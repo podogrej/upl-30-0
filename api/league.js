@@ -2,7 +2,100 @@
 // POST {initData, result?}: перевіряє підпис Telegram, додає гравця в лігу групи (якщо гру відкрито з кнопки групи)
 //   і записує офіційний результат виклику дня в усі його ліги, оновлюючи табло в чатах.
 // GET ?chat=ID: дані ліги для картки в грі.
-const L = require('./_lib');
+const L = (() => {   // спільні функції (вбудовано, щоб файл не залежав від інших)
+const crypto = require('crypto');
+const SB_URL = 'https://qruhcbwycrnfgzzdbljr.supabase.co';
+const env = k => String(process.env[k] || '').replace(/\s+/g, '');
+const esc = s => String(s == null ? '' : s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+
+async function tg(method, body) {
+  const r = await fetch(`https://api.telegram.org/bot${env('TG_TOKEN')}/${method}`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+  });
+  return r.json();
+}
+
+// запити до бази з правами сервера (ключ лише у Vercel)
+async function sb(path, { method = 'GET', body, prefer } = {}) {
+  const key = env('SUPABASE_SERVICE_KEY');
+  const r = await fetch(`${SB_URL}/rest/v1/${path}`, {
+    method, headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json', ...(prefer ? { Prefer: prefer } : {}) },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  const t = await r.text(); let j = null; try { j = t ? JSON.parse(t) : null; } catch (e) {}
+  if (!r.ok) throw new Error(`db ${r.status}: ${t.slice(0, 150)}`);
+  return j;
+}
+
+function kyivDate(d = new Date()) {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Kyiv', year: 'numeric', month: '2-digit', day: '2-digit' }).format(d);
+}
+const LAUNCH = Date.UTC(2026, 8, 28);
+const dayNo = day => Math.max(1, Math.round((Date.UTC(+day.slice(0, 4), +day.slice(5, 7) - 1, +day.slice(8, 10)) - LAUNCH) / 864e5) + 1);
+const dayShort = day => `${day.slice(8, 10)}.${day.slice(5, 7)}`;
+
+// перевірка підпису Mini App (initData) — повертає {user, start_param} або null
+function checkMiniApp(initData) {
+  const token = env('TG_TOKEN');
+  const p = new URLSearchParams(initData || ''); const hash = p.get('hash'); if (!hash) return null;
+  p.delete('hash');
+  const dcs = [...p.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([k, v]) => `${k}=${v}`).join('\n');
+  const secret = crypto.createHmac('sha256', 'WebAppData').update(token).digest();
+  if (crypto.createHmac('sha256', secret).update(dcs).digest('hex') !== hash) return null;
+  if (Date.now() / 1000 - Number(p.get('auth_date') || 0) > 86400) return null;
+  let user = null; try { user = JSON.parse(p.get('user')); } catch (e) {}
+  return user ? { user, start_param: p.get('start_param') || '' } : null;
+}
+const nameOf = u => ([u.first_name, u.last_name].filter(Boolean).join(' ') || u.username || 'Гравець').slice(0, 40);
+
+const playUrl = chat_id => `https://t.me/${env('TG_BOT') || 'upl30_bot'}?startapp=g${chat_id}`;
+const playKb = chat_id => ({ inline_keyboard: [[{ text: '▶️ Зіграти виклик дня', url: playUrl(chat_id) }]] });
+
+const sortRes = (a, b) => b.pts - a.pts || (b.gf - b.ga) - (a.gf - a.ga) || b.gf - a.gf || String(a.created_at).localeCompare(String(b.created_at));
+
+// загальний залік ліги: перемоги в днях (минулі дні + сьогодні)
+async function standings(chat_id) {
+  const rows = await sb(`league_results?chat_id=eq.${chat_id}&select=day,tg_user_id,name,pts,gf,ga,created_at&order=day.desc&limit=3000`) || [];
+  const byDay = {}; for (const r of rows) (byDay[r.day] = byDay[r.day] || []).push(r);
+  const st = {};
+  for (const [day, list] of Object.entries(byDay)) {
+    list.sort(sortRes);
+    for (const r of list) { const s = st[r.tg_user_id] || (st[r.tg_user_id] = { name: r.name, wins: 0, days: 0, pts: 0 }); s.days++; s.pts += r.pts; s.name = r.name; }
+    st[list[0].tg_user_id].wins++;
+  }
+  return Object.values(st).sort((a, b) => b.wins - a.wins || b.pts / b.days - a.pts / a.days);
+}
+
+async function boardText(chat_id, day) {
+  const [lg] = await sb(`leagues?chat_id=eq.${chat_id}&select=title`) || [];
+  const rows = (await sb(`league_results?chat_id=eq.${chat_id}&day=eq.${day}&select=*`) || []).sort(sortRes);
+  const members = (await sb(`league_members?chat_id=eq.${chat_id}&select=tg_user_id`) || []).length;
+  const medal = ['🥇', '🥈', '🥉'];
+  let t = `<b>🏟 Ліга «${esc(lg ? lg.title : 'група')}»</b>\nВиклик дня №${dayNo(day)} · ${dayShort(day)} — однакове колесо для всіх\n\n`;
+  if (!rows.length) t += 'Сьогодні ще ніхто не зіграв. Будь першим!';
+  else t += rows.map((r, i) => `${medal[i] || (i + 1) + '.'} ${esc(r.name)} — <b>${r.pts}</b> (${r.w}-${r.d}-${r.l}, ${r.gf}:${r.ga})${r.trophies && r.trophies.length ? ' 🏆' : ''}`).join('\n');
+  t += `\n\nЗіграли: ${rows.length} з ${Math.max(members, rows.length)}`;
+  return t;
+}
+
+// одне повідомлення-табло на день: редагуємо, а не шлемо нові
+async function upsertBoard(chat_id, day, { forceNew = false } = {}) {
+  const text = await boardText(chat_id, day);
+  const [b] = await sb(`league_boards?chat_id=eq.${chat_id}&day=eq.${day}&select=message_id`) || [];
+  if (b && b.message_id && !forceNew) {
+    const r = await tg('editMessageText', { chat_id, message_id: b.message_id, text, parse_mode: 'HTML', reply_markup: playKb(chat_id), disable_web_page_preview: true });
+    if (r.ok || /not modified/.test(r.description || '')) return b.message_id;
+  }
+  const m = await tg('sendMessage', { chat_id, text, parse_mode: 'HTML', reply_markup: playKb(chat_id), disable_web_page_preview: true });
+  if (!m.ok) throw new Error('send: ' + m.description);
+  const mid = m.result.message_id;
+  await tg('pinChatMessage', { chat_id, message_id: mid, disable_notification: true });   // вийде, лише якщо бот — адмін
+  await sb('league_boards?on_conflict=chat_id,day', { method: 'POST', prefer: 'resolution=merge-duplicates,return=minimal', body: { chat_id, day, message_id: mid } });
+  return mid;
+}
+
+return { SB_URL, env, esc, tg, sb, kyivDate, dayNo, dayShort, checkMiniApp, nameOf, playUrl, playKb, sortRes, standings, boardText, upsertBoard };
+})();
 
 module.exports = async (req, res) => {
   let stage = 'start';
