@@ -144,7 +144,13 @@ module.exports = async (req, res) => {
     if (m && typeof m.text === 'string') {
       const chat = m.chat, isPrivate = chat.type === 'private';
       const cmd = m.text.trim().split(/[\s@]/)[0].toLowerCase();
-      if (cmd === '/start' || cmd === '/help') {
+      const arg = m.text.trim().split(/\s+/)[1] || '';
+      if (cmd === '/start' && isPrivate && /^login_[a-f0-9]{32}$/.test(arg)) {
+        // вхід на сайт через бота: браузер відкрив t.me/upl30_bot?start=login_<токен>, прив'язуємо токен до цього Telegram-акаунта
+        const f = m.from || {};
+        await L.sb('tg_logins?on_conflict=token', { method: 'POST', prefer: 'resolution=ignore-duplicates,return=minimal', body: { token: arg.slice(6), tg_id: f.id, first_name: f.first_name || null, last_name: f.last_name || null, username: f.username || null } });
+        await L.tg('sendMessage', { chat_id: chat.id, text: '✅ Вхід підтверджено. Повернись у браузер — гра вже знає, що це ти.\n\nЯкщо ти не намагався увійти на upl-30-0.vercel.app, просто проігноруй це повідомлення.' });
+      } else if (cmd === '/start' || cmd === '/help') {
         await L.tg('sendMessage', { chat_id: chat.id, text: isPrivate ? HELLO : GROUP_HELLO, reply_markup: { inline_keyboard: [[playButton(isPrivate)]] } });
       } else if (cmd === '/play') {
         const hasLeague = !isPrivate && (await L.sb(`leagues?chat_id=eq.${chat.id}&select=chat_id`) || []).length > 0;
