@@ -513,16 +513,16 @@ document.getElementById('againBtn').onclick=()=>{S.result=null;go(1);};
 // ---------- online leaderboard (only on the real site)
 const ONLINE=true;
 const SB_URL="https://qruhcbwycrnfgzzdbljr.supabase.co", SB_KEY="sb_publishable_pEszTOPsCHLgpiPpwB4JKg_SS-X07hY";
-function deviceId(){let id=lsGet("upl30_device");if(!id){id=(crypto.randomUUID?crypto.randomUUID():'10000000-1000-4000-8000-100000000000'.replace(/[018]/g,c=>(c^crypto.getRandomValues(new Uint8Array(1))[0]&15>>c/4).toString(16)));lsSet("upl30_device",id);}return id;}
-async function sbTop(day){const r=await fetch(`${SB_URL}/rest/v1/daily_results?day=eq.${day}&select=nickname,w,d,l,pts,place,gf,ga,device_id&order=pts.desc,ga.asc,gf.desc&limit=500`,{headers:{apikey:SB_KEY}});if(!r.ok)throw new Error(r.status);return r.json();}
-async function sbInsert(row){const r=await fetch(`${SB_URL}/rest/v1/daily_results`,{method:"POST",headers:{apikey:SB_KEY,"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify(row)});if(!r.ok){const t=await r.text();const e=new Error(r.status+" "+t);e.status=r.status;e.body=t;throw e;}}
+function deviceId(){let id=lsGet("upl30_device");if(!id){try{id=crypto.randomUUID();}catch(e){const h=[...crypto.getRandomValues(new Uint8Array(16))].map(b=>b.toString(16).padStart(2,'0')).join('');id=`${h.slice(0,8)}-${h.slice(8,12)}-4${h.slice(13,16)}-a${h.slice(17,20)}-${h.slice(20,32)}`;}lsSet("upl30_device",id);}return id;}
+async function sbTop(day){const r=await fetch(`${SB_URL}/rest/v1/daily_results?apikey=${SB_KEY}&day=eq.${day}&select=nickname,w,d,l,pts,place,gf,ga,device_id&order=pts.desc,ga.asc,gf.desc&limit=500`);if(!r.ok){throw new Error('GET '+r.status+' '+(await r.text()).slice(0,200));}return r.json();}
+async function sbInsert(row){const r=await fetch(`${SB_URL}/rest/v1/daily_results?apikey=${SB_KEY}`,{method:"POST",headers:{apikey:SB_KEY,"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify(row)});if(!r.ok){const t=await r.text();const e=new Error(r.status+" "+t);e.status=r.status;e.body=t;throw e;}}
 function lbHtml(rows){
   const me=deviceId();rows.sort((a,b)=>b.pts-a.pts||(b.gf-b.ga)-(a.gf-a.ga)||b.gf-a.gf);
   const mi=rows.findIndex(r=>r.device_id===me);const show=rows.map((r,i)=>({...r,i})).filter(r=>r.i<20||r.i===mi);
   if(!rows.length)return '<p class="muted">Поки що ніхто не зіграв. Будь першим!</p>';
   return `<table><tr><th>#</th><th>Нік</th><th class="num">П-Н-Пр</th><th class="num">Г</th><th class="num">О</th></tr>`+show.map(r=>`<tr${r.i===mi?' class="me"':''}><td class="num">${r.i+1}</td><td>${esc(r.nickname)}</td><td class="num">${r.w}-${r.d}-${r.l}</td><td class="num">${r.gf}:${r.ga}</td><td class="num"><b>${r.pts}</b></td></tr>`).join('')+`</table><p class="muted" style="margin-top:6px">Всього гравців сьогодні: ${rows.length}</p>`;
 }
-async function loadLb(el){el.innerHTML='<p class="muted">Завантаження…</p>';try{el.innerHTML=lbHtml(await sbTop(DAY));}catch(e){el.innerHTML='<p class="muted">Таблиця зараз недоступна.</p>';}}
+async function loadLb(el){el.innerHTML='<p class="muted">Завантаження…</p>';try{el.innerHTML=lbHtml(await sbTop(DAY));}catch(e){el.innerHTML='<p class="muted">Таблиця зараз недоступна.</p><p class="muted mono" style="font-size:11px">'+esc(String(e&&e.message||e))+'</p>';}}
 function renderLb(r){
   const box=document.getElementById('lbBox');box.hidden=!(ONLINE&&S.daily);if(box.hidden)return;
   const sent=lsGet("upl30_sent_"+DAY);const form=document.getElementById('lbForm');const msg=document.getElementById('lbMsg');
@@ -540,7 +540,7 @@ document.getElementById('lbSend').onclick=async()=>{
       xi:S.slots.map(s=>[s.player.name,s.pos,s.player.r,s.player.club,s.player.y])});
     lsSet("upl30_nick",nick);lsSet("upl30_sent_"+DAY,true);document.getElementById('lbForm').hidden=true;msg.textContent='Готово! Ти в таблиці.';loadLb(document.getElementById('lbTable'));}
   catch(e){if(e.status===409){lsSet("upl30_sent_"+DAY,true);document.getElementById('lbForm').hidden=true;msg.textContent='З цього пристрою результат дня вже надіслано.';loadLb(document.getElementById('lbTable'));}
-    else{msg.textContent='Не вдалося надіслати. Спробуй ще раз.';}}
+    else{msg.textContent='Не вдалося надіслати. Спробуй ще раз. ('+String(e&&e.message||e).slice(0,220)+')';}}
   btn.disabled=false;};
 // ---------- share
 function gridOf(r){const m={W:"🟩",D:"🟨",L:"🟥"};let s="";r.log.forEach((x,i)=>{s+=m[x.res];if(i%10===9&&i<r.log.length-1)s+="\n";});return s;}
