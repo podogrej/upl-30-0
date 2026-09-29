@@ -1,6 +1,6 @@
 <title>30-0 УПЛ</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;900&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
-<script>(function(){try{var m=/[?&]skin=([a-z]+)/.exec(location.search);var k=m?m[1]:(localStorage.getItem('upl30_skin')||'board');if(m)localStorage.setItem('upl30_skin',k);if(k&&k!=='classic')document.documentElement.setAttribute('data-skin',k);}catch(e){document.documentElement.setAttribute('data-skin','board');}try{var pm=/[?&]pitch=([a-z]+)/.exec(location.search);var pk=pm?pm[1]:localStorage.getItem('upl30_pitch');if(pm)localStorage.setItem('upl30_pitch',pk);if(pk&&pk!=='night')document.documentElement.setAttribute('data-pitch',pk);}catch(e){}try{var t=/[?&]theme=(light|dark)/.exec(location.search);var th=t?t[1]:(localStorage.getItem('upl30_theme')||'dark');if(t)localStorage.setItem('upl30_theme',th);document.documentElement.setAttribute('data-theme',th);}catch(e){document.documentElement.setAttribute('data-theme','dark');}})();</script>
+<script>(function(){try{var m=/[?&]skin=([a-z]+)/.exec(location.search);var k=m?m[1]:(localStorage.getItem('upl30_skin')||'board');if(k==='upl'){k='board';localStorage.setItem('upl30_skin',k);}if(m)localStorage.setItem('upl30_skin',k);if(k&&k!=='classic')document.documentElement.setAttribute('data-skin',k);}catch(e){document.documentElement.setAttribute('data-skin','board');}try{var pm=/[?&]pitch=([a-z]+)/.exec(location.search);var pk=pm?pm[1]:localStorage.getItem('upl30_pitch');if(pm)localStorage.setItem('upl30_pitch',pk);if(pk&&pk!=='night')document.documentElement.setAttribute('data-pitch',pk);}catch(e){}try{var t=/[?&]theme=(light|dark)/.exec(location.search);var th=t?t[1]:(localStorage.getItem('upl30_theme')||'dark');if(t)localStorage.setItem('upl30_theme',th);document.documentElement.setAttribute('data-theme',th);}catch(e){document.documentElement.setAttribute('data-theme','dark');}})();</script>
 <style>
 :root{
   --bg:#f3f1e8; --bg2:#e9e6d9; --surface:#fbfaf5; --line:#d6d2c2; --ink:#1c2a22; --ink2:#5a675e; --muted:#8a948c;
@@ -24,9 +24,6 @@
 :root[data-skin="board"]{--bg:#f5f3ef; --bg2:#ebe8e2; --surface:#fffdf9; --line:#dcd7ce; --ink:#161514; --ink2:#5c5850; --muted:#928c82; --pitch:#2f6b45; --pitch2:#234f33; --chalk:#ffffff; --amber:#c44f00; --amber2:#ff8a2a; --win:#34C759; --draw:#FFCC00; --loss:#FF3B30; --gk:#FFCC00; --df:#007AFF; --mf:#34C759; --fw:#FF3B30;}
 @media (prefers-color-scheme: dark){ :root[data-skin="board"]:not([data-theme="light"]){--bg:#121212; --bg2:#0b0b0b; --surface:#1c1c1d; --line:#303032; --ink:#f4f1ea; --ink2:#b3aea4; --muted:#7c776f; --pitch:#2c563b; --pitch2:#1c3a27; --chalk:#f0ede6; --amber:#ff7a1a; --amber2:#ff9a3d; --win:#30D158; --draw:#FFD60A; --loss:#FF453A; --gk:#FFD60A; --df:#0A84FF; --mf:#30D158; --fw:#FF453A; color-scheme:dark;}}
 :root[data-skin="board"][data-theme="dark"]{--bg:#121212; --bg2:#0b0b0b; --surface:#1c1c1d; --line:#303032; --ink:#f4f1ea; --ink2:#b3aea4; --muted:#7c776f; --pitch:#2c563b; --pitch2:#1c3a27; --chalk:#f0ede6; --amber:#ff7a1a; --amber2:#ff9a3d; --win:#30D158; --draw:#FFD60A; --loss:#FF453A; --gk:#FFD60A; --df:#0A84FF; --mf:#30D158; --fw:#FF453A; color-scheme:dark;}
-:root[data-skin="upl"]{--bg:#f6f4fb; --bg2:#ece8f6; --surface:#ffffff; --line:#ddd7ee; --ink:#15103d; --ink2:#554f7d; --muted:#908bb0; --pitch:#1f6b52; --pitch2:#16513d; --chalk:#ffffff; --amber:#d8177b; --amber2:#7a26b3; --win:#1f9a62; --draw:#d19a00; --loss:#e23b52; --gk:#e0a100; --df:#3b5bdb; --mf:#1f9a62; --fw:#e23b52; --grad:linear-gradient(95deg,#6d2abb 0%,#d8177b 60%,#fb702f 100%);}
-@media (prefers-color-scheme: dark){ :root[data-skin="upl"]:not([data-theme="light"]){--bg:#0b0f2e; --bg2:#070a22; --surface:#151a42; --line:#282f62; --ink:#f4f2fc; --ink2:#b5b3d8; --muted:#7c80aa; --pitch:#1c5c46; --pitch2:#123f30; --chalk:#e8ecf8; --amber:#ff3d94; --amber2:#b77cff; --win:#3ed598; --draw:#ffc94d; --loss:#ff5a6e; --gk:#ffc94d; --df:#6f8cff; --mf:#3ed598; --fw:#ff5a6e; --grad:linear-gradient(95deg,#7b35d6 0%,#ff2d87 60%,#ff7a3d 100%); color-scheme:dark;}}
-:root[data-skin="upl"][data-theme="dark"]{--bg:#0b0f2e; --bg2:#070a22; --surface:#151a42; --line:#282f62; --ink:#f4f2fc; --ink2:#b5b3d8; --muted:#7c80aa; --pitch:#1c5c46; --pitch2:#123f30; --chalk:#e8ecf8; --amber:#ff3d94; --amber2:#b77cff; --win:#3ed598; --draw:#ffc94d; --loss:#ff5a6e; --gk:#ffc94d; --df:#6f8cff; --mf:#3ed598; --fw:#ff5a6e; --grad:linear-gradient(95deg,#7b35d6 0%,#ff2d87 60%,#ff7a3d 100%); color-scheme:dark;}
 :root[data-skin="programme"]{--bg:#f4ecdc; --bg2:#eadfca; --surface:#fbf6ea; --line:#d8cbb0; --ink:#1b2340; --ink2:#4d5470; --muted:#8a8570; --pitch:#4f7a3a; --pitch2:#3a5e2b; --chalk:#fbf6ea; --amber:#c8202f; --amber2:#ffd54a; --win:#3d7a34; --draw:#b8901c; --loss:#c8202f; --gk:#c79a1e; --df:#2a4f9c; --mf:#3d7a34; --fw:#c8202f;}
 @media (prefers-color-scheme: dark){ :root[data-skin="programme"]:not([data-theme="light"]){--bg:#161b2e; --bg2:#10152a; --surface:#1e2540; --line:#333c5e; --ink:#f4ecdc; --ink2:#c2bba6; --muted:#878399; --pitch:#4a763a; --pitch2:#33552a; --chalk:#f4ecdc; --amber:#ff5a5f; --amber2:#ffd54a; --win:#6cc25c; --draw:#e6c04a; --loss:#ff5a5f; --gk:#ffd54a; --df:#7ea6ff; --mf:#6cc25c; --fw:#ff5a5f; color-scheme:dark;}}
 :root[data-skin="programme"][data-theme="dark"]{--bg:#161b2e; --bg2:#10152a; --surface:#1e2540; --line:#333c5e; --ink:#f4ecdc; --ink2:#c2bba6; --muted:#878399; --pitch:#4a763a; --pitch2:#33552a; --chalk:#f4ecdc; --amber:#ff5a5f; --amber2:#ffd54a; --win:#6cc25c; --draw:#e6c04a; --loss:#ff5a5f; --gk:#ffd54a; --df:#7ea6ff; --mf:#6cc25c; --fw:#ff5a5f; color-scheme:dark;}
@@ -110,16 +107,17 @@ button.ghost{border-color:var(--line);background:transparent;color:var(--ink2);p
 .slot.target{animation:glow 1.1s ease-in-out infinite}@keyframes glow{0%,100%{box-shadow:0 0 0 2px var(--amber2)}50%{box-shadow:0 0 0 5px color-mix(in srgb,var(--amber2) 35%,transparent)}}
 .pl.on{border-color:var(--amber2);box-shadow:0 0 0 2px var(--amber2)}
 .squad{display:grid;gap:4px;margin-top:10px}
-.pl,.sqHead{display:grid;grid-template-columns:34px 1fr 34px 30px 44px 36px auto;gap:5px;}.noast .pl,.sqHead.noast{grid-template-columns:34px 1fr 34px 30px 36px auto}
-.sqHead{padding:0 10px;font-family:var(--font-body);font-size:9.5px;font-weight:600;line-height:1.15;color:var(--muted);letter-spacing:0;text-align:right;align-items:end;overflow-wrap:normal}.sqHead span:nth-child(-n+2){text-align:left}
+.pl,.sqHead{display:grid;grid-template-columns:32px minmax(0,1fr) repeat(var(--nst,4),30px) var(--rtw,30px);gap:4px;}.noast,.sqHead.noast{--nst:3}.nor,.sqHead.nor{--rtw:0px}.sqHead b{font-weight:inherit}.sqHead i{display:none;font-style:normal}
+@media (max-width:360px){.pl,.sqHead{grid-template-columns:28px minmax(0,1fr) repeat(var(--nst,4),23px) var(--rtw,27px);gap:3px}.squad .pl{padding:8px}.sqHead{padding:0 9px;font-size:8px}.pl .nm{font-size:13.5px}.pl .st{font-size:11px}.pl .rt{font-size:14px}.sqHead b{display:none}.sqHead i{display:inline}}
+.sqHead{padding:0 11px;font-family:var(--font-body);font-size:9px;font-weight:600;line-height:1.15;color:var(--muted);letter-spacing:0;text-align:right;align-items:end;overflow-wrap:normal}.sqHead span:nth-child(-n+2){text-align:left}
 .pl{align-items:center;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);cursor:pointer;text-align:left;font-weight:500}
 .pl:hover{border-color:var(--ink)}
 .pl[disabled]{opacity:.38;cursor:not-allowed}
 .pl .pos{font-family:var(--font-mono);font-size:11px;font-weight:600;padding:2px 0;border-radius:5px;text-align:center;color:#fff}
 .pos.GK{background:var(--gk)} .pos.DF{background:var(--df)} .pos.MF{background:var(--mf)} .pos.FW{background:var(--fw)}
 .pl .st{font-family:var(--font-mono);font-size:12px;color:var(--ink2);text-align:right}.pl .st.d{color:var(--muted)}
-.pl .rt{font-family:var(--font-display);font-weight:700;font-size:16px;min-width:0;text-align:right}.pl .rt:empty{display:none}.sqHead .h:empty{display:none}
-.pl .nm{overflow:hidden;line-height:1.25;overflow-wrap:anywhere}
+.pl .rt{font-family:var(--font-display);font-weight:700;font-size:15px;line-height:1;font-variant-numeric:tabular-nums;min-width:0;text-align:right}
+.pl .nm{overflow:hidden;line-height:1.25;overflow-wrap:break-word;-webkit-hyphens:auto;hyphens:auto}
 /* results */
 .hero{border:2px solid var(--ink);border-radius:14px;padding:18px 16px;background:var(--surface);display:grid;gap:8px}
 .hero .tier{font-family:var(--font-display);font-weight:900;font-size:clamp(22px,5vw,34px);line-height:1.05;letter-spacing:-.01em}
@@ -239,10 +237,6 @@ button.ghost.big0{padding:11px 18px;font-size:15px;font-family:var(--font-body);
 #squad.rin .pl .rt{animation:rtin .35s ease-out both}@keyframes rtin{from{opacity:0;transform:scale(.7)}to{opacity:1;transform:none}}
 section.enter{animation:secin .26s cubic-bezier(.2,.8,.2,1) both}section.back{animation:secback .26s cubic-bezier(.2,.8,.2,1) both}
 @keyframes secin{from{opacity:0;transform:translateX(28px)}to{opacity:1;transform:none}}@keyframes secback{from{opacity:0;transform:translateX(-28px)}to{opacity:1;transform:none}}
-:root[data-skin="upl"] .logo0 span,:root[data-skin="upl"] .tier{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
-:root[data-skin="upl"] button.primary{background:var(--grad);color:#fff;border-color:transparent}:root[data-skin="upl"] button.primary .ic{background:rgba(255,255,255,.18);color:#fff}
-:root[data-skin="upl"] .badge0{border-color:color-mix(in srgb,var(--amber) 55%,transparent)}:root[data-skin="upl"] #dailyCard{border-image:var(--grad) 1;border-width:1px;border-style:solid}
-:root[data-skin="upl"] header.top{border-bottom:2px solid transparent;border-image:var(--grad) 1}
 
 #moveBtn.on{border-color:var(--amber);color:var(--amber)}
 #wHint{display:block;text-align:right;font-size:12px;margin-top:-2px}
@@ -297,6 +291,7 @@ td .sub{font-size:11px;color:var(--muted);margin-top:2px;display:flex;gap:6px;al
 .tro.on.sec{border-color:color-mix(in srgb,#9b6bd6 40%,var(--line));background:var(--surface)}
 .tro .tri{font-size:22px;text-align:center}.tro .trt{display:grid;gap:2px;min-width:0}.tro .trt b{font-size:14px}.tro .trt span{font-size:12px;color:var(--ink2)}
 .tro .trt .trp{font-family:var(--font-mono);font-size:11px;color:var(--muted)}.tro .trn{font-family:var(--font-mono);font-weight:600;font-size:14px}
+.tro .trt .trq{display:flex;align-items:center;gap:3px;font-size:11px;color:var(--muted);font-style:italic}.trq .ico{width:12px;height:12px;fill:currentColor;flex:none}
 .trsec{text-align:center;color:var(--ink2);margin:10px 0 0}.trsx{font-style:normal;font-size:11px;color:#9b6bd6;font-family:var(--font-mono);text-transform:uppercase}
 .chip.onc{border-color:var(--amber2)}
 .tro.pop{animation:tropop .55s cubic-bezier(.2,.9,.3,1.3) both}.tro.new{box-shadow:0 0 0 1px color-mix(in srgb,var(--amber) 55%,transparent)}
@@ -485,7 +480,7 @@ td .sub{font-size:11px;color:var(--muted);margin-top:2px;display:flex;gap:6px;al
     </div>
 </div>
 <div class="overlay" id="viewBox" hidden><div class="box"><div class="vhead"><h3 id="viewTitle">Склад</h3><button class="ghost" id="viewClose">Закрити</button></div><div id="viewBody"></div></div></div>
-<div class="foot">30-0 УПЛ · <a href="#" id="newsBtn">Що нового у версії 0.47<b id="newsDot" hidden></b></a> · <a href="#" id="themeBtn" class="thm" aria-label="Світла тема"></a> · неофіційний фан-проєкт</div>
+<div class="foot">30-0 УПЛ · <a href="#" id="newsBtn">Що нового у версії 0.49<b id="newsDot" hidden></b></a> · <a href="#" id="themeBtn" class="thm" aria-label="Світла тема"></a> · неофіційний фан-проєкт</div>
 <script id="pool" type="application/json">__POOL__</script>
 <script>
 (function(){
@@ -750,7 +745,7 @@ function renderWheel(){
   document.getElementById('wHint').textContent=`${cs.pos} місце в тому сезоні`+(S.format==='anti'?` · лише гравці з ${ANTI_MIN_APPS}+ матчами`:'');
   const rr=document.getElementById('rerollRow');rr.style.visibility='visible';rr.hidden=S.rerolls<=0;document.getElementById('rerollCnt').textContent=`↻ ${S.rerolls}`;
   const sq=document.getElementById('squad');sq.innerHTML='';
-  const hasAst=cs.pl.every(p=>p[8]!=null);sq.classList.toggle('noast',!hasAst);const hd=document.getElementById('sqHead');hd.classList.toggle('noast',!hasAst);hd.hidden=S.format==='anti';hd.innerHTML=`<span></span><span></span><span>Матчі</span><span>Голи</span>${hasAst?'<span>Гольові передачі</span>':''}<span>Сухі матчі</span><span class="h">${show?'Рейт.':''}</span>`;
+  const hasAst=cs.pl.every(p=>p[8]!=null);sq.classList.toggle('noast',!hasAst);sq.classList.toggle('nor',!show);const hd=document.getElementById('sqHead');hd.classList.toggle('noast',!hasAst);hd.classList.toggle('nor',!show);hd.hidden=S.format==='anti';hd.innerHTML=`<span></span><span></span><span>Матчі</span><span>Голи</span>${hasAst?'<span title="Гольові передачі"><b>Асисти</b><i>Ас.</i></span>':''}<span title="Сухі матчі">Сухі</span><span>${show?'Рейт.':''}</span>`;
   const anti=S.format==='anti';const list=[...cs.pl].map(p=>({p,ok:isOk(cs,p)})).sort((a,b)=>(b.ok-a.ok)||(anti?a.p[0].localeCompare(b.p[0],'uk'):sortR?b.p[2]-a.p[2]:(b.p[3]-a.p[3]||b.p[4]-a.p[4])));
   let sep=false;
   for(const {p,ok} of list){if(!ok&&!sep){sep=true;const h=document.createElement('div');h.className='muted';h.style.cssText='font-size:12px;margin:8px 0 2px';h.textContent=S.taken.size?'Позиція зайнята або не підходить — переставте когось у складі, щоб відкрити':'Не підходять під вільні позиції';sq.appendChild(h);}
@@ -1048,7 +1043,7 @@ if(ONLINE&&/tgWebApp/.test(location.hash+location.search)){const sc=document.cre
 function tgFields(){return TGU?{tg_user_id:TGU.id,tg_name:([TGU.first_name,TGU.last_name].filter(Boolean).join(' ')||TGU.username||'').slice(0,64)}:{};}
 // «Поділитися карткою»: у Telegram — бот готує повідомлення з карткою (api/card, share) і відкривається вибір чату;
 // поза Telegram — системне меню з файлом картки; інакше — текст через t.me/share
-function shareTextLink(){const text=S.result?shareTextOf(S.result,true):document.getElementById('shareText').value;
+function shareTextLink(){const text=S.result?shareTextOf(S.result,true,true):document.getElementById('shareText').value;   // без квадратиків — вони для картки
   const url=`https://t.me/share/url?url=${encodeURIComponent(tgLink())}&text=${encodeURIComponent(text)}`;
   if(TG&&TG.openTelegramLink)TG.openTelegramLink(url);else window.open(url,'_blank');}
 document.getElementById('tgShareBtn').onclick=async()=>{const b=document.getElementById('tgShareBtn'),msg=document.getElementById('copyMsg');if(!S.result)return;
@@ -1059,7 +1054,7 @@ document.getElementById('tgShareBtn').onclick=async()=>{const b=document.getElem
     try{const r=await _fetch('/api/card',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({initData:TG.initData,image:CARD_CANVAS.toDataURL('image/jpeg',0.9),caption:shareTextOf(S.result,true,true),share:true})});
       const j=await r.json().catch(()=>({}));b.disabled=false;
       if(j.ok&&j.prepared){msg.textContent='';TG.shareMessage(j.prepared,ok=>{msg.textContent=ok?'Надіслано':'';});return;}
-      if(j.need_start){msg.textContent='Спочатку відкрий чат з @'+TG_BOT+' і натисни «Start» — тоді картку можна буде надсилати.';return;}
+      if(j.need_start){msg.innerHTML='Спочатку відкрий чат з ботом і натисни «Start», потім спробуй ще раз. <button class="ghost" id="openBotBtn" style="padding:4px 10px">Відкрити @'+TG_BOT+'</button>';document.getElementById('openBotBtn').onclick=()=>TG.openTelegramLink('https://t.me/'+TG_BOT+'?start=card');return;}
     }catch(e){b.disabled=false;}
     msg.textContent='Картку не вийшло — надсилаю текстом.';shareTextLink();return;}
   let canFile=false;try{canFile=!inTg&&!!navigator.canShare&&navigator.canShare({files:[new File([new Blob(['x'],{type:'image/png'})],'x.png',{type:'image/png'})]});}catch(e){}
@@ -1208,7 +1203,7 @@ document.getElementById('cardBtn').onclick=async()=>{try{await document.fonts.re
 document.getElementById('cardTgBtn').onclick=async()=>{const msg=document.getElementById('cardMsg'),b=document.getElementById('cardTgBtn');if(!CARD_CANVAS)return;b.disabled=true;msg.textContent='Надсилаємо…';
   try{const r=await _fetch('/api/card',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({initData:TG.initData,image:CARD_CANVAS.toDataURL('image/jpeg',0.9),caption:S.result?shareTextOf(S.result,false,true):''})});
     const j=await r.json().catch(()=>({}));
-    msg.textContent=j.ok?'Готово — картка в чаті з @'+TG_BOT+'.':j.need_start?'Спочатку відкрий чат з @'+TG_BOT+' і натисни «Start», потім спробуй ще раз.':'Не вдалося надіслати ('+String(j.error||r.status).slice(0,80)+').';}
+    if(j.need_start){msg.innerHTML='Спочатку відкрий чат з ботом і натисни «Start», потім спробуй ще раз. <button class="ghost" id="openBotBtn2" style="padding:4px 10px">Відкрити @'+TG_BOT+'</button>';document.getElementById('openBotBtn2').onclick=()=>TG.openTelegramLink('https://t.me/'+TG_BOT+'?start=card');}else msg.textContent=j.ok?'Готово — картка в чаті з @'+TG_BOT+'.':'Не вдалося надіслати ('+String(j.error||r.status).slice(0,80)+').';}
   catch(e){msg.textContent='Не вдалося надіслати: немає зв’язку.';}
   b.disabled=false;};
 document.getElementById('cardShareBtn').onclick=()=>{const msg=document.getElementById('cardMsg');if(!CARD_CANVAS)return;
@@ -1243,10 +1238,11 @@ function drawCard(r){
 }
 document.getElementById('replayBtn').onclick=()=>playSeason(null);
 // ---------- «Що нового»: коротко й по-людськи про останню версію (технічний журнал — CHANGELOG.md у репозиторії)
-const WHATSNEW={v:'0.47',date:'29.09.2026',items:[
-  ['ferris-wheel','Колесо живіше','Більші барабани, плавне гальмування, гравці з\'являються по черзі. Перекрутка — один перемикач: клуб, сезон або все.'],
-  ['swap-horizontal','Плавні переходи','Екрани виїжджають збоку, рейтинги з\'являються м\'яко.'],
-  ['bread-slice','Два нові секрети','Від Віті. Хтось скаже «паляниця», а хтось — по батькові.']]};
+const WHATSNEW={v:'0.49',date:'29.09.2026',items:[
+  ['share-variant','Картка — у будь-який чат','«Поділитися карткою» тепер надсилає саме картинку сезону в обраний чат, навіть якщо ти ніколи не писав боту. Жодних кольорових квадратиків у тексті.'],
+  ['ferris-wheel','Колесо живіше','Більші барабани, плавне гальмування, гравці з\'являються по черзі. Перекрутка — один перемикач.'],
+  ['view-column','Рівні стовпчики','Коли відкриваєш рейтинги в колесі, цифри більше не розʼїжджаються: матчі, голи, асисти, сухі й рейтинг стоять у своїх колонках.'],
+  ['bread-slice','П\'ять нових секретів','Хтось скаже «паляниця», а в когось збереться ціла Олександрія. А ще заробітчани, третій до компанії і повна зала депутатів. Трофеї за цитати тренерів тепер підписані: ❝ Кварцяний.']]};
 function openNews(){const box=document.getElementById('viewBox');document.getElementById('viewTitle').textContent=`Що нового · версія ${WHATSNEW.v}`;
   document.getElementById('viewBody').innerHTML=`<div class="news">${WHATSNEW.items.map(([e,h,d])=>`<div class="ni">${ic(e,'lg')}<div><b>${esc(h)}</b><p>${esc(d)}</p></div></div>`).join('')}</div>`;
   box.hidden=false;lsSet('upl30_news_seen',WHATSNEW.v);document.getElementById('newsDot').hidden=true;}
