@@ -458,7 +458,7 @@ td .sub{font-size:11px;color:var(--muted);margin-top:2px;display:flex;gap:6px;al
     </div>
 </div>
 <div class="overlay" id="viewBox" hidden><div class="box"><div class="vhead"><h3 id="viewTitle">Склад</h3><button class="ghost" id="viewClose">Закрити</button></div><div id="viewBody"></div></div></div>
-<div class="foot">30-0 УПЛ · версія 0.40 · 29.09.2026 · <a href="#" id="newsBtn">Що нового<b id="newsDot" hidden></b></a> · <a href="#" id="themeBtn">Світла тема</a> · неофіційний фан-проєкт</div>
+<div class="foot">30-0 УПЛ · <a href="#" id="newsBtn">Що нового у версії 0.40<b id="newsDot" hidden></b></a> · <a href="#" id="themeBtn">Світла тема</a> · неофіційний фан-проєкт</div>
 <script id="pool" type="application/json">__POOL__</script>
 <script>
 (function(){
@@ -574,7 +574,7 @@ function streakUpdate(){const st=lsGet("upl30_streak")||{};const y=dayAdd(DAY,-1
   if(st.last===DAY)count=st.count||1;else if(st.last===y)count=(st.count||0)+1;else if(st.last===y2&&st.freezeWeek!==weekKey(DAY)){count=(st.count||0)+1;freezeWeek=weekKey(DAY);used=true;}
   lsSet("upl30_streak",{last:DAY,count,freezeWeek,best:Math.max(st.best||0,count)});return {count,used};}
 function renderDailyCard(){
-  document.getElementById('dKicker').textContent=`Щоденний виклик №${DAY_NO} · ${DAY.slice(8,10)}.${DAY.slice(5,7)}`;
+  document.getElementById('dKicker').textContent=`Щоденний виклик · ${DAY.slice(8,10)}.${DAY.slice(5,7)}`;
   const done=lsGet("upl30_daily_"+DAY);const si=streakInfo();
   document.getElementById('dMeta').innerHTML=`<span class="chip">Схема ${DAILY.formation}</span><span class="chip">Суперники: сезон ${seasonLabel(DAILY.year)}</span><span class="chip">1 перекручування</span>`+(si.count>1?`<span class="chip hot">${ic('fire')}Серія: ${si.count} дн.</span>`:'')+(si.count>0||si.rescue?`<span class="chip" title="Один пропущений день на тиждень не обнуляє серію">${ic('snowflake')}Заморозка: ${si.freeze?'є':'використана цього тижня'}</span>`:'');
   document.getElementById('dStatus').textContent=done?`Сьогодні: ${done.W}-${done.D}-${done.L}, ${done.pts} ${ptsWord(done.pts)}, ${done.place} місце`:(si.rescue&&si.count>1?`Вчора пропустив — зіграй сьогодні, і ❄️ заморозка збереже серію ${si.count} дн.`:'');
@@ -604,7 +604,7 @@ function showBest(){const el=document.getElementById('bestLine');const key=S.for
 showBest();
 function go(n){[1,2,3,4,5].forEach(i=>{document.getElementById('s'+i).hidden=(i!==n);const st=document.getElementById('st'+i);if(st)st.classList.toggle('on',i===n);});document.getElementById('statsCard').hidden=n!==1||!STATS_ON;window.scrollTo({top:0});}
 document.getElementById('dailyBtn').onclick=()=>{S.daily={practice:!!lsGet("upl30_daily_"+DAY)};S.chal=null;S.challenge=null;S.format='classic';[...fmEl.children].forEach((c,i)=>c.classList.toggle('on',i===0));document.getElementById('clubPickRow').hidden=true;DAILY.ptr=0;S.formation=DAILY.formation;S.mode="daily";S.result=null;
-  S.slots=newSlots(S.formation);S.taken=new Set();S.wheel=null;S.rerolls=MODES.daily.rerolls;document.getElementById('modeLabel').textContent=`Виклик №${DAY_NO} · ${S.formation}`;renderDraft();go(2);};
+  S.slots=newSlots(S.formation);S.taken=new Set();S.wheel=null;S.rerolls=MODES.daily.rerolls;document.getElementById('modeLabel').textContent=`Виклик дня · ${S.formation}`;renderDraft();go(2);};
 renderDailyCard();
 document.getElementById('startBtn').onclick=()=>{S.daily=null;S.result=null;S.challenge=null;S.chal=S.format==='classic'?chalNewGame():null;if(S.mode==="daily")S.mode="normal";if(S.format==='anti')S.mode='hardcore';S.slots=newSlots(S.formation);S.taken=new Set();S.wheel=null;S.rerolls=MODES[S.mode].rerolls;document.getElementById('modeLabel').textContent=(S.format!=='classic'?FORMATS[S.format].name+' · ':'')+S.formation+" · "+MODES[S.mode].name;renderDraft();go(2);};
 document.getElementById('restartBtn').onclick=()=>go(S.daily||S.challenge?1:4);
@@ -987,7 +987,7 @@ function deviceId(){let id=lsGet("upl30_device");if(!id){try{id=crypto.randomUUI
 async function sbTop(day){const q=sel=>`${SB_URL}/rest/v1/daily_results?apikey=${SB_KEY}&day=eq.${day}&select=${sel}&order=pts.desc,ga.asc,gf.desc&limit=500`;
   let r=await fetch(q('*,players(name,anon_name)'));if(!r.ok)r=await fetch(q('*'));if(!r.ok){throw new Error('GET '+r.status+' '+(await r.text()).slice(0,200));}return r.json();}
 async function sbInsert(row){const r=await fetch(`${SB_URL}/rest/v1/daily_results?apikey=${SB_KEY}`,{method:"POST",headers:{apikey:SB_KEY,"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify(row)});if(!r.ok){const t=await r.text();const e=new Error(r.status+" "+t);e.status=r.status;e.body=t;throw e;}}
-const VERSION=(document.querySelector('.foot').textContent.match(/версія ([\d.]+)/)||[])[1]||'?';
+const VERSION=(document.querySelector('.foot').textContent.match(/версі[яї] ([\d.]+)/)||[])[1]||'?';
 // ---------- Telegram Mini App: якщо сторінку відкрито всередині Telegram, беремо ім'я з профілю, тему і кнопку «Надіслати в чат»
 const TG_BOT='upl30_bot';   // username бота без @
 let TG=null,TGU=null;
@@ -1117,16 +1117,16 @@ document.getElementById('lbSend').onclick=async()=>{
   btn.disabled=false;};
 // ---------- share
 function gridOf(r){const m={W:"🟩",D:"🟨",L:"🟥"};let s="";r.log.forEach((x,i)=>{s+=m[x.res];if(i%10===9&&i<r.log.length-1)s+="\n";});return s;}
-function shareTextOf(r,noLink){
-  const [tier]=tierOf(r);const fmt=S.format==='classic'?'':(S.format==='oneclub'?(DATA.clubs.find(c=>c.c===S.club)||{}).n:FORMATS[S.format].name)+' · ';
-  const head=S.daily?`⚽ 30-0 УПЛ · Виклик дня №${DAY_NO}`:`⚽ 30-0 УПЛ · ${fmt}${S.formation} · ${MODES[S.mode].name}`;
+function shareTextOf(r,noLink,noGrid){   // noGrid: підпис до картки — квадратики вже намальовані на ній
+  const [tier,gold]=tierOf(r);const fmt=S.format==='classic'?'':(S.format==='oneclub'?(DATA.clubs.find(c=>c.c===S.club)||{}).n:FORMATS[S.format].name)+' · ';
+  const head=S.daily?`⚽ 30-0 УПЛ · Виклик дня`:`⚽ 30-0 УПЛ · ${fmt}${S.formation} · ${MODES[S.mode].name}`;
   const wd=(n,a,b,c)=>{const x=n%10,y=n%100;return n+' '+(x===1&&y!==11?a:x>=2&&x<=4&&(y<12||y>14)?b:c);};
   const rec=`${wd(r.W,'перемога','перемоги','перемог')}, ${wd(r.D,'нічия','нічиї','нічиїх')}, ${wd(r.L,'поразка','поразки','поразок')}`;
   const top=r.scorers[0]?`\nНайкращий бомбардир: ${r.scorers[0].name} — ${r.scorers[0].g}`:'';
   const stk=S.daily&&r.streak&&r.streak.count>1?`\n🔥 Серія: ${r.streak.count} дн. поспіль${r.streak.used?' (❄️ заморозка)':''}`:'';
   const tro=r.tro&&r.tro.fresh.length?`\n🏆 ${r.tro.fresh.length>1?'Нові трофеї':'Новий трофей'}: ${r.tro.fresh.map(id=>trDef(id).n).join(', ')}`:'';
   const link=ONLINE&&!noLink?`\n\nЗбери свою 11-ку: ${TG?tgLink():'https://upl-30-0.vercel.app'}`:'';
-  return `${head}\n${tier}\n\n${rec}\n${r.pts} ${ptsWord(r.pts)} · ${r.place} місце · голи ${r.gf}:${r.ga}\n\n${gridOf(r)}${top}${stk}${tro}${link}`;
+  return `${head}${gold?'\n'+tier:''}\n\n${rec}\n${r.pts} ${ptsWord(r.pts)} · ${r.place} місце · голи ${r.gf}:${r.ga}${noGrid?'':'\n\n'+gridOf(r)}${noGrid?'\n':''}${top}${stk}${tro}${link}`;
 }
 function renderShare(r){
   {const v=document.getElementById('verLine');if(v)v.hidden=true;}
@@ -1145,22 +1145,23 @@ document.getElementById('cardBtn').onclick=async()=>{try{await document.fonts.re
   h.textContent=inTg?'У Telegram картку не зберегти довгим натисканням — натисни «Надіслати картку мені в Telegram», і бот пришле її в особисті. Звідти її можна зберегти або переслати.':'Натисни й утримуй картку, щоб зберегти її або поділитися в Telegram чи Instagram.';
   img.scrollIntoView({behavior:'smooth',block:'center'});};
 document.getElementById('cardTgBtn').onclick=async()=>{const msg=document.getElementById('cardMsg'),b=document.getElementById('cardTgBtn');if(!CARD_CANVAS)return;b.disabled=true;msg.textContent='Надсилаємо…';
-  try{const r=await _fetch('/api/card',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({initData:TG.initData,image:CARD_CANVAS.toDataURL('image/jpeg',0.9),caption:S.result?shareTextOf(S.result):''})});
+  try{const r=await _fetch('/api/card',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({initData:TG.initData,image:CARD_CANVAS.toDataURL('image/jpeg',0.9),caption:S.result?shareTextOf(S.result,false,true):''})});
     const j=await r.json().catch(()=>({}));
     msg.textContent=j.ok?'Готово — картка в чаті з @'+TG_BOT+'.':j.need_start?'Спочатку відкрий чат з @'+TG_BOT+' і натисни «Start», потім спробуй ще раз.':'Не вдалося надіслати ('+String(j.error||r.status).slice(0,80)+').';}
   catch(e){msg.textContent='Не вдалося надіслати: немає зв’язку.';}
   b.disabled=false;};
 document.getElementById('cardShareBtn').onclick=()=>{const msg=document.getElementById('cardMsg');if(!CARD_CANVAS)return;
-  CARD_CANVAS.toBlob(bl=>{const f=new File([bl],'30-0-upl.png',{type:'image/png'});navigator.share({files:[f],text:S.result?shareTextOf(S.result):''}).catch(e=>{if(e&&e.name!=='AbortError')msg.textContent='Не вдалося відкрити меню «Поділитися».';});},'image/png');};
+  CARD_CANVAS.toBlob(bl=>{const f=new File([bl],'30-0-upl.png',{type:'image/png'});navigator.share({files:[f],text:S.result?shareTextOf(S.result,false,true):''}).catch(e=>{if(e&&e.name!=='AbortError')msg.textContent='Не вдалося відкрити меню «Поділитися».';});},'image/png');};
 let CARD_CANVAS=null;
 function drawCard(r){
   const W=1080,H=1350,c=document.createElement('canvas');CARD_CANVAS=c;c.width=W;c.height=H;const g=c.getContext('2d');
   const DISP='"Unbounded", "Manrope", sans-serif', BODY='"Manrope", sans-serif', MONO='"JetBrains Mono", monospace';
   const grd=g.createLinearGradient(0,0,0,H);grd.addColorStop(0,'#121212');grd.addColorStop(1,'#241c16');g.fillStyle=grd;g.fillRect(0,0,W,H);
   g.strokeStyle='rgba(255,255,255,.12)';g.lineWidth=4;g.strokeRect(40,40,W-80,H-80);
-  g.fillStyle='#ff9a3d';g.font=`600 30px ${MONO}`;g.fillText(S.daily?`ЩОДЕННИЙ ВИКЛИК №${DAY_NO} · ${DAY.slice(8,10)}.${DAY.slice(5,7)}.${DAY.slice(0,4)}`:`${S.format==='classic'?'':(S.format==='oneclub'?(DATA.clubs.find(c=>c.c===S.club)||{}).n:FORMATS[S.format].name).toUpperCase()+' · '}${S.formation} · ${MODES[S.mode].name.toUpperCase()}`,80,120);
+  g.fillStyle='#ff9a3d';g.font=`600 30px ${MONO}`;g.fillText(S.daily?`ЩОДЕННИЙ ВИКЛИК · ${DAY.slice(8,10)}.${DAY.slice(5,7)}.${DAY.slice(0,4)}`:`${S.format==='classic'?'':(S.format==='oneclub'?(DATA.clubs.find(c=>c.c===S.club)||{}).n:FORMATS[S.format].name).toUpperCase()+' · '}${S.formation} · ${MODES[S.mode].name.toUpperCase()}`,80,120);
   g.fillStyle='#f4f1ea';g.font=`900 84px ${DISP}`;g.fillText('30-0 УПЛ',80,215);
-  const [tier,gold]=tierOf(r);g.fillStyle=gold?'#ff7a1a':'#f4f1ea';let fs=54;g.font=`700 ${fs}px ${DISP}`;while(g.measureText(tier).width>W-160&&fs>30){fs-=2;g.font=`700 ${fs}px ${DISP}`;}g.fillText(tier,80,295);
+  const [tier,gold]=tierOf(r);const T0=gold?345:265;   // рівень («Чемпіони», «30-0-0»…) лише для особливих сезонів; місце й так є в плитці
+  if(gold){g.fillStyle='#ff7a1a';let fs=54;g.font=`700 ${fs}px ${DISP}`;while(g.measureText(tier).width>W-160&&fs>30){fs-=2;g.font=`700 ${fs}px ${DISP}`;}g.fillText(tier,80,295);}
   // два ряди плиток: П / Н / П, потім очки / місце / голи — великі цифри й читабельні підписи
   const pl=(n,a,b,c)=>{const x=n%10,y=n%100;return x===1&&y!==11?a:x>=2&&x<=4&&(y<12||y>14)?b:c;};
   const tile=(x,y,w,h,val,lab,accent,valCol)=>{g.fillStyle='rgba(255,255,255,.05)';g.beginPath();g.roundRect?g.roundRect(x,y,w,h,18):g.rect(x,y,w,h);g.fill();
@@ -1168,20 +1169,21 @@ function drawCard(r){
     g.fillStyle=valCol||'#f4f1ea';let fs=76;g.font=`700 ${fs}px ${DISP}`;while(g.measureText(val).width>w-48&&fs>40){fs-=4;g.font=`700 ${fs}px ${DISP}`;}g.fillText(val,x+26,y+94);
     g.fillStyle='#b3aea4';g.font=`600 28px ${BODY}`;g.fillText(lab,x+26,y+136);};
   const tw=(W-160-2*24)/3,th=160;
-  [[String(r.W),pl(r.W,'перемога','перемоги','перемог'),'#30D158'],[String(r.D),pl(r.D,'нічия','нічиї','нічиїх'),'#FFD60A'],[String(r.L),pl(r.L,'поразка','поразки','поразок'),'#FF453A']].forEach(([v,l,a],k)=>tile(80+k*(tw+24),345,tw,th,v,l,a));
-  [[String(r.pts),ptsWord(r.pts),null,'#ff9a3d'],[String(r.place),'місце'],[`${r.gf}:${r.ga}`,'голи']].forEach(([v,l,a,c],k)=>tile(80+k*(tw+24),345+th+20,tw,th,v,l,a,c));
-  const col={W:'#30D158',D:'#FFD60A',L:'#FF453A'};const gap=12,sw=(W-160-9*gap)/10,sh=48,gy=345+2*th+50;r.log.forEach((m,i)=>{const cx=80+(i%10)*(sw+gap),cy=gy+Math.floor(i/10)*(sh+gap);g.fillStyle=col[m.res];g.beginPath();g.roundRect?g.roundRect(cx,cy,sw,sh,10):g.rect(cx,cy,sw,sh);g.fill();});
+  [[String(r.W),pl(r.W,'перемога','перемоги','перемог'),'#30D158'],[String(r.D),pl(r.D,'нічия','нічиї','нічиїх'),'#FFD60A'],[String(r.L),pl(r.L,'поразка','поразки','поразок'),'#FF453A']].forEach(([v,l,a],k)=>tile(80+k*(tw+24),T0,tw,th,v,l,a));
+  [[String(r.pts),ptsWord(r.pts),null,'#ff9a3d'],[String(r.place),'місце'],[`${r.gf}:${r.ga}`,'голи']].forEach(([v,l,a,c],k)=>tile(80+k*(tw+24),T0+th+20,tw,th,v,l,a,c));
+  const col={W:'#30D158',D:'#FFD60A',L:'#FF453A'};const gap=12,sw=(W-160-9*gap)/10,sh=48,gy=T0+2*th+50;r.log.forEach((m,i)=>{const cx=80+(i%10)*(sw+gap),cy=gy+Math.floor(i/10)*(sh+gap);g.fillStyle=col[m.res];g.beginPath();g.roundRect?g.roundRect(cx,cy,sw,sh,10):g.rect(cx,cy,sw,sh);g.fill();});
   const sy=gy+3*(sh+gap)+44;g.fillStyle='#b3aea4';g.font=`600 24px ${MONO}`;g.fillText((S.teamName||'Твоя 11-ка').toUpperCase(),80,sy);
-  const xi=S.slots.map(s=>s.player);const colsX=[80,560];xi.forEach((p,i)=>{const cx=colsX[i<6?0:1],cy=sy+46+(i<6?i:i-6)*46;
+  const LN={FW:0,MF:1,DF:2,GK:3};const xi=S.slots.map(s=>s.player).map((p,i)=>[p,i]).sort((a,b)=>(LN[a[0].pos]-LN[b[0].pos])||(a[1]-b[1])).map(x=>x[0]);const colsX=[80,560];xi.forEach((p,i)=>{const cx=colsX[i<6?0:1],cy=sy+46+(i<6?i:i-6)*46;
     const pc={GK:'#FFD60A',DF:'#0A84FF',MF:'#30D158',FW:'#FF453A'}[p.pos];g.fillStyle=pc;g.fillRect(cx,cy-26,8,32);
     g.fillStyle='#f4f1ea';g.font=`700 28px ${BODY}`;let nm=p.name;while(g.measureText(nm).width>340&&nm.length>4)nm=nm.slice(0,-2)+'…';g.fillText(nm,cx+22,cy);
     if(MODES[S.mode].showRatings||MODES[S.mode].reveal){g.fillStyle='#ff9a3d';g.font=`700 28px ${DISP}`;g.fillText(String(p.r),cx+380,cy);}});
-  g.fillStyle='#7c776f';g.font=`500 24px ${BODY}`;g.fillText(`Суперники — УПЛ ${seasonLabel(r.year)} · upl-30-0.vercel.app`,80,H-62);
+  g.fillStyle='#7c776f';g.font=`500 24px ${BODY}`;const luck=r.xp!=null?r.pts-r.xp:null;g.fillText((luck!=null&&MODES[S.mode].reveal!==false?`${luck>=0?'Везіння':'Невезіння'} ${luck>=0?'+':'−'}${Math.abs(luck).toFixed(1)} очк. · `:'')+'upl-30-0.vercel.app',80,H-62);
   return c.toDataURL('image/png');
 }
 document.getElementById('replayBtn').onclick=()=>playSeason(null);
 // ---------- «Що нового»: коротко й по-людськи про останню версію (технічний журнал — CHANGELOG.md у репозиторії)
 const WHATSNEW={v:'0.40',date:'29.09.2026',items:[
+  ['image','Картка сезону охайніша','Без номера виклику й без зайвого «3 місце» двічі. Склад іде лініями: нападники, півзахисники, захисники, воротар. Унизу — наскільки пощастило. У підписі до картки більше немає кольорових квадратиків — вони вже на картинці.'],
   ['home','Чистіший вигляд','Зверху завжди кнопки «Головна» й «Увійти». На головній — одна велика кнопка «Грати», решта режимів коротким списком. Пояснення сховані під стрілочку: відкриваєш, коли треба.'],
   ['eye','Темна тема для всіх','Тепер гра завжди темна, і в Telegram теж. Світлу можна ввімкнути внизу сторінки: «Світла тема».'],
   ['soccer','Гольові передачі 2021/22','Для сезону 2021/22 тепер є гольові передачі всіх 16 клубів (раніше — лише Динамо й Маріуполя). Дані — sports.ru, лише матчі УПЛ.']]};
@@ -1197,6 +1199,6 @@ themeLabel();
 document.getElementById('newsDot').hidden=lsGet('upl30_news_seen')===WHATSNEW.v;
 /*__FIVE__*/
 document.getElementById('f5Open').onclick=f5Start;
-window.__dbg={renderWheel,simulate,seasonForm,FORMATIONS,GROUP_OF,MODES,P,DATA,TROPHIES,trEval,PERSON,effRating,get S(){return S;},rerun(seed,year,xi){rnd=mulberry32(seed);const r=simulate(xi||S.slots.map(s=>s.player),MODES[S.mode],year);rnd=Math.random;return {W:r.W,D:r.D,L:r.L,gf:r.gf,ga:r.ga,place:r.place};}};
+window.__dbg={renderWheel,simulate,shareTextOf,seasonForm,FORMATIONS,GROUP_OF,MODES,P,DATA,TROPHIES,trEval,PERSON,effRating,get S(){return S;},rerun(seed,year,xi){rnd=mulberry32(seed);const r=simulate(xi||S.slots.map(s=>s.player),MODES[S.mode],year);rnd=Math.random;return {W:r.W,D:r.D,L:r.L,gf:r.gf,ga:r.ga,place:r.place};}};
 })();
 </script>
