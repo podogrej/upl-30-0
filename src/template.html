@@ -95,15 +95,18 @@ button.ghost{border-color:var(--line);background:transparent;color:var(--ink2);p
 .pos.DF,.pos.CB,.pos.RB,.pos.LB,.pos.RWB,.pos.LWB{background:var(--df)} .pos.MF,.pos.CDM,.pos.CM,.pos.CAM,.pos.RM,.pos.LM{background:var(--mf)} .pos.FW,.pos.RW,.pos.LW,.pos.ST{background:var(--fw)}
 /* wheel result */
 .wheel{border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);padding:14px;display:grid;gap:6px}
-.wheel .club{font-family:var(--font-display);font-size:17px;font-weight:700;line-height:1.15}
+.wheel .club{font-family:var(--font-display);font-size:18px;font-weight:700;line-height:1.15}
 .wheel .season{font-family:var(--font-mono);color:var(--ink2)}
-.reels{display:grid;grid-template-columns:1fr 96px;gap:8px;align-items:center}
-.reel{padding:0 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);height:48px;overflow:hidden;position:relative}
-.reel .strip{display:grid;will-change:transform}.reel .strip>div{height:48px;display:grid;align-content:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.reel .strip.go{transition:transform 1.1s cubic-bezier(.12,.8,.2,1)}#reelYear .strip.go{transition-duration:1.5s}
-.reel .season{font-size:16px;font-weight:700;color:var(--ink)}
+.reels{display:grid;grid-template-columns:1fr 104px;gap:8px;align-items:center}
+.reel{padding:0 12px;border:1px solid var(--line);border-radius:12px;background:var(--bg);height:64px;overflow:hidden;position:relative;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--amber) 0%,transparent);transition:box-shadow .3s}
+.reel.spinning{box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--amber) 45%,transparent)}
+.reel.landed .strip>div{animation:land .45s cubic-bezier(.2,1.4,.4,1)}@keyframes land{0%{transform:scale(.94);opacity:.6}100%{transform:none;opacity:1}}
+.reel .strip{display:grid;will-change:transform}.reel .strip>div{height:64px;display:grid;align-content:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.reel .strip.go>div{filter:blur(.6px)}.reel .strip.go>div:last-child{filter:none}
+.reel .strip.go{transition:transform 1.5s cubic-bezier(.16,.84,.22,1.02)}#reelYear .strip.go{transition-duration:1.9s}
+.reel .season{font-size:18px;font-weight:700;color:var(--ink)}
 .reel::before,.reel::after{content:'';position:absolute;left:0;right:0;height:12px;pointer-events:none;z-index:1}.reel::before{top:0;background:linear-gradient(var(--bg),transparent)}.reel::after{bottom:0;background:linear-gradient(transparent,var(--bg))}
-@media (prefers-reduced-motion:reduce){.reel .strip.go{transition:none}}
+@media (prefers-reduced-motion:reduce){.reel .strip.go{transition:none}.reel.landed .strip>div,.pl.in,section.enter,section.back{animation:none!important}}
 .slot.target{animation:glow 1.1s ease-in-out infinite}@keyframes glow{0%,100%{box-shadow:0 0 0 2px var(--amber2)}50%{box-shadow:0 0 0 5px color-mix(in srgb,var(--amber2) 35%,transparent)}}
 .pl.on{border-color:var(--amber2);box-shadow:0 0 0 2px var(--amber2)}
 .squad{display:grid;gap:4px;margin-top:10px}
@@ -230,6 +233,12 @@ button.ghost.big0{padding:11px 18px;font-size:15px;font-family:var(--font-body);
 .facts0{justify-content:center;margin-top:18px}.hero0 h1{font-size:clamp(24px,5.5vw,36px);line-height:1.1;letter-spacing:-.01em}
 .lead0{font-size:16px;color:var(--ink2);margin:0;max-width:60ch}.facts0{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--ink2)}.facts0 b{font-family:var(--font-display);color:var(--ink);font-size:16px}
 .mode0{margin-top:14px}
+.pl.in{animation:plin .32s ease-out both}@keyframes plin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.rr{display:inline-flex;align-items:center;gap:8px}.rr>.mono{font-size:13px;color:var(--amber);font-weight:700}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}.seg button{border:0;border-radius:0;background:transparent;color:var(--ink2);padding:7px 11px;font-size:13px;font-weight:600}.seg button+button{border-left:1px solid var(--line)}.seg button:hover{color:var(--ink);background:var(--bg2)}
+#squad.rin .pl .rt{animation:rtin .35s ease-out both}@keyframes rtin{from{opacity:0;transform:scale(.7)}to{opacity:1;transform:none}}
+section.enter{animation:secin .26s cubic-bezier(.2,.8,.2,1) both}section.back{animation:secback .26s cubic-bezier(.2,.8,.2,1) both}
+@keyframes secin{from{opacity:0;transform:translateX(28px)}to{opacity:1;transform:none}}@keyframes secback{from{opacity:0;transform:translateX(-28px)}to{opacity:1;transform:none}}
 :root[data-skin="upl"] .logo0 span,:root[data-skin="upl"] .tier{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
 :root[data-skin="upl"] button.primary{background:var(--grad);color:#fff;border-color:transparent}:root[data-skin="upl"] button.primary .ic{background:rgba(255,255,255,.18);color:#fff}
 :root[data-skin="upl"] .badge0{border-color:color-mix(in srgb,var(--amber) 55%,transparent)}:root[data-skin="upl"] #dailyCard{border-image:var(--grad) 1;border-width:1px;border-style:solid}
@@ -386,7 +395,7 @@ td .sub{font-size:11px;color:var(--muted);margin-top:2px;display:flex;gap:6px;al
       <div class="wheel" id="wheel" hidden>
         <div class="reels"><div class="reel" id="reelClub"><div class="strip"><div class="club" id="wClub"></div></div></div><div class="reel" id="reelYear"><div class="strip"><div class="season" id="wSeason"></div></div></div></div>
         <div class="row" style="justify-content:space-between"><span class="muted" id="wHint"></span>
-          <span class="row" id="rerollRow" style="gap:6px"><span class="muted mono" id="rerollCnt"></span><button class="ghost" id="rerollClub">Інший клуб</button><button class="ghost" id="rerollYear">Інший сезон</button><button class="ghost" id="rerollBtn">Обидва</button></span></div>
+          <span class="rr" id="rerollRow"><span class="mono" id="rerollCnt"></span><span class="seg"><button id="rerollClub" title="Інший клуб, той самий сезон">Клуб</button><button id="rerollYear" title="Той самий клуб, інший сезон">Сезон</button><button id="rerollBtn" title="Інший клуб і сезон">Усе</button></span></span></div>
         <label class="rtog" id="showRRow" hidden><input type="checkbox" id="showR"> Показати рейтинги гравців</label><div class="sqHead" id="sqHead" hidden></div><div class="squad" id="squad"></div>
       </div>
       <div class="pre" id="lockBox" hidden><p style="margin:0">Склад зібрано — рахуємо рейтинги й прогноз.</p><button class="primary" id="lockBtn"><!--i:lock-open-variant-->Відкрити рейтинги й прогноз</button></div>
@@ -476,7 +485,7 @@ td .sub{font-size:11px;color:var(--muted);margin-top:2px;display:flex;gap:6px;al
     </div>
 </div>
 <div class="overlay" id="viewBox" hidden><div class="box"><div class="vhead"><h3 id="viewTitle">Склад</h3><button class="ghost" id="viewClose">Закрити</button></div><div id="viewBody"></div></div></div>
-<div class="foot">30-0 УПЛ · <a href="#" id="newsBtn">Що нового у версії 0.46<b id="newsDot" hidden></b></a> · <a href="#" id="themeBtn" class="thm" aria-label="Світла тема"></a> · неофіційний фан-проєкт</div>
+<div class="foot">30-0 УПЛ · <a href="#" id="newsBtn">Що нового у версії 0.47<b id="newsDot" hidden></b></a> · <a href="#" id="themeBtn" class="thm" aria-label="Світла тема"></a> · неофіційний фан-проєкт</div>
 <script id="pool" type="application/json">__POOL__</script>
 <script>
 (function(){
@@ -621,7 +630,8 @@ for(const m in MODES){if(m==='daily'||m==='practice'||m==='hardcore')continue;co
 function shortName(n){const t=n.split(' ');return t.length<2?n:t[0][0]+'. '+t.slice(1).join(' ');}
 function showBest(){const el=document.getElementById('bestLine');const key=S.format==='oneclub'?'oneclub:'+S.club:S.format;const best=BEST[key];el.textContent='';if(best)el.textContent=`Найкращий результат: ${best.W}-${best.D}-${best.L}, ${best.pts} ${ptsWord(best.pts)}, ${best.place} місце (${best.formation}, ${MODES[best.mode].name})`;}
 showBest();
-function go(n){[1,2,3,4,5].forEach(i=>{document.getElementById('s'+i).hidden=(i!==n);const st=document.getElementById('st'+i);if(st)st.classList.toggle('on',i===n);});document.getElementById('statsCard').hidden=n!==1||!STATS_ON;window.scrollTo({top:0});}
+let CUR_SEC=1;
+function go(n){const back=n===1&&CUR_SEC!==1;[1,2,3,4,5].forEach(i=>{const el=document.getElementById('s'+i);const was=el.hidden;el.hidden=(i!==n);if(i===n&&(was||CUR_SEC!==n)){el.classList.remove('enter','back');void el.offsetWidth;el.classList.add(back?'back':'enter');}const st=document.getElementById('st'+i);if(st)st.classList.toggle('on',i===n);});document.getElementById('statsCard').hidden=n!==1||!STATS_ON;CUR_SEC=n;window.scrollTo({top:0});}
 document.getElementById('dailyBtn').onclick=()=>{S.daily={practice:!!lsGet("upl30_daily_"+DAY)};S.chal=null;S.challenge=null;S.format='classic';[...fmEl.children].forEach((c,i)=>c.classList.toggle('on',i===0));document.getElementById('clubPickRow').hidden=true;DAILY.ptr=0;S.formation=DAILY.formation;S.mode="daily";S.result=null;
   S.slots=newSlots(S.formation);S.taken=new Set();S.wheel=null;S.rerolls=MODES.daily.rerolls;S.showR=false;S.moveMode=false;document.getElementById('modeLabel').textContent=`Виклик дня · ${S.formation}`;renderDraft();go(2);};
 renderDailyCard();
@@ -629,7 +639,7 @@ document.getElementById('startBtn').onclick=()=>{S.daily=null;S.result=null;S.ch
 document.getElementById('restartBtn').onclick=()=>go(S.daily||S.challenge?1:4);
 document.getElementById('homeBtn').onclick=()=>go(1);
 document.getElementById('freeOpen').onclick=()=>{myNameShow();go(4);};document.getElementById('moveBtn').onclick=()=>{S.moveMode=!S.moveMode;S.move=null;const h=document.getElementById('moveHint');h.hidden=!S.moveMode;h.textContent='Тапни гравця, потім місце, куди його поставити. Підсвічуються лише позиції, де він реально грав.';renderDraft();};
-document.getElementById('showR').onchange=e=>{S.showR=e.target.checked;if(S.wheel)renderWheel();renderDraft();};document.getElementById('howGo').onclick=()=>document.getElementById('howH').scrollIntoView({behavior:'smooth',block:'start'});document.getElementById('freeBack').onclick=()=>go(1);
+document.getElementById('showR').onchange=e=>{S.showR=e.target.checked;if(S.wheel)renderWheel();renderDraft();document.getElementById('squad').classList.toggle('rin',S.showR);};document.getElementById('howGo').onclick=()=>document.getElementById('howH').scrollIntoView({behavior:'smooth',block:'start'});document.getElementById('freeBack').onclick=()=>go(1);
 {const tn=document.getElementById('teamName');tn.value=lsGet('upl30_team')||'';tn.oninput=()=>{lsSet('upl30_team',tn.value.trim().slice(0,22));};}
 function myNameShow(){const on=ONLINE&&!!PLAYER;document.getElementById('myNameH').hidden=!on;document.getElementById('myNameRow').hidden=!on;if(!on)return;const f=document.getElementById('myName');if(document.activeElement!==f)f.value=PLAYER.name||'';f.placeholder=PLAYER.anon_name||"Твоє ім'я";}
 document.getElementById('myName').onchange=e=>{const v=e.target.value.trim();if(!v){if(PLAYER&&PLAYER.name)playerRename('');}else nickSet(v);};
@@ -724,10 +734,11 @@ function spin(mode){
     if(!n){strip.className='strip';strip.style.transform='';strip.innerHTML=`<div class="${cls}">${esc(final)}</div>`;res();return;}
     const seq=[];for(let i=0;i<n;i++)seq.push(items[Math.floor(Math.random()*items.length)]);seq.push(final);
     strip.className='strip';strip.style.transform='translateY(0)';strip.innerHTML=seq.map(v=>`<div class="${cls}">${esc(v)}</div>`).join('');
-    requestAnimationFrame(()=>requestAnimationFrame(()=>{strip.classList.add('go');strip.style.transform=`translateY(-${n*48}px)`;}));
-    let done=false;const fin=()=>{if(done)return;done=true;strip.className='strip';strip.style.transform='';strip.innerHTML=`<div class="${cls}">${esc(final)}</div>`;res();};
-    strip.addEventListener('transitionend',fin,{once:true});setTimeout(fin,1900);});
-  Promise.all([roll('reelClub','club',names,cs.n,spinClub?22:0),roll('reelYear','season',years.map(seasonLabel),seasonLabel(cs.y),spinYear?30:0)]).then(()=>{if(S.wheel===cs)renderWheel();});
+    reel.classList.remove('landed');reel.classList.add('spinning');
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{strip.classList.add('go');strip.style.transform=`translateY(-${n*64}px)`;}));
+    let done=false;const fin=()=>{if(done)return;done=true;strip.className='strip';strip.style.transform='';strip.innerHTML=`<div class="${cls}">${esc(final)}</div>`;reel.classList.remove('spinning');reel.classList.add('landed');res();};
+    strip.addEventListener('transitionend',fin,{once:true});setTimeout(fin,2300);});
+  Promise.all([roll('reelClub','club',names,cs.n,spinClub?22:0),roll('reelYear','season',years.map(seasonLabel),seasonLabel(cs.y),spinYear?30:0)]).then(()=>{if(S.wheel===cs){S.wheelFresh=true;renderWheel();}});
 }
 function alertNoCands(){document.getElementById('wheel').hidden=false;document.querySelector('#reelClub .strip').innerHTML='<div class="club">Гравців більше немає</div>';document.querySelector('#reelYear .strip').innerHTML='<div class="season"></div>';document.getElementById('squad').innerHTML='<p class="muted">У цьому клубі закінчились гравці на вільні позиції. Спробуй іншу схему.</p>';}
 function renderWheel(){
@@ -737,7 +748,7 @@ function renderWheel(){
   document.querySelector('#reelClub .strip').innerHTML=`<div class="club">${esc(cs.n)}</div>`;
   document.querySelector('#reelYear .strip').innerHTML=`<div class="season">${seasonLabel(cs.y)}</div>`;
   document.getElementById('wHint').textContent=`${cs.pos} місце в тому сезоні`+(S.format==='anti'?` · лише гравці з ${ANTI_MIN_APPS}+ матчами`:'');
-  const rr=document.getElementById('rerollRow');rr.style.visibility='visible';rr.hidden=S.rerolls<=0;document.getElementById('rerollCnt').textContent=`Перекрутити (${S.rerolls}):`;
+  const rr=document.getElementById('rerollRow');rr.style.visibility='visible';rr.hidden=S.rerolls<=0;document.getElementById('rerollCnt').textContent=`↻ ${S.rerolls}`;
   const sq=document.getElementById('squad');sq.innerHTML='';
   const hasAst=cs.pl.every(p=>p[8]!=null);sq.classList.toggle('noast',!hasAst);const hd=document.getElementById('sqHead');hd.classList.toggle('noast',!hasAst);hd.hidden=S.format==='anti';hd.innerHTML=`<span></span><span></span><span>Матчі</span><span>Голи</span>${hasAst?'<span>Гольові передачі</span>':''}<span>Сухі матчі</span><span class="h">${show?'Рейт.':''}</span>`;
   const anti=S.format==='anti';const list=[...cs.pl].map(p=>({p,ok:isOk(cs,p)})).sort((a,b)=>(b.ok-a.ok)||(anti?a.p[0].localeCompare(b.p[0],'uk'):sortR?b.p[2]-a.p[2]:(b.p[3]-a.p[3]||b.p[4]-a.p[4])));
@@ -747,7 +758,9 @@ function renderWheel(){
     const st=v=>v==null?'<span class="st d">–</span>':`<span class="st">${v}</span>`;
     b.className='pl'+(S.pending===p?' on':'');
     b.innerHTML=`<span class="pos ${GROUP_OF[p[6]]||p[1]}" title="${POSFULL[p[6]]}">${POSNAME[p[6]]}</span><span class="nm" title="${POSFULL[p[6]]}">${esc(p[0])}${nickOf(p[5])}${altTags(p)}</span>`+(anti?'<span></span><span></span><span></span>'+(hasAst?'<span></span>':''):st(p[3])+st(p[4])+(hasAst?st(p[8]):'')+(!CS_POS.has(p[6])?'<span class="st"></span>':p[9]==null?st(null):`<span class="st"${cs.cs_est?' title="Оцінка за командною статистикою"':''}>${''}${p[9]}</span>`))   /* асисти (p[8]) — лише де є повні дані (2012/13+); сухі — лише оборонним позиціям */+`<span class="rt">${show?p[2]:''}</span>`;
+    if(S.wheelFresh){b.classList.add('in');b.style.animationDelay=Math.min(sq.children.length,14)*28+'ms';}
     b.onclick=()=>choose(p);sq.appendChild(b);}
+  S.wheelFresh=false;
 }
 // альтернативні позиції гравця: реальні (з даних) і сусідні з невеликим штрафом, до трьох
 const ALT_SLOTS=['GK','CB','RB','LB','RWB','LWB','CDM','CM','CAM','RM','LM','RW','LW','ST'];
@@ -1230,10 +1243,10 @@ function drawCard(r){
 }
 document.getElementById('replayBtn').onclick=()=>playSeason(null);
 // ---------- «Що нового»: коротко й по-людськи про останню версію (технічний журнал — CHANGELOG.md у репозиторії)
-const WHATSNEW={v:'0.46',date:'29.09.2026',items:[
-  ['chart-bar','Чесніші рейтинги','Якщо зірка зіграла за сезон лише кілька матчів, її рейтинг тепер підтягується до рівня сусідніх повних сезонів. Алієв у «Динамо» 09/10 — 85, а не 59.'],
-  ['swap-horizontal','Переставити гравців','Кнопка під полем вмикає перестановку: тапни гравця, потім місце. Гравець стає лише туди, де він реально грав.'],
-  ['format-list-numbered','Таблиця й режими','Твоя команда в таблиці — у рамці, зони єврокубків — своїми кольорами. «Хардкор» прибрано: лишились «Звичайний» і «Складний».']]};
+const WHATSNEW={v:'0.47',date:'29.09.2026',items:[
+  ['ferris-wheel','Колесо живіше','Більші барабани, плавне гальмування, гравці з\'являються по черзі. Перекрутка — один перемикач: клуб, сезон або все.'],
+  ['swap-horizontal','Плавні переходи','Екрани виїжджають збоку, рейтинги з\'являються м\'яко.'],
+  ['bread-slice','Два нові секрети','Від Віті. Хтось скаже «паляниця», а хтось — по батькові.']]};
 function openNews(){const box=document.getElementById('viewBox');document.getElementById('viewTitle').textContent=`Що нового · версія ${WHATSNEW.v}`;
   document.getElementById('viewBody').innerHTML=`<div class="news">${WHATSNEW.items.map(([e,h,d])=>`<div class="ni">${ic(e,'lg')}<div><b>${esc(h)}</b><p>${esc(d)}</p></div></div>`).join('')}</div>`;
   box.hidden=false;lsSet('upl30_news_seen',WHATSNEW.v);document.getElementById('newsDot').hidden=true;}

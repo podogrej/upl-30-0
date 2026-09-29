@@ -93,6 +93,8 @@ const TROPHIES=[
   {id:"brains",i:"🧠",n:"Трагедія з мізками",d:"xP 55+, але виліт (Кварцяний)",cat:"secret",sec:1,t:c=>notAnti(c)&&c.r.xp>=55&&c.r.place>=15},
   {id:"talk",i:"🎤",n:"Вийдемо, поговоримо",d:"Чемпіон, але двічі програв одній команді (Блохін)",cat:"secret",sec:1,t:c=>{if(!notAnti(c)||c.r.place!==1)return false;const m={};for(const x of LOG(c))if(x.res==='L')m[x.opp]=(m[x.opp]||0)+1;return Object.values(m).some(v=>v>=2);}},
   {id:"pyvo",i:"🍺",n:"По пиву?",d:"Алієв і Мілевський в одному складі",cat:"secret",sec:1,t:c=>c.xi.some(x=>x.id==='tm:9796')&&c.xi.some(x=>x.id==='tm:9800')},
+  {id:"palianytsia",i:"🍞",n:"Скажи «паляниця»",d:"Олександр Паляниця у складі",cat:"secret",sec:1,t:c=>c.xi.some(x=>x.id==='w:1972-02-29:palianitsia')},
+  {id:"oleksandry",i:"👥",n:"Володимир Олександрович",d:"5+ Олександрів в одному складі",cat:"secret",sec:1,t:c=>c.xi.filter(x=>firstName(x.name)==='Олександр').length>=5},
   {id:"tablo",i:"🔢",n:"Результат на табло",d:"Чемпіон, забивши 45 або менше (Лобановський)",cat:"secret",sec:1,t:c=>notAnti(c)&&c.r.place===1&&c.r.gf<=45},
 ];
 const MILESTONES=[[1,"🌱","Перший сезон"],[5,"⚽","5 сезонів"],[10,"🎫","10 сезонів"],[25,"🎗️","25 сезонів"],[50,"🥇","Півсотні"],[100,"💯","Клуб 100"],[250,"🏛️","250 сезонів"]];
