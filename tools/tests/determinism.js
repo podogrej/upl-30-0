@@ -2,7 +2,7 @@
 const path=require('path');const {ROOT,openPage,playSeason}=require('./_page.js');
 const E=require(path.join(ROOT,'lib','engine.js'));
 (async()=>{const {b,pg,errs}=await openPage();
- const runs=[['classic',1,1],['classic',2,2],['classic',3,3],['derby',1,1],['oneclub',1,1],['anti',3,1],['daily',0,0],['classic',1,6]];
+ const runs=[['classic',1,1],['classic',2,2],['classic',2,3],['derby',1,1],['oneclub',1,1],['anti',3,1],['daily',0,0],['classic',1,6]];
  let ok=0;
  for(const [fmt,mode,form] of runs){
   await playSeason(pg,fmt,mode,form);
