@@ -91,19 +91,19 @@ const TROPHIES=[
   {id:"panenka",i:"🪶",n:"Паненка",d:"Артем Мілевський у складі, команда в трійці",cat:"secret",sec:1,t:c=>notAnti(c)&&c.r.place<=3&&c.xi.some(x=>x.id==='tm:9800')},
   {id:"samba8",i:"💃",n:"Самба",d:"8+ бразильців в одному складі",cat:"secret",sec:1,t:c=>c.xi.filter(x=>DATA.nats[x.nat]==='Бразилія').length>=8},
   // Кварцяний, Блохін, Лобановський
-  {id:"ndoye",i:"🧤",n:"Шедевр! Феномен!",d:"Ісса Ндоє у складі — «кращий у світі» (Кварцяний)",cat:"secret",sec:1,t:c=>c.xi.some(x=>x.id==='w:1985-12-12:ndoe')},
-  {id:"pichkur",i:"🚭",n:"Не п'є, не курить",d:"Євген Пічкур у складі — «дуже важка людина» (Кварцяний)",cat:"secret",sec:1,t:c=>c.xi.some(x=>x.id==='tm:89427')},
-  {id:"poodles",i:"🐩",n:"Є пуделі, а є вівчарки",d:"Програй «Шахтарю» 1:4 (Кварцяний)",cat:"secret",sec:1,t:c=>notAnti(c)&&LOG(c).some(m=>/^Шахтар/.test(m.opp)&&m.ug===1&&m.og===4)},
-  {id:"sheep",i:"🐑",n:"Стадо баранів",d:"5 поразок поспіль (Кварцяний)",cat:"secret",sec:1,t:c=>{if(!notAnti(c))return false;let k=0;for(const m of LOG(c)){k=m.res==='L'?k+1:0;if(k>=5)return true;}return false;}},
-  {id:"brains",i:"🧠",n:"Трагедія з мізками",d:"xP 55+, але виліт (Кварцяний)",cat:"secret",sec:1,t:c=>notAnti(c)&&c.r.xp>=55&&c.r.place>=15},
-  {id:"talk",i:"🎤",n:"Вийдемо, поговоримо",d:"Чемпіон, але двічі програв одній команді (Блохін)",cat:"secret",sec:1,t:c=>{if(!notAnti(c)||c.r.place!==1)return false;const m={};for(const x of LOG(c))if(x.res==='L')m[x.opp]=(m[x.opp]||0)+1;return Object.values(m).some(v=>v>=2);}},
+  {id:"ndoye",i:"🧤",n:"Шедевр! Феномен!",q:"Кварцяний",d:"Ісса Ндоє у складі",cat:"secret",sec:1,t:c=>c.xi.some(x=>x.id==='w:1985-12-12:ndoe')},
+  {id:"pichkur",i:"🚭",n:"Не п'є, не курить",q:"Кварцяний",d:"Євген Пічкур у складі",cat:"secret",sec:1,t:c=>c.xi.some(x=>x.id==='tm:89427')},
+  {id:"poodles",i:"🐩",n:"Є пуделі, а є вівчарки",q:"Кварцяний",d:"Програй «Шахтарю» 1:4",cat:"secret",sec:1,t:c=>notAnti(c)&&LOG(c).some(m=>/^Шахтар/.test(m.opp)&&m.ug===1&&m.og===4)},
+  {id:"sheep",i:"🐑",n:"Стадо баранів",q:"Кварцяний",d:"5 поразок поспіль",cat:"secret",sec:1,t:c=>{if(!notAnti(c))return false;let k=0;for(const m of LOG(c)){k=m.res==='L'?k+1:0;if(k>=5)return true;}return false;}},
+  {id:"brains",i:"🧠",n:"Трагедія з мізками",q:"Кварцяний",d:"xP 55+, але виліт",cat:"secret",sec:1,t:c=>notAnti(c)&&c.r.xp>=55&&c.r.place>=15},
+  {id:"talk",i:"🎤",n:"Вийдемо, поговоримо",q:"Блохін",d:"Чемпіон, але двічі програв одній команді",cat:"secret",sec:1,t:c=>{if(!notAnti(c)||c.r.place!==1)return false;const m={};for(const x of LOG(c))if(x.res==='L')m[x.opp]=(m[x.opp]||0)+1;return Object.values(m).some(v=>v>=2);}},
   {id:"pyvo",i:"🍺",n:"По пиву?",d:"Алієв і Мілевський в одному складі",cat:"secret",sec:1,t:c=>c.xi.some(x=>x.id==='tm:9796')&&c.xi.some(x=>x.id==='tm:9800')},
   {id:"palianytsia",i:"🍞",n:"Скажи «паляниця»",d:"Олександр Паляниця у складі",cat:"secret",sec:1,t:c=>c.xi.some(x=>x.id==='w:1972-02-29:palianitsia')},
-  {id:"oleksandry",i:"👥",n:"Володимир Олександрович",d:"5+ Олександрів в одному складі",cat:"secret",sec:1,t:c=>c.xi.filter(x=>firstName(x.name)==='Олександр').length>=5},
+  {id:"oleksandry",i:"👥",n:"Олександрія",d:"9+ Олександрів в одному складі",cat:"secret",sec:1,t:c=>c.xi.filter(x=>firstName(x.name)==='Олександр').length>=9},
   {id:"zarobitchany",i:"🧳",n:"Заробітчани",d:"5+ українців, які грали в клубах Європи",cat:"secret",sec:1,t:c=>c.xi.filter(x=>ABROAD.has(x.id)).length>=5},
   {id:"trio",i:"🍻",n:"Третім будеш?",d:"Алієв, Мілевський і Бухал в одному складі",cat:"secret",sec:1,t:c=>['tm:9796','tm:9800','tm:381268'].every(id=>c.xi.some(x=>x.id===id))},
   {id:"rada",i:"🏛️",n:"Верховна Рада",d:"6+ гравців із прізвищами народних депутатів",cat:"secret",sec:1,t:c=>c.xi.filter(x=>RADA.has(normSur(x.name))).length>=6},
-  {id:"tablo",i:"🔢",n:"Результат на табло",d:"Чемпіон, забивши 45 або менше (Лобановський)",cat:"secret",sec:1,t:c=>notAnti(c)&&c.r.place===1&&c.r.gf<=45},
+  {id:"tablo",i:"🔢",n:"Результат на табло",q:"Лобановський",d:"Чемпіон, забивши 45 або менше",cat:"secret",sec:1,t:c=>notAnti(c)&&c.r.place===1&&c.r.gf<=45},
 ];
 const MILESTONES=[[1,"🌱","Перший сезон"],[5,"⚽","5 сезонів"],[10,"🎫","10 сезонів"],[25,"🎗️","25 сезонів"],[50,"🥇","Півсотні"],[100,"💯","Клуб 100"],[250,"🏛️","250 сезонів"]];
 function trStore(){const s=lsGet("upl30_tr")||{};s.t=s.t||{};s.seasons=s.seasons||0;s.dailies=s.dailies||0;return s;}
@@ -157,7 +157,7 @@ function renderTrBtn(){const s=trStore();const n=Object.values(s.t).filter(e=>e.
 function trCard(t,e,pct,prog){
   const got=e&&e.n;const p=pct!=null?`<span class="trp">${pct===0?'ще ніхто не відкрив':`є в ${pct<1?'<1':Math.round(pct)}% гравців`}</span>`:'';
   const pr=!got&&prog?`<span class="trp">${Math.min(prog[0],prog[1])}/${prog[1]}</span>`:'';
-  return `<div class="tro${got?' on':''}${t.sec?' sec':''}"><span class="tri">${trBadge(t,got)}</span><div class="trt"><b>${esc(t.n)}</b><span>${esc(t.d)}</span>${p}${pr}</div>${got&&e.n>1?`<span class="trn">×${e.n}</span>`:''}</div>`;
+  return `<div class="tro${got?' on':''}${t.sec?' sec':''}"><span class="tri">${trBadge(t,got)}</span><div class="trt"><b>${esc(t.n)}</b>${trQ(t)}<span>${esc(t.d)}</span>${p}${pr}</div>${got&&e.n>1?`<span class="trn">×${e.n}</span>`:''}</div>`;
 }
 async function openTrophies(){
   const box=document.getElementById('viewBox'),body=document.getElementById('viewBody');document.getElementById('viewTitle').textContent='Трофеї';box.hidden=false;
@@ -175,10 +175,11 @@ async function openTrophies(){
     body.innerHTML=h;};
   draw();if(ONLINE&&!TR_PCT){await trLoadPct();if(!box.hidden)draw();}
 }
+const trQ=t=>t.q?`<span class="trq">${icon('format-quote-open')}${esc(t.q)}</span>`:'';   // трофей за цитату: «❝ Кварцяний» під назвою
 function renderNewTro(r){
   const el=document.getElementById('newTro');if(!el)return;const a=r.tro;
   if(!a||!a.got.length){el.hidden=true;return;}
   const s=trStore();const fresh=new Set(a.fresh);
   const items=[...new Set(a.got)].map(trDef).filter(Boolean).sort((x,y)=>(fresh.has(y.id)?1:0)-(fresh.has(x.id)?1:0));
-  el.hidden=false;el.innerHTML=`<div class="kicker" style="margin-bottom:6px">${a.fresh.length?'Нові трофеї':'Трофеї сезону'}</div><div class="trg">`+items.map((t,k)=>`<div class="tro on pop${fresh.has(t.id)?' new':''}" style="animation-delay:${k*120}ms"><span class="tri">${trBadge(t,true)}</span><div class="trt"><b>${esc(t.n)}${t.sec&&fresh.has(t.id)?' <em class="trsx">секретний!</em>':''}</b><span>${esc(t.d)}</span></div>${(s.t[t.id]||{}).n>1?`<span class="trn">×${s.t[t.id].n}</span>`:''}</div>`).join('')+`</div>`;
+  el.hidden=false;el.innerHTML=`<div class="kicker" style="margin-bottom:6px">${a.fresh.length?'Нові трофеї':'Трофеї сезону'}</div><div class="trg">`+items.map((t,k)=>`<div class="tro on pop${fresh.has(t.id)?' new':''}" style="animation-delay:${k*120}ms"><span class="tri">${trBadge(t,true)}</span><div class="trt"><b>${esc(t.n)}</b>${trQ(t)}<span>${esc(t.d)}</span>${t.sec&&fresh.has(t.id)?'<em class="trsx">секретний!</em>':''}</div>${(s.t[t.id]||{}).n>1?`<span class="trn" title="Отримано ${s.t[t.id].n} рази за весь час">×${s.t[t.id].n}</span>`:''}</div>`).join('')+`</div>`;
 }

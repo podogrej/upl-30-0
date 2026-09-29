@@ -7,7 +7,7 @@ ROOT=sys.argv[1] if len(sys.argv)>1 else '/usr/local/lib/python3.11/dist-package
 SRC=os.path.join(os.path.dirname(os.path.abspath(__file__)),'..')
 UI=['trophy','fire','snowflake','sword-cross','calendar-star','ferris-wheel','soccer-field','format-list-numbered','share-variant','send',
     'account-circle','bullhorn','lock-open-variant','chart-bar','incognito','eye','check-circle','check-decagram','handshake','content-copy','image',
-    'star','lock','google','star-four-points','account-group','new-box','chart-box','medal','crown','home','chevron-right','weather-night','white-balance-sunny','view-column']
+    'star','lock','google','star-four-points','account-group','new-box','chart-box','medal','crown','home','chevron-right','weather-night','white-balance-sunny','view-column','format-quote-open']
 TR={ # трофей → гліф
  'champ':'trophy','top3':'star','unbeaten':'shield-star','perfect':'diamond-stone','mid8':'scale-balance','relegated':'trending-down',
  'goals80':'soccer','fortress':'wall','iron':'door-closed-lock','nodraw':'sword-cross','sieve':'dots-grid','lucky':'clover','unlucky':'weather-pouring',

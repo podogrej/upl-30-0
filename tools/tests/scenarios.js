@@ -44,7 +44,14 @@ const fail=[];const check=(ok,msg)=>{if(!ok)fail.push(msg);};
  await pg.click('#moveBtn');await pg.evaluate(()=>document.getElementById('homeBtn').click());
  // пасхалка й трофей Nice
  check(await pg.evaluate(()=>{const D=window.__dbg;const cs=D.DATA.clubs.find(c=>c.pl.some(p=>p[5]==='w:1979-03-30:timoschuk'));D.S.wheel=cs;D.renderWheel();const ok=/Анатолій Тимощук \(пітух\)/.test(document.getElementById('squad').textContent);D.S.wheel=null;return ok;}),'пасхалка: у Тимощука немає «(пітух)»');
- check(await pg.evaluate(()=>{const e=window.__dbg.trEval;const X=n=>({id:'x'+n,name:'Олександр Тест'+n});const c={r:{W:1,D:1,L:28,pts:4,place:16,gf:5,ga:60,xp:10,log:[]},xi:[X(1),X(2),X(3),X(4),X(5),{id:'w:1972-02-29:palianitsia',name:'Олександр Паляниця'}],pl:[],mode:'normal',format:'classic',reveal:true};const g=e(c);return g.includes('oleksandry')&&g.includes('palianytsia');}),'трофеї Віті не видаються');
+ check(await pg.evaluate(()=>{const e=window.__dbg.trEval;const X=n=>({id:'x'+n,name:'Олександр Тест'+n});const c={r:{W:1,D:1,L:28,pts:4,place:16,gf:5,ga:60,xp:10,log:[]},xi:[X(1),X(2),X(3),X(4),X(5),X(6),X(7),X(8),{id:'w:1972-02-29:palianitsia',name:'Олександр Паляниця'}],pl:[],mode:'normal',format:'classic',reveal:true};const g=e(c);const c5={...c,xi:c.xi.slice(4)};return g.includes('oleksandry')&&g.includes('palianytsia')&&!e(c5).includes('oleksandry');}),'трофеї Віті не видаються');
+ check(await pg.evaluate(()=>{const e=window.__dbg.trEval;const base={r:{W:10,D:10,L:10,pts:40,place:8,gf:40,ga:40,xp:40,log:[]},pl:[],mode:'normal',format:'classic',reveal:true};
+   const P=window.__dbg.PERSON;const nm=id=>{for(const c of window.__dbg.DATA.clubs)for(const p of c.pl)if(p[5]===id)return p[0];return id;};
+   const trio=e({...base,xi:['tm:9796','tm:9800','tm:381268'].map(id=>({id,name:nm(id)}))});
+   const zar=e({...base,xi:['tm:69015','w:1974-06-03:rebrov','tm:264372','tm:25732','w:1968-08-05:lujni'].map(id=>({id,name:nm(id)}))});
+   const rada=e({...base,xi:['Абрамов', 'Аваков', 'Авраменко', 'Акопян', 'Аксьонов', 'Алексєєв'].map((s,i)=>({id:'r'+i,name:'Іван '+s}))});
+   const rada5=e({...base,xi:['Абрамов', 'Аваков', 'Авраменко', 'Акопян', 'Аксьонов'].map((s,i)=>({id:'r'+i,name:'Іван '+s}))});
+   return trio.includes('trio')&&zar.includes('zarobitchany')&&rada.includes('rada')&&!rada5.includes('rada');}),'трофеї 0.49 (трійця, заробітчани, Рада) не видаються');
  check(await pg.evaluate(()=>{const e=window.__dbg.trEval;const c={r:{W:1,D:1,L:28,pts:4,place:16,gf:5,ga:60,xp:10,log:[]},xi:[{id:'tm:9796'},{id:'tm:9800'}],pl:[],mode:'normal',format:'classic',reveal:true};return e(c).includes('pyvo');}),'трофей «По пиву?» не видається');
  check(await pg.evaluate(()=>{const D=window.__dbg;const before=(D.trStore().t.nodraw||{}).n||0;const c={r:{W:20,D:0,L:10,pts:60,place:3,gf:50,ga:30,xp:55,log:[]},xi:[],pl:[],mode:'normal',format:'classic',reveal:true};
    D.trAward(c);D.trAward(c);return ((D.trStore().t.nodraw||{}).n||0)===before+2;}),'трофеї: не повторюються (×N)');
