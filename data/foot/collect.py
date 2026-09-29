@@ -73,10 +73,10 @@ def wd_tm_ids(dates):
     return out
 
 MON = {m: i for i, m in enumerate(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'], 1)}
-def tm_profile(tid):
-    if tid in TMP:
+def tm_profile(tid, tries=3):
+    if tid in TMP and not ('err' in TMP[tid] and tries == 3):
         return TMP[tid]
-    time.sleep(3)
+    time.sleep(6)
     r = subprocess.run(['curl', '-sL', '-m', '40', '-A', UA, f'https://www.transfermarkt.com/-/profil/spieler/{tid}'], capture_output=True, text=True)
     h = r.stdout
     txt = re.sub(r'\s+', ' ', re.sub('<[^>]+>', ' ', h))
@@ -90,7 +90,9 @@ def tm_profile(tid):
         d = re.search(r'Date of birth/Age: ([A-Z][a-z]{2}) (\d{1,2}), (\d{4})', txt)
         e['dob'] = f'{d.group(3)}-{MON[d.group(1)]:02d}-{int(d.group(2)):02d}' if d else ''
     if not e['name'] or 'Transfermarkt' not in h:
-        time.sleep(30)   # заглушка від частих запитів — пауза, запис не кешується між запусками
+        if tries > 1:
+            time.sleep(90)   # заглушка від частих запитів — пауза й повтор
+            return tm_profile(tid, tries - 1)
         e = {'err': f'http/parse ({len(h)} bytes)'}
     TMP[tid] = e
     jsave('tm_profiles.json', TMP)
