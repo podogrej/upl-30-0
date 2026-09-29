@@ -33,6 +33,10 @@ const fail=[];const check=(ok,msg)=>{if(!ok)fail.push(msg);};
  await pg.evaluate(()=>document.getElementById('homeBtn').click());await pg.click('#freeOpen');await pg.click('#modes .opt:nth-child(1)');await pg.evaluate(()=>document.getElementById('homeBtn').click());
  // пасхалка й трофей Nice
  check(await pg.evaluate(()=>{const D=window.__dbg;const cs=D.DATA.clubs.find(c=>c.pl.some(p=>p[5]==='w:1979-03-30:timoschuk'));D.S.wheel=cs;D.renderWheel();const ok=/Анатолій Тимощук \(пітух\)/.test(document.getElementById('squad').textContent);D.S.wheel=null;return ok;}),'пасхалка: у Тимощука немає «(пітух)»');
+ check(await pg.evaluate(()=>{const e=window.__dbg.trEval;const L=(n,f)=>Array.from({length:30},(_,i)=>f(i));
+   const base={xi:[],pl:[],mode:'normal',format:'classic',reveal:true};
+   const c1={...base,r:{W:10,D:10,L:10,pts:40,place:9,gf:30,ga:30,xp:40,log:L(30,i=>({ug:i<5?0:1,og:i<5?1:0,res:i<5?'L':'W',home:true,opp:'X'}))}};
+   const g=e(c1);return g.includes('equal')&&g.includes('sheep')&&!g.includes('homefort');}),'нові трофеї: «Порівну»/«Стадо баранів»/«Білгород» рахуються неправильно');
  check(await pg.evaluate(()=>{const e=window.__dbg.trEval;const r=p=>({r:{W:20,D:9,L:1,pts:p,place:2,gf:60,ga:20,xp:60},xi:[],pl:[],mode:'normal',format:'classic',reveal:true});return e(r(69)).includes('nice')&&!e(r(70)).includes('nice');}),'трофей Nice: не видається за 69 або видається не за 69');
  for(const [fmt,mode,form] of [['classic',1,1],['daily',0,0],['anti',3,1],['derby',2,2]]){
   await playSeason(pg,fmt,mode,form);
@@ -40,6 +44,8 @@ const fail=[];const check=(ok,msg)=>{if(!ok)fail.push(msg);};
   await pg.click('#cardBtn');await pg.waitForTimeout(900);
   const d=await pg.evaluate(()=>{const S=window.__dbg.S;return {text:document.getElementById('shareText').value,cap:window.__dbg.shareTextOf(S.result,false,true),img:document.getElementById('shareImg').src,r:{W:S.result.W,D:S.result.D,L:S.result.L,gf:S.result.gf,ga:S.result.ga,log:S.result.log.map(m=>[m.ug,m.og,m.res])},verified:document.getElementById('verLine').textContent};});
   fs.writeFileSync(path.join(OUT,`card_${fmt}.png`),Buffer.from(d.img.split(',')[1],'base64'));
+  const te=await pg.evaluate(()=>{const D=window.__dbg;const c=D.trCtxNow(D.S.result);const bad=[];for(const t of D.TROPHIES){if(!t.t)continue;try{t.t(c);}catch(e){bad.push(t.id+': '+e.message);}}return bad;});
+  check(!te.length,`${fmt}: трофеї падають: ${te.join('; ')}`);
   const L=d.r.log;check(L.length===30,`${fmt}: не 30 матчів`);
   check(L.reduce((a,m)=>a+m[0],0)===d.r.gf&&L.reduce((a,m)=>a+m[1],0)===d.r.ga,`${fmt}: голи не сходяться з матчами`);
   check(L.every(m=>m[2]===(m[0]>m[1]?'W':m[0]<m[1]?'L':'D')),`${fmt}: результат матчу не збігається з рахунком`);

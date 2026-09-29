@@ -460,7 +460,7 @@ td .sub{font-size:11px;color:var(--muted);margin-top:2px;display:flex;gap:6px;al
     </div>
 </div>
 <div class="overlay" id="viewBox" hidden><div class="box"><div class="vhead"><h3 id="viewTitle">Склад</h3><button class="ghost" id="viewClose">Закрити</button></div><div id="viewBody"></div></div></div>
-<div class="foot">30-0 УПЛ · <a href="#" id="newsBtn">Що нового у версії 0.41<b id="newsDot" hidden></b></a> · <a href="#" id="themeBtn">Світла тема</a> · неофіційний фан-проєкт</div>
+<div class="foot">30-0 УПЛ · <a href="#" id="newsBtn">Що нового у версії 0.42<b id="newsDot" hidden></b></a> · <a href="#" id="themeBtn">Світла тема</a> · неофіційний фан-проєкт</div>
 <script id="pool" type="application/json">__POOL__</script>
 <script>
 (function(){
@@ -1188,10 +1188,10 @@ function drawCard(r){
 }
 document.getElementById('replayBtn').onclick=()=>playSeason(null);
 // ---------- «Що нового»: коротко й по-людськи про останню версію (технічний журнал — CHANGELOG.md у репозиторії)
-const WHATSNEW={v:'0.41',date:'29.09.2026',items:[
-  ['eye','Рейтинги — за бажанням','Не знаєш гравців того сезону? Під час драфту постав галочку «Показати рейтинги гравців» — цифри з\'являться і лишаться до кінця драфту. За замовчуванням вони, як і раніше, сховані. У «Хардкорі» й антисезоні галочки немає.'],
-  ['emoticon-wink-outline','Новий секретний трофей','Спробуй здогадатися, за скільки очок. Підказка: nice.'],
-  ['star-four-points','Пасхалка','Деякі гравці тепер підписані так, як їх звуть на трибунах.']]};
+const WHATSNEW={v:'0.42',date:'29.09.2026',items:[
+  ['trophy','Трофеї з характером','Нові назви з відсилками до пісень, фільмів і приказок: «Не здамся без бою», «Там, де нас нема», «Як Шева», «Нова пошта», «Знизу постукали»… Твої вже отримані трофеї нікуди не ділися.'],
+  ['castle','Нові трофеї','«Білгород-Дністровський» — без поразок удома, «Розбили, як Бог черепаху», «Мінімалісти», «Порівну», «Один у полі не воїн», «Укрпошта» та інші.'],
+  ['star-face','Нові секретні','Кварцяний, Блохін і Лобановський теж тут. Шедевр! Феномен!']]};
 function openNews(){const box=document.getElementById('viewBox');document.getElementById('viewTitle').textContent=`Що нового · версія ${WHATSNEW.v}`;
   document.getElementById('viewBody').innerHTML=`<div class="news">${WHATSNEW.items.map(([e,h,d])=>`<div class="ni">${ic(e,'lg')}<div><b>${esc(h)}</b><p>${esc(d)}</p></div></div>`).join('')}</div>`;
   box.hidden=false;lsSet('upl30_news_seen',WHATSNEW.v);document.getElementById('newsDot').hidden=true;}
@@ -1204,6 +1204,6 @@ themeLabel();
 document.getElementById('newsDot').hidden=lsGet('upl30_news_seen')===WHATSNEW.v;
 /*__FIVE__*/
 document.getElementById('f5Open').onclick=f5Start;
-window.__dbg={renderWheel,simulate,shareTextOf,seasonForm,FORMATIONS,GROUP_OF,MODES,P,DATA,TROPHIES,trEval,PERSON,effRating,get S(){return S;},rerun(seed,year,xi){rnd=mulberry32(seed);const r=simulate(xi||S.slots.map(s=>s.player),MODES[S.mode],year);rnd=Math.random;return {W:r.W,D:r.D,L:r.L,gf:r.gf,ga:r.ga,place:r.place};}};
+window.__dbg={renderWheel,simulate,shareTextOf,trCtxNow,seasonForm,FORMATIONS,GROUP_OF,MODES,P,DATA,TROPHIES,trEval,PERSON,effRating,get S(){return S;},rerun(seed,year,xi){rnd=mulberry32(seed);const r=simulate(xi||S.slots.map(s=>s.player),MODES[S.mode],year);rnd=Math.random;return {W:r.W,D:r.D,L:r.L,gf:r.gf,ga:r.ga,place:r.place};}};
 })();
 </script>
