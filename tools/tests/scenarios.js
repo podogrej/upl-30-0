@@ -14,6 +14,26 @@ const fail=[];const check=(ok,msg)=>{if(!ok)fail.push(msg);};
  await pg.click('#themeBtn');check(await pg.evaluate(()=>document.documentElement.dataset.theme)==='light','перемикач теми не працює');
  await pg.reload();await pg.waitForTimeout(500);check(await pg.evaluate(()=>document.documentElement.dataset.theme)==='light','тема не запам\'яталась');
  await pg.screenshot({path:path.join(OUT,'home_light.png')});await pg.click('#themeBtn');
+ // «Показати рейтинги»: вимкнено за замовчуванням, вмикається посеред драфту, порядок не змінює, лишається на наступне кручення
+ await pg.evaluate(()=>document.getElementById('homeBtn').click());await pg.click('#freeOpen');await pg.click('#formats .opt:nth-child(1)');await pg.click('#modes .opt:nth-child(1)');await pg.click('#startBtn');
+ await pg.click('#spinBtn');await pg.waitForTimeout(1800);
+ const before=await pg.evaluate(()=>({vis:!document.getElementById('showRRow').hidden,on:document.getElementById('showR').checked,names:[...document.querySelectorAll('#squad .pl .nm')].map(e=>e.textContent),rt:[...document.querySelectorAll('#squad .pl .rt')].map(e=>e.textContent).join('')}));
+ check(before.vis&&!before.on&&before.rt==='','рейтинги: галочка не видна або рейтинги вже показані');
+ await pg.click('#showR');await pg.waitForTimeout(200);
+ const after=await pg.evaluate(()=>({names:[...document.querySelectorAll('#squad .pl .nm')].map(e=>e.textContent),rt:[...document.querySelectorAll('#squad .pl .rt')].map(e=>e.textContent)}));
+ check(after.rt.every(x=>/^\d+$/.test(x)),'рейтинги: після галочки цифр немає');check(JSON.stringify(after.names)===JSON.stringify(before.names),'рейтинги: змінився порядок гравців');
+ await pg.screenshot({path:path.join(OUT,'draft_ratings.png'),fullPage:true});
+ {const btn=await pg.$('.pl:not([disabled])');await btn.click();await pg.waitForTimeout(80);const pick=await pg.$('#pitch .slot.target');if(pick)await pick.click();}
+ await pg.click('#spinBtn');await pg.waitForTimeout(1800);
+ check(await pg.evaluate(()=>document.getElementById('showR').checked&&[...document.querySelectorAll('#squad .pl .rt')].every(e=>/^\d+$/.test(e.textContent))),'рейтинги: не лишились на наступне кручення');
+ check(await pg.evaluate(()=>/^\d+$/.test((document.querySelector('#pitch .slot.filled .r')||{}).textContent||'')),'рейтинги: немає цифри на полі');
+ // хардкор — без галочки
+ await pg.evaluate(()=>document.getElementById('homeBtn').click());await pg.click('#freeOpen');await pg.click('#modes .opt:nth-child(3)');await pg.click('#startBtn');await pg.click('#spinBtn');await pg.waitForTimeout(1800);
+ check(await pg.evaluate(()=>document.getElementById('showRRow').hidden),'рейтинги: галочка є в «Хардкорі»');
+ await pg.evaluate(()=>document.getElementById('homeBtn').click());await pg.click('#freeOpen');await pg.click('#modes .opt:nth-child(1)');await pg.evaluate(()=>document.getElementById('homeBtn').click());
+ // пасхалка й трофей Nice
+ check(await pg.evaluate(()=>{const D=window.__dbg;const cs=D.DATA.clubs.find(c=>c.pl.some(p=>p[5]==='w:1979-03-30:timoschuk'));D.S.wheel=cs;D.renderWheel();const ok=/Анатолій Тимощук \(пітух\)/.test(document.getElementById('squad').textContent);D.S.wheel=null;return ok;}),'пасхалка: у Тимощука немає «(пітух)»');
+ check(await pg.evaluate(()=>{const e=window.__dbg.trEval;const r=p=>({r:{W:20,D:9,L:1,pts:p,place:2,gf:60,ga:20,xp:60},xi:[],pl:[],mode:'normal',format:'classic',reveal:true});return e(r(69)).includes('nice')&&!e(r(70)).includes('nice');}),'трофей Nice: не видається за 69 або видається не за 69');
  for(const [fmt,mode,form] of [['classic',1,1],['daily',0,0],['anti',3,1],['derby',2,2]]){
   await playSeason(pg,fmt,mode,form);
   await pg.screenshot({path:path.join(OUT,`result_${fmt}.png`),fullPage:true});
