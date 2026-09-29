@@ -73,7 +73,10 @@ def wd_tm_ids(dates):
     return out
 
 MON = {m: i for i, m in enumerate(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'], 1)}
+CACHE_ONLY = os.environ.get('CACHE_ONLY') == '1'   # лише вже завантажені профілі, без запитів до Transfermarkt
 def tm_profile(tid, tries=3):
+    if CACHE_ONLY:
+        return TMP.get(tid, {'err': 'not cached'})
     if tid in TMP and not ('err' in TMP[tid] and tries == 3):
         return TMP[tid]
     time.sleep(6)

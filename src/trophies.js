@@ -131,8 +131,6 @@ const TROPHIES=[
   {id:"rebrov15",i:"🛡",n:"Без поразок, як у 2015-му",d:"Пройди сезон без поразок із шістьма гравцями «Динамо» Реброва (2014–2016)",cat:"secret",sec:1,t:c=>notAnti(c)&&c.r.L===0&&ERA(c,'dynamo-kyiv',2014,2015)>=6},
   {id:"collective",i:"🤝",n:"Колектив",d:"Стань чемпіоном, щоб ніхто не забив і 15 — команда важливіша за зірок",cat:"secret",sec:1,t:c=>notAnti(c)&&c.r.place===1&&c.pl.length===11&&c.pl.every(p=>(p.g||0)<15)},
   {id:"semi99",i:"🏟",n:"Півфінал-99",d:"Збери шістьох гравців «Динамо» 1998/99 і не програй удома жодного разу",cat:"secret",sec:1,t:c=>notAnti(c)&&LOG(c).length===30&&ERA(c,'dynamo-kyiv',1998,1998)>=6&&homeL(c)===0},
-  {id:"baku",i:"✈️",n:"Зимовий рейс до Баку",d:"Набери 30+ очок за перше коло, а за друге — не більше 15. Григорчук теж пішов посеред сезону",cat:"secret",sec:1,t:c=>{const L=LOG(c);if(!notAnti(c)||L.length<30)return false;const pt=m=>m.res==='W'?3:m.res==='D'?1:0;return L.slice(0,15).reduce((a,m)=>a+pt(m),0)>=30&&L.slice(15).reduce((a,m)=>a+pt(m),0)<=15;}},
-  {id:"bench",i:"🏃",n:"Пробіжка до чужої лави",d:"Обіграй «Дніпро» 1:0, маючи в складі п'ятьох гравців «Чорноморця»",cat:"secret",sec:1,t:c=>ERA(c,'chornomorets-odesa',1900,2100)>=5&&LOG(c).some(m=>/^Дніпро/.test(m.opp)&&m.ug===1&&m.og===0)},
   // Чорноморець
   {id:"odesa",i:"🌊",n:"Одеса-мама",d:"Збери в склад сімох гравців «Чорноморця»",cat:"secret",sec:1,t:c=>ERA(c,'chornomorets-odesa',1900,2100)>=7},
   {id:"shalandy",i:"🐟",n:"Шаланди, повні кефалі",d:"Нехай гравці «Чорноморця» наколотять за сезон 40+ голів",cat:"secret",sec:1,t:c=>{const ids=new Set(c.xi.filter(x=>x.cc==='chornomorets-odesa').map(x=>x.id));return c.pl.filter(p=>ids.has(p.id)).reduce((a,p)=>a+(p.g||0),0)>=40;}},
