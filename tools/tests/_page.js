@@ -18,7 +18,7 @@ async function openPage(opts={}){
 async function playSeason(pg,fmt,mode,form){
   await pg.evaluate(()=>document.getElementById('homeBtn').click());await pg.waitForTimeout(200);
   if(fmt==='daily')await pg.click('#dailyBtn');
-  else{await pg.click('#freeOpen');const fi={classic:1,derby:2,oneclub:3,anti:4}[fmt];await pg.click(`#formats .opt:nth-child(${fi})`);await pg.click(`#formations .opt:nth-child(${form})`);if(fmt!=='anti')await pg.click(`#modes .opt:nth-child(${mode})`);await pg.click('#startBtn');}
+  else{await pg.click('#freeOpen');const fi={classic:1,derby:2,oneclub:3,anti:4,legends:5}[fmt];await pg.click(`#formats .opt:nth-child(${fi})`);await pg.click(`#formations .opt:nth-child(${form})`);if(fmt!=='anti')await pg.click(`#modes .opt:nth-child(${mode})`);await pg.click('#startBtn');}
   for(let i=0;i<11;i++){await pg.click('#spinBtn');await pg.waitForSelector('#squad .pl:not([disabled])',{timeout:8000});const btn=await pg.$('.pl:not([disabled])');await btn.click();await pg.waitForTimeout(80);const pick=await pg.$('#pitch .slot.target');if(pick){await pick.click();await pg.waitForTimeout(60);}}
   await pg.waitForSelector('#simBtn:not([hidden])');/* з 0.45 прогноз рахується сам */await pg.click('#simBtn');await pg.click('#skipBtn');await pg.waitForTimeout(500);}
 module.exports={ROOT,launch,openPage,playSeason};

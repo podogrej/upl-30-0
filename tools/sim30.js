@@ -23,7 +23,7 @@ function play(cfg) {
   const taken = new Set();
   const noise = {};   // сприйняття гравця стабільне протягом драфту: знаєш когось як «сильного» — він сильний для тебе весь драфт
   const perceived = (p, slot) => { const er = effRating(p, slot); if (er == null) return null; if (!(p[5] in noise)) noise[p[5]] = normal(r) * cfg.sigma; return (SEE === 'base' ? p[2] : er) + noise[p[5]]; };
-  const pool = anti || cfg.format === 'classic' || cfg.daily ? DATA.clubs : cfg.format === 'derby' ? DATA.clubs.filter(c => FORMATS.derby.clubs.includes(c.c)) : DATA.clubs.filter(c => c.c === cfg.club);
+  const pool = anti || cfg.format === 'classic' || cfg.format === 'legends' || cfg.daily ? DATA.clubs : cfg.format === 'derby' ? DATA.clubs.filter(c => FORMATS.derby.clubs.includes(c.c)) : DATA.clubs.filter(c => c.c === cfg.club);
   const okP = p => !taken.has(p[5]) && (!anti || p[3] >= ANTI_MIN_APPS);
   const best = cs => {   // найкращий (для анти — найгірший) хід у цьому клуб-сезоні
     let b = null;
@@ -46,7 +46,7 @@ function play(cfg) {
     b.s.p = b.p; taken.add(b.p[5]);
   }
   const xi = slots.map(s => ({ id: s.p[5], name: s.p[0], slot: s.slot, pos: GROUP_OF[s.slot], r: effRating(s.p, s.slot) }));
-  const year = cfg.daily ? cfg.daily.year : cfg.year || YEARS16[Math.floor(r() * YEARS16.length)];
+  const year = cfg.daily ? cfg.daily.year : cfg.year || (E.LEAGUE_CULT ? (cfg.format === 'legends' ? E.LEAGUE_LEGENDS : E.LEAGUE_CULT) : YEARS16[Math.floor(r() * YEARS16.length)]);   // з 0.50 — ліга культових клубів; старий рушій — випадковий сезон
   const mode = cfg.daily ? 'daily' : cfg.mode;
   const res = E.run({ xi, mode, format: cfg.format, year, seed: Math.floor(r() * 2147483647) });
   const avg = xi.reduce((a, x) => a + x.r, 0) / 11;

@@ -7,7 +7,8 @@ const CORS={'access-control-allow-origin':'*','access-control-allow-headers':'*'
 const SB_STUB=user=>`window.supabase={createClient(){let cb=()=>{};return {auth:{onAuthStateChange(f){cb=f;},async getSession(){return {data:{session:null}};},
   async verifyOtp(){setTimeout(()=>cb('SIGNED_IN',{access_token:'AT',user:${JSON.stringify(user||{id:'u1',email:'tg-1@users.upl-30-0.vercel.app',user_metadata:{full_name:'Андрій'},app_metadata:{}})}}),20);return {error:null};},
   async signOut(){cb('SIGNED_OUT',null);},async signInWithOAuth(){return {error:null};},async setSession(){return {error:null};}}};}};`;
-// база PostgREST у пам'яті. cfg[таблиця]={pk:[...], uq:[[...]], auto:'id', def:{...}}; rpc[ім'я]=(args)=>відповідь
+// база PostgREST у пам'яті. cfg[таблиця]={pk:[...], uq:[[...]], auto:'id', def:{...}, cols:[...] (інших колонок «немає» — 400), onInsert(row)};
+// rpc[ім'я]=(args)=>відповідь; select=…players(name,anon_name) підтягує гравця з таблиці players, якщо вона є
 function makeDB(cfg={},rpc={}){
   const DB={};let seq=0;for(const t of Object.keys(cfg))DB[t]=[];
   const val=v=>v==='null'?null:v==='true'?true:v==='false'?false:v;
@@ -22,15 +23,23 @@ function makeDB(cfg={},rpc={}){
     if(parts.pop()==='rpc'){const f=rpc[t];if(!f)return out(404,{message:'no rpc '+t});const r=f(body?JSON.parse(body):{},headers);return r&&r.status?r:out(200,r==null?{}:r);}
     if(!DB[t])return method==='GET'?out(200,[]):out(201,null);
     const C=cfg[t]||{},f=where(u),match=r=>f.every(([k,v])=>test(r,k,v));
-    if(method==='GET'){let rows=DB[t].filter(match);const o=u.searchParams.get('order');
+    const bad=k=>C.cols&&!C.cols.includes(k)&&k!=='id'&&k!=='created_at';
+    const sel=u.searchParams.get('select')||'';const ord=(u.searchParams.get('order')||'').split(',').filter(Boolean).map(x=>x.split('.')[0]);
+    if(method==='GET'){const miss=[...f.map(([k])=>k),...ord,...sel.split(',').filter(x=>x&&x!=='*'&&!x.includes('('))].find(bad);
+      if(miss)return out(400,{code:'42703',message:`column ${t}.${miss} does not exist`});
+      if(/players\(/.test(sel)&&!DB.players)return out(400,{code:'PGRST200',message:`Could not find a relationship between '${t}' and 'players' in the schema cache`});
+      let rows=DB[t].filter(match);
+      if(/players\(/.test(sel))rows=rows.map(r=>{const p=DB.players.find(x=>x.id===r.player_id);return {...r,players:p?{name:p.name,anon_name:p.anon_name}:null};});const o=u.searchParams.get('order');
       if(o)for(const p of o.split(',').reverse()){const [c,d]=p.split('.');rows=[...rows].sort((a,b)=>(a[c]>b[c]?1:a[c]<b[c]?-1:0)*(d==='desc'?-1:1));}
       const lim=u.searchParams.get('limit');if(lim)rows=rows.slice(0,+lim);return out(200,rows);}
     if(method==='POST'){const list=[].concat(JSON.parse(body));const res=[];
-      for(const row0 of list){const row={...(C.def||{}),...row0};if(C.auto&&row[C.auto]==null)row[C.auto]=++seq;row.created_at=row.created_at||new Date().toISOString();
+      for(const row0 of list){const miss=Object.keys(row0).find(bad);if(miss)return out(400,{code:'PGRST204',message:`Could not find the '${miss}' column of '${t}' in the schema cache`});
+        const row={...(C.def||{}),...row0};if(C.onInsert)C.onInsert(row,headers);if(C.auto&&row[C.auto]==null)row[C.auto]=++seq;row.created_at=row.created_at||new Date().toISOString();
         const oc=u.searchParams.get('on_conflict');
         if(oc&&/merge-duplicates/.test(prefer)){const ks=oc.split(',');const old=DB[t].find(x=>ks.every(k=>String(x[k])===String(row[k])));if(old){Object.assign(old,row0);res.push(old);continue;}}
-        for(const ks of [C.pk,...(C.uq||[])].filter(Boolean))if(DB[t].some(x=>ks.every(k=>String(x[k])===String(row[k]))))
-          return out(409,{code:'23505',message:`duplicate key value violates unique constraint "${t}_${ks.join('_')}_key"`});
+        const dup=[C.pk,...(C.uq||[])].filter(Boolean).find(ks=>DB[t].some(x=>ks.every(k=>String(x[k])===String(row[k]))));
+        if(dup&&/ignore-duplicates/.test(prefer))continue;
+        if(dup)return out(409,{code:'23505',message:`duplicate key value violates unique constraint "${t}_${dup.join('_')}_key"`});
         DB[t].push(row);res.push(row);}
       return /return=representation/.test(prefer)?out(201,res):out(201,null);}
     if(method==='PATCH'){const b=JSON.parse(body);const rows=DB[t].filter(match);rows.forEach(r=>Object.assign(r,b));return /return=representation/.test(prefer)?out(200,rows):out(204,null);}
@@ -41,7 +50,7 @@ function makeDB(cfg={},rpc={}){
   return {DB,handle,fetch};}
 // виклик обробника Vercel (api/*.js) без сервера
 const callApi=(h,body,method='POST',query={})=>new Promise(res=>{h({method,body,query,headers:{}},{status(c){this.c=c;return this;},json(j){res({status:this.c||200,json:j});},send(j){res({status:this.c||200,json:j});},setHeader(){},end(){res({status:this.c||200,json:null});}});});
-// відкрити сторінку. opts: {b, query:'?c=..', hash, db, api:{'/api/x':async(req)=>({status,json})}, tg:{...WebApp}, user, route:(r,url)=>bool, viewport}
+// відкрити сторінку. opts: {b, query:'?c=..', hash, init:'JS до завантаження', db, api:{'/api/x':async(req)=>({status,json})}, tg:{...WebApp}, user, route:(r,url)=>bool, viewport}
 async function openSite(opts={}){
   const b=opts.b||await launch();const ctx=await b.newContext({viewport:opts.viewport||{width:390,height:844},colorScheme:opts.colorScheme||'dark'});
   const html=fs.readFileSync(path.join(ROOT,'index.html'));const log=[];
@@ -61,6 +70,7 @@ async function openSite(opts={}){
       if(/fonts\.(googleapis|gstatic)\.com/.test(u.host))return r.continue();
       return r.abort();
     }catch(e){console.log('route error',u.href,e.message);return r.abort();}});
+  if(opts.init)await ctx.addInitScript(opts.init);   // напр. localStorage до завантаження гри
   const pg=await ctx.newPage();const errs=[];pg.on('pageerror',e=>errs.push(e.message));
   await pg.goto(SITE+(opts.query||'')+(opts.hash||''));await pg.waitForTimeout(opts.wait||1000);
   return {b,ctx,pg,errs,log};}

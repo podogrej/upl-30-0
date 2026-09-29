@@ -45,7 +45,7 @@ ${extra.join('\n')}
 function dailySetupFor(day){
   const r=mulberry32(hashStr("upl30|"+day+"|setup"));
   const fs=Object.keys(FORMATIONS);const formation=fs[Math.floor(r()*fs.length)];
-  const year=YEARS16[Math.floor(r()*YEARS16.length)];
+  const year=LEAGUE_CULT;   // з 0.50 — «Ліга культових клубів» (як dailySetup у template.html)
   const prev=S.format;S.format='classic';
   const wr=mulberry32(hashStr("upl30|"+day+"|wheel"));const seq=[];for(let i=0;i<600;i++){const c=pickWeighted(DATA.clubs,wr);seq.push(DATA.clubs.indexOf(c));}
   S.format=prev;return {formation,year,seq};
@@ -57,7 +57,7 @@ function run({ xi, mode, format, year, seed }){
   rnd = Math.random; S.format = 'classic';
   return r;
 }
-module.exports = { VERSION: '${VERSION}', DATA, FORMATIONS, FORMATS, GROUP_OF, MODES, YEARS16, ANTI_MIN_APPS, effRating, mulberry32, hashStr, dailySetupFor, run, setFormat: f => { S.format = f; } };
+module.exports = { VERSION: '${VERSION}', DATA, FORMATIONS, FORMATS, GROUP_OF, MODES, YEARS16, LEAGUE_CULT, LEAGUE_LEGENDS, LEAGUES, ANTI_MIN_APPS, effRating, mulberry32, hashStr, dailySetupFor, run, setFormat: f => { S.format = f; } };
 `;
 fs.mkdirSync(ROOT + '/lib', { recursive: true });
 fs.writeFileSync(ROOT + '/lib/engine.js', mod);

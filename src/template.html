@@ -536,6 +536,22 @@ function footAdj(id,slot){const f=DATA.foot&&DATA.foot[id];if(!f)return 0;
 function effRating(p,slot){const pen=slotPenalty(p[6],p[7],slot);if(pen==null)return null;return S.format==='anti'?p[2]:Math.max(40,p[2]-pen+footAdj(p[5],slot));}   // в антисезоні штраф не діє, інакше «чужа позиція» стає читом
 // 30 турів = сезони з 16 командами (ти замінюєш останню); сезони на 12/14/18 команд — для майбутнього режиму «Формати минулого»
 const YEARS16 = Object.keys(DATA.seasons).map(Number).filter(y=>DATA.seasons[y].teams.length===16);
+// ---------- суперники з 0.50 (рішення власника 29.09.2026): «Ліга культових клубів» — стандарт для всіх режимів;
+// «Ліга легенд» — ті самі 15 клубів, кожен у своєму найкращому сезоні (окремий формат). Сила — лише із сезонів на 16 команд.
+// Номери 9001/9002 — умовні «сезони» (зберігаються в seasons.year; справжні сезони — роки 1992–2025).
+const CULT_CLUBS=['dynamo-kyiv','shakhtar-donetsk','dnipro','metalist-kharkiv','chornomorets-odesa','karpaty-lviv','metalurh-donetsk','metalurh-zaporizhzhia','mariupol','zorya-luhansk','tavriya-simferopol','vorskla-poltava','kryvbas','arsenal-kyiv','sevastopol'];
+const LEAGUE_CULT=9001, LEAGUE_LEGENDS=9002;
+function buildLeague(best){const hist={};for(const y of YEARS16)for(const t of DATA.seasons[y].teams)(hist[t[0]]=hist[t[0]]||[]).push({y,t});
+  const base=YEARS16.reduce((a,y)=>a+DATA.seasons[y].base,0)/YEARS16.length;
+  const teams=CULT_CLUBS.map(c=>{const v=hist[c]||[];if(best){const b=v.slice().sort((a,b)=>a.t[2]-b.t[2]||b.t[3]/b.t[4]-a.t[3]/a.t[4])[0];return [c,b.t[1]+' '+seasonLabel(b.y),0,b.t[3],b.t[4]];}
+    const g=k=>Math.exp(v.reduce((a,x)=>a+Math.log(x.t[k]),0)/v.length);return [c,v[0].t[1],0,+g(3).toFixed(3),+g(4).toFixed(3)];});
+  teams.sort((a,b)=>b[3]/b[4]-a[3]/a[4]).forEach((t,i)=>t[2]=i+1);teams.push(['-','—',16,1,1]);   // останній — місце для твоєї 11-ки
+  return {base:+base.toFixed(3),teams};}
+const LEAGUES={[LEAGUE_CULT]:buildLeague(false),[LEAGUE_LEGENDS]:buildLeague(true)};
+const LEAGUE_NAME={[LEAGUE_CULT]:'Ліга культових клубів',[LEAGUE_LEGENDS]:'Ліга легенд'};
+function seasonOf(y){return DATA.seasons[y]||LEAGUES[y];}
+function oppYear(){return S.format==='legends'?LEAGUE_LEGENDS:LEAGUE_CULT;}
+function oppLabel(y){return LEAGUE_NAME[y]||('УПЛ '+seasonLabel(y));}
 const MODES = {
   normal:{name:"Звичайний",desc:"Рейтинги відкриються перед сезоном. 2 перекручування.",damp:0.8,star:2,rerolls:2,showRatings:false,reveal:true},
   hard:{name:"Складний",desc:"Без перекручувань, суперники в повну силу.",damp:1.0,star:0,rerolls:0,showRatings:false,reveal:true},
@@ -545,12 +561,13 @@ const FORMATS = {
   classic:{name:"Класика",desc:"Усі 524 клуб-сезони."},
   derby:{name:"Класичне дербі",desc:"Лише «Динамо» і «Шахтар» за 34 сезони.",clubs:["dynamo-kyiv","shakhtar-donetsk"]},
   oneclub:{name:"Один клуб",desc:"Найкращий XI одного клубу за всю історію УПЛ."},
-  anti:{name:"Антисезон 0-30",desc:"Збери найгірший склад і програй усі 30. Лише пам'ять."}};
+  anti:{name:"Антисезон 0-30",desc:"Збери найгірший склад і програй усі 30. Лише пам'ять."},
+  legends:{name:"Ліга легенд",desc:"Ті самі 15 культових клубів, але кожен у своєму найкращому сезоні."}};
 const ANTI_MIN_APPS=10;
 const ATT_W={GK:0,CB:0.15,RB:0.35,LB:0.35,RWB:0.5,LWB:0.5,CDM:0.4,CM:0.6,CAM:0.85,RM:0.7,LM:0.7,RW:0.9,LW:0.9,ST:1.0};
 const DEF_W={GK:1.4,CB:1.1,RB:0.85,LB:0.85,RWB:0.7,LWB:0.7,CDM:0.75,CM:0.5,CAM:0.25,RM:0.4,LM:0.4,RW:0.2,LW:0.2,ST:0.1};
 const REF_A=5.6, REF_D=7.3, FE=0.5;
-const P={betaA:0.065,betaD:0.085,refA:80.56,refD:79.48,capA:4.0,floorD:0.25,home:0.12,formSd:0.15,balPen:0.01,seasonTeamSd:3.0,seasonPlayerSd:4.0,seasonFormCap:10};
+const P={betaA:0.065,betaD:0.085,refA:80.56,refD:79.48,capA:4.0,floorD:0.25,floorA:0.33,capD:3.0,home:0.12,formSd:0.15,balPen:0.01,seasonTeamSd:3.0,seasonPlayerSd:4.0,seasonFormCap:10};
 // форма сезону: у кожного гравця свій рік (σ 4), плюс спільний для команди «хімія» (σ 3); навіть зірка може провалити сезон, а середній склад — вистрілити
 function seasonForm(xi){const team=normal()*P.seasonTeamSd;const f={};for(const x of xi){f[x.id]=Math.max(-P.seasonFormCap,Math.min(P.seasonFormCap,Math.round(team+normal()*P.seasonPlayerSd)));}return f;}
 
@@ -586,7 +603,7 @@ const DAY_NO=Math.max(1,Math.round((Date.UTC(+DAY.slice(0,4),+DAY.slice(5,7)-1,+
 function dailySetup(){
   const r=mulberry32(hashStr("upl30|"+DAY+"|setup"));
   const fs=Object.keys(FORMATIONS);const formation=fs[Math.floor(r()*fs.length)];
-  const years=YEARS16;const year=years[Math.floor(r()*years.length)];
+  const year=LEAGUE_CULT;
   const wr=mulberry32(hashStr("upl30|"+DAY+"|wheel"));const seq=[];for(let i=0;i<600;i++){const c=pickWeighted(DATA.clubs,wr);seq.push(DATA.clubs.indexOf(c));}
   return {formation,year,seq,ptr:0};
 }
@@ -605,7 +622,7 @@ function streakUpdate(){const st=lsGet("upl30_streak")||{};const y=dayAdd(DAY,-1
 function renderDailyCard(){
   document.getElementById('dKicker').textContent=`Щоденний виклик · ${DAY.slice(8,10)}.${DAY.slice(5,7)}`;
   const done=lsGet("upl30_daily_"+DAY);const si=streakInfo();
-  document.getElementById('dMeta').innerHTML=`<span class="chip">Схема ${DAILY.formation}</span><span class="chip">Суперники: сезон ${seasonLabel(DAILY.year)}</span><span class="chip">1 перекручування</span>`+(si.count>1?`<span class="chip hot">${ic('fire')}Серія: ${si.count} дн.</span>`:'')+(si.count>0||si.rescue?`<span class="chip" title="Один пропущений день на тиждень не обнуляє серію">${ic('snowflake')}Заморозка: ${si.freeze?'є':'використана цього тижня'}</span>`:'');
+  document.getElementById('dMeta').innerHTML=`<span class="chip">Схема ${DAILY.formation}</span><span class="chip">Суперники: ${oppLabel(DAILY.year)}</span><span class="chip">1 перекручування</span>`+(si.count>1?`<span class="chip hot">${ic('fire')}Серія: ${si.count} дн.</span>`:'')+(si.count>0||si.rescue?`<span class="chip" title="Один пропущений день на тиждень не обнуляє серію">${ic('snowflake')}Заморозка: ${si.freeze?'є':'використана цього тижня'}</span>`:'');
   document.getElementById('dStatus').textContent=done?`Сьогодні: ${done.W}-${done.D}-${done.L}, ${done.pts} ${ptsWord(done.pts)}, ${done.place} місце`:(si.rescue&&si.count>1?`Вчора пропустив — зіграй сьогодні, і ❄️ заморозка збереже серію ${si.count} дн.`:'');
   const db=document.getElementById('dailyBtn');db.innerHTML=ic('calendar-star')+(done?'Зіграно — новий виклик завтра':'Грати виклик дня');db.disabled=!!done;
 }
@@ -614,7 +631,7 @@ function newSlots(f){S.locked=false;S.pre=null;S.srv=null;S.year=null;return FOR
 function openSlots(){return S.slots.filter(s=>!s.player);}
 function bestSlot(p){let best=null;for(const s of openSlots()){const r=effRating(p,s.slot);if(r!=null&&(!best||r>best.r))best={s,r};}return best;}
 function eligible(cs){const anti=S.format==="anti";return cs.pl.filter(p=>!S.taken.has(p[5])&&(!anti||p[3]>=ANTI_MIN_APPS)&&bestSlot(p));}
-function wheelPool(){if(S.daily||S.format==="classic"||S.format==="anti")return DATA.clubs;
+function wheelPool(){if(S.daily||S.format==="classic"||S.format==="anti"||S.format==="legends")return DATA.clubs;
   if(S.format==="derby")return DATA.clubs.filter(c=>FORMATS.derby.clubs.includes(c.c));
   return DATA.clubs.filter(c=>c.c===S.club);}
 function isOk(cs,p){return !S.taken.has(p[5])&&(S.format!=="anti"||p[3]>=ANTI_MIN_APPS)&&!!bestSlot(p);}
@@ -796,7 +813,7 @@ document.getElementById('lockBtn').onclick=lockDraft;
 async function lockDraft(){
   if(S.locked||!S.slots.every(s=>s.player))return;const b=document.getElementById('lockBtn');b.disabled=true;b.textContent='Рахуємо прогноз…';
   const xi=S.slots.map(s=>s.player);const mode=MODES[S.mode];
-  const year=S.daily?DAILY.year:S.chal?S.chal.year:pick(YEARS16);
+  const year=S.daily?DAILY.year:S.chal?S.chal.year:oppYear();
   S.srv=await fetchSeed(year);S.year=year;
   // xP: той самий склад проти тих самих суперників, 300 прогонів (без форми сезону)
   let sp=0,sg=0,sa=0;const N=300;for(let k=0;k<N;k++){const q=simulate(xi,mode,year,true);sp+=q.pts;sg+=q.gf;sa+=q.ga;}
@@ -806,9 +823,9 @@ async function lockDraft(){
 function renderPre(){
   const el=document.getElementById('preBox');const m=MODES[S.mode];const xi=S.slots.map(s=>s.player);const open=m.reveal||m.showRatings;
   const avg=xi.reduce((s,x)=>s+baseR(x),0)/11;const mx=xi.reduce((a,x)=>baseR(x)>baseR(a)?x:a),mn=xi.reduce((a,x)=>baseR(x)<baseR(a)?x:a);
-  const sea=DATA.seasons[S.year];const last=sea&&sea.teams[sea.teams.length-1];
+  const sea=seasonOf(S.year);const last=sea&&sea.teams[sea.teams.length-1];const lg=LEAGUE_NAME[S.year];
   el.innerHTML=`<div class="kicker">${open?'Рейтинги відкрито':'Склад зафіксовано'}</div>`+
-    `<p style="margin:0">Суперники — справжня УПЛ ${seasonLabel(S.year)}. Твоя 11-ка займе місце «${esc(last?last[1]:'')}», що тоді фінішував останнім.</p>`+
+    (lg?`<p style="margin:0">Суперники — ${lg}: ${sea.teams.slice(0,-1).map(t=>esc(t[1])).join(', ')}. ${S.year===LEAGUE_CULT?'Кожен клуб — із середньою силою за свою історію в УПЛ.':'Кожен клуб — у своєму найкращому сезоні.'}</p>`:`<p style="margin:0">Суперники — справжня УПЛ ${seasonLabel(S.year)}. Твоя 11-ка займе місце «${esc(last?last[1]:'')}», що тоді фінішував останнім.</p>`)+
     (open?`<div class="tiles t2"><div class="tile"><b>${avg.toFixed(1)}</b><span>середній рейтинг</span></div><div class="tile hot"><b>${S.pre.xp.toFixed(1)}</b><span>очікувані очки (xP)</span></div></div>`+
       `<p class="muted cap">Найсильніший — ${esc(mx.name)} (${baseR(mx)}), найслабший — ${esc(mn.name)} (${baseR(mn)}). xP — скільки очок у середньому набирає цей склад проти цих суперників за 300 симуляцій. Справжній сезон може піти краще чи гірше: форма гравців і везіння.</p>`
     :`<p class="muted cap">Хардкор: рейтинги й прогноз не показуються.</p>`);
@@ -825,7 +842,7 @@ function teamIndices(xi){
 function userMult(t,mode){
   const pen=Math.max(0,t.gap-12)*P.balPen;
   const a=Math.exp(P.betaA*(t.att+mode.star-P.refA)-pen), d=Math.exp(-P.betaD*(t.def+mode.star-P.refD)+pen);
-  return {att:Math.min(a,P.capA),def:Math.max(d,P.floorD)};
+  return {att:Math.max(P.floorA,Math.min(a,P.capA)),def:Math.min(P.capD,Math.max(d,P.floorD))};   // з 0.50 межі й знизу: інакше найгірший склад програє майже все (антисезон)
 }
 // ---------- правила УПЛ для рівних очок: 1) очки в особистих зустрічах, 2) різниця м'ячів в особистих, 3) забиті в особистих,
 // 4) загальна різниця, 5) загальні забиті; за 1-ше місце при повній рівності — «золотий матч», за інші — жереб
@@ -848,7 +865,7 @@ function rankTeams(st,R){
 function simulate(xi0,mode,seasonYear,light){
   let xgf=0,xga=0;
   const form=light?{}:seasonForm(xi0);const xi=xi0.map(x=>({...x,r0:x.r,r:Math.max(40,Math.min(99,x.r+(form[x.id]||0)))}));   // у xP форма не входить: xP — очікування для складу, форма — частина «везіння»
-  const y=seasonYear||pick(YEARS16);const sea=DATA.seasons[y];
+  const y=seasonYear||oppYear();const sea=seasonOf(y);
   const t=teamIndices(xi), u=userMult(t,S.format==='anti'?{...mode,star:0}:mode);
   const last=sea.teams[sea.teams.length-1];
   const teams=[{id:"USER",n:S.teamName||"Твоя 11-ка",att:u.att,def:u.def}];
@@ -945,14 +962,14 @@ async function playSeason(year){
   const xi=S.slots.map(s=>s.player);const mode=MODES[S.mode];
   let srv=null;
   if(S.locked&&S.year&&!year){year=S.year;srv=S.srv;S.srv=null;}   // рік і seed видано під час фіксації складу
-  else{if(S.daily){year=DAILY.year;}else if(S.chal){year=S.chal.year;}if(!year)year=pick(YEARS16);srv=await fetchSeed(year);}
+  else{if(S.daily){year=DAILY.year;}else if(S.chal){year=S.chal.year;}if(!year)year=oppYear();srv=await fetchSeed(year);}
   sb.disabled=false;sb.textContent=sbt;SIM_BUSY=false;
   const seed=srv?srv.seed:Math.floor(Math.random()*2147483647);rnd=mulberry32(seed);const r=simulate(xi,mode,year);rnd=Math.random;r.seed=seed;r.seedId=srv?srv.seed_id:null;S.result=r;
   // xP: той самий склад проти того самого сезону, 300 прогонів
   if(S.pre&&year===S.year){r.xp=S.pre.xp;r.egf=S.pre.egf;r.ega=S.pre.ega;}
   else{let sp=0,sg=0,sa=0;const N=300;for(let k=0;k<N;k++){const q=simulate(xi,mode,year,true);sp+=q.pts;sg+=q.gf;sa+=q.ga;}r.xp=sp/N;r.egf=sg/N;r.ega=sa/N;}
   const [tier,gold]=tierOf(r);const te=document.getElementById('tier');te.textContent=tier;te.classList.toggle('gold',gold);
-  document.getElementById('seasonLine').textContent=`Чемпіонат ${seasonLabel(r.year)}: твоя 11-ка грала замість «${r.replaced}» (останнє місце того сезону). ${S.formation} · ${mode.name}.`;
+  document.getElementById('seasonLine').textContent=(LEAGUE_NAME[r.year]?`${LEAGUE_NAME[r.year]}: твоя 11-ка проти 15 культових клубів УПЛ. `:`Чемпіонат ${seasonLabel(r.year)}: твоя 11-ка грала замість «${r.replaced}» (останнє місце того сезону). `)+`${S.formation} · ${mode.name}.`;
   const pl=(n,a,b,c)=>{const x=n%10,y=n%100;return x===1&&y!==11?a:x>=2&&x<=4&&(y<12||y>14)?b:c;};
   document.getElementById('recTiles').innerHTML=`<div class="tile W"><b>${r.W}</b><span>${pl(r.W,'перемога','перемоги','перемог')}</span></div><div class="tile D"><b>${r.D}</b><span>${pl(r.D,'нічия','нічиї','нічиїх')}</span></div><div class="tile L"><b>${r.L}</b><span>${pl(r.L,'поразка','поразки','поразок')}</span></div>`;
   document.getElementById('sumTiles').innerHTML=`<div class="tile hot"><b>${r.pts}</b><span>${ptsWord(r.pts)}</span></div><div class="tile"><b>${r.place}</b><span>місце</span></div><div class="tile"><b>${r.gf}:${r.ga}</b><span>голи</span></div>`;
@@ -978,7 +995,7 @@ async function playSeason(year){
   document.querySelectorAll('#tabs .tab').forEach((b,i)=>b.classList.toggle('on',i===0));['t1','t2'].forEach((id,i)=>document.getElementById(id).hidden=i!==0);
   const avg=(xi.reduce((s,x)=>s+baseR(x),0)/11).toFixed(1);
   document.getElementById('myXiTitle').textContent=S.teamName||'Твоя 11-ка';
-  document.getElementById('modelNote').textContent=(MODES[S.mode].reveal||MODES[S.mode].showRatings?`Середній рейтинг XI ${avg}`:`Хардкор: рейтинги не розкриваються`)+` · індекс атаки ${r.t.att.toFixed(1)} · індекс оборони ${r.t.def.toFixed(1)}` + (r.t.gap>12?` · лінії розбалансовані (розрив ${r.t.gap.toFixed(0)}), штраф`:'') + `. Очікувані голи проти середньої команди: ${(DATA.seasons[r.year].base*r.u.att).toFixed(2)} за матч, пропущені ${(DATA.seasons[r.year].base*r.u.def).toFixed(2)}.`;
+  document.getElementById('modelNote').textContent=(MODES[S.mode].reveal||MODES[S.mode].showRatings?`Середній рейтинг XI ${avg}`:`Хардкор: рейтинги не розкриваються`)+` · індекс атаки ${r.t.att.toFixed(1)} · індекс оборони ${r.t.def.toFixed(1)}` + (r.t.gap>12?` · лінії розбалансовані (розрив ${r.t.gap.toFixed(0)}), штраф`:'') + `. Очікувані голи проти середньої команди: ${(seasonOf(r.year).base*r.u.att).toFixed(2)} за матч, пропущені ${(seasonOf(r.year).base*r.u.def).toFixed(2)}.`;
   const score=r.pts*100+(30-r.place);
   if(S.daily){
     if(!S.daily.practice){lsSet("upl30_daily_"+DAY,{W:r.W,D:r.D,L:r.L,pts:r.pts,place:r.place,gf:r.gf,ga:r.ga,xp:Math.round(r.xp*10)/10});
@@ -998,7 +1015,7 @@ async function playSeason(year){
 let REV=null;
 function startReveal(r){
   clearInterval(REV&&REV.t);const live=document.getElementById('live'),fin=document.getElementById('final');
-  live.hidden=false;fin.hidden=true;document.getElementById('lvSeason').textContent=`Суперники — УПЛ ${seasonLabel(r.year)} · ${S.formation}`;
+  live.hidden=false;fin.hidden=true;document.getElementById('lvSeason').textContent=`Суперники — ${oppLabel(r.year)} · ${S.formation}`;
   document.getElementById('lvGrid').innerHTML=r.log.map(()=>'<i></i>').join('');
   REV={r,i:0,ms:650,t:null};tickReveal();REV.t=setInterval(tickReveal,REV.ms);
 }
@@ -1103,10 +1120,11 @@ async function loadHomeStats(){
 const LEVEL={normal:['Звичайний','lv-n'],hard:['Складний','lv-h'],hardcore:['Хардкор','lv-x'],daily:['Виклик дня','lv-d'],practice:['Тренування','lv-n']};
 const lvChip=m=>{const l=LEVEL[m];return l?`<span class="lv ${l[1]}">${l[0]}</span>`:'';};
 const BOARDS={
-  main:{name:'Загальна',q:'format=eq.classic&mode=in.(normal,hard,hardcore,daily)',note:'Класика й виклик дня. Поруч з іменем — рівень: 30-0 на «Хардкорі» і на «Звичайному» — різні речі.'},
+  main:{name:'Загальна',q:'format=eq.classic&mode=in.(normal,hard,hardcore,daily)',note:'Класика й виклик дня. Поруч з іменем — позначка режиму: «Звичайний» чи «Складний».'},
   derby:{name:'Дербі',q:'format=eq.derby',note:'Лише «Динамо» і «Шахтар». Тут 30-0 приблизно вдесятеро легше, ніж у класиці, тому таблиця окрема.'},
   oneclub:{name:'Один клуб',q:'format=eq.oneclub',note:'Найкращий XI одного клубу. Складність дуже залежить від клубу.'},
-  anti:{name:'Антисезон',q:'format=eq.anti',asc:true,note:'Навпаки: чим менше очок, тим вище. Мета — 0-30.'}};
+  anti:{name:'Антисезон',q:'format=eq.anti',asc:true,note:'Навпаки: чим менше очок, тим вище. Мета — 0-30.'},
+  legends:{name:'Ліга легенд',q:'format=eq.legends',note:'Суперники — 15 культових клубів, кожен у своєму найкращому сезоні. Тут 30-0 майже неможливе.'}};
 const CLUBN={};for(const c of DATA.clubs)CLUBN[c.c]=c.n;
 const pname=r=>(r.players&&(r.players.name||r.players.anon_name))||r.nickname||'Анонім';
 async function sbGetFallback(qs){let err;for(const q of qs){try{return await sbGet(q);}catch(e){err=e;}}throw err;}
@@ -1130,7 +1148,7 @@ function pitchHtml(formation,xi){const G=pitchGeo(formation);const F=FORMATIONS[
 function viewHtml(s){
   const xi=s.xi||[],tb=s.tbl||[];const rc=v=>v>=7.5?'var(--win)':v>=6.9?'var(--mf)':v>=6.5?'var(--draw)':'var(--loss)';
   const mvp=[...xi].filter(p=>p.rt!=null).sort((a,b)=>b.rt-a.rt)[0];
-  return `<div class="hero"><div class="tier">${esc(s.tier||'')}</div><div class="muted">${esc(pname(s))} · сезон ${seasonLabel(s.year)} · ${esc(s.formation)} · ${s.day?'Виклик дня '+s.day:(MODES[s.mode]?MODES[s.mode].name:esc(s.mode))}</div>
+  return `<div class="hero"><div class="tier">${esc(s.tier||'')}</div><div class="muted">${esc(pname(s))} · ${oppLabel(s.year)} · ${esc(s.formation)} · ${s.day?'Виклик дня '+s.day:(MODES[s.mode]?MODES[s.mode].name:esc(s.mode))}</div>
     <div class="big"><div><div class="n">${s.w}-${s.d}-${s.l}</div><div class="l">П – Н – Пр</div></div><div><div class="n">${s.pts}</div><div class="l">очок</div></div><div><div class="n">${s.place}</div><div class="l">місце</div></div><div><div class="n">${s.gf}:${s.ga}</div><div class="l">голи</div></div></div>
     <div class="xrow"><span class="chip">xP <b>${s.xp!=null?Number(s.xp).toFixed(1):'—'}</b></span><span class="chip">xG <b>${s.xg!=null?Number(s.xg).toFixed(1):'—'}</b></span><span class="chip">xGA <b>${s.xga!=null?Number(s.xga).toFixed(1):'—'}</b></span></div></div>
     <h3>Склад</h3>${pitchHtml(s.formation,xi)}

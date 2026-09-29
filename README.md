@@ -91,19 +91,14 @@ upl-30-0/
 
 Нужны Node 18+, Python 3, Playwright с Chromium (`cd tools && npm i --no-save acorn acorn-walk playwright`).
 - Главные, работают из репозитория как есть (открывают `index.html`, сеть кроме шрифтов заблокирована — в базы ничего не пишут):
-  - `node tools/tests/determinism.js` — браузер и сервер совпали 8/8;
+  - `node tools/tests/determinism.js` — браузер и сервер совпали 9/9 (с 0.50 — ещё «Ліга легенд»);
   - `node tools/tests/scenarios.js` — главная, тема, 4 сезона разных форматов, голы сходятся с матчами, текст и картка; снимки в `tools/tests/out/`.
   - В облачной среде Claude Chromium ходит через прокси: `PROXY_CA_SPKI` — отпечаток ключа CA прокси (`openssl x509 -in /root/.ccr/agent-proxy-ca.crt -pubkey -noout | openssl pkey -pubin -outform der | openssl dgst -sha256 -binary | base64`).
-- Остальные — раздать папку с собранным сайтом как `preview.html` на `localhost:8765`: `python3 -m http.server 8765`. Тесты — в `tools/tests/`:
-  - `modes` — режимы и форматы;
-  - `tro` — трофеи;
-  - `chal` — виклик другу;
-  - `cheat` — античит: все подделки отклоняются;
-  - `leagueui` — лиги групп;
-  - `news` — «Що нового» и вход;
-  - `f5test2`, `f5online` — 5×5.
-- `v39.js` — сквозной тест с настоящим Postgres и PostgREST, собирается скриптами `tools/tests/stub.sql` и `setup.sh`.
-- Пути в остальных тестах остались от рабочей папки 29.09 — при первом запуске поправить.
+- Остальные тесты в `tools/tests/` запускаются так же, из корня: `node tools/tests/<файл>`; каждый заканчивается строкой «УСЕ ГАРАЗД»:
+  - `cheat` — античит без браузера: честный сезон проходит, все подделки отклоняются;
+  - `modes` — режимы и форматы; `tro` — трофеи; `chal` — виклик другу; `leagueui` — лиги групп; `news` — «Що нового» и вход; `f5test2`, `f5online` — 5×5;
+  - `v39` — профиль игрока, таблица, проверка сезона: браузер против базы в памяти (`_site.js`) и настоящих `api/*.js`; `node tools/tests/v39.js [new|old|both]`.
+- `bash tools/tests/setup.sh` — SQL на временном Postgres (заглушка Supabase `stub.sql`): повторный запуск `new_db_part_A.sql`, `v039_part_B.sql`, `cards_bucket.sql`, RLS и функции игрока.
 
 ## Первый запуск в Claude Code (один раз)
 

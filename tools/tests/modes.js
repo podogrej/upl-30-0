@@ -1,38 +1,40 @@
-const { chromium } = require('playwright');
-async function draft(pg){ for (let i=0;i<11;i++){ await pg.click('#spinBtn'); await pg.waitForTimeout(1750); const btn = await pg.$('.pl:not([disabled])'); if(!btn){console.log('NO BUTTON at',i); return false;} await btn.click(); await pg.waitForTimeout(80); const pk=await pg.$('#pitch .slot.target'); if(pk){await pk.click(); await pg.waitForTimeout(60);}} return true; }
-async function fmt(pg,i){ await pg.evaluate(()=>{const s=document.getElementById('s4');if(s&&s.hidden)document.getElementById('freeOpen').click();});await pg.click(`#formats .opt:nth-child(${i})`); }
-(async () => {
-  const b = await chromium.launch({args:['--no-sandbox']});
-  const pg = await (await b.newContext({viewport:{width:820,height:1100}})).newPage();
-  let errs=0; pg.on('pageerror', e => {errs++; console.log('PAGEERROR', e.message);});
-  await pg.goto('file://' + process.cwd() + '/preview.html'); await pg.waitForTimeout(400);
-  // classic with reveal: check mid-reveal state
-  await pg.evaluate(()=>{const s=document.getElementById('s4');if(s&&s.hidden)document.getElementById('freeOpen').click();});await pg.click('#startBtn'); await draft(pg); await pg.click('#lockBtn');await pg.waitForSelector('#simBtn:not([hidden])');await pg.click('#simBtn'); await pg.waitForTimeout(2200);
-  console.log('LIVE', (await pg.textContent('#lvRound')), await pg.textContent('#lvRec'), '| final hidden', await pg.$eval('#final',e=>e.hidden));
-  await pg.screenshot({path:'shot_live.png'});
-  await pg.click('#fastBtn'); await pg.waitForTimeout(300); await pg.click('#skipBtn'); await pg.waitForTimeout(200);
-  console.log('after skip final hidden', await pg.$eval('#final',e=>e.hidden), 'matches', (await pg.$$('.m')).length, '|', (await pg.inputValue('#shareText')).split('\n').slice(0,3).join(' / '));
-  // derby
-  await pg.click('#againBtn'); await fmt(pg,2); await pg.evaluate(()=>{const s=document.getElementById('s4');if(s&&s.hidden)document.getElementById('freeOpen').click();});await pg.click('#startBtn'); await draft(pg);
-  const clubs = await pg.$$eval('#pitch .slot .club', els=>els.map(e=>e.textContent.split(' ')[0]));
-  console.log('DERBY clubs', [...new Set(clubs)]);
-  await pg.click('#lockBtn');await pg.waitForSelector('#simBtn:not([hidden])');await pg.click('#simBtn'); await pg.click('#skipBtn'); console.log('DERBY', (await pg.inputValue('#shareText')).split('\n').slice(0,3).join(' / '));
-  // one club: Karpaty default, choose Metalist
-  await pg.click('#againBtn'); await fmt(pg,3); console.log('clubpick visible', !(await pg.$eval('#clubPickRow',e=>e.hidden)));
-  await pg.selectOption('#clubPick','metalist-kharkiv'); await pg.evaluate(()=>{const s=document.getElementById('s4');if(s&&s.hidden)document.getElementById('freeOpen').click();});await pg.click('#startBtn'); const ok=await draft(pg);
-  const clubs2 = await pg.$$eval('#pitch .slot .club', els=>els.map(e=>e.textContent.replace(/ \d{4}.*/,'')));
-  console.log('ONECLUB ok', ok, [...new Set(clubs2)]);
-  if(ok){await pg.click('#lockBtn');await pg.waitForSelector('#simBtn:not([hidden])');await pg.click('#simBtn'); await pg.click('#skipBtn'); console.log('ONECLUB', (await pg.inputValue('#shareText')).split('\n').slice(0,3).join(' / '));}
-  // anti: pick worst available
-  await pg.click('#againBtn'); await fmt(pg,4); await pg.evaluate(()=>{const s=document.getElementById('s4');if(s&&s.hidden)document.getElementById('freeOpen').click();});await pg.click('#startBtn');
-  for (let i=0;i<11;i++){ await pg.click('#spinBtn'); await pg.waitForTimeout(1750); const btns = await pg.$$('.pl:not([disabled])'); await btns[0].click(); await pg.waitForTimeout(80); const pk=await pg.$('#pitch .slot.target'); if(pk){await pk.click(); await pg.waitForTimeout(60);}}
-  const apps = await pg.$$eval('#pitch .slot .r', els=>els.map(e=>e.textContent));
-  console.log('ANTI ratings', apps.join(','));
-  await pg.click('#lockBtn');await pg.waitForSelector('#simBtn:not([hidden])');await pg.click('#simBtn'); await pg.click('#skipBtn'); console.log('ANTI', (await pg.inputValue('#shareText')).split('\n').slice(0,3).join(' / '));
-  console.log('best line', await pg.textContent('#bestLine').catch(()=>''));
-  // daily determinism still
-  await pg.click('#againBtn'); await pg.evaluate(()=>{const s=document.getElementById('s1');if(s&&s.hidden)document.getElementById('homeBtn').click();});await pg.click('#dailyBtn'); await draft(pg); await pg.click('#lockBtn');await pg.waitForSelector('#simBtn:not([hidden])');await pg.click('#simBtn'); await pg.click('#skipBtn'); const d1=await pg.inputValue('#shareText');
-  await pg.click('#againBtn'); await pg.evaluate(()=>{const s=document.getElementById('s1');if(s&&s.hidden)document.getElementById('homeBtn').click();}); const dis=await pg.$eval('#dailyBtn',e=>[e.disabled,e.textContent]); const modesList=await pg.$$eval('#modes .opt b',e=>e.map(x=>x.textContent));
-  console.log('daily after official: disabled', dis[0], '|', dis[1], '| modes', modesList.join(','), '|', d1.split('\n').slice(0,3).join(' / '));
-  console.log('errors', errs); await b.close();
-})();
+// Режими гри в одному браузері: живий показ сезону (тур за туром, «Швидше», «Пропустити»), дербі (лише «Динамо» і «Шахтар»),
+// один клуб (вибір клубу, усі гравці з нього), антисезон (гравці з 10+ матчами), виклик дня (після офіційної спроби кнопка вимкнена).
+// Тексти й картки цих сезонів перевіряє scenarios.js. Запуск з кореня: node tools/tests/modes.js
+const {openPage}=require('./_page.js');const {checker}=require('./_site.js');
+async function draft(pg){for(let i=0;i<11;i++){await pg.click('#spinBtn');await pg.waitForSelector('#squad .pl:not([disabled])',{timeout:8000});const btn=await pg.$('.pl:not([disabled])');await btn.click();await pg.waitForTimeout(80);const pk=await pg.$('#pitch .slot.target');if(pk){await pk.click();await pg.waitForTimeout(60);}}
+  await pg.waitForSelector('#simBtn:not([hidden])');}
+async function free(pg,fi,before){await pg.evaluate(()=>document.getElementById('homeBtn').click());await pg.click('#freeOpen');await pg.click(`#formats .opt:nth-child(${fi})`);if(before)await before();await pg.click('#startBtn');}
+const clubsOf=pg=>pg.evaluate(()=>[...new Set(window.__dbg.S.slots.map(s=>s.player.cc))]);
+(async()=>{const T=checker('modes');const {b,pg,errs}=await openPage();
+ // класика: живий показ
+ await free(pg,1);await draft(pg);await pg.click('#simBtn');await pg.waitForSelector('#live:not([hidden])',{timeout:15000});await pg.waitForTimeout(2000);
+ const live=await pg.evaluate(()=>({round:document.getElementById('lvRound').textContent,rec:document.getElementById('lvRec').textContent,fin:document.getElementById('final').hidden,cells:document.querySelectorAll('#lvGrid i[class]').length}));
+ T.check(/^Тур \d+ \/ 30$/.test(live.round)&&/^\d+-\d+-\d+$/.test(live.rec)&&live.fin&&live.cells>=2&&live.cells<30,`живий показ: ${live.round}, ${live.rec}, ${live.cells} клітинок, підсумок схований`);
+ await pg.click('#fastBtn');await pg.waitForTimeout(300);await pg.click('#skipBtn');await pg.waitForTimeout(300);
+ const fin=await pg.evaluate(()=>({fin:!document.getElementById('final').hidden,live:document.getElementById('live').hidden,m:document.getElementById('matches').children.length,share:document.getElementById('shareText').value}));
+ T.check(fin.fin&&fin.live,'«Пропустити»: підсумок показано, живий показ сховано');
+ T.check(fin.m>=30&&/30-0 УПЛ/.test(fin.share),`підсумок: ${fin.m} рядків матчів, текст «${fin.share.split('\n')[0]}»`);
+ // дербі
+ await free(pg,2);await draft(pg);const dc=await clubsOf(pg);
+ T.check(dc.length&&dc.every(c=>['dynamo-kyiv','shakhtar-donetsk'].includes(c)),'дербі: лише Динамо і Шахтар ('+dc.join(', ')+')');
+ await pg.click('#simBtn');await pg.click('#skipBtn');T.check(/дербі/i.test(await pg.inputValue('#shareText')),'дербі: у тексті є «дербі»');
+ // один клуб
+ let club='';
+ await free(pg,3,async()=>{T.check(await pg.$eval('#clubPickRow',e=>!e.hidden),'один клуб: видно вибір клубу');
+   club=await pg.evaluate(()=>{const o=[...document.getElementById('clubPick').options];return (o.find(x=>x.value==='metalist-kharkiv')||o[1]).value;});await pg.selectOption('#clubPick',club);});
+ await draft(pg);const oc=await clubsOf(pg);T.check(oc.length===1&&oc[0]===club,'один клуб: усі гравці з «'+club+'» ('+oc.join(', ')+')');
+ await pg.click('#simBtn');await pg.click('#skipBtn');
+ T.check(/Найкращий результат/.test(await pg.evaluate(()=>{document.getElementById('homeBtn').click();document.getElementById('freeOpen').click();return document.getElementById('bestLine').textContent;})),'один клуб: після сезону є «Найкращий результат»');
+ // антисезон: лише гравці з 10+ матчами за клуб-сезон
+ await free(pg,4);await draft(pg);
+ const apps=await pg.evaluate(()=>window.__dbg.S.slots.map(s=>s.player.apps));T.check(apps.every(a=>a>=10),'антисезон: у всіх 10+ матчів ('+apps.join(',')+')');
+ T.check(await pg.evaluate(()=>window.__dbg.S.mode)==='hardcore','антисезон: внутрішній режим «hardcore» (без рейтингів)');
+ await pg.click('#simBtn');await pg.click('#skipBtn');T.check(/антисезон|0-30/i.test(await pg.inputValue('#shareText')),'антисезон: текст про антисезон');
+ // виклик дня: офіційна спроба одна
+ await pg.evaluate(()=>document.getElementById('homeBtn').click());T.check(!(await pg.$eval('#dailyBtn',e=>e.disabled)),'виклик дня: до гри кнопка активна');
+ await pg.click('#dailyBtn');await draft(pg);await pg.click('#simBtn');await pg.click('#skipBtn');await pg.waitForTimeout(300);
+ await pg.evaluate(()=>document.getElementById('homeBtn').click());const d=await pg.$eval('#dailyBtn',e=>[e.disabled,e.textContent]);
+ const st=await pg.textContent('#dStatus');T.check(d[0]&&/завтра/.test(d[1])&&/^Сьогодні: \d+-\d+-\d+/.test(st),`виклик дня після гри: «${d[1].trim()}», «${st}»`);
+ T.check(!errs.length,'помилок на сторінці немає '+errs.join(' | '));
+ await b.close();process.exit(T.done());})();
