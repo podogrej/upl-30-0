@@ -391,7 +391,7 @@ td .sub{font-size:11px;color:var(--muted);margin-top:2px;display:flex;gap:6px;al
         <div class="reels"><div class="reel" id="reelClub"><div class="strip"><div class="club" id="wClub"></div></div></div><div class="reel" id="reelYear"><div class="strip"><div class="season" id="wSeason"></div></div></div></div>
         <div class="row" style="justify-content:space-between"><span class="muted" id="wHint"></span>
           <span class="rr" id="rerollRow"><span class="mono" id="rerollCnt"></span><span class="seg"><button id="rerollClub" title="Інший клуб, той самий сезон">Клуб</button><button id="rerollYear" title="Той самий клуб, інший сезон">Сезон</button><button id="rerollBtn" title="Інший клуб і сезон">Усе</button></span></span></div>
-        <label class="rtog" id="showRRow" hidden><input type="checkbox" id="showR"> Показати рейтинги гравців</label><div class="sqHead" id="sqHead" hidden></div><div class="squad" id="squad"></div>
+        <label class="rtog" id="showRRow" hidden><input type="checkbox" id="showR"> Показати рейтинги гравців</label><p class="muted" id="antiHint" hidden style="font-size:12px;margin:6px 0 4px">Рейтинги приховані: антисезон грається на пам'ять.</p><div class="sqHead" id="sqHead" hidden></div><div class="squad" id="squad"></div>
       </div>
       <div class="pre" id="lockBox" hidden><p style="margin:0">Склад зібрано — рахуємо рейтинги й прогноз.</p><button class="primary" id="lockBtn"><!--i:lock-open-variant-->Відкрити рейтинги й прогноз</button></div>
       <div class="pre" id="preBox" hidden></div>
@@ -766,7 +766,7 @@ function alertNoCands(){document.getElementById('wheel').hidden=false;document.q
 function renderWheel(){
   const cs=S.wheel;const sortR=MODES[S.mode].showRatings;const show=sortR||!!S.showR;
   // «Показати рейтинги»: за замовчуванням вимкнено, діє до кінця драфту; порядок гравців не змінює. Немає в «Хардкорі» й антисезоні
-  {const row=document.getElementById('showRRow');row.hidden=sortR||MODES[S.mode].reveal===false||S.format==='anti';document.getElementById('showR').checked=!!S.showR;}
+  {const row=document.getElementById('showRRow');row.hidden=sortR||MODES[S.mode].reveal===false||S.format==='anti';document.getElementById('antiHint').hidden=S.format!=='anti';document.getElementById('showR').checked=!!S.showR;}
   document.querySelector('#reelClub .strip').innerHTML=`<div class="club">${esc(cs.n)}</div>`;
   document.querySelector('#reelYear .strip').innerHTML=`<div class="season">${seasonLabel(cs.y)}</div>`;
   document.getElementById('wHint').textContent=`${cs.pos} місце в тому сезоні`+(S.format==='anti'?` · лише гравці з ${ANTI_MIN_APPS}+ матчами`:'');
@@ -844,7 +844,8 @@ function teamIndices(xi){
 function userMult(t,mode){
   const pen=Math.max(0,t.gap-12)*P.balPen;
   const a=Math.exp(P.betaA*(t.att+mode.star-P.refA)-pen), d=Math.exp(-P.betaD*(t.def+mode.star-P.refD)+pen);
-  return {att:Math.max(P.floorA,Math.min(a,P.capA)),def:Math.min(P.capD,Math.max(d,P.floorD))};   // з 0.50 межі й знизу: інакше найгірший склад програє майже все (антисезон)
+  const anti=S.format==='anti';   // з 0.50 межі знизу — лише в антисезоні (там 0-30 має бути важким); у класиці «рекорди ганьби» лишаються
+  return {att:Math.max(anti?P.floorA:0,Math.min(a,P.capA)),def:Math.min(anti?P.capD:Infinity,Math.max(d,P.floorD))};
 }
 // ---------- правила УПЛ для рівних очок: 1) очки в особистих зустрічах, 2) різниця м'ячів в особистих, 3) забиті в особистих,
 // 4) загальна різниця, 5) загальні забиті; за 1-ше місце при повній рівності — «золотий матч», за інші — жереб
@@ -980,7 +981,7 @@ async function playSeason(year){
   document.getElementById('xCap').textContent=`xG — очікувані голи: скільки команда мала б забити за силою атаки й суперників. xGA — очікувані пропущені. Везіння — різниця між набраними очками й прогнозом перед сезоном (xP ${r.xp.toFixed(1)}).`;
   renderPitch(document.getElementById('pitch2'),S.slots,true);
   document.getElementById('scorers').innerHTML=r.scorers.slice(0,6).map(s=>`<span class="mono">${s.g}</span> ${esc(s.name)}`).join(' · ')||'—';
-  document.getElementById('matches').innerHTML=r.log.map(m=>`<div class="m" title="${esc(whoStr(m.who))} · xG ${m.xg.toFixed(1)}:${m.xga.toFixed(1)}"><span class="res ${m.res}">${m.res==='W'?'П':m.res==='D'?'Н':'Пр'}</span><span class="op">${m.home?'':'@ '}${esc(m.opp)}</span><span class="sc">${m.ug}:${m.og}</span></div>`).join('');
+  document.getElementById('matches').innerHTML=r.log.map(m=>`<div class="m" title="${esc(whoMin(m))} · xG ${m.xg.toFixed(1)}:${m.xga.toFixed(1)}"><span class="res ${m.res}">${m.res==='W'?'П':m.res==='D'?'Н':'Пр'}</span><span class="op">${m.home?'':'@ '}${esc(m.opp)}</span><span class="sc">${m.ug}:${m.og}</span></div>`).join('');
   const f1=v=>v.toFixed(1),sg=v=>(v>0?'+':'')+v;
   document.getElementById('table').innerHTML=`<tr><th>#</th><th>Команда</th><th class="num">І</th><th class="num">В</th><th class="num">Н</th><th class="num">П</th><th class="num">Г</th><th class="num">РМ</th><th class="num">О</th><th class="num">xG</th><th class="num">xGA</th><th class="num">Г−xG</th></tr>`+r.table.map((t,i)=>`<tr class="${ZONE(i+1,r.table.length)}${t.id==='USER'?' me':''}"><td class="num">${i+1}</td><td>${esc(t.n)}</td><td class="num">${t.w+t.d+t.l}</td><td class="num">${t.w}</td><td class="num">${t.d}</td><td class="num">${t.l}</td><td class="num">${t.gf}:${t.ga}</td><td class="num">${sg(t.gf-t.ga)}</td><td class="num"><b>${t.pts}</b></td><td class="num">${f1(t.xg)}</td><td class="num">${f1(t.xga)}</td><td class="num">${(t.gf-t.xg>=0?'+':'')+(t.gf-t.xg).toFixed(1)}</td></tr>`).join('');
   let tn="При рівності очок місця визначаються за регламентом УПЛ: очки в особистих зустрічах → різниця м'ячів в особистих → забиті в особистих → загальна різниця м'ячів → загальна кількість забитих; за 1-ше місце — «золотий матч», за інші — жереб.";
@@ -1021,13 +1022,19 @@ function startReveal(r){
   document.getElementById('lvGrid').innerHTML=r.log.map(()=>'<i></i>').join('');
   REV={r,i:0,ms:650,t:null};tickReveal();REV.t=setInterval(tickReveal,REV.ms);
 }
+// з 0.50: автори наших голів з хвилинами, зліва направо: «1' Шацьких, 15' Шевченко». Хвилини — окремий генератор із seed сезону й туру,
+// тож результати матчів від них не залежать. Голи суперника не показуємо.
+function goalMins(m){const n=m.who.length;if(!n)return [];const R=mulberry32(hashStr(`${(S.result&&S.result.seed)||0}|${m.rd}|min`));
+  const mins=Array.from({length:n},()=>1+Math.floor(R()*90)).sort((a,b)=>a-b);
+  return m.who.map((nm,i)=>{const t=nm.split(' ');const sur=t.length>1?t.slice(1).join(' '):nm;const mi=mins[i];return (mi===90&&R()<0.6?`90+${1+Math.floor(R()*5)}`:mi)+`' ${sur}`;});}
+function whoMin(m){return goalMins(m).join(', ');}
 function whoStr(a){const c={};for(const n of a){const t=n.split(' ');const k=t.length>1?t.slice(1).join(' '):n;c[k]=(c[k]||0)+1;}return Object.entries(c).map(([k,v])=>v>1?`${k} ${v}`:k).join(', ');}
 function tickReveal(){
   const {r}=REV;if(REV.i>=r.log.length){finishReveal();return;}
   const m=r.log[REV.i],k=REV.i+1;let w=0,d=0,l=0;for(let q=0;q<k;q++){const x=r.log[q].res;if(x==='W')w++;else if(x==='D')d++;else l++;}
   document.getElementById('lvRound').textContent=`Тур ${k} / ${r.log.length}`;
   document.getElementById('lvRec').textContent=`${w}-${d}-${l}`;document.getElementById('lvPts').textContent=`${w*3+d} ${ptsWord(w*3+d)}`;
-  document.getElementById('lvMatch').innerHTML=`<span class="res ${m.res}" style="width:28px;height:28px;border-radius:6px;display:grid;place-items:center;color:#fff;font-family:var(--font-mono);font-weight:600">${m.res==='W'?'П':m.res==='D'?'Н':'Пр'}</span><div><b>${m.home?'':'@ '}${esc(m.opp)}</b><div class="who">${m.who.length?esc(whoStr(m.who)):'&nbsp;'}</div></div><span class="sc">${m.ug}:${m.og}</span>`;
+  document.getElementById('lvMatch').innerHTML=`<span class="res ${m.res}" style="width:28px;height:28px;border-radius:6px;display:grid;place-items:center;color:#fff;font-family:var(--font-mono);font-weight:600">${m.res==='W'?'П':m.res==='D'?'Н':'Пр'}</span><div><b>${m.home?'':'@ '}${esc(m.opp)}</b><div class="who">${m.who.length?esc(whoMin(m)):'&nbsp;'}</div></div><span class="sc">${m.ug}:${m.og}</span>`;
   document.getElementById('lvGrid').children[REV.i].className=m.res;
   const snap=r.snaps[k-1];const ui=snap.findIndex(t=>t.id==='USER');const rows=snap.map((t,i)=>({...t,i})).filter(t=>t.i<4||t.i===ui||t.i===snap.length-1);
   document.getElementById('lvTable').innerHTML=`<tr><th>#</th><th>Команда</th><th class="num">І</th><th class="num">РМ</th><th class="num">О</th></tr>`+rows.map(t=>`<tr class="${ZONE(t.i+1,snap.length)}${t.id==='USER'?' me':''}"><td class="num">${t.i+1}</td><td>${esc(t.n)}</td><td class="num">${t.p}</td><td class="num">${t.gd>0?'+':''}${t.gd}</td><td class="num"><b>${t.pts}</b></td></tr>`).join('');
