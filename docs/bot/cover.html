@@ -1,0 +1,36 @@
+<!doctype html><html><head><meta charset="utf-8">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@700;900&family=JetBrains+Mono:wght@600&family=Manrope:wght@600&display=swap">
+<style>
+html,body{margin:0;background:#121212}
+.c{position:relative;overflow:hidden;background:radial-gradient(120% 90% at 85% 110%,#1f3a28 0%,#121212 60%);color:#f4f1ea;font-family:Manrope,sans-serif}
+.pitch{position:absolute;inset:0;opacity:.16}
+.k{font-family:'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#ff9a3d;border:1.5px solid rgba(255,122,26,.5);border-radius:99px;display:inline-block}
+.logo{font-family:Unbounded,sans-serif;font-weight:900;letter-spacing:-.03em;line-height:.9}
+.logo span{color:#ff7a1a}
+.sub{color:#b3aea4}
+.chips{display:flex;gap:10px}
+.chip{font-family:'JetBrains Mono',monospace;border:1.5px solid #303032;border-radius:10px;color:#f4f1ea;background:#1c1c1d}
+.chip b{color:#ff9a3d}
+/* cover 640x360 */
+#cover{width:640px;height:360px}
+#cover .in{position:absolute;left:40px;top:38px;right:40px}
+#cover .k{font-size:13px;padding:5px 14px}
+#cover .logo{font-size:84px;margin-top:20px;white-space:nowrap}
+#cover .sub{font-size:19px;margin-top:16px}
+#cover .chips{margin-top:22px}#cover .chip{font-size:14px;padding:7px 11px}
+/* avatar 640x640 */
+#ava{width:640px;height:640px;display:grid;place-items:center;text-align:center;background:radial-gradient(90% 90% at 50% 100%,#1f3a28 0%,#121212 65%)}
+#ava .logo{font-size:150px}
+#ava .logo span{display:block;font-size:122px;margin-top:10px}
+</style></head><body>
+<div class="c" id="cover">
+ <svg class="pitch" viewBox="0 0 640 360" preserveAspectRatio="none"><g fill="none" stroke="#f0ede6" stroke-width="2"><rect x="430" y="20" width="220" height="320" rx="4"/><line x1="430" y1="180" x2="620" y2="180"/><circle cx="525" cy="180" r="44"/><rect x="475" y="20" width="100" height="52"/><rect x="475" y="288" width="100" height="52"/></g></svg>
+ <div class="in">
+  <div class="k">Telegram-гра · драфт</div>
+  <div class="logo">30-0 <span>УПЛ</span></div>
+  <div class="sub">Збери XI з історії чемпіонату України<br>і пройди сезон без поразок</div>
+  <div class="chips"><div class="chip"><b>34</b> сезони</div><div class="chip"><b>524</b> клуб-сезони</div><div class="chip"><b>4 557</b> футболістів</div></div>
+ </div>
+</div>
+<div class="c" id="ava"><div class="logo">30-0<span>УПЛ</span></div></div>
+</body></html>
