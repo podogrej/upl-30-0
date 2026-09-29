@@ -1,0 +1,243 @@
+# source: https://www.rsssf.org/tableso/oekr02.html (via WebFetch summary, requested verbatim; auto-extracted from transcript)
+TABLE
+ 1.Shakhtar Donets'k              26 20  6  0 49-10 66  Champions
+ 2.Dynamo Kyiv                    26 20  5  1 62- 9 65
+ 3.Metalurh Donets'k              26 12  6  8 38-28 42
+ 4.Metalurh Zaporizhzhya          26 11  7  8 25-22 40  [4 2 1 1 4-3 7]  [=]
+ 5.Metalist Kharkiv               26 11  7  8 35-36 40  [4 3 0 1 6-2 9]
+ 6.Dnipro Dnipropetrovs'k         26 11  7  8 30-20 40  [4 0 1 3 1-6 1]
+ 7.Tavria Symferopol'             26  8  6 12 27-36 30
+ 8.Karpaty L'viv                  26  7  8 11 19-31 29
+ 9.Kryvbas Kryvyi Rih             26  6 10 10 28-40 28
+10.Metalurh Mariupol'             26  6  8 12 29-42 26
+11.Vorskla Poltava                26  6  7 13 19-33 25
+12.Arsenal Kyiv                   26  6  5 15 18-28 23  [2 1 0 1 2-1 3]  [*]
+13.Polihraftechnica Olexandria    26  5  8 13 21-39 23  [2 1 0 1 1-2 3]  Relegation Playoff
+14.Zakarpattya Uzhhorod           26  5  6 15 23-49 21  Relegated
+# aliases: WebFetch summary used short names; CSCA (CSKA Kyiv) = renamed Arsenal Kyiv during season
+ALIAS Polihraft. => Polihraftechnica Olexandria
+ALIAS Polihraftechnika => Polihraftechnica Olexandria
+ALIAS Polihraftechnica => Polihraftechnica Olexandria
+ALIAS Metalurh M => Metalurh Mariupol'
+ALIAS Metalurh D => Metalurh Donets'k
+ALIAS Metalurh Z => Metalurh Zaporizhzhya
+ALIAS CSCA => Arsenal Kyiv
+ALIAS Arsenal => Arsenal Kyiv
+ALIAS Tavria => Tavria Symferopol'
+ALIAS Kryvbas => Kryvbas Kryvyi Rih
+ALIAS Dynamo => Dynamo Kyiv
+ALIAS Shakhtar => Shakhtar Donets'k
+ALIAS Karpaty => Karpaty L'viv
+ALIAS Metalist => Metalist Kharkiv
+ALIAS Dnipro => Dnipro Dnipropetrovs'k
+ALIAS Vorskla => Vorskla Poltava
+ALIAS Zakarpattya => Zakarpattya Uzhhorod
+MATCHES
+Round 1
+Dynamo 5-0 Polihraft.
+Shakhtar 5-1 Zakarpattya
+Kryvbas 1-1 Metalurh M
+Vorskla 1-2 Dnipro
+Metalurh Z 0-3 Metalurh D
+Metalist 2-1 CSCA
+Tavria 3-0 Karpaty
+Round 2
+Dynamo 2-2 Shakhtar
+Zakarpattya 0-0 Dnipro
+Metalurh M 1-0 Vorskla
+Karpaty 2-1 Metalurh Z
+Metalurh D 5-0 Metalist
+Polihraft. 1-0 CSCA
+Kryvbas 2-0 Tavria
+Round 3
+Shakhtar 2-1 Polihraft.
+Dnipro 0-0 Dynamo
+Metalurh M 3-0 Zakarpattya
+Metalurh Z 0-0 Kryvbas
+Metalist 0-0 Karpaty
+CSCA 0-1 Metalurh D
+Tavria 1-0 Vorskla
+Round 4
+Dynamo 1-0 Metalurh M
+Zakarpattya 2-2 Tavria
+Vorskla 0-1 Metalurh Z
+Kryvbas 4-1 Metalist
+Karpaty 1-0 CSCA
+Polihraft. 1-0 Metalurh D
+Shakhtar 1-0 Dnipro
+Round 5
+Metalurh M 0-2 Shakhtar
+Dnipro 0-0 Polihraft.
+Metalurh Z 4-1 Zakarpattya
+Metalist 2-0 Vorskla
+CSCA 3-0 Kryvbas
+Metalurh D 0-0 Karpaty
+Tavria 1-5 Dynamo
+Round 6
+Polihraft. 1-1 Karpaty
+Kryvbas 1-3 Metalurh D
+Zakarpattya 3-5 Metalist
+Dynamo 1-0 Metalurh Z
+Shakhtar 2-1 Tavria
+Dnipro 3-1 Metalurh M
+Vorskla 1-0 CSCA
+Round 7
+Tavria 0-2 Dnipro
+Metalurh M 2-1 Polihraft.
+CSCA 0-2 Zakarpattya
+Metalurh D 0-0 Vorskla
+Karpaty 3-2 Kryvbas
+Metalurh Z 0-3 Shakhtar
+Metalist 0-1 Dynamo
+Round 8
+Polihraft. 0-0 Kryvbas
+Vorskla 1-3 Karpaty
+Zakarpattya 1-1 Metalurh D
+Dnipro 0-0 Metalurh Z
+Metalurh M 0-0 Tavria
+Shakhtar 3-0 Metalist
+Dynamo 2-0 CSCA
+Round 9
+Karpaty 3-0 Zakarpattya
+Tavria 2-0 Polihraft.
+Metalurh Z 3-0 Metalurh M
+Kryvbas 2-0 Vorskla
+Metalist 3-0 Dnipro
+CSCA 0-0 Shakhtar
+Metalurh D 0-0 Dynamo
+Round 10
+Polihraft. 2-2 Vorskla
+Zakarpattya 2-0 Kryvbas
+Shakhtar 3-1 Metalurh D
+Dynamo 4-1 Karpaty
+Metalurh M 0-0 Metalist
+Tavria 0-1 Metalurh Z
+Dnipro 2-0 CSCA
+Round 11
+Metalurh Z 0-0 Polihraftechnika
+Metalist 4-1 Tavria
+Kryvbas 0-7 Dynamo
+Vorskla 1-0 Zakarpattya
+CSCA 3-2 Metalurh M
+Metalurh D 2-0 Dnipro
+Karpaty 0-2 Shakhtar
+Round 12
+Polihraft. 4-2 Zakarpattya
+Metalurh M 4-2 Metalurh D
+Metalurh Z 1-0 Metalist
+Dynamo 1-0 Vorskla
+Shakhtar 3-1 Kryvbas
+Dnipro 0-1 Karpaty
+Tavria 1-2 CSCA
+Round 13
+Metalist 1-0 Polihraftechnika
+CSCA 2-0 Metalurh Z
+Metalurh D 4-1 Tavria
+Karpaty 2-0 Metalurh M
+Kryvbas 3-3 Dnipro
+Vorskla 1-1 Shakhtar
+Zakarpattya 1-2 Dynamo
+Round 14
+Polihraft. 2-0 Metalist
+Metalurh Z 2-0 Arsenal
+Tavria 1-3 Metalurh D
+Metalurh M 3-1 Karpaty
+Dnipro 2-0 Kryvbas
+Shakhtar 4-0 Vorskla
+Dynamo 5-0 Zakarpattya
+Round 15
+Zakarpattya 0-1 Polihraftechnica
+Metalurh D 2-1 Metalurh M
+Metalist 2-1 Metalurh Z
+Vorskla 1-2 Dynamo
+Kryvbas 0-0 Shakhtar
+Karpaty 0-0 Dnipro
+Arsenal 0-0 Tavria
+Round 16
+Polihraft. 0-1 Metalurh Z
+Tavria 2-0 Metalist
+Metalurh M 1-2 Arsenal
+Dnipro 2-0 Metalurh D
+Shakhtar 3-0 Karpaty
+Dynamo 0-0 Kryvbas
+Zakarpattya 2-0 Vorskla
+Round 17
+Vorskla 1-1 Polihraftechnica
+Kryvbas 1-0 Zakarpattya
+Metalist 2-2 Metalurh M
+Metalurh Z 0-2 Tavria
+Metalurh D 0-1 Shakhtar
+Karpaty 0-2 Dynamo
+Arsenal 0-1 Dnipro
+Round 18
+Polihraft. 0-1 Tavria
+Metalurh M 0-0 Metalurh Z
+Zakarpattya 1-0 Karpaty
+Vorskla 2-2 Kryvbas
+Dnipro 0-1 Metalist
+Shakhtar 2-0 Arsenal
+Dynamo 2-0 Metalurh D
+Round 19
+Kryvbas 3-1 Polihraftechnica
+Karpaty 0-1 Vorskla
+Metalurh D 1-1 Zakarpattya
+Metalist 1-1 Shakhtar
+Metalurh Z 2-1 Dnipro
+Tavria 3-1 Metalurh M
+Arsenal 0-1 Dynamo
+Round 20
+Shakhtar 0-0 Metalurh Z
+Dynamo 6-0 Metalist
+Dnipro 2-1 Tavria
+Polihraft. 2-2 Metalurh M
+Zakarpattya 2-1 Arsenal
+Vorskla 2-1 Metalurh D
+Kryvbas 0-0 Karpaty
+Round 21
+Karpaty 0-0 Polihraftechnica
+Metalurh D 3-2 Kryvbas
+Metalist 4-0 Zakarpattya
+Metalurh Z 1-3 Dynamo
+Tavria 0-1 Shakhtar
+Metalurh M 0-0 Dnipro
+Arsenal 0-0 Vorskla
+Round 22
+Polihraft. 2-6 Dnipro
+Shakhtar 2-0 Metalurh M
+Dynamo 0-0 Tavria
+Zakarpattya 0-1 Metalurh Z
+Vorskla 1-1 Metalist
+Kryvbas 1-0 Arsenal
+Karpaty 0-1 Metalurh D
+Round 23
+Arsenal 0-0 Karpaty
+Metalist 0-0 Kryvbas
+Metalurh Z 1-0 Vorskla
+Tavria 1-1 Zakarpattya
+Metalurh D 1-0 Polihraftechnica
+Metalurh M 0-6 Dynamo
+Dnipro 0-1 Shakhtar
+Round 24
+Zakarpattya 1-1 Metalurh M
+Vorskla 2-0 Tavria
+Kryvbas 0-0 Metalurh Z
+Karpaty 0-2 Metalist
+Metalurh D 2-1 Arsenal
+Polihraft. 1-2 Shakhtar
+Dynamo 1-0 Dnipro
+Round 25
+Arsenal 2-0 Polihraftechnica
+Metalist 3-1 Metalurh D
+Metalurh Z 4-1 Karpaty
+Tavria 3-2 Kryvbas
+Vorskla 2-1 Metalurh M
+Dnipro 2-0 Zakarpattya
+Shakhtar 2-0 Dynamo
+Round 26
+Polihraft. 0-3 Dynamo
+Zakarpattya 0-1 Shakhtar
+Dnipro 2-0 Vorskla
+Metalurh M 3-1 Kryvbas
+Karpaty 0-0 Tavria
+Metalurh D 1-1 Metalurh Z
+Arsenal 1-1 Metalist

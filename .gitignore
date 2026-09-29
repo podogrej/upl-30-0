@@ -1,0 +1,6 @@
+node_modules/
+__pycache__/
+dist/
+*.pyc
+tools/tests/*.png
+tools/tests/preview.html

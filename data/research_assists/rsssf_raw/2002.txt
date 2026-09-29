@@ -1,0 +1,281 @@
+# source: https://www.rsssf.org/tableso/oekr03.html (via WebFetch summary, requested verbatim; auto-extracted from transcript)
+TABLE
+ 1.Dynamo Kyiv                    30 23  4  3 66-20 73  Champions
+ 2.Shakhtar Donets'k              30 22  4  4 61-24 70
+ 3.Metalurh Donets'k              30 18  6  6 44-26 60
+ 4.Dnipro Dnipropetrovs'k         30 18  5  7 48-27 59
+ 5.Arsenal Kyiv                   30 16  8  6 49-24 56
+ 6.Volyn Lutsk                    30 12  5 13 37-44 41
+ 7.Karpaty L'viv                  30  9  9 12 29-37 36
+ 8.Chornomorets Odesa             30 10  4 16 31-45 34
+ 9.Tavria Symferopol'             30  9  7 14 36-50 34
+10.Illichivets Mariupol'          30  8 10 12 34-38 34
+11.Vorskla Poltava                30  8  8 14 26-41 32
+12.Kryvbas Kryvyi Rih             30  8  7 15 25-37 31
+13.FC Olexandria                  30  7  9 14 26-43 30
+14.Obolon Kyiv                    30  7  7 16 32-45 28
+15.Metalurh Zaporizhzhya          30  6  8 16 22-41 26  Relegated
+16.Metalist Kharkiv               30  6  5 19 19-43 23  Relegated
+# aliases: WebFetch summary used short names; Polihraftechnica = later renamed FC Olexandria, Metalurh Mariupol = Illichivets
+ALIAS Polihraftechnica => FC Olexandria
+ALIAS Polihraftechnika => FC Olexandria
+ALIAS Olexandria => FC Olexandria
+ALIAS Metalurh M => Illichivets Mariupol'
+ALIAS Illichivets => Illichivets Mariupol'
+ALIAS Metalurh D => Metalurh Donets'k
+ALIAS Metalurh Z => Metalurh Zaporizhzhya
+ALIAS Volyn-1 => Volyn Lutsk
+ALIAS SC Volyn-1 => Volyn Lutsk
+ALIAS Volyn => Volyn Lutsk
+ALIAS Tavria => Tavria Symferopol'
+ALIAS Chornomorets => Chornomorets Odesa
+ALIAS Kryvbas => Kryvbas Kryvyi Rih
+ALIAS Dynamo => Dynamo Kyiv
+ALIAS Shakhtar => Shakhtar Donets'k
+ALIAS Arsenal => Arsenal Kyiv
+ALIAS Karpaty => Karpaty L'viv
+ALIAS Metalist => Metalist Kharkiv
+ALIAS Dnipro => Dnipro Dnipropetrovs'k
+ALIAS Obolon => Obolon Kyiv
+ALIAS Vorskla => Vorskla Poltava
+MATCHES
+Polihraftechnica 0-0 Karpaty
+Metalurh D 2-1 Obolon
+Metalurh M 4-1 Vorskla
+Chornomorets 0-2 Kryvbas
+Dnipro 2-0 Volyn-1
+Metalist 0-2 Dynamo
+Arsenal 0-0 Shakhtar
+Tavria 1-1 Metalurh Z
+Karpaty 1-0 Metalurh Z
+Shakhtar 5-2 Tavria
+Dynamo 3-1 Arsenal
+SC Volyn-1 2-0 Metalist
+Kryvbas 1-1 Dnipro
+Vorskla 1-2 Chornomorets
+Polihraftechnica 0-2 Metalurh D
+Obolon 0-0 Metalurh M
+Metalurh D 1-1 Karpaty
+Metalurh M 1-1 Polihraftechnica
+Chornomorets 0-2 Obolon
+Dnipro 1-0 Vorskla
+Metalist 2-1 Kryvbas
+Arsenal 8-1 SC Volyn-1
+Tavria 1-2 Dynamo
+Metalurh Z 0-1 Shakhtar
+Obolon 1-3 Dnipro
+Metalurh D 2-0 Metalurh M
+Karpaty 2-4 Shakhtar
+Dynamo 5-2 Metalurh Z
+Volyn 1-0 Tavria
+Kryvbas 0-1 Arsenal
+Vorskla 1-0 Metalist
+Polihraftechnica 2-1 Chornomorets
+Shakhtar 1-0 Dynamo
+Metalurh M 2-3 Karpaty
+Chornomorets 0-1 Metalurh D
+Dnipro 1-1 Polihraftechnica
+Metalist 1-1 Obolon
+Arsenal 2-1 Vorskla
+Tavria 4-2 Kryvbas
+Metalurh Z 1-0 Volyn
+Volyn 2-0 Shakhtar
+Kryvbas 0-0 Metalurh Z
+Vorskla 1-0 Tavria
+Obolon 0-2 Arsenal
+Polihraftechnica 1-1 Metalist
+Metalurh D 1-3 Dnipro
+Metalurh M 2-0 Chornomorets
+Karpaty 0-0 Dynamo
+Chornomorets 1-1 Karpaty
+Dnipro 1-0 Metalurh M
+Metalist 0-3 Metalurh D
+Tavria 3-1 Obolon
+Shakhtar 1-1 Kryvbas
+Dynamo 3-1 Volyn
+Arsenal 5-1 Polihraftechnica
+Metalurh Z 0-1 Vorskla
+Chornomorets 0-1 Dnipro
+Polihraftechnica 1-1 Tavria
+Metalurh D 1-2 Arsenal
+Vorskla 1-2 Shakhtar
+Karpaty 0-2 Volyn
+Kryvbas 0-0 Dynamo
+Metalurh M 1-1 Metalist
+Obolon 2-0 Metalurh Z
+Dnipro 2-0 Karpaty
+Dynamo 8-0 Vorskla
+Metalist 1-0 Chornomorets
+Shakhtar 2-1 Obolon
+Volyn 2-0 Kryvbas
+Tavria 0-2 Metalurh D
+Metalurh Z 2-1 Polihraftechnica
+Arsenal 2-0 Metalurh M
+Vorskla 0-1 Volyn
+Karpaty 0-0 Kryvbas
+Obolon 1-1 Dynamo
+Polihraftechnica 0-1 Shakhtar
+Chornomorets 1-3 Arsenal
+Dnipro 2-0 Metalist
+Metalurh M 2-0 Tavria
+Metalurh D 1-1 Metalurh Z
+Shakhtar 3-1 Metalurh D
+Metalurh Z 1-1 Metalurh M
+Kryvbas 2-1 Vorskla
+Metalist 1-0 Karpaty
+Tavria 2-0 Chornomorets
+Dynamo 2-0 Polihraftechnica
+Volyn 2-1 Obolon
+Arsenal 0-3 Dnipro
+Karpaty 3-0 Vorskla
+Obolon 0-1 Kryvbas
+Polihraftechnica 3-2 Volyn
+Metalurh D 1-0 Dynamo
+Metalurh M 2-4 Shakhtar
+Chornomorets 1-0 Metalurh Z
+Dnipro 2-0 Tavria
+Metalist 1-1 Arsenal
+Tavria 2-0 Metalist
+Metalurh Z 0-2 Dnipro
+Shakhtar 2-0 Chornomorets
+Dynamo 2-0 Metalurh M
+Volyn 1-1 Metalurh D
+Kryvbas 1-1 Polihraftechnica
+Vorskla 0-0 Obolon
+Arsenal 1-1 Karpaty
+Chornomorets 1-4 Dynamo
+Karpaty 0-1 Obolon
+Dnipro 0-3 Shakhtar
+Metalist 2-1 Metalurh Z
+Arsenal 5-0 Tavria
+Polihraftechnica 2-0 Vorskla
+Metalurh D 2-1 Kryvbas
+Metalurh M 3-2 Volyn
+Dynamo 1-0 Dnipro
+Volyn 2-2 Chornomorets
+Shakhtar 2-0 Metalist
+Kryvbas 2-0 Metalurh M
+Vorskla 0-0 Metalurh D
+Metalurh Z 0-5 Arsenal
+Tavria 1-0 Karpaty
+Obolon 2-2 Polihraftechnika
+Metalist 0-1 Shakhtar
+Metalurh D 2-0 Vorskla
+Illichivets 2-0 Kryvbas
+Olexandria 1-0 Obolon
+Karpaty 3-1 Tavria
+Arsenal 0-0 Metalurh Z
+Chornomorets 2-0 Volyn
+Dnipro 2-2 Dynamo
+Dynamo 2-0 Chornomorets
+Vorskla 2-1 Olexandria
+Kryvbas 0-2 Metalurh D
+Volyn 2-1 Illichivets
+Shakhtar 2-0 Dnipro
+Metalurh Z 2-0 Metalist
+Tavria 1-0 Arsenal
+Obolon 2-1 Karpaty
+Metalist 1-0 Tavria
+Dnipro 1-0 Metalurh Z
+Chornomorets 2-0 Shakhtar
+Illichivets 0-1 Dynamo
+Metalurh D 2-1 Volyn
+Olexandria 0-0 Kryvbas
+Obolon 1-0 Vorskla
+Karpaty 1-2 Arsenal
+Vorskla 3-0 Karpaty
+Kryvbas 1-0 Obolon
+Volyn 1-0 Olexandria
+Dynamo 2-0 Metalurh D
+Shakhtar 4-2 Illichivets
+Metalurh Z 1-2 Chornomorets
+Tavria 3-2 Dnipro
+Arsenal 1-0 Metalist
+Metalurh D 0-2 Shakhtar
+Olexandria 0-2 Dynamo
+Obolon 1-1 Volyn
+Dnipro 0-0 Arsenal
+Karpaty 2-0 Metalist
+Chornomorets 2-0 Tavria
+Illichivets 1-1 Metalurh Z
+Vorskla 2-1 Kryvbas
+Arsenal 1-0 Chornomorets
+Volyn 0-0 Vorskla
+Kryvbas 2-1 Karpaty
+Dynamo 5-3 Obolon
+Shakhtar 5-0 Olexandria
+Tavria 0-0 Illichivets
+Metalist 0-2 Dnipro
+Metalurh Z 0-1 Metalurh D
+Karpaty 1-0 Dnipro
+Chornomorets 1-0 Metalist
+Metalurh D 2-0 Tavria
+Olexandria 2-1 Metalurh Z
+Obolon 0-1 Shakhtar
+Vorskla 1-2 Dynamo
+Kryvbas 0-1 Volyn
+Illichivets 0-0 Arsenal
+Volyn 0-1 Karpaty
+Dynamo 1-0 Kryvbas
+Shakhtar 0-0 Vorskla
+Tavria 3-1 Olexandria
+Metalist 0-1 Illichivets
+Dnipro 0-0 Chornomorets
+Metalurh Z 2-0 Obolon
+Arsenal 1-3 Metalurh D
+Kryvbas 0-1 Shakhtar
+Volyn 1-0 Dynamo
+Karpaty 2-1 Chornomorets
+Illichivets 2-0 Dnipro
+Metalurh D 3-2 Metalist
+Obolon 1-1 Tavria
+Olexandria 0-0 Arsenal
+Vorskla 2-0 Metalurh Z
+Shakhtar 1-3 Volyn
+Metalurh Z 2-1 Kryvbas
+Tavria 3-2 Vorskla
+Metalist 0-1 Olexandria
+Dnipro 4-1 Metalurh D
+Chornomorets 3-2 Illichivets
+Dynamo 2-0 Karpaty
+Arsenal 2-0 Obolon
+Dynamo 2-1 Shakhtar
+Karpaty 1-1 Illichivets
+Metalurh D 2-0 Chornomorets
+Olexandria 0-1 Dnipro
+Obolon 3-1 Metalist
+Vorskla 1-1 Arsenal
+Kryvbas 2-1 Tavria
+Volyn 0-2 Metalurh Z
+Dnipro 4-2 Obolon
+Illichivets 1-1 Metalurh D
+Tavria 1-1 Volyn
+Arsenal 2-1 Kryvbas
+Metalist 0-0 Vorskla
+Chornomorets 2-1 Olexandria
+Shakhtar 4-0 Karpaty
+Metalurh Z 0-3 Dynamo
+Olexandria 1-0 Illichivets
+Obolon 4-1 Chornomorets
+Vorskla 2-0 Dnipro
+Volyn 0-1 Arsenal
+Karpaty 0-0 Metalurh D
+Kryvbas 1-0 Metalist
+Dynamo 4-1 Tavria
+Shakhtar 2-0 Metalurh Z
+Metalurh Z 1-1 Karpaty
+Tavria 3-3 Shakhtar
+Arsenal 0-1 Dynamo
+Metalist 3-1 Volyn
+Dnipro 3-0 Kryvbas
+Chornomorets 2-2 Vorskla
+Metalurh D 1-0 Olexandria
+Illichivets 2-1 Obolon
+Karpaty 3-2 Olexandria
+Obolon 0-3 Metalurh D
+Vorskla 1-1 Illichivets
+Kryvbas 2-4 Chornomorets
+Volyn 4-5 Dnipro
+Dynamo 4-2 Metalist
+Shakhtar 3-0 Arsenal
+Metalurh Z 1-1 Tavria

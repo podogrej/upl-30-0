@@ -1,0 +1,289 @@
+# source: https://www.rsssf.org/tableso/oekr2010.html (via WebFetch summary, requested verbatim; auto-extracted from transcript)
+TABLE
+ 1.Shakhtar Donets'k                    30 24  5  1  62-18  77  Champions
+ 2.Dynamo Kyiv                          30 22  5  3  61-16  71
+ 3.Metalist Kharkiv                     30 19  5  6  49-23  62
+ 4.Dnipro Dnipropetrovs'k               30 15  9  6  48-25  54
+ 5.Karpaty L'viv                        30 13 11  6  44-35  50
+ 6.Tavrija Simferopol'                  30 12  9  9  38-38  45
+ 7.Arsenal Kyiv                         30 11  9 10  44-41  42
+ 8.Metalurh Donets'k                    30 11  7 12  41-33  40
+ 9.Metalurh Zaporizhzhja                30 10  5 15  31-48  35
+10.Vorskla Poltava                      30  6 13 11  29-32  31
+11.Obolon' Kyiv                         30  9  4 17  26-50  31
+12.Illichivets' Mariupol                30  7  8 15  31-56  29
+13.Zorja Luhans'k                       30  7  7 16  23-47  28
+14.Kryvbas Kryvyj Rih                   30  7  4 19  31-47  25
+15.Chornomorets' Odesa                  30  5  9 16  21-44  24  Relegated
+16.Zakarpattja Uzhhorod                 30  5  4 21  18-44  19  Relegated
+MATCHES
+Round 1
+Illichivets' Mariupol 1-0 Zakarpattja Uzhhorod
+Dynamo Kyiv 5-0 Chornomorets' Odesa
+Shakhtar Donets'k 3-0 Kryvbas Kryvyj Rih
+Vorskla Poltava 1-2 Karpaty L'viv
+Zorja Luhans'k 0-0 Arsenal Kyiv
+Metalurh Donets'k 0-0 Dnipro Dnipropetrovs'k
+Obolon' Kyiv 0-2 Metalist Kharkiv
+Tavrija Simferopol' 2-0 Metalurh Zaporizhzhja
+Round 2
+Chornomorets' Odesa 1-3 Arsenal Kyiv
+Dynamo Kyiv 6-0 Tavrija Simferopol'
+Illichivets' Mariupol 0-2 Shakhtar Donets'k
+Dnipro Dnipropetrovs'k 2-0 Metalist Kharkiv
+Zakarpattja Uzhhorod 1-3 Vorskla Poltava
+Metalurh Zaporizhzhja 2-1 Kryvbas Kryvyj Rih
+Obolon' Kyiv 3-0 Zorja Luhans'k
+Karpaty L'viv 2-2 Metalurh Donets'k
+Round 3
+Tavrija Simferopol' 2-1 Chornomorets' Odesa
+Kryvbas Kryvyj Rih 1-3 Dynamo Kyiv
+Vorskla Poltava 1-1 Shakhtar Donets'k
+Zorja Luhans'k 0-1 Dnipro Dnipropetrovs'k
+Arsenal Kyiv 4-1 Obolon' Kyiv
+Illichivets' Mariupol 2-1 Metalurh Zaporizhzhja
+Metalist Kharkiv 1-0 Karpaty L'viv
+Metalurh Donets'k 4-1 Zakarpattja Uzhhorod
+Round 4
+Dnipro Dnipropetrovs'k 1-1 Arsenal Kyiv
+Dynamo Kyiv 3-1 Illichivets' Mariupol
+Tavrija Simferopol' 3-1 Kryvbas Kryvyj Rih
+Karpaty L'viv 4-0 Zorja Luhans'k
+Chornomorets' Odesa 0-1 Obolon' Kyiv
+Zakarpattja Uzhhorod 0-2 Metalist Kharkiv
+Metalurh Zaporizhzhja 1-1 Vorskla Poltava
+Shakhtar Donets'k 4-1 Metalurh Donets'k
+Round 5
+Zorja Luhans'k 2-0 Zakarpattja Uzhhorod
+Kryvbas Kryvyj Rih 2-3 Chornomorets' Odesa
+Obolon' Kyiv 1-0 Dnipro Dnipropetrovs'k
+Illichivets' Mariupol 2-2 Tavrija Simferopol'
+Arsenal Kyiv 0-0 Karpaty L'viv
+Metalurh Donets'k 3-0 Metalurh Zaporizhzhja
+Vorskla Poltava 1-1 Dynamo Kyiv
+Metalist Kharkiv 1-1 Shakhtar Donets'k
+Round 6
+Zakarpattja Uzhhorod 2-1 Arsenal Kyiv
+Chornomorets' Odesa 0-1 Dnipro Dnipropetrovs'k
+Kryvbas Kryvyj Rih 0-2 Illichivets' Mariupol
+Tavrija Simferopol' 1-0 Vorskla Poltava
+Karpaty L'viv 5-0 Obolon' Kyiv
+Metalurh Zaporizhzhja 0-2 Metalist Kharkiv
+Dynamo Kyiv 3-1 Metalurh Donets'k
+Zorja Luhans'k 1-3 Shakhtar Donets'k
+Round 7
+Zorja Luhans'k 3-1 Metalurh Zaporizhzhja
+Obolon' Kyiv 0-1 Zakarpattja Uzhhorod
+Illichivets' Mariupol 2-0 Chornomorets' Odesa
+Dnipro Dnipropetrovs'k 3-0 Karpaty L'viv
+Arsenal Kyiv 2-4 Shakhtar Donets'k
+Vorskla Poltava 0-0 Kryvbas Kryvyj Rih
+Metalurh Donets'k 0-0 Tavrija Simferopol'
+Metalist Kharkiv 1-2 Dynamo Kyiv
+Round 8
+Dynamo Kyiv 2-0 Zorja Luhans'k
+Zakarpattja Uzhhorod 0-2 Dnipro Dnipropetrovs'k
+Kryvbas Kryvyj Rih 0-1 Metalurh Donets'k
+Metalurh Zaporizhzhja 2-1 Arsenal Kyiv
+Illichivets' Mariupol 0-0 Vorskla Poltava
+Chornomorets' Odesa 1-1 Karpaty L'viv
+Shakhtar Donets'k 4-0 Obolon' Kyiv
+Tavrija Simferopol' 0-0 Metalist Kharkiv
+Round 9
+Zorja Luhans'k 0-0 Tavrija Simferopol'
+Metalurh Donets'k 4-1 Illichivets' Mariupol
+Obolon' Kyiv 4-1 Metalurh Zaporizhzhja
+Metalist Kharkiv 1-0 Kryvbas Kryvyj Rih
+Arsenal Kyiv 0-1 Dynamo Kyiv
+Dnipro Dnipropetrovs'k 2-2 Shakhtar Donets'k
+Karpaty L'viv 1-0 Zakarpattja Uzhhorod
+Vorskla Poltava 0-0 Chornomorets' Odesa
+Round 10
+Kryvbas Kryvyj Rih 4-0 Zorja Luhans'k
+Vorskla Poltava 1-2 Metalurh Donets'k
+Chornomorets' Odesa 2-0 Zakarpattja Uzhhorod
+Metalurh Zaporizhzhja 1-3 Dnipro Dnipropetrovs'k
+Dynamo Kyiv 2-1 Obolon' Kyiv
+Illichivets' Mariupol 0-2 Metalist Kharkiv
+Shakhtar Donets'k 5-1 Karpaty L'viv
+Tavrija Simferopol' 2-2 Arsenal Kyiv
+Round 11
+Arsenal Kyiv 2-1 Kryvbas Kryvyj Rih
+Metalurh Donets'k 2-0 Chornomorets' Odesa
+Obolon' Kyiv 1-0 Tavrija Simferopol'
+Dnipro Dnipropetrovs'k 0-2 Dynamo Kyiv
+Karpaty L'viv 3-3 Metalurh Zaporizhzhja
+Zorja Luhans'k 3-2 Illichivets' Mariupol
+Zakarpattja Uzhhorod 1-1 Shakhtar Donets'k
+Metalist Kharkiv 1-0 Vorskla Poltava
+Round 12
+Vorskla Poltava 2-0 Zorja Luhans'k
+Dynamo Kyiv 1-1 Karpaty L'viv
+Tavrija Simferopol' 2-1 Dnipro Dnipropetrovs'k
+Kryvbas Kryvyj Rih 3-2 Obolon' Kyiv
+Illichivets' Mariupol 1-2 Arsenal Kyiv
+Metalurh Zaporizhzhja 3-0 Zakarpattja Uzhhorod
+Chornomorets' Odesa 0-1 Shakhtar Donets'k
+Metalurh Donets'k 0-1 Metalist Kharkiv
+Round 13
+Dynamo Kyiv 3-0 Shakhtar Donets'k
+Tavrija Simferopol' 3-2 Zakarpattja Uzhhorod
+Vorskla Poltava 3-2 Obolon' Kyiv
+Metalurh Donets'k 3-0 Arsenal Kyiv
+Metalist Kharkiv 2-0 Zorja Luhans'k
+Chornomorets' Odesa 0-0 Metalurh Zaporizhzhja
+Kryvbas Kryvyj Rih 1-2 Karpaty L'viv
+Illichivets' Mariupol 0-3 Dnipro Dnipropetrovs'k
+Round 14
+Zakarpattja Uzhhorod 3-0 Kryvbas Kryvyj Rih
+Dnipro Dnipropetrovs'k 2-2 Vorskla Poltava
+Shakhtar Donets'k 3-0 Tavrija Simferopol'
+Karpaty L'viv 2-2 Illichivets' Mariupol
+Zorja Luhans'k 0-1 Chornomorets' Odesa
+Arsenal Kyiv 1-2 Metalist Kharkiv
+Obolon' Kyiv 2-1 Metalurh Donets'k
+Metalurh Zaporizhzhja 0-0 Dynamo Kyiv
+Round 15
+Chornomorets' Odesa 0-1 Dynamo Kyiv
+Karpaty L'viv 1-0 Vorskla Poltava
+Arsenal Kyiv 1-1 Zorja Luhans'k
+Metalist Kharkiv 0-1 Obolon' Kyiv
+Metalurh Zaporizhzhja 0-1 Tavrija Simferopol'
+Zakarpattja Uzhhorod 0-1 Illichivets' Mariupol
+Kryvbas Kryvyj Rih 0-2 Shakhtar Donets'k
+Dnipro Dnipropetrovs'k 2-0 Metalurh Donets'k
+Round 16
+Shakhtar Donets'k 2-0 Metalurh Zaporizhzhja
+Metalist Kharkiv 5-1 Chornomorets' Odesa
+Arsenal Kyiv 2-0 Vorskla Poltava
+Obolon' Kyiv 1-1 Illichivets' Mariupol
+Dnipro Dnipropetrovs'k 3-1 Kryvbas Kryvyj Rih
+Zakarpattja Uzhhorod 1-0 Dynamo Kyiv
+Zorja Luhans'k 1-1 Metalurh Donets'k
+Karpaty L'viv 1-0 Tavrija Simferopol'
+Round 17
+Arsenal Kyiv 2-0 Chornomorets' Odesa
+Zorja Luhans'k 2-0 Obolon' Kyiv
+Shakhtar Donets'k 2-1 Illichivets' Mariupol
+Metalist Kharkiv 3-2 Dnipro Dnipropetrovs'k
+Vorskla Poltava 2-0 Zakarpattja Uzhhorod
+Kryvbas Kryvyj Rih 1-3 Metalurh Zaporizhzhja
+Metalurh Donets'k 1-0 Karpaty L'viv
+Tavrija Simferopol' 2-3 Dynamo Kyiv
+Round 18
+Zakarpattja Uzhhorod 0-1 Metalurh Donets'k
+Dynamo Kyiv 1-0 Kryvbas Kryvyj Rih
+Metalurh Zaporizhzhja 2-0 Illichivets' Mariupol
+Karpaty L'viv 2-1 Metalist Kharkiv
+Shakhtar Donets'k 1-0 Vorskla Poltava
+Dnipro Dnipropetrovs'k 2-2 Zorja Luhans'k
+Obolon' Kyiv 0-0 Arsenal Kyiv
+Chornomorets' Odesa 2-0 Tavrija Simferopol'
+Round 19
+Illichivets' Mariupol 1-1 Dynamo Kyiv
+Zorja Luhans'k 0-2 Karpaty L'viv
+Metalist Kharkiv 2-1 Zakarpattja Uzhhorod
+Obolon' Kyiv 1-0 Chornomorets' Odesa
+Vorskla Poltava 1-1 Metalurh Zaporizhzhja
+Metalurh Donets'k 0-1 Shakhtar Donets'k
+Arsenal Kyiv 1-1 Dnipro Dnipropetrovs'k
+Kryvbas Kryvyj Rih 0-1 Tavrija Simferopol'
+Round 20
+Chornomorets' Odesa 3-1 Kryvbas Kryvyj Rih
+Dynamo Kyiv 1-0 Vorskla Poltava
+Karpaty L'viv 3-3 Arsenal Kyiv
+Metalurh Zaporizhzhja 3-2 Metalurh Donets'k
+Zakarpattja Uzhhorod 2-1 Zorja Luhans'k
+Dnipro Dnipropetrovs'k 2-0 Obolon' Kyiv
+Tavrija Simferopol' 3-3 Illichivets' Mariupol
+Shakhtar Donets'k 2-1 Metalist Kharkiv
+Round 21
+Metalurh Donets'k 1-1 Dynamo Kyiv
+Vorskla Poltava 0-1 Tavrija Simferopol'
+Arsenal Kyiv 0-0 Zakarpattja Uzhhorod
+Illichivets' Mariupol 0-3 Kryvbas Kryvyj Rih
+Obolon' Kyiv 1-3 Karpaty L'viv
+Shakhtar Donets'k 2-0 Zorja Luhans'k
+Metalist Kharkiv 4-0 Metalurh Zaporizhzhja
+Dnipro Dnipropetrovs'k 3-1 Chornomorets' Odesa
+Round 22
+Zakarpattja Uzhhorod 0-1 Obolon' Kyiv
+Metalurh Zaporizhzhja 3-1 Zorja Luhans'k
+Chornomorets' Odesa 1-1 Illichivets' Mariupol
+Tavrija Simferopol' 1-0 Metalurh Donets'k
+Dynamo Kyiv 3-0 Metalist Kharkiv
+Shakhtar Donets'k 3-1 Arsenal Kyiv
+Kryvbas Kryvyj Rih 1-1 Vorskla Poltava
+Karpaty L'viv 1-0 Dnipro Dnipropetrovs'k
+Round 23
+Karpaty L'viv 1-1 Chornomorets' Odesa
+Vorskla Poltava 3-0 Illichivets' Mariupol
+Zorja Luhans'k 0-2 Dynamo Kyiv
+Metalist Kharkiv 1-1 Tavrija Simferopol'
+Metalurh Donets'k 0-1 Kryvbas Kryvyj Rih
+Dnipro Dnipropetrovs'k 1-0 Zakarpattja Uzhhorod
+Obolon' Kyiv 0-1 Shakhtar Donets'k
+Arsenal Kyiv 2-0 Metalurh Zaporizhzhja
+Round 24
+Metalurh Zaporizhzhja 2-1 Obolon' Kyiv
+Chornomorets' Odesa 0-0 Vorskla Poltava
+Kryvbas Kryvyj Rih 2-2 Metalist Kharkiv
+Dynamo Kyiv 3-1 Arsenal Kyiv
+Shakhtar Donets'k 0-0 Dnipro Dnipropetrovs'k
+Zakarpattja Uzhhorod 1-1 Karpaty L'viv
+Illichivets' Mariupol 0-4 Metalurh Donets'k
+Tavrija Simferopol' 0-1 Zorja Luhans'k
+Round 25
+Obolon' Kyiv 0-4 Dynamo Kyiv
+Dnipro Dnipropetrovs'k 2-0 Metalurh Zaporizhzhja
+Arsenal Kyiv 1-6 Tavrija Simferopol'
+Zorja Luhans'k 1-0 Kryvbas Kryvyj Rih
+Metalist Kharkiv 3-1 Illichivets' Mariupol
+Metalurh Donets'k 1-3 Vorskla Poltava
+Karpaty L'viv 0-2 Shakhtar Donets'k
+Zakarpattja Uzhhorod 1-1 Chornomorets' Odesa
+Round 26
+Chornomorets' Odesa 1-1 Metalurh Donets'k
+Vorskla Poltava 0-0 Metalist Kharkiv
+Illichivets' Mariupol 1-0 Zorja Luhans'k
+Kryvbas Kryvyj Rih 0-1 Arsenal Kyiv
+Dynamo Kyiv 2-1 Dnipro Dnipropetrovs'k
+Shakhtar Donets'k 1-0 Zakarpattja Uzhhorod
+Metalurh Zaporizhzhja 0-1 Karpaty L'viv
+Tavrija Simferopol' 0-0 Obolon' Kyiv
+Round 27
+Arsenal Kyiv 3-1 Illichivets' Mariupol
+Karpaty L'viv 1-0 Dynamo Kyiv
+Dnipro Dnipropetrovs'k 3-1 Tavrija Simferopol'
+Zorja Luhans'k 2-1 Vorskla Poltava
+Metalist Kharkiv 2-0 Metalurh Donets'k
+Zakarpattja Uzhhorod 0-1 Metalurh Zaporizhzhja
+Shakhtar Donets'k 3-0 Chornomorets' Odesa
+Obolon' Kyiv 1-2 Kryvbas Kryvyj Rih
+Round 28
+Metalurh Donets'k 0-0 Zorja Luhans'k
+Vorskla Poltava 1-5 Arsenal Kyiv
+Illichivets' Mariupol 1-0 Obolon' Kyiv
+Kryvbas Kryvyj Rih 0-0 Dnipro Dnipropetrovs'k
+Tavrija Simferopol' 1-1 Karpaty L'viv
+Dynamo Kyiv 2-0 Zakarpattja Uzhhorod
+Metalurh Zaporizhzhja 0-2 Shakhtar Donets'k
+Chornomorets' Odesa 0-2 Metalist Kharkiv
+Round 29
+Shakhtar Donets'k 1-0 Dynamo Kyiv
+Zakarpattja Uzhhorod 0-1 Tavrija Simferopol'
+Karpaty L'viv 0-2 Kryvbas Kryvyj Rih
+Dnipro Dnipropetrovs'k 4-1 Illichivets' Mariupol
+Obolon' Kyiv 1-1 Vorskla Poltava
+Arsenal Kyiv 2-0 Metalurh Donets'k
+Zorja Luhans'k 1-4 Metalist Kharkiv
+Metalurh Zaporizhzhja 1-0 Chornomorets' Odesa
+Round 30
+Chornomorets' Odesa 1-1 Zorja Luhans'k
+Metalist Kharkiv 1-0 Arsenal Kyiv
+Metalurh Donets'k 5-0 Obolon' Kyiv
+Vorskla Poltava 1-1 Dnipro Dnipropetrovs'k
+Illichivets' Mariupol 2-2 Karpaty L'viv
+Kryvbas Kryvyj Rih 3-1 Zakarpattja Uzhhorod
+Tavrija Simferopol' 2-3 Shakhtar Donets'k
+Dynamo Kyiv 3-0 Metalurh Zaporizhzhja

@@ -1,0 +1,18 @@
+const { chromium } = require('playwright');
+(async()=>{const b=await chromium.launch({args:['--no-sandbox']});const ctx=await b.newContext({viewport:{width:390,height:900},deviceScaleFactor:2,colorScheme:'dark'});const pg=await ctx.newPage();
+ let errs=0;pg.on('pageerror',e=>{errs++;console.log('PAGEERROR',e.message)});
+ let authCalls=[];let mode='pending';
+ await pg.route('https://cdn.jsdelivr.net/**',r=>r.fulfill({contentType:'application/javascript',body:'window.supabase={createClient(){return {auth:{onAuthStateChange(cb){window.__cb=cb},async getSession(){return {data:{session:null}}},async verifyOtp(){window.__cb("SIGNED_IN",{user:{email:"tg-1@users.upl-30-0.vercel.app",user_metadata:{full_name:"Андрій"},app_metadata:{}}});return {error:null}}}}}};'}));
+ await pg.route('**/api/auth',async r=>{authCalls.push(r.request().postData());if(mode==='pending')return r.fulfill({status:202,contentType:'application/json',body:'{"pending":true}'});return r.fulfill({status:200,contentType:'application/json',body:'{"token_hash":"abc","name":"Андрій"}'});});
+ await pg.route('**/rest/v1/**',r=>r.fulfill({status:200,contentType:'application/json',body:'[]'}));
+ await pg.goto('http://localhost:8765/preview.html');await pg.waitForTimeout(800);
+ console.log('dot visible', !(await pg.$eval('#newsDot',e=>e.hidden)));
+ await pg.click('#newsBtn');await pg.waitForTimeout(300);await pg.locator('#viewBox .box').screenshot({path:'n_news.png'});
+ await pg.click('#viewClose');console.log('dot after', await pg.$eval('#newsDot',e=>e.hidden));
+ await pg.click('#acctBtn');await pg.waitForTimeout(300);await pg.locator('#viewBox .box').screenshot({path:'n_acct.png'});
+ const href=await pg.getAttribute('#acctBot','href');console.log('href',href);
+ const [popup]=await Promise.all([ctx.waitForEvent('page').catch(()=>null),pg.click('#acctBot')]);if(popup)await popup.close().catch(()=>{});
+ await pg.waitForTimeout(3000);console.log('calls pending',authCalls.length,authCalls[0]);
+ mode='ok';await pg.waitForTimeout(3000);
+ console.log('acct btn', await pg.textContent('#acctBtn'), '| msg', (await pg.textContent('#viewBody')).slice(0,80));
+ console.log('errors',errs);await b.close();})();

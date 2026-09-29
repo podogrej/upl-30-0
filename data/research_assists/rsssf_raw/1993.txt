@@ -1,0 +1,328 @@
+# source: https://en.wikipedia.org/wiki/1993%E2%80%9394_Vyshcha_Liha (en.wikipedia via WebFetch summary; crosstable converted to match list;
+#   rsssf page for this season was not reachable: not returned by web search -> provenance block)
+TABLE
+ 1.Dynamo Kyiv                         34  23  10   1  61-21  0
+ 2.Shakhtar Donetsk                    34  20   9   5  64-32  0
+ 3.Chornomorets Odesa                  34  20   8   6  52-23  0
+ 4.Dnipro Dnipropetrovsk               34  16   9   9  53-35  0
+ 5.Karpaty Lviv                        34  16   8  10  37-30  0
+ 6.Kryvbas Kryvyi Rih                  34  14   8  12  26-26  0
+ 7.Nyva Ternopil                       34  13  10  11  44-26  0
+ 8.Tavriya Simferopol                  34  12  10  12  41-34  0
+ 9.Temp Shepetivka                     34  12   8  14  39-38  0
+10.Nyva Vinnytsia                      34  12   8  14  37-45  0
+11.Volyn Lutsk                         34  10  12  12  27-30  0
+12.Veres Rivne                         34  10  12  12  32-36  0
+13.Torpedo Zaporizhzhia                34   9  10  15  27-39  0
+14.Zorya-MALS Luhansk                  34  10   6  18  24-46  0
+15.Kremin Kremenchuk                   34   9   8  17  26-39  0
+16.Metalurh Zaporizhzhia               34   9   6  19  26-49  0
+17.Bukovyna Chernivtsi                 34   7   6  21  25-51  0
+18.Metalist Kharkiv                    34   6   8  20  22-63  0
+MATCHES
+Bukovyna Chernivtsi 0-1 Chornomorets Odesa
+Bukovyna Chernivtsi 0-1 Dnipro Dnipropetrovsk
+Bukovyna Chernivtsi 0-3 Dynamo Kyiv
+Bukovyna Chernivtsi 3-2 Karpaty Lviv
+Bukovyna Chernivtsi 1-0 Kremin Kremenchuk
+Bukovyna Chernivtsi 2-0 Kryvbas Kryvyi Rih
+Bukovyna Chernivtsi 4-0 Metalist Kharkiv
+Bukovyna Chernivtsi 2-0 Metalurh Zaporizhzhia
+Bukovyna Chernivtsi 0-0 Nyva Ternopil
+Bukovyna Chernivtsi 0-0 Nyva Vinnytsia
+Bukovyna Chernivtsi 1-2 Shakhtar Donetsk
+Bukovyna Chernivtsi 1-2 Tavriya Simferopol
+Bukovyna Chernivtsi 2-1 Temp Shepetivka
+Bukovyna Chernivtsi 0-1 Torpedo Zaporizhzhia
+Bukovyna Chernivtsi 1-1 Veres Rivne
+Bukovyna Chernivtsi 1-0 Volyn Lutsk
+Bukovyna Chernivtsi 0-0 Zorya-MALS Luhansk
+Chornomorets Odesa 4-0 Bukovyna Chernivtsi
+Chornomorets Odesa 2-1 Dnipro Dnipropetrovsk
+Chornomorets Odesa 1-2 Dynamo Kyiv
+Chornomorets Odesa 1-1 Karpaty Lviv
+Chornomorets Odesa 4-1 Kremin Kremenchuk
+Chornomorets Odesa 2-0 Kryvbas Kryvyi Rih
+Chornomorets Odesa 3-0 Metalist Kharkiv
+Chornomorets Odesa 1-0 Metalurh Zaporizhzhia
+Chornomorets Odesa 3-1 Nyva Ternopil
+Chornomorets Odesa 3-0 Nyva Vinnytsia
+Chornomorets Odesa 0-1 Shakhtar Donetsk
+Chornomorets Odesa 3-1 Tavriya Simferopol
+Chornomorets Odesa 2-0 Temp Shepetivka
+Chornomorets Odesa 1-0 Torpedo Zaporizhzhia
+Chornomorets Odesa 1-1 Veres Rivne
+Chornomorets Odesa 2-0 Volyn Lutsk
+Chornomorets Odesa 4-1 Zorya-MALS Luhansk
+Dnipro Dnipropetrovsk 4-2 Bukovyna Chernivtsi
+Dnipro Dnipropetrovsk 0-0 Chornomorets Odesa
+Dnipro Dnipropetrovsk 2-3 Dynamo Kyiv
+Dnipro Dnipropetrovsk 1-1 Karpaty Lviv
+Dnipro Dnipropetrovsk 2-1 Kremin Kremenchuk
+Dnipro Dnipropetrovsk 2-1 Kryvbas Kryvyi Rih
+Dnipro Dnipropetrovsk 3-1 Metalist Kharkiv
+Dnipro Dnipropetrovsk 7-0 Metalurh Zaporizhzhia
+Dnipro Dnipropetrovsk 3-1 Nyva Ternopil
+Dnipro Dnipropetrovsk 1-0 Nyva Vinnytsia
+Dnipro Dnipropetrovsk 2-1 Shakhtar Donetsk
+Dnipro Dnipropetrovsk 2-0 Tavriya Simferopol
+Dnipro Dnipropetrovsk 1-0 Temp Shepetivka
+Dnipro Dnipropetrovsk 0-0 Torpedo Zaporizhzhia
+Dnipro Dnipropetrovsk 3-1 Veres Rivne
+Dnipro Dnipropetrovsk 1-0 Volyn Lutsk
+Dnipro Dnipropetrovsk 0-0 Zorya-MALS Luhansk
+Dynamo Kyiv 3-1 Bukovyna Chernivtsi
+Dynamo Kyiv 2-0 Chornomorets Odesa
+Dynamo Kyiv 2-0 Dnipro Dnipropetrovsk
+Dynamo Kyiv 2-1 Karpaty Lviv
+Dynamo Kyiv 1-1 Kremin Kremenchuk
+Dynamo Kyiv 3-0 Kryvbas Kryvyi Rih
+Dynamo Kyiv 2-0 Metalist Kharkiv
+Dynamo Kyiv 3-0 Metalurh Zaporizhzhia
+Dynamo Kyiv 1-0 Nyva Ternopil
+Dynamo Kyiv 3-1 Nyva Vinnytsia
+Dynamo Kyiv 1-1 Shakhtar Donetsk
+Dynamo Kyiv 1-1 Tavriya Simferopol
+Dynamo Kyiv 0-0 Temp Shepetivka
+Dynamo Kyiv 4-1 Torpedo Zaporizhzhia
+Dynamo Kyiv 2-1 Veres Rivne
+Dynamo Kyiv 0-0 Volyn Lutsk
+Dynamo Kyiv 1-0 Zorya-MALS Luhansk
+Karpaty Lviv 1-0 Bukovyna Chernivtsi
+Karpaty Lviv 0-1 Chornomorets Odesa
+Karpaty Lviv 3-1 Dnipro Dnipropetrovsk
+Karpaty Lviv 1-2 Dynamo Kyiv
+Karpaty Lviv 1-0 Kremin Kremenchuk
+Karpaty Lviv 1-0 Kryvbas Kryvyi Rih
+Karpaty Lviv 3-0 Metalist Kharkiv
+Karpaty Lviv 2-0 Metalurh Zaporizhzhia
+Karpaty Lviv 1-0 Nyva Ternopil
+Karpaty Lviv 2-1 Nyva Vinnytsia
+Karpaty Lviv 1-0 Shakhtar Donetsk
+Karpaty Lviv 1-0 Tavriya Simferopol
+Karpaty Lviv 2-1 Temp Shepetivka
+Karpaty Lviv 3-1 Torpedo Zaporizhzhia
+Karpaty Lviv 0-0 Veres Rivne
+Karpaty Lviv 1-2 Volyn Lutsk
+Karpaty Lviv 1-0 Zorya-MALS Luhansk
+Kremin Kremenchuk 2-0 Bukovyna Chernivtsi
+Kremin Kremenchuk 0-1 Chornomorets Odesa
+Kremin Kremenchuk 0-0 Dnipro Dnipropetrovsk
+Kremin Kremenchuk 0-2 Dynamo Kyiv
+Kremin Kremenchuk 1-2 Karpaty Lviv
+Kremin Kremenchuk 0-1 Kryvbas Kryvyi Rih
+Kremin Kremenchuk 1-0 Metalist Kharkiv
+Kremin Kremenchuk 2-0 Metalurh Zaporizhzhia
+Kremin Kremenchuk 0-0 Nyva Ternopil
+Kremin Kremenchuk 2-0 Nyva Vinnytsia
+Kremin Kremenchuk 0-0 Shakhtar Donetsk
+Kremin Kremenchuk 1-0 Tavriya Simferopol
+Kremin Kremenchuk 0-0 Temp Shepetivka
+Kremin Kremenchuk 1-0 Torpedo Zaporizhzhia
+Kremin Kremenchuk 1-0 Veres Rivne
+Kremin Kremenchuk 1-0 Volyn Lutsk
+Kremin Kremenchuk 4-1 Zorya-MALS Luhansk
+Kryvbas Kryvyi Rih 3-0 Bukovyna Chernivtsi
+Kryvbas Kryvyi Rih 1-0 Chornomorets Odesa
+Kryvbas Kryvyi Rih 0-0 Dnipro Dnipropetrovsk
+Kryvbas Kryvyi Rih 1-1 Dynamo Kyiv
+Kryvbas Kryvyi Rih 2-0 Karpaty Lviv
+Kryvbas Kryvyi Rih 1-0 Kremin Kremenchuk
+Kryvbas Kryvyi Rih 0-1 Metalist Kharkiv
+Kryvbas Kryvyi Rih 1-0 Metalurh Zaporizhzhia
+Kryvbas Kryvyi Rih 2-1 Nyva Ternopil
+Kryvbas Kryvyi Rih 3-0 Nyva Vinnytsia
+Kryvbas Kryvyi Rih 2-1 Shakhtar Donetsk
+Kryvbas Kryvyi Rih 0-0 Tavriya Simferopol
+Kryvbas Kryvyi Rih 2-1 Temp Shepetivka
+Kryvbas Kryvyi Rih 1-0 Torpedo Zaporizhzhia
+Kryvbas Kryvyi Rih 1-0 Veres Rivne
+Kryvbas Kryvyi Rih 0-0 Volyn Lutsk
+Kryvbas Kryvyi Rih 1-0 Zorya-MALS Luhansk
+Metalist Kharkiv 1-1 Bukovyna Chernivtsi
+Metalist Kharkiv 1-2 Chornomorets Odesa
+Metalist Kharkiv 1-1 Dnipro Dnipropetrovsk
+Metalist Kharkiv 1-2 Dynamo Kyiv
+Metalist Kharkiv 0-1 Karpaty Lviv
+Metalist Kharkiv 3-2 Kremin Kremenchuk
+Metalist Kharkiv 1-0 Kryvbas Kryvyi Rih
+Metalist Kharkiv 0-3 Metalurh Zaporizhzhia
+Metalist Kharkiv 0-0 Nyva Ternopil
+Metalist Kharkiv 0-2 Nyva Vinnytsia
+Metalist Kharkiv 1-1 Shakhtar Donetsk
+Metalist Kharkiv 0-0 Tavriya Simferopol
+Metalist Kharkiv 1-1 Temp Shepetivka
+Metalist Kharkiv 2-1 Torpedo Zaporizhzhia
+Metalist Kharkiv 2-1 Veres Rivne
+Metalist Kharkiv 1-1 Volyn Lutsk
+Metalist Kharkiv 0-2 Zorya-MALS Luhansk
+Metalurh Zaporizhzhia 1-1 Bukovyna Chernivtsi
+Metalurh Zaporizhzhia 0-0 Chornomorets Odesa
+Metalurh Zaporizhzhia 1-2 Dnipro Dnipropetrovsk
+Metalurh Zaporizhzhia 0-1 Dynamo Kyiv
+Metalurh Zaporizhzhia 0-1 Karpaty Lviv
+Metalurh Zaporizhzhia 1-0 Kremin Kremenchuk
+Metalurh Zaporizhzhia 1-1 Kryvbas Kryvyi Rih
+Metalurh Zaporizhzhia 0-1 Metalist Kharkiv
+Metalurh Zaporizhzhia 1-2 Nyva Ternopil
+Metalurh Zaporizhzhia 1-0 Nyva Vinnytsia
+Metalurh Zaporizhzhia 0-3 Shakhtar Donetsk
+Metalurh Zaporizhzhia 4-1 Tavriya Simferopol
+Metalurh Zaporizhzhia 2-1 Temp Shepetivka
+Metalurh Zaporizhzhia 1-1 Torpedo Zaporizhzhia
+Metalurh Zaporizhzhia 1-0 Veres Rivne
+Metalurh Zaporizhzhia 2-0 Volyn Lutsk
+Metalurh Zaporizhzhia 1-1 Zorya-MALS Luhansk
+Nyva Ternopil 3-0 Bukovyna Chernivtsi
+Nyva Ternopil 0-0 Chornomorets Odesa
+Nyva Ternopil 2-2 Dnipro Dnipropetrovsk
+Nyva Ternopil 0-0 Dynamo Kyiv
+Nyva Ternopil 1-1 Karpaty Lviv
+Nyva Ternopil 4-1 Kremin Kremenchuk
+Nyva Ternopil 3-0 Kryvbas Kryvyi Rih
+Nyva Ternopil 3-0 Metalist Kharkiv
+Nyva Ternopil 2-0 Metalurh Zaporizhzhia
+Nyva Ternopil 3-0 Nyva Vinnytsia
+Nyva Ternopil 1-1 Shakhtar Donetsk
+Nyva Ternopil 2-0 Tavriya Simferopol
+Nyva Ternopil 3-0 Temp Shepetivka
+Nyva Ternopil 2-0 Torpedo Zaporizhzhia
+Nyva Ternopil 3-0 Veres Rivne
+Nyva Ternopil 2-1 Volyn Lutsk
+Nyva Ternopil 2-0 Zorya-MALS Luhansk
+Nyva Vinnytsia 3-1 Bukovyna Chernivtsi
+Nyva Vinnytsia 1-2 Chornomorets Odesa
+Nyva Vinnytsia 2-1 Dnipro Dnipropetrovsk
+Nyva Vinnytsia 2-2 Dynamo Kyiv
+Nyva Vinnytsia 1-1 Karpaty Lviv
+Nyva Vinnytsia 1-1 Kremin Kremenchuk
+Nyva Vinnytsia 0-1 Kryvbas Kryvyi Rih
+Nyva Vinnytsia 2-1 Metalist Kharkiv
+Nyva Vinnytsia 0-0 Metalurh Zaporizhzhia
+Nyva Vinnytsia 1-0 Nyva Ternopil
+Nyva Vinnytsia 2-2 Shakhtar Donetsk
+Nyva Vinnytsia 1-0 Tavriya Simferopol
+Nyva Vinnytsia 2-0 Temp Shepetivka
+Nyva Vinnytsia 0-0 Torpedo Zaporizhzhia
+Nyva Vinnytsia 2-1 Veres Rivne
+Nyva Vinnytsia 2-1 Volyn Lutsk
+Nyva Vinnytsia 2-0 Zorya-MALS Luhansk
+Shakhtar Donetsk 1-0 Bukovyna Chernivtsi
+Shakhtar Donetsk 4-1 Chornomorets Odesa
+Shakhtar Donetsk 2-1 Dnipro Dnipropetrovsk
+Shakhtar Donetsk 1-0 Dynamo Kyiv
+Shakhtar Donetsk 3-0 Karpaty Lviv
+Shakhtar Donetsk 1-1 Kremin Kremenchuk
+Shakhtar Donetsk 1-0 Kryvbas Kryvyi Rih
+Shakhtar Donetsk 3-1 Metalist Kharkiv
+Shakhtar Donetsk 5-2 Metalurh Zaporizhzhia
+Shakhtar Donetsk 2-1 Nyva Ternopil
+Shakhtar Donetsk 2-1 Nyva Vinnytsia
+Shakhtar Donetsk 2-0 Tavriya Simferopol
+Shakhtar Donetsk 3-1 Temp Shepetivka
+Shakhtar Donetsk 1-0 Torpedo Zaporizhzhia
+Shakhtar Donetsk 3-0 Veres Rivne
+Shakhtar Donetsk 3-1 Volyn Lutsk
+Shakhtar Donetsk 3-0 Zorya-MALS Luhansk
+Tavriya Simferopol 3-1 Bukovyna Chernivtsi
+Tavriya Simferopol 0-0 Chornomorets Odesa
+Tavriya Simferopol 1-0 Dnipro Dnipropetrovsk
+Tavriya Simferopol 2-4 Dynamo Kyiv
+Tavriya Simferopol 2-0 Karpaty Lviv
+Tavriya Simferopol 3-0 Kremin Kremenchuk
+Tavriya Simferopol 2-0 Kryvbas Kryvyi Rih
+Tavriya Simferopol 7-1 Metalist Kharkiv
+Tavriya Simferopol 1-0 Metalurh Zaporizhzhia
+Tavriya Simferopol 1-1 Nyva Ternopil
+Tavriya Simferopol 2-2 Nyva Vinnytsia
+Tavriya Simferopol 1-1 Shakhtar Donetsk
+Tavriya Simferopol 2-1 Temp Shepetivka
+Tavriya Simferopol 3-0 Torpedo Zaporizhzhia
+Tavriya Simferopol 1-1 Veres Rivne
+Tavriya Simferopol -:+ Volyn Lutsk
+Tavriya Simferopol 3-1 Zorya-MALS Luhansk
+Temp Shepetivka 1-0 Bukovyna Chernivtsi
+Temp Shepetivka 1-1 Chornomorets Odesa
+Temp Shepetivka 3-2 Dnipro Dnipropetrovsk
+Temp Shepetivka 0-1 Dynamo Kyiv
+Temp Shepetivka 1-1 Karpaty Lviv
+Temp Shepetivka 3-1 Kremin Kremenchuk
+Temp Shepetivka 1-0 Kryvbas Kryvyi Rih
+Temp Shepetivka 3-1 Metalist Kharkiv
+Temp Shepetivka 3-1 Metalurh Zaporizhzhia
+Temp Shepetivka 1-0 Nyva Ternopil
+Temp Shepetivka 3-0 Nyva Vinnytsia
+Temp Shepetivka 3-1 Shakhtar Donetsk
+Temp Shepetivka 1-1 Tavriya Simferopol
+Temp Shepetivka 3-0 Torpedo Zaporizhzhia
+Temp Shepetivka 1-2 Veres Rivne
+Temp Shepetivka 2-1 Volyn Lutsk
+Temp Shepetivka 1-0 Zorya-MALS Luhansk
+Torpedo Zaporizhzhia 2-0 Bukovyna Chernivtsi
+Torpedo Zaporizhzhia 1-0 Chornomorets Odesa
+Torpedo Zaporizhzhia 1-1 Dnipro Dnipropetrovsk
+Torpedo Zaporizhzhia 0-0 Dynamo Kyiv
+Torpedo Zaporizhzhia 1-1 Karpaty Lviv
+Torpedo Zaporizhzhia 2-0 Kremin Kremenchuk
+Torpedo Zaporizhzhia 0-0 Kryvbas Kryvyi Rih
+Torpedo Zaporizhzhia 3-0 Metalist Kharkiv
+Torpedo Zaporizhzhia 1-2 Metalurh Zaporizhzhia
+Torpedo Zaporizhzhia 1-0 Nyva Ternopil
+Torpedo Zaporizhzhia 1-3 Nyva Vinnytsia
+Torpedo Zaporizhzhia 3-3 Shakhtar Donetsk
+Torpedo Zaporizhzhia 0-1 Tavriya Simferopol
+Torpedo Zaporizhzhia 2-1 Temp Shepetivka
+Torpedo Zaporizhzhia 1-1 Veres Rivne
+Torpedo Zaporizhzhia 1-0 Volyn Lutsk
+Torpedo Zaporizhzhia 1-0 Zorya-MALS Luhansk
+Veres Rivne 1-0 Bukovyna Chernivtsi
+Veres Rivne 1-2 Chornomorets Odesa
+Veres Rivne 2-1 Dnipro Dnipropetrovsk
+Veres Rivne 0-3 Dynamo Kyiv
+Veres Rivne 0-0 Karpaty Lviv
+Veres Rivne 2-0 Kremin Kremenchuk
+Veres Rivne 1-1 Kryvbas Kryvyi Rih
+Veres Rivne 4-0 Metalist Kharkiv
+Veres Rivne 0-1 Metalurh Zaporizhzhia
+Veres Rivne 0-0 Nyva Ternopil
+Veres Rivne 3-2 Nyva Vinnytsia
+Veres Rivne 2-0 Shakhtar Donetsk
+Veres Rivne 0-0 Tavriya Simferopol
+Veres Rivne 0-0 Temp Shepetivka
+Veres Rivne 1-0 Torpedo Zaporizhzhia
+Veres Rivne 0-0 Volyn Lutsk
+Veres Rivne 2-1 Zorya-MALS Luhansk
+Volyn Lutsk 2-0 Bukovyna Chernivtsi
+Volyn Lutsk 0-0 Chornomorets Odesa
+Volyn Lutsk 1-2 Dnipro Dnipropetrovsk
+Volyn Lutsk 1-3 Dynamo Kyiv
+Volyn Lutsk 1-0 Karpaty Lviv
+Volyn Lutsk 1-1 Kremin Kremenchuk
+Volyn Lutsk 0-0 Kryvbas Kryvyi Rih
+Volyn Lutsk 0-0 Metalist Kharkiv
+Volyn Lutsk 2-0 Metalurh Zaporizhzhia
+Volyn Lutsk 1-0 Nyva Ternopil
+Volyn Lutsk 2-0 Nyva Vinnytsia
+Volyn Lutsk 2-2 Shakhtar Donetsk
+Volyn Lutsk 1-0 Tavriya Simferopol
+Volyn Lutsk 0-0 Temp Shepetivka
+Volyn Lutsk 2-0 Torpedo Zaporizhzhia
+Volyn Lutsk 1-1 Veres Rivne
+Volyn Lutsk 2-1 Zorya-MALS Luhansk
+Zorya-MALS Luhansk 2-0 Bukovyna Chernivtsi
+Zorya-MALS Luhansk 1-4 Chornomorets Odesa
+Zorya-MALS Luhansk 0-3 Dnipro Dnipropetrovsk
+Zorya-MALS Luhansk 1-1 Dynamo Kyiv
+Zorya-MALS Luhansk 1-0 Karpaty Lviv
+Zorya-MALS Luhansk 1-0 Kremin Kremenchuk
+Zorya-MALS Luhansk 1-0 Kryvbas Kryvyi Rih
+Zorya-MALS Luhansk 1-0 Metalist Kharkiv
+Zorya-MALS Luhansk 1-0 Metalurh Zaporizhzhia
+Zorya-MALS Luhansk 2-1 Nyva Ternopil
+Zorya-MALS Luhansk 0-1 Nyva Vinnytsia
+Zorya-MALS Luhansk 0-4 Shakhtar Donetsk
+Zorya-MALS Luhansk 1-0 Tavriya Simferopol
+Zorya-MALS Luhansk 1-0 Temp Shepetivka
+Zorya-MALS Luhansk 1-1 Torpedo Zaporizhzhia
+Zorya-MALS Luhansk 1-2 Veres Rivne
+Zorya-MALS Luhansk 1-1 Volyn Lutsk

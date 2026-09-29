@@ -1,0 +1,294 @@
+# source: https://www.rsssf.org/tableso/oekr97.html (via WebFetch summary, requested verbatim; auto-extracted from transcript)
+TABLE
+ 1.Dynamo Kyiv                   30  23  4  3  69-20  73  Champions
+ 2.Shakhtar Donetsk              30  19  5  6  72-28  62  CWC
+ 3.Vorskla Poltava               30  17  7  6  50-26  58  UEFA Cup
+ 4.Dnipro Dnipropetrovsk         30  14 13  3  48-19  55  UEFA Cup
+ 5.Karpaty L'viv                 30  15  7  8  36-23  52
+ 6.Tavria Simferopil'            30  13  5 12  36-46  44
+ 7.Chornomorets Odesa            30  12  6 12  36-31  42
+ 8.Metalurh Zaporozhzhye         30  12  5 13  48-44  41
+ 9.Nyva Ternopil'                30  11  6 13  34-37  39
+10.Zirka-NIBAS Kyrovohrad        30  11  3 16  31-55  36
+11.CSCA Kyiv                     30   9  8 13  33-35  35
+12.Kryvbas Kryvy Ryh             30   9  6 15  24-48  33
+13.Prykarpattja Ivano-Frankivsk  30   8  7 15  33-49  31
+14.Torpedo Zaporozhzhye          30   8  5 17  25-56  29
+15.Kremin' Kreminchuk            30   7  3 20  28-57  24  Relegated
+16.Nyva Vynnitsa                 30   4  6 20  19-48  18  Relegated
+# aliases: CSKA/CSKA-Borisphen = CSCA Kyiv; Metalurg = Metalurh Zaporozhzhye
+ALIAS Prikarpattya => Prykarpattja Ivano-Frankivsk
+ALIAS Metallurg => Metalurh Zaporozhzhye
+ALIAS Metalurg => Metalurh Zaporozhzhye
+MATCHES
+Round 1
+CSKA Kyiv 0-1 Dynamo Kyiv
+Prikarpattya Ivano-Frankivsk 0-2 Vorskla Poltava
+Dnipro Dnipropetrovsk 2-1 Kryvbas Kryvy Ryh
+Metalurg Zaporozhzhye 2-0 Torpedo Zaporozhzhye
+Karpaty L'viv 4-0 Kremin' Kreminchuk
+Zirka-Nibas Kyrovohrad 1-0 Nyva Ternopil'
+Chornomorets Odesa 0-0 Nyva Vynnitsa
+Tavriya 0-2 Shahtar
+Round 2
+Dynamo 1-2 Metalurg
+Dnipro 4-0 Nyva Vn
+Shahtar 0-0 Karpaty
+Vorskla 2-0 Kremin'
+Nyva Tr 1-0 Tavriya
+Torpedo 3-1 Zirka-Nibas
+Prikarpattya 2-4 Chornomorets
+Kryvbas 2-1 CSKA
+Round 3
+Zirka-Nibas 0-4 Dynamo
+Metalurg 1-1 Kryvbas
+Karpaty 3-1 Nyva Tr
+Chornomorets 0-3 Vorskla
+Dnipro 4-0 Prikarpattya
+Tavriya 2-1 Torpedo
+Kremin' 0-1 Shahtar
+CSKA 1-0 Nyva Vn
+Round 4
+Chornomorets 3-0 Dnipro
+Vorskla 1-1 Shahtar
+Nyva Tr 1-0 Kremin
+Torpedo 1-0 Karpaty
+Dynamo 3-0 Tavriya
+Kryvbas 0-2 Zirka-Nibas
+Nyva Vn 0-0 Metalurg
+Prikarpattya 0-0 CSKA-Borisphen
+Round 5
+Karpaty 0-2 Dynamo
+Shahtar 5-0 Nyva Tr
+Tavriya 1-0 Kryvbas
+Kremin' 1-1 Torpedo
+Zirka-Nibas 2-1 Nyva Vn
+Dnipro 1-1 Vorskla
+CSKA 1-2 Chornomorets
+Metalurg 3-2 Prikarpattya
+Round 6
+Vorskla 2-1 Nyva Tr
+Torpedo 2-1 Shahtar
+Dynamo 5-0 Kremin
+Kryvbas 1-2 Karpaty
+Prikarpattya 0-0 Zirka-Nibas
+Chornomorets 2-1 Metallurg
+Dnipro 2-1 CSKA-Borisphen
+Nyva Vn 0-0 Tavriya
+Round 7
+Zirka-Nibas 0-2 Chornomorets
+CSKA-Borisphen 0-0 Vorskla
+Metalurg 1-1 Dnipro
+Tavriya 2-0 Prikarpattya
+Karpaty 1-2 Nyva Vn
+Kremin 2-1 Kryvbas
+Shahtar 1-3 Dynamo
+Nyva Tr 2-1 Torpedo
+Round 8
+Vorskla 2-0 Torpedo
+Dynamo 1-0 Nyva Tr
+Kryvbas 1-3 Shahtar
+Nyva Vn 2-1 Kremin
+Prikarpattya 1-2 Karpaty
+Chornomorets 5-1 Tavriya
+Dnipro 4-0 Zirka-Nibas
+CSKA-Borisphen 2-1 Metalurg
+Round 9
+Karpaty 1-0 Chornomorets
+Torpedo 0-0 Dynamo
+Metalurg 2-0 Vorskla
+Zirka-Nibas 2-0 CSKA-Borisphen
+Tavriya 0-0 Dnipro
+Kremin 2-1 Prikarpattya
+Shahtar 1-0 Nyva Vn
+Nyva Tr 2-0 Kryvbas
+Round 10
+Vorskla 4-3 Dynamo
+Kryvbas 2-1 Torpedo
+Prikarpattya 2-1 Shahtar
+Chornomorets 1-0 Kremin
+Dnipro 0-0 Karpaty
+CSKA-Borisphen 2-1 Tavriya
+Metalurg 0-1 Zirka-Nibas
+Nyva Vn 0-0 Nyva Tr
+Round 11
+Zirka-Nibas 2-0 Vorskla
+Tavriya 3-0 Metalurg
+Karpaty 1-2 CSKA-Borisphen
+Kremin 1-1 Dnipro
+Shahtar 3-0 Chornomorets
+Nyva Tr 3-0 Prikarpattya
+Torpedo 1-0 Nyva Vn
+Dynamo 5-0 Kryvbas
+Round 12
+Vorskla 4-0 Kryvbas
+Prikarpattya 2-1 Torpedo
+Chornomorets 2-0 Nyva Tr
+Dnipro 2-0 Shahtar
+CSKA-Borisphen 3-1 Kremin
+Metalurg 2-0 Karpaty
+Zirka-Nibas 2-1 Tavriya
+Nyva Vn 0-1 Dynamo
+Round 13
+Torpedo 1-2 Chornomorets
+Tavriya 1-1 Vorskla
+Karpaty 2-0 Zirka-Nibas
+Kremin 4-1 Metalurg
+Shahtar 3-0 CSKA-Borisphen
+Nyva Tr 2-2 Dnipro
+Dynamo 2-1 Prikarpattya
+Kryvbas 3-0 Nyva Vn
+Round 14
+Chornomorets 1-3 Dynamo
+Dnipro 4-0 Torpedo
+Metalurg 1-1 Shahtar
+Prikarpattya 2-0 Kryvbas
+CSKA 1-0 Nyva Tr
+Zirka-Nibas 2-0 Kremin'
+Tavriya 3-1 Karpaty
+Vorskla 3-0 Nyva Vn
+Round 15
+Karpaty 2-0 Vorskla
+Kremin 2-3 Tavriya
+Shahtar 3-1 Zirka-Nibas
+Nyva Tr 2-1 Metallurg
+Dynamo 2-2 Dnipro
+Kryvbas 1-0 Chornomorets
+Nyva Vn 1-2 Prikarpattya
+# WebFetch: "Torpedo 0-0 CSKA-Borisphen (awd; Torpedo awarded 0-0)" - direction from table residual: awarded win for Torpedo, goals not counted in table
+Torpedo +:- CSKA-Borisphen
+Round 16
+Tavriya 1-1 Kremin
+Vorskla 0-0 Karpaty
+Chornomorets 0-0 Kryvbas
+Prikarpattya 2-1 Nyva Vn
+CSKA-Borisphen 5-1 Torpedo
+Zirka-Nibas 2-3 Shahtar
+Metalurg 4-2 Nyva Tr
+Dnipro 0-1 Dynamo
+Round 17
+Kryvbas 1-1 Prikarpattya
+Dynamo 2-0 Chornomorets
+Torpedo 1-3 Dnipro
+Nyva Tr 0-0 CSKA-Borisphen
+Shahtar 4-2 Metallurg
+Kremin 1-0 Zirka-Nibas
+Karpaty 1-1 Tavriya
+Nyva Vn 2-4 Vorskla
+Round 18
+Prikarpattya 0-2 Dynamo
+Chornomorets 2-0 Torpedo
+Vorskla 1-0 Tavriya
+Zirka-Nibas 2-0 Karpaty
+Metallurg 3-2 Kremin
+CSKA-Borisphen 1-1 Shahtar
+Dnipro 1-0 Nyva Tr
+Nyva Vn 2-0 Kryvbas
+Round 19
+Kremin 0-2 CSKA-Borisphen
+Shahtar 1-0 Dnipro
+Nyva Tr 2-0 Chornomorets
+Dynamo 2-0 Nyva Vn
+Kryvbas 1-1 Vorskla
+Torpedo 1-1 Prikarpattya
+Tavriya 1-0 Zirka-Nibas
+Karpaty 1-0 Metallurg
+Round 20
+Kryvbas 0-2 Dynamo
+Vorskla 3-0 Zirka-Nibas
+Dnipro 3-0 Kremin
+Chornomorets 1-1 Shahtar
+Metalurg 8-1 Tavriya
+CSKA-Borisphen 0-1 Karpaty
+Nyva Vn 0-0 Torpedo
+Prikarpattya 0-0 Nyva Tr
+Round 21
+Dynamo 2-1 Vorskla
+Karpaty 0-0 Dnipro
+Shahtar 2-0 Prikarpattya
+Torpedo 1-0 Kryvbas
+Kremin 1-0 Chornomorets
+Tavriya 2-1 CSKA-Borisphen
+Zirka-Nibas 1-0 Metalurg
+Nyva Tr 3-0 Nyva Vn
+Round 22
+Dynamo 2-1 Torpedo
+Chornomorets 0-0 Karpaty
+CSKA-Borisphen 1-2 Zirka-Nibas
+Vorskla 3-0 Metalurg
+Dnipro 1-0 Tavriya
+Prikarpattya 2-0 Kremin
+Nyva Vn 1-2 Shahtar
+Kryvbas 2-0 Nyva Tr
+Round 23
+Nyva Tr 1-0 Dynamo
+Torpedo 2-3 Vorskla
+Tavriya 1-0 Chornomorets
+Shahtar 6-0 Kryvbas
+Karpaty 3-1 Prikarpattya
+Zirka-Nibas 0-0 Dnipro
+Metalurg 4-2 CSKA-Borisphen
+Kremin 3-0 Nyva Vn
+Round 24
+Dynamo 3-1 Shahtar
+Chornomorets 5-1 Zirka-Nibas
+Vorskla 1-0 CSKA-Borisphen
+Dnipro 4-0 Metalurg
+Prikarpattya 1-2 Tavriya
+Nyva Vn 0-1 Karpaty
+Kryvbas 1-0 Kremin
+Torpedo 0-0 Nyva Tr
+Round 25
+Nyva Tr 1-0 Vorskla
+Shahtar 9-1 Torpedo
+Kremin 1-4 Dynamo
+Karpaty 5-1 Kryvbas
+Zirka-Nibas 2-4 Prikarpattya
+Metalurg 1-0 Chornomorets
+CSKA-Borisphen 0-0 Dnipro
+Tavriya 3-2 Nyva Vn
+Round 26
+Dynamo 2-0 Karpaty
+Vorskla 0-0 Dnipro
+Chornomorets 0-0 CSKA-Borisphen
+Prikarpattya 3-2 Metalurg
+Kryvbas 1-0 Tavriya
+Torpedo 1-0 Kremin
+Nyva Tr 1-4 Shahtar
+Nyva Vn 3-1 Zirka-Nibas
+Round 27
+Tavriya 1-3 Dynamo
+Kremin 3-2 Nyva Tr
+Karpaty 2-0 Torpedo
+Zirka-Nibas 1-1 Kryvbas
+Metalurg 2-0 Nyva Vn
+CSKA-Borisphen 2-1 Prikarpattya
+Dnipro 3-2 Chornomorets
+Shahtar 4-0 Vorskla
+Round 28
+Dynamo 6-1 Zirka-Nibas
+Prikarpattya 2-2 Dnipro
+Nyva Vn 2-2 CSKA-Borisphen
+Vorskla 2-1 Chornomorets
+Shahtar 4-2 Kremin
+Kryvbas 1-0 Metalurg
+Nyva Tr 1-1 Karpaty
+Torpedo 1-3 Tavriya
+Round 29
+Metalurg 0-0 Dynamo
+Chornomorets 0-0 Prikarpattya
+Karpaty 1-0 Shahtar
+Kremin 0-4 Vorskla
+Nyva Vn 0-2 Dnipro
+Tavriya 2-1 Nyva Tr
+Zirka-Nibas 1-2 Torpedo
+CSKA 1-2 Kryvbas
+Round 30
+Vorskla 2-0 Prikarpattya
+Nyva Vn 0-1 Chornomorets
+Dynamo 2-2 CSKA-Borisphen
+Kryvbas 0-0 Dnipro
+Torpedo 0-4 Metalurg
+Nyva Tr 5-1 Zirka-Nibas
+Shahtar 4-0 Tavriya
+Kremin 0-1 Karpaty
