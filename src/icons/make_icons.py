@@ -7,7 +7,7 @@ ROOT=sys.argv[1] if len(sys.argv)>1 else '/usr/local/lib/python3.11/dist-package
 SRC=os.path.join(os.path.dirname(os.path.abspath(__file__)),'..')
 UI=['trophy','fire','snowflake','sword-cross','calendar-star','ferris-wheel','soccer-field','format-list-numbered','share-variant','send',
     'account-circle','bullhorn','lock-open-variant','chart-bar','incognito','eye','check-circle','check-decagram','handshake','content-copy','image',
-    'star','lock','google','star-four-points','account-group','new-box','chart-box','medal','crown','home','chevron-right','weather-night','white-balance-sunny']
+    'star','lock','google','star-four-points','account-group','new-box','chart-box','medal','crown','home','chevron-right','weather-night','white-balance-sunny','view-column']
 TR={ # трофей → гліф
  'champ':'trophy','top3':'star','unbeaten':'shield-star','perfect':'diamond-stone','mid8':'scale-balance','relegated':'trending-down',
  'goals80':'soccer','fortress':'wall','iron':'door-closed-lock','nodraw':'sword-cross','sieve':'dots-grid','lucky':'clover','unlucky':'weather-pouring',
@@ -17,7 +17,7 @@ TR={ # трофей → гліф
  's3':'fire','s7':'calendar-week','s14':'calendar-month','s30':'calendar-check','d10':'coffee','d50':'medal','golden':'trophy-variant','rebsh':'handshake',
  'samba':'music','noua':'airplane','namesakes':'card-account-details','ghosts':'ghost','crimea':'waves','cross':'road-variant','mediocre':'hat-fedora',
  'cursed':'crystal-ball','heist':'sack','fairy':'auto-fix','fallen':'star-off','kids':'baby-face-outline','gkmvp':'hand-back-right','bottom':'chevron-triple-down',
- 'nice':'emoticon-wink-outline','homefort':'castle','thrash':'turtle','tractor':'tractor','minimal':'numeric-1-box','drawish':'handshake-outline','equal':'scale-balance','lonewolf':'account-alert','ukrposhta':'email-alert','kukuriku':'bird','lobanovsky':'clipboard-text','panenka':'feather','samba8':'music-note','ndoye':'star-face','pichkur':'glass-mug-off','poodles':'dog','sheep':'sheep','brains':'brain','talk':'microphone','tablo':'scoreboard','pyvo':'glass-mug-variant','palianytsia':'bread-slice','oleksandry':'account-group','ms1':'sprout','ms5':'soccer','ms10':'ticket','ms25':'ribbon','ms50':'medal','ms100':'star-circle','ms250':'bank'}
+ 'nice':'emoticon-wink-outline','homefort':'castle','thrash':'turtle','tractor':'tractor','minimal':'numeric-1-box','drawish':'handshake-outline','equal':'scale-balance','lonewolf':'account-alert','ukrposhta':'email-alert','kukuriku':'bird','lobanovsky':'clipboard-text','panenka':'feather','samba8':'music-note','ndoye':'star-face','pichkur':'glass-mug-off','poodles':'dog','sheep':'sheep','brains':'brain','talk':'microphone','tablo':'scoreboard','pyvo':'glass-mug-variant','palianytsia':'bread-slice','oleksandry':'account-group','trio':'glass-wine','rada':'vote','zarobitchany':'bag-suitcase','ms1':'sprout','ms5':'soccer','ms10':'ticket','ms25':'ribbon','ms50':'medal','ms100':'star-circle','ms250':'bank'}
 def load(path):
     t=open(path).read();vb=re.search(r'viewBox="([^"]+)"',t).group(1);ds=re.findall(r'<path[^>]*\sd="([^"]+)"',t)
     assert len(ds)==1,(path,len(ds));return [vb,ds[0]]
