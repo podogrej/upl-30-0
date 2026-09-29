@@ -223,6 +223,7 @@ button.ghost.big0{padding:11px 18px;font-size:15px;font-family:var(--font-body);
 .facts0{justify-content:center;margin-top:18px}.hero0 h1{font-size:clamp(24px,5.5vw,36px);line-height:1.1;letter-spacing:-.01em}
 .lead0{font-size:16px;color:var(--ink2);margin:0;max-width:60ch}.facts0{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--ink2)}.facts0 b{font-family:var(--font-display);color:var(--ink);font-size:16px}
 .mode0{margin-top:14px}
+html.tgfs header.top{padding-top:calc(10px + var(--tg-safe-area-inset-top,0px) + var(--tg-content-safe-area-inset-top,0px))}
 .rtog{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:var(--ink2);cursor:pointer;padding:4px 2px}.rtog input{width:18px;height:18px;accent-color:var(--amber)}
 .nick{font-weight:500;color:var(--amber);font-size:.85em}
 details.tip{border:0;background:none;padding:0;margin:6px 0 0}details.tip>summary{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:500;color:var(--ink2);list-style:none}
@@ -417,12 +418,12 @@ td .sub{font-size:11px;color:var(--muted);margin-top:2px;display:flex;gap:6px;al
     <div class="share" id="shareBox">
       <h3>Поділитися</h3>
       <span class="flag" id="practiceFlag" hidden>Тренування: офіційний результат дня вже записано</span>
-      <textarea id="shareText" readonly aria-label="Текст для поширення"></textarea>
-      <div class="grid" id="chalBox" hidden style="gap:6px"><input id="chalName" maxlength="24" placeholder="Твоє ім'я у виклику" style="max-width:260px"><div class="row"><button class="primary" id="chalBtn"><!--i:sword-cross-->Кинути виклик другу</button><button class="ghost" id="chalCopyBtn"><!--i:content-copy-->Скопіювати посилання</button></div><span class="muted" style="font-size:13px">Друг зіграє з тим самим колесом, схемою й суперниками — побачимо, хто сильніший.</span><div class="muted" id="chalMsg" style="font-size:13px;word-break:break-all"></div></div>
-      <div class="row"><button class="primary" id="tgShareBtn" hidden><!--i:telegram-->Надіслати в Telegram</button><button class="primary" id="copyBtn"><!--i:content-copy-->Скопіювати текст</button><button class="ghost" id="cardBtn"><!--i:image-->Показати картку</button><span class="best" id="copyMsg"></span></div>
+      <textarea id="shareText" hidden readonly aria-label="Текст для поширення"></textarea>
+      <div class="row"><button class="primary" id="tgShareBtn"><!--i:share-variant-->Поділитися карткою</button><button class="ghost" id="cardBtn"><!--i:image-->Показати картку</button><button class="ghost" id="copyBtn"><!--i:content-copy-->Скопіювати текст</button><span class="best" id="copyMsg"></span></div>
       <img id="shareImg" alt="Картка результату" hidden>
       <div class="row" id="cardActs" hidden><button class="primary" id="cardTgBtn" hidden><!--i:telegram-->Надіслати картку мені в Telegram</button><button class="primary" id="cardShareBtn" hidden><!--i:share-variant-->Поділитися карткою</button><span class="best" id="cardMsg"></span></div>
       <div class="hint" id="shareHint" hidden>Натисни й утримуй картку, щоб зберегти її або поділитися в Telegram чи Instagram.</div>
+      <div class="grid" id="chalBox" hidden style="gap:6px"><input id="chalName" maxlength="24" placeholder="Твоє ім'я у виклику" style="max-width:260px;font:inherit;padding:9px 12px;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);color:var(--ink)"><div class="row"><button class="primary" id="chalBtn"><!--i:sword-cross-->Кинути виклик другу</button><button class="ghost" id="chalCopyBtn"><!--i:content-copy-->Скопіювати посилання</button></div><span class="muted" style="font-size:13px">Друг зіграє з тим самим колесом, схемою й суперниками — побачимо, хто сильніший.</span><div class="muted" id="chalMsg" style="font-size:13px;word-break:break-all"></div></div>
     </div>
     <div class="tabs" role="tablist" id="tabs"><button class="tab on" data-tab="t1" role="tab">Огляд</button><button class="tab" data-tab="t2" role="tab">Статистика сезону</button></div>
     <div id="t1" class="tabpane">
@@ -460,7 +461,7 @@ td .sub{font-size:11px;color:var(--muted);margin-top:2px;display:flex;gap:6px;al
     </div>
 </div>
 <div class="overlay" id="viewBox" hidden><div class="box"><div class="vhead"><h3 id="viewTitle">Склад</h3><button class="ghost" id="viewClose">Закрити</button></div><div id="viewBody"></div></div></div>
-<div class="foot">30-0 УПЛ · <a href="#" id="newsBtn">Що нового у версії 0.43<b id="newsDot" hidden></b></a> · <a href="#" id="themeBtn">Світла тема</a> · неофіційний фан-проєкт</div>
+<div class="foot">30-0 УПЛ · <a href="#" id="newsBtn">Що нового у версії 0.44<b id="newsDot" hidden></b></a> · <a href="#" id="themeBtn">Світла тема</a> · неофіційний фан-проєкт</div>
 <script id="pool" type="application/json">__POOL__</script>
 <script>
 (function(){
@@ -1002,15 +1003,35 @@ function tgInit(){
   try{TG=window.Telegram&&window.Telegram.WebApp;if(!TG||!TG.initData)return;TG.ready();TG.expand();
     TGU=TG.initDataUnsafe&&TG.initDataUnsafe.user||null;
     try{const bg=getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();if(bg){TG.setHeaderColor&&TG.setHeaderColor(bg);TG.setBackgroundColor&&TG.setBackgroundColor(bg);}}catch(e){}
+    // iPad: Telegram відкриває Mini App маленьким вікном — просимо повний екран (Bot API 8.0); відступи під кнопки Telegram — з CSS-змінних --tg-*-safe-area-inset-top
+    try{const tablet=TG.platform==='ios'&&Math.min(screen.width,screen.height)>=700;const fs=()=>document.documentElement.classList.toggle('tgfs',!!TG.isFullscreen);
+      TG.onEvent&&TG.onEvent('fullscreenChanged',fs);if(tablet&&TG.requestFullscreen&&TG.isVersionAtLeast&&TG.isVersionAtLeast('8.0')&&!TG.isFullscreen)TG.requestFullscreen();fs();}catch(e){}
     if(TGU&&!lsGet("upl30_nick")){const nm=[TGU.first_name,TGU.last_name].filter(Boolean).join(' ').trim()||TGU.username||'';if(nm)lsSet("upl30_nick",nm.slice(0,24));}
   if(typeof acctTgAuto==='function')acctTgAuto();if(typeof chalLoad==='function')chalLoad();if(typeof f5Boot==='function')f5Boot();
   }catch(e){TG=null;}
 }
 if(ONLINE&&/tgWebApp/.test(location.hash+location.search)){const sc=document.createElement('script');sc.src='https://telegram.org/js/telegram-web-app.js';sc.onload=tgInit;document.head.appendChild(sc);}
 function tgFields(){return TGU?{tg_user_id:TGU.id,tg_name:([TGU.first_name,TGU.last_name].filter(Boolean).join(' ')||TGU.username||'').slice(0,64)}:{};}
-document.getElementById('tgShareBtn').onclick=()=>{const text=S.result?shareTextOf(S.result,true):document.getElementById('shareText').value;
+// «Поділитися карткою»: у Telegram — бот готує повідомлення з карткою (api/card, share) і відкривається вибір чату;
+// поза Telegram — системне меню з файлом картки; інакше — текст через t.me/share
+function shareTextLink(){const text=S.result?shareTextOf(S.result,true):document.getElementById('shareText').value;
   const url=`https://t.me/share/url?url=${encodeURIComponent(tgLink())}&text=${encodeURIComponent(text)}`;
-  if(TG&&TG.openTelegramLink)TG.openTelegramLink(url);else window.open(url,'_blank');};
+  if(TG&&TG.openTelegramLink)TG.openTelegramLink(url);else window.open(url,'_blank');}
+document.getElementById('tgShareBtn').onclick=async()=>{const b=document.getElementById('tgShareBtn'),msg=document.getElementById('copyMsg');if(!S.result)return;
+  try{await document.fonts.ready;}catch(e){}drawCard(S.result);
+  const inTg=!!(ONLINE&&TG&&TG.initData);
+  if(inTg&&TG.shareMessage&&TG.isVersionAtLeast&&TG.isVersionAtLeast('8.0')){
+    b.disabled=true;msg.textContent='Готуємо картку…';
+    try{const r=await _fetch('/api/card',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({initData:TG.initData,image:CARD_CANVAS.toDataURL('image/jpeg',0.9),caption:shareTextOf(S.result,true,true),share:true})});
+      const j=await r.json().catch(()=>({}));b.disabled=false;
+      if(j.ok&&j.prepared){msg.textContent='';TG.shareMessage(j.prepared,ok=>{msg.textContent=ok?'Надіслано':'';});return;}
+      if(j.need_start){msg.textContent='Спочатку відкрий чат з @'+TG_BOT+' і натисни «Start» — тоді картку можна буде надсилати.';return;}
+    }catch(e){b.disabled=false;}
+    msg.textContent='Картку не вийшло — надсилаю текстом.';shareTextLink();return;}
+  let canFile=false;try{canFile=!inTg&&!!navigator.canShare&&navigator.canShare({files:[new File([new Blob(['x'],{type:'image/png'})],'x.png',{type:'image/png'})]});}catch(e){}
+  if(canFile){CARD_CANVAS.toBlob(bl=>{const f=new File([bl],'30-0-upl.png',{type:'image/png'});navigator.share({files:[f],text:shareTextOf(S.result,false,true)}).catch(e=>{if(e&&e.name!=='AbortError')shareTextLink();});},'image/png');return;}
+  if(inTg)return shareTextLink();
+  document.getElementById('cardBtn').click();};
 async function sbPost(table,row){const r=await fetch(`${SB_URL}/rest/v1/${table}?apikey=${SB_KEY}`,{method:"POST",headers:{apikey:SB_KEY,"Content-Type":"application/json",Prefer:"return=representation"},body:JSON.stringify(row)});if(!r.ok)throw new Error(r.status+' '+(await r.text()).slice(0,200));return r.json();}
 async function sbGet(q){const r=await fetch(`${SB_URL}/rest/v1/${q}${q.includes('?')?'&':'?'}apikey=${SB_KEY}`);if(!r.ok)throw new Error('GET '+r.status);return r.json();}
 // ---------- журнал: кожен зіграний сезон пишеться в таблицю seasons (склад, статистика, таблиця, seed)
@@ -1136,7 +1157,7 @@ function shareTextOf(r,noLink,noGrid){   // noGrid: підпис до картк
 }
 function renderShare(r){
   {const v=document.getElementById('verLine');if(v)v.hidden=true;}
-  document.getElementById('shareText').value=shareTextOf(r);document.getElementById('tgShareBtn').hidden=!ONLINE;
+  document.getElementById('shareText').value=shareTextOf(r);
   document.getElementById('shareImg').hidden=true;document.getElementById('shareHint').hidden=true;document.getElementById('cardActs').hidden=true;document.getElementById('copyMsg').textContent='';
 }
 document.getElementById('copyBtn').onclick=()=>{const ta=document.getElementById('shareText');const msg=document.getElementById('copyMsg');
@@ -1188,9 +1209,10 @@ function drawCard(r){
 }
 document.getElementById('replayBtn').onclick=()=>playSeason(null);
 // ---------- «Що нового»: коротко й по-людськи про останню версію (технічний журнал — CHANGELOG.md у репозиторії)
-const WHATSNEW={v:'0.43',date:'29.09.2026',items:[
-  ['trophy','Трофеї можна брати знову','Кожен трофей за сезон тепер зараховується щоразу, коли ти його виконав. Поруч із трофеєм — лічильник ×2, ×3…'],
-  ['star','Нові назви','«Як на роботу», «Трудоголік», «Шева б пишався», «Дует Лобановського», «Сила в єдності».']]};
+const WHATSNEW={v:'0.44',date:'29.09.2026',items:[
+  ['share-variant','Ділися карткою','Кнопка «Поділитися карткою» в Telegram надсилає в обраний чат саме картку сезону з кнопкою «Зібрати свою 11-ку», а не текст із квадратиками.'],
+  ['star-four-points','iPad — на весь екран','На iPad гра в Telegram тепер відкривається на весь екран, а не маленьким віконцем.'],
+  ['emoticon-wink-outline','Ще один секрет','Дехто в «Динамо» знає, про що він. По пиву?']]};
 function openNews(){const box=document.getElementById('viewBox');document.getElementById('viewTitle').textContent=`Що нового · версія ${WHATSNEW.v}`;
   document.getElementById('viewBody').innerHTML=`<div class="news">${WHATSNEW.items.map(([e,h,d])=>`<div class="ni">${ic(e,'lg')}<div><b>${esc(h)}</b><p>${esc(d)}</p></div></div>`).join('')}</div>`;
   box.hidden=false;lsSet('upl30_news_seen',WHATSNEW.v);document.getElementById('newsDot').hidden=true;}

@@ -1,7 +1,8 @@
 // 30-0 УПЛ — надіслати картку результату собі в Telegram (адреса /api/card)
 // У застосунку Telegram довге натискання на картинку в Mini App не дає її зберегти, тому бот надсилає картку в особистий чат:
 // звідти її можна зберегти, переслати друзям або викласти в сторіз.
-// POST {initData, image: "data:image/jpeg;base64,…", caption}. Змінна оточення у Vercel: TG_TOKEN.
+// POST {initData, image: "data:image/jpeg;base64,…", caption, share?}. Змінні оточення у Vercel: TG_TOKEN, TG_BOT.
+// share=true: замість картки в особистих бот повертає id підготовленого повідомлення (savePreparedInlineMessage) для WebApp.shareMessage.
 const crypto = require('crypto');
 const env = k => String(process.env[k] || '').replace(/\s+/g, '');
 const hmac = (key, data) => crypto.createHmac('sha256', key).update(data).digest();
@@ -42,7 +43,22 @@ module.exports = async (req, res) => {
       const blocked = /chat not found|bot can't initiate|blocked/i.test(j.description || '');
       return res.status(200).json({ ok: false, need_start: blocked, error: String(j.description || r.status).slice(0, 160) });
     }
-    res.status(200).json({ ok: true });
+    if (!b.share) return res.status(200).json({ ok: true });
+    // share: картка потрібна лише як файл на серверах Telegram — прибираємо її з особистого чату,
+    // готуємо повідомлення (фото + підпис + кнопка «Зібрати свою 11-ку»), і Mini App відкриває вибір чату (WebApp.shareMessage)
+    stage = 'prepare';
+    const photos = (j.result && j.result.photo) || [];
+    const fileId = photos.length ? photos[photos.length - 1].file_id : null;
+    if (!fileId) return res.status(200).json({ ok: false, error: 'no file_id' });
+    fetch(`https://api.telegram.org/bot${token}/deleteMessage`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: u.id, message_id: j.result.message_id }) }).catch(() => {});
+    const bot = env('TG_BOT') || 'upl30_bot';
+    const result = { type: 'photo', id: crypto.randomBytes(8).toString('hex'), photo_file_id: fileId, caption: String(b.caption || '').slice(0, 1000),
+      reply_markup: { inline_keyboard: [[{ text: 'Зібрати свою 11-ку', url: `https://t.me/${bot}?startapp` }]] } };
+    const pr = await fetch(`https://api.telegram.org/bot${token}/savePreparedInlineMessage`, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: u.id, result, allow_user_chats: true, allow_group_chats: true, allow_channel_chats: true }) });
+    const pj = await pr.json().catch(() => ({}));
+    if (!pj.ok) return res.status(200).json({ ok: false, error: String(pj.description || pr.status).slice(0, 160) });
+    res.status(200).json({ ok: true, prepared: pj.result.id });
   } catch (e) {
     res.status(500).json({ error: `crash at ${stage}: ${String(e && e.message || e).slice(0, 160)}` });
   }
