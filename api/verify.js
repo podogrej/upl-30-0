@@ -2,7 +2,7 @@
 // POST {season_id}: сервер бере запис сезону з журналу, перевіряє seed, склад, рейтинги й правила формату
 // і перераховує сезон тим самим рушієм, що й гра (lib/engine.js). Результат: seasons.verified = true/false.
 const crypto = require('crypto');
-const SB_URL = 'https://qruhcbwycrnfgzzdbljr.supabase.co';
+const SB_URL = (process.env.SUPABASE_URL || 'https://qruhcbwycrnfgzzdbljr.supabase.co').trim();   // у тестовому оточенні Vercel — адреса тестової бази
 const env = k => String(process.env[k] || '').replace(/\s+/g, '');
 async function sb(path, { method = 'GET', body, prefer } = {}) {
   const key = env('SUPABASE_SERVICE_KEY');
