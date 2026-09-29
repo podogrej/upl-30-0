@@ -67,6 +67,16 @@ const fail=[];const check=(ok,msg)=>{if(!ok)fail.push(msg);};
   check(await pg.evaluate(()=>!document.getElementById('shareImg').hidden),`${fmt}: «Поділитися карткою» не показала картку`);
   const d=await pg.evaluate(()=>{const S=window.__dbg.S;return {text:document.getElementById('shareText').value,cap:window.__dbg.shareTextOf(S.result,false,true),img:document.getElementById('shareImg').src,r:{W:S.result.W,D:S.result.D,L:S.result.L,gf:S.result.gf,ga:S.result.ga,log:S.result.log.map(m=>[m.ug,m.og,m.res])},verified:document.getElementById('verLine').textContent};});
   fs.writeFileSync(path.join(OUT,`card_${fmt}.png`),Buffer.from(d.img.split(',')[1],'base64'));
+  // 0.50: гравець бачить лише базовий рейтинг картки — на полі результату, у таблиці гравців і в перегляді сезону
+  if(fmt!=='anti'){const rb=await pg.evaluate(()=>{const D=window.__dbg,S=D.S;const bad=[];
+    const base=S.slots.map(s=>s.player.r0);
+    [...document.querySelectorAll('#pitch2 .slot')].forEach((d,i)=>{const e=d.querySelector('.r0');if(e&&+e.textContent!==base[i])bad.push('поле '+e.textContent+'≠'+base[i]);});
+    const all=new Set(base);[...document.querySelectorAll('#playerStats tr')].slice(1).forEach(tr=>{const c=[...tr.children].map(td=>td.textContent);const v=+c[3];if(c.length>7&&!all.has(v))bad.push('таблиця '+v);});
+    const xi=S.slots.map(s=>({n:s.player.name,id:s.player.id,slot:s.slot,r:s.player.r,r0:s.player.r0,c:s.player.club,y:s.player.y,rt:7}));
+    const box=document.createElement('div');box.innerHTML=D.viewHtml({xi,tbl:[],w:1,d:1,l:1,pts:1,place:1,gf:1,ga:1,formation:S.formation,mode:S.mode,year:S.result.year});
+    [...box.querySelectorAll('.slot .r')].forEach((e,i)=>{if(!all.has(+e.textContent))bad.push('перегляд '+e.textContent);});
+    const diff=S.slots.filter(s=>s.player.r!==s.player.r0).length;return {bad,diff};});
+   check(!rb.bad.length,`${fmt}: видно не базовий рейтинг: ${rb.bad.join(', ')}`);console.log(`${fmt}: гравців зі схованим модифікатором ${rb.diff}`);}
   const te=await pg.evaluate(()=>{const D=window.__dbg;const c=D.trCtxNow(D.S.result);const bad=[];for(const t of D.TROPHIES){if(!t.t)continue;try{t.t(c);}catch(e){bad.push(t.id+': '+e.message);}}return bad;});
   check(!te.length,`${fmt}: трофеї падають: ${te.join('; ')}`);
   const L=d.r.log;check(L.length===30,`${fmt}: не 30 матчів`);
