@@ -1,0 +1,8 @@
+src/
+sql/
+tools/
+data/
+docs/
+dist/
+*.zip
+*.md

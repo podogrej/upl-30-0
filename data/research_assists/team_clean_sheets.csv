@@ -1,0 +1,323 @@
+season;team_name_as_source;games;goals_against;clean_sheets;check_ok
+1992;Dynamo Kyiv;30;14;16;OK (src=en.wikipedia crosstable, not rsssf)
+1992;Dnipro Dnipropetrovsk;30;20;13;OK (src=en.wikipedia crosstable, not rsssf)
+1992;Bukovyna Chernivtsi;30;32;13;OK (src=en.wikipedia crosstable, not rsssf)
+1992;Chornomorets Odesa;30;31;12;OK (src=en.wikipedia crosstable, not rsssf)
+1992;Metalist Kharkiv;30;34;11;OK (src=en.wikipedia crosstable, not rsssf)
+1992;Karpaty Lviv;30;38;11;OK (src=en.wikipedia crosstable, not rsssf)
+1992;Nyva Ternopil;30;25;10;OK (src=en.wikipedia crosstable, not rsssf)
+1992;Metalurh Zaporizhzhia;30;35;9;OK (src=en.wikipedia crosstable, not rsssf)
+1992;Kryvbas Kryvyi Rih;30;40;9;OK (src=en.wikipedia crosstable, not rsssf)
+1992;Kremin Kremenchuk;30;40;9;OK (1 awarded match(es) counted in games but not as clean sheets, src=en.wikipedia crosstable, not rsssf)
+1992;Torpedo Zaporizhzhia;30;40;9;OK (src=en.wikipedia crosstable, not rsssf)
+1992;Shakhtar Donetsk;30;32;8;OK (src=en.wikipedia crosstable, not rsssf)
+1992;Tavriya Simferopol;30;39;8;OK (1 awarded match(es) counted in games but not as clean sheets, src=en.wikipedia crosstable, not rsssf)
+1992;Zorya-MALS Luhansk;30;46;8;OK (src=en.wikipedia crosstable, not rsssf)
+1992;Veres Rivne;30;42;7;OK (src=en.wikipedia crosstable, not rsssf)
+1992;Volyn Lutsk;30;54;6;OK (src=en.wikipedia crosstable, not rsssf)
+1993;Dynamo Kyiv;34;21;16;OK (src=en.wikipedia crosstable, not rsssf)
+1993;Chornomorets Odesa;34;23;16;OK (src=en.wikipedia crosstable, not rsssf)
+1993;Kryvbas Kryvyi Rih;34;26;16;OK (src=en.wikipedia crosstable, not rsssf)
+1993;Nyva Ternopil;34;26;16;OK (src=en.wikipedia crosstable, not rsssf)
+1993;Volyn Lutsk;34;30;14;OK (1 awarded match(es) counted in games but not as clean sheets, src=en.wikipedia crosstable, not rsssf)
+1993;Karpaty Lviv;34;30;13;OK (src=en.wikipedia crosstable, not rsssf)
+1993;Shakhtar Donetsk;34;32;12;OK (src=en.wikipedia crosstable, not rsssf)
+1993;Dnipro Dnipropetrovsk;34;35;12;OK (src=en.wikipedia crosstable, not rsssf)
+1993;Torpedo Zaporizhzhia;34;39;12;OK (src=en.wikipedia crosstable, not rsssf)
+1993;Kremin Kremenchuk;34;39;12;OK (src=en.wikipedia crosstable, not rsssf)
+1993;Tavriya Simferopol;34;34;11;OK (1 awarded match(es) counted in games but not as clean sheets, src=en.wikipedia crosstable, not rsssf)
+1993;Veres Rivne;34;36;11;OK (src=en.wikipedia crosstable, not rsssf)
+1993;Zorya-MALS Luhansk;34;46;11;OK (src=en.wikipedia crosstable, not rsssf)
+1993;Temp Shepetivka;34;38;10;OK (src=en.wikipedia crosstable, not rsssf)
+1993;Nyva Vinnytsia;34;45;9;OK (src=en.wikipedia crosstable, not rsssf)
+1993;Metalurh Zaporizhzhia;34;49;8;OK (src=en.wikipedia crosstable, not rsssf)
+1993;Bukovyna Chernivtsi;34;51;8;OK (src=en.wikipedia crosstable, not rsssf)
+1993;Metalist Kharkiv;34;63;6;OK (src=en.wikipedia crosstable, not rsssf)
+1994;Dynamo Kyiv;34;24;17;OK (src=en.wikipedia crosstable, not rsssf)
+1994;Shakhtar Donetsk;34;29;15;OK (src=en.wikipedia crosstable, not rsssf)
+1994;Kryvbas Kryvyi Rih;34;30;15;OK (src=en.wikipedia crosstable, not rsssf)
+1994;Chornomorets Odesa;34;29;14;OK (src=en.wikipedia crosstable, not rsssf)
+1994;Metalurh Zaporizhzhia;34;42;14;OK (src=en.wikipedia crosstable, not rsssf)
+1994;Dnipro Dnipropetrovsk;34;33;13;OK (src=en.wikipedia crosstable, not rsssf)
+1994;Tavriya Simferopol;34;37;13;OK (src=en.wikipedia crosstable, not rsssf)
+1994;Nyva Ternopil;34;44;13;OK (src=en.wikipedia crosstable, not rsssf)
+1994;Karpaty Lviv;34;36;12;OK (src=en.wikipedia crosstable, not rsssf)
+1994;Torpedo Zaporizhzhia;34;49;11;OK (src=en.wikipedia crosstable, not rsssf)
+1994;Nyva Vinnytsia;34;51;11;OK (src=en.wikipedia crosstable, not rsssf)
+1994;Temp Shepetivka;34;41;11;OK (src=en.wikipedia crosstable, not rsssf)
+1994;Kremin Kremenchuk;34;54;8;OK (src=en.wikipedia crosstable, not rsssf)
+1994;Prykarpattya Ivano-Frankivsk;34;52;8;OK (src=en.wikipedia crosstable, not rsssf)
+1994;SC Mykolaiv;34;59;7;OK (src=en.wikipedia crosstable, not rsssf)
+1994;Volyn Lutsk;34;58;7;OK (src=en.wikipedia crosstable, not rsssf)
+1994;Veres Rivne;34;63;7;OK (src=en.wikipedia crosstable, not rsssf)
+1994;Zorya-MALS Luhansk;34;70;6;OK (src=en.wikipedia crosstable, not rsssf)
+1995;Dynamo Kyiv;34;17;21;OK (src=en.wikipedia crosstable, not rsssf)
+1995;Chornomorets Odesa;34;25;19;OK (src=en.wikipedia crosstable, not rsssf)
+1995;CSKA-Borysfen Kyiv;34;27;15;OK (src=en.wikipedia crosstable, not rsssf)
+1995;Zirka-NIBAS Kirovohrad;34;33;15;OK (src=en.wikipedia crosstable, not rsssf)
+1995;Dnipro Dnipropetrovsk;34;34;14;OK (src=en.wikipedia crosstable, not rsssf)
+1995;Shakhtar Donetsk;34;43;13;OK (src=en.wikipedia crosstable, not rsssf)
+1995;SC Mykolaiv;34;53;12;OK (src=en.wikipedia crosstable, not rsssf)
+1995;Metalurh Zaporizhzhia;34;42;11;OK (src=en.wikipedia crosstable, not rsssf)
+1995;Nyva Vinnytsia;34;36;11;OK (src=en.wikipedia crosstable, not rsssf)
+1995;Karpaty Lviv;34;39;10;OK (src=en.wikipedia crosstable, not rsssf)
+1995;Tavriya Simferopol;34;46;10;OK (1 awarded match(es) counted in games but not as clean sheets, src=en.wikipedia crosstable, not rsssf)
+1995;Torpedo Zaporizhzhia;34;46;9;OK (src=en.wikipedia crosstable, not rsssf)
+1995;Prykarpattya Ivano-Frankivsk;34;49;9;OK (src=en.wikipedia crosstable, not rsssf)
+1995;Nyva Ternopil;34;42;9;OK (1 awarded match(es) counted in games but not as clean sheets, src=en.wikipedia crosstable, not rsssf)
+1995;Kryvbas Kryvyi Rih;34;52;8;OK (src=en.wikipedia crosstable, not rsssf)
+1995;Volyn Lutsk;34;58;8;OK (1 awarded match(es) counted in games but not as clean sheets, src=en.wikipedia crosstable, not rsssf)
+1995;Kremin Kremenchuk;34;56;6;OK (src=en.wikipedia crosstable, not rsssf)
+1995;Zorya Luhansk;34;80;3;OK (1 awarded match(es) counted in games but not as clean sheets, src=en.wikipedia crosstable, not rsssf)
+1996;Dnipro Dnipropetrovsk;30;19;17;OK
+1996;Dynamo Kyiv;30;20;16;OK
+1996;Vorskla Poltava;30;26;15;OK
+1996;Karpaty L'viv;30;23;15;OK
+1996;Shakhtar Donetsk;30;28;12;OK
+1996;Nyva Ternopil';30;37;12;OK
+1996;Chornomorets Odesa;30;31;11;OK
+1996;Zirka-NIBAS Kyrovohrad;30;55;10;OK
+1996;Metalurh Zaporozhzhye;30;44;8;OK
+1996;CSCA Kyiv;30;35;8;OK (1 awarded match(es) counted in games but not as clean sheets)
+1996;Kryvbas Kryvy Ryh;30;48;8;OK
+1996;Tavria Simferopil';30;46;7;OK
+1996;Torpedo Zaporozhzhye;30;56;7;OK (1 awarded match(es) counted in games but not as clean sheets)
+1996;Prykarpattja Ivano-Frankivsk;30;49;6;OK
+1996;Nyva Vynnitsa;30;48;6;OK
+1996;Kremin' Kreminchuk;30;57;3;OK
+1997;Dynamo Kyiv;30;15;17;OK
+1997;Karpaty L'viv;30;20;16;OK
+1997;Shakhtar Donetsk;30;25;13;OK
+1997;Dnipro Dnipropetrovsk;30;27;13;OK
+1997;Metalurh Donetsk;30;27;13;OK
+1997;Nyva Ternopil';30;39;11;OK (1 awarded match(es) counted in games but not as clean sheets)
+1997;Vorskla Poltava;30;46;10;OK
+1997;Prykarpattya Ivano-Frankivsk;30;41;10;OK
+1997;Zirka-NIBAS Kyrovohrad;30;48;10;OK
+1997;Kryvbas Kryvy Ryh;30;33;9;OK
+1997;Metalurh Mariupil';30;48;9;OK (1 awarded match(es) counted in games but not as clean sheets)
+1997;Tavriya Simferopil';30;41;9;OK
+1997;CSCA Kyiv;30;35;7;OK
+1997;Chornomorets Odesa;30;39;7;OK
+1997;Metalurh Zaporozhzhye;30;44;6;OK
+1997;Torpedo Zaporozhzhye;30;69;2;OK
+1998;Dynamo Kyiv;30;17;19;OK
+1998;Kryvbas Kryvy Ryh;30;18;16;OK
+1998;Metalist Kharkiv;30;32;14;OK
+1998;Metalurh Mariupil';30;27;13;OK
+1998;Shakhtar Donetsk;30;25;12;OK
+1998;Karpaty L'viv;30;34;11;OK
+1998;Metalurh Donetsk;30;51;10;OK
+1998;Tavriya Simferopil';30;39;9;OK
+1998;Vorskla Poltava;30;43;9;OK
+1998;CSCA Kyiv;30;35;8;OK
+1998;Metalurh Zaporozhzhye;30;43;8;OK
+1998;Dnipro Dnipropetrovsk;30;46;8;OK
+1998;Nyva Ternopil';30;41;8;OK
+1998;Zirka-NIBAS Kyrovohrad;30;40;7;OK
+1998;Prykarpattya Ivano-Frankivsk;30;59;5;OK
+1998;SC Mykolaiv;30;67;5;OK
+1999;Shakhtar Donets'k;30;16;17;OK
+1999;Dynamo Kyiv;30;18;15;OK
+1999;Vorskla Poltava;30;34;13;OK
+1999;CSCA Kyiv;30;36;11;OK
+1999;Kryvbas Kryvyi Rih;30;30;10;OK
+1999;Metalurh Donets'k;30;35;10;OK
+1999;Karpaty L'viv;30;38;9;OK
+1999;Chornomorets' Odesa;30;50;9;OK (1 awarded match(es) counted in games but not as clean sheets)
+1999;Metalist Kharkiv;30;39;8;OK
+1999;Metalurh Zaporizhzhya;30;35;8;OK
+1999;Tavria Symferopol';30;51;6;OK
+1999;Prykarpattya Ivano-Frankivs'k;30;47;6;OK
+1999;Metalurh Mariupol';30;48;5;OK
+1999;Dnipro Dnipropetrovs'k;30;52;5;OK (1 awarded match(es) counted in games but not as clean sheets)
+1999;Nyva Ternopil';30;57;4;OK
+1999;Zirka Kirovohrad;30;66;2;OK
+2000;Dynamo Kyiv;26;17;14;OK (src=en.wikipedia crosstable, not rsssf)
+2000;Dnipro Dnipropetrovsk;26;18;14;OK (src=en.wikipedia crosstable, not rsssf)
+2000;Metalurh Donetsk;26;24;12;OK (src=en.wikipedia crosstable, not rsssf)
+2000;Tavriya Simferopol;26;31;11;OK (src=en.wikipedia crosstable, not rsssf)
+2000;Metalurh Mariupol;26;26;10;OK (1 awarded match(es) counted in games but not as clean sheets, src=en.wikipedia crosstable, not rsssf)
+2000;Shakhtar Donetsk;26;21;9;OK (src=en.wikipedia crosstable, not rsssf)
+2000;CSKA Kyiv;26;23;9;OK (src=en.wikipedia crosstable, not rsssf)
+2000;Metalurh Zaporizhzhia;26;31;9;OK (1 awarded match(es) counted in games but not as clean sheets, src=en.wikipedia crosstable, not rsssf)
+2000;Metalist Kharkiv;26;37;7;OK (src=en.wikipedia crosstable, not rsssf)
+2000;Vorskla Poltava;26;29;7;OK (1 awarded match(es) counted in games but not as clean sheets, src=en.wikipedia crosstable, not rsssf)
+2000;Kryvbas Kryvyi Rih;26;36;6;OK (1 awarded match(es) counted in games but not as clean sheets, src=en.wikipedia crosstable, not rsssf)
+2000;Karpaty Lviv;26;42;5;OK (src=en.wikipedia crosstable, not rsssf)
+2000;Stal Alchevsk;26;49;4;OK (src=en.wikipedia crosstable, not rsssf)
+2000;Nyva Ternopil;26;65;2;OK (src=en.wikipedia crosstable, not rsssf)
+2001;Dynamo Kyiv;26;9;19;OK
+2001;Shakhtar Donets'k;26;10;17;OK
+2001;Metalurh Zaporizhzhya;26;22;14;OK
+2001;Dnipro Dnipropetrovs'k;26;20;13;OK
+2001;Karpaty L'viv;26;31;11;OK
+2001;Kryvbas Kryvyi Rih;26;40;11;OK
+2001;Tavria Symferopol';26;36;10;OK
+2001;Metalurh Donets'k;26;28;9;OK
+2001;Metalist Kharkiv;26;36;9;OK
+2001;Polihraftechnica Olexandria;26;39;8;OK
+2001;Arsenal Kyiv;26;28;7;OK
+2001;Metalurh Mariupol';26;42;6;OK
+2001;Vorskla Poltava;26;33;6;OK
+2001;Zakarpattya Uzhhorod;26;49;5;OK
+2002;Shakhtar Donets'k;30;24;17;OK
+2002;Dynamo Kyiv;30;20;15;OK
+2002;Metalurh Donets'k;30;26;15;OK
+2002;Dnipro Dnipropetrovs'k;30;27;15;OK
+2002;Arsenal Kyiv;30;24;14;OK
+2002;Vorskla Poltava;30;41;11;OK
+2002;Volyn Lutsk;30;44;10;OK
+2002;Karpaty L'viv;30;37;9;OK
+2002;Kryvbas Kryvyi Rih;30;37;9;OK
+2002;Illichivets Mariupol';30;38;8;OK
+2002;FC Olexandria;30;43;7;OK
+2002;Chornomorets Odesa;30;45;6;OK
+2002;Obolon Kyiv;30;45;6;OK
+2002;Metalurh Zaporizhzhya;30;41;6;OK
+2002;Tavria Symferopol';30;50;5;OK
+2002;Metalist Kharkiv;30;43;4;OK
+2003;Shakhtar Donets'k;30;19;17;OK
+2003;Dynamo Kyiv;30;20;16;OK
+2003;Dnipro Dnipropetrovs'k;30;23;15;OK
+2003;Obolon' Kyiv;30;35;10;OK
+2003;Borysfen Boryspil';30;29;10;OK
+2003;Kryvbas Kryvyj Rih;30;41;10;OK
+2003;Karpaty L'viv;30;39;10;OK
+2003;Metalurh Donets'k;30;34;9;OK
+2003;Chornomorets' Odesa;30;33;9;OK
+2003;Illichivets' Mariupol';30;36;9;OK
+2003;Arsenal Kyiv;30;44;9;OK
+2003;Metalurh-Zaporizhzhja Zaporizhzhja;30;40;9;OK
+2003;Tavrija Simferopol';30;28;9;OK
+2003;Volyn' Luts'k;30;44;6;OK
+2003;Vorskla-Naftohaz Poltava;30;49;6;OK
+2003;Zirka Kirovohrad;30;43;5;OK
+2004;Dynamo Kyiv;30;14;20;OK
+2004;Shakhtar Donets'k;30;19;15;OK
+2004;Illichivets' Mariupol';30;34;11;OK
+2004;Chornomorets' Odesa;30;29;11;OK
+2004;Metalist Kharkiv;30;37;11;OK
+2004;Zakarpattja Uzhhorod;30;30;11;OK (1 awarded match(es) counted in games but not as clean sheets)
+2004;Dnipro Dnipropetrovs'k;30;34;10;OK
+2004;Metalurh-Zaporizhzhja Zaporizhzhja;30;32;10;OK
+2004;Kryvbas Kryvyj Rih;30;38;10;OK
+2004;Arsenal Kyiv;30;33;9;OK
+2004;Metalurh Donets'k;30;35;8;OK
+2004;Tavrija Simferopol';30;28;8;OK (1 awarded match(es) counted in games but not as clean sheets)
+2004;Volyn' Luts'k;30;37;8;OK
+2004;Borysfen Boryspil';30;31;8;OK (1 awarded match(es) counted in games but not as clean sheets)
+2004;Vorskla-Naftohaz Poltava;30;35;7;OK (1 awarded match(es) counted in games but not as clean sheets)
+2004;Obolon' Kyiv;30;43;7;OK
+2005;Shakhtar Donets'k;30;14;19;OK
+2005;Dnipro Dnipropetrovs'k;30;23;16;OK
+2005;Dynamo Kyiv;30;20;13;OK
+2005;Illichivets' Mariupol';30;34;12;OK
+2005;Vorskla Poltava;30;34;12;OK
+2005;Chornomorets' Odesa;30;31;11;OK
+2005;Metalist Kharkiv;30;42;11;OK
+2005;Stal' Alchevs'k;30;39;11;OK
+2005;Tavrija Simferopol';30;31;10;OK
+2005;Metalurh Donets'k;30;35;10;OK
+2005;FC Kharkiv;30;36;10;OK
+2005;Metalurh-Zaporizhzhja Zaporizhzhja;30;40;8;OK
+2005;Kryvbas Kryvyj Rih;30;35;7;OK
+2005;Volyn' Luts'k;30;45;7;OK
+2005;Arsenal Kyiv;30;39;6;OK
+2005;Zakarpattja Uzhhorod;30;53;3;OK
+2006;Metalist Kharkiv;30;20;18;OK (1 awarded match(es) counted in games but not as clean sheets)
+2006;Shakhtar Donets'k;30;20;15;OK
+2006;Dnipro Dnipropetrovs'k;30;24;13;OK
+2006;Chornomorets' Odesa;30;33;13;OK
+2006;Dynamo Kyiv;30;23;12;OK
+2006;Tavrija Simferopol';30;30;12;OK
+2006;Metalurh-Zaporizhzhja Zaporizhzhja;30;32;12;OK
+2006;FC Kharkiv;30;38;11;OK
+2006;Kryvbas Kryvyj Rih;30;36;10;OK
+2006;Vorskla Poltava;30;28;10;OK
+2006;Karpaty L'viv;30;32;9;OK (1 awarded match(es) counted in games but not as clean sheets)
+2006;Metalurh Donets'k;30;35;9;OK
+2006;Zorja Luhans'k;30;43;8;OK
+2006;Arsenal Kyiv;30;44;7;OK
+2006;Illichivets' Mariupol';30;39;7;OK
+2006;Stal' Alchevs'k;30;38;5;OK
+2007;Metalist Kharkiv;30;27;17;OK
+2007;Dnipro Dnipropetrovs'k;30;27;15;OK
+2007;Dynamo Kyiv;30;26;13;OK
+2007;Karpaty L'viv;30;41;13;OK
+2007;Metalurh-Zaporizhzhja Zaporizhzhja;30;32;12;OK
+2007;Shakhtar Donets'k;30;24;11;OK
+2007;Chornomorets' Odesa;30;33;11;OK
+2007;Tavrija Simferopol';30;40;10;OK
+2007;Arsenal Kyiv;30;36;10;OK
+2007;FC Kharkiv;30;32;9;OK
+2007;Vorskla Poltava;30;30;8;OK (1 awarded match(es) counted in games but not as clean sheets)
+2007;Metalurh Donets'k;30;39;8;OK
+2007;Naftovyk-Ukrnafta Okhtyrka;30;38;8;OK
+2007;Zakarpattja Uzhhorod;30;54;8;OK
+2007;Kryvbas Kryvyj Rih;30;39;7;OK
+2007;Zorja Luhans'k;30;43;5;OK (1 awarded match(es) counted in games but not as clean sheets)
+2008;Shakhtar Donets'k;30;16;18;OK
+2008;Dynamo Kyiv;30;19;17;OK
+2008;Vorskla Poltava;30;26;14;OK (incl. 1 match (FC L'viv-Vorskla) missing in fetch, reconstructed 0-0 from table residual)
+2008;Dnipro Dnipropetrovs'k;30;25;12;OK
+2008;Arsenal Kyiv;30;33;12;OK
+2008;Metalist Kharkiv;30;25;11;OK
+2008;Metalurh Donets'k;30;27;11;OK
+2008;Metalurh-Zaporizhzhja Zaporizhzhja;30;30;11;OK
+2008;Kryvbas Kryvyj Rih;30;36;8;OK
+2008;Karpaty L'viv;30;39;7;OK
+2008;FC L'viv;30;39;7;OK (incl. 1 match (FC L'viv-Vorskla) missing in fetch, reconstructed 0-0 from table residual)
+2008;Tavrija Simferopol';30;45;6;OK
+2008;Chornomorets' Odesa;30;42;6;OK
+2008;Illichivets' Mariupol;30;54;6;OK
+2008;Zorja Luhans'k;30;45;5;OK
+2008;FC Kharkiv;30;50;4;OK
+2009;Shakhtar Donets'k;30;18;17;OK
+2009;Dynamo Kyiv;30;16;15;OK
+2009;Metalist Kharkiv;30;23;15;OK
+2009;Dnipro Dnipropetrovs'k;30;25;13;OK
+2009;Tavrija Simferopol';30;38;11;OK
+2009;Metalurh Donets'k;30;33;11;OK
+2009;Karpaty L'viv;30;35;10;OK
+2009;Arsenal Kyiv;30;41;9;OK
+2009;Obolon' Kyiv;30;50;9;OK
+2009;Vorskla Poltava;30;32;8;OK
+2009;Illichivets' Mariupol;30;56;7;OK
+2009;Zorja Luhans'k;30;47;7;OK
+2009;Metalurh Zaporizhzhja;30;48;6;OK
+2009;Kryvbas Kryvyj Rih;30;47;6;OK
+2009;Chornomorets' Odesa;30;44;6;OK
+2009;Zakarpattja Uzhhorod;30;44;4;OK
+2010;Dnipro Dnipropetrovs'k;30;20;17;OK
+2010;Shakhtar Donets'k;30;16;16;OK
+2010;Metalist Kharkiv;30;26;15;OK
+2010;Dynamo Kyiv;30;24;14;OK
+2010;Volyn' Luts'k;30;49;10;OK
+2010;Karpaty L'viv;30;34;9;OK
+2010;Vorskla Poltava;30;32;9;OK
+2010;Arsenal Kyiv;30;38;8;OK
+2010;Zorja Luhans'k;30;40;8;OK
+2010;Metalurh Zaporizhzhja;30;40;8;OK
+2010;Obolon' Kyiv;30;38;7;OK
+2010;Kryvbas Kryvyj Rih;30;45;7;OK
+2010;PFC Sevastopol';30;48;6;OK
+2010;Tavrija Simferopol';30;46;5;OK
+2010;Metalurh Donets'k;30;45;5;OK
+2010;Illichivets' Mariupol;30;67;4;OK
+2011;Dynamo Kyiv;30;12;19;OK
+2011;Shakhtar Donets'k;30;18;15;OK
+2011;Arsenal Kyiv;30;27;14;OK
+2011;Metalist Kharkiv;30;32;11;OK
+2011;Metalurh Donets'k;30;34;11;OK
+2011;Dnipro Dnipropetrovs'k;30;35;10;OK
+2011;Tavrija Simferopol';30;36;9;OK
+2011;Chornomorets' Odesa;30;42;8;OK
+2011;Kryvbas Kryvyj Rih;30;38;8;OK
+2011;Illichivets' Mariupol;30;42;8;OK
+2011;Obolon' Kyiv;30;42;8;OK
+2011;Vorskla Poltava;30;43;7;OK
+2011;Volyn' Luts'k;30;43;7;OK
+2011;Zorja Luhans'k;30;58;7;OK
+2011;PFC Oleksandrija;30;58;6;OK
+2011;Karpaty L'viv;30;51;5;OK

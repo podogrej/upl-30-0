@@ -1,0 +1,78 @@
+<title>Поле 30-0: варіанти</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@700;900&family=Manrope:wght@500;600;700;800&family=JetBrains+Mono:wght@600&display=swap">
+<style>
+:root{color-scheme:dark;--bg:#121212;--surface:#1c1c1d;--line:#303032;--ink:#f4f1ea;--ink2:#b3aea4;--amber:#ff8a2a;
+  --gk:#ffb22e;--df:#5ea0e8;--mf:#43c26b;--fw:#ff4d4d;--grass1:#2c5a3c;--grass2:#27513a;--chalk:rgba(255,255,255,.55)}
+body{background:var(--bg);color:var(--ink);font-family:"Manrope",system-ui,sans-serif;margin:0;padding-inline:16px;padding-block:20px 40px}
+.wrap{max-width:1180px;margin:0 auto}
+h1{font-family:"Unbounded",sans-serif;font-size:22px;margin:0 0 6px}
+.lead{color:var(--ink2);margin:0 0 20px;max-width:64ch;font-size:14px;line-height:1.5}
+.vars{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:22px;align-items:start}
+.var h2{font-family:"Unbounded",sans-serif;font-size:16px;margin:0 0 4px}
+.var p{color:var(--ink2);font-size:13px;margin:0 0 10px;line-height:1.45}
+/* поле: справжні пропорції 68×105, вид згори, атака вгорі */
+.pitch{position:relative;width:100%;max-width:420px;aspect-ratio:68/105;border-radius:12px;overflow:hidden;
+  background:repeating-linear-gradient(180deg,var(--grass1) 0 10%,var(--grass2) 10% 20%)}
+.pitch svg.mk{position:absolute;inset:0;width:100%;height:100%}
+.pitch svg.mk *{fill:none;stroke:var(--chalk);stroke-width:.45}
+.pitch svg.mk .dot{fill:var(--chalk);stroke:none}
+.p{position:absolute;transform:translate(-50%,-50%);display:grid;justify-items:center;text-align:center}
+.GK{--c:var(--gk)}.DF{--c:var(--df)}.MF{--c:var(--mf)}.FW{--c:var(--fw)}
+.tag{font-family:"JetBrains Mono",monospace;font-size:9px;font-weight:600;letter-spacing:.04em;color:#111;background:var(--c);border-radius:3px;padding:0 4px;line-height:14px}
+
+/* A — квадратні картки */
+.A .p{width:21%;aspect-ratio:1;background:rgba(10,14,12,.72);border:1.5px solid rgba(255,255,255,.8);border-top:4px solid var(--c);border-radius:8px;padding:4px 3px;align-content:space-between;gap:1px}
+.A .nm{font-weight:800;font-size:clamp(9px,2.7vw,12px);line-height:1.1;overflow-wrap:anywhere}
+.A .r{font-family:"Unbounded",sans-serif;font-weight:700;font-size:clamp(12px,3.6vw,16px);color:var(--amber);line-height:1}
+.A .cl{font-size:clamp(7px,2vw,9px);color:var(--ink2);line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+
+/* B — кружки з рейтингом */
+.B .p{width:24%;gap:2px}
+.B .ring{width:clamp(34px,11vw,46px);aspect-ratio:1;border-radius:50%;background:rgba(10,14,12,.85);border:3px solid var(--c);display:grid;place-items:center;font-family:"Unbounded",sans-serif;font-weight:700;font-size:clamp(11px,3.4vw,15px);color:var(--ink)}
+.B .nm{font-weight:800;font-size:clamp(9px,2.6vw,11.5px);line-height:1.1;background:rgba(10,14,12,.8);border-radius:4px;padding:1px 5px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.B .cl{font-size:clamp(7px,2vw,9px);color:#e8e4dc;opacity:.8;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+
+/* C — футболки */
+.C .p{width:24%;gap:1px}
+.C svg.shirt{width:clamp(30px,10vw,42px);height:auto}
+.C svg.shirt path{fill:var(--c);stroke:rgba(0,0,0,.45);stroke-width:1.2}
+.C svg.shirt text{font-family:"Unbounded",sans-serif;font-weight:700;font-size:13px;fill:#111}
+.C .nm{font-weight:800;font-size:clamp(9px,2.6vw,11.5px);line-height:1.1;text-shadow:0 1px 2px #000;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.C .cl{font-size:clamp(7px,2vw,9px);color:#e8e4dc;opacity:.85;text-shadow:0 1px 2px #000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.C .pos{font-family:"JetBrains Mono",monospace;font-size:8px;color:var(--c);font-weight:600;text-shadow:0 1px 2px #000}
+.empty{opacity:.9}
+.empty .nm{color:var(--ink2);font-weight:600}
+</style>
+<div class="wrap">
+  <h1>Нове поле: три варіанти</h1>
+  <p class="lead">Однаковий склад 4-4-2, вертикальне поле з розміткою в справжніх пропорціях. Два місця внизу порожні — так вони виглядають під час драфту. Скажи, який варіант брати, або що змішати.</p>
+  <div class="vars" id="vars"></div>
+</div>
+<script>
+const XI=[
+ ["ST","НП","С. Шубін","Нива (Вінниця) 94/95",69],["ST","НП","С. Шищенко","Металург (Д) 06/07",97],
+ ["LM","ЛПЗ","Ісмаїлі","Шахтар 16/17",94],["CM","ЦПЗ","Едмар","Металіст 12/13",86],["CM","ЦПЗ","С. Ференчак","Севастополь 10/11",79],["RM","ППЗ","В. Кобін","Карпати 09/10",79],
+ ["LB","ЛЗ","І. Дібанго","Кривбас 97/98",99],["CB","ЦЗ","Т. Кендзьора","Динамо 16/17",90],["CB","ЦЗ",null],["RB","ПЗ",null],
+ ["GK","ВР","О. Горяінов","Металіст 02/03",79]];
+const G={GK:"GK",CB:"DF",LB:"DF",RB:"DF",CM:"MF",LM:"MF",RM:"MF",ST:"FW"};
+const ROWS=[[0,1],[2,3,4,5],[6,7,8,9],[10]];
+const Y=[17,43,70,90];   // % висоти
+const X=k=>k===1?[50]:k===2?[33,67]:k===3?[22,50,78]:k===4?[13,38,62,87]:[10,30,50,70,90];
+const MK=`<svg class="mk" viewBox="0 0 68 105" preserveAspectRatio="none">
+ <rect x="2" y="2" width="64" height="101"/><line x1="2" y1="52.5" x2="66" y2="52.5"/><circle cx="34" cy="52.5" r="9.15"/><circle class="dot" cx="34" cy="52.5" r=".6"/>
+ <rect x="13.85" y="2" width="40.3" height="16.5"/><rect x="24.84" y="2" width="18.32" height="5.5"/><circle class="dot" cx="34" cy="13" r=".5"/><path d="M26.7 18.5 A9.15 9.15 0 0 0 41.3 18.5"/>
+ <rect x="13.85" y="86.5" width="40.3" height="16.5"/><rect x="24.84" y="97.5" width="18.32" height="5.5"/><circle class="dot" cx="34" cy="92" r=".5"/><path d="M26.7 86.5 A9.15 9.15 0 0 1 41.3 86.5"/>
+ <path d="M2 3 A1 1 0 0 0 3 2 M65 2 A1 1 0 0 0 66 3 M2 102 A1 1 0 0 1 3 103 M65 103 A1 1 0 0 1 66 102"/></svg>`;
+const shirt=r=>`<svg class="shirt" viewBox="0 0 48 44"><path d="M16 3 L8 6 L2 15 L8 19 L11 16 L11 41 L37 41 L37 16 L40 19 L46 15 L40 6 L32 3 Q24 9 16 3 Z"/><text x="24" y="29" text-anchor="middle">${r??''}</text></svg>`;
+const V={
+ A:{t:"A · Квадратні картки",d:"Найближче до того, що є зараз, але квадратні й на справжньому полі. Кольорова смужка зверху — лінія, внизу клуб і сезон.",
+    cell:(s)=>s[2]?`<span class="tag">${s[1]}</span><span class="nm">${s[2]}</span><span class="r">${s[4]}</span><span class="cl">${s[3]}</span>`:`<span class="tag">${s[1]}</span><span class="nm" style="color:var(--ink2)">—</span>`},
+ B:{t:"B · Кружки з рейтингом",d:"Як у Fotmob і FIFA: кружок кольору лінії з рейтингом, під ним прізвище та клуб. Найбільше «повітря» на полі.",
+    cell:(s)=>`<span class="ring">${s[2]?s[4]:s[1]}</span><span class="nm">${s[2]||s[1]}</span>${s[2]?`<span class="cl">${s[3]}</span>`:''}`},
+ C:{t:"C · Футболки",d:"Футболка кольору лінії з рейтингом замість номера. Найбільш «футбольно», але рейтинг дрібніший.",
+    cell:(s)=>`${shirt(s[2]?s[4]:'')}<span class="pos">${s[1]}</span><span class="nm">${s[2]||'—'}</span>${s[2]?`<span class="cl">${s[3]}</span>`:''}`}
+};
+const root=document.getElementById('vars');
+for(const k in V){let h='';ROWS.forEach((row,ri)=>{const xs=X(row.length);row.forEach((i,j)=>{const s=XI[i];h+=`<div class="p ${G[s[0]]}${s[2]?'':' empty'}" style="left:${xs[j]}%;top:${Y[ri]}%">${V[k].cell(s)}</div>`;});});
+  root.insertAdjacentHTML('beforeend',`<section class="var ${k}"><h2>${V[k].t}</h2><p>${V[k].d}</p><div class="pitch">${MK}${h}</div></section>`);}
+</script>

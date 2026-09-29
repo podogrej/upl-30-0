@@ -1,0 +1,170 @@
+club_name,canonical_id
+Arsenal Kyiv,arsenal-kyiv
+Chornomorets Odesa,chornomorets-odesa
+Desna Chernigiv,desna-chernihiv
+Dnipro Dnipropetrovsk (-2020),dnipro
+Dynamo Kyiv,dynamo-kyiv
+Epicentr Kamyanets-Podilskyi,epicentr
+FC Kudrivka,kudrivka
+FC Minaj,minaj
+FC Oleksandriya,oleksandriya
+FC Shakhtar Donetsk,shakhtar-donetsk
+FK Mariupol,mariupol
+FK Polissya Zhytomyr,polissya-zhytomyr
+FK Sevastopol (- 2014),sevastopol
+Goverla Uzhgorod (- 2016),hoverla-uzhhorod
+Ingulets Petrove,inhulets-petrove
+Karpaty Lviv,karpaty-lviv
+Karpaty Lviv (-2021),karpaty-lviv
+Kolos Kovalivka,kolos-kovalivka
+Kryvbas Kryvyi Rig,kryvbas
+LNZ Cherkasy,lnz-cherkasy
+Livyi Bereg Kyiv,livyi-bereh-kyiv
+Metalist Kharkiv,metalist-kharkiv
+Metalist Kharkiv (- 2016),metalist-kharkiv
+Metalurg Donetsk (- 2015),metalurh-donetsk
+Metalurg Zaporizhya (-2016),metalurh-zaporizhzhia
+NK Veres Rivne,veres-rivne
+Obolon Kyiv,obolon-kyiv
+Olimpik Donetsk,olimpik-donetsk
+PFK Lviv,pfk-lviv
+PFK Stal Kamyanske (-2018),stal-kamianske
+Rukh Lviv,rukh-lviv
+SC Dnipro-1,dnipro-1
+SC Poltava,sc-poltava
+SK Tavriya Simferopol ( - 2022),tavriya-simferopol
+TOV FK Metalist 1925 Kharkiv,metalist-1925
+Volyn Lutsk,volyn-lutsk
+Vorskla Poltava,vorskla-poltava
+Zirka Kropyvnytskyi,zirka-kropyvnytskyi
+Zorya Lugansk,zorya-luhansk
+«Іллічівець» (Маріуполь),mariupol
+«Арсенал» (Київ),arsenal-kyiv
+«Борисфен» (Бориспіль),borysfen-boryspil
+«Буковина» (Чернівці),bukovyna-chernivtsi
+«Верес» (Рівне),veres-rivne
+«Волинь» (Луцьк),volyn-lutsk
+«Ворскла-Нафтогаз» (Полтава),vorskla-poltava
+«Ворскла» (Полтава),vorskla-poltava
+«Динамо» (Київ),dynamo-kyiv
+«Дніпро» (Дніпропетровськ),dnipro
+«Закарпаття» (Ужгород),hoverla-uzhhorod
+«Зоря-МАЛС» (Луганськ),zorya-luhansk
+«Зоря» (Луганськ),zorya-luhansk
+«Зірка-НІБАС» (Кіровоград),zirka-kropyvnytskyi
+«Зірка» (Кіровоград),zirka-kropyvnytskyi
+«Карпати» (Львів),karpaty-lviv
+«Кремінь» (Кременчук),kremin-kremenchuk
+«Кривбас» (Кривий Ріг),kryvbas
+«Металург» (Донецьк),metalurh-donetsk
+«Металург» (Запоріжжя),metalurh-zaporizhzhia
+«Металург» (Маріуполь),mariupol
+«Металіст» (Харків),metalist-kharkiv
+«Нафтовик-Укрнафта» (Охтирка),naftovyk-okhtyrka
+«Нива» (Вінниця),nyva-vinnytsia
+«Нива» (Тернопіль),nyva-ternopil
+«Оболонь» (Київ),obolon-kyiv
+«Поліграфтехніка» (Олександрія),oleksandriya
+«Прикарпаття» (Івано-Франківськ),prykarpattia
+«Сталь» (Алчевськ),stal-alchevsk
+«Таврія» (Сімферополь),tavriya-simferopol
+«Темп» (Шепетівка),temp-shepetivka
+«Торпедо» (Запоріжжя),torpedo-zaporizhzhia
+«ЦСКА-Борисфен» (Київ),cska-kyiv
+«Чорноморець» (Одеса),chornomorets-odesa
+«Шахтар» (Донецьк),shakhtar-donetsk
+ПФК «Севастополь»,sevastopol
+СК «Миколаїв»,mykolaiv
+ФК «Львів»,fc-lviv-2008
+ФК «Олександрія»,oleksandriya
+ФК «Харків»,fc-kharkiv
+ЦСКА (Київ),cska-kyiv
+Александрия,oleksandriya
+Арсенал (Киев),arsenal-kyiv
+Волынь (Луцк),volyn-lutsk
+Ворскла (Полтава),vorskla-poltava
+Динамо (Киев),dynamo-kyiv
+Днепр (Днепропетровск),dnipro
+Заря (Луганск),zorya-luhansk
+Ильичёвец (Мариуполь),mariupol
+Карпаты (Львов),karpaty-lviv
+Кривбасс (Кривой Рог),kryvbas
+Металлист (Харьков),metalist-kharkiv
+Металлург (Донецк),metalurh-donetsk
+Оболонь (Киев),obolon-kyiv
+Таврия (Симферополь),tavriya-simferopol
+Черноморец (Одесса),chornomorets-odesa
+Шахтёр (Донецк),shakhtar-donetsk
+Днепр-1 (Днепр),dnipro-1
+Днепр-1,dnipro-1
+Колос (Ковалевка),kolos-kovalivka
+Десна (Чернигов),desna-chernihiv
+Мариуполь,mariupol
+Верес (Ровно),veres-rivne
+Металлист 1925 (Харьков),metalist-1925
+Ингулец (Петрово),inhulets-petrove
+Львов,pfk-lviv
+Минай,minaj
+Рух (Львов),rukh-lviv
+Металлург (Запорожье),metalurh-zaporizhzhia
+Говерла (Ужгород),hoverla-uzhhorod
+Севастополь,sevastopol
+Олимпик (Донецк),olimpik-donetsk
+Сталь (Каменское),stal-kamianske
+Сталь (Днепродзержинск),stal-kamianske
+Звезда (Кропивницкий),zirka-kropyvnytskyi
+Полесье (Житомир),polissya-zhytomyr
+ЛНЗ (Черкассы),lnz-cherkasy
+Левый Берег (Киев),livyi-bereh-kyiv
+"Металлист (Харьков, 2020)",metalist-kharkiv
+Эпицентр (Каменец-Подольский),epicentr
+Кудровка,kudrivka
+Полтава,sc-poltava
+Металург Д,metalurh-donetsk
+Металург З,metalurh-zaporizhzhia
+Металург М,mariupol
+Іллічівець М,mariupol
+Нива Т,nyva-ternopil
+Нива В,nyva-vinnytsia
+Динамо К,dynamo-kyiv
+Шахтар Д,shakhtar-donetsk
+Дніпро Д,dnipro
+Металіст Х,metalist-kharkiv
+Чорноморець О,chornomorets-odesa
+Чорноморець Одеса,chornomorets-odesa
+Ворскла П,vorskla-poltava
+Таврія С,tavriya-simferopol
+Карпати Л,karpaty-lviv
+Зоря Л,zorya-luhansk
+Кривбас КР,kryvbas
+Арсенал К,arsenal-kyiv
+ЦСКА К,cska-kyiv
+Закарпаття У,hoverla-uzhhorod
+Волинь Л,volyn-lutsk
+Оболонь К,obolon-kyiv
+Сталь А,stal-alchevsk
+Кремінь К,kremin-kremenchuk
+Торпедо З,torpedo-zaporizhzhia
+Прикарпаття ІФ,prykarpattia
+Зірка К,zirka-kropyvnytskyi
+Борисфен Б,borysfen-boryspil
+Нафтовик О,naftovyk-okhtyrka
+Буковина Ч,bukovyna-chernivtsi
+Темп Ш,temp-shepetivka
+Миколаїв,mykolaiv
+СК Миколаїв,mykolaiv
+Харків,fc-kharkiv
+ФК Харків,fc-kharkiv
+Металург Донецьк,metalurh-donetsk
+Металург Запоріжжя,metalurh-zaporizhzhia
+Динамо Київ,dynamo-kyiv
+Шахтар Донецьк,shakhtar-donetsk
+Дніпро Дніпропетровськ,dnipro
+Металіст Харків,metalist-kharkiv
+Ворскла Полтава,vorskla-poltava
+Таврія Сімферополь,tavriya-simferopol
+Карпати Львів,karpaty-lviv
+Зоря Луганськ,zorya-luhansk
+Кривбас Кривий Ріг,kryvbas
+Арсенал Київ,arsenal-kyiv
+Волинь Луцьк,volyn-lutsk

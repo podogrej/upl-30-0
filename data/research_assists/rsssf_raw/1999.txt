@@ -1,0 +1,302 @@
+# source: https://rsssf.org/tableso/oekr00.html (via WebFetch summary, requested verbatim; auto-extracted from transcript)
+TABLE
+ 1.Dynamo Kyiv                    30  27  3  0  85-18  84  Champions
+ 2.Shakhtar Donets'k              30  21  3  6  60-16  66  Champions' League
+ 3.Kryvbas Kryvyi Rih             30  18  6  6  54-30  60  UEFA Cup
+ 4.Vorskla Poltava                30  14  7  9  50-34  49  UEFA Cup
+ 5.Metalist Kharkiv               30  12  8 10  41-39  44  [2 0 2 0 1-1 2, 1 away goal]
+ 6.Metalurh Zaporizhzhya          30  12  8 10  43-35  44  [2 0 2 0 1-1 2, 0 away goals]
+ 7.Metalurh Donets'k              30  11 10  9  39-35  43
+ 8.Metalurh Mariupol'             30  13  3 14  49-48  42
+ 9.Karpaty L'viv                  30  12  4 14  39-38  40
+10.CSCA Kyiv                      30   9  8 13  31-36  35
+11.Dnipro Dnipropetrovs'k         30   8  9 13  26-52  33
+12.Nyva Ternopil'                 30   7 10 13  40-57  31
+13.Tavria Symferopol'             30   7  8 15  32-51  29  [2 2 0 0 3-0 6]
+14.Prykarpattya Ivano-Frankivs'k  30   7  8 15  27-47  29  [2 0 0 2 0-3 0]  Relegated
+15.Chornomorets' Odesa            30   6  8 16  20-50  26  Relegated
+16.Zirka Kirovohrad               30   0  9 21  16-66   9  Relegated
+ALIAS Kryvbas => Kryvbas Kryvyi Rih
+ALIAS Shakhtar => Shakhtar Donets'k
+ALIAS Vorskla => Vorskla Poltava
+ALIAS Tavriya => Tavria Symferopol'
+ALIAS Chornomorets => Chornomorets' Odesa
+ALIAS Prykarpattya => Prykarpattya Ivano-Frankivs'k
+ALIAS Karpaty => Karpaty L'viv
+ALIAS CSCA => CSCA Kyiv
+ALIAS Metalist => Metalist Kharkiv
+ALIAS Zirka => Zirka Kirovohrad
+ALIAS Dnipro => Dnipro Dnipropetrovs'k
+MATCHES
+Round 1
+Kryvbas 1-1 Dynamo Kyiv
+Shakhtar 1-0 Zirka
+Vorskla 4-0 Dnipro
+Metalurh Zaporizhzhya 3-2 Tavriya
+Metalurh Mariupol' 5-0 Chornomorets
+Prykarpattya 1-1 Metalurh Donets'k
+Nyva Ternopil' 1-2 Karpaty
+CSCA 0-1 Metalist
+Round 2
+Dynamo Kyiv 2-1 Metalist
+Tavriya 0-3 Shakhtar
+Zirka 1-1 Prykarpattya
+Karpaty 1-0 CSCA
+Kryvbas 4-0 Vorskla
+Dnipro 0-2 Metalurh Zaporizhzhya
+Metalurh Donets'k 2-1 Metalurh Mariupol'
+Chornomorets 1-0 Nyva Ternopil'
+Round 3
+Vorskla 1-2 Dynamo Kyiv
+Metalist 1-0 Karpaty
+Shakhtar 2-0 Dnipro
+Prykarpattya 0-2 Tavriya
+Metalurh Mariupol' 3-0 Zirka
+CSCA 3-0 Chornomorets
+Metalurh Zaporizhzhya 1-2 Kryvbas
+Nyva Ternopil' 3-0 Metalurh Donets'k
+Round 4
+Dynamo Kyiv 3-0 Karpaty
+Kryvbas 1-0 Shakhtar
+Chornomorets 0-1 Metalist
+Dnipro 1-1 Prykarpattya
+Tavriya 1-0 Metalurh Mariupol'
+Zirka 1-1 Nyva Ternopil'
+Metalurh Donets'k 0-0 CSCA
+Vorskla 3-0 Metalurh Zaporizhzhya
+Round 5
+Shakhtar 0-0 Vorskla
+Karpaty 5-0 Chornomorets
+Prykarpattya 1-3 Kryvbas
+Metalist 2-1 Metalurh Donets'k
+Metalurh Mariupol' 3-2 Dnipro
+Nyva Ternopil' 1-1 Tavriya
+CSCA 3-0 Zirka
+Dynamo Kyiv 2-0 Metalurh Zaporizhzhya
+Round 6
+Dynamo Kyiv 4-1 Chornomorets
+Metalurh Zaporizhzhya 1-0 Shakhtar
+Vorskla 2-0 Prykarpattya
+Metalurh Donets'k 2-1 Karpaty
+Kryvbas 2-1 Metalurh Mariupol'
+Zirka 2-2 Metalist
+Dnipro 1-1 Nyva Ternopil'
+Tavriya 1-2 CSCA
+Round 7
+Prykarpattya 0-0 Metalurh Zaporizhzhya
+Metalurh Mariupol' 2-1 Vorskla
+Chornomorets 0-1 Metalurh Donets'k
+Karpaty 3-0 Zirka
+Metalist 2-1 Tavriya
+Nyva Ternopil' 3-3 Kryvbas
+Dnipro 2-1 CSCA
+Shakhtar 0-0 Dynamo Kyiv
+Round 8
+Dynamo Kyiv 1-0 Metalurh Donets'k
+Zirka 0-0 Chornomorets
+Shakhtar 1-0 Prykarpattya
+Metalurh Zaporizhzhya 2-1 Metalurh Mariupol'
+Vorskla 4-2 Nyva Ternopil'
+Tavriya 4-1 Karpaty
+Kryvbas 2-1 CSCA
+Dnipro 1-0 Metalist
+Round 9
+Karpaty 4-0 Dnipro
+Chornomorets 1-2 Tavriya
+Metalurh Donets'k 2-0 Zirka
+Nyva Ternopil' 0-3 Metalurh Zaporizhzhya
+CSCA 1-1 Vorskla
+Metalurh Mariupol' 1-2 Shakhtar
+Metalist 1-1 Kryvbas
+Dynamo Kyiv 6-0 Prykarpattya
+Round 10
+Vorskla 3-1 Metalist
+Dynamo Kyiv 3-0 Zirka
+Kryvbas 2-1 Karpaty
+Tavriya 1-1 Metalurh Donets'k
+Dnipro 1-1 Chornomorets
+Prykarpattya 3-0 Metalurh Mariupol'
+Shakhtar 5-0 Nyva Ternopil'
+Metalurh Zaporizhzhya 2-2 CSCA
+Round 11
+Metalurh Mariupol' 2-3 Dynamo Kyiv
+Zirka 2-2 Tavriya
+Metalurh Donets'k 5-1 Dnipro
+Metalist 0-0 Metalurh Zaporizhzhya
+Nyva Ternopil' 3-1 Prykarpattya
+Chornomorets 2-0 Kryvbas
+CSCA 1-0 Shakhtar
+Karpaty 3-1 Vorskla
+Round 12
+Dynamo Kyiv 2-0 Tavriya
+Kryvbas 0-0 Metalurh Donets'k
+Metalurh Mariupol' 2-1 Nyva Ternopil'
+Dnipro 2-0 Zirka
+Metalurh Zaporizhzhya 3-1 Karpaty
+Shakhtar 3-1 Metalist
+Vorskla 4-0 Chornomorets
+Prykarpattya 0-0 CSCA
+Round 13
+Nyva Ternopil' 0-1 Dynamo Kyiv
+CSCA 1-1 Metalurh Mariupol'
+Karpaty 1-0 Shakhtar
+Zirka 0-3 Kryvbas
+Metalist 2-0 Prykarpattya
+Chornomorets 1-0 Metalurh Zaporizhzhya
+Metalurh Donets'k 2-3 Vorskla
+Tavriya 1-1 Dnipro
+Round 14
+Dynamo Kyiv 4-0 Dnipro
+Metalurh Mariupol' 3-1 Metalist
+Metalurh Zaporizhzhya 1-1 Metalurh Donets'k
+Kryvbas 2-1 Tavriya
+Nyva Ternopil' 2-2 CSCA
+Vorskla 1-1 Zirka
+Prykarpattya 3-1 Karpaty
+Shakhtar 0-1 Chornomorets
+Round 15
+CSCA 0-3 Dynamo Kyiv
+Metalist 5-2 Nyva Ternopil'
+Karpaty 3-1 Metalurh Mariupol'
+Chornomorets 0-0 Prykarpattya
+Metalurh Donets'k 2-3 Shakhtar
+Zirka 1-1 Metalurh Zaporizhzhya
+Tavriya 0-3 Vorskla
+Dnipro 1-0 Kryvbas
+Round 16
+Dynamo Kyiv 3-1 CSCA
+Nyva Ternopil' 2-1 Metalist
+Metalurh Mariupol' 1-0 Karpaty
+Prykarpattya 1-0 Chornomorets
+Shakhtar 2-0 Metalurh Donets'k
+Metalurh Zaporizhzhya 2-0 Zirka
+Vorskla 4-0 Tavriya
+Kryvbas 2-2 Dnipro
+Round 17
+Tavriya 2-4 Kryvbas
+Zirka 0-2 Vorskla
+Metalurh Donets'k 2-1 Metalurh Zaporizhzhya
+Chornomorets 0-3 Shakhtar
+Karpaty 0-1 Prykarpattya
+Metalist 2-0 Metalurh Mariupol'
+CSCA 0-0 Nyva Ternopil'
+Dnipro 0-2 Dynamo Kyiv
+Round 18
+Shakhtar 4-0 Karpaty
+Dynamo Kyiv 4-1 Nyva Ternopil'
+Vorskla 0-0 Metalurh Donets'k
+Kryvbas 3-1 Zirka
+Metalurh Mariupol' 2-0 CSCA
+Metalurh Zaporizhzhya 2-0 Chornomorets
+Prykarpattya 2-1 Metalist
+Dnipro 1-0 Tavriya
+Round 19
+Tavriya 1-3 Dynamo Kyiv
+Zirka 1-1 Dnipro
+Metalurh Donets'k 0-0 Kryvbas
+Chornomorets 1-1 Vorskla
+Karpaty 1-0 Metalurh Zaporizhzhya
+Metalist 0-1 Shakhtar
+CSCA 2-1 Prykarpattya
+Nyva Ternopil' 2-1 Metalurh Mariupol'
+Round 20
+Dynamo Kyiv 6-1 Metalurh Mariupol'
+Prykarpattya 2-1 Nyva Ternopil'
+Shakhtar 3-0 CSCA
+Metalurh Zaporizhzhya 1-1 Metalist
+Vorskla 1-0 Karpaty
+Kryvbas 2-0 Chornomorets
+Dnipro 0-1 Metalurh Donets'k
+Tavriya 2-0 Zirka
+Round 21
+Zirka 1-4 Dynamo Kyiv
+Metalurh Donets'k 0-0 Tavriya
+# rsssf: 'Chornomorets awd Dnipro [awarded 0-0 victory to Dnipro (originally 2-2) as Chornomorets fielded ineligible player]'
+# played 2-2 -> no clean sheet for either side; table counts it as Dnipro win with 0 goals
+Chornomorets -:+ Dnipro
+Karpaty 1-0 Kryvbas
+Metalist 2-1 Vorskla
+CSCA 1-0 Metalurh Zaporizhzhya
+Nyva Ternopil' 1-1 Shakhtar
+Metalurh Mariupol' 2-0 Prykarpattya
+Round 22
+Prykarpattya 1-2 Dynamo Kyiv
+Shakhtar 3-0 Metalurh Mariupol'
+Metalurh Zaporizhzhya 4-0 Nyva Ternopil'
+Tavriya 1-1 Chornomorets
+Zirka 0-2 Metalurh Donets'k
+Kryvbas 2-0 Metalist
+Vorskla 2-0 CSCA
+Dnipro 1-1 Karpaty
+Round 23
+CSCA 1-2 Kryvbas
+Metalurh Donets'k 0-4 Dynamo Kyiv
+Chornomorets 1-0 Zirka
+Karpaty 0-1 Tavriya
+Metalist 2-1 Dnipro
+Nyva Ternopil' 1-1 Vorskla
+Metalurh Mariupol' 1-1 Metalurh Zaporizhzhya
+Prykarpattya 0-2 Shakhtar
+Round 24
+Dynamo Kyiv 2-1 Shakhtar
+Kryvbas 5-1 Nyva Ternopil'
+Vorskla 1-1 Metalurh Mariupol'
+CSCA 3-0 Dnipro
+Tavriya 2-2 Metalist
+Metalurh Zaporizhzhya 2-2 Prykarpattya
+Metalurh Donets'k 4-0 Chornomorets
+Zirka 0-2 Karpaty
+Round 25
+Metalurh Mariupol' 0-2 Kryvbas
+Metalist 4-0 Zirka
+CSCA 3-0 Tavriya
+Karpaty 1-1 Metalurh Donets'k
+Chornomorets 2-2 Dynamo Kyiv
+Prykarpattya 0-1 Vorskla
+Shakhtar 4-0 Metalurh Zaporizhzhya
+Nyva Ternopil' 1-1 Dnipro
+Round 26
+Vorskla 0-3 Shakhtar
+Dnipro 1-0 Metalurh Mariupol'
+Tavriya 1-1 Nyva Ternopil'
+Zirka 0-0 CSCA
+Metalurh Donets'k 1-1 Metalist
+Chornomorets 0-0 Karpaty
+Kryvbas 3-0 Prykarpattya
+Metalurh Zaporizhzhya 0-3 Dynamo Kyiv
+Round 27
+Karpaty 2-3 Dynamo Kyiv
+Metalist 1-1 Chornomorets
+CSCA 1-0 Metalurh Donets'k
+Nyva Ternopil' 3-0 Zirka
+Metalurh Mariupol' 4-1 Tavriya
+Prykarpattya 1-1 Dnipro
+Shakhtar 3-1 Kryvbas
+Metalurh Zaporizhzhya 3-1 Vorskla
+Round 28
+Dynamo Kyiv 3-0 Vorskla
+Kryvbas 1-0 Metalurh Zaporizhzhya
+Dnipro 1-2 Shakhtar
+Tavriya 1-0 Prykarpattya
+Zirka 1-2 Metalurh Mariupol'
+Metalurh Donets'k 3-2 Nyva Ternopil'
+Chornomorets 2-0 CSCA
+Karpaty 1-1 Metalist
+Round 29
+CSCA 2-3 Karpaty
+Metalist 0-5 Dynamo Kyiv
+Metalurh Mariupol' 4-1 Metalurh Donets'k
+Metalurh Zaporizhzhya 6-1 Dnipro
+Nyva Ternopil' 3-1 Chornomorets
+Prykarpattya 4-2 Zirka
+Shakhtar 2-0 Tavriya
+Vorskla 3-0 Kryvbas
+Round 30
+Chornomorets 3-4 Metalurh Mariupol'
+Dnipro 2-1 Vorskla
+Dynamo Kyiv 2-1 Kryvbas
+Karpaty 0-1 Nyva Ternopil'
+Metalist 2-0 CSCA
+Metalurh Donets'k 4-1 Prykarpattya
+Tavriya 1-2 Metalurh Zaporizhzhya
+Zirka 2-6 Shakhtar

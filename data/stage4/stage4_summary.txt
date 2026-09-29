@@ -1,0 +1,45 @@
+Этап 4 запущен 2026-09-27 18:40
+Загружено: игрок-сезонов 16350 | сезонов 34 | клубов 51 | людей 5107
+Kaggle: таблицы посчитаны для сезонов [2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025]
+Таблицы: сезонов 34 | клубов-сезонов 524 | источники по сезонам:
+season
+1992          wiki_uk
+1993          wiki_uk
+1994          wiki_uk
+1995          wiki_uk
+1996          wiki_uk
+1997          wiki_uk
+1998          wiki_uk
+1999          wiki_uk
+2000          wiki_uk
+2001          wiki_uk
+2002          wiki_uk
+2003          wiki_uk
+2004    proxy,wiki_uk
+2005    proxy,wiki_uk
+2006          wiki_uk
+2007          wiki_uk
+2008          wiki_uk
+2009          wiki_uk
+2010          wiki_ru
+2011          wiki_uk
+2012     kaggle_games
+2013     kaggle_games
+2014     kaggle_games
+2015     kaggle_games
+2016     kaggle_games
+2017     kaggle_games
+2018     kaggle_games
+2019     kaggle_games
+2020     kaggle_games
+2021     kaggle_games
+2022     kaggle_games
+2023     kaggle_games
+2024     kaggle_games
+2025     kaggle_games
+Вратари Kaggle: пропущенные досчитаны для 488 из 488 вратарь-сезонов
+Позиция угадана (была пустой): 59 строк; по сезонам: {2011: 50, 2012: 1, 2014: 2, 2015: 2, 2016: 3, 2017: 1}
+Создан шаблон поправок: /content/drive/MyDrive/UPL-data/ref/rating_overrides.csv
+Ручных поправок применено к строкам: 0
+Рейтинг: средний 69.1 | медиана 69.8 | ≥90: 593 | ≥80: 3369
+Карточек игрок×клуб: 8604 | людей: 4948 | с пиковым рейтингом ≥85: 890
