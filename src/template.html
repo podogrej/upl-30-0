@@ -447,7 +447,7 @@ td .sub{font-size:11px;color:var(--muted);margin-top:2px;display:flex;gap:6px;al
     </div>
 </div>
 <div class="overlay" id="viewBox" hidden><div class="box"><div class="vhead"><h3 id="viewTitle">Склад</h3><button class="ghost" id="viewClose">Закрити</button></div><div id="viewBody"></div></div></div>
-<div class="foot">30-0 УПЛ · версія 0.39 · 29.09.2026 · <a href="#" id="newsBtn">Що нового<b id="newsDot" hidden></b></a> · неофіційний фан-проєкт</div>
+<div class="foot">30-0 УПЛ · версія 0.40 · 29.09.2026 · <a href="#" id="newsBtn">Що нового<b id="newsDot" hidden></b></a> · неофіційний фан-проєкт</div>
 <script id="pool" type="application/json">__POOL__</script>
 <script>
 (function(){
@@ -1170,11 +1170,8 @@ function drawCard(r){
 }
 document.getElementById('replayBtn').onclick=()=>playSeason(null);
 // ---------- «Що нового»: коротко й по-людськи про останню версію (технічний журнал — CHANGELOG.md у репозиторії)
-const WHATSNEW={v:'0.39',date:'29.09.2026',items:[
-  ['format-list-numbered','Таблиця на головній','Кожен сезон — окремий рядок. Класика й виклик дня разом, поруч з іменем видно рівень: «Звичайний», «Складний», «Хардкор». Дербі, «Один клуб» і антисезон — у своїх вкладках.'],
-  ['account-circle','Одне ім\'я всюди','Ім\'я тепер у профілі: змінив раз — оновилось у всіх таблицях. Не хочеш називатися — у таблиці будеш під анонімним ім\'ям на кшталт «Silent Owl».'],
-  ['swap-horizontal','Один гравець на всіх пристроях','Увійшов у Google чи Telegram з нового телефона — усі твої сезони підтягуються до одного профілю, без дублів.'],
-  ['calendar-star','Виклик дня — одна спроба','Режим «Тренування» сховали. Виклик дня можна зіграти раз на день.']]};
+const WHATSNEW={v:'0.40',date:'29.09.2026',items:[
+  ['soccer','Гольові передачі 2021/22','Для сезону 2021/22 тепер є гольові передачі всіх 16 клубів (раніше — лише Динамо й Маріуполя). Дані — sports.ru, лише матчі УПЛ.']]};
 function openNews(){const box=document.getElementById('viewBox');document.getElementById('viewTitle').textContent=`Що нового · версія ${WHATSNEW.v}`;
   document.getElementById('viewBody').innerHTML=`<div class="news">${WHATSNEW.items.map(([e,h,d])=>`<div class="ni">${ic(e,'lg')}<div><b>${esc(h)}</b><p>${esc(d)}</p></div></div>`).join('')}</div>`;
   box.hidden=false;lsSet('upl30_news_seen',WHATSNEW.v);document.getElementById('newsDot').hidden=true;}
