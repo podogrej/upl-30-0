@@ -17,7 +17,7 @@ TR={ # трофей → гліф
  's3':'fire','s7':'calendar-week','s14':'calendar-month','s30':'calendar-check','d10':'coffee','d50':'medal','golden':'trophy-variant','rebsh':'handshake',
  'samba':'music','noua':'airplane','namesakes':'card-account-details','ghosts':'ghost','crimea':'waves','cross':'road-variant','mediocre':'hat-fedora',
  'cursed':'crystal-ball','heist':'sack','fairy':'auto-fix','fallen':'star-off','kids':'baby-face-outline','gkmvp':'hand-back-right','bottom':'chevron-triple-down',
- 'ms1':'sprout','ms5':'soccer','ms10':'ticket','ms25':'ribbon','ms50':'medal','ms100':'star-circle','ms250':'bank'}
+ 'nice':'emoticon-wink-outline','ms1':'sprout','ms5':'soccer','ms10':'ticket','ms25':'ribbon','ms50':'medal','ms100':'star-circle','ms250':'bank'}
 def load(path):
     t=open(path).read();vb=re.search(r'viewBox="([^"]+)"',t).group(1);ds=re.findall(r'<path[^>]*\sd="([^"]+)"',t)
     assert len(ds)==1,(path,len(ds));return [vb,ds[0]]
