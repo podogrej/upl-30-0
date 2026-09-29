@@ -1,0 +1,32 @@
+<!doctype html><html><head><meta charset="utf-8">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@700;900&family=Manrope:wght@500;700&family=JetBrains+Mono:wght@700&display=swap">
+<style>
+body{margin:0;background:#000;display:flex;gap:24px;padding:24px;width:max-content;font-family:Manrope,sans-serif}
+.p{width:330px;background:var(--bg);color:var(--ink);border-radius:22px;padding:18px;display:grid;gap:12px;border:1px solid var(--line)}
+.name{font:700 13px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--acc)}
+.ava{width:140px;height:140px;border-radius:50%;background:var(--bg2);display:grid;place-items:center;justify-self:center;border:1px solid var(--line)}
+.board{background:#000;border:4px solid var(--line);border-radius:14px;padding:8px 10px;font:700 40px 'JetBrains Mono',monospace;color:var(--acc);box-shadow:0 0 18px color-mix(in srgb,var(--acc) 35%,transparent)}
+.logo{font:900 44px Unbounded,sans-serif;letter-spacing:-.03em;text-align:center;line-height:1}.logo span{color:var(--acc)}
+.btn{background:var(--ink);color:var(--bg);font:700 16px Unbounded,sans-serif;text-align:center;padding:12px;border-radius:12px}
+.btn2{border:1px solid var(--line);color:var(--ink2);text-align:center;padding:9px;border-radius:12px;font-weight:700;font-size:14px}
+.row{display:flex;gap:10px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px}
+.ic{width:30px;height:30px;border-radius:8px;background:color-mix(in srgb,var(--acc) 18%,transparent);color:var(--acc);display:grid;place-items:center;font-weight:900}
+.row small{display:block;color:var(--ink2);font-size:12px}
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.t{background:var(--surface);border-radius:10px;padding:8px;font:700 22px Unbounded}.t small{display:block;font:600 11px Manrope;color:var(--ink2)}
+.t.w{border-top:3px solid var(--win)}.t.d{border-top:3px solid var(--draw)}.t.l{border-top:3px solid var(--loss)}.t.pts{color:var(--acc)}
+.sw{display:flex;gap:4px}.sw i{flex:1;height:18px;border-radius:5px}
+</style></head><body>
+<script>
+const P=[
+ ['1 · Зараз: чорний + помаранч',{bg:'#121212',bg2:'#0b0b0b',surface:'#1c1c1d',line:'#303032',ink:'#f4f1ea',ink2:'#b3aea4',acc:'#ff7a1a',win:'#30D158',draw:'#FFD60A',loss:'#FF453A'}],
+ ['2 · Табло: чорний + бурштин',{bg:'#0d0d0c',bg2:'#070707',surface:'#181816',line:'#2c2b27',ink:'#f2efe6',ink2:'#aaa699',acc:'#ffb300',win:'#3ccf6e',draw:'#e8e8e8',loss:'#ff5a4e'}],
+ ['3 · Синьо-жовта ніч',{bg:'#0a1020',bg2:'#070b17',surface:'#121a2e',line:'#24304d',ink:'#eef2fb',ink2:'#a7b2cc',acc:'#ffd23f',win:'#3ec27a',draw:'#8fa3c7',loss:'#ef5a5a'}],
+ ['4 · Газон: темно-зелений + лайм',{bg:'#0c1510',bg2:'#08100b',surface:'#13201a',line:'#23372b',ink:'#eaf3ec',ink2:'#a2b8a9',acc:'#b8f53d',win:'#4ade80',draw:'#e5d45a',loss:'#f06a5a'}],
+ ['5 · Ретро-програмка: графіт + червоний',{bg:'#151517',bg2:'#0e0e10',surface:'#1f1f22',line:'#333338',ink:'#f5efe2',ink2:'#b9b2a3',acc:'#ff4a3d',win:'#57c785',draw:'#e7c35a',loss:'#8a8a94'}],
+];
+for(const [n,c] of P){const d=document.createElement('div');d.className='p';for(const k in c)d.style.setProperty('--'+k,c[k]);
+d.innerHTML=`<div class="name">${n}</div><div class="ava"><div class="board">30:0</div></div><div class="logo">30-0 <span>УПЛ</span></div><div class="btn">Грати</div><div class="btn2">Як грати</div>
+<div class="row"><div class="ic">★</div><div><b>Трофеї</b><small>81 трофей, частина — секретні</small></div></div>
+<div class="tiles"><div class="t w">19<small>перемог</small></div><div class="t d">5<small>нічиїх</small></div><div class="t l">6<small>поразок</small></div><div class="t pts">62<small>очки</small></div><div class="t">2<small>місце</small></div><div class="t">62:26<small>голи</small></div></div>
+<div class="sw"><i style="background:${c.bg}"></i><i style="background:${c.surface}"></i><i style="background:${c.ink}"></i><i style="background:${c.acc}"></i><i style="background:${c.win}"></i><i style="background:${c.draw}"></i><i style="background:${c.loss}"></i></div>`;document.body.appendChild(d);}
+</script></body></html>
