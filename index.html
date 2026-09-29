@@ -120,7 +120,8 @@ button.ghost{border-color:var(--line);background:transparent;color:var(--ink2);p
 .slot.target{animation:glow 1.1s ease-in-out infinite}@keyframes glow{0%,100%{box-shadow:0 0 0 2px var(--amber2)}50%{box-shadow:0 0 0 5px color-mix(in srgb,var(--amber2) 35%,transparent)}}
 .pl.on{border-color:var(--amber2);box-shadow:0 0 0 2px var(--amber2)}
 .squad{display:grid;gap:4px;margin-top:10px}
-.pl,.sqHead{display:grid;grid-template-columns:32px minmax(0,1fr) repeat(var(--nst,4),30px) var(--rtw,30px);gap:4px;}.noast,.sqHead.noast{--nst:3}.nor,.sqHead.nor{--rtw:0px}
+.pl,.sqHead{display:grid;grid-template-columns:32px minmax(0,1fr) repeat(var(--nst,4),30px) var(--rtw,30px);gap:4px;}.noast,.sqHead.noast{--nst:3}.nor,.sqHead.nor{--rtw:0px}.sqHead b{font-weight:inherit}.sqHead i{display:none;font-style:normal}
+@media (max-width:360px){.pl,.sqHead{grid-template-columns:28px minmax(0,1fr) repeat(var(--nst,4),23px) var(--rtw,27px);gap:3px}.squad .pl{padding:8px}.sqHead{padding:0 9px;font-size:8px}.pl .nm{font-size:13.5px}.pl .st{font-size:11px}.pl .rt{font-size:14px}.sqHead b{display:none}.sqHead i{display:inline}}
 .sqHead{padding:0 11px;font-family:var(--font-body);font-size:9px;font-weight:600;line-height:1.15;color:var(--muted);letter-spacing:0;text-align:right;align-items:end;overflow-wrap:normal}.sqHead span:nth-child(-n+2){text-align:left}
 .pl{align-items:center;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);cursor:pointer;text-align:left;font-weight:500}
 .pl:hover{border-color:var(--ink)}
@@ -129,7 +130,7 @@ button.ghost{border-color:var(--line);background:transparent;color:var(--ink2);p
 .pos.GK{background:var(--gk)} .pos.DF{background:var(--df)} .pos.MF{background:var(--mf)} .pos.FW{background:var(--fw)}
 .pl .st{font-family:var(--font-mono);font-size:12px;color:var(--ink2);text-align:right}.pl .st.d{color:var(--muted)}
 .pl .rt{font-family:var(--font-display);font-weight:700;font-size:15px;line-height:1;font-variant-numeric:tabular-nums;min-width:0;text-align:right}
-.pl .nm{overflow:hidden;line-height:1.25;overflow-wrap:anywhere}
+.pl .nm{overflow:hidden;line-height:1.25;overflow-wrap:break-word;-webkit-hyphens:auto;hyphens:auto}
 /* results */
 .hero{border:2px solid var(--ink);border-radius:14px;padding:18px 16px;background:var(--surface);display:grid;gap:8px}
 .hero .tier{font-family:var(--font-display);font-weight:900;font-size:clamp(22px,5vw,34px);line-height:1.05;letter-spacing:-.01em}
@@ -768,7 +769,7 @@ function renderWheel(){
   document.getElementById('wHint').textContent=`${cs.pos} місце в тому сезоні`+(S.format==='anti'?` · лише гравці з ${ANTI_MIN_APPS}+ матчами`:'');
   const rr=document.getElementById('rerollRow');rr.style.visibility='visible';rr.hidden=S.rerolls<=0;document.getElementById('rerollCnt').textContent=`↻ ${S.rerolls}`;
   const sq=document.getElementById('squad');sq.innerHTML='';
-  const hasAst=cs.pl.every(p=>p[8]!=null);sq.classList.toggle('noast',!hasAst);sq.classList.toggle('nor',!show);const hd=document.getElementById('sqHead');hd.classList.toggle('noast',!hasAst);hd.classList.toggle('nor',!show);hd.hidden=S.format==='anti';hd.innerHTML=`<span></span><span></span><span>Матчі</span><span>Голи</span>${hasAst?'<span title="Гольові передачі">Асисти</span>':''}<span title="Сухі матчі">Сухі</span><span>${show?'Рейт.':''}</span>`;
+  const hasAst=cs.pl.every(p=>p[8]!=null);sq.classList.toggle('noast',!hasAst);sq.classList.toggle('nor',!show);const hd=document.getElementById('sqHead');hd.classList.toggle('noast',!hasAst);hd.classList.toggle('nor',!show);hd.hidden=S.format==='anti';hd.innerHTML=`<span></span><span></span><span>Матчі</span><span>Голи</span>${hasAst?'<span title="Гольові передачі"><b>Асисти</b><i>Ас.</i></span>':''}<span title="Сухі матчі">Сухі</span><span>${show?'Рейт.':''}</span>`;
   const anti=S.format==='anti';const list=[...cs.pl].map(p=>({p,ok:isOk(cs,p)})).sort((a,b)=>(b.ok-a.ok)||(anti?a.p[0].localeCompare(b.p[0],'uk'):sortR?b.p[2]-a.p[2]:(b.p[3]-a.p[3]||b.p[4]-a.p[4])));
   let sep=false;
   for(const {p,ok} of list){if(!ok&&!sep){sep=true;const h=document.createElement('div');h.className='muted';h.style.cssText='font-size:12px;margin:8px 0 2px';h.textContent=S.taken.size?'Позиція зайнята або не підходить — переставте когось у складі, щоб відкрити':'Не підходять під вільні позиції';sq.appendChild(h);}
