@@ -35,7 +35,7 @@ const TROPHIES=[
   {id:"pegs",i:"🔄",n:"Хто в ліс, хто по дрова",d:"6+ польових гравців не на основній позиції",cat:"squad",t:c=>c.xi.filter(x=>x.slot!=='GK'&&x.main&&x.main.length>2&&x.main!==x.slot).length>=6},
   {id:"vets",i:"👴",n:"В бій ідуть лише «старі»",d:"Усім 11 гравцям 30+ у тому сезоні",cat:"squad",t:c=>c.xi.every(x=>x.by&&x.y-x.by>=30)},
   // гравці
-  {id:"striker",i:"🎯",n:"Як Шева",d:"Гравець забиває 25+ голів за сезон",cat:"players",rep:1,t:c=>c.pl.some(p=>p.g>=25)},
+  {id:"striker",i:"🎯",n:"Шева б пишався",d:"Гравець забиває 25+ голів за сезон",cat:"players",rep:1,t:c=>c.pl.some(p=>p.g>=25)},
   {id:"assist",i:"🪄",n:"Нова пошта",d:"Гравець віддає 15+ асистів за сезон",cat:"players",rep:1,t:c=>c.pl.some(p=>p.a>=15)},
   {id:"eight",i:"🌟",n:"Круглий відмінник",d:"Середня оцінка гравця за сезон 8.0+",cat:"players",rep:1,t:c=>c.pl.some(p=>p.rt>=8)},
   // режими
@@ -49,14 +49,14 @@ const TROPHIES=[
   // виклик дня (перевіряються за лічильниками)
   {id:"dchamp",i:"📅",n:"Герой дня",d:"Стань чемпіоном в офіційній спробі виклику дня",cat:"daily",rep:1,t:c=>c.dailyOfficial&&c.r.place===1},
   {id:"s3",i:"🔥",n:"Бог любить трійцю",d:"Зіграй виклик дня 3 дні поспіль",cat:"daily",st:s=>s.streak>=3,prog:s=>[s.streak,3]},
-  {id:"s7",i:"🗓️",n:"Тиждень без пропусків",d:"7 днів поспіль",cat:"daily",st:s=>s.streak>=7,prog:s=>[s.streak,7]},
+  {id:"s7",i:"🗓️",n:"Як на роботу",d:"7 днів поспіль",cat:"daily",st:s=>s.streak>=7,prog:s=>[s.streak,7]},
   {id:"s14",i:"📆",n:"Відпустка? Не чув",d:"14 днів поспіль",cat:"daily",st:s=>s.streak>=14,prog:s=>[s.streak,14]},
-  {id:"s30",i:"🏛️",n:"Без вихідних",d:"30 днів поспіль",cat:"daily",st:s=>s.streak>=30,prog:s=>[s.streak,30]},
+  {id:"s30",i:"🏛️",n:"Трудоголік",d:"30 днів поспіль",cat:"daily",st:s=>s.streak>=30,prog:s=>[s.streak,30]},
   {id:"d10",i:"☕",n:"Завсідник",d:"Зіграй 10 викликів дня",cat:"daily",st:s=>s.dailies>=10,prog:s=>[s.dailies,10]},
   {id:"d50",i:"🎖️",n:"Старожил",d:"Зіграй 50 викликів дня",cat:"daily",st:s=>s.dailies>=50,prog:s=>[s.dailies,50]},
   // секретні
   {id:"golden",i:"🥇",n:"Як у 2006-му",d:"Стань чемпіоном через золотий матч",cat:"secret",sec:1,t:c=>notAnti(c)&&c.r.place===1&&!!c.r.golden},
-  {id:"rebsh",i:"🤝",n:"Шева і Ребров",d:"Ребров і Шевченко в одному складі",cat:"secret",sec:1,t:c=>c.xi.some(x=>x.name==='Сергій Ребров')&&c.xi.some(x=>x.name==='Андрій Шевченко')},
+  {id:"rebsh",i:"🤝",n:"Дует Лобановського",d:"Ребров і Шевченко в одному складі",cat:"secret",sec:1,t:c=>c.xi.some(x=>x.name==='Сергій Ребров')&&c.xi.some(x=>x.name==='Андрій Шевченко')},
   {id:"samba",i:"🇧🇷",n:"Самба на Донбасі",d:"5 бразильців «Шахтаря» в одному складі",cat:"secret",sec:1,t:c=>c.xi.filter(x=>x.cc==='shakhtar-donetsk'&&DATA.nats[x.nat]==='Бразилія').length>=5},
   {id:"noua",i:"✈️",n:"Іноземний легіон",d:"У складі немає жодного українця",cat:"secret",sec:1,t:c=>c.xi.every(x=>x.nat>=0&&x.nat!==UA)},
   {id:"namesakes",i:"🪪",n:"Ні, не родичі",d:"3 гравці з однаковим прізвищем",cat:"secret",sec:1,t:c=>{const m={};for(const x of c.xi){const k=surname(x.name);m[k]=(m[k]||0)+1;}return Math.max(...Object.values(m))>=3;}},
@@ -66,7 +66,7 @@ const TROPHIES=[
   {id:"mediocre",i:"🧢",n:"З грязі в князі",d:"Чемпіон із середнім рейтингом складу нижче 80",cat:"secret",sec:1,t:c=>c.reveal&&notAnti(c)&&c.r.place===1&&c.xi.reduce((s,x)=>s+x.r0,0)/c.xi.length<80},
   {id:"cursed",i:"🧿",n:"Прокляття xG",d:"xP 70+, але не чемпіон",cat:"secret",sec:1,t:c=>notAnti(c)&&c.r.xp>=70&&c.r.place>1},
   {id:"heist",i:"💰",n:"Пограбування",d:"Чемпіон з xP нижче 55",cat:"secret",sec:1,t:c=>notAnti(c)&&c.r.place===1&&c.r.xp<55},
-  {id:"fairy",i:"✨",n:"Сезон-казка",d:"Усі 11 гравців провели сезон у плюсовій формі (+1 і вище)",cat:"secret",sec:1,t:c=>c.pl.length===11&&c.pl.every(p=>p.form>=1)},
+  {id:"fairy",i:"✨",n:"Сила в єдності",d:"Усі 11 гравців провели сезон у плюсовій формі (+1 і вище)",cat:"secret",sec:1,t:c=>c.pl.length===11&&c.pl.every(p=>p.form>=1)},
   {id:"fallen",i:"🌠",n:"Зірка згасла",d:"Гравець з рейтингом 95+ провів найгірший можливий сезон (форма −10)",cat:"secret",sec:1,t:c=>c.pl.some(p=>p.r0>=95&&p.form<=-10)},
   {id:"kids",i:"🧒",n:"Молодо — зелено",d:"Усім 11 гравцям менше 23 у тому сезоні",cat:"secret",sec:1,t:c=>c.xi.every(x=>x.by&&x.y-x.by<23)},
   {id:"gkmvp",i:"🧤",n:"Воротар — пів команди",d:"Гравець сезону — воротар з оцінкою 7.8+",cat:"secret",sec:1,t:c=>{const m=[...c.pl].sort((a,b)=>b.rt-a.rt)[0];return !!m&&m.slot==='GK'&&m.rt>=7.8;}},
@@ -116,7 +116,7 @@ function trAward(c,{daily}={}){
   const s=trStore();const got=trEval(c);const fresh=[];const today=kyivDate();
   s.seasons++;if(daily)s.dailies++;
   const add=id=>{const e=s.t[id]||(s.t[id]={n:0,at:today});if(!e.n)fresh.push(id);e.n++;};
-  for(const id of got){const t=TROPHIES.find(x=>x.id===id);if(t.rep||!(s.t[id]&&s.t[id].n))add(id);}
+  for(const id of got)add(id);   // з 0.43 усі трофеї за сезон повторювані: лічильник ×N
   const ctxS={streak:trStreak(),dailies:s.dailies};
   for(const t of TROPHIES)if(t.st&&t.st(ctxS)&&!(s.t[t.id]&&s.t[t.id].n)){add(t.id);got.push(t.id);}
   for(const [k] of MILESTONES)if(s.seasons===k){add('ms'+k);got.push('ms'+k);}
@@ -136,7 +136,7 @@ async function trRetro(){
   try{const rows=await sbGet(`seasons?device_id=eq.${deviceId()}&select=*&order=id.asc&limit=1000`);
     const s=trStore();const fresh=[];const today=kyivDate();
     for(const row of rows){if(row.practice||row.mode==='practice')continue;s.seasons++;if(row.day)s.dailies++;
-      for(const id of trEval(trCtxRow(row))){const t=trDef(id);const e=s.t[id]||(s.t[id]={n:0,at:(row.created_at||today).slice(0,10)});if(!e.n)fresh.push(id);if(t.rep||!e.n)e.n++;}}
+      for(const id of trEval(trCtxRow(row))){const t=trDef(id);const e=s.t[id]||(s.t[id]={n:0,at:(row.created_at||today).slice(0,10)});if(!e.n)fresh.push(id);e.n++;}}
     for(const [k] of MILESTONES)if(s.seasons>=k){const id='ms'+k;if(!(s.t[id]&&s.t[id].n)){s.t[id]={n:1,at:today};fresh.push(id);}}
     lsSet("upl30_tr",s);lsSet("upl30_tr_retro",1);if(fresh.length)trSync(fresh);renderTrBtn();
   }catch(e){}

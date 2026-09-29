@@ -33,6 +33,8 @@ const fail=[];const check=(ok,msg)=>{if(!ok)fail.push(msg);};
  await pg.evaluate(()=>document.getElementById('homeBtn').click());await pg.click('#freeOpen');await pg.click('#modes .opt:nth-child(1)');await pg.evaluate(()=>document.getElementById('homeBtn').click());
  // пасхалка й трофей Nice
  check(await pg.evaluate(()=>{const D=window.__dbg;const cs=D.DATA.clubs.find(c=>c.pl.some(p=>p[5]==='w:1979-03-30:timoschuk'));D.S.wheel=cs;D.renderWheel();const ok=/Анатолій Тимощук \(пітух\)/.test(document.getElementById('squad').textContent);D.S.wheel=null;return ok;}),'пасхалка: у Тимощука немає «(пітух)»');
+ check(await pg.evaluate(()=>{const D=window.__dbg;const before=(D.trStore().t.nodraw||{}).n||0;const c={r:{W:20,D:0,L:10,pts:60,place:3,gf:50,ga:30,xp:55,log:[]},xi:[],pl:[],mode:'normal',format:'classic',reveal:true};
+   D.trAward(c);D.trAward(c);return ((D.trStore().t.nodraw||{}).n||0)===before+2;}),'трофеї: не повторюються (×N)');
  check(await pg.evaluate(()=>{const e=window.__dbg.trEval;const L=(n,f)=>Array.from({length:30},(_,i)=>f(i));
    const base={xi:[],pl:[],mode:'normal',format:'classic',reveal:true};
    const c1={...base,r:{W:10,D:10,L:10,pts:40,place:9,gf:30,ga:30,xp:40,log:L(30,i=>({ug:i<5?0:1,og:i<5?1:0,res:i<5?'L':'W',home:true,opp:'X'}))}};
