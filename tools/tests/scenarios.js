@@ -33,6 +33,7 @@ const fail=[];const check=(ok,msg)=>{if(!ok)fail.push(msg);};
  await pg.evaluate(()=>document.getElementById('homeBtn').click());await pg.click('#freeOpen');await pg.click('#modes .opt:nth-child(1)');await pg.evaluate(()=>document.getElementById('homeBtn').click());
  // пасхалка й трофей Nice
  check(await pg.evaluate(()=>{const D=window.__dbg;const cs=D.DATA.clubs.find(c=>c.pl.some(p=>p[5]==='w:1979-03-30:timoschuk'));D.S.wheel=cs;D.renderWheel();const ok=/Анатолій Тимощук \(пітух\)/.test(document.getElementById('squad').textContent);D.S.wheel=null;return ok;}),'пасхалка: у Тимощука немає «(пітух)»');
+ check(await pg.evaluate(()=>{const e=window.__dbg.trEval;const c={r:{W:1,D:1,L:28,pts:4,place:16,gf:5,ga:60,xp:10,log:[]},xi:[{id:'tm:9796'},{id:'tm:9800'}],pl:[],mode:'normal',format:'classic',reveal:true};return e(c).includes('pyvo');}),'трофей «По пиву?» не видається');
  check(await pg.evaluate(()=>{const D=window.__dbg;const before=(D.trStore().t.nodraw||{}).n||0;const c={r:{W:20,D:0,L:10,pts:60,place:3,gf:50,ga:30,xp:55,log:[]},xi:[],pl:[],mode:'normal',format:'classic',reveal:true};
    D.trAward(c);D.trAward(c);return ((D.trStore().t.nodraw||{}).n||0)===before+2;}),'трофеї: не повторюються (×N)');
  check(await pg.evaluate(()=>{const e=window.__dbg.trEval;const L=(n,f)=>Array.from({length:30},(_,i)=>f(i));
@@ -43,7 +44,8 @@ const fail=[];const check=(ok,msg)=>{if(!ok)fail.push(msg);};
  for(const [fmt,mode,form] of [['classic',1,1],['daily',0,0],['anti',3,1],['derby',2,2]]){
   await playSeason(pg,fmt,mode,form);
   await pg.screenshot({path:path.join(OUT,`result_${fmt}.png`),fullPage:true});
-  await pg.click('#cardBtn');await pg.waitForTimeout(900);
+  await pg.click('#tgShareBtn');await pg.waitForTimeout(900);   // поза Telegram і без системного меню — показує картку
+  check(await pg.evaluate(()=>!document.getElementById('shareImg').hidden),`${fmt}: «Поділитися карткою» не показала картку`);
   const d=await pg.evaluate(()=>{const S=window.__dbg.S;return {text:document.getElementById('shareText').value,cap:window.__dbg.shareTextOf(S.result,false,true),img:document.getElementById('shareImg').src,r:{W:S.result.W,D:S.result.D,L:S.result.L,gf:S.result.gf,ga:S.result.ga,log:S.result.log.map(m=>[m.ug,m.og,m.res])},verified:document.getElementById('verLine').textContent};});
   fs.writeFileSync(path.join(OUT,`card_${fmt}.png`),Buffer.from(d.img.split(',')[1],'base64'));
   const te=await pg.evaluate(()=>{const D=window.__dbg;const c=D.trCtxNow(D.S.result);const bad=[];for(const t of D.TROPHIES){if(!t.t)continue;try{t.t(c);}catch(e){bad.push(t.id+': '+e.message);}}return bad;});
