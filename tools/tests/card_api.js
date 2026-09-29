@@ -1,7 +1,8 @@
 // /api/card без мережі: підроблений Telegram (fetch) і справжній підпис initData тестовим токеном.
 // Запуск з кореня: node tools/tests/card_api.js
 const crypto = require('crypto');
-const TOKEN = '123:TEST'; process.env.TG_TOKEN = TOKEN; process.env.TG_BOT = 'upl30_bot';
+const TOKEN = '123:TEST'; process.env.TG_TOKEN = TOKEN; process.env.TG_BOT = 'upl30_bot'; process.env.SUPABASE_SERVICE_KEY = 'svc'; process.env.SUPABASE_URL = 'https://sb.test';
+let STORAGE_OK = true;
 const hmac = (k, d) => crypto.createHmac('sha256', k).update(d).digest();
 function initData(user) {
   const p = new URLSearchParams({ auth_date: String(Math.floor(Date.now() / 1000)), user: JSON.stringify(user), query_id: 'q1' });
@@ -9,7 +10,8 @@ function initData(user) {
   p.set('hash', hmac(hmac('WebAppData', TOKEN), dcs).toString('hex')); return p.toString();
 }
 const calls = [];
-global.fetch = async (url, opt) => { const m = url.split('/').pop(); calls.push(m);
+global.fetch = async (url, opt) => { if (url.startsWith('https://sb.test/storage/')) { calls.push('storage'); return { ok: STORAGE_OK, status: STORAGE_OK ? 200 : 404, json: async () => ({}) }; }
+  const m = url.split('/').pop(); calls.push(m);
   const body = opt.body instanceof FormData ? null : JSON.parse(opt.body || '{}');
   const R = x => ({ ok: true, status: 200, json: async () => x });
   if (m === 'sendPhoto') return R({ ok: true, result: { message_id: 7, photo: [{ file_id: 'small' }, { file_id: 'BIG' }] } });
@@ -24,6 +26,9 @@ let fail = 0; const check = (ok, m) => { if (!ok) { fail++; console.log('✗', m
   let [c, j] = await run({ initData: initData({ id: 42, first_name: 'A' }), image: img, caption: 'hi' });
   check(c === 200 && j.ok && !j.prepared && calls.join() === 'sendPhoto', 'звичайна картка собі: лише sendPhoto');
   calls.length = 0;
+  [c, j] = await run({ initData: initData({ id: 42, first_name: 'A' }), image: img, caption: 'hi', share: true });
+  check(j.ok && j.prepared === 'PREP1' && calls.join() === 'storage,savePreparedInlineMessage' && /^https:\/\/sb\.test\/storage\/v1\/object\/public\/cards\//.test(prepBody.result.photo_url), 'share через сховище: без особистого чату, photo_url з публічного bucket');
+  STORAGE_OK = false; calls.length = 0;
   [c, j] = await run({ initData: initData({ id: 42, first_name: 'A' }), image: img, caption: 'hi', share: true });
   await new Promise(r => setTimeout(r, 10));
   check(j.ok && j.prepared === 'PREP1', 'share: повертає id підготовленого повідомлення');

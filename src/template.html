@@ -485,7 +485,7 @@ td .sub{font-size:11px;color:var(--muted);margin-top:2px;display:flex;gap:6px;al
     </div>
 </div>
 <div class="overlay" id="viewBox" hidden><div class="box"><div class="vhead"><h3 id="viewTitle">Склад</h3><button class="ghost" id="viewClose">Закрити</button></div><div id="viewBody"></div></div></div>
-<div class="foot">30-0 УПЛ · <a href="#" id="newsBtn">Що нового у версії 0.47<b id="newsDot" hidden></b></a> · <a href="#" id="themeBtn" class="thm" aria-label="Світла тема"></a> · неофіційний фан-проєкт</div>
+<div class="foot">30-0 УПЛ · <a href="#" id="newsBtn">Що нового у версії 0.48<b id="newsDot" hidden></b></a> · <a href="#" id="themeBtn" class="thm" aria-label="Світла тема"></a> · неофіційний фан-проєкт</div>
 <script id="pool" type="application/json">__POOL__</script>
 <script>
 (function(){
@@ -1048,7 +1048,7 @@ if(ONLINE&&/tgWebApp/.test(location.hash+location.search)){const sc=document.cre
 function tgFields(){return TGU?{tg_user_id:TGU.id,tg_name:([TGU.first_name,TGU.last_name].filter(Boolean).join(' ')||TGU.username||'').slice(0,64)}:{};}
 // «Поділитися карткою»: у Telegram — бот готує повідомлення з карткою (api/card, share) і відкривається вибір чату;
 // поза Telegram — системне меню з файлом картки; інакше — текст через t.me/share
-function shareTextLink(){const text=S.result?shareTextOf(S.result,true):document.getElementById('shareText').value;
+function shareTextLink(){const text=S.result?shareTextOf(S.result,true,true):document.getElementById('shareText').value;   // без квадратиків — вони для картки
   const url=`https://t.me/share/url?url=${encodeURIComponent(tgLink())}&text=${encodeURIComponent(text)}`;
   if(TG&&TG.openTelegramLink)TG.openTelegramLink(url);else window.open(url,'_blank');}
 document.getElementById('tgShareBtn').onclick=async()=>{const b=document.getElementById('tgShareBtn'),msg=document.getElementById('copyMsg');if(!S.result)return;
@@ -1059,7 +1059,7 @@ document.getElementById('tgShareBtn').onclick=async()=>{const b=document.getElem
     try{const r=await _fetch('/api/card',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({initData:TG.initData,image:CARD_CANVAS.toDataURL('image/jpeg',0.9),caption:shareTextOf(S.result,true,true),share:true})});
       const j=await r.json().catch(()=>({}));b.disabled=false;
       if(j.ok&&j.prepared){msg.textContent='';TG.shareMessage(j.prepared,ok=>{msg.textContent=ok?'Надіслано':'';});return;}
-      if(j.need_start){msg.textContent='Спочатку відкрий чат з @'+TG_BOT+' і натисни «Start» — тоді картку можна буде надсилати.';return;}
+      if(j.need_start){msg.innerHTML='Спочатку відкрий чат з ботом і натисни «Start», потім спробуй ще раз. <button class="ghost" id="openBotBtn" style="padding:4px 10px">Відкрити @'+TG_BOT+'</button>';document.getElementById('openBotBtn').onclick=()=>TG.openTelegramLink('https://t.me/'+TG_BOT+'?start=card');return;}
     }catch(e){b.disabled=false;}
     msg.textContent='Картку не вийшло — надсилаю текстом.';shareTextLink();return;}
   let canFile=false;try{canFile=!inTg&&!!navigator.canShare&&navigator.canShare({files:[new File([new Blob(['x'],{type:'image/png'})],'x.png',{type:'image/png'})]});}catch(e){}
@@ -1208,7 +1208,7 @@ document.getElementById('cardBtn').onclick=async()=>{try{await document.fonts.re
 document.getElementById('cardTgBtn').onclick=async()=>{const msg=document.getElementById('cardMsg'),b=document.getElementById('cardTgBtn');if(!CARD_CANVAS)return;b.disabled=true;msg.textContent='Надсилаємо…';
   try{const r=await _fetch('/api/card',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({initData:TG.initData,image:CARD_CANVAS.toDataURL('image/jpeg',0.9),caption:S.result?shareTextOf(S.result,false,true):''})});
     const j=await r.json().catch(()=>({}));
-    msg.textContent=j.ok?'Готово — картка в чаті з @'+TG_BOT+'.':j.need_start?'Спочатку відкрий чат з @'+TG_BOT+' і натисни «Start», потім спробуй ще раз.':'Не вдалося надіслати ('+String(j.error||r.status).slice(0,80)+').';}
+    if(j.need_start){msg.innerHTML='Спочатку відкрий чат з ботом і натисни «Start», потім спробуй ще раз. <button class="ghost" id="openBotBtn2" style="padding:4px 10px">Відкрити @'+TG_BOT+'</button>';document.getElementById('openBotBtn2').onclick=()=>TG.openTelegramLink('https://t.me/'+TG_BOT+'?start=card');}else msg.textContent=j.ok?'Готово — картка в чаті з @'+TG_BOT+'.':'Не вдалося надіслати ('+String(j.error||r.status).slice(0,80)+').';}
   catch(e){msg.textContent='Не вдалося надіслати: немає зв’язку.';}
   b.disabled=false;};
 document.getElementById('cardShareBtn').onclick=()=>{const msg=document.getElementById('cardMsg');if(!CARD_CANVAS)return;
@@ -1243,9 +1243,9 @@ function drawCard(r){
 }
 document.getElementById('replayBtn').onclick=()=>playSeason(null);
 // ---------- «Що нового»: коротко й по-людськи про останню версію (технічний журнал — CHANGELOG.md у репозиторії)
-const WHATSNEW={v:'0.47',date:'29.09.2026',items:[
-  ['ferris-wheel','Колесо живіше','Більші барабани, плавне гальмування, гравці з\'являються по черзі. Перекрутка — один перемикач: клуб, сезон або все.'],
-  ['swap-horizontal','Плавні переходи','Екрани виїжджають збоку, рейтинги з\'являються м\'яко.'],
+const WHATSNEW={v:'0.48',date:'29.09.2026',items:[
+  ['share-variant','Картка — у будь-який чат','«Поділитися карткою» тепер надсилає саме картинку сезону в обраний чат, навіть якщо ти ніколи не писав боту. Жодних кольорових квадратиків у тексті.'],
+  ['ferris-wheel','Колесо живіше','Більші барабани, плавне гальмування, гравці з\'являються по черзі. Перекрутка — один перемикач.'],
   ['bread-slice','Два нові секрети','Від Віті. Хтось скаже «паляниця», а хтось — по батькові.']]};
 function openNews(){const box=document.getElementById('viewBox');document.getElementById('viewTitle').textContent=`Що нового · версія ${WHATSNEW.v}`;
   document.getElementById('viewBody').innerHTML=`<div class="news">${WHATSNEW.items.map(([e,h,d])=>`<div class="ni">${ic(e,'lg')}<div><b>${esc(h)}</b><p>${esc(d)}</p></div></div>`).join('')}</div>`;
