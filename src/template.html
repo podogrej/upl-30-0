@@ -107,9 +107,9 @@ button.ghost{border-color:var(--line);background:transparent;color:var(--ink2);p
 .slot.target{animation:glow 1.1s ease-in-out infinite}@keyframes glow{0%,100%{box-shadow:0 0 0 2px var(--amber2)}50%{box-shadow:0 0 0 5px color-mix(in srgb,var(--amber2) 35%,transparent)}}
 .pl.on{border-color:var(--amber2);box-shadow:0 0 0 2px var(--amber2)}
 .squad{display:grid;gap:4px;margin-top:10px}
-.pl,.sqHead{display:grid;grid-template-columns:32px minmax(0,1fr) repeat(var(--nst,4),30px) var(--rtw,30px);gap:4px;}.noast,.sqHead.noast{--nst:3}.nor,.sqHead.nor{--rtw:0px}.sqHead b{font-weight:inherit}.sqHead i{display:none;font-style:normal}
-@media (max-width:360px){.pl,.sqHead{grid-template-columns:28px minmax(0,1fr) repeat(var(--nst,4),23px) var(--rtw,27px);gap:3px}.squad .pl{padding:8px}.sqHead{padding:0 9px;font-size:8px}.pl .nm{font-size:13.5px}.pl .st{font-size:11px}.pl .rt{font-size:14px}.sqHead b{display:none}.sqHead i{display:inline}}
-.sqHead{padding:0 11px;font-family:var(--font-body);font-size:9px;font-weight:600;line-height:1.15;color:var(--muted);letter-spacing:0;text-align:right;align-items:end;overflow-wrap:normal}.sqHead span:nth-child(-n+2){text-align:left}
+.pl,.sqHead{display:grid;grid-template-columns:32px minmax(0,1fr) repeat(var(--nst,4),29px) var(--rtw,38px);gap:4px;}.noast,.sqHead.noast{--nst:3}.nor,.sqHead.nor{--rtw:0px}.sqHead b{font-weight:inherit}.sqHead i{display:none;font-style:normal}
+@media (max-width:360px){.pl,.sqHead{grid-template-columns:28px minmax(0,1fr) repeat(var(--nst,4),23px) var(--rtw,32px);gap:3px}.squad .pl{padding:8px}.sqHead{padding:0 9px;font-size:8px}.pl .nm{font-size:13.5px}.pl .st{font-size:11px}.pl .rt{font-size:14px}.sqHead b{display:none}.sqHead i{display:inline}}
+.sqHead{padding:0 11px;font-family:var(--font-body);font-size:8.5px;letter-spacing:-.01em;font-weight:600;line-height:1.15;color:var(--muted);letter-spacing:0;text-align:right;align-items:end;overflow-wrap:normal}.sqHead span:nth-child(-n+2){text-align:left}
 .pl{align-items:center;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);cursor:pointer;text-align:left;font-weight:500}
 .pl:hover{border-color:var(--ink)}
 .pl[disabled]{opacity:.38;cursor:not-allowed}
@@ -149,7 +149,7 @@ details{border:1px solid var(--line);border-radius:var(--radius);padding:10px 14
 details[open]>*:not(summary){animation:dopen .22s ease-out}@keyframes dopen{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
 summary{transition:color .15s}details>summary:hover{color:var(--amber)}
 @media (prefers-reduced-motion:reduce){details[open]>*:not(summary){animation:none}}
-.foot .thm{display:inline-flex;vertical-align:-3px}.foot .thm .ico{width:15px;height:15px}
+.foot .thm{position:relative;display:inline-flex;align-items:center;justify-content:space-between;width:46px;height:24px;padding:0 5px;margin:0 2px;border-radius:12px;border:1px solid var(--line);background:var(--surface);vertical-align:middle;cursor:pointer;color:var(--muted);box-sizing:border-box}.foot .thm .ico{width:13px;height:13px;fill:currentColor;position:relative;z-index:1}.foot .thm::after{content:'';position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:var(--amber);transition:transform .2s ease}[data-theme="light"] .foot .thm::after{transform:translateX(22px)}.foot .thm .ico:first-child{color:var(--ink)}[data-theme="light"] .foot .thm .ico:first-child{color:var(--muted)}[data-theme="light"] .foot .thm .ico:last-child{color:var(--ink)}@media (prefers-reduced-motion:reduce){.foot .thm::after{transition:none}}
 summary{cursor:pointer;font-weight:600}
 .facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-block:10px}
 .fact{padding:8px 10px;border:1px solid var(--line);border-radius:8px}
@@ -480,7 +480,7 @@ td .sub{font-size:11px;color:var(--muted);margin-top:2px;display:flex;gap:6px;al
     </div>
 </div>
 <div class="overlay" id="viewBox" hidden><div class="box"><div class="vhead"><h3 id="viewTitle">Склад</h3><button class="ghost" id="viewClose">Закрити</button></div><div id="viewBody"></div></div></div>
-<div class="foot">30-0 УПЛ · <a href="#" id="newsBtn">Що нового у версії 0.50<b id="newsDot" hidden></b></a> · <a href="#" id="themeBtn" class="thm" aria-label="Світла тема"></a> · неофіційний фан-проєкт</div>
+<div class="foot">30-0 УПЛ · <a href="#" id="newsBtn">Що нового у версії 0.50<b id="newsDot" hidden></b></a> · <a href="#" id="themeBtn" class="thm" role="switch" aria-checked="false" aria-label="Світла тема"></a> · неофіційний фан-проєкт</div>
 <script id="pool" type="application/json">__POOL__</script>
 <script>
 (function(){
@@ -771,7 +771,7 @@ function renderWheel(){
   document.getElementById('wHint').textContent=`${cs.pos} місце в тому сезоні`+(S.format==='anti'?` · лише гравці з ${ANTI_MIN_APPS}+ матчами`:'');
   const rr=document.getElementById('rerollRow');rr.style.visibility='visible';rr.hidden=S.rerolls<=0;document.getElementById('rerollCnt').textContent=`↻ ${S.rerolls}`;
   const sq=document.getElementById('squad');sq.innerHTML='';
-  const hasAst=cs.pl.every(p=>p[8]!=null);sq.classList.toggle('noast',!hasAst);sq.classList.toggle('nor',!show);const hd=document.getElementById('sqHead');hd.classList.toggle('noast',!hasAst);hd.classList.toggle('nor',!show);hd.hidden=S.format==='anti';hd.innerHTML=`<span></span><span></span><span>Матчі</span><span>Голи</span>${hasAst?'<span title="Гольові передачі"><b>Асисти</b><i>Ас.</i></span>':''}<span title="Сухі матчі">Сухі</span><span>${show?'Рейт.':''}</span>`;
+  const hasAst=cs.pl.every(p=>p[8]!=null);sq.classList.toggle('noast',!hasAst);sq.classList.toggle('nor',!show);const hd=document.getElementById('sqHead');hd.classList.toggle('noast',!hasAst);hd.classList.toggle('nor',!show);hd.hidden=S.format==='anti';hd.innerHTML=`<span></span><span></span><span>Матчі</span><span>Голи</span>${hasAst?'<span title="Гольові передачі"><b>Асисти</b><i>Ас.</i></span>':''}<span title="Сухі матчі"><b>Сухарі</b><i>Сух.</i></span><span>${show?'Рейт.':''}</span>`;
   const anti=S.format==='anti';const list=[...cs.pl].map(p=>({p,ok:isOk(cs,p)})).sort((a,b)=>(b.ok-a.ok)||(anti?a.p[0].localeCompare(b.p[0],'uk'):sortR?b.p[2]-a.p[2]:(b.p[3]-a.p[3]||b.p[4]-a.p[4])));
   let sep=false;
   for(const {p,ok} of list){if(!ok&&!sep){sep=true;const h=document.createElement('div');h.className='muted';h.style.cssText='font-size:12px;margin:8px 0 2px';h.textContent=S.taken.size?'Позиція зайнята або не підходить — переставте когось у складі, щоб відкрити':'Не підходять під вільні позиції';sq.appendChild(h);}
@@ -1273,7 +1273,7 @@ function openNews(){const box=document.getElementById('viewBox');document.getEle
   box.hidden=false;lsSet('upl30_news_seen',WHATSNEW.v);document.getElementById('newsDot').hidden=true;}
 document.getElementById('newsBtn').onclick=e=>{e.preventDefault();openNews();};
 // тема: темна за замовчуванням, світла — перемикачем у підвалі (вибір пам'ятаємо)
-function themeLabel(){const b=document.getElementById('themeBtn'),l=document.documentElement.dataset.theme==='light';b.innerHTML=icon(l?'weather-night':'white-balance-sunny');b.title=b.ariaLabel=l?'Темна тема':'Світла тема';}
+function themeLabel(){const b=document.getElementById('themeBtn'),l=document.documentElement.dataset.theme==='light';b.innerHTML=icon('weather-night')+icon('white-balance-sunny');b.title=l?'Світла тема · натисни для темної':'Темна тема · натисни для світлої';b.ariaLabel='Світла тема';b.setAttribute('aria-checked',String(l));}   // перемикач: ліворуч місяць (темна), праворуч сонце (світла)
 document.getElementById('themeBtn').onclick=e=>{e.preventDefault();const th=document.documentElement.dataset.theme==='light'?'dark':'light';document.documentElement.dataset.theme=th;try{localStorage.setItem('upl30_theme',th);}catch(e){}themeLabel();
   try{const bg=getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();document.querySelector('meta[name=theme-color]')?.setAttribute('content',bg);if(TG){TG.setHeaderColor&&TG.setHeaderColor(bg);TG.setBackgroundColor&&TG.setBackgroundColor(bg);}}catch(e){}};
 themeLabel();
