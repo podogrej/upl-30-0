@@ -4,7 +4,7 @@
 // GET ?chat=ID: дані ліги для картки в грі.
 const L = (() => {   // спільні функції (вбудовано, щоб файл не залежав від інших)
 const crypto = require('crypto');
-const SB_URL = 'https://qruhcbwycrnfgzzdbljr.supabase.co';
+const SB_URL = (process.env.SUPABASE_URL || 'https://qruhcbwycrnfgzzdbljr.supabase.co').trim();   // у тестовому оточенні Vercel — адреса тестової бази
 const env = k => String(process.env[k] || '').replace(/\s+/g, '');
 const esc = s => String(s == null ? '' : s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
 

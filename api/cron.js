@@ -2,7 +2,7 @@
 // Пише в групу один раз на день і лише якщо хтось грав. Повторний виклик нічого не надсилає.
 const L = (() => {   // спільні функції (вбудовано, щоб файл не залежав від інших)
 const crypto = require('crypto');
-const SB_URL = 'https://qruhcbwycrnfgzzdbljr.supabase.co';
+const SB_URL = (process.env.SUPABASE_URL || 'https://qruhcbwycrnfgzzdbljr.supabase.co').trim();   // у тестовому оточенні Vercel — адреса тестової бази
 const env = k => String(process.env[k] || '').replace(/\s+/g, '');
 const esc = s => String(s == null ? '' : s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
 
@@ -125,7 +125,32 @@ module.exports = async (req, res) => {
       await L.sb('league_boards?on_conflict=chat_id,day', { method: 'POST', prefer: 'resolution=merge-duplicates,return=minimal', body: { chat_id, day, summary_sent: true } });
       done.push(chat_id);
     }
-    res.status(200).json({ ok: true, day, summaries: done.length });
+    // недільний підсумок тижня (пн–нд за Києвом): сума очків і перемоги в днях
+    const weekly = [];
+    const wd = (new Date(Date.UTC(+day.slice(0, 4), +day.slice(5, 7) - 1, +day.slice(8, 10))).getUTCDay() + 6) % 7;
+    if (wd === 6 || (req.query && req.query.week === '1')) {
+      const add = (d, n) => new Date(Date.UTC(+d.slice(0, 4), +d.slice(5, 7) - 1, +d.slice(8, 10)) + n * 864e5).toISOString().slice(0, 10);
+      const from = add(day, -wd);
+      const wrows = await L.sb(`league_results?day=gte.${from}&day=lte.${day}&select=chat_id,day,tg_user_id,name,pts,gf,ga,created_at`) || [];
+      const byChat = {}; for (const r of wrows) (byChat[r.chat_id] = byChat[r.chat_id] || []).push(r);
+      for (const [chat_id, rows] of Object.entries(byChat)) {
+        const [b] = await L.sb(`league_boards?chat_id=eq.${chat_id}&day=eq.${day}&select=weekly_sent`) || [];
+        if (b && b.weekly_sent) continue;
+        const [lg] = await L.sb(`leagues?chat_id=eq.${chat_id}&select=title`) || [];
+        const byDay = {}; for (const r of rows) (byDay[r.day] = byDay[r.day] || []).push(r);
+        const st = {};
+        for (const list of Object.values(byDay)) { list.sort(L.sortRes); list.forEach((r, i) => { const s = st[r.tg_user_id] || (st[r.tg_user_id] = { name: r.name, pts: 0, days: 0, wins: 0 }); s.pts += r.pts; s.days++; s.name = r.name; if (i === 0) s.wins++; }); }
+        const tab = Object.values(st).sort((a, b) => b.pts - a.pts || b.wins - a.wins);
+        const medal = ['🥇', '🥈', '🥉'];
+        let t = `<b>📅 Підсумок тижня ${L.dayShort(from)}–${L.dayShort(day)} — ліга «${L.esc(lg ? lg.title : '')}»</b>\n(сума очків за всі виклики тижня)\n\n`;
+        t += tab.map((s, i) => `${medal[i] || (i + 1) + '.'} ${L.esc(s.name)} — <b>${s.pts}</b> за ${s.days} ${s.days === 1 ? 'день' : s.days < 5 ? 'дні' : 'днів'}${s.wins ? `, перемог: ${s.wins}` : ''}`).join('\n');
+        t += `\n\n🏅 Гравець тижня: <b>${L.esc(tab[0].name)}</b>. Новий тиждень — з понеділка!`;
+        await L.tg('sendMessage', { chat_id, text: t, parse_mode: 'HTML', reply_markup: L.playKb(chat_id), disable_web_page_preview: true });
+        await L.sb('league_boards?on_conflict=chat_id,day', { method: 'POST', prefer: 'resolution=merge-duplicates,return=minimal', body: { chat_id, day, weekly_sent: true } });
+        weekly.push(chat_id);
+      }
+    }
+    res.status(200).json({ ok: true, day, summaries: done.length, weekly: weekly.length });
   } catch (e) {
     res.status(500).json({ error: String(e && e.message || e).slice(0, 200) });
   }

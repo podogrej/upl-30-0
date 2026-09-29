@@ -2,7 +2,7 @@
 // Перевіряє підпис Telegram (Mini App initData, віджет входу або вхід через бота login_token) і видає одноразовий токен входу Supabase.
 // Змінні оточення у Vercel: TG_TOKEN (токен бота), SUPABASE_SERVICE_KEY (Supabase → Settings → API Keys → secret key).
 const crypto = require('crypto');
-const SB_URL = 'https://qruhcbwycrnfgzzdbljr.supabase.co';
+const SB_URL = (process.env.SUPABASE_URL || 'https://qruhcbwycrnfgzzdbljr.supabase.co').trim();   // у тестовому оточенні Vercel — адреса тестової бази
 
 const hmac = (key, data) => crypto.createHmac('sha256', key).update(data).digest();
 

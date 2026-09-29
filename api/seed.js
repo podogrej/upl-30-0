@@ -2,7 +2,7 @@
 // Браузер надсилає зібраний склад перед симуляцією; сервер запам'ятовує склад і видає випадковий seed.
 // Так результат не можна «підібрати» перебором seed у себе, а сервер потім перерахує сезон (/api/verify).
 const crypto = require('crypto');
-const SB_URL = 'https://qruhcbwycrnfgzzdbljr.supabase.co';
+const SB_URL = (process.env.SUPABASE_URL || 'https://qruhcbwycrnfgzzdbljr.supabase.co').trim();   // у тестовому оточенні Vercel — адреса тестової бази
 const env = k => String(process.env[k] || '').replace(/\s+/g, '');
 async function sb(path, { method = 'GET', body, prefer } = {}) {
   const key = env('SUPABASE_SERVICE_KEY');

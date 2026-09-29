@@ -2,7 +2,7 @@
 // Змінні оточення у Vercel: TG_TOKEN, TG_SECRET, TG_BOT, SUPABASE_SERVICE_KEY
 const L = (() => {   // спільні функції (вбудовано, щоб файл не залежав від інших)
 const crypto = require('crypto');
-const SB_URL = 'https://qruhcbwycrnfgzzdbljr.supabase.co';
+const SB_URL = (process.env.SUPABASE_URL || 'https://qruhcbwycrnfgzzdbljr.supabase.co').trim();   // у тестовому оточенні Vercel — адреса тестової бази
 const env = k => String(process.env[k] || '').replace(/\s+/g, '');
 const esc = s => String(s == null ? '' : s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
 
@@ -95,7 +95,7 @@ async function upsertBoard(chat_id, day, { forceNew = false } = {}) {
 return { SB_URL, env, esc, tg, sb, kyivDate, dayNo, dayShort, checkMiniApp, nameOf, playUrl, playKb, sortRes, standings, boardText, upsertBoard };
 })();
 const SITE = 'https://upl-30-0.vercel.app/';
-const SB_KEY = 'sb_publishable_pEszTOPsCHLgpiPpwB4JKg_SS-X07hY'; // публічний ключ, як і на сайті
+const SB_KEY = (process.env.SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_pEszTOPsCHLgpiPpwB4JKg_SS-X07hY').trim(); // публічний ключ, як і на сайті
 
 function playButton(isPrivate) {
   // у приватному чаті — кнопка Mini App; у групах Telegram такі кнопки не дозволяє, тож посилання на головний Mini App бота
@@ -149,6 +149,11 @@ module.exports = async (req, res) => {
         // вхід на сайт через бота: браузер відкрив t.me/upl30_bot?start=login_<токен>, прив'язуємо токен до цього Telegram-акаунта
         const f = m.from || {};
         await L.sb('tg_logins?on_conflict=token', { method: 'POST', prefer: 'resolution=ignore-duplicates,return=minimal', body: { token: arg.slice(6), tg_id: f.id, first_name: f.first_name || null, last_name: f.last_name || null, username: f.username || null } });
+        // бот один на обидві бази: якщо у Vercel задано тестову базу, той самий токен входу пишемо й туди — тоді вхід через бота працює і на тестовому сайті
+        const tUrl = String(process.env.TEST_SUPABASE_URL || '').trim(), tKey = String(process.env.TEST_SUPABASE_SERVICE_KEY || '').replace(/\s+/g, '');
+        if (tUrl && tKey) {
+          try { await fetch(`${tUrl}/rest/v1/tg_logins?on_conflict=token`, { method: 'POST', headers: { apikey: tKey, Authorization: `Bearer ${tKey}`, 'Content-Type': 'application/json', Prefer: 'resolution=ignore-duplicates,return=minimal' }, body: JSON.stringify({ token: arg.slice(6), tg_id: f.id, first_name: f.first_name || null, last_name: f.last_name || null, username: f.username || null }) }); } catch (e) {}
+        }
         await L.tg('sendMessage', { chat_id: chat.id, text: '✅ Вхід підтверджено. Повернись у браузер — гра вже знає, що це ти.\n\nЯкщо ти не намагався увійти на upl-30-0.vercel.app, просто проігноруй це повідомлення.' });
       } else if (cmd === '/start' || cmd === '/help') {
         await L.tg('sendMessage', { chat_id: chat.id, text: isPrivate ? HELLO : GROUP_HELLO, reply_markup: { inline_keyboard: [[playButton(isPrivate)]] } });
