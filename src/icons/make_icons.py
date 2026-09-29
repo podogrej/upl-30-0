@@ -7,7 +7,7 @@ ROOT=sys.argv[1] if len(sys.argv)>1 else '/usr/local/lib/python3.11/dist-package
 SRC=os.path.join(os.path.dirname(os.path.abspath(__file__)),'..')
 UI=['trophy','fire','snowflake','sword-cross','calendar-star','ferris-wheel','soccer-field','format-list-numbered','share-variant','send',
     'account-circle','bullhorn','lock-open-variant','chart-bar','incognito','eye','check-circle','check-decagram','handshake','content-copy','image',
-    'star','lock','google','star-four-points','account-group','new-box','chart-box','medal','crown','home','chevron-right']
+    'star','lock','google','star-four-points','account-group','new-box','chart-box','medal','crown','home','chevron-right','weather-night','white-balance-sunny']
 TR={ # трофей → гліф
  'champ':'trophy','top3':'star','unbeaten':'shield-star','perfect':'diamond-stone','mid8':'scale-balance','relegated':'trending-down',
  'goals80':'soccer','fortress':'wall','iron':'door-closed-lock','nodraw':'sword-cross','sieve':'dots-grid','lucky':'clover','unlucky':'weather-pouring',
@@ -33,7 +33,7 @@ const ICO={json.dumps(ICO,separators=(',',':'))};
 function icon(n){{const x=ICO[n];return x?`<svg class="ico" viewBox="${{x[0]}}" aria-hidden="true"><path d="${{x[1]}}"/></svg>`:'';}}
 function ic(n,cls){{return `<i class="ic${{cls?' '+cls:''}}">${{icon(n)}}</i>`;}}   // стиль C: іконка в помаранчевій плитці
 const TR_GLYPH={json.dumps(TR,separators=(',',':'))};
-const TR_COL={{season:'var(--gk)',squad:'var(--mf)',players:'var(--amber)',modes:'var(--fw)',daily:'var(--df)',secret:'#a77ee6',milestone:'var(--gk)'}};
+const TR_COL={{season:'color-mix(in srgb,var(--gk) 58%,var(--muted))',squad:'color-mix(in srgb,var(--mf) 58%,var(--muted))',players:'color-mix(in srgb,var(--amber) 62%,var(--muted))',modes:'color-mix(in srgb,var(--fw) 58%,var(--muted))',daily:'color-mix(in srgb,var(--df) 58%,var(--muted))',secret:'color-mix(in srgb,#a77ee6 60%,var(--muted))',milestone:'color-mix(in srgb,var(--gk) 58%,var(--muted))'}};   // приглушені кольори категорій
 const HEX_D='M50 3 L91 26.5 V73.5 L50 97 L9 73.5 V26.5 Z';
 // значок трофея (T3): шестикутник кольору категорії, гліф усередині; закритий — сірий із замком
 function trBadge(t,got){{const g=ICO[TR_GLYPH[t.id]]||ICO.trophy;const l=ICO.lock;
