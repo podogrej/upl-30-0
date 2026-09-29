@@ -34,7 +34,7 @@ const extra = body.filter(n => n.type !== 'FunctionDeclaration' && n.type !== 'V
   .filter(t => /^for\(const c of DATA\.clubs\)\{const r=c\.pl/.test(t) || /^MODES\.daily=/.test(t) || /^for\(const f in FORMATIONS\)FORMATIONS\[f\]\.slots=/.test(t));
 if (extra.length !== 3) throw new Error('extra statements not found: ' + extra.length);
 const pool = fs.readFileSync(ROOT + '/src/pool.json', 'utf8');
-const VERSION = (html.match(/версія ([\d.]+)/) || [])[1] || '?';
+const VERSION = (html.match(/версі[яї] ([\d.]+)/) || [])[1] || '?';   // підвал: «Що нового у версії X.YY»
 const mod = `// ЗГЕНЕРОВАНО tools/make_engine.js з template.html — не редагувати вручну. Рушій симуляції 30-0 УПЛ для сервера.
 'use strict';
 const DATA = ${pool};

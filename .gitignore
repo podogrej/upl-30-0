@@ -4,3 +4,4 @@ dist/
 *.pyc
 tools/tests/*.png
 tools/tests/preview.html
+tools/tests/out/
