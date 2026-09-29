@@ -1,31 +1,34 @@
-const { chromium } = require('playwright');
-(async()=>{const b=await chromium.launch({args:['--no-sandbox']});
- const DB={challenges:[],challenge_results:[]};let errs=0;
- async function page(){const ctx=await b.newContext({viewport:{width:430,height:900}});const pg=await ctx.newPage();
-  pg.on('pageerror',e=>{errs++;console.log('PAGEERROR',e.message)});
-  await pg.route('https://cdn.jsdelivr.net/**',r=>r.fulfill({contentType:'application/javascript',body:'window.supabase={createClient(){return {auth:{onAuthStateChange(){},async getSession(){return {data:{session:null}}}}}}};'}));
-  await pg.route('**/rest/v1/**',async r=>{const req=r.request();const u=new URL(req.url());const t=u.pathname.split('/').pop();
-    if(DB[t]){if(req.method()==='POST'){DB[t].push(JSON.parse(req.postData()));return r.fulfill({status:201,body:''});}
-      const f=[...u.searchParams].filter(([k,v])=>v.startsWith('eq.'));return r.fulfill({status:200,contentType:'application/json',body:JSON.stringify(DB[t].filter(x=>f.every(([k,v])=>String(x[k])===v.slice(3))))});}
-    if(req.method()==='POST')return r.fulfill({status:201,contentType:'application/json',body:'[{"id":1}]'});
-    return r.fulfill({status:200,contentType:'application/json',body:'[]'});});
-  return pg;}
- async function draft(pg){const seen=[];for(let i=0;i<11;i++){await pg.click('#spinBtn');await pg.waitForTimeout(1750);seen.push(await pg.textContent('#reelClub .strip')+' '+await pg.textContent('#reelYear .strip'));const btn=await pg.$('.pl:not([disabled])');await btn.click();await pg.waitForTimeout(80);const pick=await pg.$('#pitch .slot.target');if(pick){await pick.click();await pg.waitForTimeout(60);}}
-   await pg.click('#lockBtn');await pg.waitForSelector('#simBtn:not([hidden])');await pg.click('#simBtn');await pg.click('#skipBtn');await pg.waitForTimeout(600);return seen;}
- // A plays and creates challenge
- const A=await page();await A.goto('http://localhost:8765/preview.html');await A.waitForTimeout(500);
- await A.evaluate(()=>localStorage.setItem('upl30_nick','Андрій'));
- await A.evaluate(()=>{const s=document.getElementById('s4');if(s&&s.hidden)document.getElementById('freeOpen').click();});await A.click('#formations .opt:nth-child(3)');await A.evaluate(()=>{const s=document.getElementById('s4');if(s&&s.hidden)document.getElementById('freeOpen').click();});await A.click('#startBtn');const seenA=await draft(A);
- console.log('A result', (await A.textContent('#sumTiles .tile b')), 'chalBox visible', !(await A.$eval('#chalBox',e=>e.hidden)));
- await A.fill('#chalName','Андрій');await A.click('#chalCopyBtn');await A.waitForTimeout(400);console.log('A msg', await A.textContent('#chalMsg'));
- const id=DB.challenges[0].id;console.log('challenge row', JSON.stringify(DB.challenges[0]));
- // B opens link
- const B=await page();await B.goto('http://localhost:8765/preview.html?c='+id);await B.waitForTimeout(800);
- await B.evaluate(()=>localStorage.setItem('upl30_nick','Сергій'));
- console.log('B card', (await B.$eval('#chalCard',e=>e.hidden?'hidden':e.textContent.replace(/\s+/g,' ').trim())).slice(0,200));
- await B.click('#chalGo');console.log('B label', await B.textContent('#modeLabel'));const seenB=await draft(B);
- console.log('same wheel', JSON.stringify(seenA)===JSON.stringify(seenB), '| first spins A', seenA.slice(0,3), 'B', seenB.slice(0,3));
- console.log('B line', await B.$eval('#chalLine',e=>e.hidden?'hidden':e.textContent));
- console.log('results rows', JSON.stringify(DB.challenge_results));
- await B.click('#againBtn');await B.waitForTimeout(600);console.log('B card after', (await B.textContent('#chalCard')).replace(/\s+/g,' ').slice(0,220));
- console.log('errors',errs);await b.close();})();
+// Виклик другові: A грає класику й створює виклик, B відкриває ?c=…, бачить картку, грає те саме колесо (ті самі клуби й сезони),
+// бачить порівняння, результат B пишеться в challenge_results і з'являється в картці. База — у пам'яті.
+// Запуск з кореня: node tools/tests/chal.js
+const {launch,makeDB,openSite,draftSeason,checker}=require('./_site.js');
+(async()=>{const T=checker('chal');const b=await launch();
+ const db=makeDB({challenges:{pk:['id']},challenge_results:{auto:'id'},seasons:{auto:'id'}});const DB=db.DB;
+ const spins=pg=>{const seen=[];return [seen,async()=>seen.push(await pg.evaluate(()=>{const w=window.__dbg.S.wheel;return w.n+' '+w.y;}))];};
+ // A: вільна класика, схема 3
+ const A=await openSite({b,db});await A.pg.evaluate(()=>localStorage.setItem('upl30_nick','"Андрій"'));
+ await A.pg.click('#freeOpen');await A.pg.click('#formats .opt:nth-child(1)');await A.pg.click('#formations .opt:nth-child(3)');await A.pg.click('#startBtn');
+ const [seenA,onA]=spins(A.pg);await draftSeason(A.pg,onA);
+ T.check(await A.pg.$eval('#chalBox',e=>!e.hidden),'A: після класики є блок «Виклик другові»');
+ await A.pg.fill('#chalName','Андрій');await A.pg.click('#chalCopyBtn');await A.pg.waitForTimeout(500);
+ const msgA=await A.pg.textContent('#chalMsg');const row=DB.challenges[0];
+ T.check(row&&/\?c=/.test(msgA)&&msgA.includes(row.id),'A: виклик створено, посилання показано ('+msgA.slice(0,70)+')');
+ const rA=await A.pg.evaluate(()=>{const S=window.__dbg.S;return {pts:S.result.pts,formation:S.formation,mode:S.mode,year:S.result.year};});
+ T.check(row&&row.name==='Андрій'&&row.pts===rA.pts&&row.formation===rA.formation&&row.mode===rA.mode&&row.year===rA.year&&row.seed>0,'A: рядок challenges збігається з сезоном');
+ // B відкриває посилання
+ const B=await openSite({b,db,query:'?c='+row.id,wait:1500});await B.pg.evaluate(()=>localStorage.setItem('upl30_nick','"Сергій"'));
+ const card=await B.pg.$eval('#chalCard',e=>e.hidden?'':e.textContent.replace(/\s+/g,' ').trim());
+ T.check(card.includes('Андрій')&&card.includes(String(row.pts))&&card.includes(row.formation),'B: картка виклику ('+card.slice(0,80)+')');
+ await B.pg.click('#chalGo');const label=await B.pg.textContent('#modeLabel');
+ T.check(label.startsWith('Виклик')&&label.includes(row.formation),'B: підпис драфту «'+label+'»');
+ const [seenB,onB]=spins(B.pg);await draftSeason(B.pg,onB);
+ T.check(seenA.length===11&&JSON.stringify(seenA)===JSON.stringify(seenB),'те саме колесо: '+seenA.slice(0,3).join(', ')+' …');
+ T.check(await B.pg.evaluate(()=>window.__dbg.S.result.year)===row.year,'B: ті самі суперники (сезон '+row.year+')');
+ const line=await B.pg.$eval('#chalLine',e=>e.hidden?'':e.textContent);T.check(/Ти \d+ : \d+ Андрій/.test(line),'B: рядок порівняння «'+line+'»');
+ T.check(await B.pg.$eval('#chalBox',e=>!e.hidden),'B: може кинути свій виклик далі');
+ await B.pg.waitForTimeout(600);const res=DB.challenge_results;
+ T.check(res.length===1&&res[0].challenge_id===row.id&&res[0].name==='Сергій','B: результат записано в challenge_results');
+ await B.pg.click('#againBtn');await B.pg.waitForTimeout(600);
+ const after=await B.pg.$eval('#chalCard',e=>e.hidden?'':e.textContent.replace(/\s+/g,' '));T.check(after.includes('Сергій'),'B: картка після гри показує результат Сергія');
+ T.check(!A.errs.length&&!B.errs.length,'помилок на сторінках немає '+[...A.errs,...B.errs].join(' | '));
+ await b.close();process.exit(T.done());})();

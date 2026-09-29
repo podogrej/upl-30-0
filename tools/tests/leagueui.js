@@ -1,24 +1,30 @@
-const { chromium } = require('playwright');
-(async()=>{const b = await chromium.launch({args:['--no-sandbox']});
- const pg = await (await b.newContext({viewport:{width:430,height:900}})).newPage();
- let errs=0; pg.on('pageerror', e => {errs++; console.log('PAGEERROR', e.message);});
- const posts=[];
- await pg.route('https://cdn.jsdelivr.net/**', r=>r.fulfill({contentType:'application/javascript',body:`window.supabase={createClient(){let cb;return {auth:{onAuthStateChange(f){cb=f},async getSession(){return {data:{session:null}}},async verifyOtp(){setTimeout(()=>cb('SIGNED_IN',{access_token:'AT',user:{id:'u1',email:'tg-1@users.upl-30-0.vercel.app',user_metadata:{full_name:'Андрій'},app_metadata:{}}}),20);return {error:null}}}}}};`}));
- await pg.route('https://telegram.org/js/telegram-web-app.js', r => r.fulfill({contentType:'application/javascript', body:`window.Telegram={WebApp:{initData:'user=x&hash=abc',initDataUnsafe:{user:{id:1,first_name:'Андрій'},start_param:'g-100555'},colorScheme:'dark',ready(){},expand(){},openTelegramLink(){}}};`}));
- await pg.route('**/api/auth', r=>r.fulfill({status:200,contentType:'application/json',body:'{"token_hash":"TH"}'}));
- let today=[{name:'Сергій',w:20,d:5,l:5,pts:65,gf:60,ga:30}];
- await pg.route('**/api/league**', r=>{const req=r.request();if(req.method()==='POST'){posts.push(req.postData());const j=JSON.parse(req.postData());if(j.result)today.unshift({name:'Андрій',...j.result});return r.fulfill({status:200,contentType:'application/json',body:JSON.stringify({ok:true,joined:[],posted:j.result?['Футбол по середах']:[]})});}
-   return r.fulfill({status:200,contentType:'application/json',body:JSON.stringify({title:'Футбол по середах',day:'2026-09-28',today,members:3,standings:[{name:'Сергій',wins:2},{name:'Андрій',wins:1}]})});});
- await pg.route('**/rest/v1/**', r=>r.fulfill({status:200,contentType:'application/json',body:'[]'}));
- await pg.goto('http://localhost:8765/preview.html#tgWebAppData=x'); await pg.waitForTimeout(1200);
- console.log('card', await pg.$eval('#leagueCard',e=>e.hidden?'hidden':e.textContent.replace(/\s+/g,' ').trim().slice(0,200)));
- await pg.screenshot({path:'s_league.png'});
- await pg.click('#leagueGo');
- for (let i=0;i<11;i++){ await pg.click('#spinBtn'); await pg.waitForTimeout(1750); const btn = await pg.$('.pl:not([disabled])'); await btn.click(); await pg.waitForTimeout(80); const pick=await pg.$('#pitch .slot.target'); if(pick){await pick.click(); await pg.waitForTimeout(60);} }
- await pg.click('#lockBtn');await pg.waitForSelector('#simBtn:not([hidden])');await pg.click('#simBtn'); await pg.click('#skipBtn'); await pg.waitForTimeout(2200);
- console.log('leagueMsg', await pg.$eval('#leagueMsg',e=>e.hidden?'hidden':e.textContent));
- console.log('posts', posts.map(p=>p.slice(0,40)+' … '+(JSON.parse(p).result?JSON.stringify(JSON.parse(p).result).slice(0,160):'join')));
- await pg.click('#againBtn'); await pg.waitForTimeout(400);
- console.log('card after', await pg.$eval('#leagueCard',e=>e.textContent.replace(/\s+/g,' ').trim().slice(0,220)));
- console.log('google btn?', await pg.evaluate(()=>typeof AUTH_GOOGLE));
- console.log('errors',errs);await b.close();})();
+// Ліга групи в Telegram Mini App (Telegram, /api/league і /api/auth підроблені): гру відкрито з кнопки групи (start_param g-…) →
+// вступ у лігу й картка ліги на головній; тихий вхід через Telegram; виклик дня → результат іде в /api/league і показується в табло.
+// Запуск з кореня: node tools/tests/leagueui.js [папка для знімків]
+const path=require('path'),fs=require('fs');const {ROOT,makeDB,openSite,draftSeason,checker}=require('./_site.js');
+const OUT=process.argv[2]||path.join(ROOT,'tools','tests','out');fs.mkdirSync(OUT,{recursive:true});
+(async()=>{const T=checker('ліга');const posts=[],auth=[];
+ let today=[{name:'Сергій',w:20,d:5,l:5,pts:65,gf:60,ga:30}];let getChat=null;
+ const api={
+  '/api/auth':async req=>{auth.push(req.body);return {json:{token_hash:'TH'}};},
+  '/api/league':async req=>{if(req.method==='POST'){posts.push(req.body);if(req.body.result)today.unshift({name:'Андрій',...req.body.result});return {json:{ok:true,joined:[],posted:req.body.result?['Футбол по середах']:[]}};}
+    getChat=req.url.searchParams.get('chat');return {json:{title:'Футбол по середах',day:'2026-09-28',today,members:3,standings:[{name:'Сергій',wins:2},{name:'Андрій',wins:1}]}};}};
+ const tg={initData:'user=x&hash=abc',initDataUnsafe:{user:{id:1,first_name:'Андрій'},start_param:'g-100555'},colorScheme:'dark',platform:'android'};
+ const {b,pg,errs}=await openSite({db:makeDB({}),api,tg,hash:'#tgWebAppData=x',viewport:{width:430,height:900},wait:1800});
+ const card=await pg.$eval('#leagueCard',e=>e.hidden?'':e.textContent.replace(/\s+/g,' ').trim());
+ T.check(card.includes('«Футбол по середах»')&&card.includes('Сергій')&&/Сьогодні зіграли 1 з 3/.test(card),'картка ліги: '+card.slice(0,90));
+ T.check(getChat==='-100555','картку взято для чату з start_param ('+getChat+')');
+ T.check(posts.length>=1&&posts[0].initData==='user=x&hash=abc'&&!posts[0].result,'вступ у лігу: POST /api/league з initData');
+ T.check(auth.length===1&&auth[0].initData==='user=x&hash=abc','тихий вхід: /api/auth з initData');
+ T.check(/Андрій/.test(await pg.textContent('#acctBtn')),'після входу в шапці ім\'я: '+(await pg.textContent('#acctBtn')).trim());
+ await pg.click('#acctBtn');await pg.waitForTimeout(200);T.check(!(await pg.$('#acctG')),'у Telegram немає кнопки Google');await pg.click('#viewClose');
+ await pg.screenshot({path:path.join(OUT,'league_home.png')});
+ await pg.click('#leagueGo');T.check(/Виклик дня/.test(await pg.textContent('#modeLabel')),'«Зіграти виклик дня» з картки ліги відкриває виклик дня');
+ await draftSeason(pg);await pg.waitForTimeout(1500);
+ const res=posts.find(p=>p.result);T.check(res&&res.result.day&&typeof res.result.pts==='number'&&res.result.formation,'результат дня надіслано в лігу: '+(res?JSON.stringify(res.result).slice(0,100):'—'));
+ const msg=await pg.$eval('#leagueMsg',e=>e.hidden?'':e.textContent);T.check(/табло групи: «Футбол по середах»/.test(msg),'повідомлення: '+msg);
+ await pg.click('#againBtn');await pg.waitForTimeout(600);
+ const after=await pg.$eval('#leagueCard',e=>e.textContent.replace(/\s+/g,' ').trim());
+ T.check(/Сьогодні зіграли 2 з 3/.test(after)&&/уже в табло групи/.test(after)&&!(await pg.$('#leagueGo')),'картка після гри: '+after.slice(0,90));
+ T.check(!errs.length,'помилок на сторінці немає '+errs.join(' | '));
+ await b.close();process.exit(T.done());})();
