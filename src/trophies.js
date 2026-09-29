@@ -99,17 +99,24 @@ const TROPHIES=[
   {id:"talk",i:"🎤",n:"Вийдемо, поговоримо",q:"Блохін",d:"Чемпіон, але двічі програв одній команді",cat:"secret",sec:1,t:c=>{if(!notAnti(c)||c.r.place!==1)return false;const m={};for(const x of LOG(c))if(x.res==='L')m[x.opp]=(m[x.opp]||0)+1;return Object.values(m).some(v=>v>=2);}},
   {id:"pyvo",i:"🍺",n:"По пиву?",d:"Алієв і Мілевський в одному складі",cat:"secret",sec:1,t:c=>c.xi.some(x=>x.id==='tm:9796')&&c.xi.some(x=>x.id==='tm:9800')},
   {id:"palianytsia",i:"🍞",n:"Скажи «паляниця»",d:"Олександр Паляниця у складі",cat:"secret",sec:1,t:c=>c.xi.some(x=>x.id==='w:1972-02-29:palianitsia')},
-  {id:"oleksandry",i:"👥",n:"Олександрія",d:"9+ Олександрів в одному складі",cat:"secret",sec:1,t:c=>c.xi.filter(x=>firstName(x.name)==='Олександр').length>=9},
+  {id:"oleksandry",i:"👥",n:"Олександрія",d:"11 Олександрів в одному складі",cat:"secret",sec:1,t:c=>c.xi.filter(x=>firstName(x.name)==='Олександр').length>=11},
   {id:"zarobitchany",i:"🧳",n:"Заробітчани",d:"5+ українців, які грали в клубах Європи",cat:"secret",sec:1,t:c=>c.xi.filter(x=>ABROAD.has(x.id)).length>=5},
   {id:"trio",i:"🍻",n:"Третім будеш?",d:"Алієв, Мілевський і Бухал в одному складі",cat:"secret",sec:1,t:c=>['tm:9796','tm:9800','tm:381268'].every(id=>c.xi.some(x=>x.id===id))},
   {id:"rada",i:"🏛️",n:"Верховна Рада",d:"6+ гравців із прізвищами народних депутатів",cat:"secret",sec:1,t:c=>c.xi.filter(x=>RADA.has(normSur(x.name))).length>=6},
   // «рекорди ганьби» в класиці (з 0.50: у звичайних режимах слабка команда не має нижньої межі сили; в антисезоні — має)
-  {id:"ga150",i:"🍝",n:"Друшляк",d:"Пропусти 150+ голів за сезон",cat:"secret",sec:1,t:c=>notAnti(c)&&c.r.ga>=150},
-  {id:"ga250",i:"🚪",n:"Ворота навстіж",d:"Пропусти 250+ голів за сезон",cat:"secret",sec:1,t:c=>notAnti(c)&&c.r.ga>=250},
-  {id:"ga400",i:"🎯",n:"Тир",d:"Пропусти 400+ голів за сезон",cat:"secret",sec:1,t:c=>notAnti(c)&&c.r.ga>=400},
+  {id:"ga150",i:"🍝",n:"Де тонко, там і рветься",d:"Пропусти 150+ голів за сезон",cat:"secret",sec:1,t:c=>notAnti(c)&&c.r.ga>=150},
+  {id:"ga250",i:"🚪",n:"День відчинених дверей",d:"Пропусти 250+ голів за сезон",cat:"secret",sec:1,t:c=>notAnti(c)&&c.r.ga>=250},
+  {id:"ga400",i:"🎯",n:"Гра в одні ворота",d:"Пропусти 400+ голів за сезон",cat:"secret",sec:1,t:c=>notAnti(c)&&c.r.ga>=400},
   {id:"ga600",i:"🤾",n:"Гандбольний рахунок",d:"Пропусти 600+ голів за сезон",cat:"secret",sec:1,t:c=>notAnti(c)&&c.r.ga>=600},
   {id:"ga800",i:"🏀",n:"Баскетбольний рахунок",d:"Пропусти 800+ голів за сезон",cat:"secret",sec:1,t:c=>notAnti(c)&&c.r.ga>=800},
-  {id:"ga1000",i:"💯",n:"Тисячник навпаки",d:"Пропусти 1000+ голів за сезон",cat:"secret",sec:1,t:c=>notAnti(c)&&c.r.ga>=1000},
+  {id:"ga1000",i:"💯",n:"Все буде добре",d:"Пропусти 1000+ голів за сезон",cat:"secret",sec:1,t:c=>notAnti(c)&&c.r.ga>=1000},
+  // тезки: 11 однакових імен — трофеї-назви населених пунктів (рішення власника 29.09.2026)
+  ...[['serhiivka','Сергій','Сергіївка'],['andriivka','Андрій','Андріївка'],['dmytrivka','Дмитро','Дмитрівка'],['yuriivka','Юрій','Юріївка'],['oleksiivka','Олексій','Олексіївка'],['maksymivka','Максим','Максимівка'],['romaniv','Роман','Романів'],['volodymyr','Володимир','Володимир']]
+    .map(([id,nm,town])=>({id,i:"📍",n:town,d:`11 гравців на ім'я ${nm} в одному складі`,cat:"secret",sec:1,t:c=>c.xi.filter(x=>firstName(x.name)===nm).length>=11})),
+  // цитати тренерів (пачка 2, вибір власника 29.09.2026)
+  {id:"money",i:"💸",n:"Гроші — це завжди друга справа",q:"Маркевич",d:"Чемпіон без жодного гравця «Динамо» і «Шахтаря»",cat:"secret",sec:1,t:c=>notAnti(c)&&c.r.place===1&&c.xi.length===11&&c.xi.every(x=>x.cc&&x.cc!=='dynamo-kyiv'&&x.cc!=='shakhtar-donetsk')},
+  {id:"simple",i:"⚽",n:"У футболі все просто: обіграв — забив",q:"Кварцяний",d:"Забий 90+ голів за сезон",cat:"secret",sec:1,t:c=>notAnti(c)&&c.r.gf>=90},
+  {id:"vodka",i:"🍶",n:"Серце легше переносить тонну горілки…",q:"Кварцяний",d:"Програй 10+ домашніх матчів",cat:"secret",sec:1,t:c=>notAnti(c)&&LOG(c).filter(m=>m.home&&m.res==='L').length>=10},
   {id:"tablo",i:"🔢",n:"Результат на табло",q:"Лобановський",d:"Чемпіон, забивши 45 або менше",cat:"secret",sec:1,t:c=>notAnti(c)&&c.r.place===1&&c.r.gf<=45},
 ];
 const MILESTONES=[[1,"🌱","Перший сезон"],[5,"⚽","5 сезонів"],[10,"🎫","10 сезонів"],[25,"🎗️","25 сезонів"],[50,"🥇","Півсотні"],[100,"💯","Клуб 100"],[250,"🏛️","250 сезонів"]];
