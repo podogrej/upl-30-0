@@ -24,6 +24,9 @@
 :root[data-skin="board"]{--bg:#f5f3ef; --bg2:#ebe8e2; --surface:#fffdf9; --line:#dcd7ce; --ink:#161514; --ink2:#5c5850; --muted:#928c82; --pitch:#2f6b45; --pitch2:#234f33; --chalk:#ffffff; --amber:#c44f00; --amber2:#ff8a2a; --win:#34C759; --draw:#FFCC00; --loss:#FF3B30; --gk:#FFCC00; --df:#007AFF; --mf:#34C759; --fw:#FF3B30;}
 @media (prefers-color-scheme: dark){ :root[data-skin="board"]:not([data-theme="light"]){--bg:#121212; --bg2:#0b0b0b; --surface:#1c1c1d; --line:#303032; --ink:#f4f1ea; --ink2:#b3aea4; --muted:#7c776f; --pitch:#2c563b; --pitch2:#1c3a27; --chalk:#f0ede6; --amber:#ff7a1a; --amber2:#ff9a3d; --win:#30D158; --draw:#FFD60A; --loss:#FF453A; --gk:#FFD60A; --df:#0A84FF; --mf:#30D158; --fw:#FF453A; color-scheme:dark;}}
 :root[data-skin="board"][data-theme="dark"]{--bg:#121212; --bg2:#0b0b0b; --surface:#1c1c1d; --line:#303032; --ink:#f4f1ea; --ink2:#b3aea4; --muted:#7c776f; --pitch:#2c563b; --pitch2:#1c3a27; --chalk:#f0ede6; --amber:#ff7a1a; --amber2:#ff9a3d; --win:#30D158; --draw:#FFD60A; --loss:#FF453A; --gk:#FFD60A; --df:#0A84FF; --mf:#30D158; --fw:#FF453A; color-scheme:dark;}
+:root[data-skin="upl"]{--bg:#f2f5fa; --bg2:#e6ebf3; --surface:#ffffff; --line:#d3dbe8; --ink:#0a2350; --ink2:#44587d; --muted:#8793ab; --pitch:#1d6b4a; --pitch2:#155437; --chalk:#ffffff; --amber:#0077c8; --amber2:#e6a817; --win:#1f9a55; --draw:#d19a00; --loss:#d9363e; --gk:#e6a817; --df:#0077c8; --mf:#1f9a55; --fw:#d9363e;}
+@media (prefers-color-scheme: dark){ :root[data-skin="upl"]:not([data-theme="light"]){--bg:#081a36; --bg2:#06142b; --surface:#0f2548; --line:#21406d; --ink:#eef3fb; --ink2:#a9b8d3; --muted:#7084a8; --pitch:#1d6b4a; --pitch2:#134834; --chalk:#e8f0f8; --amber:#29a8f0; --amber2:#f5c242; --win:#3ec27a; --draw:#f5c242; --loss:#ef5a5a; --gk:#f5c242; --df:#29a8f0; --mf:#3ec27a; --fw:#ef5a5a; color-scheme:dark;}}
+:root[data-skin="upl"][data-theme="dark"]{--bg:#081a36; --bg2:#06142b; --surface:#0f2548; --line:#21406d; --ink:#eef3fb; --ink2:#a9b8d3; --muted:#7084a8; --pitch:#1d6b4a; --pitch2:#134834; --chalk:#e8f0f8; --amber:#29a8f0; --amber2:#f5c242; --win:#3ec27a; --draw:#f5c242; --loss:#ef5a5a; --gk:#f5c242; --df:#29a8f0; --mf:#3ec27a; --fw:#ef5a5a; color-scheme:dark;}
 :root[data-skin="programme"]{--bg:#f4ecdc; --bg2:#eadfca; --surface:#fbf6ea; --line:#d8cbb0; --ink:#1b2340; --ink2:#4d5470; --muted:#8a8570; --pitch:#4f7a3a; --pitch2:#3a5e2b; --chalk:#fbf6ea; --amber:#c8202f; --amber2:#ffd54a; --win:#3d7a34; --draw:#b8901c; --loss:#c8202f; --gk:#c79a1e; --df:#2a4f9c; --mf:#3d7a34; --fw:#c8202f;}
 @media (prefers-color-scheme: dark){ :root[data-skin="programme"]:not([data-theme="light"]){--bg:#161b2e; --bg2:#10152a; --surface:#1e2540; --line:#333c5e; --ink:#f4ecdc; --ink2:#c2bba6; --muted:#878399; --pitch:#4a763a; --pitch2:#33552a; --chalk:#f4ecdc; --amber:#ff5a5f; --amber2:#ffd54a; --win:#6cc25c; --draw:#e6c04a; --loss:#ff5a5f; --gk:#ffd54a; --df:#7ea6ff; --mf:#6cc25c; --fw:#ff5a5f; color-scheme:dark;}}
 :root[data-skin="programme"][data-theme="dark"]{--bg:#161b2e; --bg2:#10152a; --surface:#1e2540; --line:#333c5e; --ink:#f4ecdc; --ink2:#c2bba6; --muted:#878399; --pitch:#4a763a; --pitch2:#33552a; --chalk:#f4ecdc; --amber:#ff5a5f; --amber2:#ffd54a; --win:#6cc25c; --draw:#e6c04a; --loss:#ff5a5f; --gk:#ffd54a; --df:#7ea6ff; --mf:#6cc25c; --fw:#ff5a5f; color-scheme:dark;}
@@ -125,10 +128,10 @@ table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
 th,td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left;font-size:13px}
 th{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink2);font-weight:600}
 td.num,th.num{text-align:right;font-family:var(--font-mono)}
-tr.me td{background:color-mix(in srgb,var(--amber) 18%,transparent);font-weight:700}
-:root{--z-cl:#0A84FF;--z-el:#BF5AF2;--z-co:#30D158;--z-rl:#FF453A}
+tr.me td{background:transparent}
+:root{--z-cl:#0A84FF;--z-el:#FF9F0A;--z-co:#30D158;--z-rl:#FF453A}
 tr.z-cl td{background:color-mix(in srgb,var(--z-cl) 16%,transparent)}tr.z-el td{background:color-mix(in srgb,var(--z-el) 16%,transparent)}tr.z-co td{background:color-mix(in srgb,var(--z-co) 14%,transparent)}tr.z-rl td{background:color-mix(in srgb,var(--z-rl) 14%,transparent)}
-tr.me td{background:color-mix(in srgb,var(--ink) 16%,transparent);font-weight:700}tr.me td:nth-child(2){color:var(--amber)}
+tr.me td{font-weight:800;border-top:2px solid var(--ink);border-bottom:2px solid var(--ink)}tr.me td:first-child{border-left:2px solid var(--ink)}tr.me td:last-child{border-right:2px solid var(--ink)}tr.me td:nth-child(2)::before{content:'▶ ';font-size:.8em}
 tr.z-cl td:first-child{box-shadow:inset 3px 0 var(--z-cl)}tr.z-el td:first-child{box-shadow:inset 3px 0 var(--z-el)}tr.z-co td:first-child{box-shadow:inset 3px 0 var(--z-co)}tr.z-rl td:first-child{box-shadow:inset 3px 0 var(--z-rl)}
 .zlg{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:8px;font-size:12px;color:var(--ink2)}.zlg span{display:inline-flex;align-items:center;gap:6px}.zlg span::before{content:"";width:12px;height:12px;border-radius:3px}
 .zlg .z-cl::before{background:color-mix(in srgb,var(--z-cl) 45%,transparent);box-shadow:inset 3px 0 var(--z-cl)}.zlg .z-el::before{background:color-mix(in srgb,var(--z-el) 45%,transparent);box-shadow:inset 3px 0 var(--z-el)}.zlg .z-co::before{background:color-mix(in srgb,var(--z-co) 45%,transparent);box-shadow:inset 3px 0 var(--z-co)}.zlg .z-rl::before{background:color-mix(in srgb,var(--z-rl) 45%,transparent);box-shadow:inset 3px 0 var(--z-rl)}
@@ -227,6 +230,7 @@ button.ghost.big0{padding:11px 18px;font-size:15px;font-family:var(--font-body);
 .facts0{justify-content:center;margin-top:18px}.hero0 h1{font-size:clamp(24px,5.5vw,36px);line-height:1.1;letter-spacing:-.01em}
 .lead0{font-size:16px;color:var(--ink2);margin:0;max-width:60ch}.facts0{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--ink2)}.facts0 b{font-family:var(--font-display);color:var(--ink);font-size:16px}
 .mode0{margin-top:14px}
+#moveBtn.on{border-color:var(--amber);color:var(--amber)}
 #wHint{display:block;text-align:right;font-size:12px;margin-top:-2px}
 html.tgfs header.top{padding-top:calc(10px + var(--tg-safe-area-inset-top,0px) + var(--tg-content-safe-area-inset-top,0px))}
 .rtog{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:var(--ink2);cursor:pointer;padding:4px 2px}.rtog input{width:18px;height:18px;accent-color:var(--amber)}
@@ -369,6 +373,7 @@ td .sub{font-size:11px;color:var(--muted);margin-top:2px;display:flex;gap:6px;al
       <div class="row"><span class="muted" id="modeLabel"></span><button class="ghost" id="restartBtn">Спочатку</button></div>
     </div>
     <div class="pitch" id="pitch"></div>
+    <div class="row" style="justify-content:flex-end;margin-top:8px"><button class="ghost" id="moveBtn" hidden><!--i:swap-horizontal-->Переставити гравців</button></div>
     <p class="muted" id="moveHint" hidden style="margin:8px 0 0;font-size:13px"></p>
     <div style="margin-top:12px" class="grid">
       <button class="spin" id="spinBtn">Крутити колесо</button>
@@ -466,7 +471,7 @@ td .sub{font-size:11px;color:var(--muted);margin-top:2px;display:flex;gap:6px;al
     </div>
 </div>
 <div class="overlay" id="viewBox" hidden><div class="box"><div class="vhead"><h3 id="viewTitle">Склад</h3><button class="ghost" id="viewClose">Закрити</button></div><div id="viewBody"></div></div></div>
-<div class="foot">30-0 УПЛ · <a href="#" id="newsBtn">Що нового у версії 0.45<b id="newsDot" hidden></b></a> · <a href="#" id="themeBtn" class="thm" aria-label="Світла тема"></a> · неофіційний фан-проєкт</div>
+<div class="foot">30-0 УПЛ · <a href="#" id="newsBtn">Що нового у версії 0.46<b id="newsDot" hidden></b></a> · <a href="#" id="themeBtn" class="thm" aria-label="Світла тема"></a> · неофіційний фан-проєкт</div>
 <script id="pool" type="application/json">__POOL__</script>
 <script>
 (function(){
@@ -488,18 +493,18 @@ const POSFULL = {GK:"воротар",CB:"центральний захисник
 const NEAR={
   GK:{},
   CB:{},
-  RB:{RWB:2,RM:5,RW:7},
-  LB:{LWB:2,LM:5,LW:7},
-  RWB:{RB:2,RM:3,RW:5},
-  LWB:{LB:2,LM:3,LW:5},
+  RB:{RWB:2},
+  LB:{LWB:2},
+  RWB:{RB:2,RM:3},
+  LWB:{LB:2,LM:3},
   CDM:{CM:3},
   CM:{CDM:3,CAM:3},
-  CAM:{CM:3,ST:6},
-  RM:{RW:2,RWB:4,RB:6},
-  LM:{LW:2,LWB:4,LB:6},
-  RW:{RM:2,RWB:5},
-  LW:{LM:2,LWB:5},
-  ST:{CAM:6}};   // сусідні позиції по своєму флангу/осі; все інше — лише через alts (10+ матчів на позиції)
+  CAM:{CM:3},
+  RM:{RW:2,RWB:4},
+  LM:{LW:2,LWB:4},
+  RW:{RM:2},
+  LW:{LM:2},
+  ST:{}};   // з 0.46 — лише та сама роль під іншою назвою (фланговий захисник/вінгбек, крайній півзахисник/вінгер, центр поля); інші позиції — тільки де гравець реально зіграв 10+ матчів (alts)
 const GENERIC_PEN=2;   // «захисник/півзахисник» без уточнення: будь-який слот своєї групи з невеликим штрафом
 function parseAlts(s){const o={};for(const t of String(s||'').split(';')){if(!t)continue;const [c,sh]=t.split(':');o[c]=sh?parseFloat(sh):0.2;}return o;}
 // штраф гравця (main, alts) у слоті slot; null = не може грати
@@ -509,8 +514,7 @@ function slotPenalty(main,alts,slot){
   if(main==="DF"||main==="MF"){const g=GROUP_OF[slot];if(g===main)return GENERIC_PEN;if(main==="MF"&&g==="FW")return 6;if(main==="DF"&&slot==="CDM")return 7;if(main==="MF"&&(slot==="RB"||slot==="LB"||slot==="RWB"||slot==="LWB"))return 7;return null;}
   const A=parseAlts(alts);
   if(slot in A)return A[slot]>=0.15?2:3;
-  let best=NEAR[main]&&NEAR[main][slot];
-  for(const a in A){const n=NEAR[a]&&NEAR[a][slot];if(n!=null&&(best==null||3+n<best))best=3+n;}   // сусідня до додаткової позиції: +3
+  const best=NEAR[main]&&NEAR[main][slot];
   return best==null?null:best;
 }
 function effRating(p,slot){const pen=slotPenalty(p[6],p[7],slot);if(pen==null)return null;return S.format==='anti'?p[2]:Math.max(40,p[2]-pen);}   // в антисезоні штраф не діє, інакше «чужа позиція» стає читом
@@ -607,18 +611,20 @@ for(const k in FORMATS){const d=document.createElement('div');d.className='opt'+
   const sel=document.getElementById('clubPick');Object.entries(cnt).filter(([,v])=>v.k>=6).sort((a,b)=>b[1].k-a[1].k||a[1].n.localeCompare(b[1].n,'uk')).forEach(([id,v])=>{const o=document.createElement('option');o.value=id;o.textContent=`${v.n} · ${v.k} сез.`;if(id===S.club)o.selected=true;sel.appendChild(o);});
   sel.onchange=()=>{S.club=sel.value;};})();
 for(const f in FORMATIONS){const d=document.createElement('div');d.className='opt'+(f===S.formation?' on':'');d.tabIndex=0;d.innerHTML=`<b>${f}</b><small>${FORMATIONS[f].tag}</small>`;d.onclick=()=>{S.formation=f;[...fEl.children].forEach(c=>c.classList.remove('on'));d.classList.add('on');};d.onkeydown=e=>{if(e.key==='Enter'||e.key===' ')d.click();};fEl.appendChild(d);}
-for(const m in MODES){if(m==='daily'||m==='practice')continue;const d=document.createElement('div');d.className='opt'+(m===S.mode?' on':'');d.tabIndex=0;d.innerHTML=`<b>${MODES[m].name}</b><small>${MODES[m].desc}</small>`;d.onclick=()=>{S.mode=m;[...mEl.children].forEach(c=>c.classList.remove('on'));d.classList.add('on');};d.onkeydown=e=>{if(e.key==='Enter'||e.key===' ')d.click();};mEl.appendChild(d);}
+if(S.mode==='hardcore')S.mode='hard';   // «Хардкор» прибрано з вибору в 0.46 (всередині лишився для антисезону)
+for(const m in MODES){if(m==='daily'||m==='practice'||m==='hardcore')continue;const d=document.createElement('div');d.className='opt'+(m===S.mode?' on':'');d.tabIndex=0;d.innerHTML=`<b>${MODES[m].name}</b><small>${MODES[m].desc}</small>`;d.onclick=()=>{S.mode=m;[...mEl.children].forEach(c=>c.classList.remove('on'));d.classList.add('on');};d.onkeydown=e=>{if(e.key==='Enter'||e.key===' ')d.click();};mEl.appendChild(d);}
 function shortName(n){const t=n.split(' ');return t.length<2?n:t[0][0]+'. '+t.slice(1).join(' ');}
 function showBest(){const el=document.getElementById('bestLine');const key=S.format==='oneclub'?'oneclub:'+S.club:S.format;const best=BEST[key];el.textContent='';if(best)el.textContent=`Найкращий результат: ${best.W}-${best.D}-${best.L}, ${best.pts} ${ptsWord(best.pts)}, ${best.place} місце (${best.formation}, ${MODES[best.mode].name})`;}
 showBest();
 function go(n){[1,2,3,4,5].forEach(i=>{document.getElementById('s'+i).hidden=(i!==n);const st=document.getElementById('st'+i);if(st)st.classList.toggle('on',i===n);});document.getElementById('statsCard').hidden=n!==1||!STATS_ON;window.scrollTo({top:0});}
 document.getElementById('dailyBtn').onclick=()=>{S.daily={practice:!!lsGet("upl30_daily_"+DAY)};S.chal=null;S.challenge=null;S.format='classic';[...fmEl.children].forEach((c,i)=>c.classList.toggle('on',i===0));document.getElementById('clubPickRow').hidden=true;DAILY.ptr=0;S.formation=DAILY.formation;S.mode="daily";S.result=null;
-  S.slots=newSlots(S.formation);S.taken=new Set();S.wheel=null;S.rerolls=MODES.daily.rerolls;S.showR=false;document.getElementById('modeLabel').textContent=`Виклик дня · ${S.formation}`;renderDraft();go(2);};
+  S.slots=newSlots(S.formation);S.taken=new Set();S.wheel=null;S.rerolls=MODES.daily.rerolls;S.showR=false;S.moveMode=false;document.getElementById('modeLabel').textContent=`Виклик дня · ${S.formation}`;renderDraft();go(2);};
 renderDailyCard();
-document.getElementById('startBtn').onclick=()=>{S.daily=null;S.result=null;S.challenge=null;S.chal=S.format==='classic'?chalNewGame():null;if(S.mode==="daily")S.mode="normal";if(S.format==='anti')S.mode='hardcore';S.slots=newSlots(S.formation);S.taken=new Set();S.wheel=null;S.rerolls=MODES[S.mode].rerolls;S.showR=false;document.getElementById('modeLabel').textContent=(S.format!=='classic'?FORMATS[S.format].name+' · ':'')+S.formation+" · "+MODES[S.mode].name;renderDraft();go(2);};
+document.getElementById('startBtn').onclick=()=>{S.daily=null;S.result=null;S.challenge=null;S.chal=S.format==='classic'?chalNewGame():null;if(S.mode==="daily")S.mode="normal";if(S.format==='anti')S.mode='hardcore';S.slots=newSlots(S.formation);S.taken=new Set();S.wheel=null;S.rerolls=MODES[S.mode].rerolls;S.showR=false;S.moveMode=false;document.getElementById('modeLabel').textContent=(S.format!=='classic'?FORMATS[S.format].name+' · ':'')+S.formation+" · "+MODES[S.mode].name;renderDraft();go(2);};
 document.getElementById('restartBtn').onclick=()=>go(S.daily||S.challenge?1:4);
 document.getElementById('homeBtn').onclick=()=>go(1);
-document.getElementById('freeOpen').onclick=()=>{myNameShow();go(4);};document.getElementById('showR').onchange=e=>{S.showR=e.target.checked;if(S.wheel)renderWheel();renderDraft();};document.getElementById('howGo').onclick=()=>document.getElementById('howH').scrollIntoView({behavior:'smooth',block:'start'});document.getElementById('freeBack').onclick=()=>go(1);
+document.getElementById('freeOpen').onclick=()=>{myNameShow();go(4);};document.getElementById('moveBtn').onclick=()=>{S.moveMode=!S.moveMode;S.move=null;const h=document.getElementById('moveHint');h.hidden=!S.moveMode;h.textContent='Тапни гравця, потім місце, куди його поставити. Підсвічуються лише позиції, де він реально грав.';renderDraft();};
+document.getElementById('showR').onchange=e=>{S.showR=e.target.checked;if(S.wheel)renderWheel();renderDraft();};document.getElementById('howGo').onclick=()=>document.getElementById('howH').scrollIntoView({behavior:'smooth',block:'start'});document.getElementById('freeBack').onclick=()=>go(1);
 {const tn=document.getElementById('teamName');tn.value=lsGet('upl30_team')||'';tn.oninput=()=>{lsSet('upl30_team',tn.value.trim().slice(0,22));};}
 function myNameShow(){const on=ONLINE&&!!PLAYER;document.getElementById('myNameH').hidden=!on;document.getElementById('myNameRow').hidden=!on;if(!on)return;const f=document.getElementById('myName');if(document.activeElement!==f)f.value=PLAYER.name||'';f.placeholder=PLAYER.anon_name||"Твоє ім'я";}
 document.getElementById('myName').onchange=e=>{const v=e.target.value.trim();if(!v){if(PLAYER&&PLAYER.name)playerRename('');}else nickSet(v);};
@@ -664,19 +670,22 @@ function canMove(from,to){const a=S.slots[from],b=S.slots[to];if(!a.player)retur
   if(effRating(playerRow(a.player),b.slot)==null)return false;
   if(b.player&&effRating(playerRow(b.player),a.slot)==null)return false;return true;}
 function slotTap(idx){
-  if(S.locked)return;
+  if(S.locked&&!S.moveMode)return;
   if(S.pending){const p=S.pending,s=S.slots[idx];if(!s.player&&effRating(p,s.slot)!=null){S.pending=null;place(p,s);}else{S.pending=null;renderDraft();}return;}
-  if(S.move==null){if(!S.slots[idx].player)return;S.move=idx;renderDraft();const h=document.getElementById('moveHint');h.hidden=false;h.textContent='Обери, куди переставити гравця: підсвічені місця вільні або дозволяють обмін. Тап по ньому ще раз — скасувати.';return;}
+  if(S.move==null){if(!S.slots[idx].player||!S.moveMode)return;S.move=idx;renderDraft();const h=document.getElementById('moveHint');h.hidden=false;h.textContent='Обери, куди переставити гравця: підсвічені місця вільні або дозволяють обмін. Тап по ньому ще раз — скасувати.';return;}
   if(S.move===idx){S.move=null;renderDraft();return;}
   if(!canMove(S.move,idx)){S.move=null;renderDraft();return;}
   const a=S.slots[S.move],b=S.slots[idx];const pa=a.player,pb=b.player;
-  a.player=pb?setSlot(pb,a):null;b.player=setSlot(pa,b);S.move=null;renderDraft();
+  a.player=pb?setSlot(pb,a):null;b.player=setSlot(pa,b);S.move=null;
+  if(S.locked){S.locked=false;S.pre=null;S.year=null;S.srv=null;renderDraft();document.getElementById('lockBtn').click();return;}   // склад змінився — прогноз заново
+  renderDraft();
   if(S.wheel)renderWheel();
 }
 function setSlot(p,s){return {...p,slot:s.slot,pos:GROUP_OF[s.slot],r:effRating(playerRow(p),s.slot)};}
 function renderDraft(){
   const filled=S.slots.filter(s=>s.player).length;
   document.getElementById('draftCount').textContent=filled+"/11";
+  {const mb=document.getElementById('moveBtn');mb.hidden=filled<2;mb.classList.toggle('on',!!S.moveMode);mb.lastChild.textContent=S.moveMode?'Готово':'Переставити гравців';}
   renderPitch(document.getElementById('pitch'),S.slots,false);
   const done=filled===11;
   document.getElementById('spinBtn').hidden=done||!!S.wheel;
@@ -753,7 +762,7 @@ function choose(p){
 function place(p,s){
   const r=effRating(p,s.slot);
   s.player={name:p[0],pos:GROUP_OF[s.slot],slot:s.slot,main:p[6],alts:p[7],r,r0:p[2],apps:p[3],goals:p[4],ast:p[8],cs:p[9],nat:p[10],by:p[11],cc:S.wheel.c,id:p[5],club:S.wheel.n,y:S.wheel.y};S.taken.add(p[5]);S.wheel=null;S.move=null;S.pending=null;renderDraft();
-  {const n=S.slots.filter(x=>x.player).length,seen=lsGet('upl30_hint_move')||0;if(n===2&&seen<2){const h=document.getElementById('moveHint');h.hidden=false;h.textContent='Порада: тапни гравця на полі, щоб переставити його на іншу позицію.';lsSet('upl30_hint_move',seen+1);}}
+  {const n=S.slots.filter(x=>x.player).length,seen=lsGet('upl30_hint_move')||0;if(n===2&&seen<2){const h=document.getElementById('moveHint');h.hidden=false;h.textContent='Порада: кнопка «Переставити гравців» під полем дозволяє поміняти позиції.';lsSet('upl30_hint_move',seen+1);}}
   if(S.slots.every(x=>x.player))document.getElementById('lockBtn').click();   // склад зібрано — одразу рейтинги, прогноз і «Зіграти сезон» (через кнопку, щоб рушій не тягнув UI)
 }
 document.getElementById('spinBtn').onclick=()=>spin();
@@ -1216,10 +1225,10 @@ function drawCard(r){
 }
 document.getElementById('replayBtn').onclick=()=>playSeason(null);
 // ---------- «Що нового»: коротко й по-людськи про останню версію (технічний журнал — CHANGELOG.md у репозиторії)
-const WHATSNEW={v:'0.45',date:'29.09.2026',items:[
-  ['lock-open-variant','Одразу до сезону','Зібрав 11 — рейтинги й прогноз з\'являються самі, лишається натиснути «Зіграти сезон».'],
-  ['swap-horizontal','Більше позицій','Гравець тепер може стати й на позицію поруч зі своєю додатковою: наприклад, лівий півзахисник — на лівий фланг атаки. Тапни гравця на полі, щоб переставити.'],
-  ['white-balance-sunny','Дрібниці','Перемикач теми — іконкою внизу. Твоя команда в таблиці більше не зливається з Лігою Європи. Трофеї — спокійніших кольорів. Менше зайвого тексту під колесом.']]};
+const WHATSNEW={v:'0.46',date:'29.09.2026',items:[
+  ['chart-bar','Чесніші рейтинги','Якщо зірка зіграла за сезон лише кілька матчів, її рейтинг тепер підтягується до рівня сусідніх повних сезонів. Алієв у «Динамо» 09/10 — 85, а не 59.'],
+  ['swap-horizontal','Переставити гравців','Кнопка під полем вмикає перестановку: тапни гравця, потім місце. Гравець стає лише туди, де він реально грав.'],
+  ['format-list-numbered','Таблиця й режими','Твоя команда в таблиці — у рамці, зони єврокубків — своїми кольорами. «Хардкор» прибрано: лишились «Звичайний» і «Складний».']]};
 function openNews(){const box=document.getElementById('viewBox');document.getElementById('viewTitle').textContent=`Що нового · версія ${WHATSNEW.v}`;
   document.getElementById('viewBody').innerHTML=`<div class="news">${WHATSNEW.items.map(([e,h,d])=>`<div class="ni">${ic(e,'lg')}<div><b>${esc(h)}</b><p>${esc(d)}</p></div></div>`).join('')}</div>`;
   box.hidden=false;lsSet('upl30_news_seen',WHATSNEW.v);document.getElementById('newsDot').hidden=true;}

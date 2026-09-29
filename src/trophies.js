@@ -29,7 +29,7 @@ const TROPHIES=[
   {id:"allua",i:"🇺🇦",n:"Файна Юкрайна",d:"Усі 11 гравців — українці",cat:"squad",rep:1,t:c=>c.xi.every(x=>x.nat===UA)},
   {id:"nations",i:"🌍",n:"Євробачення",d:"8+ різних громадянств в одному XI",cat:"squad",t:c=>new Set(c.xi.filter(x=>x.nat>=0).map(x=>x.nat)).size>=8},
   {id:"band7",i:"🏟️",n:"Кайдашева сім'я",d:"7 гравців одного клубу (не в режимах «Один клуб» і «Дербі»)",cat:"squad",t:c=>mixed(c)&&byClub(c.xi)>=7},
-  {id:"band5",i:"🥁",n:"Зібрали гурт",d:"5 гравців з одного клуб-сезону (не в «Один клуб» і «Дербі»)",cat:"squad",t:c=>mixed(c)&&byClubSeason(c.xi)>=5},
+  {id:"band5",i:"🥁",n:"Реюніон-тур",d:"5 гравців з одного клуб-сезону (не в «Один клуб» і «Дербі»)",cat:"squad",t:c=>mixed(c)&&byClubSeason(c.xi)>=5},
   {id:"abc",i:"🔤",n:"Буквар",d:"Імена всіх 11 гравців починаються з різних літер",cat:"squad",t:c=>new Set(c.xi.map(x=>firstName(x.name)[0])).size===11},
   {id:"tannoy",i:"📢",n:"Скоромовка",d:"5 прізвищ на одну літеру",cat:"squad",t:c=>{const m={};for(const x of c.xi){const k=surname(x.name)[0];m[k]=(m[k]||0)+1;}return Math.max(...Object.values(m))>=5;}},
   {id:"pegs",i:"🔄",n:"Хто в ліс, хто по дрова",d:"6+ польових гравців не на основній позиції",cat:"squad",t:c=>c.xi.filter(x=>x.slot!=='GK'&&x.main&&x.main.length>2&&x.main!==x.slot).length>=6},
@@ -40,7 +40,7 @@ const TROPHIES=[
   {id:"eight",i:"🌟",n:"Круглий відмінник",d:"Середня оцінка гравця за сезон 8.0+",cat:"players",rep:1,t:c=>c.pl.some(p=>p.rt>=8)},
   // режими
   {id:"hardchamp",i:"🔥",n:"Без права на помилку",d:"Стань чемпіоном у режимі «Складний»",cat:"modes",rep:1,t:c=>c.mode==='hard'&&notAnti(c)&&c.r.place===1},
-  {id:"hcchamp",i:"🙈",n:"Кіт у мішку",d:"Стань чемпіоном у «Хардкорі»",cat:"modes",rep:1,t:c=>c.mode==='hardcore'&&notAnti(c)&&c.r.place===1},
+  {id:"hcchamp",i:"🙈",n:"Кіт у мішку",d:"Стань чемпіоном у «Хардкорі» (режим прибрано в 0.46)",cat:"modes",rep:1,gone:1,t:c=>c.mode==='hardcore'&&notAnti(c)&&c.r.place===1},
   {id:"derbychamp",i:"⚡",n:"Класика жанру",d:"Стань чемпіоном у «Класичному дербі»",cat:"modes",rep:1,t:c=>c.format==='derby'&&c.r.place===1},
   {id:"oneclubchamp",i:"❤️",n:"Два кольори",d:"Стань чемпіоном у режимі «Один клуб»",cat:"modes",rep:1,t:c=>c.format==='oneclub'&&c.r.place===1},
   {id:"antilast",i:"⬇️",n:"Нижче плінтуса",d:"Антисезон: фініш останнім",cat:"modes",rep:1,t:c=>c.format==='anti'&&c.r.place===16},
@@ -143,7 +143,7 @@ async function trRetro(){
   }catch(e){}
 }
 // ---------- UI: кнопка на головній, шафа трофеїв, нові трофеї після сезону
-function renderTrBtn(){const s=trStore();const n=Object.values(s.t).filter(e=>e.n).length;{const tt=document.getElementById('trTotal');if(tt){const n=TROPHIES.length+MILESTONES.length,x=n%10,y=n%100;tt.textContent=`${n} ${x===1&&y!==11?'трофей':x>=2&&x<=4&&(y<12||y>14)?'трофеї':'трофеїв'}, частина — секретні`;}}const b=document.getElementById('trCount');if(b)b.textContent=n?` · ${n}`:'';}
+function renderTrBtn(){const s=trStore();const n=Object.values(s.t).filter(e=>e.n).length;{const tt=document.getElementById('trTotal');if(tt){const n=TROPHIES.filter(t=>!t.gone).length+MILESTONES.length,x=n%10,y=n%100;tt.textContent=`${n} ${x===1&&y!==11?'трофей':x>=2&&x<=4&&(y<12||y>14)?'трофеї':'трофеїв'}, частина — секретні`;}}const b=document.getElementById('trCount');if(b)b.textContent=n?` · ${n}`:'';}
 function trCard(t,e,pct,prog){
   const got=e&&e.n;const p=pct!=null?`<span class="trp">${pct===0?'ще ніхто не відкрив':`є в ${pct<1?'<1':Math.round(pct)}% гравців`}</span>`:'';
   const pr=!got&&prog?`<span class="trp">${Math.min(prog[0],prog[1])}/${prog[1]}</span>`:'';
@@ -153,9 +153,9 @@ async function openTrophies(){
   const box=document.getElementById('viewBox'),body=document.getElementById('viewBody');document.getElementById('viewTitle').textContent='Трофеї';box.hidden=false;
   const draw=()=>{const s=trStore();const st={streak:trStreak(),dailies:s.dailies};
     const pctOf=id=>TR_PCT&&TR_PCT.players>=10?100*((TR_PCT.t||{})[id]||0)/TR_PCT.players:null;
-    const total=TROPHIES.length,have=TROPHIES.filter(t=>s.t[t.id]&&s.t[t.id].n).length;
+    const got=t=>s.t[t.id]&&s.t[t.id].n;const LIVE=TROPHIES.filter(t=>!t.gone||got(t));const total=LIVE.length,have=LIVE.filter(got).length;
     let h=`<p class="muted" style="margin:0">Відкрито ${have} з ${total} · зіграно сезонів: ${s.seasons}</p>`;
-    for(const [cat,title] of TR_CATS){const list=TROPHIES.filter(t=>t.cat===cat&&(!t.sec||(s.t[t.id]&&s.t[t.id].n)));
+    for(const [cat,title] of TR_CATS){const list=LIVE.filter(t=>t.cat===cat&&(!t.sec||(s.t[t.id]&&s.t[t.id].n)));
       const hiddenN=TROPHIES.filter(t=>t.cat===cat&&t.sec&&!(s.t[t.id]&&s.t[t.id].n)).length;
       if(!list.length&&!hiddenN)continue;
       list.sort((a,b)=>((s.t[b.id]||{}).n?1:0)-((s.t[a.id]||{}).n?1:0));

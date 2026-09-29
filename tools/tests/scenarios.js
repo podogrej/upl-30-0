@@ -27,10 +27,21 @@ const fail=[];const check=(ok,msg)=>{if(!ok)fail.push(msg);};
  await pg.click('#spinBtn');await pg.waitForTimeout(1800);
  check(await pg.evaluate(()=>document.getElementById('showR').checked&&[...document.querySelectorAll('#squad .pl .rt')].every(e=>/^\d+$/.test(e.textContent))),'рейтинги: не лишились на наступне кручення');
  check(await pg.evaluate(()=>/^\d+$/.test((document.querySelector('#pitch .slot.filled .r')||{}).textContent||'')),'рейтинги: немає цифри на полі');
- // хардкор — без галочки
- await pg.evaluate(()=>document.getElementById('homeBtn').click());await pg.click('#freeOpen');await pg.click('#modes .opt:nth-child(3)');await pg.click('#startBtn');await pg.click('#spinBtn');await pg.waitForTimeout(1800);
- check(await pg.evaluate(()=>document.getElementById('showRRow').hidden),'рейтинги: галочка є в «Хардкорі»');
- await pg.evaluate(()=>document.getElementById('homeBtn').click());await pg.click('#freeOpen');await pg.click('#modes .opt:nth-child(1)');await pg.evaluate(()=>document.getElementById('homeBtn').click());
+ // «Хардкора» в выборе нет (0.46); в антисезоне галочки нет
+ check(await pg.evaluate(()=>{document.getElementById('homeBtn').click();document.getElementById('freeOpen').click();return [...document.querySelectorAll('#modes .opt b')].map(b=>b.textContent).join(',');})==='Звичайний,Складний','режими: у виборі не лише «Звичайний» і «Складний»');
+ await pg.click('#formats .opt:nth-child(4)');await pg.click('#startBtn');await pg.click('#spinBtn');await pg.waitForTimeout(1800);
+ check(await pg.evaluate(()=>document.getElementById('showRRow').hidden),'рейтинги: галочка є в антисезоні');
+ await pg.evaluate(()=>document.getElementById('homeBtn').click());await pg.click('#freeOpen');await pg.click('#formats .opt:nth-child(1)');await pg.click('#modes .opt:nth-child(1)');
+ // «Переставити гравців»: без кнопки тап по гравцю нічого не робить, з кнопкою — підсвічує місця
+ await pg.click('#startBtn');
+ for(let i=0;i<3;i++){await pg.click('#spinBtn');await pg.waitForTimeout(1750);const btn=await pg.$('.pl:not([disabled])');await btn.click();await pg.waitForTimeout(80);const pick=await pg.$('#pitch .slot.target');if(pick){await pick.click();await pg.waitForTimeout(60);}}
+ const fi=await pg.evaluate(()=>[...document.querySelectorAll('#pitch .slot')].findIndex(d=>d.classList.contains('filled')));
+ check(await pg.evaluate(()=>!document.getElementById('moveBtn').hidden),'перестановка: немає кнопки «Переставити гравців»');
+ await (await pg.$$('#pitch .slot'))[fi].click();await pg.waitForTimeout(100);
+ check(await pg.evaluate(()=>window.__dbg.S.move==null),'перестановка: тап без кнопки вмикає перестановку');
+ await pg.click('#moveBtn');await (await pg.$$('#pitch .slot'))[fi].click();await pg.waitForTimeout(100);
+ check(await pg.evaluate(()=>window.__dbg.S.move!=null),'перестановка: з кнопкою тап не вибирає гравця');
+ await pg.click('#moveBtn');await pg.evaluate(()=>document.getElementById('homeBtn').click());
  // пасхалка й трофей Nice
  check(await pg.evaluate(()=>{const D=window.__dbg;const cs=D.DATA.clubs.find(c=>c.pl.some(p=>p[5]==='w:1979-03-30:timoschuk'));D.S.wheel=cs;D.renderWheel();const ok=/Анатолій Тимощук \(пітух\)/.test(document.getElementById('squad').textContent);D.S.wheel=null;return ok;}),'пасхалка: у Тимощука немає «(пітух)»');
  check(await pg.evaluate(()=>{const e=window.__dbg.trEval;const c={r:{W:1,D:1,L:28,pts:4,place:16,gf:5,ga:60,xp:10,log:[]},xi:[{id:'tm:9796'},{id:'tm:9800'}],pl:[],mode:'normal',format:'classic',reveal:true};return e(c).includes('pyvo');}),'трофей «По пиву?» не видається');
