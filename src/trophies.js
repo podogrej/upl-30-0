@@ -72,7 +72,7 @@ const TROPHIES=[
   {id:"cursed",i:"🧿",n:"Прокляття xG",d:"xP 70+, але не чемпіон",cat:"secret",sec:1,t:c=>notAnti(c)&&c.r.xp>=70&&c.r.place>1},
   {id:"heist",i:"💰",n:"Пограбування",d:"Чемпіон з xP нижче 55",cat:"secret",sec:1,t:c=>notAnti(c)&&c.r.place===1&&c.r.xp<55},
   {id:"fairy",i:"✨",n:"Сила в єдності",d:"Усі 11 гравців провели сезон у плюсовій формі (+1 і вище)",cat:"secret",sec:1,t:c=>c.pl.length===11&&c.pl.every(p=>p.form>=1)},
-  {id:"fallen",i:"🌠",n:"Зірка згасла",d:"Гравець з рейтингом 95+ провів найгірший можливий сезон (форма −10)",cat:"secret",sec:1,t:c=>c.pl.some(p=>p.r0>=95&&p.form<=-10)},
+  {id:"fallen",i:"🌠",n:"Зірка згасла",d:"Гравець з рейтингом 92+ провів найгірший можливий сезон (форма −10)",cat:"secret",sec:1,t:c=>c.pl.some(p=>p.r0>=92&&p.form<=-10)},
   {id:"kids",i:"🧒",n:"Молодо — зелено",d:"Усім 11 гравцям менше 23 у тому сезоні",cat:"secret",sec:1,t:c=>c.xi.every(x=>x.by&&x.y-x.by<23)},
   {id:"gkmvp",i:"🧤",n:"Воротар — пів команди",d:"Гравець сезону — воротар з оцінкою 7.8+",cat:"secret",sec:1,t:c=>{const m=[...c.pl].sort((a,b)=>b.rt-a.rt)[0];return !!m&&m.slot==='GK'&&m.rt>=7.8;}},
   {id:"bottom",i:"🕳️",n:"Знизу постукали",d:"10 очок або менше за сезон (не антисезон)",cat:"secret",sec:1,t:c=>notAnti(c)&&c.r.pts<=10},
