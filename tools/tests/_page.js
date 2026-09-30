@@ -14,11 +14,14 @@ async function openPage(opts={}){
   const pg=await ctx.newPage();const errs=[];pg.on('pageerror',e=>errs.push(e.message));
   await pg.goto('file://'+path.join(ROOT,'index.html'));await pg.waitForTimeout(800);
   return {b,pg,errs};}
-// один сезон: формат, номер режиму й схеми у списках налаштувань (як їх бачить гравець)
+// один сезон: формат (data-fmt плитки; 'pick' — «Вибір сезону», 'daily' — драфт дня), номер режиму й схеми у списках налаштувань (як їх бачить гравець)
 async function playSeason(pg,fmt,mode,form){
   await pg.evaluate(()=>document.getElementById('homeBtn').click());await pg.waitForTimeout(200);
   if(fmt==='daily')await pg.click('#dailyBtn');
-  else{await pg.click('#freeOpen');const fi={classic:1,derby:2,oneclub:3,anti:4,legends:5}[fmt];await pg.click(`#formats .opt:nth-child(${fi})`);await pg.click(`#formations .opt:nth-child(${form})`);if(fmt!=='anti')await pg.click(`#modes .opt:nth-child(${mode})`);if(fmt==='oneclub')await pg.selectOption('#clubPick','karpaty-lviv');await pg.click('#startBtn');}
-  for(let i=0;i<11;i++){await pg.click('#spinBtn');await pg.waitForSelector('#squad .pl:not([disabled])',{timeout:8000});const btn=await pg.$('.pl:not([disabled])');await btn.click();await pg.waitForTimeout(80);const pick=await pg.$('#pitch .slot.target');if(pick){await pick.click();await pg.waitForTimeout(60);}}
+  else{await pg.click('#freeOpen');await pg.click(`#formats .opt[data-fmt="${fmt}"]`);await pg.click(`#formations .opt:nth-child(${form})`);if(fmt!=='anti'&&fmt!=='pick')await pg.click(`#modes .opt:nth-child(${mode})`);if(fmt==='oneclub')await pg.selectOption('#clubPick','karpaty-lviv');await pg.click('#startBtn');}
+  for(let i=0;i<11;i++){await pg.click('#spinBtn');
+    // «Вибір сезону» (0.60): після барабана клубу — три кнопки сезонів; беремо останній (найпізніший) сезон
+    await pg.waitForSelector('#seaPick:not([hidden]) button, #squad .pl:not([disabled])',{timeout:8000});const sp=await pg.$$('#seaPick:not([hidden]) button');if(sp.length)await sp[sp.length-1].click();
+    await pg.waitForSelector('#squad .pl:not([disabled])',{timeout:8000});const btn=await pg.$('.pl:not([disabled])');await btn.click();await pg.waitForTimeout(80);const pick=await pg.$('#pitch .slot.target');if(pick){await pick.click();await pg.waitForTimeout(60);}}
   await pg.waitForSelector('#simBtn:not([hidden])');/* з 0.45 прогноз рахується сам */await pg.click('#simBtn');await pg.click('#skipBtn');await pg.waitForTimeout(500);}
 module.exports={ROOT,launch,openPage,playSeason};

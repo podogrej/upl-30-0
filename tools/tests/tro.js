@@ -15,7 +15,7 @@ const DEV='aaaaaaaa-0000-4000-a000-000000000001';
  const st0=await pg.evaluate(()=>({s:window.__dbg.trStore().seasons,retro:localStorage.getItem('upl30_tr_retro'),cnt:document.getElementById('trCount').textContent}));
  T.check(st0.s===1&&st0.retro==='1'&&/· \d+/.test(st0.cnt),`після видачі: сезонів ${st0.s}, кнопка «Трофеї${st0.cnt}»`);
  for(let k=0;k<2;k++){
-  await pg.evaluate(()=>{document.getElementById('homeBtn').click();document.getElementById('freeOpen').click();});await pg.click('#formats .opt:nth-child(1)');await pg.click('#startBtn');
+  await pg.evaluate(()=>{document.getElementById('homeBtn').click();document.getElementById('freeOpen').click();});await pg.click('#formats .opt[data-fmt="classic"]');await pg.click('#startBtn');
   const n0=db.DB.trophies.length;await draftSeason(pg);await pg.waitForTimeout(700);
   const r=await pg.evaluate(()=>{const R=window.__dbg.S.result;return {got:R.tro.got,fresh:R.tro.fresh,seasons:window.__dbg.trStore().seasons,box:document.getElementById('newTro').hidden?'':document.getElementById('newTro').textContent,share:document.getElementById('shareText').value};});
   T.check(r.seasons===2+k,`сезон ${k+1}: лічильник сезонів ${r.seasons}`);
@@ -24,7 +24,11 @@ const DEV='aaaaaaaa-0000-4000-a000-000000000001';
   T.check(db.DB.trophies.length===n0+r.fresh.length,`сезон ${k+1}: у trophies записано лише нові (${r.fresh.length})`);
   if(k===0)await pg.screenshot({path:path.join(OUT,'tro_result.png')});
  }
- await pg.evaluate(()=>document.getElementById('homeBtn').click());await pg.click('#trBtn');await pg.waitForTimeout(600);
+ // 0.60: «Трофеї» на головній відкриває шафу своєї сторінки; старе вікно лишилось для файлу без сайту — перевіряємо обидва
+ await pg.evaluate(()=>document.getElementById('homeBtn').click());await pg.click('#trBtn');await pg.waitForTimeout(900);
+ const ppc=(await pg.textContent('#ppCab')).replace(/\s+/g,' ');
+ T.check(/Трофеї\s*Відкрито \d+ з \d+/.test(ppc)&&await pg.evaluate(()=>!document.getElementById('s6').hidden),'«Трофеї» → шафа своєї сторінки: '+ppc.slice(0,50));
+ await pg.evaluate(()=>{document.getElementById('homeBtn').click();window.__dbg.openTrophies();});await pg.waitForTimeout(600);
  const cab=(await pg.textContent('#viewBody')).replace(/\s+/g,' ');
  T.check(/Відкрито \d+ з \d+ · зіграно сезонів: 3/.test(cab),'шафа: '+cab.slice(0,60));
  T.check(/Чемпіони.*є в 30% гравців/.test(cab),'шафа: «Чемпіони — є в 30% гравців» з trophy_stats');

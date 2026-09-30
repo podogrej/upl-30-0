@@ -43,7 +43,13 @@ function play(cfg) {
     return spinFresh();
   };
   const REROLL_BELOW = cfg.rerollBelow ?? 83;
+  // «Вибір сезону» (0.60): колесо дає клуб, бот бере найкращий хід серед трьох випадкових сезонів цього клубу (де є кого взяти)
+  const pickN = MODES[cfg.mode] && MODES[cfg.mode].pick;
+  const spinPick = () => { const c0 = spinFresh(); const all = pool.filter(c => c.c === c0.c && best(c)); const opts = [];
+    while (opts.length < pickN && all.length) opts.push(all.splice(Math.floor(r() * all.length), 1)[0]);
+    let bb = null; for (const c of opts) { const b = best(c); if (!bb || b.score > bb.score) bb = b; } return bb; };
   for (let k = 0; k < 11; k++) {
+    if (pickN && !cfg.daily) { const b = spinPick(); b.s.p = b.p; taken.add(canon(b.p[5])); continue; }
     let cs = spin(), b = best(cs);
     while (rerolls > 0 && !anti && b.v < REROLL_BELOW) { rerolls--; cs = spinFresh(); b = best(cs); }
     b.s.p = b.p; taken.add(canon(b.p[5]));
@@ -75,7 +81,7 @@ if (require.main === module) {
   const t0 = Date.now();
   const runSet = (key, mk) => { const rows = []; for (let i = 0; i < N; i++) rows.push(play(mk(i))); out[key] = summarize(rows); console.log(key, JSON.stringify(out[key]), ((Date.now() - t0) / 1000).toFixed(0) + 's'); };
   for (const [who, sigma] of Object.entries(SIGMAS)) {
-    for (const mode of ['normal', 'hard'])
+    for (const mode of ['normal', 'hard', 'pick'])
       runSet(`classic|${mode}|${who}`, i => ({ format: 'classic', mode, sigma, formation: FORMS[i % FORMS.length], seed: seedBase++ }));
     // виклик дня: різні дні
     runSet(`daily|daily|${who}`, i => { const day = new Date(Date.UTC(2026, 8, 28) + (i % 365) * 864e5).toISOString().slice(0, 10); return { format: 'classic', mode: 'daily', sigma, daily: E.dailySetupFor(day), seed: seedBase++ }; });

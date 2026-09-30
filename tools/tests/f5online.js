@@ -5,7 +5,7 @@ const OUT=process.argv[2]||path.join(ROOT,'tools','tests','out');fs.mkdirSync(OU
 (async()=>{const T=checker('f5 онлайн');const b=await launch();
  const db=makeDB({f5_rooms:{pk:['id'],def:{status:'lobby',players_n:null}},f5_players:{pk:['room_id','seat'],uq:[['room_id','device_id']]},f5_picks:{pk:['room_id','seat','k'],uq:[['room_id','n']]}});const DB=db.DB;
  const H=await openSite({b,db,viewport:{width:430,height:900}});
- await H.pg.click('#f5Open');await H.pg.fill('[data-nm="0"]','Андрій');await H.pg.click('#f5Go');await H.pg.waitForTimeout(800);
+ await H.pg.evaluate(()=>document.getElementById('f5Open').click());   /* 0.60: кнопку сховано на головній, режим лишився */await H.pg.fill('[data-nm="0"]','Андрій');await H.pg.click('#f5Go');await H.pg.waitForTimeout(800);
  const room=DB.f5_rooms[0];T.check(room&&DB.f5_players.length===1&&DB.f5_players[0].seat===0,'господар створив кімнату '+(room&&room.id));
  T.check(/\?r=/.test(H.pg.url()),'у адресі господаря посилання на кімнату');
  const G=await openSite({b,db,query:'?r='+room.id,viewport:{width:430,height:900},wait:1500});

@@ -1,7 +1,8 @@
 -- 30-0 УПЛ · v0.59 · сторінка гравця, ім'я гравця в одному місці, імена лише латиницею (DECISIONS п. 2, п. 12; аудит В5)
 -- Запускати: спершу тестова база (upl-30-0-test), потім основна. Supabase → SQL Editor → вставити цілком → Run.
 -- Результат запуску — таблиця «було → стало»: чиї імена переписано на латиницю (повторний запуск — порожня таблиця).
--- Повторний запуск нічого не ламає (і в базі, де попередня версія цього файлу вже виконувалась). Сайт 0.58, ще відкритий у гравців,
+-- Повторний запуск нічого не ламає (і в базі, де попередня версія цього файлу вже виконувалась). Після 0.60: повторний запуск цього файлу
+-- повертає функції 0.59 (set_player_name, player_json, delete_player, player_profile) — тоді одразу запустити й sql/v060_one_player.sql. Сайт 0.58, ще відкритий у гравців,
 -- працює як раніше (player_json лише отримав нові поля; перше ім'я кирилицею з Telegram сервер сам переписує латиницею).
 -- Нових політик запису для anon/authenticated немає: ім'я й видалення — лише через RPC з перевіркою секрету пристрою (як set_player_name).
 --
@@ -223,10 +224,15 @@ revoke execute on function public.merge_players(uuid, uuid) from public, anon, a
 create temp table if not exists v059_renames (player_id uuid, was text, became text);
 delete from v059_renames;
 do $$
-declare r record; nm text;
+declare r record; nm text; kept boolean;
 begin
   for r in select id, name, created_at from public.players
             where name is not null and merged_into is null and deleted_at is null order by created_at, id loop
+    -- з 0.60: зарезервоване ім'я гравця (name_reserved, «andré» власника) повторний запуск не переписує
+    if to_regclass('public.name_reserved') is not null then
+      execute 'select exists (select 1 from public.name_reserved where name = $1 and player_id = $2)' into kept using r.name, r.id;
+      if kept then continue; end if;
+    end if;
     if public.name_problem(r.name) is null and not exists (
          select 1 from public.players o where o.id <> r.id and o.name is not null and o.merged_into is null and o.deleted_at is null
             and public.name_key(o.name) = public.name_key(r.name) and (o.created_at, o.id) < (r.created_at, r.id)) then

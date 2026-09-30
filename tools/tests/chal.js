@@ -9,9 +9,10 @@ process.env.SUPABASE_SERVICE_KEY='svc';const saveH=require(path.join(ROOT,'api',
  const spins=pg=>{const seen=[];return [seen,async()=>seen.push(await pg.evaluate(()=>{const w=window.__dbg.S.wheel;return w.n+' '+w.y;}))];};
  // A: вільна класика, схема 3
  const A=await openSite({b,db,api});await A.pg.evaluate(()=>localStorage.setItem('upl30_nick','"Андрій"'));
- await A.pg.click('#freeOpen');await A.pg.click('#formats .opt:nth-child(1)');await A.pg.click('#formations .opt:nth-child(3)');await A.pg.click('#startBtn');
+ await A.pg.click('#freeOpen');await A.pg.click('#formats .opt[data-fmt="classic"]');await A.pg.click('#formations .opt:nth-child(3)');await A.pg.click('#startBtn');
  const [seenA,onA]=spins(A.pg);await draftSeason(A.pg,onA);
- T.check(await A.pg.$eval('#chalBox',e=>!e.hidden),'A: після класики є блок «Виклик другові»');
+ T.check(await A.pg.$eval('#chalOpen',e=>!e.hidden)&&await A.pg.$eval('#chalBox',e=>e.hidden),'A: після класики є плитка «Виклик» (блок згорнуто)');
+ await A.pg.click('#chalOpen');T.check(await A.pg.$eval('#chalBox',e=>!e.hidden),'A: плитка «Виклик» відкриває блок «Кинути виклик другу»');
  await A.pg.fill('#chalName','Андрій');await A.pg.click('#chalCopyBtn');await A.pg.waitForTimeout(500);
  const msgA=await A.pg.textContent('#chalMsg');const row=DB.challenges[0];
  T.check(row&&/\?c=/.test(msgA)&&msgA.includes(row.id),'A: виклик створено, посилання показано ('+msgA.slice(0,70)+')');
@@ -28,7 +29,7 @@ process.env.SUPABASE_SERVICE_KEY='svc';const saveH=require(path.join(ROOT,'api',
  T.check(seenA.length===11&&JSON.stringify(seenA)===JSON.stringify(seenB),'те саме колесо: '+seenA.slice(0,3).join(', ')+' …');
  T.check(await B.pg.evaluate(()=>window.__dbg.S.result.year)===row.year,'B: ті самі суперники (сезон '+row.year+')');
  const line=await B.pg.$eval('#chalLine',e=>e.hidden?'':e.textContent);T.check(/Ти \d+ : \d+ андрій/.test(line),'B: рядок порівняння «'+line+'»');
- T.check(await B.pg.$eval('#chalBox',e=>!e.hidden),'B: може кинути свій виклик далі');
+ T.check(await B.pg.$eval('#chalOpen',e=>!e.hidden),'B: може кинути свій виклик далі (плитка «Виклик»)');
  await B.pg.waitForTimeout(600);const res=DB.challenge_results;
  T.check(res.length===1&&res[0].challenge_id===row.id&&res[0].name==='сергій','B: результат записано в challenge_results');
  await B.pg.click('#againBtn');await B.pg.waitForTimeout(600);

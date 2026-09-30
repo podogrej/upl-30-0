@@ -109,6 +109,7 @@ async function playerSync(){
   try{let p=null;
     if(SESSION){try{p=await playerRpc('link_account');}catch(e){p=null;}}
     if(!p)p=await playerRpc('player_hello');
+    const offer=p&&p.merge_offer;if(p)delete p.merge_offer;if(offer&&offer.id)setTimeout(()=>mergeAsk(offer),600);
     // перший раз: нік, яким гравець підписувався до 0.39, або ім'я з акаунта стає ім'ям профілю
     if(p&&!p.name){const nk=(lsGet("upl30_nick")||'').trim()||(SESSION?acctName():'');if(nk&&nk!=='Гравець')p=await playerAutoName(p,nk);}
     playerSet(p);
@@ -151,7 +152,8 @@ async function playerAutoName(p,raw){
 // будь-яке місце, де гравець вписав своє ім'я (таблиця дня, виклик, 5×5), — лише перше ім'я профілю; змінити — на своїй сторінці
 function nickSet(v){v=String(v||'').trim().slice(0,24);if(v.length<2)return;if(PLAYER&&nameKey(v)===PLAYER.anon_name)return;lsSet("upl30_nick",v);
   if(ONLINE&&PLAYER&&!PLAYER.name)playerAutoName(PLAYER,v).then(playerSet).catch(e=>console.warn('name',e));}
-async function playerRename(v){const c=nameCheck(v);if(c.err)return NAME_MSG[c.err];
+async function playerRename(v){if(PLAYER&&PLAYER.name&&nameKey(v)===PLAYER.name)return '';   // те саме ім'я (зокрема зарезервоване «andré», 0.60) — нічого не міняємо
+  const c=nameCheck(v);if(c.err)return NAME_MSG[c.err];
   try{const p=await playerRpc('set_player_name',{p_name:c.name||''});playerSet(p);if(!c.name)lsSet("upl30_nick",null);return '';}catch(e){return nameErrOf(e);}}
 // ---------- інтерфейс
 // шапка (0.59): аватарка замість «Увійти» — тап відкриває свою сторінку
@@ -163,7 +165,7 @@ function openAcct(){screenTag('account');
     body.innerHTML=`${msg}<p style="margin:0">Ти увійшов як <b>${esc(acctName())}</b> через ${via}.</p><p class="muted" style="margin:0">Трофеї, серія, рекорди й нік зберігаються в акаунті й доступні на будь-якому пристрої та в Telegram.</p><div class="row"><button class="ghost" id="acctOut">Вийти</button></div>`;
     document.getElementById('acctOut').onclick=acctLogout;return;}
   body.innerHTML=`${msg}<p style="margin:0"><b>Грати можна без акаунта.</b> Вхід потрібен, щоб не загубити прогрес:</p>
-    <ul class="muted" style="margin:0;padding-left:18px"><li>трофеї, серія виклику дня й рекорди — на всіх пристроях і в Telegram</li><li>ім'я та всі результати — одні на всіх пристроях</li><li>ліги з друзями в Telegram-групах</li></ul>
+    <ul class="muted" style="margin:0;padding-left:18px"><li>трофеї, серія драфту дня й рекорди — на всіх пристроях і в Telegram</li><li>ім'я та всі результати — одні на всіх пристроях</li><li>ліги з друзями в Telegram-групах</li></ul>
     <div class="grid" style="gap:8px">${IN_TG()?`<button class="primary" id="acctT">${ic('telegram')}Увійти через Telegram</button>`:''}${AUTH_GOOGLE&&!IN_TG()?`<button class="primary" id="acctG">${ic('google')}Увійти через Google</button>`:''}${AUTH_TG()&&!IN_TG()?`<a class="btnlink" id="acctBot" href="https://t.me/${TG_BOT}?start=login_${acctBotPending()||acctBotToken()}" target="_blank" rel="noopener">${ic('telegram')}Увійти через Telegram</a><span class="muted" style="font-size:12px" id="acctBotHint">${acctBotPending()&&BOT_POLL?'Чекаємо підтвердження: у чаті з ботом натисни «Start», потім «Підтвердити вхід» і повернись сюди.':'Відкриється чат з @'+TG_BOT+' — натисни там «Start», потім «Підтвердити вхід» і повернись сюди.'}</span>`:''}</div>
     ${ACCT_ERR||!SB?`<p class="muted mono" style="font-size:11px;margin:0">Діагностика: ${!SB?'бібліотека входу не завантажилась':esc(ACCT_ERR)}</p>`:''}
     <p class="muted" style="font-size:12px;margin:0">Зберігаємо лише ім'я та ідентифікатор входу. Усе, що вже зіграно на цьому пристрої, перейде в акаунт.</p>`;
@@ -171,6 +173,19 @@ function openAcct(){screenTag('account');
   const tb=document.getElementById('acctT');if(tb)tb.onclick=()=>{ACCT_MSG='Входимо…';openAcct();acctTelegram({initData:TG.initData},false);};
   const ab=document.getElementById('acctBot');if(ab)ab.onclick=()=>{ACCT_ERR='';setTimeout(()=>{acctBotPoll();const h=document.getElementById('acctBotHint');if(h)h.textContent='Чекаємо підтвердження: у чаті з ботом натисни «Start», потім «Підтвердити вхід» і повернись сюди.';},300);};
 }
+// «Це ти?» (0.60, DECISIONS п. 16): вхід другим способом на пристрої, де вже грав гравець іншого входу з історією.
+// Автоматично не склеюємо (на одному телефоні можуть грати двоє) — питаємо. «Так» — злиття з журналом (помилку можна відкотити вручну).
+function mergeAsk(o){if(!SESSION||!o||mergeAsk.shown===o.id)return;mergeAsk.shown=o.id;screenTag('merge');
+  const box=document.getElementById('viewBox'),body=document.getElementById('viewBody');document.getElementById('viewTitle').textContent='Це ти?';box.hidden=false;
+  const n=+o.seasons||0;
+  body.innerHTML=`<p style="margin:0">На цьому пристрої вже грав <b>${esc(String(o.name||''))}</b> — ${n} ${plUk(n,'сезон','сезони','сезонів')}, але з іншим входом (Google чи Telegram).</p>
+    <p class="muted" style="margin:0">Якщо це ти — об'єднаємо: сезони, трофеї, серія й ім'я стануть одним гравцем, і обидва входи відкриватимуть його. Якщо це хтось інший — нічого не зміниться.</p>
+    <div class="grid" style="gap:8px"><button class="primary" id="mergeYes">${ic('account-multiple-check')}Так, це я — об'єднати</button><button class="ghost" id="mergeNo">Ні, це інший гравець</button></div><p class="note" id="mergeMsg" hidden style="margin:0"></p>`;
+  const ans=async yes=>{const m=document.getElementById('mergeMsg');['mergeYes','mergeNo'].forEach(id=>document.getElementById(id).disabled=true);
+    try{const p=await playerRpc('merge_answer',{p_offer:o.id,p_yes:yes});if(PP)PP.prof=null;playerSet(p);if(yes){try{await acctPull();}catch(e){}}
+      m.hidden=false;m.textContent=yes?`Готово — тепер ти один гравець: ${myName()}.`:'Добре, лишаємо окремо.';setTimeout(()=>{if(!box.hidden&&document.getElementById('mergeMsg'))viewHide();},1800);}
+    catch(e){m.hidden=false;m.textContent='Не вдалося. Спробуй ще раз пізніше.';['mergeYes','mergeNo'].forEach(id=>{const b=document.getElementById(id);if(b)b.disabled=false;});}};
+  document.getElementById('mergeYes').onclick=()=>ans(true);document.getElementById('mergeNo').onclick=()=>ans(false);}
 // м'яка пропозиція увійти: після першого трофея, серії 3+ днів, 3-го сезону або при надсиланні в таблицю дня; «Пізніше» — тиша на 3 дні
 function acctNudge(r){
   const el=document.getElementById('acctNudge');if(!el)return;el.hidden=true;
@@ -201,7 +216,7 @@ function renderLeague(){
     <div class="meta">Сьогодні зіграли ${L.today.length} з ${Math.max(L.members,L.today.length)}</div>
     ${L.today.length?`<div class="tbl"><table>${L.today.slice(0,6).map((r,i)=>`<tr${(r.u&&PLAYER&&r.u===PLAYER.public_id)||(!r.u&&TGU&&r.name===[TGU.first_name,TGU.last_name].filter(Boolean).join(' '))?' class="me"':''}><td>${medal[i]||i+1}</td><td>${plink({players:{name:r.name,public_id:r.u}})}</td><td class="num">${r.w}-${r.d}-${r.l}</td><td class="num"><b>${r.pts}</b></td></tr>`).join('')}</table></div>`:'<p class="muted" style="margin:0">Ще ніхто не зіграв — будь першим!</p>'}
     ${L.standings&&L.standings.length>1?`<p class="muted" style="margin:0;font-size:13px">Залік (перемоги в днях): ${L.standings.slice(0,5).map(s=>`${plink({players:{name:s.name,public_id:s.u}})} ${s.wins}`).join(' · ')}</p>`:''}
-    <div class="row">${played?'<span class="best">Твій результат уже в табло групи</span>':'<button class="primary" id="leagueGo">Зіграти виклик дня</button>'}</div>`;
+    <div class="row">${played?'<span class="best">Твій результат уже в табло групи</span>':'<button class="primary" id="leagueGo">Зіграти драфт дня</button>'}</div>`;
   const g=document.getElementById('leagueGo');if(g)g.onclick=()=>document.getElementById('dailyBtn').click();
 }
 async function leagueSubmit(r){

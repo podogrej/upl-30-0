@@ -8,6 +8,8 @@
 #  - 0.55 (v055_backups.sql, двічі): сховище backups приватне, anon/authenticated не читають і не бачать файлів; rate_hit — лише сервер.
 #  - 0.59 (v059_player_page.sql, двічі): імена лише латиницею (правила, транслітерація, міграція старих імен і її повтор), унікальність без регістру, 30 днів, public_id, сторінка гравця, видалення акаунта,
 #    лічильники за гравцем, жодного нового прямого запису для anon; база зі збігами імен і база зі старою версією v059 — доводяться до правил.
+#  - 0.60 (v060_one_player.sql, двічі): питання «Це ти?» при другому вході, відповідь лише тим самим входом, злиття з журналом і відкат (unmerge_players),
+#    «andré» лише власнику (і повторний v059 його не чіпає), пошта для новин (правила, не публічна, стирається з акаунтом), show_r, «Вибір сезону» на сторінці гравця.
 #  База — UTF8 з локаллю C (lower() не чіпає кирилицю — як найгірший випадок; ключ імені робить переклад сам).
 # Потрібні бінарники Postgres (/usr/lib/postgresql/*/bin). Запуск з кореня: bash tools/tests/setup.sh   (KEEP=1 — не зупиняти базу)
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
@@ -300,6 +302,96 @@ chk "delete_player: ім'я й прив'язки стерто, результа�
   end;"
 chk "delete_player: вхід іншого гравця — відмова" authenticated "
   begin j := delete_player('$DEV', '$SEC'); assert false, 'видалив чужого'; exception when sqlstate '28000' then null; end;" ',"sub":"'$U2'"'
+# ===== 0.60: «Один гравець» — питання «Це ти?», журнал злиттів, «andré», пошта, show_r, «Вибір сезону» на сторінці =====
+$P -d t1 -c "select count(*) from pg_policies" -tA > "$D/pol_before60" 2>/dev/null
+for pass in 1 2; do
+  if $P -d t1 -f "$ROOT/sql/v060_one_player.sql" >/dev/null 2>"$D/err"; then ok "запуск $pass: v060_one_player.sql"; else bad "запуск $pass: v060_one_player.sql — $(grep -v NOTICE "$D/err" | head -3)"; fi
+done
+chk "v060: нових політик немає; нові таблиці закриті для anon/authenticated" postgres "
+  assert (select count(*) from pg_policies)::text = '$(cat "$D/pol_before60")', 'кількість політик змінилась';
+  assert not has_table_privilege('anon', 'merge_log', 'select') and not has_table_privilege('authenticated', 'merge_offers', 'insert')
+     and not has_table_privilege('anon', 'name_reserved', 'select') and not has_table_privilege('authenticated', 'name_reserved', 'update'), 'права на нові таблиці';
+  assert (select relrowsecurity from pg_class where relname = 'merge_offers') and (select relrowsecurity from pg_class where relname = 'merge_log'), 'RLS';
+  assert exists (select 1 from information_schema.columns where table_name = 'seasons' and column_name = 'show_r'), 'show_r';"
+MX=eeeeeeee-0000-4000-a000-000000000001; UT=33333333-3333-4333-a333-333333333333; UG=44444444-4444-4444-a444-444444444444
+$P -d t1 >/dev/null 2>"$D/err" <<SQL || { cat "$D/err"; exit 1; }
+insert into auth.users(id,email) values ('$UT','tg-777@users.upl-30-0.vercel.app'), ('$UG','g60@example.com');
+-- лише для тесту: читати закриті таблиці 0.60 з перевірок від імені authenticated
+create function t_offers() returns bigint language sql security definer as \$\$ select count(*) from merge_offers \$\$;
+create function t_offer() returns uuid language sql security definer as \$\$ select id from merge_offers order by created_at limit 1 \$\$;
+create function t_new_offer(s uuid, d uuid) returns uuid language sql security definer as \$\$ insert into merge_offers(src, dst) values (s, d) returning id \$\$;
+create function t_answer(o uuid) returns text language sql security definer as \$\$ select answer from merge_offers where id = o \$\$;
+create function t_contacts(p uuid) returns bigint language sql security definer as \$\$ select count(*) from player_contacts where player_id = p \$\$;
+create function t_logged(s uuid, d uuid) returns bigint language sql security definer as \$\$ select count(*) from merge_log where src = s and dst = d and jsonb_array_length(moved->'seasons') = 1 \$\$;
+select player_hello('$MX', '$SEC');
+insert into seasons(device_id, mode, format, formation, w, d, l, pts, place, gf, ga) values ('$MX', 'normal', 'classic', '4-4-2', 20, 5, 5, 65, 2, 60, 30);
+update players set name = 'tester60' where id = (select player_id from player_links where kind = 'device' and key = '$MX');
+SQL
+chk "v060: перший вхід (Telegram) на пристрої без чужого входу — як раніше, без питання" authenticated "
+  j := link_account('$MX', '$SEC'); assert j->>'name' = 'tester60' and j->'merge_offer' is null or json_typeof(j->'merge_offer') = 'null', j::text;" ',"sub":"'$UT'"'
+chk "v060: другий вхід (Google) на тому ж пристрої — новий гравець і питання «Це ти?» з ім'ям і кількістю сезонів; повтор — те саме питання" authenticated "
+  j := link_account('$MX', '$SEC'); assert j->>'name' is null and j->'merge_offer'->>'name' = 'tester60' and (j->'merge_offer'->>'seasons')::int = 1, j::text;
+  k := link_account('$MX', '$SEC'); assert k->'merge_offer'->>'id' = j->'merge_offer'->>'id', 'друге питання ' || k::text;
+  assert t_offers() = 1, 'кількість питань';" ',"sub":"'$UG'"'
+chk "v060: відповісти може лише той самий вхід; anon — ні" authenticated "
+  begin j := merge_answer('$MX', '$SEC', t_offer(), true); assert false, 'чужий вхід відповів';
+  exception when sqlstate '22023' then null; end;" ',"sub":"'$UT'"'
+chk "v060: anon не викликає merge_answer / unmerge_players / merge_players_logged" anon "
+  begin j := merge_answer('$MX', '$SEC', (gen_random_uuid()), true); assert false, 'anon'; exception when insufficient_privilege then null; end;
+  begin perform unmerge_players(1); assert false, 'unmerge'; exception when insufficient_privilege then null; end;
+  begin perform merge_players_logged(gen_random_uuid(), gen_random_uuid(), 'x'); assert false, 'logged'; exception when insufficient_privilege then null; end;"
+chk "v060: «Так» — історія й вхід старого гравця переходять до нового, ім'я — старе (новий без історії), запис у журналі; вдруге — відмова" authenticated "
+  declare old uuid := t_link('auth', '$UT'); o uuid := t_offer(); begin
+  j := merge_answer('$MX', '$SEC', o, true);
+  assert j->>'name' = 'tester60', 'ім''я ' || j::text;
+  assert (select merged_into::text from players where id = old) = j->>'id', 'не злито';
+  assert (select count(*) from seasons where player_id = (j->>'id')::uuid) = 1 and t_link('auth', '$UT')::text = j->>'id', 'сезони/вхід';
+  assert t_logged(old, (j->>'id')::uuid) = 1, 'журнал';
+  begin j := merge_answer('$MX', '$SEC', o, true); assert false, 'вдруге'; exception when sqlstate '22023' then null; end;
+  end;" ',"sub":"'$UG'"'
+chk "v060: unmerge_players — усе повертається старому гравцю, новий — без імені" postgres "
+  declare L merge_log; begin select * into L from merge_log order by id desc limit 1;
+  assert unmerge_players(L.id) = 'ok', 'unmerge';
+  assert (select merged_into is null and name = 'tester60' from players where id = L.src), 'старий гравець';
+  assert (select name is null from players where id = L.dst), 'ім''я нового';
+  assert (select count(*) from seasons where player_id = L.src) = 1 and t_link('auth', '$UT') = L.src, 'сезони/вхід назад';
+  assert unmerge_players(L.id) = 'уже відкочено', 'двічі';
+  end;"
+chk "v060: «Ні» — питання закрите, нічого не злито" authenticated "
+  declare o uuid; src uuid := t_link('auth', '$UT'); begin
+  o := t_new_offer(src, t_link('auth', '$UG'));
+  j := merge_answer('$MX', '$SEC', o, false);
+  assert (select merged_into is null from players where id = src) and t_answer(o) = 'no', 'злито після «ні»';
+  j := link_account('$MX', '$SEC'); assert j->'merge_offer' is null or json_typeof(j->'merge_offer') = 'null', 'питання знову ' || j::text;
+  end;" ',"sub":"'$UG'"'
+$P -d t1 -c "insert into name_reserved(name, player_id, note) select 'andré', t_link('device', '$DEV'), 'тест' on conflict do nothing" >/dev/null
+chk "v060: зарезервоване «andré» — лише своєму гравцю; решта правил без змін" anon "
+  begin j := set_player_name('$DEV', '$SEC', 'andré'); exception when sqlstate '22023' then null; end;
+  j := player_hello('$DEV', '$SEC');
+  begin j := set_player_name('$EDEV', '$SEC2', 'andré'); assert false, 'чужий взяв andré'; exception when sqlstate '22023' then assert sqlerrm = 'name_chars', sqlerrm; end;
+  begin j := set_player_name('$EDEV', '$SEC2', 'andré2'); assert false, 'andré2'; exception when sqlstate '22023' then null; end;"
+$P -d t1 -c "update players set name = 'andré', name_changed_at = null where id = t_link('device', '$DEV')" >/dev/null
+chk "v060: власник «andré» зберігає ім'я кнопкою без помилки (те саме ім'я)" anon "
+  j := set_player_name('$DEV', '$SEC', 'andré'); assert j->>'name' = 'andré', j::text;"
+if $P -d t1 -f "$ROOT/sql/v059_player_page.sql" -tA >"$D/ren3" 2>"$D/err" && $P -d t1 -f "$ROOT/sql/v060_one_player.sql" >/dev/null 2>>"$D/err" \
+   && [ "$($P -d t1 -tAc "select name from players where id = t_link('device', '$DEV')")" = "andré" ] && ! grep -q "andré" "$D/ren3"
+then ok "v060: повторний запуск v059 (+ v060) не переписує зарезервоване «andré»"; else bad "v059 після v060 переписав andré — $(cat "$D/ren3") $(grep -v NOTICE "$D/err" | head -2)"; fi
+chk "v060: пошта — нижній регістр; погана — email_bad; порожня — стерто разом із галочкою; галочка без пошти не ставиться" anon "
+  j := set_player_contact('$EDEV', '$SEC2', ' Oleh@Example.COM ', true); assert j->>'contact_email' = 'oleh@example.com' and (j->>'news_optin')::boolean, j::text;
+  begin j := set_player_contact('$EDEV', '$SEC2', 'not-an-email', true); assert false, 'погана'; exception when sqlstate '22023' then assert sqlerrm = 'email_bad', sqlerrm; end;
+  j := set_player_contact('$EDEV', '$SEC2', '', true); assert j->>'contact_email' is null and not (j->>'news_optin')::boolean, j::text;
+  begin j := set_player_contact('$EDEV', 'attacker-attacker-attacker', 'x@y.zz', true); assert false, 'чужий секрет'; exception when sqlstate '28000' then null; end;
+  j := set_player_contact('$EDEV', '$SEC2', 'oleh@example.com', false); assert not (j->>'news_optin')::boolean, 'галочка';"
+chk "v060: пошта не видна на публічній сторінці й anon не читає її з players напряму" anon "
+  j := player_profile_pub((player_hello('$EDEV', '$SEC2'))->>'public_id'); assert j::text !~ 'example', 'пошта на сторінці';
+  begin perform 1 from player_contacts limit 1; assert false, 'anon читає player_contacts'; exception when insufficient_privilege then null; end;
+  assert not exists (select 1 from information_schema.columns where table_name = 'players' and column_name like '%mail%'), 'пошта в players';"
+chk "v060: «Видалити акаунт» стирає пошту" anon "
+  declare old uuid := t_link('device', '$EDEV'); begin j := delete_player('$EDEV', '$SEC2');
+  assert t_contacts(old) = 0, 'пошта лишилась'; end;"
+chk "v060: player_profile — «Вибір сезону» окремим режимом" postgres "
+  insert into seasons(device_id, mode, format, formation, w, d, l, pts, place, gf, ga) values ('$DEV', 'pick', 'classic', '4-4-2', 25, 3, 2, 78, 1, 70, 20);
+  j := player_profile(t_link('device', '$DEV')); assert j->'best'->'pick' is not null and (j->'best'->'pick'->>'pts')::int = 78, j::text;"
 # база, де збіги імен уже є: v059_name_conflicts.sql їх показує; v059 дає молодшому номер і створює індекс
 $P -c "create database t3" >/dev/null
 if { $P -d t3 -f "$ROOT/tools/tests/stub.sql" && $P -d t3 -f "$ROOT/sql/new_db_part_A.sql" && $P -d t3 -f "$ROOT/sql/v039_part_B.sql" \

@@ -28,6 +28,11 @@ const TABLES = [
   { t: 'f5_rooms', order: 'id', key: 'id' },
   { t: 'f5_players', order: 'room_id,seat' },
   { t: 'f5_picks', order: 'room_id,seat,k' },
+  // 0.60 (sql/v060_one_player.sql): пошта для новин, питання «Це ти?», журнал злиттів (для відкату), іменні винятки
+  { t: 'player_contacts', order: 'player_id', key: 'player_id' },
+  { t: 'merge_offers', order: 'id', key: 'id' },
+  { t: 'merge_log', order: 'id', key: 'id' },
+  { t: 'name_reserved', order: 'name', key: 'name' },
 ];
 const safeEq = (a, b) => { const x = Buffer.from(String(a)), y = Buffer.from(String(b)); return x.length === y.length && crypto.timingSafeEqual(x, y); };
 const q = v => encodeURIComponent(typeof v === 'string' && /[,.()"]/.test(v) ? `"${v.replace(/"/g, '\\"')}"` : String(v));

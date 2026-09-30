@@ -42,7 +42,7 @@ async function run(MODE,b){const T=checker('v39 '+MODE);const v39=MODE==='new';c
  // вільна гра, «Складний»
  await pg.click('#freeOpen');const nameRow=await pg.$eval('#myNameRow',e=>!e.hidden);
  T.check(v39?nameRow&&await pg.$eval('#myName',e=>e.textContent)==='andrii':!nameRow,'налаштування: рядок імені '+(v39?'з «andrii»':'схований'));
- await pg.click('#formats .opt:nth-child(1)');await pg.click('#modes .opt:nth-child(2)');await pg.click('#startBtn');await draftSeason(pg);await pg.waitForTimeout(1500);
+ await pg.click('#formats .opt[data-fmt="classic"]');await pg.click('#modes .opt:nth-child(2)');await pg.click('#startBtn');await draftSeason(pg);await pg.waitForTimeout(1500);
  const ver=await pg.$eval('#verLine',e=>e.hidden?'':e.textContent);T.check(/перевірено сервером/.test(ver),'«Результат перевірено сервером»');
  const row=DB.seasons[DB.seasons.length-1]||{};
  T.check(v39?log.includes('POST /api/save')&&!log.includes('POST /api/verify'):log.includes('POST /api/save')&&log.includes('POST /api/verify'),v39?'сезон записав сервер (/api/save), не браузер':'SQL 0.53 немає — /api/save відповів 503, сезон записано напряму, як 0.52');

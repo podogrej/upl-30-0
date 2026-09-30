@@ -11,7 +11,7 @@ const OUT=process.argv[2]||path.join(ROOT,'tools','tests','out');fs.mkdirSync(OU
      hidden=hidden&&await pg.$$eval('#f5Sq .pl .rt',e=>e.every(x=>x.textContent===''));
      picked.push(await btn.$eval('.nm',e=>e.textContent));await btn.click();await pg.waitForTimeout(80);}
    return {turns,picked,hidden};}
- await pg.click('#f5Open');await pg.click('[data-w="local"]');
+ await pg.evaluate(()=>document.getElementById('f5Open').click());   /* 0.60: кнопку сховано на головній */await pg.click('[data-w="local"]');
  await pg.click('#f5Go');T.check(!!(await pg.$('#f5Go'))&&await pg.$eval('[data-nm="0"]',e=>e.classList.contains('bad')),'без ніку драфт не починається');
  await pg.fill('[data-nm="0"]','Андрій');await pg.fill('[data-nm="1"]','Сергій');await pg.fill('[data-tm="1"]','Динамо Двір');await pg.click('[data-fi="1"][data-fm="2-2"]');
  await pg.click('#f5Go');const d2=await draft();

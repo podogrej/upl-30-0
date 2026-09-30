@@ -1,128 +1,6 @@
 // 30-0 УПЛ — Telegram-бот (Vercel serverless function, адреса: /api/bot)
 // Змінні оточення у Vercel: TG_TOKEN, TG_SECRET (обов'язкова, інакше 401), TG_BOT, SUPABASE_SERVICE_KEY
-const L = (() => {   // спільні функції (вбудовано, щоб файл не залежав від інших)
-const crypto = require('crypto');
-const SB_URL = (process.env.SUPABASE_URL || 'https://qruhcbwycrnfgzzdbljr.supabase.co').trim();   // у тестовому оточенні Vercel — адреса тестової бази
-const env = k => String(process.env[k] || '').replace(/\s+/g, '');
-const esc = s => String(s == null ? '' : s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
-
-async function tg(method, body) {
-  const r = await fetch(`https://api.telegram.org/bot${env('TG_TOKEN')}/${method}`, {
-    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
-  });
-  return r.json();
-}
-
-// запити до бази з правами сервера (ключ лише у Vercel)
-async function sb(path, { method = 'GET', body, prefer } = {}) {
-  const key = env('SUPABASE_SERVICE_KEY');
-  const r = await fetch(`${SB_URL}/rest/v1/${path}`, {
-    method, headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json', ...(prefer ? { Prefer: prefer } : {}) },
-    body: body ? JSON.stringify(body) : undefined,
-  });
-  const t = await r.text(); let j = null; try { j = t ? JSON.parse(t) : null; } catch (e) {}
-  if (!r.ok) throw new Error(`db ${r.status}: ${t.slice(0, 150)}`);
-  return j;
-}
-
-function kyivDate(d = new Date()) {
-  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Kyiv', year: 'numeric', month: '2-digit', day: '2-digit' }).format(d);
-}
-const LAUNCH = Date.UTC(2026, 8, 28);
-const dayNo = day => Math.max(1, Math.round((Date.UTC(+day.slice(0, 4), +day.slice(5, 7) - 1, +day.slice(8, 10)) - LAUNCH) / 864e5) + 1);
-const dayShort = day => `${day.slice(8, 10)}.${day.slice(5, 7)}`;
-
-// перевірка підпису Mini App (initData) — повертає {user, start_param} або null
-function checkMiniApp(initData) {
-  const token = env('TG_TOKEN');
-  const p = new URLSearchParams(initData || ''); const hash = p.get('hash'); if (!hash) return null;
-  p.delete('hash');
-  const dcs = [...p.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([k, v]) => `${k}=${v}`).join('\n');
-  const secret = crypto.createHmac('sha256', 'WebAppData').update(token).digest();
-  if (crypto.createHmac('sha256', secret).update(dcs).digest('hex') !== hash) return null;
-  if (Date.now() / 1000 - Number(p.get('auth_date') || 0) > 86400) return null;
-  let user = null; try { user = JSON.parse(p.get('user')); } catch (e) {}
-  return user ? { user, start_param: p.get('start_param') || '' } : null;
-}
-const nameOf = u => ([u.first_name, u.last_name].filter(Boolean).join(' ') || u.username || 'Гравець').slice(0, 40);
-
-const playUrl = chat_id => `https://t.me/${env('TG_BOT') || 'upl30_bot'}?startapp=g${chat_id}`;
-const playKb = chat_id => ({ inline_keyboard: [[{ text: '▶️ Зіграти виклик дня', url: playUrl(chat_id) }]] });
-
-const sortRes = (a, b) => b.pts - a.pts || (b.gf - b.ga) - (a.gf - a.ga) || b.gf - a.gf || String(a.created_at).localeCompare(String(b.created_at));
-
-// ім'я в табло — з профілю гравця (players.name, інакше анонімне; з 0.59 — латиниця в нижньому регістрі), а не копія імені Telegram у рядку (аудит В5).
-// Гравця шукаємо за прив'язкою Telegram (player_links, kind = 'tg'); немає прив'язки чи SQL 0.59 ще не виконано — ім'я з рядка, як було.
-async function withNames(rows) {
-  const keys = [...new Set(rows.map(r => r.tg_user_id).filter(x => x != null && /^\d+$/.test(String(x))).map(String))];
-  const pl = {};
-  for (let i = 0; i < keys.length; i += 100) {
-    const q = `player_links?kind=eq.tg&key=in.(${keys.slice(i, i + 100).join(',')})&select=key,players(name,anon_name,public_id)`;
-    let ls = []; try { ls = await sb(q) || []; } catch (e) { try { ls = await sb(q.replace(',public_id', '')) || []; } catch (e2) { console.warn('names', e2.message); } }
-    for (const l of ls) if (l.players) pl[l.key] = l.players;
-  }
-  return rows.map(r => { const p = pl[String(r.tg_user_id)]; const n = p && (p.name || p.anon_name);
-    return n ? { ...r, name: String(n), u: p.public_id || undefined } : r; });
-}
-// з 0.52 у табло й підсумках ліг — лише результати, чий сезон сервер перевірив (цифри беремо із сезону, а не з браузера).
-// Дні до VERIFIED_FROM показуємо як були, щоб не переписувати історію ліг.
-const VERIFIED_FROM = '2026-10-01';
-async function onlyVerified(rows) {
-  const ids = [...new Set(rows.filter(r => String(r.day) >= VERIFIED_FROM).map(r => +r.season_id).filter(Boolean))];
-  const ok = {};
-  for (let i = 0; i < ids.length; i += 100)
-    for (const s of await sb(`seasons?id=in.(${ids.slice(i, i + 100).join(',')})&verified=is.true&practice=is.false&select=id,day,tg_user_id,w,d,l,gf,ga,place`) || []) ok[s.id] = s;
-  return withNames(rows.filter(r => {
-    if (String(r.day) < VERIFIED_FROM) return true;
-    const s = ok[+r.season_id];
-    return !!s && String(s.day).slice(0, 10) === String(r.day).slice(0, 10) && (s.tg_user_id == null || String(s.tg_user_id) === String(r.tg_user_id));
-  }).map(r => { const s = ok[+r.season_id]; return s ? { ...r, w: s.w, d: s.d, l: s.l, pts: s.w * 3 + s.d, gf: s.gf, ga: s.ga, place: s.place } : r; }));
-}
-
-// загальний залік ліги: перемоги в днях (минулі дні + сьогодні)
-async function standings(chat_id) {
-  const rows = await onlyVerified(await sb(`league_results?chat_id=eq.${chat_id}&select=day,tg_user_id,name,pts,gf,ga,created_at,season_id&order=day.desc&limit=3000`) || []);
-  const byDay = {}; for (const r of rows) (byDay[r.day] = byDay[r.day] || []).push(r);
-  const st = {};
-  for (const [day, list] of Object.entries(byDay)) {
-    list.sort(sortRes);
-    for (const r of list) { const s = st[r.tg_user_id] || (st[r.tg_user_id] = { name: r.name, u: r.u, wins: 0, days: 0, pts: 0 }); s.days++; s.pts += r.pts; s.name = r.name; }
-    st[list[0].tg_user_id].wins++;
-  }
-  return Object.values(st).sort((a, b) => b.wins - a.wins || b.pts / b.days - a.pts / a.days);
-}
-
-async function boardText(chat_id, day) {
-  const [lg] = await sb(`leagues?chat_id=eq.${chat_id}&select=title`) || [];
-  const rows = (await onlyVerified(await sb(`league_results?chat_id=eq.${chat_id}&day=eq.${day}&select=*`) || [])).sort(sortRes);
-  const members = (await sb(`league_members?chat_id=eq.${chat_id}&select=tg_user_id`) || []).length;
-  const medal = ['🥇', '🥈', '🥉'];
-  let t = `<b>🏟 Ліга «${esc(lg ? lg.title : 'група')}»</b>\nВиклик дня №${dayNo(day)} · ${dayShort(day)} — однакове колесо для всіх\n\n`;
-  if (!rows.length) t += 'Сьогодні ще ніхто не зіграв. Будь першим!';
-  else t += rows.map((r, i) => `${medal[i] || (i + 1) + '.'} ${esc(r.name)} — <b>${r.pts}</b> (${r.w}-${r.d}-${r.l}, ${r.gf}:${r.ga})${r.trophies && r.trophies.length ? ' 🏆' : ''}`).join('\n');
-  t += `\n\nЗіграли: ${rows.length} з ${Math.max(members, rows.length)}`;
-  return t;
-}
-
-// одне повідомлення-табло на день: редагуємо, а не шлемо нові
-async function upsertBoard(chat_id, day, { forceNew = false } = {}) {
-  const text = await boardText(chat_id, day);
-  const [b] = await sb(`league_boards?chat_id=eq.${chat_id}&day=eq.${day}&select=message_id`) || [];
-  if (b && b.message_id && !forceNew) {
-    const r = await tg('editMessageText', { chat_id, message_id: b.message_id, text, parse_mode: 'HTML', reply_markup: playKb(chat_id), disable_web_page_preview: true });
-    if (r.ok || /not modified/.test(r.description || '')) return b.message_id;
-  }
-  const m = await tg('sendMessage', { chat_id, text, parse_mode: 'HTML', reply_markup: playKb(chat_id), disable_web_page_preview: true });
-  if (!m.ok) throw new Error('send: ' + m.description);
-  const mid = m.result.message_id;
-  await tg('pinChatMessage', { chat_id, message_id: mid, disable_notification: true });   // вийде, лише якщо бот — адмін
-  await sb('league_boards?on_conflict=chat_id,day', { method: 'POST', prefer: 'resolution=merge-duplicates,return=minimal', body: { chat_id, day, message_id: mid } });
-  return mid;
-}
-
-return { SB_URL, env, esc, tg, sb, kyivDate, dayNo, dayShort, checkMiniApp, nameOf, playUrl, playKb, sortRes, onlyVerified, standings, boardText, upsertBoard };
-})();
-const SITE = 'https://upl-30-0.vercel.app/';
+const L = require('./_league.js');   // спільні функції ліг груп (0.60: одна копія замість трьох)const SITE = 'https://upl-30-0.vercel.app/';
 const SB_KEY = (process.env.SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_pEszTOPsCHLgpiPpwB4JKg_SS-X07hY').trim(); // публічний ключ, як і на сайті
 
 function playButton(isPrivate) {
@@ -134,18 +12,20 @@ function playButton(isPrivate) {
 async function topToday() {
   const day = L.kyivDate();
   // ім'я — з профілю гравця (players), копія nickname — лише якщо профілю немає (аудит В5)
-  const q = sel => fetch(`${L.SB_URL}/rest/v1/daily_results?apikey=${SB_KEY}&day=eq.${day}&verified=is.true&select=${sel}&order=pts.desc,ga.asc,gf.desc&limit=10`);
-  let r = await q('nickname,w,d,l,pts,gf,ga,players(name,anon_name)'); if (!r.ok) r = await q('nickname,w,d,l,pts,gf,ga');
-  const rows = r.ok ? await r.json() : [];
-  if (!rows.length) return `<b>Виклик дня ${day}</b>\nПоки що ніхто не зіграв. Будь першим!`;
+  const q = sel => fetch(`${L.SB_URL}/rest/v1/daily_results?apikey=${SB_KEY}&day=eq.${day}&verified=is.true&select=${sel}&order=pts.desc,ga.asc,gf.desc&limit=30`);
+  let r = await q('nickname,w,d,l,pts,gf,ga,player_id,players(name,anon_name)'); if (!r.ok) r = await q('nickname,w,d,l,pts,gf,ga');
+  // у гравця може бути два результати дня (0.60: об'єднані входи з двох пристроїв) — лише кращий
+  const seen = new Set();
+  const rows = (r.ok ? await r.json() : []).filter(x => !x.player_id || (!seen.has(x.player_id) && seen.add(x.player_id))).slice(0, 10);
+  if (!rows.length) return `<b>Драфт дня ${day}</b>\nПоки що ніхто не зіграв. Будь першим!`;
   const medal = ['🥇', '🥈', '🥉'];
-  return `<b>Виклик дня ${day} — топ ${rows.length}</b>\n` + rows.map((x, i) =>
+  return `<b>Драфт дня ${day} — топ ${rows.length}</b>\n` + rows.map((x, i) =>
     `${medal[i] || (i + 1) + '.'} ${L.esc(x.players && (x.players.name || x.players.anon_name) ? String(x.players.name || x.players.anon_name) : (x.nickname || 'Анонім'))} — <b>${x.pts}</b> (${x.w}-${x.d}-${x.l}, ${x.gf}:${x.ga})`).join('\n');
 }
 
 const HELLO = 'Збери XI з усієї історії Прем\'єр-ліги України і пройди сезон 30-0.\n\n' +
   'Колесо видає клуб і сезон, з кожного береш одного гравця. Одинадцять обертів — і 30 турів чемпіонату.\n\n' +
-  '/play — грати\n/top — таблиця виклику дня\n\nДодай мене в групу з друзями й напиши там /league — буде ліга вашої групи.';
+  '/play — грати\n/top — таблиця драфту дня\n\nДодай мене в групу з друзями й напиши там /league — буде ліга вашої групи.';
 const GROUP_HELLO = 'Привіт! Я — 30-0 УПЛ ⚽️\n\nНапишіть /league — створю лігу вашої групи. Щодня однакове колесо для всіх, ' +
   'таблиця дня оновлюється сама, а ввечері підсумок: хто виграв день і хто відкрив трофеї.\n\n' +
   'Порада: зробіть мене адміністратором (лише «Закріплення повідомлень»), щоб я закріплював табло.';
@@ -155,7 +35,7 @@ async function league(chat, from) {
   const exists = (await L.sb(`leagues?chat_id=eq.${chat_id}&select=chat_id`) || []).length > 0;
   await L.sb('leagues?on_conflict=chat_id', { method: 'POST', prefer: 'resolution=merge-duplicates,return=minimal', body: { chat_id, title: String(chat.title || 'Група').slice(0, 60), created_by: from && from.id } });
   if (from && !from.is_bot) await L.sb('league_members?on_conflict=chat_id,tg_user_id', { method: 'POST', prefer: 'resolution=merge-duplicates,return=minimal', body: { chat_id, tg_user_id: from.id, name: L.nameOf(from) } });
-  if (!exists) await L.tg('sendMessage', { chat_id, text: '🏟 Лігу групи створено! Грайте виклик дня з кнопки під табло — результати потраплять сюди автоматично. Підсумок дня — щовечора близько 21:00 за Києвом.' });
+  if (!exists) await L.tg('sendMessage', { chat_id, text: '🏟 Лігу групи створено! Грайте драфт дня з кнопки під табло — результати потраплять сюди автоматично. Підсумок дня — щовечора близько 21:00 за Києвом.' });
   await L.upsertBoard(chat_id, L.kyivDate(), { forceNew: true });
 }
 

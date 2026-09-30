@@ -20,7 +20,7 @@ const OUT=process.argv[2]||path.join(ROOT,'tools','tests','out');fs.mkdirSync(OU
  await pg.click('#acctBtn');await pg.waitForTimeout(300);T.check(/Увійшов через Telegram/.test(await pg.textContent('#pp')),'своя сторінка: «Увійшов через Telegram»');
 await pg.click('#homeBtn');
  await pg.screenshot({path:path.join(OUT,'league_home.png')});
- await pg.click('#leagueGo');T.check(/Виклик дня/.test(await pg.textContent('#modeLabel')),'«Зіграти виклик дня» з картки ліги відкриває виклик дня');
+ await pg.click('#leagueGo');T.check(/Драфт дня/.test(await pg.textContent('#modeLabel')),'«Зіграти драфт дня» з картки ліги відкриває драфт дня');
  await draftSeason(pg);await pg.waitForTimeout(1500);
  const res=posts.find(p=>p.result);T.check(res&&res.result.day&&typeof res.result.pts==='number'&&res.result.formation,'результат дня надіслано в лігу: '+(res?JSON.stringify(res.result).slice(0,100):'—'));
  const msg=await pg.$eval('#leagueMsg',e=>e.hidden?'':e.textContent);T.check(/табло групи: «Футбол по середах»/.test(msg),'повідомлення: '+msg);
