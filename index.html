@@ -1305,7 +1305,7 @@ const SB_URL=SB_ENVS[SB_ENV].url, SB_KEY=SB_ENVS[SB_ENV].key;
 const DATA_VERSION="d476449c5";   // відбиток пулу гравців (рейтинги) — пишемо в кожен сезон
 if(SB_ENV==='test'){const b=document.getElementById('homeBtn');if(b)b.insertAdjacentHTML('beforeend','<span class="testbadge">ТЕСТ</span>');}
 function deviceId(){let id=lsGet("upl30_device");if(!id){try{id=crypto.randomUUID();}catch(e){const h=[...crypto.getRandomValues(new Uint8Array(16))].map(b=>b.toString(16).padStart(2,'0')).join('');id=`${h.slice(0,8)}-${h.slice(8,12)}-4${h.slice(13,16)}-a${h.slice(17,20)}-${h.slice(20,32)}`;}lsSet("upl30_device",id);}return id;}
-async function sbTop(day){const q=sel=>`${SB_URL}/rest/v1/daily_results?apikey=${SB_KEY}&day=eq.${day}&select=${sel}&order=pts.desc,ga.asc,gf.desc&limit=500`;
+async function sbTop(day){const q=sel=>`${SB_URL}/rest/v1/daily_results?apikey=${SB_KEY}&day=eq.${day}&verified=is.true&select=${sel}&order=pts.desc,ga.asc,gf.desc&limit=500`;   // лише результати, які сервер записав з перевіреного сезону
   let r=await fetch(q('*,players(name,anon_name)'));if(!r.ok)r=await fetch(q('*'));if(!r.ok){throw new Error('GET '+r.status+' '+(await r.text()).slice(0,200));}return r.json();}
 async function sbInsert(row){const r=await fetch(`${SB_URL}/rest/v1/daily_results?apikey=${SB_KEY}`,{method:"POST",headers:{apikey:SB_KEY,"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify(row)});if(!r.ok){const t=await r.text();const e=new Error(r.status+" "+t);e.status=r.status;e.body=t;throw e;}}
 const VERSION=(document.querySelector('.foot').textContent.match(/версі[яї] ([\d.]+)/)||[])[1]||'?';
@@ -1363,7 +1363,9 @@ function logSeason(r){
 // сервер перераховує сезон і ставить позначку «перевірено»
 async function verifySeason(r){
   try{const res=await _fetch('/api/verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({season_id:r.rowId})});const j=await res.json();r.verified=j.verified;
-    const el=document.getElementById('verLine');if(el&&S.result===r){el.hidden=j.verified!==true;el.innerHTML=ic('check-decagram','sm')+'Результат перевірено сервером';}}catch(e){}
+    const el=document.getElementById('verLine');if(el&&S.result===r){el.hidden=j.verified!==true;el.innerHTML=ic('check-decagram','sm')+'Результат перевірено сервером';}
+    // з 0.52 результат дня в таблицю пише сервер (з перевіреного сезону) — надсилати вручну вже не треба
+    if(j.verified===true&&S.result===r&&S.daily&&!S.daily.practice){lsSet("upl30_sent_"+DAY,true);const f=document.getElementById('lbForm'),m=document.getElementById('lbMsg');if(f&&!f.hidden){f.hidden=true;m.textContent='Твій результат уже в таблиці дня.';document.getElementById('lbAcct').hidden=true;loadLb(document.getElementById('lbTable'));}}}catch(e){}
 }
 async function setSeasonNick(nick){const r=S.result;if(!ONLINE||!r||!r.rowId)return;try{await fetch(`${SB_URL}/rest/v1/seasons?id=eq.${r.rowId}&apikey=${SB_KEY}`,{method:"PATCH",headers:{apikey:SB_KEY,"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify({nickname:nick})});}catch(e){}}
 const fmtN=n=>Number(n||0).toLocaleString('uk-UA');
@@ -1688,7 +1690,7 @@ function lbHtml(rows){
   const me=deviceId();rows.sort((a,b)=>b.pts-a.pts||(b.gf-b.ga)-(a.gf-a.ga)||b.gf-a.gf);
   const pid=PLAYER&&PLAYER.id;const mi=rows.findIndex(r=>r.device_id===me||(pid&&r.player_id===pid));const show=rows.map((r,i)=>({...r,i})).filter(r=>r.i<20||r.i===mi);
   if(!rows.length)return '<p class="muted">Поки що ніхто не зіграв. Будь першим!</p>';
-  return `<div class="clickable"><table><tr><th>#</th><th>Гравець</th><th class="num">П-Н-Пр</th><th class="num">Г</th><th class="num">xP</th><th class="num">О</th></tr>`+show.map(r=>`<tr data-q="day=eq.${DAY}&device_id=eq.${esc(encodeURIComponent(r.device_id))}&practice=is.false"${r.i===mi?' class="me"':''}><td class="num">${r.i+1}</td><td>${esc(pname(r))}${r.verified?' <span title="Перевірено сервером" style="color:var(--win)">✓</span>':''}</td><td class="num">${numOr0(r.w)}-${numOr0(r.d)}-${numOr0(r.l)}</td><td class="num">${numOr0(r.gf)}:${numOr0(r.ga)}</td><td class="num">${r.xp!=null?numOr0(r.xp).toFixed(1):'—'}</td><td class="num"><b>${numOr0(r.pts)}</b></td></tr>`).join('')+`</table></div><p class="muted" style="margin-top:6px">Всього гравців сьогодні: ${rows.length} · тап по рядку — склад</p>`;
+  return `<div class="clickable"><table><tr><th>#</th><th>Гравець</th><th class="num">П-Н-Пр</th><th class="num">Г</th><th class="num">xP</th><th class="num">О</th></tr>`+show.map(r=>`<tr data-q="day=eq.${DAY}&device_id=eq.${esc(encodeURIComponent(r.device_id))}&practice=is.false"${r.i===mi?' class="me"':''}><td class="num">${r.i+1}</td><td>${esc(pname(r))}</td><td class="num">${numOr0(r.w)}-${numOr0(r.d)}-${numOr0(r.l)}</td><td class="num">${numOr0(r.gf)}:${numOr0(r.ga)}</td><td class="num">${r.xp!=null?numOr0(r.xp).toFixed(1):'—'}</td><td class="num"><b>${numOr0(r.pts)}</b></td></tr>`).join('')+`</table></div><p class="muted" style="margin-top:6px">Всього гравців сьогодні: ${rows.length} · лише результати, перевірені сервером · тап по рядку — склад</p>`;
 }
 async function loadLb(el){el.innerHTML='<p class="muted">Завантаження…</p>';try{el.innerHTML=lbHtml(await sbTop(DAY));}catch(e){el.innerHTML='<p class="muted">Таблиця зараз недоступна.</p><p class="muted mono" style="font-size:11px">'+esc(String(e&&e.message||e))+'</p>';}}
 function renderLb(r){
@@ -1710,7 +1712,7 @@ document.getElementById('lbSend').onclick=async()=>{
     Object.assign(row,tgFields());
     try{await sbInsert(row);}catch(e1){if(e1.status===400&&/tg_|xp/.test(e1.body||'')){delete row.tg_user_id;delete row.tg_name;if(/xp/.test(e1.body||''))delete row.xp;await sbInsert(row);}else throw e1;}
     nickSet(nick);setSeasonNick(nick);if(S.result&&S.result.rowId&&S.result.seedId)verifySeason(S.result);lsSet("upl30_sent_"+DAY,true);document.getElementById('lbForm').hidden=true;msg.textContent='Готово! Ти в таблиці.';loadLb(document.getElementById('lbTable'));}
-  catch(e){if(e.status===409){lsSet("upl30_sent_"+DAY,true);document.getElementById('lbForm').hidden=true;msg.textContent='З цього пристрою результат дня вже надіслано.';loadLb(document.getElementById('lbTable'));}
+  catch(e){if(e.status===409){nickSet(nick);lsSet("upl30_sent_"+DAY,true);document.getElementById('lbForm').hidden=true;msg.textContent='Твій результат уже в таблиці дня.';loadLb(document.getElementById('lbTable'));}
     else{msg.textContent='Не вдалося надіслати. Спробуй ще раз. ('+String(e&&e.message||e).slice(0,220)+')';}}
   btn.disabled=false;};
 // ---------- share

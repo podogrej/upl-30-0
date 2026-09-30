@@ -51,9 +51,24 @@ const playKb = chat_id => ({ inline_keyboard: [[{ text: '▶️ Зіграти �
 
 const sortRes = (a, b) => b.pts - a.pts || (b.gf - b.ga) - (a.gf - a.ga) || b.gf - a.gf || String(a.created_at).localeCompare(String(b.created_at));
 
+// з 0.52 у табло й підсумках ліг — лише результати, чий сезон сервер перевірив (цифри беремо із сезону, а не з браузера).
+// Дні до VERIFIED_FROM показуємо як були, щоб не переписувати історію ліг.
+const VERIFIED_FROM = '2026-10-01';
+async function onlyVerified(rows) {
+  const ids = [...new Set(rows.filter(r => String(r.day) >= VERIFIED_FROM).map(r => +r.season_id).filter(Boolean))];
+  const ok = {};
+  for (let i = 0; i < ids.length; i += 100)
+    for (const s of await sb(`seasons?id=in.(${ids.slice(i, i + 100).join(',')})&verified=is.true&practice=is.false&select=id,day,tg_user_id,w,d,l,gf,ga,place`) || []) ok[s.id] = s;
+  return rows.filter(r => {
+    if (String(r.day) < VERIFIED_FROM) return true;
+    const s = ok[+r.season_id];
+    return !!s && String(s.day).slice(0, 10) === String(r.day).slice(0, 10) && (s.tg_user_id == null || String(s.tg_user_id) === String(r.tg_user_id));
+  }).map(r => { const s = ok[+r.season_id]; return s ? { ...r, w: s.w, d: s.d, l: s.l, pts: s.w * 3 + s.d, gf: s.gf, ga: s.ga, place: s.place } : r; });
+}
+
 // загальний залік ліги: перемоги в днях (минулі дні + сьогодні)
 async function standings(chat_id) {
-  const rows = await sb(`league_results?chat_id=eq.${chat_id}&select=day,tg_user_id,name,pts,gf,ga,created_at&order=day.desc&limit=3000`) || [];
+  const rows = await onlyVerified(await sb(`league_results?chat_id=eq.${chat_id}&select=day,tg_user_id,name,pts,gf,ga,created_at,season_id&order=day.desc&limit=3000`) || []);
   const byDay = {}; for (const r of rows) (byDay[r.day] = byDay[r.day] || []).push(r);
   const st = {};
   for (const [day, list] of Object.entries(byDay)) {
@@ -66,7 +81,7 @@ async function standings(chat_id) {
 
 async function boardText(chat_id, day) {
   const [lg] = await sb(`leagues?chat_id=eq.${chat_id}&select=title`) || [];
-  const rows = (await sb(`league_results?chat_id=eq.${chat_id}&day=eq.${day}&select=*`) || []).sort(sortRes);
+  const rows = (await onlyVerified(await sb(`league_results?chat_id=eq.${chat_id}&day=eq.${day}&select=*`) || [])).sort(sortRes);
   const members = (await sb(`league_members?chat_id=eq.${chat_id}&select=tg_user_id`) || []).length;
   const medal = ['🥇', '🥈', '🥉'];
   let t = `<b>🏟 Ліга «${esc(lg ? lg.title : 'група')}»</b>\nВиклик дня №${dayNo(day)} · ${dayShort(day)} — однакове колесо для всіх\n\n`;
@@ -92,7 +107,7 @@ async function upsertBoard(chat_id, day, { forceNew = false } = {}) {
   return mid;
 }
 
-return { SB_URL, env, esc, tg, sb, kyivDate, dayNo, dayShort, checkMiniApp, nameOf, playUrl, playKb, sortRes, standings, boardText, upsertBoard };
+return { SB_URL, env, esc, tg, sb, kyivDate, dayNo, dayShort, checkMiniApp, nameOf, playUrl, playKb, sortRes, onlyVerified, standings, boardText, upsertBoard };
 })();
 const SITE = 'https://upl-30-0.vercel.app/';
 const SB_KEY = (process.env.SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_pEszTOPsCHLgpiPpwB4JKg_SS-X07hY').trim(); // публічний ключ, як і на сайті
@@ -105,7 +120,7 @@ function playButton(isPrivate) {
 
 async function topToday() {
   const day = L.kyivDate();
-  const r = await fetch(`${L.SB_URL}/rest/v1/daily_results?apikey=${SB_KEY}&day=eq.${day}&select=nickname,w,d,l,pts,gf,ga&order=pts.desc,ga.asc,gf.desc&limit=10`);
+  const r = await fetch(`${L.SB_URL}/rest/v1/daily_results?apikey=${SB_KEY}&day=eq.${day}&verified=is.true&select=nickname,w,d,l,pts,gf,ga&order=pts.desc,ga.asc,gf.desc&limit=10`);
   const rows = r.ok ? await r.json() : [];
   if (!rows.length) return `<b>Виклик дня ${day}</b>\nПоки що ніхто не зіграв. Будь першим!`;
   const medal = ['🥇', '🥈', '🥉'];
