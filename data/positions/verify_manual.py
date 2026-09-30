@@ -237,7 +237,7 @@ if APPLY:
         if x:
             r['main'], r['alts'], r['conf'], r['source'] = x['new_main'], x['new_alts'], 'tm', x['url']
     with open(MANUAL, 'w', newline='') as f:
-        w = csv.DictWriter(f, fieldnames=hdr, lineterminator='\n')
+        w = csv.DictWriter(f, fieldnames=hdr)   # як в оригіналі: CRLF
         w.writeheader()
         w.writerows(allrows)
     print('positions_manual.csv: оновлено рядків', len(by))
