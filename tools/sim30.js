@@ -15,7 +15,7 @@ function pickW(cands, r, uniform) {
 }
 
 // один драфт + сезон
-// cfg: {format, club, mode, sigma, formation, daily:{seq,year,formation}|null, seed}
+// cfg: {format, club, mode, sigma, formation, daily:{seq,year,formation}|null, seed, y0} — y0: епоха (0.58), колесо лише з клуб-сезонів від y0
 function play(cfg) {
   const r = mulberry32(cfg.seed);
   E.setFormat(cfg.format);
@@ -25,7 +25,8 @@ function play(cfg) {
   const taken = new Set();   // людей — за canonical id (DATA.alias), як S.taken у грі
   const noise = {};   // сприйняття гравця стабільне протягом драфту: знаєш когось як «сильного» — він сильний для тебе весь драфт
   const perceived = (p, slot) => { const er = effRating(p, slot); if (er == null) return null; if (!(p[5] in noise)) noise[p[5]] = normal(r) * cfg.sigma; return (SEE === 'base' ? p[2] : er) + noise[p[5]]; };
-  const pool = anti || cfg.format === 'classic' || cfg.format === 'legends' || cfg.daily ? DATA.clubs : cfg.format === 'derby' ? DATA.clubs.filter(c => FORMATS.derby.clubs.includes(c.c)) : DATA.clubs.filter(c => c.c === cfg.club);
+  const pool0 = anti || cfg.format === 'classic' || cfg.format === 'legends' || cfg.daily ? DATA.clubs : cfg.format === 'derby' ? DATA.clubs.filter(c => FORMATS.derby.clubs.includes(c.c)) : DATA.clubs.filter(c => c.c === cfg.club);
+  const pool = cfg.y0 && !cfg.daily ? pool0.filter(c => c.y >= cfg.y0) : pool0;
   const okP = p => !taken.has(canon(p[5])) && (!anti || p[3] >= ANTI_MIN_APPS);
   const best = cs => {   // найкращий (для анти — найгірший) хід у цьому клуб-сезоні
     let b = null;

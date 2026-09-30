@@ -92,6 +92,8 @@ const TROPHIES=[
   {id:"lobanovsky",i:"📋",n:"Лобан би схвалив",d:"Чемпіон, у складі 6+ гравців «Динамо» 1997–2001",cat:"secret",sec:1,t:c=>notAnti(c)&&c.r.place===1&&c.xi.filter(x=>x.cc==='dynamo-kyiv'&&x.y>=1997&&x.y<=2000).length>=6},
   {id:"panenka",i:"🪶",n:"Паненка",d:"Артем Мілевський у складі, команда в трійці",cat:"secret",sec:1,t:c=>notAnti(c)&&c.r.place<=3&&c.xi.some(x=>x.id==='tm:9800')},
   {id:"samba8",i:"💃",n:"Самба",d:"8+ бразильців в одному складі",cat:"secret",sec:1,t:c=>c.xi.filter(x=>DATA.nats[x.nat]==='Бразилія').length>=8},
+  // 0.58, ідея Віті: 106 грузинів у пулі, розкидані по клубах; бот, що полює на грузинів, збирає 6+ приблизно в 1 драфті з 8, випадково — майже ніколи
+  {id:"gamarjoba",i:"🇬🇪",n:"Гамарджоба",d:"6+ грузинів в одному складі",cat:"secret",sec:1,t:c=>c.xi.filter(x=>DATA.nats[x.nat]==='Грузія').length>=6},
   // Кварцяний, Блохін, Лобановський
   {id:"ndoye",i:"🧤",n:"Шедевр! Феномен!",q:"Кварцяний",d:"Ісса Ндоє у складі",cat:"secret",sec:1,t:c=>c.xi.some(x=>x.id==='w:1985-12-12:ndoe')},
   {id:"pichkur",i:"🚭",n:"Не п'є, не курить",q:"Кварцяний",d:"Євген Пічкур у складі",cat:"secret",sec:1,t:c=>c.xi.some(x=>x.id==='tm:89427')},
@@ -188,13 +190,13 @@ async function trRetro(){
   }catch(e){}
 }
 // ---------- UI: кнопка на головній, шафа трофеїв, нові трофеї після сезону
-function renderTrBtn(){const s=trStore();const n=Object.values(s.t).filter(e=>e.n).length;{const tt=document.getElementById('trTotal');if(tt){const n=TROPHIES.filter(t=>!t.gone).length+MILESTONES.length,x=n%10,y=n%100;tt.textContent=`${n} ${x===1&&y!==11?'трофей':x>=2&&x<=4&&(y<12||y>14)?'трофеї':'трофеїв'}, частина — секретні`;}}const b=document.getElementById('trCount');if(b)b.textContent=n?` · ${n}`:'';}
+function renderTrBtn(){const s=trStore();const n=Object.values(s.t).filter(e=>e.n).length;{const tt=document.getElementById('trTotal');if(tt){const n=TROPHIES.filter(t=>!t.gone).length+MILESTONES.length;tt.textContent=`${n} ${plUk(n,'трофей','трофеї','трофеїв')}, частина — секретні`;}}const b=document.getElementById('trCount');if(b)b.textContent=n?` · ${n}`:'';}
 function trCard(t,e,pct,prog){
   const got=e&&e.n;const p=pct!=null?`<span class="trp">${pct===0?'ще ніхто не відкрив':`є в ${pct<1?'<1':Math.round(pct)}% гравців`}</span>`:'';
   const pr=!got&&prog?`<span class="trp">${Math.min(prog[0],prog[1])}/${prog[1]}</span>`:'';
   return `<div class="tro${got?' on':''}${t.sec?' sec':''}"><span class="tri">${trBadge(t,got)}</span><div class="trt"><b>${esc(t.n)}</b>${trQ(t)}<span>${esc(t.d)}</span>${p}${pr}</div>${got&&e.n>1?`<span class="trn">×${e.n}</span>`:''}</div>`;
 }
-async function openTrophies(){
+async function openTrophies(){screenTag('trophies');
   const box=document.getElementById('viewBox'),body=document.getElementById('viewBody');document.getElementById('viewTitle').textContent='Трофеї';box.hidden=false;
   const draw=()=>{const s=trStore();const st={streak:trStreak(),dailies:s.dailies};
     const pctOf=id=>TR_PCT&&TR_PCT.players>=10?100*((TR_PCT.t||{})[id]||0)/TR_PCT.players:null;

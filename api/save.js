@@ -32,7 +32,9 @@ function seasonRow(r) {
   return { ...sc, nickname: str(r.nickname, 24), competition: str(r.competition || 'upl', 12), data_version: str(r.data_version, 16), mode, format, club: str(r.club, 40), formation,
     year: int(r.year, 1900, 9999), seed: int(r.seed, 0, 2 ** 53), version: str(r.version, 12), xp: num(r.xp, 0, 90), xg: num(r.xg, 0, 999), xga: num(r.xga, 0, 999),
     tier: str(r.tier, 80), golden: !!r.golden, perfect: !!r.perfect, seed_id: /^[0-9A-Za-z-]{1,64}$/.test(String(r.seed_id || '')) ? String(r.seed_id) : null, practice: !!r.practice,
-    day: dayRe.test(String(r.day || '')) ? r.day : null, xi: r.xi.map(xiItem), tbl: (r.tbl || []).map(tblItem) };
+    day: dayRe.test(String(r.day || '')) ? r.day : null, xi: r.xi.map(xiItem), tbl: (r.tbl || []).map(tblItem),
+    // епоха (0.58) — лише не «Усі роки» (сайт інакше її не надсилає). Колонки seasons.era поки немає: insert() повторить запис без неї
+    ...(/^y\d{4}$/.test(String(r.era || '')) ? { era: String(r.era) } : {}) };
 }
 // вставка з повтором без колонки, якої в базі ще немає (як робив браузер)
 async function insert(table, row, qs = '', prefer = 'return=representation') {

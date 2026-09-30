@@ -138,7 +138,7 @@ function nameBoxHtml(){if(!ONLINE||!PLAYER)return '';
 function nameBoxWire(){const b=document.getElementById('pNameSave');if(!b)return;b.onclick=async()=>{const m=document.getElementById('pNameMsg');b.disabled=true;const err=await playerRename(document.getElementById('pName').value);b.disabled=false;m.innerHTML=err?esc(err):(PLAYER.name?`Збережено: <b>${esc(PLAYER.name)}</b>.`:`Готово: ти знову <b>${esc(PLAYER.anon_name)}</b>.`);};}
 // ---------- інтерфейс
 function renderAcct(){const b=document.getElementById('acctBtn');if(!b)return;b.hidden=!ONLINE;b.innerHTML=SESSION?ic('account-circle')+esc(acctName().split(' ')[0]):ic('account-circle')+'Увійти';}
-function openAcct(){
+function openAcct(){screenTag('account');
   const box=document.getElementById('viewBox'),body=document.getElementById('viewBody');document.getElementById('viewTitle').textContent='Акаунт';box.hidden=false;
   const msg=nameBoxHtml()+(ACCT_MSG?`<p class="note">${esc(ACCT_MSG)}</p>`:'');
   if(SESSION){const u=SESSION.user;const via=(u.app_metadata&&u.app_metadata.provider)==='google'?'Google':(u.email||'').endsWith('@users.upl-30-0.vercel.app')?'Telegram':'пошту';
@@ -162,7 +162,7 @@ function acctNudge(r){
   const s=trStore();const streak=trStreak();let why='';
   if(r.tro&&r.tro.fresh.length&&Object.values(s.t).filter(e=>e.n).length<=r.tro.fresh.length+1)why='Трофей збережено лише на цьому пристрої.';
   else if(streak>=3)why=`Серія ${streak} дні поспіль — не загуби її, якщо зміниш телефон.`;
-  else if(s.seasons>=3){const nt=Object.values(s.t).filter(e=>e.n).length;const pl=(n,a,b,c)=>n%10===1&&n%100!==11?a:(n%10>=2&&n%10<=4&&(n%100<12||n%100>14))?b:c;why=`Уже ${s.seasons} ${pl(s.seasons,'сезон','сезони','сезонів')} і ${nt} ${pl(nt,'трофей','трофеї','трофеїв')}.`;}
+  else if(s.seasons>=3){const nt=Object.values(s.t).filter(e=>e.n).length;why=`Уже ${s.seasons} ${plUk(s.seasons,'сезон','сезони','сезонів')} і ${nt} ${plUk(nt,'трофей','трофеї','трофеїв')}.`;}
   if(!why)return;
   el.hidden=false;el.innerHTML=`<span>${why} Увійди, щоб зберегти прогрес.</span><span class="row" style="gap:6px"><button class="primary" id="nudgeGo">Увійти</button><button class="ghost" id="nudgeLater">Пізніше</button></span>`;
   document.getElementById('nudgeGo').onclick=()=>openAcct();
