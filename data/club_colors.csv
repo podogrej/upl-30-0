@@ -1,0 +1,52 @@
+code,name,c1,c2,c3,confidence
+dynamo-kyiv,Динамо (Київ),#FFFFFF,#0055A5,,high
+shakhtar-donetsk,Шахтар (Донецьк),#F26522,#000000,,high
+vorskla-poltava,Ворскла (Полтава),#009B48,#FFFFFF,,high
+karpaty-lviv,Карпати (Львів),#00843D,#FFFFFF,,high
+chornomorets-odesa,Чорноморець (Одеса),#0072BC,#000000,#FFFFFF,high
+dnipro,Дніпро (Дніпропетровськ),#0057B8,#FFFFFF,,high
+kryvbas,Кривбас (Кривий Ріг),#D1001F,#FFFFFF,,high
+zorya-luhansk,Зоря (Луганськ),#FFFFFF,#000000,,high
+metalurh-zaporizhzhia,Металург (Запоріжжя),#C8102E,#FFFFFF,,high
+tavriya-simferopol,Таврія (Сімферополь),#1B4F9C,#FFFFFF,,medium
+mariupol,Маріуполь / Іллічівець,#1D4E9E,#FFFFFF,,low
+metalist-kharkiv,Металіст (Харків),#FFD200,#0A2A66,,high
+metalurh-donetsk,Металург (Донецьк),#FFFFFF,#1C2F5E,#F7C600,low
+volyn-lutsk,Волинь (Луцьк),#E0282E,#FFFFFF,#8B0000,high
+arsenal-kyiv,Арсенал (Київ),#1D3F8F,#D2232A,,medium
+oleksandriya,Олександрія,#FFCC00,#000000,,medium
+nyva-ternopil,Нива (Тернопіль),#FFD700,#007A3D,,medium
+veres-rivne,Верес (Рівне),#D71920,#000000,,medium
+hoverla-uzhhorod,Говерла / Закарпаття (Ужгород),#FFFFFF,#1E73BE,,medium
+obolon-kyiv,Оболонь (Київ),#00843D,#FFFFFF,#FFD100,high
+zirka-kropyvnytskyi,Зірка (Кропивницький),#D0021B,#FFD200,,medium
+olimpik-donetsk,Олімпік (Донецьк),#1E5AA8,#FFFFFF,,low
+kolos-kovalivka,Колос (Ковалівка),#FFFFFF,#000000,,medium
+torpedo-zaporizhzhia,Торпедо (Запоріжжя),#FFFFFF,#1F4E9B,,medium
+prykarpattia,Прикарпаття (Івано-Франківськ),#00843D,#FFFFFF,,low
+cska-kyiv,ЦСКА (Київ),#FFFFFF,#000000,,low
+rukh-lviv,Рух (Львів),#FFD100,#000000,,high
+kremin-kremenchuk,Кремінь (Кременчук),#0047AB,#FFFFFF,,medium
+pfk-lviv,ПФК Львів,#1F4E9B,#FFFFFF,,low
+dnipro-1,СК Дніпро-1,#0B1F4B,#1E6FD9,#FFFFFF,medium
+nyva-vinnytsia,Нива (Вінниця),#FFD200,#1F4E9B,,low
+fc-kharkiv,ФК Харків,#7B1E3A,#FFFFFF,,medium
+desna-chernihiv,Десна (Чернігів),#FFFFFF,#1F5FAD,,high
+inhulets-petrove,Інгулець (Петрове),#FFD200,#D7141A,,medium
+minaj,Минай,#56A0D3,#FFFFFF,#FFD200,medium
+metalist-1925,Металіст 1925 (Харків),#FFD200,#0A2A66,,high
+mykolaiv,СК Миколаїв,#1F4E9B,#FFFFFF,,medium
+stal-alchevsk,Сталь (Алчевськ),#D2001E,#FFFFFF,,medium
+stal-kamianske,Сталь (Кам'янське),#FFFFFF,#1F4E9B,#A7A9AC,medium
+lnz-cherkasy,ЛНЗ (Черкаси),#5B2C83,#FFFFFF,,high
+polissya-zhytomyr,Полісся (Житомир),#00843D,#000000,#FFFFFF,medium
+bukovyna-chernivtsi,Буковина (Чернівці),#FFD200,#000000,,medium
+temp-shepetivka,Темп (Шепетівка),,,,low
+borysfen-boryspil,Борисфен (Бориспіль),#1F4E9B,#FFFFFF,,low
+sevastopol,Севастополь,#D2001E,#FFFFFF,#0B1F4B,medium
+naftovyk-okhtyrka,Нафтовик-Укрнафта (Охтирка),#FFD200,#000000,,low
+fc-lviv-2008,ФК Львів (2006–2012),#1F4E9B,#FFFFFF,,low
+livyi-bereh-kyiv,Лівий Берег (Київ),#FFD200,#000000,,low
+epicentr,Епіцентр (Кам'янець-Подільський),#6A2C91,#000000,#E4007C,low
+kudrivka,Кудрівка,#1F4E9B,#FFFFFF,,medium
+sc-poltava,СК Полтава,#E4007C,#FFFFFF,#FFD200,low
