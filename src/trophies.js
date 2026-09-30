@@ -203,7 +203,7 @@ async function openTrophies(){
       if(!list.length&&!hiddenN)continue;
       list.sort((a,b)=>((s.t[b.id]||{}).n?1:0)-((s.t[a.id]||{}).n?1:0));
       h+=`<h3>${title}</h3><div class="trg">${list.map(t=>trCard(t,s.t[t.id],pctOf(t.id),t.prog&&t.prog(st))).join('')}</div>`;
-      if(hiddenN)h+=`<p class="trsec">+${hiddenN} ${hiddenN%10===1&&hiddenN%100!==11?'секретний трофей':'секретних трофеїв'} чекають ${icon('eye')}</p>`;}
+      if(hiddenN)h+=`<p class="trsec">+${hiddenN} ${plUk(hiddenN,'секретний трофей чекає','секретні трофеї чекають','секретних трофеїв чекають')} ${icon('eye')}</p>`;}
     h+=`<h3>Віхи</h3><div class="row" style="gap:6px">${MILESTONES.map(([k,i,n])=>{const on=s.t['ms'+k]&&s.t['ms'+k].n;return `<span class="chip ms${on?' onc':''}">${trBadge({id:'ms'+k,cat:'milestone'},on)}${n}${!on&&s.seasons<k?` · ${s.seasons}/${k}`:''}</span>`;}).join('')}</div>`;
     body.innerHTML=h;};
   draw();if(ONLINE&&!TR_PCT){await trLoadPct();if(!box.hidden)draw();}

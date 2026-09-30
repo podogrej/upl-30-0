@@ -56,7 +56,7 @@ async function acctOnLogin(){
   try{await fetch(`${SB_URL}/rest/v1/rpc/claim_device?apikey=${SB_KEY}`,{method:'POST',headers:{apikey:SB_KEY,'Content-Type':'application/json'},body:JSON.stringify({p_device:deviceId()})});}catch(e){}
   await playerSync();
   const res=await acctPull();const s=trStore();
-  ACCT_MSG=`Готово! Прогрес збережено в акаунті: ${s.seasons} ${s.seasons%10===1&&s.seasons%100!==11?'сезон':'сезонів'}, трофеїв — ${Object.values(s.t).filter(e=>e.n).length}.`;
+  ACCT_MSG=`Готово! Прогрес збережено в акаунті: ${s.seasons} ${plUk(s.seasons,'сезон','сезони','сезонів')}, трофеїв — ${Object.values(s.t).filter(e=>e.n).length}.`;
   if(!lsGet("upl30_nick")){const n=acctName();if(n)lsSet("upl30_nick",n.slice(0,24));}
   renderAcct();if(!document.getElementById('viewBox').hidden&&document.getElementById('viewTitle').textContent==='Акаунт')openAcct();
 }
