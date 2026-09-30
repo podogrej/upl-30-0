@@ -235,6 +235,9 @@ files.share_B_open = shPage('Поділитися — B, відкрито', shB(
 files.share_C = shPage('Поділитися — C, картка', shC(0));
 files.share_C_challenge = shPage('Поділитися — C, виклик', shC(1));
 
+Object.assign(files, require('./leagues.js')({ page, header, I, icon, avatar, ME }));
+const ONLY = process.env.ONLY;   // напр. ONLY=lg_ — лише макети ліг
+for (const k of Object.keys(files)) if (ONLY && !k.startsWith(ONLY)) delete files[k];
 for (const [k, v] of Object.entries(files)) fs.writeFileSync(path.join(OUT, k + '.html'), v);
 
 // ---------- знімки
