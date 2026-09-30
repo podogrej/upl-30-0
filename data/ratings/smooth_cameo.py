@@ -47,8 +47,9 @@ def smoothed(pool, raw):
 
 
 def final(pool, raw):
-    """итоговый рейтинг каждой карточки — то, что лежит в pool.json (без записи)"""
-    return smoothed(pool, raw)
+    """итоговый рейтинг каждой карточки — то, что лежит в pool.json (без записи): сглаживание → рейтинги v2 (0.57)"""
+    import class_v2   # рядом, data/ratings/class_v2.py (импорт здесь — class_v2 сам импортирует этот модуль)
+    return class_v2.apply_v2(pool, smoothed(pool, raw))
 
 
 def main():
