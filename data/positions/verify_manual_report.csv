@@ -48,14 +48,14 @@ w:1971-09-05:nahorniak,Сергій Нагорняк,ST,,Central Midfield,,chang
 w:1981-06-18:hioane,Тіберіу Гіоане,CM,CAM;RM,Central Midfield,"Right Midfield, Right-Back",changed,CM,RM;RB,https://www.transfermarkt.com/-/profil/spieler/9793
 w:1972-01-02:haschin,Володимир Гащин,CM,CDM,Central Midfield,Attacking Midfield,changed,CM,CAM,https://www.transfermarkt.com/-/profil/spieler/167029
 w:1980-05-16:melnik,Вадим Мельник,ST,,Centre-Back,Defensive Midfield,changed,CB,CDM,https://www.transfermarkt.com/-/profil/spieler/59092
-w:1972-03-13:volosianko,Микола Волосянко,CB,,,,tm_error,,,
+w:1972-03-13:volosianko,Микола Волосянко,CB,,Centre-Back,,ok,CB,,https://www.transfermarkt.com/-/profil/spieler/76929
 w:1976-07-19:radchenko,Олександр Радченко,CB,LB,Left-Back,"Right-Back, Left Midfield",changed,LB,RB;LM,https://www.transfermarkt.com/-/profil/spieler/24046
 w:1983-10-05:jadson,Жадсон,CAM,RW;CM,Attacking Midfield,"Right Winger, Left Winger",changed,CAM,RW;LW,https://www.transfermarkt.com/-/profil/spieler/29261
 w:1975-11-08:hramtsov,Олексій Храмцов,CB,,Centre-Back,,ok,CB,,https://www.transfermarkt.com/-/profil/spieler/58041
 w:1979-08-09:hunchak,Руслан Гунчак,CM,CDM,Centre-Back,"Central Midfield, Defensive Midfield",changed,CB,CM;CDM,https://www.transfermarkt.com/-/profil/spieler/58026
 w:1973-08-11:kosovski,Віталій Косовський,LM,LW,Left Winger,Left Midfield,changed,LW,LM,https://www.transfermarkt.com/-/profil/spieler/117021
-w:1980-06-16:evaeverson,Брандао,ST,,,,not_found,,,
-w:1983-11-21:emanuel,Еммануель Окодува,ST,,,,not_found,,,
+w:1980-06-16:evaeverson,Брандао,ST,,Centre-Forward,,ok,ST,,https://www.transfermarkt.com/-/profil/spieler/14948
+w:1983-11-21:emanuel,Еммануель Окодува,ST,,Centre-Forward,,ok,ST,,https://www.transfermarkt.com/-/profil/spieler/44360
 w:1973-10-19:hatskevich,Олександр Хацкевич,CM,CDM;CAM,Defensive Midfield,"Central Midfield, Right Midfield",changed,CDM,CM;RM,https://www.transfermarkt.com/-/profil/spieler/9792
 w:1980-05-10:chernat,Флорін Чернат,CAM,CM,,,not_found,,,
 w:1976-09-26:demetradze,Георгій Деметрадзе,ST,,Centre-Forward,,ok,ST,,https://www.transfermarkt.com/-/profil/spieler/24002
@@ -63,24 +63,24 @@ w:1978-11-09:markovich,Слободан Маркович,CB,,Centre-Back,"Defens
 w:1978-03-21:venhlinski,Олег Венглінський,ST,,Centre-Forward,,ok,ST,,https://www.transfermarkt.com/-/profil/spieler/16004
 w:1969-11-19:skripnik,Віктор Скрипник,LB,LM,Left-Back,"Left Midfield, Centre-Back",changed,LB,LM;CB,https://www.transfermarkt.com/-/profil/spieler/535
 w:1976-10-12:baharev,Олексій Бахарєв,LM,LW;CM,Central Midfield,,changed,CM,,https://www.transfermarkt.com/-/profil/spieler/14926
-w:1981-01-31:badr,Бадр Ель-Каддурі,LB,,,,not_found,,,
+w:1981-01-31:badr,Бадр Ель-Каддурі,LB,,Left-Back,Left Midfield,changed,LB,LM,https://www.transfermarkt.com/-/profil/spieler/9790
 w:1971-02-25:revut,Сергій Ревут,CB,,Centre-Back,,ok,CB,,https://www.transfermarkt.com/-/profil/spieler/251344
 w:1976-03-24:kovalenko,Олександр Коваленко,CM,CDM,Central Midfield,,changed,CM,,https://www.transfermarkt.com/-/profil/spieler/341515
 w:1982-07-06:motuz,Сергій Мотуз,CM,RM,Centre-Forward,,changed,ST,,https://www.transfermarkt.com/-/profil/spieler/24042
 w:1981-08-24:stoian,Денис Стоян,CB,LB,Left-Back,"Right-Back, Left Midfield",changed,LB,RB;LM,https://www.transfermarkt.com/-/profil/spieler/43377
 w:1979-05-13:oleksenko,Олександр Олексієнко,CDM,CM,Right Midfield,Central Midfield,changed,RM,CM,https://www.transfermarkt.com/-/profil/spieler/23987
-w:1978-09-05:hiom,Патрік Ібанда,CDM,CM,,,not_found,,,
+w:1978-09-05:hiom,Патрік Ібанда,CDM,CM,Defensive Midfield,"Right-Back, Left-Back",changed,CDM,RB;LB,https://www.transfermarkt.com/-/profil/spieler/58236
 w:1975-05-10:kudinov,Юрій Кудінов,ST,,Centre-Forward,,ok,ST,,https://www.transfermarkt.com/-/profil/spieler/91548
 w:1979-08-09:danchenko,Юрій Данченко,ST,,Left-Back,Left Midfield,changed,LB,LM,https://www.transfermarkt.com/-/profil/spieler/91704
-w:1977-04-09:aleksandru,Александру Поповічі,ST,,,,not_found,,,
-w:1968-02-25:dumenko,Сергій Думенко,ST,,,,not_found,,,
+w:1977-04-09:aleksandru,Александру Поповічі,ST,,Centre-Forward,,ok,ST,,https://www.transfermarkt.com/-/profil/spieler/58246
+w:1968-02-25:dumenko,Сергій Думенко,ST,,Attack,,tm_generic,,,https://www.transfermarkt.com/-/profil/spieler/559442
 w:1976-02-29:prodan,Ігор Продан,ST,,Centre-Forward,,ok,ST,,https://www.transfermarkt.com/-/profil/spieler/167028
 w:1977-07-20:kariaka,Дмитро Каряка,CM,,Midfield,,tm_generic,,,https://www.transfermarkt.com/-/profil/spieler/855951
 w:1986-10-16:alozi,Міхаель Алозі,ST,,Centre-Forward,,ok,ST,,https://www.transfermarkt.com/-/profil/spieler/72387
 w:1980-10-18:dos,Жоземар,ST,,,,not_found,,,
-w:1985-10-02:chiprian,Чіпріан Маріка,ST,LW;RW,,,not_found,,,
-w:1981-06-17:venans,Венанс Зезе,RW,LW;ST,,,not_found,,,
-w:1983-08-12:djakomase,Клебер,ST,RW,,,not_found,,,
+w:1985-10-02:chiprian,Чіпріан Маріка,ST,LW;RW,Centre-Forward,"Right Winger, Left Winger",ok,ST,RW;LW,https://www.transfermarkt.com/-/profil/spieler/16833
+w:1981-06-17:venans,Венанс Зезе,RW,LW;ST,Right Winger,Centre-Forward,changed,RW,ST,https://www.transfermarkt.com/-/profil/spieler/13758
+w:1983-08-12:djakomase,Клебер,ST,RW,Centre-Forward,"Left Winger, Right Winger",changed,ST,LW;RW,https://www.transfermarkt.com/-/profil/spieler/15880
 w:1979-07-19:vukich,Звонимир Вукич,CAM,CM;LM,Attacking Midfield,Second Striker,changed,CAM,ST,https://www.transfermarkt.com/-/profil/spieler/14542
 w:1977-05-03:dainius,Дайнюс Глевецкас,CB,,,,not_found,,,
 w:1978-04-01:kariaka,Андрій Каряка,LM,LW;CAM,Left Winger,"Right Winger, Attacking Midfield",changed,LW,RW;CAM,https://www.transfermarkt.com/-/profil/spieler/15907
@@ -92,12 +92,12 @@ w:1970-02-17:herasimenko,Олексій Герасименко,ST,CAM;RW,,,not_f
 w:1976-04-03:bohatirov,Сергій Богатирьов,CDM,CM,,,not_found,,,
 w:1974-01-23:kormiltsev,Сергій Кормильцев,CM,CDM;RB,,,not_found,,,
 w:1962-03-19:iaremchuk,Іван Яремчук,RM,RW;CM,Right Midfield,"Central Midfield, Left Midfield",changed,RM,CM;LM,https://www.transfermarkt.com/-/profil/spieler/117396
-w:1988-05-14:borha,Борха Гомес,CB,,,,not_found,,,
+w:1988-05-14:borha,Борха Гомес,CB,,Centre-Back,,ok,CB,,https://www.transfermarkt.com/-/profil/spieler/65060
 w:1980-04-19:harmash,Денис Гармаш,CM,CDM;RM,,,not_found,,,
 w:1987-01-23:kolesnichenko,Сергій Колесниченко,RM,CM,Defensive Midfield,Centre-Back,changed,CDM,CB,https://www.transfermarkt.com/-/profil/spieler/89713
 w:1989-06-09:avelar,Даніло Авелар,LB,LM;CB,Left-Back,Centre-Back,changed,LB,CB,https://www.transfermarkt.com/-/profil/spieler/140748
 w:1981-00-00:pshenichnih,,RB,CB,,,not_found,,,
 w:1959-02-19:demianenko,Анатолій Дем'яненко,LB,CB,Left-Back,"Right-Back, Left Midfield",changed,LB,RB;LM,https://www.transfermarkt.com/-/profil/spieler/117378
 w:1988-10-14:djenison,Дженісон,CAM,CM,,,not_found,,,
-w:1983-12-16:dancho,Данчо Масев,CDM,CM,,,not_found,,,
-w:1983-03-25:enrike,Нельсон Рівас,CB,RB,,,not_found,,,
+w:1983-12-16:dancho,Данчо Масев,CDM,CM,Attacking Midfield,,changed,CAM,,https://www.transfermarkt.com/-/profil/spieler/25805
+w:1983-03-25:enrike,Нельсон Рівас,CB,RB,Centre-Back,Right-Back,ok,CB,RB,https://www.transfermarkt.com/-/profil/spieler/52580
