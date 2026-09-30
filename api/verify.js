@@ -15,14 +15,40 @@ const xiHash = xi => crypto.createHash('sha256').update(xi.map(x => `${x.id}|${x
 let E = null;
 function engine() { if (!E) E = require('../lib/engine.js'); return E; }
 
+// рік суперників, дозволений для сезону: для формату — той, що дає гра (oppYear: «Ліга легенд» або «Ліга культових клубів»).
+// Виняток — класика за старим «Викликом другу» (до 0.50 виклик міг мати справжній сезон УПЛ на 16 команд):
+// такий рік приймаємо, лише якщо в таблиці challenges є виклик з цим роком і схемою (chalYearOk рахує обробник нижче).
+function yearOk(row, E, chalYearOk) {
+  const y = +row.year;
+  const opp = row.format === 'legends' ? E.LEAGUE_LEGENDS : E.LEAGUE_CULT;
+  if (y === opp) return true;
+  return row.format === 'classic' && !row.day && E.YEARS16.includes(y) && !!chalYearOk;
+}
+
+// Сайт попередньої версії ще відкритий у гравців (кеш браузера, Mini App). Якщо його сезон повністю сходиться з новим рушієм
+// (симуляція між цими версіями не мінялася) — приймаємо; не сходиться (напр. у гравця змінилася позиція в пулі) — «не перевірити» (null), не «підробка».
+const PREV_VERSIONS = ['0.51'];
+
 // головна перевірка: повертає [true|false|null, пояснення]; null — перевірити неможливо (стара версія тощо)
-function check(row, seedRow) {
+function check(row, seedRow, opts = {}) {
   const E = engine();
-  if (row.version && row.version !== E.VERSION) return [null, `версія гри ${row.version} ≠ рушій ${E.VERSION}`];
+  if (!row.version || row.version === E.VERSION) return checkCore(row, seedRow, opts);
+  if (!PREV_VERSIONS.includes(row.version)) return [null, `версія гри ${row.version} ≠ рушій ${E.VERSION}`];
+  const [v, note] = checkCore(row, seedRow, opts);
+  return v === true ? [true, `ok (версія ${row.version})`] : [null, `версія гри ${row.version}: ${note}`];
+}
+function checkCore(row, seedRow, { chalYearOk = false } = {}) {
+  const E = engine();
   if (!seedRow) return [false, 'seed не видавався сервером'];
   if (String(seedRow.device_id) !== String(row.device_id)) return [false, 'seed іншого пристрою'];
   if (+seedRow.seed !== +row.seed) return [false, 'seed не збігається'];
   if (seedRow.used_by && +seedRow.used_by !== +row.id) return [false, 'seed уже використано'];
+  // схема, режим, формат і рік — ті самі, під які сервер видав seed (у старих seed полів може не бути)
+  for (const k of ['formation', 'mode', 'format']) if (seedRow[k] != null && seedRow[k] !== '' && String(seedRow[k]) !== String(row[k])) return [false, `${k}: seed видано для «${seedRow[k]}»`];
+  if (seedRow.year != null && +seedRow.year !== +row.year) return [false, `рік: seed видано для ${seedRow.year}`];
+  if (!E.FORMATS[row.format]) return [false, 'невідомий формат'];
+  if (!E.MODES[row.mode]) return [false, 'невідомий режим'];
+  if (!yearOk(row, E, chalYearOk)) return [false, `суперники ${row.year} не для формату ${row.format}`];
   const xi = row.xi || [];
   if (xi.length !== 11) return [false, 'не 11 гравців'];
   if (xiHash(xi) !== seedRow.xi_hash) return [false, 'склад змінено після видачі seed'];
@@ -38,6 +64,7 @@ function check(row, seedRow) {
     const r = E.effRating(p, x.slot);
     if (r == null) return [false, `${x.n} не може грати на ${x.slot}`];
     if (r !== +x.r) return [false, `рейтинг ${x.n}: ${x.r} ≠ ${r}`];
+    if (x.r0 != null && +x.r0 !== p[2]) return [false, `базовий рейтинг ${x.n}: ${x.r0} ≠ ${p[2]}`];   // r0 показують таблиці й картка
     if (row.format === 'derby' && !E.FORMATS.derby.clubs.includes(club.c)) return [false, 'дербі: чужий клуб'];
     if (row.format === 'oneclub' && row.club && club.c !== row.club) return [false, 'один клуб: чужий клуб'];
     if (row.format === 'anti' && p[3] < E.ANTI_MIN_APPS) return [false, 'антисезон: замало матчів'];
@@ -49,9 +76,29 @@ function check(row, seedRow) {
     const onWheel = xi.filter(x => { const i = E.DATA.clubs.findIndex(c => c.n === x.c && c.y === +x.y); return inSeq.has(i); }).length;
     if (onWheel < 10) return [false, `колесо дня: лише ${onWheel} з 11 клуб-сезонів`];   // 1 перекручування дозволено
   }
+  if (row.perfect != null && !!row.perfect !== (+row.w === 30)) return [false, 'позначка 30-0 не відповідає результату'];
   const sim = E.run({ xi: xi.map(x => ({ id: x.id, name: x.n, slot: x.slot, pos: E.GROUP_OF[x.slot], r: +x.r })), mode: row.mode, format: row.format, year: +row.year, seed: +row.seed });
-  const same = sim.W === row.w && sim.D === row.d && sim.L === row.l && sim.gf === row.gf && sim.ga === row.ga && sim.place === row.place;
+  const same = sim.W === row.w && sim.D === row.d && sim.L === row.l && sim.gf === row.gf && sim.ga === row.ga && sim.place === row.place && (row.pts == null || sim.pts === row.pts);
   return same ? [true, 'ok'] : [false, `перерахунок: ${sim.W}-${sim.D}-${sim.L} ${sim.gf}:${sim.ga} #${sim.place}`];
+}
+
+// результат виклику дня пише сам сервер — з перевіреного сезону (цифри з браузера в daily_results не довіряємо).
+// Лише перша офіційна спроба дня (seed official) і лише сезон, якому цей seed віддано (used_by).
+// Рядок уже є (браузер вставив його кнопкою «Надіслати») — переписуємо цифри й ставимо verified; немає — вставляємо сами.
+async function syncDaily(row, seedRow) {
+  if (!row.day || row.verified !== true || row.practice || !seedRow || !seedRow.official || +seedRow.used_by !== +row.id) return false;
+  const day = String(row.day).slice(0, 10), dev = encodeURIComponent(String(row.device_id));
+  const res = { w: row.w, d: row.d, l: row.l, pts: row.w * 3 + row.d, gf: row.gf, ga: row.ga, place: row.place, formation: row.formation, xp: row.xp == null ? null : +row.xp,
+    xi: (row.xi || []).map(x => [x.n, x.slot, x.r, x.c, x.y]), verified: true };
+  // табло ліг групи: результат, надісланий до того, як браузер дізнався номер сезону, прив'язуємо до цього сезону
+  if (row.tg_user_id) await sb(`league_results?day=eq.${day}&tg_user_id=eq.${+row.tg_user_id}&season_id=is.null`, { method: 'PATCH', prefer: 'return=minimal', body: { season_id: row.id } });
+  const upd = await sb(`daily_results?day=eq.${day}&device_id=eq.${dev}`, { method: 'PATCH', prefer: 'return=representation', body: res });
+  if (upd && upd.length) return true;
+  let nick = String(row.nickname || row.tg_name || '').trim().slice(0, 24); if (nick.length < 2) nick = 'Гравець';
+  const ins = { day, device_id: row.device_id, nickname: nick, ...res };
+  if (row.tg_user_id) { ins.tg_user_id = row.tg_user_id; ins.tg_name = row.tg_name || null; }
+  await sb('daily_results?on_conflict=day,device_id', { method: 'POST', prefer: 'resolution=merge-duplicates,return=minimal', body: ins });
+  return true;
 }
 
 module.exports = async (req, res) => {
@@ -63,17 +110,27 @@ module.exports = async (req, res) => {
     stage = 'load';
     const [row] = await sb(`seasons?id=eq.${id}&select=*`) || [];
     if (!row) return res.status(404).json({ error: 'no season' });
-    const [seedRow] = row.seed_id ? (await sb(`season_seeds?id=eq.${row.seed_id}&select=*`) || []) : [];
-    const markDaily = async () => { if (row.day && seedRow && seedRow.official) await sb(`daily_results?day=eq.${String(row.day).slice(0, 10)}&device_id=eq.${row.device_id}`, { method: 'PATCH', prefer: 'return=minimal', body: { verified: true } }); };
-    if (row.verified !== null && row.verified !== undefined) { if (row.verified === true) await markDaily(); return res.status(200).json({ verified: row.verified, note: row.verify_note, cached: true }); }
+    const [seedRow] = row.seed_id ? (await sb(`season_seeds?id=eq.${encodeURIComponent(row.seed_id)}&select=*`) || []) : [];
+    if (row.verified !== null && row.verified !== undefined) {
+      stage = 'daily';
+      if (row.verified === true) await syncDaily(row, seedRow);   // повторний виклик (браузер щойно надіслав рядок дня) — пишемо перевірені цифри ще раз
+      return res.status(200).json({ verified: row.verified, note: row.verify_note, cached: true });
+    }
+    stage = 'challenge';
+    let chalYearOk = false;
+    if (row.format === 'classic' && !row.day && row.year != null && Number.isInteger(+row.year) && engine().YEARS16.includes(+row.year)) {
+      const ch = await sb(`challenges?year=eq.${+row.year}&formation=eq.${encodeURIComponent(String(row.formation || ''))}&select=id&limit=1`) || [];
+      chalYearOk = ch.length > 0;
+    }
     stage = 'engine';
     let v, note;
-    try { [v, note] = check(row, seedRow); } catch (e) { v = null; note = 'рушій недоступний: ' + String(e.message || e).slice(0, 80); }
+    try { [v, note] = check(row, seedRow, { chalYearOk }); } catch (e) { v = null; note = 'рушій недоступний: ' + String(e.message || e).slice(0, 80); }
     stage = 'save';
     await sb(`seasons?id=eq.${id}`, { method: 'PATCH', prefer: 'return=minimal', body: { verified: v, verify_note: String(note).slice(0, 200) } });
     if (v === true && seedRow) {
       await sb(`season_seeds?id=eq.${seedRow.id}`, { method: 'PATCH', prefer: 'return=minimal', body: { used_by: id } });
-      await markDaily();
+      stage = 'daily';
+      await syncDaily({ ...row, verified: true }, { ...seedRow, used_by: id });
     }
     res.status(200).json({ verified: v, note });
   } catch (e) {

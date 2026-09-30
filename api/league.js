@@ -53,9 +53,24 @@ const playKb = chat_id => ({ inline_keyboard: [[{ text: '▶️ Зіграти �
 
 const sortRes = (a, b) => b.pts - a.pts || (b.gf - b.ga) - (a.gf - a.ga) || b.gf - a.gf || String(a.created_at).localeCompare(String(b.created_at));
 
+// з 0.52 у табло й підсумках ліг — лише результати, чий сезон сервер перевірив (цифри беремо із сезону, а не з браузера).
+// Дні до VERIFIED_FROM показуємо як були, щоб не переписувати історію ліг.
+const VERIFIED_FROM = '2026-10-01';
+async function onlyVerified(rows) {
+  const ids = [...new Set(rows.filter(r => String(r.day) >= VERIFIED_FROM).map(r => +r.season_id).filter(Boolean))];
+  const ok = {};
+  for (let i = 0; i < ids.length; i += 100)
+    for (const s of await sb(`seasons?id=in.(${ids.slice(i, i + 100).join(',')})&verified=is.true&practice=is.false&select=id,day,tg_user_id,w,d,l,gf,ga,place`) || []) ok[s.id] = s;
+  return rows.filter(r => {
+    if (String(r.day) < VERIFIED_FROM) return true;
+    const s = ok[+r.season_id];
+    return !!s && String(s.day).slice(0, 10) === String(r.day).slice(0, 10) && (s.tg_user_id == null || String(s.tg_user_id) === String(r.tg_user_id));
+  }).map(r => { const s = ok[+r.season_id]; return s ? { ...r, w: s.w, d: s.d, l: s.l, pts: s.w * 3 + s.d, gf: s.gf, ga: s.ga, place: s.place } : r; });
+}
+
 // загальний залік ліги: перемоги в днях (минулі дні + сьогодні)
 async function standings(chat_id) {
-  const rows = await sb(`league_results?chat_id=eq.${chat_id}&select=day,tg_user_id,name,pts,gf,ga,created_at&order=day.desc&limit=3000`) || [];
+  const rows = await onlyVerified(await sb(`league_results?chat_id=eq.${chat_id}&select=day,tg_user_id,name,pts,gf,ga,created_at,season_id&order=day.desc&limit=3000`) || []);
   const byDay = {}; for (const r of rows) (byDay[r.day] = byDay[r.day] || []).push(r);
   const st = {};
   for (const [day, list] of Object.entries(byDay)) {
@@ -68,7 +83,7 @@ async function standings(chat_id) {
 
 async function boardText(chat_id, day) {
   const [lg] = await sb(`leagues?chat_id=eq.${chat_id}&select=title`) || [];
-  const rows = (await sb(`league_results?chat_id=eq.${chat_id}&day=eq.${day}&select=*`) || []).sort(sortRes);
+  const rows = (await onlyVerified(await sb(`league_results?chat_id=eq.${chat_id}&day=eq.${day}&select=*`) || [])).sort(sortRes);
   const members = (await sb(`league_members?chat_id=eq.${chat_id}&select=tg_user_id`) || []).length;
   const medal = ['🥇', '🥈', '🥉'];
   let t = `<b>🏟 Ліга «${esc(lg ? lg.title : 'група')}»</b>\nВиклик дня №${dayNo(day)} · ${dayShort(day)} — однакове колесо для всіх\n\n`;
@@ -94,7 +109,7 @@ async function upsertBoard(chat_id, day, { forceNew = false } = {}) {
   return mid;
 }
 
-return { SB_URL, env, esc, tg, sb, kyivDate, dayNo, dayShort, checkMiniApp, nameOf, playUrl, playKb, sortRes, standings, boardText, upsertBoard };
+return { SB_URL, env, esc, tg, sb, kyivDate, dayNo, dayShort, checkMiniApp, nameOf, playUrl, playKb, sortRes, onlyVerified, standings, boardText, upsertBoard };
 })();
 
 module.exports = async (req, res) => {
@@ -106,7 +121,8 @@ module.exports = async (req, res) => {
       const [lg] = await L.sb(`leagues?chat_id=eq.${chat}&select=title`) || [];
       if (!lg) return res.status(404).json({ error: 'no league' });
       const day = L.kyivDate();
-      const today = (await L.sb(`league_results?chat_id=eq.${chat}&day=eq.${day}&select=name,w,d,l,pts,gf,ga,created_at`) || []).sort(L.sortRes);
+      const today = (await L.onlyVerified(await L.sb(`league_results?chat_id=eq.${chat}&day=eq.${day}&select=name,w,d,l,pts,gf,ga,created_at,day,tg_user_id,season_id`) || []))
+        .sort(L.sortRes).map(({ name, w, d, l, pts, gf, ga, created_at }) => ({ name, w, d, l, pts, gf, ga, created_at }));
       const members = (await L.sb(`league_members?chat_id=eq.${chat}&select=tg_user_id`) || []).length;
       return res.status(200).json({ title: lg.title, day, today, members, standings: (await L.standings(chat)).slice(0, 10) });
     }
@@ -138,13 +154,18 @@ module.exports = async (req, res) => {
     const today = L.kyivDate(), yday = L.kyivDate(new Date(Date.now() - 864e5));
     const day = r.day === yday ? yday : today;
     const trophies = Array.isArray(r.trophies) ? r.trophies.slice(0, 12).map(x => String(x).slice(0, 40)) : [];
+    // сезон цього результату: з браузера (season_id) або перша не-тренувальна спроба дня цього гравця Telegram.
+    // У табло потрапить лише тоді, коли сервер перевірить цей сезон (L.onlyVerified).
+    stage = 'season';
+    let season_id = +r.season_id || null;
+    if (!season_id) { const [s] = await L.sb(`seasons?tg_user_id=eq.${u.id}&day=eq.${day}&practice=is.false&select=id&order=created_at.asc&limit=1`) || []; season_id = s ? s.id : null; }
     stage = 'leagues';
     const my = await L.sb(`league_members?tg_user_id=eq.${u.id}&select=chat_id,leagues(title)`) || [];
     const posted = [];
     for (const row of my) {
       // лише перша офіційна спроба дня
       await L.sb('league_results?on_conflict=chat_id,day,tg_user_id', { method: 'POST', prefer: 'resolution=ignore-duplicates,return=minimal',
-        body: { chat_id: row.chat_id, day, tg_user_id: u.id, name, w, d, l, pts, place, gf, ga, xp: +r.xp || null, formation: String(r.formation || '').slice(0, 8), trophies, season_id: +r.season_id || null } });
+        body: { chat_id: row.chat_id, day, tg_user_id: u.id, name, w, d, l, pts, place, gf, ga, xp: +r.xp || null, formation: String(r.formation || '').slice(0, 8), trophies, season_id } });
       try { await L.upsertBoard(row.chat_id, day); } catch (e) { console.error('board', row.chat_id, e.message); }
       posted.push(row.leagues ? row.leagues.title : String(row.chat_id));
     }

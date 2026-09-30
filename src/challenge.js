@@ -4,7 +4,7 @@ const CHAL_ALPH='abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 function chalId(){let s='';const a=new Uint32Array(8);try{crypto.getRandomValues(a);}catch(e){for(let i=0;i<8;i++)a[i]=Math.floor(Math.random()*4e9);}for(const x of a)s+=CHAL_ALPH[x%CHAL_ALPH.length];return s;}
 function wheelSeq(seed){const r=mulberry32(seed);const seq=[];for(let i=0;i<600;i++){const c=pickWeighted(DATA.clubs,r);seq.push(DATA.clubs.indexOf(c));}return seq;}
 // нова вільна гра: seed колеса й сезон суперників визначаються наперед (щоб гру можна було повторити у виклику)
-function chalNewGame(seed,year){seed=seed||Math.floor(Math.random()*2147483647);const r=mulberry32(seed^0x5bd1e995);return {seed,year:year||LEAGUE_CULT,seq:wheelSeq(seed),ptr:0};}
+function chalNewGame(seed,year){seed=seed||Math.floor(Math.random()*2147483647);return {seed,year:year||LEAGUE_CULT,seq:wheelSeq(seed),ptr:0};}
 let CHAL=null;   // виклик, який зараз відкрито за посиланням
 const chalName=()=>{const el=document.getElementById('chalName');const v=el&&el.value.trim();if(v&&v.length>=2){if(!TGU)nickSet(v);return v;}return (TGU?[TGU.first_name,TGU.last_name].filter(Boolean).join(' '):'')||myName()||'Друг';};
 function chalLinkWeb(id){return `https://upl-30-0.vercel.app/?c=${id}`;}
@@ -41,7 +41,7 @@ async function chalLoad(force){
 function renderChal(){
   const el=document.getElementById('chalCard');if(!el)return;if(!CHAL){el.hidden=true;return;}const c=CHAL;
   el.hidden=false;el.innerHTML=`<div class="kicker">${ic('sword-cross','sm')}Виклик</div><div class="ttl">${esc(c.name)}: ${c.pts} ${ptsWord(c.pts)}</div>
-    <div class="meta"><span class="chip">${c.w}-${c.d}-${c.l} · ${c.place} місце</span><span class="chip">Схема ${esc(c.formation)}</span><span class="chip">${MODES[c.mode]?MODES[c.mode].name:esc(c.mode)}</span><span class="chip">Суперники: сезон ${seasonLabel(c.year)}</span><span class="chip">Те саме колесо</span></div>
+    <div class="meta"><span class="chip">${c.w}-${c.d}-${c.l} · ${c.place} місце</span><span class="chip">Схема ${esc(c.formation)}</span><span class="chip">${MODES[c.mode]?MODES[c.mode].name:esc(c.mode)}</span><span class="chip">Суперники: ${esc(oppLabel(+c.year))}</span><span class="chip">Те саме колесо</span></div>
     ${c.results&&c.results.length?`<div class="tbl"><table>${c.results.slice(0,8).map(x=>`<tr><td>${esc(x.name)}</td><td class="num">${x.w}-${x.d}-${x.l}</td><td class="num"><b>${x.pts}</b></td><td>${x.pts>c.pts?ic('check-circle','sm')+'побив':x.pts===c.pts?ic('handshake','sm')+'нічия':'—'}</td></tr>`).join('')}</table></div>`:''}
     <div class="row"><button class="primary" id="chalGo">Прийняти виклик</button></div>`;
   document.getElementById('chalGo').onclick=chalStart;
