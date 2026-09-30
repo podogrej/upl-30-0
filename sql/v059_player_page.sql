@@ -269,3 +269,6 @@ grant execute on function public.delete_player(uuid, text) to anon, authenticate
 
 -- службові — не для браузера
 revoke execute on function public.gen_public_id() from public, anon, authenticated;
+
+-- 0.58: епоха вільної гри (сайт уже надсилає її; сервер пише й перевіряє, щойно колонка з'явиться)
+alter table public.seasons add column if not exists era text;
