@@ -6,6 +6,9 @@ function wheelSeq(seed){const r=mulberry32(seed);const seq=[];for(let i=0;i<600;
 // нова вільна гра: seed колеса й сезон суперників визначаються наперед (щоб гру можна було повторити у виклику)
 function chalNewGame(seed,year){seed=seed||Math.floor(Math.random()*2147483647);return {seed,year:year||LEAGUE_CULT,seq:wheelSeq(seed),ptr:0};}
 let CHAL=null;   // виклик, який зараз відкрито за посиланням
+// ім'я у виклику — з профілю гравця (0.59, аудит В5); старі рядки без гравця — копія name
+const chalWho=x=>x&&x.players&&(x.players.name||x.players.anon_name)?pname(x):String((x&&x.name)||'друг').toLowerCase();
+const chalLink=x=>x&&x.players&&x.players.public_id?plink(x):esc(chalWho(x));
 const chalName=()=>{const el=document.getElementById('chalName');const v=el&&el.value.trim();if(v&&v.length>=2){if(!TGU)nickSet(v);return v;}return (TGU?[TGU.first_name,TGU.last_name].filter(Boolean).join(' '):'')||myName()||'Друг';};
 function chalLinkWeb(id){return `https://upl-30-0.vercel.app/?c=${id}`;}
 function chalLinkTg(id){return `https://t.me/${TG_BOT}?startapp=c${id}`;}
@@ -35,15 +38,16 @@ async function chalCopy(){
 function chalParam(){const m=/[?&]c=([A-Za-z0-9]{6,12})/.exec(location.search);if(m)return m[1];const sp=TG&&TG.initDataUnsafe&&TG.initDataUnsafe.start_param||'';const t=/^c([A-Za-z0-9]{6,12})$/.exec(sp);return t?t[1]:null;}
 async function chalLoad(force){
   if(!ONLINE)return;const id=chalParam();if(!id||(!force&&CHAL&&CHAL.id===id))return;
-  try{const rows=await sbGet(`challenges?id=eq.${id}&select=*`);if(!rows.length)return;CHAL=rows[0];
-    CHAL.results=await sbGet(`challenge_results?challenge_id=eq.${id}&select=name,pts,w,d,l,place,created_at&order=pts.desc&limit=20`).catch(()=>[]);
+  try{const rows=await sbGetFallback([...PL_SEL.map(pl=>`challenges?id=eq.${id}&select=*,${pl}`),`challenges?id=eq.${id}&select=*`]);if(!rows.length)return;CHAL=rows[0];
+    const rq=sel=>`challenge_results?challenge_id=eq.${id}&select=${sel}&order=pts.desc&limit=20`,base='name,pts,w,d,l,place,created_at';
+    CHAL.results=await sbGetFallback([...PL_SEL.map(pl=>rq(base+','+pl)),rq(base)]).catch(()=>[]);
     renderChal();}catch(e){}
 }
 function renderChal(){
   const el=document.getElementById('chalCard');if(!el)return;if(!CHAL){el.hidden=true;return;}const c=CHAL;
-  el.hidden=false;el.innerHTML=`<div class="kicker">${ic('sword-cross','sm')}Виклик</div><div class="ttl">${esc(c.name)}: ${c.pts} ${ptsWord(c.pts)}</div>
+  el.hidden=false;el.innerHTML=`<div class="kicker">${ic('sword-cross','sm')}Виклик</div><div class="ttl">${chalLink(c)}: ${c.pts} ${ptsWord(c.pts)}</div>
     <div class="meta"><span class="chip">${c.w}-${c.d}-${c.l} · ${c.place} місце</span><span class="chip">Схема ${esc(c.formation)}</span><span class="chip">${MODES[c.mode]?MODES[c.mode].name:esc(c.mode)}</span><span class="chip">Суперники: ${esc(oppLabel(+c.year))}</span><span class="chip">Те саме колесо</span></div>
-    ${c.results&&c.results.length?`<div class="tbl"><table>${c.results.slice(0,8).map(x=>`<tr><td>${esc(x.name)}</td><td class="num">${x.w}-${x.d}-${x.l}</td><td class="num"><b>${x.pts}</b></td><td>${x.pts>c.pts?ic('check-circle','sm')+'побив':x.pts===c.pts?ic('handshake','sm')+'нічия':'—'}</td></tr>`).join('')}</table></div>`:''}
+    ${c.results&&c.results.length?`<div class="tbl"><table>${c.results.slice(0,8).map(x=>`<tr><td>${chalLink(x)}</td><td class="num">${x.w}-${x.d}-${x.l}</td><td class="num"><b>${x.pts}</b></td><td>${x.pts>c.pts?ic('check-circle','sm')+'побив':x.pts===c.pts?ic('handshake','sm')+'нічия':'—'}</td></tr>`).join('')}</table></div>`:''}
     <div class="row"><button class="primary" id="chalGo">Прийняти виклик</button></div>`;
   document.getElementById('chalGo').onclick=chalStart;
 }
@@ -61,7 +65,7 @@ function chalAfterSeason(r){
   document.getElementById('chalMsg').textContent='';
   if(!line)return;line.hidden=true;const c=S.challenge;if(!c)return;
   const diff=r.pts-c.pts;line.hidden=false;
-  line.innerHTML=`${ic('sword-cross','sm')}Ти <b>${r.pts}</b> : <b>${c.pts}</b> ${esc(c.name)} — ${diff>0?`<b>виклик прийнято й виграно</b> (+${diff})`:diff===0?'нічия за очками':`не вистачило ${-diff} ${ptsWord(-diff)}`}`;
+  line.innerHTML=`${ic('sword-cross','sm')}Ти <b>${r.pts}</b> : <b>${c.pts}</b> ${esc(chalWho(c))} — ${diff>0?`<b>виклик прийнято й виграно</b> (+${diff})`:diff===0?'нічия за очками':`не вистачило ${-diff} ${ptsWord(-diff)}`}`;
   if(!ONLINE)return;const row={challenge_id:c.id,device_id:deviceId(),name:chalName().slice(0,40),w:r.W,d:r.D,l:r.L,pts:r.pts,place:r.place,gf:r.gf,ga:r.ga};
   saveApi('chal_result',{row}).then(()=>chalLoad(true)).catch(e=>{if(e.legacy)fetch(`${SB_URL}/rest/v1/challenge_results?apikey=${SB_KEY}`,{method:'POST',headers:{apikey:SB_KEY,'Content-Type':'application/json',Prefer:'return=minimal'},body:JSON.stringify(row)}).then(()=>chalLoad(true)).catch(()=>{});});
 }

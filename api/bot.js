@@ -51,6 +51,19 @@ const playKb = chat_id => ({ inline_keyboard: [[{ text: '▶️ Зіграти �
 
 const sortRes = (a, b) => b.pts - a.pts || (b.gf - b.ga) - (a.gf - a.ga) || b.gf - a.gf || String(a.created_at).localeCompare(String(b.created_at));
 
+// ім'я в табло — з профілю гравця (players.name, інакше анонімне, у нижньому регістрі), а не копія імені Telegram у рядку (аудит В5).
+// Гравця шукаємо за прив'язкою Telegram (player_links, kind = 'tg'); немає прив'язки чи SQL 0.59 ще не виконано — ім'я з рядка, як було.
+async function withNames(rows) {
+  const keys = [...new Set(rows.map(r => r.tg_user_id).filter(x => x != null && /^\d+$/.test(String(x))).map(String))];
+  const pl = {};
+  for (let i = 0; i < keys.length; i += 100) {
+    const q = `player_links?kind=eq.tg&key=in.(${keys.slice(i, i + 100).join(',')})&select=key,players(name,anon_name,public_id)`;
+    let ls = []; try { ls = await sb(q) || []; } catch (e) { try { ls = await sb(q.replace(',public_id', '')) || []; } catch (e2) { console.warn('names', e2.message); } }
+    for (const l of ls) if (l.players) pl[l.key] = l.players;
+  }
+  return rows.map(r => { const p = pl[String(r.tg_user_id)]; const n = p && (p.name || p.anon_name);
+    return n ? { ...r, name: String(n).toLowerCase(), u: p.public_id || undefined } : r; });
+}
 // з 0.52 у табло й підсумках ліг — лише результати, чий сезон сервер перевірив (цифри беремо із сезону, а не з браузера).
 // Дні до VERIFIED_FROM показуємо як були, щоб не переписувати історію ліг.
 const VERIFIED_FROM = '2026-10-01';
@@ -59,11 +72,11 @@ async function onlyVerified(rows) {
   const ok = {};
   for (let i = 0; i < ids.length; i += 100)
     for (const s of await sb(`seasons?id=in.(${ids.slice(i, i + 100).join(',')})&verified=is.true&practice=is.false&select=id,day,tg_user_id,w,d,l,gf,ga,place`) || []) ok[s.id] = s;
-  return rows.filter(r => {
+  return withNames(rows.filter(r => {
     if (String(r.day) < VERIFIED_FROM) return true;
     const s = ok[+r.season_id];
     return !!s && String(s.day).slice(0, 10) === String(r.day).slice(0, 10) && (s.tg_user_id == null || String(s.tg_user_id) === String(r.tg_user_id));
-  }).map(r => { const s = ok[+r.season_id]; return s ? { ...r, w: s.w, d: s.d, l: s.l, pts: s.w * 3 + s.d, gf: s.gf, ga: s.ga, place: s.place } : r; });
+  }).map(r => { const s = ok[+r.season_id]; return s ? { ...r, w: s.w, d: s.d, l: s.l, pts: s.w * 3 + s.d, gf: s.gf, ga: s.ga, place: s.place } : r; }));
 }
 
 // загальний залік ліги: перемоги в днях (минулі дні + сьогодні)
@@ -73,7 +86,7 @@ async function standings(chat_id) {
   const st = {};
   for (const [day, list] of Object.entries(byDay)) {
     list.sort(sortRes);
-    for (const r of list) { const s = st[r.tg_user_id] || (st[r.tg_user_id] = { name: r.name, wins: 0, days: 0, pts: 0 }); s.days++; s.pts += r.pts; s.name = r.name; }
+    for (const r of list) { const s = st[r.tg_user_id] || (st[r.tg_user_id] = { name: r.name, u: r.u, wins: 0, days: 0, pts: 0 }); s.days++; s.pts += r.pts; s.name = r.name; }
     st[list[0].tg_user_id].wins++;
   }
   return Object.values(st).sort((a, b) => b.wins - a.wins || b.pts / b.days - a.pts / a.days);
@@ -120,12 +133,14 @@ function playButton(isPrivate) {
 
 async function topToday() {
   const day = L.kyivDate();
-  const r = await fetch(`${L.SB_URL}/rest/v1/daily_results?apikey=${SB_KEY}&day=eq.${day}&verified=is.true&select=nickname,w,d,l,pts,gf,ga&order=pts.desc,ga.asc,gf.desc&limit=10`);
+  // ім'я — з профілю гравця (players), копія nickname — лише якщо профілю немає (аудит В5)
+  const q = sel => fetch(`${L.SB_URL}/rest/v1/daily_results?apikey=${SB_KEY}&day=eq.${day}&verified=is.true&select=${sel}&order=pts.desc,ga.asc,gf.desc&limit=10`);
+  let r = await q('nickname,w,d,l,pts,gf,ga,players(name,anon_name)'); if (!r.ok) r = await q('nickname,w,d,l,pts,gf,ga');
   const rows = r.ok ? await r.json() : [];
   if (!rows.length) return `<b>Виклик дня ${day}</b>\nПоки що ніхто не зіграв. Будь першим!`;
   const medal = ['🥇', '🥈', '🥉'];
   return `<b>Виклик дня ${day} — топ ${rows.length}</b>\n` + rows.map((x, i) =>
-    `${medal[i] || (i + 1) + '.'} ${L.esc(x.nickname || 'Анонім')} — <b>${x.pts}</b> (${x.w}-${x.d}-${x.l}, ${x.gf}:${x.ga})`).join('\n');
+    `${medal[i] || (i + 1) + '.'} ${L.esc(x.players && (x.players.name || x.players.anon_name) ? String(x.players.name || x.players.anon_name).toLowerCase() : (x.nickname || 'Анонім'))} — <b>${x.pts}</b> (${x.w}-${x.d}-${x.l}, ${x.gf}:${x.ga})`).join('\n');
 }
 
 const HELLO = 'Збери XI з усієї історії Прем\'єр-ліги України і пройди сезон 30-0.\n\n' +

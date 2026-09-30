@@ -57,7 +57,7 @@ async function acctOnLogin(){
   const res=await acctPull();const s=trStore();
   ACCT_MSG=`Готово! Прогрес збережено в акаунті: ${s.seasons} ${plUk(s.seasons,'сезон','сезони','сезонів')}, трофеїв — ${Object.values(s.t).filter(e=>e.n).length}.`;
   if(!lsGet("upl30_nick")){const n=acctName();if(n)lsSet("upl30_nick",n.slice(0,24));}
-  renderAcct();if(!document.getElementById('viewBox').hidden&&document.getElementById('viewTitle').textContent==='Акаунт')openAcct();
+  renderAcct();if(!document.getElementById('viewBox').hidden&&document.getElementById('viewTitle').textContent==='Акаунт')openAcct();if(CUR_SEC===6&&PP&&PP.own)ppRender();
 }
 // ---------- способи входу
 async function acctGoogle(){if(!SB)return;const {error}=await SB.auth.signInWithOAuth({provider:'google',options:{redirectTo:location.origin+location.pathname}});if(error){ACCT_MSG='Не вдалося: '+error.message;openAcct();}}
@@ -93,23 +93,24 @@ function acctBotPoll(){if(BOT_POLL||SESSION)return;const tick=async()=>{const t=
     else if(res!=='pending'&&/крок [234]/.test(ACCT_ERR||'')){clearInterval(BOT_POLL);BOT_POLL=null;lsSet('upl30_login_tok',null);ACCT_MSG='Вхід через Telegram не вдався — '+ACCT_ERR;openAcct();}};
   BOT_POLL=setInterval(tick,2500);tick();}
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&acctBotPending()&&!SESSION){clearInterval(BOT_POLL);BOT_POLL=null;acctBotPoll();}});
-async function acctLogout(){if(SB)await SB.auth.signOut();SESSION=null;ACCT_MSG='Ти вийшов. Прогрес на цьому пристрої лишився.';renderAcct();openAcct();}
+async function acctLogout(){if(SB)await SB.auth.signOut();SESSION=null;ACCT_MSG='Ти вийшов. Прогрес на цьому пристрої лишився.';renderAcct();if(CUR_SEC===6&&PP&&PP.own)ppRender();else openAcct();}
 // ---------- ГРАВЕЦЬ (v0.39): одна людина — один гравець. Пристрій і вхід (Google/Telegram) прив'язуються до нього в базі.
 // Ім'я живе в профілі гравця: змінив — змінилося в усіх таблицях. Без імені — постійне анонімне («Silent Owl»).
-let PLAYER=lsGet("upl30_player")||null;   // {id,name,anon_name}
+let PLAYER=lsGet("upl30_player")||null;   // {id,name,anon_name,public_id,name_next} (public_id, name_next — з SQL 0.59)
 function devSecret(){let s=lsGet("upl30_dsecret");if(!s||String(s).length<32){const a=new Uint8Array(24);crypto.getRandomValues(a);s=[...a].map(b=>b.toString(16).padStart(2,'0')).join('');lsSet("upl30_dsecret",s);}return s;}
-function myName(){return (PLAYER&&(PLAYER.name||PLAYER.anon_name))||lsGet("upl30_nick")||'';}
+function myName(){return String((PLAYER&&(PLAYER.name||PLAYER.anon_name))||lsGet("upl30_nick")||'').toLowerCase();}   // з 0.59 імена лише в нижньому регістрі (DECISIONS п. 2)
 async function playerRpc(fn,extra){
   const r=await fetch(`${SB_URL}/rest/v1/rpc/${fn}?apikey=${SB_KEY}`,{method:'POST',headers:{apikey:SB_KEY,'Content-Type':'application/json'},body:JSON.stringify({p_device:deviceId(),p_secret:devSecret(),...(extra||{})})});
   const t=await r.text();if(!r.ok)throw new Error(`${fn} ${r.status}: ${t.slice(0,120)}`);return JSON.parse(t);}
-function playerSet(p){if(!p||!p.id)return;PLAYER=p;lsSet("upl30_player",p);if(p.name)lsSet("upl30_nick",p.name);renderAcct();myNameShow();}
+function playerSet(p){if(!p||!p.id)return;const was=PLAYER&&PLAYER.id;PLAYER=p;lsSet("upl30_player",p);if(p.name)lsSet("upl30_nick",p.name);renderAcct();myNameShow();
+  if(PP&&PP.own&&CUR_SEC===6){if(was!==p.id){PP.prof=null;ppLoad(PP);}ppRender();}}
 async function playerSync(){
   if(!ONLINE)return;
   try{let p=null;
     if(SESSION){try{p=await playerRpc('link_account');}catch(e){p=null;}}
     if(!p)p=await playerRpc('player_hello');
     // перший раз: нік, яким гравець підписувався до 0.39, або ім'я з акаунта стає ім'ям профілю
-    if(p&&!p.name){const nk=(lsGet("upl30_nick")||'').trim()||(SESSION?acctName():'');if(nk.length>=2&&nk!=='Гравець'&&nk!==p.anon_name)p=await playerRpc('set_player_name',{p_name:nk.slice(0,24)});}
+    if(p&&!p.name){const nk=(lsGet("upl30_nick")||'').trim()||(SESSION?acctName():'');if(nk&&nk!=='Гравець')p=await playerAutoName(p,nk);}
     playerSet(p);
   }catch(e){
     // секрет не збігся: цей device_id уже зайняв хтось інший (аудит К6) — грати далі новим пристроєм, стара історія лишається в базі
@@ -127,29 +128,47 @@ async function saveApi(kind,payload){
   if(r.status===404||j.fallback){SAVE_LEGACY=true;throw legacy();}
   if(!r.ok)throw Object.assign(new Error(j.error||('HTTP '+r.status)),{status:r.status});
   return j;}
-// будь-яке місце, де гравець вписав своє ім'я (таблиця дня, виклик, 5×5, налаштування), — оновлює профіль
-function nickSet(v){v=String(v||'').trim().slice(0,24);if(v.length<2)return;if(PLAYER&&v===PLAYER.anon_name)return;lsSet("upl30_nick",v);
-  if(ONLINE&&PLAYER&&v!==PLAYER.name)playerRpc('set_player_name',{p_name:v}).then(playerSet).catch(e=>console.warn('name',e));}
-async function playerRename(v){v=String(v||'').trim();if(v&&v.length<2)return 'Ім\'я — від 2 до 24 символів.';
-  try{const p=await playerRpc('set_player_name',{p_name:v});playerSet(p);if(!v)lsSet("upl30_nick",null);return '';}catch(e){return 'Не вдалося зберегти. Спробуй ще раз.';}}
-function nameBoxHtml(){if(!ONLINE||!PLAYER)return '';
-  return `<div class="namebox"><label for="pName"><b>Твоє ім'я в таблицях</b></label><div class="row"><input id="pName" maxlength="24" value="${esc(PLAYER.name||'')}" placeholder="${esc(PLAYER.anon_name)}"><button class="ghost" id="pNameSave">Зберегти</button></div>
-    <p class="muted" style="font-size:12px;margin:0" id="pNameMsg">${PLAYER.name?`Без імені ти був би <b>${esc(PLAYER.anon_name)}</b>.`:`Поки ти в таблицях як <b>${esc(PLAYER.anon_name)}</b>. Можна лишити так.`}</p></div>`;}
-function nameBoxWire(){const b=document.getElementById('pNameSave');if(!b)return;b.onclick=async()=>{const m=document.getElementById('pNameMsg');b.disabled=true;const err=await playerRename(document.getElementById('pName').value);b.disabled=false;m.innerHTML=err?esc(err):(PLAYER.name?`Збережено: <b>${esc(PLAYER.name)}</b>.`:`Готово: ти знову <b>${esc(PLAYER.anon_name)}</b>.`);};}
+// ---------- ІМ'Я (0.59, DECISIONS п. 2): унікальне, лише нижній регістр, 3–20 символів (літери, цифри, пробіл, _ ' -), без мату,
+// змінювати — не частіше ніж раз на 30 днів. Ті самі правила — у базі (sql/v059_player_page.sql, name_clean); тут — щоб одразу підказати.
+const NAME_BAD=['хуй','хуя','хує','хуе','хуї','пизд','пізд','блят','бляд','ебат','ебан','ебал','єбат','єбан','єбал','їбат','їбан','заїб','уеб',
+  'мудак','мудил','залуп','гандон','підор','пидор','підар','пидар','шлюх','сучар','fuck','shit','cunt','bitch','nigger','nigga','faggot','whore','pussy','asshole'];   // data/names/blocklist.txt
+const NAME_MIN=3,NAME_MAX=20;
+const nameKey=v=>String(v||'').toLowerCase().replace(/[’ʼ`‘]/g,"'").replace(/\s+/g,' ').trim();
+function nameCheck(v){const s=nameKey(v);if(!s)return {name:null};const n=[...s].length;
+  if(n<NAME_MIN||n>NAME_MAX)return {err:'len'};
+  if(!/^[a-z0-9а-яіїєґ _'-]+$/.test(s)||!/[a-zа-яіїєґ]/.test(s))return {err:'chars'};
+  const t=s.replace(/[ _'-]/g,'');if(NAME_BAD.some(b=>t.includes(b)))return {err:'bad'};
+  return {name:s};}
+const NAME_MSG={len:`Ім'я — від ${NAME_MIN} до ${NAME_MAX} символів.`,chars:"Лише малі літери (українські чи латинські), цифри, пробіл і _ ' -.",bad:"Таке ім'я не підходить. Обери інше.",
+  taken:"Це ім'я вже зайняте. Спробуй інше.",wait:d=>`Змінити ім'я знову можна з ${fmtLong(d)}.`,fail:"Не вдалося зберегти. Спробуй ще раз."};
+function nameErrOf(e){const m=/name_(len|chars|bad|taken|wait)(?::(\d{4}-\d{2}-\d{2}))?/.exec(String(e&&e.message||e));return m?(m[1]==='wait'?NAME_MSG.wait(m[2]):NAME_MSG[m[1]]):NAME_MSG.fail;}
+// перше ім'я з Telegram/Google чи з поля «Твоє ім'я»: прибираємо зайве, зайняте — з номером («андрій 7»)
+async function playerAutoName(p,raw){
+  const base=[...nameKey(raw).replace(/[^a-z0-9а-яіїєґ _'-]/g,'').replace(/\s+/g,' ').trim()].slice(0,NAME_MAX).join('').trim();
+  if(!nameCheck(base).name||base===p.anon_name)return p;
+  const cut=[...base].slice(0,NAME_MAX-3).join('').trim();
+  for(const v of [base,...[0,1,2].map(()=>`${cut} ${2+Math.floor(Math.random()*98)}`)]){
+    try{return await playerRpc('set_player_name',{p_name:v});}catch(e){if(!/name_taken|23505/.test(String(e&&e.message)))return p;}}
+  return p;}
+// будь-яке місце, де гравець вписав своє ім'я (таблиця дня, виклик, 5×5), — лише перше ім'я профілю; змінити — на своїй сторінці
+function nickSet(v){v=String(v||'').trim().slice(0,24);if(v.length<2)return;if(PLAYER&&nameKey(v)===PLAYER.anon_name)return;lsSet("upl30_nick",v);
+  if(ONLINE&&PLAYER&&!PLAYER.name)playerAutoName(PLAYER,v).then(playerSet).catch(e=>console.warn('name',e));}
+async function playerRename(v){const c=nameCheck(v);if(c.err)return NAME_MSG[c.err];
+  try{const p=await playerRpc('set_player_name',{p_name:c.name||''});playerSet(p);if(!c.name)lsSet("upl30_nick",null);return '';}catch(e){return nameErrOf(e);}}
 // ---------- інтерфейс
-function renderAcct(){const b=document.getElementById('acctBtn');if(!b)return;b.hidden=!ONLINE;b.innerHTML=SESSION?ic('account-circle')+esc(acctName().split(' ')[0]):ic('account-circle')+'Увійти';}
+// шапка (0.59): аватарка замість «Увійти» — тап відкриває свою сторінку
+function renderAcct(){const b=document.getElementById('acctBtn');if(!b)return;b.hidden=!ONLINE;b.className='avbtn';b.title='Моя сторінка';b.setAttribute('aria-label','Моя сторінка');b.innerHTML=avatarSvg(mySeed(),30);}
 function openAcct(){screenTag('account');
   const box=document.getElementById('viewBox'),body=document.getElementById('viewBody');document.getElementById('viewTitle').textContent='Акаунт';box.hidden=false;
-  const msg=nameBoxHtml()+(ACCT_MSG?`<p class="note">${esc(ACCT_MSG)}</p>`:'');
+  const msg=ACCT_MSG?`<p class="note">${esc(ACCT_MSG)}</p>`:'';
   if(SESSION){const u=SESSION.user;const via=(u.app_metadata&&u.app_metadata.provider)==='google'?'Google':(u.email||'').endsWith('@users.upl-30-0.vercel.app')?'Telegram':'пошту';
     body.innerHTML=`${msg}<p style="margin:0">Ти увійшов як <b>${esc(acctName())}</b> через ${via}.</p><p class="muted" style="margin:0">Трофеї, серія, рекорди й нік зберігаються в акаунті й доступні на будь-якому пристрої та в Telegram.</p><div class="row"><button class="ghost" id="acctOut">Вийти</button></div>`;
-    document.getElementById('acctOut').onclick=acctLogout;nameBoxWire();return;}
+    document.getElementById('acctOut').onclick=acctLogout;return;}
   body.innerHTML=`${msg}<p style="margin:0"><b>Грати можна без акаунта.</b> Вхід потрібен, щоб не загубити прогрес:</p>
     <ul class="muted" style="margin:0;padding-left:18px"><li>трофеї, серія виклику дня й рекорди — на всіх пристроях і в Telegram</li><li>ім'я та всі результати — одні на всіх пристроях</li><li>ліги з друзями в Telegram-групах</li></ul>
     <div class="grid" style="gap:8px">${IN_TG()?`<button class="primary" id="acctT">${ic('telegram')}Увійти через Telegram</button>`:''}${AUTH_GOOGLE&&!IN_TG()?`<button class="primary" id="acctG">${ic('google')}Увійти через Google</button>`:''}${AUTH_TG()&&!IN_TG()?`<a class="btnlink" id="acctBot" href="https://t.me/${TG_BOT}?start=login_${acctBotPending()||acctBotToken()}" target="_blank" rel="noopener">${ic('telegram')}Увійти через Telegram</a><span class="muted" style="font-size:12px" id="acctBotHint">${acctBotPending()&&BOT_POLL?'Чекаємо підтвердження: у чаті з ботом натисни «Start», потім «Підтвердити вхід» і повернись сюди.':'Відкриється чат з @'+TG_BOT+' — натисни там «Start», потім «Підтвердити вхід» і повернись сюди.'}</span>`:''}</div>
     ${ACCT_ERR||!SB?`<p class="muted mono" style="font-size:11px;margin:0">Діагностика: ${!SB?'бібліотека входу не завантажилась':esc(ACCT_ERR)}</p>`:''}
     <p class="muted" style="font-size:12px;margin:0">Зберігаємо лише ім'я та ідентифікатор входу. Усе, що вже зіграно на цьому пристрої, перейде в акаунт.</p>`;
-  nameBoxWire();
   const g=document.getElementById('acctG');if(g)g.onclick=acctGoogle;
   const tb=document.getElementById('acctT');if(tb)tb.onclick=()=>{ACCT_MSG='Входимо…';openAcct();acctTelegram({initData:TG.initData},false);};
   const ab=document.getElementById('acctBot');if(ab)ab.onclick=()=>{ACCT_ERR='';setTimeout(()=>{acctBotPoll();const h=document.getElementById('acctBotHint');if(h)h.textContent='Чекаємо підтвердження: у чаті з ботом натисни «Start», потім «Підтвердити вхід» і повернись сюди.';},300);};
@@ -182,8 +201,8 @@ function renderLeague(){
   const L=LEAGUE,medal=[1,2,3].map(k=>`<span class="plc p${k}">${k}</span>`);const played=lsGet("upl30_daily_"+DAY);
   el.hidden=false;el.innerHTML=`<div class="kicker">Ліга групи</div><div class="ttl">«${esc(L.title)}»</div>
     <div class="meta">Сьогодні зіграли ${L.today.length} з ${Math.max(L.members,L.today.length)}</div>
-    ${L.today.length?`<div class="tbl"><table>${L.today.slice(0,6).map((r,i)=>`<tr${TGU&&r.name===[TGU.first_name,TGU.last_name].filter(Boolean).join(' ')?' class="me"':''}><td>${medal[i]||i+1}</td><td>${esc(r.name)}</td><td class="num">${r.w}-${r.d}-${r.l}</td><td class="num"><b>${r.pts}</b></td></tr>`).join('')}</table></div>`:'<p class="muted" style="margin:0">Ще ніхто не зіграв — будь першим!</p>'}
-    ${L.standings&&L.standings.length>1?`<p class="muted" style="margin:0;font-size:13px">Залік (перемоги в днях): ${L.standings.slice(0,5).map(s=>`${esc(s.name)} ${s.wins}`).join(' · ')}</p>`:''}
+    ${L.today.length?`<div class="tbl"><table>${L.today.slice(0,6).map((r,i)=>`<tr${(r.u&&PLAYER&&r.u===PLAYER.public_id)||(!r.u&&TGU&&r.name===[TGU.first_name,TGU.last_name].filter(Boolean).join(' '))?' class="me"':''}><td>${medal[i]||i+1}</td><td>${plink({players:{name:r.name,public_id:r.u}})}</td><td class="num">${r.w}-${r.d}-${r.l}</td><td class="num"><b>${r.pts}</b></td></tr>`).join('')}</table></div>`:'<p class="muted" style="margin:0">Ще ніхто не зіграв — будь першим!</p>'}
+    ${L.standings&&L.standings.length>1?`<p class="muted" style="margin:0;font-size:13px">Залік (перемоги в днях): ${L.standings.slice(0,5).map(s=>`${plink({players:{name:s.name,public_id:s.u}})} ${s.wins}`).join(' · ')}</p>`:''}
     <div class="row">${played?'<span class="best">Твій результат уже в табло групи</span>':'<button class="primary" id="leagueGo">Зіграти виклик дня</button>'}</div>`;
   const g=document.getElementById('leagueGo');if(g)g.onclick=()=>document.getElementById('dailyBtn').click();
 }

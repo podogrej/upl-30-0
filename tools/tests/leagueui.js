@@ -12,12 +12,13 @@ const OUT=process.argv[2]||path.join(ROOT,'tools','tests','out');fs.mkdirSync(OU
  const tg={initData:'user=x&hash=abc',initDataUnsafe:{user:{id:1,first_name:'Андрій'},start_param:'g-100555'},colorScheme:'dark',platform:'android'};
  const {b,pg,errs}=await openSite({db:makeDB({}),api,tg,hash:'#tgWebAppData=x',viewport:{width:430,height:900},wait:1800});
  const card=await pg.$eval('#leagueCard',e=>e.hidden?'':e.textContent.replace(/\s+/g,' ').trim());
- T.check(card.includes('«Футбол по середах»')&&card.includes('Сергій')&&/Сьогодні зіграли 1 з 3/.test(card),'картка ліги: '+card.slice(0,90));
+ T.check(card.includes('«Футбол по середах»')&&card.includes('сергій')&&/Сьогодні зіграли 1 з 3/.test(card),'картка ліги: '+card.slice(0,90));
  T.check(getChat==='-100555','картку взято для чату з start_param ('+getChat+')');
  T.check(posts.length>=1&&posts[0].initData==='user=x&hash=abc'&&!posts[0].result,'вступ у лігу: POST /api/league з initData');
  T.check(auth.length===1&&auth[0].initData==='user=x&hash=abc','тихий вхід: /api/auth з initData');
- T.check(/Андрій/.test(await pg.textContent('#acctBtn')),'після входу в шапці ім\'я: '+(await pg.textContent('#acctBtn')).trim());
- await pg.click('#acctBtn');await pg.waitForTimeout(200);T.check(!(await pg.$('#acctG')),'у Telegram немає кнопки Google');await pg.click('#viewClose');
+ T.check(await pg.$eval('#acctBtn',e=>!!e.querySelector('svg.av')),'у шапці — аватарка');
+ await pg.click('#acctBtn');await pg.waitForTimeout(300);T.check(/Увійшов через Telegram/.test(await pg.textContent('#pp')),'своя сторінка: «Увійшов через Telegram»');
+await pg.click('#homeBtn');
  await pg.screenshot({path:path.join(OUT,'league_home.png')});
  await pg.click('#leagueGo');T.check(/Виклик дня/.test(await pg.textContent('#modeLabel')),'«Зіграти виклик дня» з картки ліги відкриває виклик дня');
  await draftSeason(pg);await pg.waitForTimeout(1500);

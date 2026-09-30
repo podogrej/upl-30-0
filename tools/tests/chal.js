@@ -21,17 +21,17 @@ process.env.SUPABASE_SERVICE_KEY='svc';const saveH=require(path.join(ROOT,'api',
  // B відкриває посилання
  const B=await openSite({b,db,api,query:'?c='+row.id,wait:1500});await B.pg.evaluate(()=>localStorage.setItem('upl30_nick','"Сергій"'));
  const card=await B.pg.$eval('#chalCard',e=>e.hidden?'':e.textContent.replace(/\s+/g,' ').trim());
- T.check(card.includes('Андрій')&&card.includes(String(row.pts))&&card.includes(row.formation),'B: картка виклику ('+card.slice(0,80)+')');
+ T.check(card.includes('андрій')&&card.includes(String(row.pts))&&card.includes(row.formation),'B: картка виклику ('+card.slice(0,80)+')');
  await B.pg.click('#chalGo');const label=await B.pg.textContent('#modeLabel');
  T.check(label.startsWith('Виклик')&&label.includes(row.formation),'B: підпис драфту «'+label+'»');
  const [seenB,onB]=spins(B.pg);await draftSeason(B.pg,onB);
  T.check(seenA.length===11&&JSON.stringify(seenA)===JSON.stringify(seenB),'те саме колесо: '+seenA.slice(0,3).join(', ')+' …');
  T.check(await B.pg.evaluate(()=>window.__dbg.S.result.year)===row.year,'B: ті самі суперники (сезон '+row.year+')');
- const line=await B.pg.$eval('#chalLine',e=>e.hidden?'':e.textContent);T.check(/Ти \d+ : \d+ Андрій/.test(line),'B: рядок порівняння «'+line+'»');
+ const line=await B.pg.$eval('#chalLine',e=>e.hidden?'':e.textContent);T.check(/Ти \d+ : \d+ андрій/.test(line),'B: рядок порівняння «'+line+'»');
  T.check(await B.pg.$eval('#chalBox',e=>!e.hidden),'B: може кинути свій виклик далі');
  await B.pg.waitForTimeout(600);const res=DB.challenge_results;
- T.check(res.length===1&&res[0].challenge_id===row.id&&res[0].name==='Сергій','B: результат записано в challenge_results');
+ T.check(res.length===1&&res[0].challenge_id===row.id&&res[0].name==='сергій','B: результат записано в challenge_results');
  await B.pg.click('#againBtn');await B.pg.waitForTimeout(600);
- const after=await B.pg.$eval('#chalCard',e=>e.hidden?'':e.textContent.replace(/\s+/g,' '));T.check(after.includes('Сергій'),'B: картка після гри показує результат Сергія');
+ const after=await B.pg.$eval('#chalCard',e=>e.hidden?'':e.textContent.replace(/\s+/g,' '));T.check(after.includes('сергій'),'B: картка після гри показує результат Сергія');
  T.check(!A.errs.length&&!B.errs.length,'помилок на сторінках немає '+[...A.errs,...B.errs].join(' | '));
  await b.close();process.exit(T.done());})();

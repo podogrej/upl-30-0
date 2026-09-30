@@ -28,14 +28,15 @@ upl-30-0/
 ├─ lib/engine.js       серверный движок симуляции (генерируется, руками не править)
 ├─ src/                ИСХОДНИКИ ИГРЫ
 │  ├─ template.html    основа: разметка, стили, игра, таблицы
-│  ├─ account.js       вход, профиль игрока, имена, лиги групп
+│  ├─ account.js       вход, профиль игрока, имена (правила), лиги групп
+│  ├─ player.js        страница игрока (0.59): своя/чужая, шафа трофеев, аватарка
 │  ├─ challenge.js     «Виклик другу» по ссылке
 │  ├─ five.js          режим 5×5 (локально и онлайн)
 │  ├─ trophies.js      трофеи
 │  ├─ icons.js         иконки (генерирует src/icons/make_icons.py)
 │  ├─ pool.json        все игроки и сезоны с рейтингами
 │  └─ build.py         сборка → ../index.html и ../dist/30-0-upl.html
-├─ sql/                все SQL по версиям; база с нуля: new_db_part_A.sql + v039_part_B.sql + cards_bucket.sql + v053_writes.sql (+ v054_close_writes.sql — шаг 2) + v055_backups.sql
+├─ sql/                все SQL по версиям; база с нуля: new_db_part_A.sql + v039_part_B.sql + cards_bucket.sql + v053_writes.sql (+ v054_close_writes.sql — шаг 2) + v055_backups.sql + v059_player_page.sql (v059_name_conflicts.sql — только чтение)
 ├─ tools/              make_engine.js (движок для сервера), sim30.js (замер сложности), tests/
 ├─ data/               датасет УПЛ и пайплайн пула: как устроен и что запускать — data/README.md; check_pool.py — проверка пула
 └─ docs/               формулы, гейм-дизайн
@@ -125,8 +126,9 @@ upl-30-0/
   - `modes` — режимы и форматы; `tro` — трофеи; `chal` — виклик другу; `leagueui` — лиги групп; `news` — «Що нового» и вход; `f5test2`, `f5online` — 5×5;
   - `draft58` (с 0.58) — кнопки позиций под игроком в колесе (как на поле, клавиатура), эпохи (колесо, дерби, виклик дня без эпохи), метки экранов Clarity, чистка старых ключей localStorage, склонения, трофей «Гамарджоба»; снимки `posbtn.png`, `era_setup.png`, `era_320.png`;
   - `pitch_layout` (с 0.56) — фишки на поле не налазят друг на друга и не выходят за край: все схемы 11×11 и 5×5, самые длинные фамилии, ширины 320–1024;
+  - `player_page` (с 0.59) — своя/чужая/без входа страница игрока, правила имени и сообщения, рідкість и фильтры шафы, ссылка из таблицы, удаление акаунта, имя в табло лиги, список мата одинаков в трёх местах; снимки `docs/mockups/player_page_059_*.png`;
   - `v39` — профиль игрока, таблица, проверка сезона: браузер против базы в памяти (`_site.js`) и настоящих `api/*.js`; `node tools/tests/v39.js [new|old|both]`.
-- `bash tools/tests/setup.sh` — SQL на временном Postgres (заглушка Supabase `stub.sql`): повторный запуск `new_db_part_A.sql`, `v039_part_B.sql`, `cards_bucket.sql`, `v053_writes.sql`, `v054_close_writes.sql`, `v055_backups.sql`, RLS и функции игрока, секрет устройства (К6), общий телефон (В6), закрытие прямой записи (шаг 2), приватное хранилище копий и `rate_hit` (0.55).
+- `bash tools/tests/setup.sh` — SQL на временном Postgres (заглушка Supabase `stub.sql`): повторный запуск `new_db_part_A.sql`, `v039_part_B.sql`, `cards_bucket.sql`, `v053_writes.sql`, `v054_close_writes.sql`, `v055_backups.sql`, RLS и функции игрока, секрет устройства (К6), общий телефон (В6), закрытие прямой записи (шаг 2), приватное хранилище копий и `rate_hit` (0.55), 0.59: правила и уникальность имён, 30 дней, `public_id`, `player_profile`, `delete_player`, база со совпадениями имён (база — UTF8, локаль C).
 
 ## Первый запуск в Claude Code (один раз)
 
