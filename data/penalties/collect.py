@@ -409,8 +409,16 @@ def write():
                     if cid == UPL:
                         upl[i] += v[i]
             ix = F.index
-            r.update(pen_taken=tot[ix('sh_att')], pen_scored=tot[ix('sh_goal')], gk_faced=tot[ix('gk_att')], gk_saved=tot[ix('gk_saved')],
-                     upl_taken=upl[ix('sh_att')], upl_scored=upl[ix('sh_goal')], upl_gk_faced=upl[ix('gk_att')], upl_gk_saved=upl[ix('gk_saved')],
+
+            def taken(v):   # у TM Attempts іноді менше за «забив + відбили» — беремо більше (див. README)
+                return max(v[ix('sh_att')], v[ix('sh_goal')] + v[ix('sh_saved')])
+
+            def faced(v):   # те саме для воротаря: пропустив + відбив
+                return max(v[ix('gk_att')], v[ix('gk_conc')] + v[ix('gk_saved')])
+            if faced(tot) > tot[ix('gk_att')] or taken(tot) > tot[ix('sh_att')]:
+                note.append('у TM кількість пенальті менша за суму результатів — взято суму')
+            r.update(pen_taken=taken(tot), pen_scored=tot[ix('sh_goal')], gk_faced=faced(tot), gk_saved=tot[ix('gk_saved')],
+                     upl_taken=taken(upl), upl_scored=upl[ix('sh_goal')], upl_gk_faced=faced(upl), upl_gk_saved=upl[ix('gk_saved')],
                      pen_saved_by_gk=tot[ix('sh_saved')], gk_conceded=tot[ix('gk_conc')], games_tm=pf['games'], games_tracked=tot[ix('tracked')],
                      tracked_seasons=f"{pf['tracked_from']}–{pf['tracked_to'] + 1}" if pf['tracked_from'] else '')
             r['source'] = 'transfermarkt (tmapi performance-game)'
