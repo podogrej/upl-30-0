@@ -3,6 +3,11 @@
 import os
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 tpl=open('template.html').read().replace('/*__ICONS__*/',open('icons.js').read()).replace('/*__TROPHIES__*/',open('trophies.js').read()).replace('/*__ACCOUNT__*/',open('account.js').read()).replace('/*__CHALLENGE__*/',open('challenge.js').read()).replace('/*__FIVE__*/',open('five.js').read()); pool=open('pool.json').read().replace('</','<\\/')
+# кольори клубів (data/club_colors.csv, code = c у pool.json) → константа CLUB_COLORS {code:[c1,c2,c3]}; клуб без c1 (Темп) — не пишемо, гра малює нейтральну фішку
+import csv,json
+_cc={r['code']:[r['c1'],r['c2'],r['c3']] for r in csv.DictReader(open('../data/club_colors.csv',encoding='utf-8')) if r['c1']}
+assert '/*__CLUB_COLORS__*/{}' in tpl
+tpl=tpl.replace('/*__CLUB_COLORS__*/{}',json.dumps(_cc,separators=(',',':')))
 import hashlib; datav='d'+hashlib.sha1(open('pool.json','rb').read()).hexdigest()[:8]; tpl=tpl.replace('__DATAV__',datav)
 art=tpl.replace('__POOL__',pool).replace('__ONLINE__','false')
 os.makedirs('../dist',exist_ok=True); open('../dist/30-0-upl.html','w').write(art)

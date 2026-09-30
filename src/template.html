@@ -35,28 +35,37 @@ button.ghost{border-color:var(--line);background:transparent;color:var(--ink2);p
 .formations{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
 .modes{grid-template-columns:repeat(auto-fill,minmax(210px,1fr))}
 /* pitch */
-/* поле: вертикальне, справжні пропорції 68×105, вид згори, атака вгорі; позиції — квадратні картки */
-.pitch{position:relative;width:100%;max-width:460px;margin-inline:auto;aspect-ratio:68/105;container-type:inline-size;border-radius:12px;overflow:hidden;color:#fff;
-  background:repeating-linear-gradient(180deg,var(--turf1) 0 10%,var(--turf2) 10% 20%)}
-:root{--turf1:#173a27;--turf2:#143322;--chalkline:rgba(255,255,255,.42)}
+/* поле (0.56): вертикальне, пропорції 68×105, вид згори, атака вгорі; гравці — фішки в кольорах клубу (кружок + рейтинг у плашці + підписи) */
+.pitch{position:relative;width:100%;max-width:460px;margin-inline:auto;aspect-ratio:68/105;container-type:inline-size;border-radius:14px;overflow:hidden;color:#fff;
+  background:radial-gradient(120% 80% at 50% 45%,#16402d 0,#0e2c20 70%)}
+:root{--chalkline:rgba(190,230,205,.22)}
 .pitch svg.mk{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 .pitch svg.mk *{fill:none;stroke:var(--chalkline);stroke-width:.45}.pitch svg.mk .dot{fill:var(--chalkline);stroke:none}
-.slot{position:absolute;transform:translate(-50%,-50%);width:var(--sw,21%);aspect-ratio:1;background:rgba(10,14,12,.72);border:1.5px dashed rgba(255,255,255,.6);border-top:4px solid var(--c,#fff);
-  border-radius:8px;padding:4px 3px;display:grid;justify-items:center;align-content:space-between;text-align:center;gap:1px;z-index:1}
-.slot.GK{--c:var(--gk)}.slot.DF{--c:var(--df)}.slot.MF{--c:var(--mf)}.slot.FW{--c:var(--fw)}
-.slot.filled{border-style:solid;border-color:rgba(255,255,255,.85);border-top-color:var(--c);cursor:pointer}
-.slot.moving{outline:3px solid var(--amber2);outline-offset:2px}
-.slot.target{border-color:var(--amber2);border-top-color:var(--amber2);border-style:solid;background:color-mix(in srgb,var(--amber2) 28%,rgba(10,14,12,.72));cursor:pointer}
-.slot .tg{display:flex;gap:4px;align-items:center;justify-content:center}
-.slot .pos{font-family:var(--font-mono);font-size:9px;font-size:max(8px,2.4cqw);font-weight:600;letter-spacing:.04em;padding:0 4px;border-radius:3px;line-height:14px;color:#111;background:var(--c,#fff)}
-.slot .r0{font-family:var(--font-mono);font-size:9px;font-size:max(8px,2.4cqw);opacity:.8}
-.slot .nm{font-weight:800;font-size:11px;font-size:max(9px,3.2cqw);line-height:1.15;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.slot .nm.long{font-size:9.5px;font-size:max(8px,2.65cqw)}.slot .nm.xl{font-size:8px;font-size:max(7px,2.2cqw)}
-.slot .r,.slot .avg{font-family:var(--font-display);font-weight:700;font-size:15px;font-size:max(12px,4.3cqw);color:var(--amber2);line-height:1}
+/* фішка: центр кружка — рівно в точці слота, підписи під ним; розміри — змінні, вужче поле (container query) — дрібніше */
+.slot{--cs:36px;--bw:4px;--pf:9.5px;--nf:11px;--nf10:10px;--nf12:9.2px;--cf:8.7px;--rf:10.5px;--rr:-15px;--rp:3px 5px;
+  position:absolute;transform:translate(-50%,calc(var(--cs)/-2));width:max-content;display:flex;flex-direction:column;align-items:center;text-align:center;white-space:nowrap;z-index:1;pointer-events:none;outline:none}
+.slot>*{pointer-events:auto}.slot[tabindex]{cursor:pointer}
+.slot .disc{position:relative;width:var(--cs);height:var(--cs);border-radius:50%;display:grid;place-items:center;background:var(--c1,#2b3a33);border:var(--bw) solid var(--c2,#9fb3a8);
+  box-shadow:0 0 0 1.5px rgba(255,255,255,.85),0 2px 6px rgba(0,0,0,.4)}
+.slot .pos{font-weight:800;font-size:var(--pf);line-height:1;color:var(--ct,#fff)}
+.slot .pill{position:absolute;top:-8px;right:var(--rr);font-weight:800;font-size:var(--rf);line-height:1;color:#fff;padding:var(--rp);border-radius:6px;background:var(--pc,#6b7280);box-shadow:0 1px 3px rgba(0,0,0,.45);font-variant-numeric:tabular-nums}
+.slot .pill.flip{right:auto;left:var(--rr)}
+.slot .pill.avg{background:#0e2c20;color:var(--amber2);box-shadow:inset 0 0 0 1.5px var(--amber2),0 1px 3px rgba(0,0,0,.45)}   /* рамка — тінню, щоб плашка не росла й не закривала позицію */
 .slot .r.reveal{animation:pop .5s ease-out both}
 @keyframes pop{0%{transform:scale(.4);opacity:0}70%{transform:scale(1.2)}100%{transform:scale(1);opacity:1}}
-.slot .club{font-size:8px;font-size:max(7px,2.3cqw);color:rgba(255,255,255,.72);line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
-.pitch.wide .slot .nm{font-size:10px;font-size:max(8.5px,2.85cqw)}.pitch.wide .slot .nm.long{font-size:max(7.5px,2.35cqw)}.pitch.wide .slot .nm.xl{font-size:max(6.5px,1.95cqw)}.pitch.wide .slot .club{font-size:max(6.5px,2.05cqw)}
-.slot .emp{color:rgba(255,255,255,.6);font-weight:600}
+.slot .nm{margin-top:3px;font-weight:800;font-size:var(--nf);line-height:1.2;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.6)}
+.slot .nm.long{font-size:var(--nf10)}.slot .nm.xl{font-size:var(--nf12);letter-spacing:-.02em}
+.slot .nick{color:var(--amber2)}
+.slot .club{font-weight:600;font-size:var(--cf);line-height:1.2;color:rgba(225,240,230,.72)}
+.slot.empty .disc{background:rgba(255,255,255,.06);border:1.5px dashed rgba(255,255,255,.45);box-shadow:none}
+.slot.empty .pos{color:rgba(255,255,255,.8)}
+.slot.target .disc{border:2px solid #7df0a8;animation:glow 1.1s ease-in-out infinite}.slot.target .pos{color:#7df0a8}
+.slot.filled.target .disc{background:color-mix(in srgb,var(--c1,#2b3a33) 35%,#0e2c20)}
+@keyframes glow{0%,100%{box-shadow:0 0 0 1.5px rgba(125,240,168,.9)}50%{box-shadow:0 0 0 6px rgba(125,240,168,.3)}}
+.slot.moving .disc{outline:3px solid var(--amber2);outline-offset:2px}
+.slot:focus-visible .disc{outline:2px solid #fff;outline-offset:3px}
+@container (max-width:339.98px){.slot{--cs:32px;--bw:3.5px;--pf:9px;--nf:10px;--nf10:9.3px;--nf12:8.6px;--cf:8.3px;--rf:9.5px;--rr:-13px}}
+@container (max-width:299.98px){.slot{--cs:30px;--bw:3px;--pf:8.5px;--nf:9.2px;--nf10:8.6px;--nf12:8px;--cf:7.6px;--rf:9px;--rr:-12px;--rp:2px 4px}}
 .pl .alts{display:block;font-family:var(--font-mono);font-size:10px;color:var(--muted);letter-spacing:.02em;line-height:1.3}.pl .alts i{font-style:normal;font-weight:600}.alts i.DF{color:var(--df)}.alts i.MF{color:var(--mf)}.alts i.FW{color:var(--fw)}
 .pl .rt s{color:var(--muted);font-weight:500;font-size:12px}
 .pos.DF,.pos.CB,.pos.RB,.pos.LB,.pos.RWB,.pos.LWB{background:var(--df)} .pos.MF,.pos.CDM,.pos.CM,.pos.CAM,.pos.RM,.pos.LM{background:var(--mf)} .pos.FW,.pos.RW,.pos.LW,.pos.ST{background:var(--fw)}
@@ -74,7 +83,6 @@ button.ghost{border-color:var(--line);background:transparent;color:var(--ink2);p
 .reel .season{font-size:18px;font-weight:700;color:var(--ink)}
 .reel::before,.reel::after{content:'';position:absolute;left:0;right:0;height:12px;pointer-events:none;z-index:1}.reel::before{top:0;background:linear-gradient(var(--bg),transparent)}.reel::after{bottom:0;background:linear-gradient(transparent,var(--bg))}
 @media (prefers-reduced-motion:reduce){.reel .strip.go{transition:none}.reel.landed .strip>div,.pl.in,section.enter,section.back{animation:none!important}}
-.slot.target{animation:glow 1.1s ease-in-out infinite}@keyframes glow{0%,100%{box-shadow:0 0 0 2px var(--amber2)}50%{box-shadow:0 0 0 5px color-mix(in srgb,var(--amber2) 35%,transparent)}}
 .pl.on{border-color:var(--amber2);box-shadow:0 0 0 2px var(--amber2)}
 .squad{display:grid;gap:4px;margin-top:10px}
 .pl,.sqHead{display:grid;grid-template-columns:32px minmax(0,1fr) repeat(var(--nst,4),29px) var(--rtw,38px);gap:4px;}.noast,.sqHead.noast{--nst:3}.nor,.sqHead.nor{--rtw:0px}.sqHead b{font-weight:inherit}.sqHead i{display:none;font-style:normal}
@@ -448,7 +456,7 @@ td .sub{font-size:11px;color:var(--muted);margin-top:2px;display:flex;gap:6px;al
     </div>
 </div>
 <div class="overlay" id="viewBox" hidden><div class="box"><div class="vhead"><h3 id="viewTitle">Склад</h3><button class="ghost" id="viewClose">Закрити</button></div><div id="viewBody"></div></div></div>
-<div class="foot">30-0 УПЛ · <a href="#" id="newsBtn">Що нового у версії 0.55<b id="newsDot" hidden></b></a> · <a href="#" id="themeBtn" class="thm" role="switch" aria-checked="false" aria-label="Світла тема"></a> · неофіційний фан-проєкт</div>
+<div class="foot">30-0 УПЛ · <a href="#" id="newsBtn">Що нового у версії 0.56<b id="newsDot" hidden></b></a> · <a href="#" id="themeBtn" class="thm" role="switch" aria-checked="false" aria-label="Світла тема"></a> · неофіційний фан-проєкт</div>
 <script id="pool" type="application/json">__POOL__</script>
 <script>
 (function(){
@@ -647,38 +655,92 @@ document.getElementById('myName').onchange=e=>{const v=e.target.value.trim();if(
 // ---------- step 2: draft
 const PITCH_MK=`<svg class="mk" viewBox="0 0 68 105" preserveAspectRatio="none" aria-hidden="true"><rect x="2" y="2" width="64" height="101"/><line x1="2" y1="52.5" x2="66" y2="52.5"/><circle cx="34" cy="52.5" r="9.15"/><circle class="dot" cx="34" cy="52.5" r=".6"/><rect x="13.85" y="2" width="40.3" height="16.5"/><rect x="24.84" y="2" width="18.32" height="5.5"/><circle class="dot" cx="34" cy="13" r=".5"/><path d="M26.7 18.5 A9.15 9.15 0 0 0 41.3 18.5"/><rect x="13.85" y="86.5" width="40.3" height="16.5"/><rect x="24.84" y="97.5" width="18.32" height="5.5"/><circle class="dot" cx="34" cy="92" r=".5"/><path d="M26.7 86.5 A9.15 9.15 0 0 1 41.3 86.5"/></svg>`;
 // координати слотів у % поля: ряди зверху (атака) вниз (воротар)
+// лесенка (0.56): у ряду з 4–5 фішок крайні стоять вище, центральна — нижче, щоб підписи сусідів не зачіпались; зсув у % висоти поля (мінус — угору)
+const LADDER_SD=5;
+function ladderOf(row){if(row.length===4)return [-1,0,0,-1];
+  if(row.length===5&&row.every(s=>GROUP_OF[s]==='MF'))return [-1.8,0,1,0,-1.8];
+  if(row.length===5&&row.every(s=>GROUP_OF[s]==='DF'))return [-2.4,0,1,0,-2.4];
+  return null;}
 function pitchGeo(formation){const F=FORMATIONS[formation]||FORMATIONS['4-4-2'];const n=F.rows.length;
-  const Y=n===5?[12,31,50,70,90]:[16,42,68,90];const wide=F.rows.some(r=>r.length>=5);
-  const X=k=>k===1?[50]:k===2?[32,68]:k===3?[20,50,80]:k===4?[13,38,62,87]:[11,30.5,50,69.5,89];
-  // вінгбек у ряду півзахисту стоїть нижче — між півзахистом і захистом; три центральні захисники тоді трохи ближче до центру
+  const Y=n===5?[12,31,50,70,90]:[16,42,68,90];
+  const X=k=>k===1?[50]:k===2?[32,68]:k===3?[20,50,80]:k===4?[12.5,37,63,87.5]:[11,30.5,50,69.5,89];
+  // вінгбек у ряду півзахисту стоїть нижче — між півзахистом і захистом; три центральні захисники тоді трохи ближче до центру; до такого ряду лесенку не застосовуємо
   const out=[];F.rows.forEach((row,ri)=>{const wbRow=row.some(s=>s==='LWB'||s==='RWB')&&row.some(s=>GROUP_OF[s]==='MF');
     const cbBelow=ri>0&&F.rows[ri-1].some(s=>(s==='LWB'||s==='RWB'))&&F.rows[ri-1].some(s=>GROUP_OF[s]==='MF')&&row.length===3&&row.every(s=>s==='CB');
-    const xs=cbBelow?[26,50,74]:X(row.length);
-    row.forEach((s,j)=>{const wb=wbRow&&(s==='LWB'||s==='RWB');out.push({x:wb?(s==='LWB'?11.5:88.5):xs[j],y:wb?Y[ri]+0.46*(Y[ri+1]-Y[ri]):Y[ri]});});});
-  return {pts:out,sw:wide?'18.5%':'21%'};}
+    const xs=cbBelow?[26,50,74]:X(row.length);const lad=wbRow?null:ladderOf(row);
+    row.forEach((s,j)=>{const wb=wbRow&&(s==='LWB'||s==='RWB');out.push({x:wb?(s==='LWB'?11.5:88.5):xs[j],y:wb?Y[ri]+0.46*(Y[ri+1]-Y[ri]):Y[ri]+(lad?lad[j]*LADDER_SD:0)});});});
+  return {pts:out};}
 const SEA_SHORT=y=>String(y).slice(2)+'/'+String(y+1).slice(2);
 const CLUB_BASE={};for(const c of DATA.clubs){const b=c.n.replace(/\s*\(.*\)\s*/,'').trim();(CLUB_BASE[b]=CLUB_BASE[b]||new Set()).add(c.n);}
 function clubShort(n){const b=String(n||'').replace(/\s*\(.*\)\s*/,'').split(' / ')[0].trim();const m=/\(([^)]+)\)/.exec(n||'');return CLUB_BASE[b]&&CLUB_BASE[b].size>1&&m?`${b} ${m[1][0]}.`:b;}
 // на картці лише прізвище (повне ім'я — у підказці); довгі прізвища дрібнішим шрифтом, щоб влізли в один рядок
 function cardName(n){const t=String(n).split(' ');return t.length<2?n:t.slice(1).join(' ');}
-function nmCls(n){const l=cardName(n).length;return l>11?' xl':l>8?' long':'';}
+function nmCls(n){const l=cardName(n).length;return l>=12?' xl':l>=10?' long':'';}   // від 10 букв 10px, від 12 — 9.2px і щільніше (0.56)
 // пасхалка: у Тимощука завжди «(пітух)»
 const NICK={'w:1979-03-30:timoschuk':'пітух'};const nickOf=id=>NICK[id]?` <span class="nick">(${NICK[id]})</span>`:'';
-function slotInner(slot,p,body){return `<div class="tg"><span class="pos">${POSNAME[slot]}</span>${body.r0||''}</div>`+(p?`<div class="nm${nmCls(p.name||p.n)}" title="${esc(p.name||p.n)}">${esc(cardName(p.name||p.n))}${nickOf(p.id)}</div>${body.mid||''}<div class="club">${esc(clubShort(p.club||p.c))} ${p.y?SEA_SHORT(p.y):''}</div>`:`<div class="nm emp">—</div><div></div>`);}
+// кольори клубу на фішці: CLUB_COLORS {code:[c1,c2,c3]} вбудовує build.py з data/club_colors.csv; клуб без кольорів — нейтральна фішка (CSS за замовчуванням)
+const CLUB_COLORS=/*__CLUB_COLORS__*/{};
+const CLUB_CODE={};for(const c of DATA.clubs)CLUB_CODE[c.n]=c.c;
+const ccOf=p=>p.cc||CLUB_CODE[p.club]||CLUB_CODE[p.c]||p.c;   // чернетка — cc; 5×5 — club (назва) і c (код); збережений сезон — c (назва)
+function relLum(h){const v=parseInt(h.slice(1),16);return [v>>16&255,v>>8&255,v&255].map(x=>{x/=255;return x<=0.03928?x/12.92:Math.pow((x+0.055)/1.055,2.4);}).reduce((a,x,i)=>a+x*[0.2126,0.7152,0.0722][i],0);}
+function contrast(a,b){const x=relLum(a),y=relLum(b);return (Math.max(x,y)+0.05)/(Math.min(x,y)+0.05);}
+const PAL={};
+function clubPal(code){if(code in PAL)return PAL[code];const c=CLUB_COLORS[code];if(!c||!c[0])return PAL[code]='';
+  const [c1,c2,c3]=c;const tx=[c2,c3].find(x=>x&&contrast(x,c1)>=3.2)||(contrast('#ffffff',c1)>=contrast('#111111',c1)?'#fff':'#111');
+  return PAL[code]=`--c1:${c1};--c2:${c2||c1};--ct:${tx}`;}
+const rtCol=v=>v>=95?'#b8860b':v>=90?'#1f9d55':v>=85?'#2f6db5':'#6b7280';
+const rPill=(v,reveal)=>`<span class="pill r${reveal?' reveal':''}" style="--pc:${rtCol(v)}">${v}</span>`;   // рейтинг гравця (лише базовий, DECISIONS п. 15)
+const avgPill=t=>`<span class="pill avg" title="Середня оцінка за сезон">${t}</span>`;
+// фішка: кружок (позиція, плашка), прізвище, клуб і сезон; o.pill — плашка, o.r0 — загальний рейтинг у рядку клубу (підсумки сезону)
+function chipInner(pos,p,o){const disc=`<div class="disc"${p?` style="${clubPal(ccOf(p))}"`:''}><span class="pos">${pos}</span>${o.pill||''}</div>`;if(!p)return disc;const n=p.name||p.n;
+  return disc+`<div class="nm${nmCls(n)}" title="${esc(n)}">${esc(cardName(n))}${nickOf(p.id)}</div><div class="club">${esc(clubShort(p.club||p.c))}${p.y?' '+SEA_SHORT(p.y):''}${o.r0!=null?` · <span class="r0" title="Загальний рейтинг">${o.r0}</span>`:''}</div>`;}
+function slotInner(slot,p,o){return chipInner(POSNAME[slot],p,o);}
 function renderPitch(el,slots,withClub){
-  el.innerHTML=PITCH_MK;const G=pitchGeo(S.formation);el.style.setProperty('--sw',G.sw);el.classList.toggle('wide',G.sw!=='21%');
+  el.innerHTML=PITCH_MK;const G=pitchGeo(S.formation);
   slots.forEach((s,idx)=>{const d=document.createElement('div');const mv=S.move;const pt=G.pts[idx]||{x:50,y:50};
       const pend=S.pending&&!withClub&&!s.player&&effRating(S.pending,s.slot)!=null;
       const tgt=pend||(mv!=null&&!withClub&&idx!==mv&&canMove(mv,idx));
-      d.className='slot '+GROUP_OF[s.slot]+(s.player?' filled':'')+(mv===idx?' moving':'')+(tgt?' target':'');d.title=POSFULL[s.slot];d.style.left=pt.x+'%';d.style.top=pt.y+'%';
+      d.className='slot '+GROUP_OF[s.slot]+(s.player?' filled':' empty')+(mv===idx?' moving':'')+(tgt?' target':'');d.title=POSFULL[s.slot];d.style.left=pt.x+'%';d.style.top=pt.y+'%';
       const p=s.player;let body={};
       if(p){const res=withClub&&S.result&&S.result.players;const open=MODES[S.mode].reveal||MODES[S.mode].showRatings;
-        if(res){const pl=S.result.players.find(x=>x.id===p.id);body={mid:pl?`<div class="avg" title="Середня оцінка за сезон">${pl.rt.toFixed(2)}</div>`:'',r0:open?`<span class="r0" title="Загальний рейтинг">${baseR(p)}</span>`:''};}
-        else if(MODES[S.mode].showRatings||(S.showR&&MODES[S.mode].reveal!==false)||(S.locked&&MODES[S.mode].reveal))body={mid:`<div class="r reveal">${baseR(p)}</div>`};}
+        if(res){const pl=S.result.players.find(x=>x.id===p.id);body={pill:pl?avgPill(pl.rt.toFixed(2)):'',r0:open?baseR(p):null};}
+        else if(MODES[S.mode].showRatings||(S.showR&&MODES[S.mode].reveal!==false)||(S.locked&&MODES[S.mode].reveal))body={pill:rPill(baseR(p),true)};}
       d.innerHTML=slotInner(s.slot,p,body);
       if(!withClub&&(s.player||tgt)){d.tabIndex=0;d.onclick=()=>slotTap(idx);d.onkeydown=e=>{if(e.key==='Enter'||e.key===' ')slotTap(idx);};}
       el.appendChild(d);});
 }
+// підписи: прізвище й рядок клубу зсуваємо разом (translateX) так, щоб текст був не ближче 4px до краю поля і не налазив на сусідні фішки
+// (кружок, плашку, підписи); кружок не рухається. Якщо зсуву не вистачає (найдовші прізвища на вузькому екрані) — цей підпис трохи дрібніше (до 85%, на полі вужчому за 300px — до 80%),
+// а якщо й тоді налазить на плашку сусіда — плашку переносимо на лівий бік його кружка (лише туди, де вона нічого не закриває).
+// Ширина тексту — через Range. Запускається після кожної перемальовки поля (MutationObserver), зміни розміру (ResizeObserver) і довантаження шрифтів.
+function fitPitch(pe){if(!pe.clientWidth)return;const P=pe.getBoundingClientRect(),rg=document.createRange(),M=4,KMIN=P.width<300?0.8:0.85;   // найвужче поле (<300px) — до 80%
+  const fixed=[],labs=[];
+  pe.querySelectorAll('.slot').forEach((sl,ci)=>{const d=sl.querySelector('.disc');if(!d)return;const r=d.getBoundingClientRect();fixed.push({ci,l:r.left,r:r.right,t:r.top,b:r.bottom});
+    const pl=d.querySelector('.pill');if(pl){pl.classList.remove('flip');const l=r.left+d.clientLeft+pl.offsetLeft,t=r.top+d.clientTop+pl.offsetTop;fixed.push({ci,pl,cx:(r.left+r.right)/2,l,r:l+pl.offsetWidth,t,b:t+pl.offsetHeight});}   // offset* — без анімації «pop»
+    const g={dx:0,m:[]};   // прізвище й рядок клубу однієї фішки зсуваються разом
+    sl.querySelectorAll('.nm,.club').forEach(e=>{e.style.transform='';e.style.fontSize='';const L={ci,e,g,k:1,fs:parseFloat(getComputedStyle(e).fontSize),get dx(){return this.g.dx;},set dx(v){this.g.dx=v;}};g.m.push(L);labs.push(L);});});
+  const meas=()=>labs.forEach(L=>{rg.selectNodeContents(L.e);const r=rg.getBoundingClientRect();Object.assign(L,{l:r.left,r:r.right,t:r.top,b:r.bottom,dx:0});});
+  const all=fixed.concat(labs),gap=(A,B)=>A.e&&B.e?3:1,   // між сусідніми підписами — 3px, до кружка/плашки — 1px
+    ov=(A,B,g=0)=>Math.min(A.r+(A.dx||0),B.r+(B.dx||0))-Math.max(A.l+(A.dx||0),B.l+(B.dx||0))>-g&&Math.min(A.b,B.b)-Math.max(A.t,B.t)>0;
+  const clamp=L=>{const m=L.g.m;L.dx=Math.max(...m.map(x=>P.left+M-x.l),Math.min(...m.map(x=>P.right-M-x.r),L.dx));};
+  for(let pass=0;pass<8;pass++){meas();labs.forEach(clamp);
+    for(let it=0;it<24;it++){let mv=false;
+      for(const L of labs)for(const O of all){if(O===L||O.ci===L.ci)continue;const g=gap(L,O);if(!ov(L,O,g-0.01))continue;const od=O.dx||0;
+        const ox=Math.min(L.r+L.dx,O.r+od)-Math.max(L.l+L.dx,O.l+od)+g,s=(L.l+L.r)/2+L.dx<(O.l+O.r)/2+od?-1:1;
+        if(O.e){L.dx+=s*ox/2;O.dx-=s*ox/2;clamp(O);}else L.dx+=s*ox;clamp(L);mv=true;}
+      if(!mv)break;}
+    const bad=labs.filter(L=>all.some(O=>O!==L&&O.ci!==L.ci&&ov(L,O)));if(!bad.length)break;
+    const shr=bad.filter(L=>L.k>KMIN+0.01);if(shr.length){shr.forEach(L=>{L.k=Math.max(KMIN,L.k-0.05);L.e.style.fontSize=(L.fs*L.k).toFixed(2)+'px';});continue;}
+    const flip=fixed.filter(O=>{if(!O.pl||O.fl||!bad.some(L=>L.ci!==O.ci&&ov(L,O)))return false;const m={l:2*O.cx-O.r,r:2*O.cx-O.l,t:O.t,b:O.b};
+      return m.l>=P.left+2&&!all.some(X=>X.ci!==O.ci&&ov(m,X));});
+    if(!flip.length)break;flip.forEach(O=>{O.fl=1;O.pl.classList.add('flip');[O.l,O.r]=[2*O.cx-O.r,2*O.cx-O.l];});}
+  labs.forEach(L=>{if(Math.abs(L.dx)>0.05)L.e.style.transform=`translateX(${L.dx.toFixed(1)}px)`;});}
+const fitAll=()=>document.querySelectorAll('.pitch').forEach(fitPitch);
+{const ro=typeof ResizeObserver==='function'?new ResizeObserver(es=>es.forEach(e=>fitPitch(e.target))):null,seen=new WeakSet();
+  new MutationObserver(ms=>{const set=new Set();for(const m of ms){const t=m.target.closest&&m.target.closest('.pitch');if(t)set.add(t);
+      for(const n of m.addedNodes)if(n.nodeType===1){if(n.matches('.pitch'))set.add(n);n.querySelectorAll('.pitch').forEach(x=>set.add(x));}}
+    set.forEach(pe=>{if(ro&&!seen.has(pe)){seen.add(pe);ro.observe(pe);}fitPitch(pe);});}).observe(document.body,{childList:true,subtree:true});
+  if(document.fonts){document.fonts.ready.then(fitAll);if(document.fonts.addEventListener)document.fonts.addEventListener('loadingdone',fitAll);}}
 // ---------- перестановки в складі: тап по гравцю → підсвічуються місця, куди він може стати (порожні або обмін)
 const baseR=p=>p.r0??p.r;
 const slotBase=id=>{const s=S.slots.find(x=>x.player&&x.player.id===id);return s?s.player.r0:null;};   // гравець бачить лише базовий рейтинг картки (p[2]); штраф за позицію й нога — приховано, тільки в симуляції
@@ -1138,7 +1200,7 @@ function openBoard(b){BOARD=b||BOARD;const box=document.getElementById('viewBox'
 async function loadBoard(b){const el=document.getElementById('boardBody');try{const rows=await sbGetFallback([boardQ(b,true),boardQ(b,false)]);if(BOARD===b&&el.isConnected)el.innerHTML=boardHtml(rows,b);}catch(e){if(el.isConnected)el.innerHTML='<p class="muted">Таблиця зараз недоступна.</p>';}}
 document.getElementById('allTimeBtn').onclick=()=>openBoard('main');
 document.getElementById('boardOpen').onclick=()=>{if(!ONLINE){document.getElementById('viewTitle').textContent='Таблиця · 11×11';document.getElementById('viewBody').innerHTML='<p class="muted">Таблиця працює на сайті upl-30-0.vercel.app і в Telegram-боті @upl30_bot.</p>';document.getElementById('viewBox').hidden=false;return;}openBoard('main');};
-function pitchHtml(formation,xi){const G=pitchGeo(formation);const F=FORMATIONS[formation]||FORMATIONS['4-4-2'];let h=PITCH_MK;F.slots.forEach((sl,i)=>{const p=xi[i];if(!p)return;const pt=G.pts[i];h+=`<div class="slot filled ${GROUP_OF[p.slot]||''}" style="left:${pt.x}%;top:${pt.y}%">${slotInner(p.slot,p,{mid:`<div class="r">${numOr0(baseR(p))}</div>`})}</div>`;});return `<div class="pitch${G.sw!=='21%'?' wide':''}" style="--sw:${G.sw}">${h}</div>`;}
+function pitchHtml(formation,xi){const G=pitchGeo(formation);const F=FORMATIONS[formation]||FORMATIONS['4-4-2'];let h=PITCH_MK;F.slots.forEach((sl,i)=>{const p=xi[i];if(!p)return;const pt=G.pts[i];h+=`<div class="slot filled ${GROUP_OF[p.slot]||''}" style="left:${pt.x}%;top:${pt.y}%">${slotInner(p.slot,p,{pill:rPill(numOr0(baseR(p)))})}</div>`;});return `<div class="pitch">${h}</div>`;}
 // дані сезону з бази (xi, tbl — jsonb, їх пише браузер): числа — лише через Number, текст — лише через esc
 const numOr0=x=>Number(x)||0;
 function cleanSeason(s){const N=numOr0,T=x=>x==null?'':String(x);
@@ -1276,8 +1338,8 @@ function drawCard(r){
 }
 document.getElementById('replayBtn').onclick=()=>playSeason(null);
 // ---------- «Що нового»: коротко й по-людськи про останню версію (технічний журнал — CHANGELOG.md у репозиторії)
-const WHATSNEW={v:'0.55',date:'30.09.2026',items:[
-  ['shield-check','Надійніше','Щоденні резервні копії бази й захист від зловживань.']]};
+const WHATSNEW={v:'0.56',date:'30.09.2026',items:[
+  ['soccer-field','Нове поле','Гравці — фішки в кольорах клубів, рейтинг — у кольоровій плашці.']]};
 function openNews(){const box=document.getElementById('viewBox');document.getElementById('viewTitle').textContent=`Що нового · версія ${WHATSNEW.v}`;
   document.getElementById('viewBody').innerHTML=`<div class="news">${WHATSNEW.items.map(([e,h,d])=>`<div class="ni">${ic(e,'lg')}<div><b>${esc(h)}</b><p>${esc(d)}</p></div></div>`).join('')}</div>`;
   box.hidden=false;lsSet('upl30_news_seen',WHATSNEW.v);document.getElementById('newsDot').hidden=true;}
@@ -1290,6 +1352,6 @@ themeLabel();
 document.getElementById('newsDot').hidden=lsGet('upl30_news_seen')===WHATSNEW.v;
 /*__FIVE__*/
 document.getElementById('f5Open').onclick=f5Start;
-window.__dbg={renderWheel,viewHtml,simulate,shareTextOf,trCtxNow,trAward,trStore,seasonForm,FORMATIONS,GROUP_OF,MODES,P,DATA,TROPHIES,trEval,PERSON,effRating,get S(){return S;},rerun(seed,year,xi){rnd=mulberry32(seed);const r=simulate(xi||S.slots.map(s=>s.player),MODES[S.mode],year);rnd=Math.random;return {W:r.W,D:r.D,L:r.L,gf:r.gf,ga:r.ga,place:r.place};}};
+window.__dbg={renderWheel,viewHtml,renderPitch,pitchHtml,f5Pitch,F5_FORMS,F5_L,POSNAME,cardName,clubShort,simulate,shareTextOf,trCtxNow,trAward,trStore,seasonForm,FORMATIONS,GROUP_OF,MODES,P,DATA,TROPHIES,trEval,PERSON,effRating,get S(){return S;},rerun(seed,year,xi){rnd=mulberry32(seed);const r=simulate(xi||S.slots.map(s=>s.player),MODES[S.mode],year);rnd=Math.random;return {W:r.W,D:r.D,L:r.L,gf:r.gf,ga:r.ga,place:r.place};}};
 })();
 </script>
