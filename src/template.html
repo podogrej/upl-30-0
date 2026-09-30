@@ -448,7 +448,7 @@ td .sub{font-size:11px;color:var(--muted);margin-top:2px;display:flex;gap:6px;al
     </div>
 </div>
 <div class="overlay" id="viewBox" hidden><div class="box"><div class="vhead"><h3 id="viewTitle">Склад</h3><button class="ghost" id="viewClose">Закрити</button></div><div id="viewBody"></div></div></div>
-<div class="foot">30-0 УПЛ · <a href="#" id="newsBtn">Що нового у версії 0.52<b id="newsDot" hidden></b></a> · <a href="#" id="themeBtn" class="thm" role="switch" aria-checked="false" aria-label="Світла тема"></a> · неофіційний фан-проєкт</div>
+<div class="foot">30-0 УПЛ · <a href="#" id="newsBtn">Що нового у версії 0.53<b id="newsDot" hidden></b></a> · <a href="#" id="themeBtn" class="thm" role="switch" aria-checked="false" aria-label="Світла тема"></a> · неофіційний фан-проєкт</div>
 <script id="pool" type="application/json">__POOL__</script>
 <script>
 (function(){
@@ -933,7 +933,7 @@ async function fetchSeed(year){
   if(!ONLINE)return null;
   const ctl=typeof AbortController!=='undefined'?new AbortController():null;const tm=setTimeout(()=>ctl&&ctl.abort(),3500);
   try{const r=await _fetch('/api/seed',{method:'POST',headers:{'Content-Type':'application/json'},signal:ctl&&ctl.signal,
-      body:JSON.stringify({device_id:deviceId(),xi:S.slots.map(s=>({id:s.player.id,slot:s.slot,c:s.player.club,y:s.player.y})),formation:S.formation,mode:S.mode,format:S.format,year,daily:!!(S.daily&&!S.daily.practice)})});
+      body:JSON.stringify({device_id:deviceId(),secret:devSecret(),xi:S.slots.map(s=>({id:s.player.id,slot:s.slot,c:s.player.club,y:s.player.y})),formation:S.formation,mode:S.mode,format:S.format,year,daily:!!(S.daily&&!S.daily.practice)})});
     if(!r.ok)return null;const j=await r.json();return j&&j.seed?j:null;}catch(e){return null;}finally{clearTimeout(tm);}
 }
 let SIM_BUSY=false;
@@ -1082,17 +1082,20 @@ function logSeason(r){
     tier,golden:!!r.golden,perfect:r.W===30,seed_id:r.seedId||null,practice:S.mode==='practice'||!!(S.daily&&S.daily.practice),day:S.daily?DAY:null,
     xi:S.slots.map(s=>{const p=s.player;const q=r.players.find(v=>v.id===p.id)||{};return {n:p.name,id:p.id,slot:s.slot,r:p.r,r0:p.r0,c:p.club,y:p.y,f:q.form||0,g:q.g||0,a:q.a||0,rt:q.rt?Math.round(q.rt*100)/100:null};}),
     tbl:r.table.map(t=>({n:t.n,w:t.w,d:t.d,l:t.l,gf:t.gf,ga:t.ga,pts:t.pts,me:t.id==='USER'}))};
-  Object.assign(row,tgFields());const ok=rows=>{if(rows&&rows[0])r.rowId=rows[0].id;loadHomeStats();if(r.rowId&&r.seedId)verifySeason(r);};
-  const tryPost=(n)=>sbPost('seasons',row).then(ok).catch(e=>{const m=String(e&&e.message).match(/'([a-z_]+)' column/);if(m&&n>0&&m[1] in row){delete row[m[1]];if(m[1]==='tg_user_id')delete row.tg_name;tryPost(n-1);}else console.warn('log',e);});tryPost(6);
+  // 0.53: сезон пише й одразу перевіряє сервер (/api/save, секрет пристрою); запасний шлях — прямий запис, як 0.52
+  saveApi('season',{row}).then(j=>{r.rowId=j.id;loadHomeStats();verifiedUi(r,j);}).catch(e=>{if(!e.legacy){console.warn('save',e);return;}
+    Object.assign(row,tgFields());const ok=rows=>{if(rows&&rows[0])r.rowId=rows[0].id;loadHomeStats();if(r.rowId&&r.seedId)verifySeason(r);};
+    const tryPost=(n)=>sbPost('seasons',row).then(ok).catch(e=>{const m=String(e&&e.message).match(/'([a-z_]+)' column/);if(m&&n>0&&m[1] in row){delete row[m[1]];if(m[1]==='tg_user_id')delete row.tg_name;tryPost(n-1);}else console.warn('log',e);});tryPost(6);});
 }
 // сервер перераховує сезон і ставить позначку «перевірено»
 async function verifySeason(r){
-  try{const res=await _fetch('/api/verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({season_id:r.rowId})});const j=await res.json();r.verified=j.verified;
+  try{const res=await _fetch('/api/verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({season_id:r.rowId})});verifiedUi(r,await res.json());}catch(e){}
+}
+function verifiedUi(r,j){r.verified=j.verified;
     const el=document.getElementById('verLine');if(el&&S.result===r){el.hidden=j.verified!==true;el.innerHTML=ic('check-decagram','sm')+'Результат перевірено сервером';}
     // з 0.52 результат дня в таблицю пише сервер (з перевіреного сезону) — надсилати вручну вже не треба
-    if(j.verified===true&&S.result===r&&S.daily&&!S.daily.practice){lsSet("upl30_sent_"+DAY,true);const f=document.getElementById('lbForm'),m=document.getElementById('lbMsg');if(f&&!f.hidden){f.hidden=true;m.textContent='Твій результат уже в таблиці дня.';document.getElementById('lbAcct').hidden=true;loadLb(document.getElementById('lbTable'));}}}catch(e){}
+    if(j.verified===true&&S.result===r&&S.daily&&!S.daily.practice){lsSet("upl30_sent_"+DAY,true);const f=document.getElementById('lbForm'),m=document.getElementById('lbMsg');if(f&&!f.hidden){f.hidden=true;m.textContent='Твій результат уже в таблиці дня.';document.getElementById('lbAcct').hidden=true;loadLb(document.getElementById('lbTable'));}}
 }
-async function setSeasonNick(nick){const r=S.result;if(!ONLINE||!r||!r.rowId)return;try{await fetch(`${SB_URL}/rest/v1/seasons?id=eq.${r.rowId}&apikey=${SB_KEY}`,{method:"PATCH",headers:{apikey:SB_KEY,"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify({nickname:nick})});}catch(e){}}
 const fmtN=n=>Number(n||0).toLocaleString('uk-UA');
 const SHOW_STATS=false;
 let STATS_ON=false;   // блок «Статистика гри» тимчасово схований; для перевірки — відкрити сайт з #stats
@@ -1182,12 +1185,17 @@ document.getElementById('lbSend').onclick=async()=>{
   if(nick.length<2){msg.textContent='Нік має бути від 2 до 24 символів.';return;}
   const res=lsGet("upl30_daily_"+DAY);if(!res){msg.textContent='Спершу зіграй офіційну спробу.';return;}
   const r=S.result;const btn=document.getElementById('lbSend');btn.disabled=true;msg.textContent='Надсилаю…';
+  const done=t=>{nickSet(nick);lsSet("upl30_sent_"+DAY,true);document.getElementById('lbForm').hidden=true;msg.textContent=t;loadLb(document.getElementById('lbTable'));};
+  // 0.53: результат дня в таблицю пише лише сервер — з перевіреного сезону (у чужий профіль ніхто не допише). Кнопка тепер зберігає ім'я.
+  if(!SAVE_LEGACY){nickSet(nick);if(r&&r.rowId&&r.verified==null&&r.seedId)await verifySeason(r);
+    if(r&&r.verified===true)done('Готово! Ти в таблиці.');else msg.textContent='Ім\'я збережено. Результат з\'явиться в таблиці, щойно сервер його перевірить.';
+    btn.disabled=false;return;}
   try{const row={day:DAY,device_id:deviceId(),nickname:nick,w:res.W,d:res.D,l:res.L,pts:res.pts,place:res.place,gf:res.gf??r.gf,ga:res.ga??r.ga,formation:DAILY.formation,xp:res.xp??null,
       xi:S.slots.map(s=>[s.player.name,s.slot,s.player.r,s.player.club,s.player.y])};
     Object.assign(row,tgFields());
     try{await sbInsert(row);}catch(e1){if(e1.status===400&&/tg_|xp/.test(e1.body||'')){delete row.tg_user_id;delete row.tg_name;if(/xp/.test(e1.body||''))delete row.xp;await sbInsert(row);}else throw e1;}
-    nickSet(nick);setSeasonNick(nick);if(S.result&&S.result.rowId&&S.result.seedId)verifySeason(S.result);lsSet("upl30_sent_"+DAY,true);document.getElementById('lbForm').hidden=true;msg.textContent='Готово! Ти в таблиці.';loadLb(document.getElementById('lbTable'));}
-  catch(e){if(e.status===409){nickSet(nick);lsSet("upl30_sent_"+DAY,true);document.getElementById('lbForm').hidden=true;msg.textContent='Твій результат уже в таблиці дня.';loadLb(document.getElementById('lbTable'));}
+    if(r&&r.rowId&&r.seedId)verifySeason(r);done('Готово! Ти в таблиці.');}
+  catch(e){if(e.status===409)done('Твій результат уже в таблиці дня.');
     else{msg.textContent='Не вдалося надіслати. Спробуй ще раз. ('+String(e&&e.message||e).slice(0,220)+')';}}
   btn.disabled=false;};
 // ---------- share
@@ -1263,10 +1271,9 @@ function drawCard(r){
 }
 document.getElementById('replayBtn').onclick=()=>playSeason(null);
 // ---------- «Що нового»: коротко й по-людськи про останню версію (технічний журнал — CHANGELOG.md у репозиторії)
-const WHATSNEW={v:'0.52',date:'30.09.2026',items:[
-  ['soccer-field','Позиції звірено','Позиції 102 гравців звірили з Transfermarkt — у 54 вони змінилися. Наприклад, Ребров тепер нападник, а запасна позиція — лівий фланг атаки.'],
-  ['shield-check','Чесні таблиці й вхід','Посилили захист результатів і входу. У таблиці дня — лише результати, перевірені сервером, і потрапляють вони туди самі. Вхід на сайті через Telegram-бота тепер треба підтвердити кнопкою «Підтвердити вхід».'],
-  ['clipboard-text','Тексти','Виправили застарілі тексти: «Про гру», питання внизу головної, суперники у «Виклику другу». Цифри про гравців і сезони тепер рахуються самі.']]};
+const WHATSNEW={v:'0.53',date:'30.09.2026',items:[
+  ['shield-check','Результати пише сервер','Сезони, трофеї, виклики й результат дня тепер записує сервер — ніхто не допише їх у чужий профіль.'],
+  ['account-circle','Спільний пристрій','Якщо на одному телефоні по черзі входять двоє, їхні профілі більше не зливаються в один.']]};
 function openNews(){const box=document.getElementById('viewBox');document.getElementById('viewTitle').textContent=`Що нового · версія ${WHATSNEW.v}`;
   document.getElementById('viewBody').innerHTML=`<div class="news">${WHATSNEW.items.map(([e,h,d])=>`<div class="ni">${ic(e,'lg')}<div><b>${esc(h)}</b><p>${esc(d)}</p></div></div>`).join('')}</div>`;
   box.hidden=false;lsSet('upl30_news_seen',WHATSNEW.v);document.getElementById('newsDot').hidden=true;}

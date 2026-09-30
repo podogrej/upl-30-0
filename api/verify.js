@@ -2,15 +2,7 @@
 // POST {season_id}: сервер бере запис сезону з журналу, перевіряє seed, склад, рейтинги й правила формату
 // і перераховує сезон тим самим рушієм, що й гра (lib/engine.js). Результат: seasons.verified = true/false.
 const crypto = require('crypto');
-const SB_URL = (process.env.SUPABASE_URL || 'https://qruhcbwycrnfgzzdbljr.supabase.co').trim();   // у тестовому оточенні Vercel — адреса тестової бази
-const env = k => String(process.env[k] || '').replace(/\s+/g, '');
-async function sb(path, { method = 'GET', body, prefer } = {}) {
-  const key = env('SUPABASE_SERVICE_KEY');
-  const r = await fetch(`${SB_URL}/rest/v1/${path}`, { method, headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json', ...(prefer ? { Prefer: prefer } : {}) }, body: body ? JSON.stringify(body) : undefined });
-  const t = await r.text(); let j = null; try { j = t ? JSON.parse(t) : null; } catch (e) {}
-  if (!r.ok) throw new Error(`db ${r.status}: ${t.slice(0, 150)}`);
-  return j;
-}
+const { sb } = require('./_device.js');   // запити до бази ключем сервера
 const xiHash = xi => crypto.createHash('sha256').update(xi.map(x => `${x.id}|${x.slot}|${x.c}|${x.y}`).join(';')).digest('hex');
 let E = null;
 function engine() { if (!E) E = require('../lib/engine.js'); return E; }
@@ -27,7 +19,7 @@ function yearOk(row, E, chalYearOk) {
 
 // Сайт попередньої версії ще відкритий у гравців (кеш браузера, Mini App). Якщо його сезон повністю сходиться з новим рушієм
 // (симуляція між цими версіями не мінялася) — приймаємо; не сходиться (напр. у гравця змінилася позиція в пулі) — «не перевірити» (null), не «підробка».
-const PREV_VERSIONS = ['0.51'];
+const PREV_VERSIONS = ['0.52', '0.51'];
 
 // головна перевірка: повертає [true|false|null, пояснення]; null — перевірити неможливо (стара версія тощо)
 function check(row, seedRow, opts = {}) {
@@ -94,46 +86,48 @@ async function syncDaily(row, seedRow) {
   if (row.tg_user_id) await sb(`league_results?day=eq.${day}&tg_user_id=eq.${+row.tg_user_id}&season_id=is.null`, { method: 'PATCH', prefer: 'return=minimal', body: { season_id: row.id } });
   const upd = await sb(`daily_results?day=eq.${day}&device_id=eq.${dev}`, { method: 'PATCH', prefer: 'return=representation', body: res });
   if (upd && upd.length) return true;
-  let nick = String(row.nickname || row.tg_name || '').trim().slice(0, 24); if (nick.length < 2) nick = 'Гравець';
+  let nick = Array.from(String(row.nickname || row.tg_name || '').trim()).slice(0, 24).join('').trim();   if (Array.from(nick).length < 2) nick = 'Гравець';   // основна база: char_length 2–24
   const ins = { day, device_id: row.device_id, nickname: nick, ...res };
   if (row.tg_user_id) { ins.tg_user_id = row.tg_user_id; ins.tg_name = row.tg_name || null; }
   await sb('daily_results?on_conflict=day,device_id', { method: 'POST', prefer: 'resolution=merge-duplicates,return=minimal', body: ins });
   return true;
 }
 
+// перевірка сезону за номером (спільна для /api/verify і /api/save): {verified, note, cached?}
+async function verifyById(id) {
+  const [row] = await sb(`seasons?id=eq.${id}&select=*`) || [];
+  if (!row) return { status: 404, error: 'no season' };
+  const [seedRow] = row.seed_id ? (await sb(`season_seeds?id=eq.${encodeURIComponent(row.seed_id)}&select=*`) || []) : [];
+  if (row.verified !== null && row.verified !== undefined) {
+    if (row.verified === true) await syncDaily(row, seedRow);   // повторний виклик — пишемо перевірені цифри дня ще раз
+    return { verified: row.verified, note: row.verify_note, cached: true };
+  }
+  let chalYearOk = false;
+  if (row.format === 'classic' && !row.day && row.year != null && Number.isInteger(+row.year) && engine().YEARS16.includes(+row.year)) {
+    const ch = await sb(`challenges?year=eq.${+row.year}&formation=eq.${encodeURIComponent(String(row.formation || ''))}&select=id&limit=1`) || [];
+    chalYearOk = ch.length > 0;
+  }
+  let v, note;
+  try { [v, note] = check(row, seedRow, { chalYearOk }); } catch (e) { v = null; note = 'рушій недоступний: ' + String(e.message || e).slice(0, 80); }
+  await sb(`seasons?id=eq.${id}`, { method: 'PATCH', prefer: 'return=minimal', body: { verified: v, verify_note: String(note).slice(0, 200) } });
+  if (v === true && seedRow) {
+    await sb(`season_seeds?id=eq.${seedRow.id}`, { method: 'PATCH', prefer: 'return=minimal', body: { used_by: id } });
+    await syncDaily({ ...row, verified: true }, { ...seedRow, used_by: id });
+  }
+  return { verified: v, note };
+}
+
+// POST {season_id}: сайт 0.52 (записав сезон сам) і повторна перевірка. З 0.53 сезон пише й одразу перевіряє /api/save.
 module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
-  let stage = 'body';
   try {
     let b = req.body || {}; if (typeof b === 'string') b = JSON.parse(b);
     const id = +b.season_id; if (!id) return res.status(400).json({ error: 'season_id?' });
-    stage = 'load';
-    const [row] = await sb(`seasons?id=eq.${id}&select=*`) || [];
-    if (!row) return res.status(404).json({ error: 'no season' });
-    const [seedRow] = row.seed_id ? (await sb(`season_seeds?id=eq.${encodeURIComponent(row.seed_id)}&select=*`) || []) : [];
-    if (row.verified !== null && row.verified !== undefined) {
-      stage = 'daily';
-      if (row.verified === true) await syncDaily(row, seedRow);   // повторний виклик (браузер щойно надіслав рядок дня) — пишемо перевірені цифри ще раз
-      return res.status(200).json({ verified: row.verified, note: row.verify_note, cached: true });
-    }
-    stage = 'challenge';
-    let chalYearOk = false;
-    if (row.format === 'classic' && !row.day && row.year != null && Number.isInteger(+row.year) && engine().YEARS16.includes(+row.year)) {
-      const ch = await sb(`challenges?year=eq.${+row.year}&formation=eq.${encodeURIComponent(String(row.formation || ''))}&select=id&limit=1`) || [];
-      chalYearOk = ch.length > 0;
-    }
-    stage = 'engine';
-    let v, note;
-    try { [v, note] = check(row, seedRow, { chalYearOk }); } catch (e) { v = null; note = 'рушій недоступний: ' + String(e.message || e).slice(0, 80); }
-    stage = 'save';
-    await sb(`seasons?id=eq.${id}`, { method: 'PATCH', prefer: 'return=minimal', body: { verified: v, verify_note: String(note).slice(0, 200) } });
-    if (v === true && seedRow) {
-      await sb(`season_seeds?id=eq.${seedRow.id}`, { method: 'PATCH', prefer: 'return=minimal', body: { used_by: id } });
-      stage = 'daily';
-      await syncDaily({ ...row, verified: true }, { ...seedRow, used_by: id });
-    }
-    res.status(200).json({ verified: v, note });
+    const r = await verifyById(id);
+    if (r.status) return res.status(r.status).json({ error: r.error });
+    res.status(200).json(r);
   } catch (e) {
-    res.status(500).json({ error: `crash at ${stage}: ${String(e && e.message || e).slice(0, 160)}` });
+    res.status(500).json({ error: `crash: ${String(e && e.message || e).slice(0, 160)}` });
   }
 };
+module.exports.verifyById = verifyById;

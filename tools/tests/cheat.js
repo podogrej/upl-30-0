@@ -4,15 +4,40 @@
 const path = require('path'), crypto = require('crypto');
 const ROOT = path.join(__dirname, '..', '..');
 process.env.SUPABASE_SERVICE_KEY = 'svc';
-const DB = { season_seeds: [], seasons: [], daily_results: [], challenges: [], league_results: [] }; let sid = 0;
+const DB = { season_seeds: [], seasons: [], daily_results: [], challenges: [], challenge_results: [], trophies: [], league_results: [] }; let sid = 0;
+// база 0.53: секрети пристроїв (device_ok), перемикач кроку 2, унікальна офіційна спроба дня (В2)
+const SECRETS = {}; let LEGACY_OPEN = true, SQL053 = true;
+const err = (status, j) => ({ ok: false, status, text: async () => JSON.stringify(j) });
 global.fetch = async (url, o = {}) => {
   const u = new URL(url); const t = u.pathname.split('/').pop(); const m = o.method || 'GET';
+  if (u.pathname.includes('/rpc/')) {
+    const a = JSON.parse(o.body || '{}');
+    if (!SQL053) return err(404, { code: 'PGRST202', message: 'Could not find the function public.' + t });
+    if (t === 'legacy_writes_open') return { ok: true, status: 200, text: async () => JSON.stringify(LEGACY_OPEN) };
+    if (t === 'device_ok') {
+      if (String(a.p_secret || '').length < 16) return err(400, { code: '22023', message: 'device?' });
+      if (SECRETS[a.p_device] == null) SECRETS[a.p_device] = a.p_secret;
+      if (SECRETS[a.p_device] !== a.p_secret) return err(403, { code: '28000', message: 'device secret' });
+      return { ok: true, status: 200, text: async () => JSON.stringify('player-' + a.p_device.slice(0, 8)) };
+    }
+    return err(404, { code: 'PGRST202' });
+  }
+  if (m === 'POST' && t === 'season_seeds') { const b = JSON.parse(o.body); if (b.official && DB.season_seeds.some(x => x.official && x.daily && x.device_id === b.device_id && x.day === b.day)) return err(409, { code: '23505', message: 'duplicate key value violates unique constraint "season_seeds_official_uq"' }); }
+  if (m === 'POST' && t !== 'season_seeds' && t !== 'daily_results' && !u.searchParams.get('on_conflict')) {   // рядки, які пише /api/save
+    const list = [].concat(JSON.parse(o.body));
+    for (const b of list) { if (t === 'seasons') b.id = 1000 + DB.seasons.length; if (t === 'challenges' && DB.challenges.some(x => x.id === b.id)) return err(409, { code: '23505' }); DB[t].push(b); }
+    return { ok: true, status: 201, text: async () => JSON.stringify(list) };
+  }
+  if (m === 'POST' && (t === 'trophies' || t === 'challenge_results')) {
+    for (const b of [].concat(JSON.parse(o.body))) { const ks = u.searchParams.get('on_conflict').split(','); if (!DB[t].some(x => ks.every(k => String(x[k]) === String(b[k])))) DB[t].push(b); }
+    return { ok: true, status: 201, text: async () => '' };
+  }
   const f = [...u.searchParams].filter(([k, v]) => /^(eq|is)\./.test(v));
   const match = r => f.every(([k, v]) => { const x = v.slice(v.indexOf('.') + 1); return v.startsWith('is.') && x === 'null' ? r[k] == null : String(r[k]) === x; });
   const ok = j => ({ ok: true, status: 200, text: async () => j == null ? '' : JSON.stringify(j) });
   const rep = /return=representation/.test((o.headers || {}).Prefer || '');
   if (m === 'GET') return ok((DB[t] || []).filter(match));
-  if (m === 'POST') { const b = JSON.parse(o.body); if (t === 'season_seeds') b.id = 'seed-' + (++sid);
+  if (m === 'POST') { const b = JSON.parse(o.body); if (t === 'season_seeds') b.id = crypto.randomUUID();
     const oc = u.searchParams.get('on_conflict'); const old = oc && DB[t].find(r => oc.split(',').every(k => String(r[k]) === String(b[k])));
     if (old) Object.assign(old, b); else DB[t].push(b); return ok([old || b]); }
   if (m === 'PATCH') { const b = JSON.parse(o.body); const rows = (DB[t] || []).filter(match); rows.forEach(r => Object.assign(r, b)); return ok(rep ? rows : null); }
@@ -124,6 +149,52 @@ function honestXi(formation) {
   const before = ins.pts; const v4 = await call(verH, { season_id: drow4.id });
   const t5 = !ds4.j.official && ins.pts === before && DB.daily_results.filter(x => x.device_id === dev3).length === 1;
   if (!t5) bad++; console.log(`${t5 ? '✓' : '✗'} виклик дня: друга спроба (verified=${v4.j.verified}) не змінює таблицю дня`);
+
+  // ===== 0.53: запис лише через сервер із секретом пристрою (/api/save), seed — із секретом =====
+  const saveH = require(path.join(ROOT, 'api', 'save.js'));
+  const ok = (name, cond, extra = '') => { if (!cond) bad++; console.log(`${cond ? '✓' : '✗'} ${name}${extra ? ' (' + extra + ')' : ''}`); };
+  const me = crypto.randomUUID(), mySecret = 'my-secret-0123456789abcdef', victim = crypto.randomUUID(), victimSecret = 'victim-secret-0123456789ab';
+  const s1 = await call(seedH, { device_id: me, secret: mySecret, xi, formation, mode: 'normal', format: 'classic', year });
+  ok('seed зі своїм секретом', s1.c === 200 && s1.j.seed > 0);
+  const q1 = E.run({ xi: xi.map(x => ({ id: x.id, name: x.n, slot: x.slot, pos: E.GROUP_OF[x.slot], r: x.r })), mode: 'normal', format: 'classic', year, seed: s1.j.seed });
+  const season = { mode: 'normal', format: 'classic', formation, year, seed: s1.j.seed, seed_id: s1.j.seed_id, version: E.VERSION, xi, w: q1.W, d: q1.D, l: q1.L, pts: q1.pts, place: q1.place, gf: q1.gf, ga: q1.ga, perfect: q1.W === 30,
+    verified: true, player_id: 'someone-else', device_id: victim, tg_user_id: 777, nickname: 'Я' };
+  const n0 = DB.seasons.length;
+  const sv = await call(saveH, { kind: 'season', device_id: me, secret: mySecret, row: season, tg_init: 'user=%7B%22id%22%3A777%7D&hash=fake' });
+  const saved = DB.seasons[DB.seasons.length - 1];
+  ok('save: сезон зі своїм секретом записано й перевірено', sv.c === 200 && sv.j.verified === true && saved.id === sv.j.id, `verified=${sv.j.verified} ${sv.j.note || sv.j.error || ''}`);
+  ok('save: device_id — з перевіреного пристрою, player_id/verified/tg_user_id з браузера відкинуто', saved.device_id === me && !('player_id' in saved) && saved.tg_user_id == null && !('verified' in saved && saved.verified !== true));
+  ok('save: без секрету — 401', (await call(saveH, { kind: 'season', device_id: me, row: season })).c === 401 && DB.seasons.length === n0 + 1);
+  await call(seedH, { device_id: victim, secret: victimSecret, xi, formation, mode: 'normal', format: 'classic', year });   // жертва вже грала з цього пристрою
+  const atk = await call(saveH, { kind: 'season', device_id: victim, secret: 'attacker-secret-0123456789', row: season });
+  ok('save: у чужий пристрій (чужий секрет) — 401', atk.c === 401 && DB.seasons.length === n0 + 1, atk.j.error);
+  const fake = await call(saveH, { kind: 'season', device_id: me, secret: mySecret, row: { ...season, w: 30, d: 0, l: 0, pts: 90 } });
+  ok('save: неможливий/підроблений рахунок не стає перевіреним', fake.c === 400 || fake.j.verified !== true, `${fake.c} ${fake.j.verified}`);
+  const tr = await call(saveH, { kind: 'trophies', device_id: me, secret: mySecret, ids: ['nice', 'nice', 'bad id!', 'x'.repeat(40)] });
+  ok('save: трофеї — лише коректні id, без дублів', tr.c === 200 && DB.trophies.filter(x => x.device_id === me).map(x => x.trophy).join() === 'nice');
+  ok('save: трофей у чужий пристрій — 401', (await call(saveH, { kind: 'trophies', device_id: victim, secret: 'attacker-secret-0123456789', ids: ['hack'] })).c === 401 && !DB.trophies.some(x => x.device_id === victim));
+  const ch = await call(saveH, { kind: 'challenge', device_id: me, secret: mySecret, row: { id: 'abcDEF23', name: 'Я', seed: 5, formation, year, mode: 'normal', w: q1.W, d: q1.D, l: q1.L, pts: q1.pts, place: q1.place, gf: q1.gf, ga: q1.ga } });
+  ok('save: виклик другу записано', ch.c === 200 && DB.challenges.some(x => x.id === 'abcDEF23' && x.device_id === me));
+  ok('save: той самий номер виклику вдруге — 409', (await call(saveH, { kind: 'challenge', device_id: me, secret: mySecret, row: { id: 'abcDEF23', seed: 5, formation, year, mode: 'normal', w: 30, d: 0, l: 0, pts: 90, place: 1, gf: 1, ga: 0 } })).c === 409);
+  const cr = await call(saveH, { kind: 'chal_result', device_id: me, secret: mySecret, row: { challenge_id: 'abcDEF23', name: 'Я', w: q1.W, d: q1.D, l: q1.L, pts: q1.pts, place: q1.place, gf: q1.gf, ga: q1.ga } });
+  ok('save: результат виклику записано', cr.c === 200 && DB.challenge_results.some(x => x.challenge_id === 'abcDEF23' && x.device_id === me));
+  ok('save: невідомий kind — 400', (await call(saveH, { kind: 'daily', device_id: me, secret: mySecret, row: {} })).c === 400);
+  // /api/seed: чужий пристрій
+  const dayArgs = { xi: dxi, formation: D.formation, mode: 'daily', format: 'classic', year: D.year, daily: true };
+  ok('seed: чужий пристрій з чужим секретом — 401 (офіційна спроба жертви ціла)', (await call(seedH, { device_id: victim, secret: 'attacker-secret-0123456789', ...dayArgs })).c === 401 && !DB.season_seeds.some(x => x.device_id === victim && x.daily));
+  ok('seed: без секрету в перехідний період (сайт 0.52) — видається', (await call(seedH, { device_id: crypto.randomUUID(), ...dayArgs })).c === 200);
+  LEGACY_OPEN = false;
+  ok('seed: без секрету після кроку 2 — 401', (await call(seedH, { device_id: victim, ...dayArgs })).c === 401 && !DB.season_seeds.some(x => x.device_id === victim && x.daily));
+  // В2: два запити одночасно — лише одна офіційна спроба
+  const racer = crypto.randomUUID(), rs = 'racer-secret-0123456789ab';
+  const both = await Promise.all([call(seedH, { device_id: racer, secret: rs, ...dayArgs }), call(seedH, { device_id: racer, secret: rs, ...dayArgs })]);
+  ok('seed: гонка двох запитів — одна офіційна спроба', both.every(x => x.c === 200) && both.filter(x => x.j.official).length === 1, both.map(x => x.j.official).join('/'));
+  // SQL 0.53 ще не виконано: сервер каже «пиши як раніше», seed працює
+  SQL053 = false;
+  const fb = await call(saveH, { kind: 'season', device_id: me, secret: mySecret, row: season });
+  ok('save без device_ok у базі — 503 fallback (браузер пише як 0.52)', fb.c === 503 && fb.j.fallback === true);
+  ok('seed без device_ok у базі — працює', (await call(seedH, { device_id: me, secret: mySecret, xi, formation, mode: 'normal', format: 'classic', year })).c === 200);
+  SQL053 = true;
   console.log(`нога у складі: ${foot ? `${foot.n} ${foot.slot} нога ${E.DATA.foot[foot.id]} r0 ${foot.r0} → r ${foot.r}` : 'нема'}`);
   console.log(bad ? `ПОМИЛКИ: ${bad}` : 'УСІ ПІДРОБКИ ВІДХИЛЕНО');
   process.exit(bad ? 1 : 0);

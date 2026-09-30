@@ -13,7 +13,7 @@ if(ONLINE){
     const o2={...(o||{}),headers:{...((o&&o.headers)||{}),Authorization:'Bearer '+SESSION.access_token}};
     const r=await _fetch(u,o2);if(r.status===401)return _fetch(u,o);return r;};
   const sc=document.createElement('script');sc.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js';
-  sc.onload=()=>acctInit();document.head.appendChild(sc);
+  sc.onload=()=>acctInit();sc.onerror=()=>playerSync();document.head.appendChild(sc);   // без бібліотеки входу гравець і секрет пристрою однаково реєструються
 }
 // Safari інколи не пропускав заголовок apikey — дублюємо ключ у рядку запиту
 const sbFetch=(u,o)=>{const url=typeof u==='string'?u:u.url;return _fetch(url+(url.includes('?')?'&':'?')+'apikey='+SB_KEY,o);};
@@ -53,7 +53,6 @@ async function acctPull(){
 async function acctPush(){if(!SESSION)return;try{await fetch(`${SB_URL}/rest/v1/user_state?apikey=${SB_KEY}&on_conflict=user_id`,{method:'POST',headers:{apikey:SB_KEY,'Content-Type':'application/json',Prefer:'resolution=merge-duplicates,return=minimal'},body:JSON.stringify({user_id:SESSION.user.id,data:acctLocal(),updated_at:new Date().toISOString()})});}catch(e){}}
 async function acctOnLogin(){
   // прив'язати до акаунта все, що зіграно з цього пристрою, і злити прогрес
-  try{await fetch(`${SB_URL}/rest/v1/rpc/claim_device?apikey=${SB_KEY}`,{method:'POST',headers:{apikey:SB_KEY,'Content-Type':'application/json'},body:JSON.stringify({p_device:deviceId()})});}catch(e){}
   await playerSync();
   const res=await acctPull();const s=trStore();
   ACCT_MSG=`Готово! Прогрес збережено в акаунті: ${s.seasons} ${plUk(s.seasons,'сезон','сезони','сезонів')}, трофеїв — ${Object.values(s.t).filter(e=>e.n).length}.`;
@@ -112,8 +111,22 @@ async function playerSync(){
     // перший раз: нік, яким гравець підписувався до 0.39, або ім'я з акаунта стає ім'ям профілю
     if(p&&!p.name){const nk=(lsGet("upl30_nick")||'').trim()||(SESSION?acctName():'');if(nk.length>=2&&nk!=='Гравець'&&nk!==p.anon_name)p=await playerRpc('set_player_name',{p_name:nk.slice(0,24)});}
     playerSet(p);
-  }catch(e){console.warn('player',e);}
+  }catch(e){
+    // секрет не збігся: цей device_id уже зайняв хтось інший (аудит К6) — грати далі новим пристроєм, стара історія лишається в базі
+    if(/28000|device secret/.test(String(e&&e.message))&&!playerSync.rot){playerSync.rot=1;lsSet("upl30_device",null);lsSet("upl30_dsecret",null);lsSet("upl30_player",null);PLAYER=null;return playerSync();}
+    console.warn('player',e);}
 }
+// ---------- ЗАПИС РЕЗУЛЬТАТІВ (0.53): сезон, трофеї, виклики пише сервер (/api/save) після перевірки секрету пристрою —
+// у чужу історію гравця ніхто не допише. Сервер недоступний / SQL 0.53 ще не виконано (503, fallback) — пишемо напряму, як 0.52.
+let SAVE_LEGACY=false;
+async function saveApi(kind,payload){
+  const legacy=()=>Object.assign(new Error('legacy'),{legacy:true});
+  if(!ONLINE)throw new Error('offline');if(SAVE_LEGACY)throw legacy();
+  let r;try{r=await _fetch('/api/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({kind,device_id:deviceId(),secret:devSecret(),tg_init:(TG&&TG.initData)||undefined,...payload})});}catch(e){throw legacy();}
+  const j=await r.json().catch(()=>({}));
+  if(r.status===404||j.fallback){SAVE_LEGACY=true;throw legacy();}
+  if(!r.ok)throw Object.assign(new Error(j.error||('HTTP '+r.status)),{status:r.status});
+  return j;}
 // будь-яке місце, де гравець вписав своє ім'я (таблиця дня, виклик, 5×5, налаштування), — оновлює профіль
 function nickSet(v){v=String(v||'').trim().slice(0,24);if(v.length<2)return;if(PLAYER&&v===PLAYER.anon_name)return;lsSet("upl30_nick",v);
   if(ONLINE&&PLAYER&&v!==PLAYER.name)playerRpc('set_player_name',{p_name:v}).then(playerSet).catch(e=>console.warn('name',e));}

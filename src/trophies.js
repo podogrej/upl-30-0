@@ -169,7 +169,9 @@ function trAward(c,{daily}={}){
 }
 const trDef=id=>{if(id.startsWith('ms')){const m=MILESTONES.find(x=>'ms'+x[0]===id);return m&&{id,i:m[1],n:m[2],d:`Зіграй ${m[0]} ${m[0]===1?'сезон':'сезонів'}`,cat:"milestone"};}return TROPHIES.find(t=>t.id===id);};
 // онлайн: перше відкриття → таблиця trophies (для «у X% гравців»)
-function trSync(ids){if(!ONLINE)return;const rows=ids.map(t=>({device_id:deviceId(),trophy:t,...(typeof tgFields==='function'?tgFields():{})}));
+// 0.53: пише сервер (/api/save, секрет пристрою); запасний шлях — прямий запис, як 0.52
+function trSync(ids){if(!ONLINE)return;saveApi('trophies',{ids}).catch(e=>{if(e.legacy)trSyncDirect(ids);});}
+function trSyncDirect(ids){const rows=ids.map(t=>({device_id:deviceId(),trophy:t,...(typeof tgFields==='function'?tgFields():{})}));
   fetch(`${SB_URL}/rest/v1/trophies?apikey=${SB_KEY}&on_conflict=device_id,trophy`,{method:'POST',headers:{apikey:SB_KEY,'Content-Type':'application/json',Prefer:'resolution=ignore-duplicates,return=minimal'},body:JSON.stringify(rows)})
     .then(r=>{if(!r.ok&&rows[0].tg_user_id!=null){rows.forEach(x=>{delete x.tg_user_id;delete x.tg_name;});return fetch(`${SB_URL}/rest/v1/trophies?apikey=${SB_KEY}&on_conflict=device_id,trophy`,{method:'POST',headers:{apikey:SB_KEY,'Content-Type':'application/json',Prefer:'resolution=ignore-duplicates,return=minimal'},body:JSON.stringify(rows)});}}).catch(()=>{});}
 let TR_PCT=null;

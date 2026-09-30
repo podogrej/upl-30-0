@@ -11,6 +11,7 @@ function chalLinkWeb(id){return `https://upl-30-0.vercel.app/?c=${id}`;}
 function chalLinkTg(id){return `https://t.me/${TG_BOT}?startapp=c${id}`;}
 async function chalCreate(r){
   const id=chalId();const row={id,device_id:deviceId(),name:chalName().slice(0,40),seed:S.chal.seed,formation:S.formation,year:r.year,mode:S.mode,w:r.W,d:r.D,l:r.L,pts:r.pts,place:r.place,gf:r.gf,ga:r.ga};
+  try{await saveApi('challenge',{row});return id;}catch(e){if(!e.legacy)throw e;}   // 0.53: пише сервер; запасний шлях — напряму, як 0.52
   const res=await fetch(`${SB_URL}/rest/v1/challenges?apikey=${SB_KEY}`,{method:'POST',headers:{apikey:SB_KEY,'Content-Type':'application/json',Prefer:'return=minimal'},body:JSON.stringify(row)});
   if(!res.ok)throw new Error('HTTP '+res.status);return id;
 }
@@ -61,5 +62,6 @@ function chalAfterSeason(r){
   if(!line)return;line.hidden=true;const c=S.challenge;if(!c)return;
   const diff=r.pts-c.pts;line.hidden=false;
   line.innerHTML=`${ic('sword-cross','sm')}Ти <b>${r.pts}</b> : <b>${c.pts}</b> ${esc(c.name)} — ${diff>0?`<b>виклик прийнято й виграно</b> (+${diff})`:diff===0?'нічия за очками':`не вистачило ${-diff} ${ptsWord(-diff)}`}`;
-  if(ONLINE)fetch(`${SB_URL}/rest/v1/challenge_results?apikey=${SB_KEY}`,{method:'POST',headers:{apikey:SB_KEY,'Content-Type':'application/json',Prefer:'return=minimal'},body:JSON.stringify({challenge_id:c.id,device_id:deviceId(),name:chalName().slice(0,40),w:r.W,d:r.D,l:r.L,pts:r.pts,place:r.place,gf:r.gf,ga:r.ga})}).then(()=>chalLoad(true)).catch(()=>{});
+  if(!ONLINE)return;const row={challenge_id:c.id,device_id:deviceId(),name:chalName().slice(0,40),w:r.W,d:r.D,l:r.L,pts:r.pts,place:r.place,gf:r.gf,ga:r.ga};
+  saveApi('chal_result',{row}).then(()=>chalLoad(true)).catch(e=>{if(e.legacy)fetch(`${SB_URL}/rest/v1/challenge_results?apikey=${SB_KEY}`,{method:'POST',headers:{apikey:SB_KEY,'Content-Type':'application/json',Prefer:'return=minimal'},body:JSON.stringify(row)}).then(()=>chalLoad(true)).catch(()=>{});});
 }

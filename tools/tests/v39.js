@@ -1,5 +1,5 @@
 // v0.39 наскрізно: сайт у браузері, база — у пам'яті (імітує players.sql: player_hello/set_player_name, player_id від пристрою),
-// /api/seed і /api/verify — справжні обробники з api/ на тій самій базі.
+// /api/seed, /api/save і /api/verify — справжні обробники з api/ на тій самій базі (0.53: new — сезон пише /api/save; old — без SQL 0.53, запасний шлях).
 //  new — база з players.sql: ім'я гравця, сезон з player_id/competition/data_version, перевірка сервером, таблиця 11×11, перейменування;
 //  old — база до players.sql (нова версія сайту до запуску SQL): гра не ламається, сезон пишеться без нових колонок, таблиця — запасним запитом.
 // SQL-частину (секрет пристрою, тригери, RLS, повторний запуск) перевіряє справжній Postgres: bash tools/tests/setup.sh
@@ -7,7 +7,7 @@
 const path=require('path'),fs=require('fs');const {ROOT,launch,makeDB,callApi,openSite,draftSeason,checker}=require('./_site.js');
 const OUT=path.join(ROOT,'tools','tests','out');fs.mkdirSync(OUT,{recursive:true});
 process.env.SUPABASE_SERVICE_KEY='svc';
-const seedH=require(path.join(ROOT,'api','seed.js')),verH=require(path.join(ROOT,'api','verify.js'));
+const seedH=require(path.join(ROOT,'api','seed.js')),verH=require(path.join(ROOT,'api','verify.js')),saveH=require(path.join(ROOT,'api','save.js'));
 const OLD_COLS='device_id,nickname,mode,format,club,formation,year,seed,version,w,d,l,pts,place,gf,ga,xp,xg,xga,tier,golden,perfect,practice,day,xi,tbl,seed_id,verified,verify_note,user_id,tg_user_id,tg_name'.split(',');
 function mkDB(v39){
   const P={players:[],links:{}};let pn=0;
@@ -16,14 +16,15 @@ function mkDB(v39){
     const l=forDevice(a.p_device);if(l.secret==null)l.secret=a.p_secret;else if(l.secret!==a.p_secret)return {err:{status:401,body:JSON.stringify({code:'28000',message:'device secret'})}};return {p:P.players.find(p=>p.id===l.pid)};};
   const js=p=>({id:p.id,name:p.name,anon_name:p.anon_name});
   const rpc=v39?{player_hello:a=>{const c=check(a);return c.err||js(c.p);},
+    device_ok:a=>{const c=check(a);return c.err||c.p.id;},   // 0.53: /api/save і /api/seed перевіряють секрет пристрою
     set_player_name:a=>{const c=check(a);if(c.err)return c.err;const nm=String(a.p_name||'').trim()||null;if(nm&&(nm.length<2||nm.length>24))return {status:400,body:'{"code":"22023"}'};c.p.name=nm;return js(c.p);}}:{};
   const db=makeDB({seasons:{auto:'id',cols:v39?null:OLD_COLS,onInsert:r=>{if(v39){r.player_id=forDevice(r.device_id).pid;r.competition=r.competition||'upl';r.gd=r.gf-r.ga;}r.verified=null;}},season_seeds:{auto:'id'},daily_results:{auto:'id'}},rpc);
   if(v39)db.DB.players=P.players;
   global.fetch=db.fetch;   // для api/seed і api/verify
   return {db,P};}
-const api={'/api/seed':async req=>callApi(seedH,req.body),'/api/verify':async req=>callApi(verH,req.body)};
+const api={'/api/seed':async req=>callApi(seedH,req.body),'/api/verify':async req=>callApi(verH,req.body),'/api/save':async req=>callApi(saveH,req.body)};
 async function run(MODE,b){const T=checker('v39 '+MODE);const v39=MODE==='new';const {db,P}=mkDB(v39);const DB=db.DB;
- const {pg,errs}=await openSite({b,db,api,viewport:{width:430,height:900},wait:1500});
+ const {pg,errs,log}=await openSite({b,db,api,viewport:{width:430,height:900},wait:1500});
  const player=await pg.evaluate(()=>JSON.parse(localStorage.getItem('upl30_player')||'null'));
  const board=async()=>{await pg.evaluate(()=>document.getElementById('homeBtn').click());await pg.click('#boardOpen');await pg.waitForTimeout(700);
    return pg.$$eval('#boardBody tr[data-q]',trs=>trs.map(t=>(t.className==='me'?'* ':'  ')+t.children[1].innerText.split('\n')[0]));};
@@ -44,6 +45,7 @@ async function run(MODE,b){const T=checker('v39 '+MODE);const v39=MODE==='new';c
  await pg.click('#formats .opt:nth-child(1)');await pg.click('#modes .opt:nth-child(2)');await pg.click('#startBtn');await draftSeason(pg);await pg.waitForTimeout(1500);
  const ver=await pg.$eval('#verLine',e=>e.hidden?'':e.textContent);T.check(/перевірено сервером/.test(ver),'«Результат перевірено сервером»');
  const row=DB.seasons[DB.seasons.length-1]||{};
+ T.check(v39?log.includes('POST /api/save')&&!log.includes('POST /api/verify'):log.includes('POST /api/save')&&log.includes('POST /api/verify'),v39?'сезон записав сервер (/api/save), не браузер':'SQL 0.53 немає — /api/save відповів 503, сезон записано напряму, як 0.52');
  T.check(row.mode==='hard'&&row.verified===true&&row.seed_id!=null&&row.verify_note!=null,`рядок seasons: mode ${row.mode}, verified ${row.verified}, seed_id ${row.seed_id}`);
  if(v39)T.check(row.player_id===player.id&&row.competition==='upl'&&/^d[0-9a-f]{8}$/.test(row.data_version)&&row.nickname==='Андрій',`нові колонки: player_id ${row.player_id}, competition ${row.competition}, data_version ${row.data_version}`);
  else T.check(!('competition' in row)&&!('data_version' in row),'стара база: сезон записано без нових колонок');
