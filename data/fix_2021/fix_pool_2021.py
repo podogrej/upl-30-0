@@ -20,7 +20,7 @@ D = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, D)
 import recompute_2021 as RC
 sys.path.insert(0, os.path.join(D, '..', 'ratings'))
-import smooth_cameo as SC   # smoothed(pool, raw) — та сама формула, що в data/ratings/smooth_cameo.py
+import smooth_cameo as SC   # final(pool, raw) — та сама формула, що пише data/ratings/smooth_cameo.py
 
 POOL, RAW = RC.POOL, RC.RAW
 Y = 2021
@@ -139,7 +139,7 @@ def main():
     # ---- smooth_cameo.py (імпорт тієї самої функції, з 0.54 — без копії формули) для змінених карток і людей, яких це зачепило ----
     pids = old_pids | {clubs[c]['pl'][i][5] for c, i in touched}
     tk = {f"{Y}|{c}|{i}" for c, i in touched}
-    sm = SC.smoothed(pool, raw)
+    sm = SC.final(pool, raw)   # итоговый рейтинг (сглаживание + с 0.57 рейтинги v2)
     changed = []
     for c in pool['clubs']:
         for i, p in enumerate(c['pl']):

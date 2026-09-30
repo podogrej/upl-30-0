@@ -3,9 +3,11 @@
 Считает всегда от исходных рейтингов (data/ratings/pool_ratings_raw.json — создаётся при первом запуске), поэтому повторный запуск ничего не портит.
 Правило: если матчей < FULL и у того же человека есть сезоны с 10+ матчами в пределах ±2 лет (кроме этого),
   рейтинг = w·свой + (1−w)·среднее тех сезонов, w = матчи / FULL.
-«Тот же человек» — тот же person_id карточки (псевдонимы pool['alias'] здесь не учитываются: так было до 0.54, рейтинги не меняем).
-Как модуль (0.54): smoothed(pool, raw) → {ключ «год|клуб|индекс»: рейтинг} — этим пользуются data/fix_2021/fix_pool_2021.py
-и data/fixes/fix_pool_054.py, чтобы не держать копию формулы.
+«Тот же человек» — с 0.57 тот же canonical id (псевдонимы pool['alias'], data/aliases): у дублей камео тянется и к сезонам под другим id
+(до 0.57 — только тот же person_id карточки).
+Как модуль: smoothed(pool, raw) → {ключ «год|клуб|индекс»: рейтинг после сглаживания}; final(pool, raw) — итоговый рейтинг карточки
+(с 0.57: сглаживание → рейтинги v2, data/ratings/class_v2.py). final() пишет main() и им пользуются data/fix_2021/fix_pool_2021.py,
+data/fixes/fix_pool_054.py и fix_pool_057.py, чтобы не держать копию формулы.
 """
 import json, os
 from collections import defaultdict
@@ -29,17 +31,24 @@ def top_map(r):
 
 def smoothed(pool, raw):
     """итоговый рейтинг каждой карточки из исходных (raw) — без записи в пул"""
+    alias = pool.get('alias') or {}
+    canon = lambda pid: alias.get(pid, pid)
     per = defaultdict(list)
     for c in pool['clubs']:
-        for i, p in enumerate(c['pl']): per[p[5]].append((c['y'], p[3] or 0, raw[key(c, i)]))
+        for i, p in enumerate(c['pl']): per[canon(p[5])].append((c['y'], p[3] or 0, raw[key(c, i)]))
     out = {}
     for c in pool['clubs']:
         for i, p in enumerate(c['pl']):
             r, a = raw[key(c, i)], p[3] or 0
-            ref = [fr for fy, fa, fr in per[p[5]] if fa >= MIN_REF_APPS and abs(fy - c['y']) <= WINDOW and fy != c['y']]
+            ref = [fr for fy, fa, fr in per[canon(p[5])] if fa >= MIN_REF_APPS and abs(fy - c['y']) <= WINDOW and fy != c['y']]
             new = r if (a >= FULL or not ref) else round((a / FULL) * r + (1 - a / FULL) * sum(ref) / len(ref))
             out[key(c, i)] = top_map(max(45, min(99, new)))
     return out
+
+
+def final(pool, raw):
+    """итоговый рейтинг каждой карточки — то, что лежит в pool.json (без записи)"""
+    return smoothed(pool, raw)
 
 
 def main():
@@ -47,7 +56,7 @@ def main():
     if not os.path.exists(RAW):
         json.dump({key(c, i): p[2] for c in pool['clubs'] for i, p in enumerate(c['pl'])}, open(RAW, 'w', encoding='utf-8'), separators=(',', ':'))
     raw = json.load(open(RAW, encoding='utf-8'))
-    new = smoothed(pool, raw)
+    new = final(pool, raw)
     changed = 0
     for c in pool['clubs']:
         for i, p in enumerate(c['pl']):
