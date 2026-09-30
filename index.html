@@ -1817,6 +1817,8 @@ const f5Open=t=>t.slots.filter(s=>!s.player);
 const f5Fits=(t,p)=>f5Open(t).some(s=>s.slot===f5G(p));
 const f5Label=t=>t.team||t.name;
 function f5Rng(tag){return mulberry32((F5.seed^hashStr(tag))>>>0);}
+// схема з бази (f5_players.form) — лише зі списку F5_FORMS, інакше «1-2-1» (запис у f5_* відкритий, туди можна вписати що завгодно)
+const f5Form=x=>Object.prototype.hasOwnProperty.call(F5_FORMS,x)?x:'1-2-1';
 function f5Team(name,team,form){return {name,team,form,slots:F5_FORMS[form].rows.flat().map(slot=>({slot,player:null})),rerolls:F5_REROLLS,taken:new Set()};}
 function f5Seat(){const n=F5.teams.length;return F5.mode==='turns'?F5.pick%n:F5.solo;}   // по черзі: суворо A-B-A-B
 function f5Taken(team){return F5.mode==='turns'?F5.takenAll:team.taken;}
@@ -2017,7 +2019,7 @@ async function f5Sync(){
   const n=room.players_n||players.length;const pl=players.slice(0,n);
   // той самий стан на кожному пристрої: склади з таблиці гравців + піки по порядку
   const myN=picks.filter(k=>k.seat===o.seat).length,key=(F5.mode==='turns'?picks.length:myN)+'|'+n;const keepCs=F5.phase==='draft'&&F5.cs&&F5.myTurnKey===key;const cs0=F5.cs;
-F5.teams=pl.map(p=>f5Team(p.name,p.team||'',p.form));F5.takenAll=new Set();F5.seqAll={ptr:0};F5.seqs=[];
+F5.teams=pl.map(p=>f5Team(String(p.name||''),String(p.team||''),f5Form(p.form)));F5.takenAll=new Set();F5.seqAll={ptr:0};F5.seqs=[];
   for(const k of picks){const team=F5.teams[k.seat];if(!team)continue;const cs=DATA.clubs[k.club_idx];const pp=cs&&cs.pl.find(x=>x[5]===k.person_id);const s=team.slots[k.slot_idx];if(!pp||!s)continue;
     s.player={name:pp[0],id:pp[5],slot:s.slot,r:pp[2],apps:pp[3],goals:pp[4],club:cs.n,c:cs.c,y:cs.y};f5Taken(team).add(pp[5]);
     if(F5.mode==='turns')F5.seqAll.ptr=k.ptr;else (F5.seqs[k.seat]=F5.seqs[k.seat]||{ptr:0}).ptr=k.ptr;}
@@ -2036,9 +2038,9 @@ async function f5OnPlace(p,s){const o=F5.online,team=F5.teams[o.seat],cs=F5.cs;c
   await f5Sync();}
 function f5RenderOnline(el){const f=F5,o=f.online;
   if(f.phase==='gone'){el.innerHTML=`<div class="daily"><div class="ttl">Кімнату не знайдено або гра вже почалася без тебе</div><div class="row"><button class="primary" id="f5New2">Створити свою гру 5×5</button></div></div>`;document.getElementById('f5New2').onclick=f5Start;return;}
-  const plist=(f.players||[]).map(p=>`<div class="f5who"><span class="f5no">${p.seat+1}</span><b>${esc(p.team||p.name)}</b>${p.team?`<span class="muted"> · ${esc(p.name)}</span>`:''}<span class="muted mono">${p.form}</span>${p.device_id===o.dev?'<span class="chip">ти</span>':''}${f.room&&p.device_id===f.room.host_device?'<span class="chip">організатор</span>':''}</div>`).join('');
+  const plist=(f.players||[]).map(p=>`<div class="f5who"><span class="f5no">${(Number(p.seat)||0)+1}</span><b>${esc(p.team||p.name)}</b>${p.team?`<span class="muted"> · ${esc(p.name)}</span>`:''}<span class="muted mono">${esc(f5Form(p.form))}</span>${p.device_id===o.dev?'<span class="chip">ти</span>':''}${f.room&&p.device_id===f.room.host_device?'<span class="chip">організатор</span>':''}</div>`).join('');
   if(f.phase==='join'){
-    el.innerHTML=`<div class="daily"><div class="kicker">${ic('account-group','sm')}Запрошення в гру 5×5 · кімната ${esc(o.id)}</div><div class="ttl">${f.room?`${f.room.mode==='turns'?'Драфт по черзі':'Кожен драфтить сам'} · до ${f.room.max_players} гравців`:'Завантажуємо кімнату…'}</div>
+    el.innerHTML=`<div class="daily"><div class="kicker">${ic('account-group','sm')}Запрошення в гру 5×5 · кімната ${esc(o.id)}</div><div class="ttl">${f.room?`${f.room.mode==='turns'?'Драфт по черзі':'Кожен драфтить сам'} · до ${Number(f.room.max_players)||0} гравців`:'Завантажуємо кімнату…'}</div>
       ${plist?`<div class="f5wholist">${plist}</div>`:''}</div>
       <h3>Ти</h3><div class="f5players"><div class="f5pl"><span class="f5no">${(f.players||[]).length+1}</span><input data-nm="0" value="${esc(f.names[0]||'')}" maxlength="18" placeholder="Нік"><input data-tm="0" value="${esc(f.teams_[0]||'')}" maxlength="22" placeholder="${F5_TEAMS[(f.players||[]).length%F5_TEAMS.length]}">
       <div class="f5forms">${Object.keys(F5_FORMS).map(k=>`<button class="f5f${f.forms[0]===k?' on':''}" data-fi="0" data-fm="${k}"><b>${k}</b><small>${F5_FORMS[k].tag}</small></button>`).join('')}</div></div></div>
@@ -2048,7 +2050,7 @@ function f5RenderOnline(el){const f=F5,o=f.online;
     el.querySelectorAll('[data-fm]').forEach(x=>x.onclick=()=>{f.forms[0]=x.dataset.fm;el.querySelectorAll('[data-fi="0"]').forEach(y=>y.classList.toggle('on',y===x));});
     document.getElementById('f5Join').onclick=f5Join;document.getElementById('f5Back2').onclick=()=>{f5StopPoll();go(1);};return;}
   if(f.phase==='lobby'){const n=(f.players||[]).length;
-    el.innerHTML=`<div class="daily"><div class="kicker">${ic('account-group','sm')}Кімната ${esc(o.id)} · ${f.room&&f.room.mode==='turns'?'по черзі':'кожен сам'}</div><div class="ttl">Чекаємо гравців: ${n} з ${f.room?f.room.max_players:'…'}</div>
+    el.innerHTML=`<div class="daily"><div class="kicker">${ic('account-group','sm')}Кімната ${esc(o.id)} · ${f.room&&f.room.mode==='turns'?'по черзі':'кожен сам'}</div><div class="ttl">Чекаємо гравців: ${n} з ${f.room?Number(f.room.max_players)||0:'…'}</div>
       <div class="f5wholist">${plist}</div>
       <div class="row"><button class="primary" id="f5TgInv">${ic('telegram')}Запросити в Telegram</button><button class="ghost" id="f5CopyInv">${ic('content-copy')}Скопіювати посилання</button></div>
       <div class="muted mono" id="f5InvMsg" style="font-size:12px;word-break:break-all">${esc(f5Link(o.id))}</div>
