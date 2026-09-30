@@ -57,6 +57,22 @@ def sim(a, b):
     return difflib.SequenceMatcher(None, latin(a), latin(b)).ratio()
 
 
+UK = dict(zip('абвгґдеєжзиіїйклмнопрстуфхцчшщьюя', ['a', 'b', 'v', 'h', 'g', 'd', 'e', 'ie', 'zh', 'z', 'y', 'i', 'i', 'i', 'k', 'l', 'm', 'n', 'o',
+                                              'p', 'r', 's', 't', 'u', 'f', 'kh', 'ts', 'ch', 'sh', 'shch', '', 'iu', 'ia']))
+
+
+def translit(s):
+    return ''.join(UK.get(ch, ch) for ch in s.lower().replace("'", '').replace('’', ''))
+
+
+def name_sim(pid, label):
+    """найкраща схожість між словами нашого імені (slug з id + ім'я з пулу латиницею) і словами імені з Wikidata/TM
+    (slug іноді — ім'я, а не прізвище: w:…:badr, w:…:chiprian)"""
+    ours = {pid.split(':', 2)[2]} | {translit(t) for t in re.split(r'[\s-]+', names.get(pid, '')) if t}
+    theirs = [t for t in re.split(r'[\s-]+', label) if len(latin(t)) >= 3]
+    return max((sim(a, b) for a in ours for b in theirs if len(latin(a)) >= 3), default=0)
+
+
 def sparql(q, head):
     for a in range(5):
         r = subprocess.run(['curl', '-sS', '-m', '70', 'https://query.wikidata.org/sparql', '--data-urlencode', 'query=' + q,
@@ -116,6 +132,32 @@ def tm_profile(tid, tries=3):
     return e
 
 
+SEARCH = jload('positions_tm_search.json', {})   # запит → [tm id] з пошуку transfermarkt.com
+
+
+def tm_search(q, tries=3):
+    """запасний шлях, коли у Wikidata немає Transfermarkt ID: пошук на transfermarkt.com за прізвищем латиницею"""
+    if q in SEARCH:
+        return SEARCH[q]
+    time.sleep(6)
+    r = subprocess.run(['curl', '-sL', '-m', '40', '-A', UA, '-H', 'Accept-Language: en-US,en;q=0.9',
+                        'https://www.transfermarkt.com/schnellsuche/ergebnis/schnellsuche?query=' + q], capture_output=True, text=True)
+    h = r.stdout
+    if 'Transfermarkt' not in h or 'Human Verification' in h:
+        if tries > 1:
+            print('  human verification (пошук) — пауза 90 с', flush=True)
+            time.sleep(90)
+            return tm_search(q, tries - 1)
+        return None
+    ids = []
+    for t in re.findall(r'/profil/spieler/(\d+)', h):
+        if t not in ids:
+            ids.append(t)
+    SEARCH[q] = ids[:8]
+    jsave('positions_tm_search.json', SEARCH)
+    return SEARCH[q]
+
+
 pool = json.load(open('src/pool.json'))
 names = {}
 for c in pool['clubs']:
@@ -147,15 +189,18 @@ for r in todo:
         tids = [pid[3:]]
     elif pid.startswith('w:') and '-00' not in pid:
         _, d, slug = pid.split(':', 2)
-        c = sorted(((sim(slug, lab.split(' ')[-1]) if lab else 0, tid) for lab, tid in WD.get(d, [])), reverse=True)
+        c = sorted(((name_sim(pid, lab) if lab else 0, tid) for lab, tid in WD.get(d, [])), reverse=True)
         tids = [tid for s, tid in c if s >= 0.7][:2]
+        if not tids:
+            sur = names.get(pid, '').split(' ')[-1]
+            tids = tm_search(translit(sur) if sur else slug) or []
     for tid in tids:
         e = tm_profile(tid)
         if 'err' in e:
             out['verdict'] = 'tm_error'
             continue
         if pid.startswith('w:'):
-            if e.get('dob') != pid.split(':')[1] or sim(pid.split(':', 2)[2], e['name'].split(' ')[-1]) < 0.7:
+            if e.get('dob') != pid.split(':')[1] or name_sim(pid, e['name']) < 0.7:
                 continue
         out['url'] = f'https://www.transfermarkt.com/-/profil/spieler/{tid}'
         out['tm_main'] = e.get('main', '')
