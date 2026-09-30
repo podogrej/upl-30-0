@@ -1,5 +1,5 @@
 // Сторінка гравця (0.59): своя без входу (попередження), своя з входом (Telegram), чужа (?u=… і тап по імені в таблиці),
-// правила імені й повідомлення (довжина, символи, зайняте, «раз на 30 днів»), шафа трофеїв (рідкість, фільтр, «нещодавні»),
+// правила імені (лише латиниця) й повідомлення (довжина, символи, краї, мат, зайняте, «раз на 30 днів»), поле вводу (малі літери, «_»), шафа трофеїв (рідкість, фільтр, «нещодавні»),
 // видалення акаунта, ім'я в табло ліги з профілю гравця (api/league.js), список мату однаковий у трьох місцях.
 // База — у пам'яті (_site.js), SQL-частину перевіряє bash tools/tests/setup.sh. Знімки 390 px: docs/mockups/player_page_059_*.png
 // Запуск з кореня: node tools/tests/player_page.js
@@ -7,7 +7,7 @@ const path=require('path'),fs=require('fs');const {ROOT,launch,makeDB,callApi,op
 const OUT=path.join(ROOT,'tools','tests','out'),MOCK=path.join(ROOT,'docs','mockups');fs.mkdirSync(OUT,{recursive:true});
 process.env.SUPABASE_SERVICE_KEY='svc';
 const T=checker('сторінка гравця');
-// ---------- список мату: data/names/blocklist.txt = sql/v059_player_page.sql = src/account.js
+// ---------- список мату: data/names/blocklist.txt = sql/v059_player_page.sql = sql/v059_name_conflicts.sql = src/account.js
 {const txt=fs.readFileSync(path.join(ROOT,'data','names','blocklist.txt'),'utf8').split('\n').map(s=>s.trim()).filter(s=>s&&!s.startsWith('#'));
  const arr=src=>JSON.stringify(((src.match(/'[^']+'/g))||[]).map(s=>s.slice(1,-1)));
  const sql=fs.readFileSync(path.join(ROOT,'sql','v059_player_page.sql'),'utf8'),acc=fs.readFileSync(path.join(ROOT,'src','account.js'),'utf8');
@@ -17,13 +17,14 @@ const T=checker('сторінка гравця');
 const TODAY=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Kyiv',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
 // ---------- база в пам'яті: гравці з public_id, правила імені як у name_clean/set_player_name (скорочено)
 function mkDB(){
-  const players=[{id:'p-v',name:'Вітя',anon_name:'brave fox',public_id:'vitya234'},{id:'p-a',name:'андрій',anon_name:'calm owl',public_id:'andr2345'}];
+  const players=[{id:'p-v',name:'vitia',anon_name:'brave_fox',public_id:'vitya234'},{id:'p-a',name:'andrii',anon_name:'calm_owl',public_id:'andr2345'}];
   const links={};let n=0;const calls=[];
-  const forDevice=d=>{let l=links[d];if(!l){const p={id:'p-'+(++n),name:null,anon_name:'silent owl',public_id:'mepl'+String.fromCharCode(97+n).repeat(4)};players.push(p);l=links[d]={pid:p.id,secret:null};}return l;};
+  const forDevice=d=>{let l=links[d];if(!l){const p={id:'p-'+(++n),name:null,anon_name:'silent_owl',public_id:'mepl'+String.fromCharCode(97+n).repeat(4)};players.push(p);l=links[d]={pid:p.id,secret:null};}return l;};
   const err=(status,code,message)=>({status,body:JSON.stringify({code,message})});
   const check=a=>{if(!a.p_device||String(a.p_secret||'').length<16)return {e:err(400,'22023','device?')};const l=forDevice(a.p_device);if(l.secret==null)l.secret=a.p_secret;else if(l.secret!==a.p_secret)return {e:err(401,'28000','device secret')};return {p:players.find(p=>p.id===l.pid)};};
-  const js=p=>({id:p.id,name:p.name?p.name.toLowerCase():null,anon_name:p.anon_name,public_id:p.public_id,name_next:p.next||null});
-  const key=v=>String(v||'').toLowerCase().replace(/\s+/g,' ').trim();
+  const js=p=>({id:p.id,name:p.name||null,anon_name:p.anon_name,public_id:p.public_id,name_next:p.next||null});
+  const key=v=>String(v||'').trim().toLowerCase().replace(/\s+/g,'_');
+  const TRANSLIT={'олег':'oleh'};   // name_translit у базі (перевіряє setup.sh); тут — лише потрібне тесту
   const rpc={
     player_hello:a=>{const c=check(a);return c.e||js(c.p);},device_ok:a=>{const c=check(a);return c.e||c.p.id;},
     set_player_name:a=>{calls.push(['set_player_name',a.p_name]);const c=check(a);if(c.e)return c.e;const nm=key(a.p_name)||null;
@@ -32,6 +33,8 @@ function mkDB(){
       if(c.p.next&&c.p.next>new Date().toISOString())return err(400,'22023','name_wait:'+c.p.next.slice(0,10));
       if(nm&&players.some(p=>p!==c.p&&key(p.name)===nm))return err(409,'23505','name_taken');
       if(c.p.name)c.p.next=new Date(Date.now()+30*864e5).toISOString();c.p.name=nm;return js(c.p);},
+    set_player_auto_name:a=>{calls.push(['set_player_auto_name',a.p_raw]);const c=check(a);if(c.e)return c.e;const b=TRANSLIT[key(a.p_raw)]||key(a.p_raw);
+      if(!c.p.name&&/^[a-z0-9._]{3,20}$/.test(b)){let v=b,k=1;while(players.some(p=>p!==c.p&&p.name===v))v=b+(++k);c.p.name=v;}return js(c.p);},
     delete_player:a=>{calls.push(['delete_player']);const c=check(a);if(c.e)return c.e;c.p.name=null;c.p.deleted=true;for(const k in links)if(links[k].pid===c.p.id)delete links[k];return {ok:true};},
     trophy_stats:()=>({players:50,t:{champ:30,top3:5,unbeaten:1,perfect:0}}),
     player_profile:a=>prof(players.find(p=>p.id===a.p_player)),
@@ -62,7 +65,7 @@ const order=pg=>pg.$$eval('#ppCab .tro.on[data-tr]',es=>es.map(e=>e.dataset.tr))
  await pg.locator('header.top').screenshot({path:path.join(OUT,'pp_header.png')});
  await pg.click('#acctBtn');await pg.waitForTimeout(700);
  T.check(await pg.$eval('#s6',e=>!e.hidden)&&await pg.$eval('#s1',e=>e.hidden),'аватарка відкриває свою сторінку');
- T.check((await pg.textContent('#ppName'))==='silent owl'&&!!(await pg.$('.pp-warn'))&&/лише на цьому пристрої/.test(await pg.textContent('.pp-warn')),'без входу: анонімне ім\'я й попередження «лише на цьому пристрої»');
+ T.check((await pg.textContent('#ppName'))==='silent_owl'&&!!(await pg.$('.pp-warn'))&&/лише на цьому пристрої/.test(await pg.textContent('.pp-warn')),'без входу: анонімне ім\'я й попередження «лише на цьому пристрої»');
  const tiles=await pg.$$eval('.pp-tiles .tile',ts=>ts.map(t=>t.innerText.replace(/\s+/g,' ')));
  T.check(tiles.length===6&&/сезонів зіграно/.test(tiles[0])&&/серія виклику дня/.test(tiles[5])&&/^4 /.test(tiles[5]),'6 плиток: '+tiles.join(' | '));
  // шафа: рідкість
@@ -81,14 +84,16 @@ const order=pg=>pg.$$eval('#ppCab .tro.on[data-tr]',es=>es.map(e=>e.dataset.tr))
  // ім'я: правила й повідомлення
  const rename=async v=>{await pg.fill('#ppNameIn',v);await pg.click('#ppNameSave');await pg.waitForTimeout(300);return pg.textContent('#ppNameMsg');};
  T.check(/від 3 до 20/.test(await rename('ab')),'ім\'я з 2 символів — «від 3 до 20»');
- T.check(/Лише малі літери/.test(await rename('andriy.s')),'крапка — «Лише малі літери…»');
- T.check(/не підходить/.test(await rename('Супер Хуй')),'мат — «Таке ім\'я не підходить»');
+ T.check(/Лише латинські літери a–z, цифри, «_» і «\.»/.test(await rename('андрій')),'кирилиця — «Лише латинські літери a–z, цифри, «_» і «.»»');
+ T.check(/Починається й закінчується літерою або цифрою/.test(await rename('andrii_')),'«_» у кінці — «Починається й закінчується…»');
+ T.check(/не підходить/.test(await rename('Super Hui')),'мат (латиницею) — «Таке ім\'я не підходить»');
+ await pg.fill('#ppNameIn','Serhii Sh');T.check((await pg.inputValue('#ppNameIn'))==='serhii_sh','поле вводу: одразу малі літери й «_» замість пробілу');
  const nCalls=M.calls.filter(c=>c[0]==='set_player_name').length;
- T.check(/вже зайняте/.test(await rename('Андрій')),'зайняте (без урахування регістру) — «Це ім\'я вже зайняте»');
+ T.check(/вже зайняте/.test(await rename('ANDRII')),'зайняте (без урахування регістру) — «Це ім\'я вже зайняте»');
  T.check(M.calls.filter(c=>c[0]==='set_player_name').length===nCalls+1,'помилки правил ловить сайт, до бази йде лише перевірка зайнятості');
- T.check(/Збережено: сергій/.test(await rename('Сергій'))&&(await pg.textContent('#ppName'))==='сергій','нове ім\'я «Сергій» → «сергій» у заголовку');
- T.check(/Збережено: петро/.test(await rename('петро')),'перша зміна вже вибраного імені — «петро» (перше ім\'я з анонімного відлік не запускає)');
- T.check(/Змінити ім'я знову можна з \d+ \S+ 20\d\d/.test(await rename('іван')),'друга зміна — «Змінити ім\'я знову можна з …»');
+ T.check(/Збережено: serhii_sh/.test(await rename('Serhii Sh'))&&(await pg.textContent('#ppName'))==='serhii_sh','нове ім\'я «Serhii Sh» → «serhii_sh» у заголовку');
+ T.check(/Збережено: petro/.test(await rename('petro')),'перша зміна вже вибраного імені — «petro» (перше ім\'я з анонімного відлік не запускає)');
+ T.check(/Змінити ім'я знову можна з \d+ \S+ 20\d\d/.test(await rename('ivan.k')),'друга зміна — «Змінити ім\'я знову можна з …»');
  // історія
  const me=M.players.find(p=>p.public_id&&p.public_id.startsWith('mepl'));
  db.DB.seasons.push({id:950,player_id:me.id,device_id:'x',format:'classic',mode:'normal',formation:'4-3-3',w:20,d:5,l:5,pts:65,place:2,gf:50,ga:30,verified:true,practice:false,competition:'upl',created_at:'2026-09-29T10:00:00Z',xi:[],tbl:[]});
@@ -100,11 +105,11 @@ const order=pg=>pg.$$eval('#ppCab .tro.on[data-tr]',es=>es.map(e=>e.dataset.tr))
  // таблиця → чужа сторінка
  await pg.evaluate(()=>document.getElementById('homeBtn').click());await pg.click('#boardOpen');await pg.waitForTimeout(700);
  const links=await pg.$$eval('#boardBody a.plink',as=>as.map(a=>a.textContent+'→'+a.dataset.u));
- T.check(links.includes('вітя→vitya234')&&links.includes('петро→'+me.public_id),'таблиця: імена з профілю, нижній регістр, посилання: '+links.join(', '));
+ T.check(links.includes('vitia→vitya234')&&links.includes('petro→'+me.public_id),'таблиця: імена з профілю, нижній регістр, посилання: '+links.join(', '));
  await pg.click('#boardBody a[data-u="vitya234"]');await pg.waitForTimeout(700);
  const url=await pg.evaluate(()=>location.search);
- T.check(await pg.$eval('#viewBox',e=>e.hidden)&&(await pg.textContent('#ppName'))==='вітя'&&/[?&]u=vitya234/.test(url),'тап по імені → сторінка «вітя», адреса '+url);
- T.check(!(await pg.$('#ppNameIn'))&&!(await pg.$('.pp-warn'))&&/Історію сезонів бачить лише вітя/.test(await pg.textContent('.pp-lock')),'чужа: без налаштувань і попередження, історію не видно');
+ T.check(await pg.$eval('#viewBox',e=>e.hidden)&&(await pg.textContent('#ppName'))==='vitia'&&/[?&]u=vitya234/.test(url),'тап по імені → сторінка «vitia», адреса '+url);
+ T.check(!(await pg.$('#ppNameIn'))&&!(await pg.$('.pp-warn'))&&/Історію сезонів бачить лише vitia/.test(await pg.textContent('.pp-lock')),'чужа: без налаштувань і попередження, історію не видно');
  T.check(await pg.$$eval('#ppCab .tro.on.sec',es=>es.length===1&&/Секретний трофей/.test(es[0].textContent)&&!/Гроші/.test(es[0].textContent)),'чужий секретний трофей, якого в мене немає, — без назви');
  T.check(/Чорноморець/.test(await pg.textContent('.pp-fav'))&&(await pg.$$eval('.pp-tiles .tile b',bs=>bs.map(b=>b.textContent))).slice(0,3).join()==='2,1,77','чужа: плитки 2 сезони, 1 чемпіонство, 77 очок; улюблений клуб');
  await pg.screenshot({path:path.join(MOCK,'player_page_059_other.png'),fullPage:true});
@@ -112,14 +117,14 @@ const order=pg=>pg.$$eval('#ppCab .tro.on[data-tr]',es=>es.map(e=>e.dataset.tr))
  T.check(!A.errs.length,'без входу: помилок на сторінці немає '+A.errs.join(' | '));
  // ===== 2. пряме посилання ?u=… і невідомий гравець
  const B=await openSite({b,db,api,query:'?u=vitya234',wait:1500});
- T.check(await B.pg.$eval('#s6',e=>!e.hidden)&&(await B.pg.textContent('#ppName'))==='вітя','посилання ?u=vitya234 відкриває сторінку гравця');
+ T.check(await B.pg.$eval('#s6',e=>!e.hidden)&&(await B.pg.textContent('#ppName'))==='vitia','посилання ?u=vitya234 відкриває сторінку гравця');
  await B.pg.close();
  const C=await openSite({b,db,api,query:'?u=zzzzzzzz',wait:1500});T.check(/Такого гравця немає/.test(await C.pg.textContent('#pp')),'невідомий ?u= — «Такого гравця немає»');await C.pg.close();
  // ===== 3. своя з входом (Telegram Mini App) і видалення акаунта
  const tg={initData:'user=x&hash=abc',initDataUnsafe:{user:{id:7,first_name:'Олег'}},colorScheme:'dark',platform:'android'};
  const D=await openSite({b,db,api,tg,hash:'#tgWebAppData=x',init:INIT,viewport:{width:390,height:844},wait:2000});
  await D.pg.click('#acctBtn');await D.pg.waitForTimeout(700);
- T.check((await D.pg.textContent('#ppName'))==='олег'&&!(await D.pg.$('.pp-warn'))&&/Увійшов через Telegram/.test(await D.pg.textContent('.pp-acct')),'з входом: ім\'я з Telegram «олег», без попередження, «Вийти»');
+ T.check((await D.pg.textContent('#ppName'))==='oleh'&&!(await D.pg.$('.pp-warn'))&&/Увійшов через Telegram/.test(await D.pg.textContent('.pp-acct')),'з входом: ім\'я з Telegram «Олег» → «oleh» (транслітерує база), без попередження, «Вийти»');
  await D.pg.screenshot({path:path.join(MOCK,'player_page_059_own.png'),fullPage:true});
  await D.pg.click('#ppDel');T.check(await D.pg.$eval('#ppDelBox',e=>!e.hidden),'«Видалити акаунт…» питає підтвердження');
  await D.pg.locator('.pp-acct').screenshot({path:path.join(OUT,'pp_delete.png')});
@@ -134,5 +139,5 @@ const order=pg=>pg.$$eval('#ppCab .tro.on[data-tr]',es=>es.map(e=>e.dataset.tr))
  db.DB.player_links.push({kind:'tg',key:'555',player_id:'p-v'});
  const lg=await callApi(require(path.join(ROOT,'api','league.js')),null,'GET',{chat:'-1'});
  const names=(lg.json.today||[]).map(r=>r.name+(r.u?'@'+r.u:''));
- T.check(names.join()==='вітя@vitya234,Без профілю','табло ліги: '+names.join(', '));
+ T.check(names.join()==='vitia@vitya234,Без профілю','табло ліги: '+names.join(', '));
  await b.close();process.exit(T.done());})();

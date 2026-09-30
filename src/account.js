@@ -95,7 +95,7 @@ function acctBotPoll(){if(BOT_POLL||SESSION)return;const tick=async()=>{const t=
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&acctBotPending()&&!SESSION){clearInterval(BOT_POLL);BOT_POLL=null;acctBotPoll();}});
 async function acctLogout(){if(SB)await SB.auth.signOut();SESSION=null;ACCT_MSG='Ти вийшов. Прогрес на цьому пристрої лишився.';renderAcct();if(CUR_SEC===6&&PP&&PP.own)ppRender();else openAcct();}
 // ---------- ГРАВЕЦЬ (v0.39): одна людина — один гравець. Пристрій і вхід (Google/Telegram) прив'язуються до нього в базі.
-// Ім'я живе в профілі гравця: змінив — змінилося в усіх таблицях. Без імені — постійне анонімне («Silent Owl»).
+// Ім'я живе в профілі гравця: змінив — змінилося в усіх таблицях. Без імені — постійне анонімне («silent_owl»).
 let PLAYER=lsGet("upl30_player")||null;   // {id,name,anon_name,public_id,name_next} (public_id, name_next — з SQL 0.59)
 function devSecret(){let s=lsGet("upl30_dsecret");if(!s||String(s).length<32){const a=new Uint8Array(24);crypto.getRandomValues(a);s=[...a].map(b=>b.toString(16).padStart(2,'0')).join('');lsSet("upl30_dsecret",s);}return s;}
 function myName(){return String((PLAYER&&(PLAYER.name||PLAYER.anon_name))||lsGet("upl30_nick")||'').toLowerCase();}   // з 0.59 імена лише в нижньому регістрі (DECISIONS п. 2)
@@ -128,28 +128,26 @@ async function saveApi(kind,payload){
   if(r.status===404||j.fallback){SAVE_LEGACY=true;throw legacy();}
   if(!r.ok)throw Object.assign(new Error(j.error||('HTTP '+r.status)),{status:r.status});
   return j;}
-// ---------- ІМ'Я (0.59, DECISIONS п. 2): унікальне, лише нижній регістр, 3–20 символів (літери, цифри, пробіл, _ ' -), без мату,
-// змінювати — не частіше ніж раз на 30 днів. Ті самі правила — у базі (sql/v059_player_page.sql, name_clean); тут — щоб одразу підказати.
-const NAME_BAD=['хуй','хуя','хує','хуе','хуї','пизд','пізд','блят','бляд','ебат','ебан','ебал','єбат','єбан','єбал','їбат','їбан','заїб','уеб',
-  'мудак','мудил','залуп','гандон','підор','пидор','підар','пидар','шлюх','сучар','fuck','shit','cunt','bitch','nigger','nigga','faggot','whore','pussy','asshole'];   // data/names/blocklist.txt
+// ---------- ІМ'Я (0.59, DECISIONS п. 2): унікальне, лише латиниця в нижньому регістрі — a-z, цифри, «_» і «.», 3–20 символів, хоч одна літера,
+// на початку й у кінці — літера або цифра, без мату; змінювати — не частіше ніж раз на 30 днів.
+// Ті самі правила — у базі (sql/v059_player_page.sql, name_problem); тут — щоб одразу підказати. Транслітерація кирилиці — лише в базі (name_translit).
+const NAME_BAD=['^hui','^huy','khui','khuy','xui','xuy','pizd','pyzd','blyad','bliad','blyat','bliat','ebat','yeban','ieban','yobany',
+  'mudak','mudil','zalup','gandon','pidor','pidar','shliukh','shlyukh','suchar','fuck','shit','cunt','bitch','nigger','nigga','faggot','whore','pussy','asshole'];   // data/names/blocklist.txt
 const NAME_MIN=3,NAME_MAX=20;
-const nameKey=v=>String(v||'').toLowerCase().replace(/[’ʼ`‘]/g,"'").replace(/\s+/g,' ').trim();
+const nameKey=v=>String(v||'').trim().toLowerCase().replace(/\s+/g,'_');   // як у полі вводу: малі літери, пробіл → «_»
+const nameBad=s=>{const t=s.replace(/[_.]/g,'');return NAME_BAD.some(b=>b[0]==='^'?new RegExp('[_.0-9]'+b.slice(1)).test('_'+s):t.includes(b));};
 function nameCheck(v){const s=nameKey(v);if(!s)return {name:null};const n=[...s].length;
   if(n<NAME_MIN||n>NAME_MAX)return {err:'len'};
-  if(!/^[a-z0-9а-яіїєґ _'-]+$/.test(s)||!/[a-zа-яіїєґ]/.test(s))return {err:'chars'};
-  const t=s.replace(/[ _'-]/g,'');if(NAME_BAD.some(b=>t.includes(b)))return {err:'bad'};
+  if(!/^[a-z0-9._]+$/.test(s)||!/[a-z]/.test(s))return {err:'chars'};
+  if(!/^[a-z0-9](.*[a-z0-9])?$/.test(s))return {err:'edge'};
+  if(nameBad(s))return {err:'bad'};
   return {name:s};}
-const NAME_MSG={len:`Ім'я — від ${NAME_MIN} до ${NAME_MAX} символів.`,chars:"Лише малі літери (українські чи латинські), цифри, пробіл і _ ' -.",bad:"Таке ім'я не підходить. Обери інше.",
+const NAME_MSG={len:`Ім'я — від ${NAME_MIN} до ${NAME_MAX} символів.`,chars:'Лише латинські літери a–z, цифри, «_» і «.».',edge:'Починається й закінчується літерою або цифрою.',bad:"Таке ім'я не підходить. Обери інше.",
   taken:"Це ім'я вже зайняте. Спробуй інше.",wait:d=>`Змінити ім'я знову можна з ${fmtLong(d)}.`,fail:"Не вдалося зберегти. Спробуй ще раз."};
-function nameErrOf(e){const m=/name_(len|chars|bad|taken|wait)(?::(\d{4}-\d{2}-\d{2}))?/.exec(String(e&&e.message||e));return m?(m[1]==='wait'?NAME_MSG.wait(m[2]):NAME_MSG[m[1]]):NAME_MSG.fail;}
-// перше ім'я з Telegram/Google чи з поля «Твоє ім'я»: прибираємо зайве, зайняте — з номером («андрій 7»)
+function nameErrOf(e){const m=/name_(len|chars|edge|bad|taken|wait)(?::(\d{4}-\d{2}-\d{2}))?/.exec(String(e&&e.message||e));return m?(m[1]==='wait'?NAME_MSG.wait(m[2]):NAME_MSG[m[1]]):NAME_MSG.fail;}
+// перше ім'я з Telegram/Google чи з поля «Твоє ім'я»: база сама транслітерує латиницею, зайняте — з номером (andrii7), закоротке — лишаємось анонімним
 async function playerAutoName(p,raw){
-  const base=[...nameKey(raw).replace(/[^a-z0-9а-яіїєґ _'-]/g,'').replace(/\s+/g,' ').trim()].slice(0,NAME_MAX).join('').trim();
-  if(!nameCheck(base).name||base===p.anon_name)return p;
-  const cut=[...base].slice(0,NAME_MAX-3).join('').trim();
-  for(const v of [base,...[0,1,2].map(()=>`${cut} ${2+Math.floor(Math.random()*98)}`)]){
-    try{return await playerRpc('set_player_name',{p_name:v});}catch(e){if(!/name_taken|23505/.test(String(e&&e.message)))return p;}}
-  return p;}
+  try{return await playerRpc('set_player_auto_name',{p_raw:String(raw||'').slice(0,60)});}catch(e){return p;}}
 // будь-яке місце, де гравець вписав своє ім'я (таблиця дня, виклик, 5×5), — лише перше ім'я профілю; змінити — на своїй сторінці
 function nickSet(v){v=String(v||'').trim().slice(0,24);if(v.length<2)return;if(PLAYER&&nameKey(v)===PLAYER.anon_name)return;lsSet("upl30_nick",v);
   if(ONLINE&&PLAYER&&!PLAYER.name)playerAutoName(PLAYER,v).then(playerSet).catch(e=>console.warn('name',e));}

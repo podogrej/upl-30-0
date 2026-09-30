@@ -1438,7 +1438,7 @@ const WHATSNEW={v:'0.59',date:'30.09.2026',items:[
   ['account-circle','Твоя сторінка','Тапни аватарку вгорі праворуч: твої сезони, чемпіонства, найкращий і найгірший склад, серія й уся шафа трофеїв.'],
   ['trophy','Рідкість трофеїв','Трофеї тепер звичайні, рідкісні, епічні й легендарні — залежно від того, скільки гравців їх має. Сортуй за рідкістю або за датою.'],
   ['account-group','Сторінки друзів','Тапни ім\'я в таблиці — відкриється сторінка цього гравця з його цифрами й трофеями.'],
-  ['check-circle','Одне ім\'я всюди','Ім\'я тепер унікальне й лише малими літерами: 3–20 символів. Змінити можна раз на 30 днів — на своїй сторінці.']]};
+  ['check-circle','Одне ім\'я всюди','Ім\'я тепер унікальне, латиницею й малими літерами: 3–20 символів — a–z, цифри, «_» і «.». Ім\'я кирилицею ми переписали латиницею (Андрій → andrii) — один раз його можна змінити одразу, далі — раз на 30 днів, на своїй сторінці.']]};
 function openNews(){screenTag('news');const box=document.getElementById('viewBox');document.getElementById('viewTitle').textContent=`Що нового · версія ${WHATSNEW.v}`;
   document.getElementById('viewBody').innerHTML=`<div class="news">${WHATSNEW.items.map(([e,h,d])=>`<div class="ni">${ic(e,'lg')}<div><b>${esc(h)}</b><p>${esc(d)}</p></div></div>`).join('')}</div>`;
   box.hidden=false;lsSet('upl30_news_seen',WHATSNEW.v);document.getElementById('newsDot').hidden=true;}

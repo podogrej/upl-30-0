@@ -132,8 +132,8 @@ function ppSettingsHtml(){
   const via=SESSION?((SESSION.user.app_metadata&&SESSION.user.app_metadata.provider)==='google'?'Google':'Telegram'):'';
   return `<div class="pp-sec"><h3>Налаштування</h3></div><div class="pp-acct">
     ${PLAYER?`<label for="ppNameIn"><b>Ім'я</b> <span class="muted" style="font-size:12px">— одне на всі таблиці, ліги й результати</span></label>
-    <div class="row"><input id="ppNameIn" maxlength="20" autocomplete="nickname" value="${esc(PLAYER.name||'')}" placeholder="${esc(PLAYER.anon_name||'')}"><button class="ghost" id="ppNameSave">Зберегти</button></div>
-    <p class="muted pp-hint" id="ppNameMsg">${nx?`Змінити знову можна з ${fmtLong(nx)}.`:`3–20 символів: малі літери, цифри, пробіл, _ ' -. Змінювати можна раз на 30 днів.`}${PLAYER.name?'':` Поки ти в таблицях як <b>${esc(PLAYER.anon_name||'')}</b>.`}</p>`:''}
+    <div class="row"><input id="ppNameIn" maxlength="20" autocomplete="nickname" autocapitalize="none" autocorrect="off" spellcheck="false" value="${esc(PLAYER.name||'')}" placeholder="${esc(PLAYER.anon_name||'')}"><button class="ghost" id="ppNameSave">Зберегти</button></div>
+    <p class="muted pp-hint" id="ppNameMsg">${nx?`Змінити знову можна з ${fmtLong(nx)}.`:`3–20 символів: латинські літери a–z, цифри, «_» і «.». Змінювати можна раз на 30 днів.`}${PLAYER.name?'':` Поки ти в таблицях як <b>${esc(PLAYER.anon_name||'')}</b>.`}</p>`:''}
     ${SESSION?`<div class="who">${icon(via==='Google'?'google':'telegram')}Увійшов через ${via}</div><div class="row"><button class="ghost" id="ppOut">${ic('logout','sm')}Вийти</button></div>`
       :`<span class="muted" style="font-size:13px">Увійди, щоб трофеї, рекорди й серія зберігались на всіх пристроях.</span><div class="row"><button class="primary" id="ppLogin2">Увійти</button></div>`}
     ${PLAYER?`<button class="pp-del" id="ppDel">${SESSION?'Видалити акаунт…':'Видалити мої дані…'}</button><div id="ppDelBox" hidden class="pp-delbox"><p>Ім'я, вхід і прив'язку цього пристрою буде стерто назавжди. Результати лишаться в таблицях під анонімним іменем, але вже не будуть пов’язані з тобою. Трофеї й серія на цьому пристрої теж зникнуть.</p><div class="row"><button class="danger" id="ppDelYes">Так, видалити</button><button class="ghost" id="ppDelNo">Скасувати</button></div><p class="muted" id="ppDelMsg" style="margin:0"></p></div>`:''}
@@ -144,6 +144,8 @@ function ppWire(){
   if($('ppEdit'))$('ppEdit').onclick=()=>{const f=$('ppNameIn');if(f){f.scrollIntoView({behavior:'smooth',block:'center'});f.focus();}};
   if($('ppPlay'))$('ppPlay').onclick=()=>go(4);
   const hd=$('ppHist');if(hd)hd.ontoggle=()=>{if(hd.open&&!(PP&&PP.hist))ppHistLoad(false);};
+  // поле імені: одразу малі літери й «_» замість пробілу (курсор лишається на місці)
+  if($('ppNameIn'))$('ppNameIn').oninput=e=>{const f=e.target,v=f.value,w=v.toLowerCase().replace(/\s/g,'_');if(w!==v){const c=f.selectionStart;f.value=w;try{f.setSelectionRange(c,c);}catch(x){}}};
   if($('ppNameSave'))$('ppNameSave').onclick=async()=>{const b=$('ppNameSave'),m=$('ppNameMsg');b.disabled=true;const err=await playerRename($('ppNameIn').value);b.disabled=false;
     const m2=$('ppNameMsg')||m;if(err){m2.textContent=err;m2.classList.add('bad');return;}m2.classList.remove('bad');m2.innerHTML=PLAYER.name?`Збережено: <b>${esc(PLAYER.name)}</b>.`:`Готово: ти знову <b>${esc(PLAYER.anon_name)}</b>.`;const h=$('ppName');if(h)h.textContent=myName();};
   if($('ppOut'))$('ppOut').onclick=acctLogout;

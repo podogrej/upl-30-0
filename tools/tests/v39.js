@@ -11,13 +11,13 @@ const seedH=require(path.join(ROOT,'api','seed.js')),verH=require(path.join(ROOT
 const OLD_COLS='device_id,nickname,mode,format,club,formation,year,seed,version,w,d,l,pts,place,gf,ga,xp,xg,xga,tier,golden,perfect,practice,day,xi,tbl,seed_id,verified,verify_note,user_id,tg_user_id,tg_name'.split(',');
 function mkDB(v39){
   const P={players:[],links:{}};let pn=0;
-  const forDevice=d=>{let l=P.links[d];if(!l){const p={id:'p-'+(++pn),name:null,anon_name:['Silent Owl','Brave Fox','Quiet Lynx'][pn%3]};P.players.push(p);l=P.links[d]={pid:p.id,secret:null};}return l;};
+  const forDevice=d=>{let l=P.links[d];if(!l){const p={id:'p-'+(++pn),name:null,anon_name:['silent_owl','brave_fox','quiet_lynx'][pn%3]};P.players.push(p);l=P.links[d]={pid:p.id,secret:null};}return l;};
   const check=(a)=>{if(!a.p_device||String(a.p_secret||'').length<16)return {err:{status:400,body:JSON.stringify({code:'22023',message:'device?'})}};
     const l=forDevice(a.p_device);if(l.secret==null)l.secret=a.p_secret;else if(l.secret!==a.p_secret)return {err:{status:401,body:JSON.stringify({code:'28000',message:'device secret'})}};return {p:P.players.find(p=>p.id===l.pid)};};
   const js=p=>({id:p.id,name:p.name,anon_name:p.anon_name});
   const rpc=v39?{player_hello:a=>{const c=check(a);return c.err||js(c.p);},
     device_ok:a=>{const c=check(a);return c.err||c.p.id;},   // 0.53: /api/save і /api/seed перевіряють секрет пристрою
-    set_player_name:a=>{const c=check(a);if(c.err)return c.err;const nm=String(a.p_name||'').trim()||null;if(nm&&(nm.length<2||nm.length>24))return {status:400,body:'{"code":"22023"}'};c.p.name=nm&&nm.toLowerCase();return js(c.p);}}:{};
+    set_player_name:a=>{const c=check(a);if(c.err)return c.err;const nm=String(a.p_name||'').trim()||null;if(nm&&(nm.length<2||nm.length>24))return {status:400,body:'{"code":"22023"}'};c.p.name=nm&&nm.toLowerCase().replace(/\s+/g,'_');return js(c.p);}}:{};
   const db=makeDB({seasons:{auto:'id',cols:v39?null:OLD_COLS,onInsert:r=>{if(v39){r.player_id=forDevice(r.device_id).pid;r.competition=r.competition||'upl';r.gd=r.gf-r.ga;}r.verified=null;}},season_seeds:{auto:'id'},daily_results:{auto:'id'}},rpc);
   if(v39)db.DB.players=P.players;
   global.fetch=db.fetch;   // для api/seed і api/verify
@@ -33,33 +33,33 @@ async function run(MODE,b){const T=checker('v39 '+MODE);const v39=MODE==='new';c
   await pg.click('#acctBtn');await pg.waitForTimeout(400);   // 0.59: аватарка → своя сторінка з налаштуваннями імені
   T.check(await pg.$eval('#ppNameIn',e=>e.placeholder)===player.anon_name&&/Поки ти в таблицях як/.test(await pg.textContent('#ppNameMsg')),'своя сторінка: поле імені з анонімним «'+player.anon_name+'»');
   await pg.screenshot({path:path.join(OUT,'v39_acct.png')});
-  await pg.fill('#ppNameIn','Андрій');await pg.click('#ppNameSave');await pg.waitForTimeout(500);
-  T.check(/Збережено: андрій/.test(await pg.textContent('#ppNameMsg'))&&P.players[0].name==='андрій','ім\'я збережено в профілі гравця (нижній регістр)');await pg.click('#homeBtn');
+  await pg.fill('#ppNameIn','Andrii');await pg.click('#ppNameSave');await pg.waitForTimeout(500);
+  T.check(/Збережено: andrii/.test(await pg.textContent('#ppNameMsg'))&&P.players[0].name==='andrii','ім\'я збережено в профілі гравця (нижній регістр)');await pg.click('#homeBtn');
  }else{
   T.check(!player,'без players.sql гравця немає, сайт працює');
   await pg.click('#acctBtn');await pg.waitForTimeout(400);T.check(!(await pg.$('#ppNameIn')),'своя сторінка без поля імені');await pg.click('#homeBtn');
  }
  // вільна гра, «Складний»
  await pg.click('#freeOpen');const nameRow=await pg.$eval('#myNameRow',e=>!e.hidden);
- T.check(v39?nameRow&&await pg.$eval('#myName',e=>e.textContent)==='андрій':!nameRow,'налаштування: рядок імені '+(v39?'з «андрій»':'схований'));
+ T.check(v39?nameRow&&await pg.$eval('#myName',e=>e.textContent)==='andrii':!nameRow,'налаштування: рядок імені '+(v39?'з «andrii»':'схований'));
  await pg.click('#formats .opt:nth-child(1)');await pg.click('#modes .opt:nth-child(2)');await pg.click('#startBtn');await draftSeason(pg);await pg.waitForTimeout(1500);
  const ver=await pg.$eval('#verLine',e=>e.hidden?'':e.textContent);T.check(/перевірено сервером/.test(ver),'«Результат перевірено сервером»');
  const row=DB.seasons[DB.seasons.length-1]||{};
  T.check(v39?log.includes('POST /api/save')&&!log.includes('POST /api/verify'):log.includes('POST /api/save')&&log.includes('POST /api/verify'),v39?'сезон записав сервер (/api/save), не браузер':'SQL 0.53 немає — /api/save відповів 503, сезон записано напряму, як 0.52');
  T.check(row.mode==='hard'&&row.verified===true&&row.seed_id!=null&&row.verify_note!=null,`рядок seasons: mode ${row.mode}, verified ${row.verified}, seed_id ${row.seed_id}`);
- if(v39)T.check(row.player_id===player.id&&row.competition==='upl'&&/^d[0-9a-f]{8}$/.test(row.data_version)&&row.nickname==='андрій',`нові колонки: player_id ${row.player_id}, competition ${row.competition}, data_version ${row.data_version}`);
+ if(v39)T.check(row.player_id===player.id&&row.competition==='upl'&&/^d[0-9a-f]{8}$/.test(row.data_version)&&row.nickname==='andrii',`нові колонки: player_id ${row.player_id}, competition ${row.competition}, data_version ${row.data_version}`);
  else T.check(!('competition' in row)&&!('data_version' in row),'стара база: сезон записано без нових колонок');
  // таблиця 11×11
- let rows=await board();T.check(rows.length===1&&rows[0].startsWith('* ')&&(!v39||rows[0].includes('андрій')),'таблиця: мій рядок '+JSON.stringify(rows));
+ let rows=await board();T.check(rows.length===1&&rows[0].startsWith('* ')&&(!v39||rows[0].includes('andrii')),'таблиця: мій рядок '+JSON.stringify(rows));
  await pg.screenshot({path:path.join(OUT,`v39_board_${MODE}.png`)});
  await pg.click('[data-board="anti"]');await pg.waitForTimeout(400);T.check(/порожньо/.test(await pg.textContent('#boardBody')),'вкладка «Антисезон» порожня');
  await pg.click('[data-board="main"]');await pg.waitForTimeout(400);await pg.click('#boardBody tr.me');await pg.waitForTimeout(500);
  T.check(!!(await pg.$('#viewBack'))&&!!(await pg.$('#viewBody .slot')),'рядок відкриває сезон із кнопкою «До таблиці»');
  await pg.click('#viewBack');await pg.waitForTimeout(500);T.check((await pg.$$('#boardBody tr[data-q]')).length===1,'«До таблиці» повертає таблицю');await pg.click('#viewClose');
  if(v39){
-  await pg.click('#freeOpen');await pg.click('#myNameEdit');await pg.waitForTimeout(400);T.check(await pg.$eval('#s6',e=>!e.hidden),'«Змінити на своїй сторінці» відкриває сторінку');
-  await pg.fill('#ppNameIn','Andriy 2');await pg.click('#ppNameSave');await pg.waitForTimeout(500);
-  rows=await board();T.check(rows[0]==='* andriy 2','перейменування на своїй сторінці → у таблиці «andriy 2»');await pg.click('#viewClose');
+  await pg.click('#freeOpen');await pg.click('#myNameEdit');await pg.waitForFunction(()=>typeof PP!=='undefined'&&PP&&!PP.loading);await pg.waitForTimeout(200);   // профіль завантажився — сторінка вже не перемалюється під час вводуT.check(await pg.$eval('#s6',e=>!e.hidden),'«Змінити на своїй сторінці» відкриває сторінку');
+  await pg.fill('#ppNameIn','Andriy 2');   // поле саме робить «andriy_2»await pg.click('#ppNameSave');await pg.waitForTimeout(500);
+  rows=await board();T.check(rows[0]==='* andriy_2','перейменування на своїй сторінці → у таблиці «andriy_2»: '+rows[0]+' · '+await pg.evaluate(()=>(document.getElementById('ppNameMsg')||{}).textContent));await pg.click('#viewClose');
   await pg.click('#acctBtn');await pg.waitForTimeout(300);await pg.fill('#ppNameIn','');await pg.click('#ppNameSave');await pg.waitForTimeout(500);
   T.check(/ти знову/.test(await pg.textContent('#ppNameMsg')),'порожнє ім\'я — знову анонімний');await pg.click('#homeBtn');
   rows=await board();T.check(rows[0]==='* '+player.anon_name.toLowerCase(),'у таблиці анонімне ім\'я: '+rows[0]);await pg.click('#viewClose');
