@@ -61,10 +61,11 @@ module.exports = async (req, res) => {
     stage = 'bot login';
     if (!/^[a-f0-9]{32}$/.test(String(b.login_token))) return res.status(400).json({ error: 'login_token?' });
     const since = new Date(Date.now() - 10 * 60e3).toISOString();
-    const rows = await sbRest(`tg_logins?token=eq.${b.login_token}&used=is.false&created_at=gte.${since}&select=*`);
-    if (!rows || !rows.length) return res.status(202).json({ pending: true });   // бот ще не отримав «Start»
+    // забираємо токен одним запитом: PATCH лише невикористаного й свіжого рядка; порожня відповідь — токена ще немає (у боті не натиснули
+    // «Підтвердити вхід») або його вже використано (другий паралельний запит нічого не отримає)
+    const rows = await sbRest(`tg_logins?token=eq.${b.login_token}&used=is.false&created_at=gte.${since}&select=*`, { method: 'PATCH', prefer: 'return=representation', body: { used: true } });
+    if (!rows || !rows.length) return res.status(202).json({ pending: true });
     const r0 = rows[0];
-    await sbRest(`tg_logins?token=eq.${b.login_token}`, { method: 'PATCH', prefer: 'return=minimal', body: { used: true } });
     u = { id: r0.tg_id, first_name: r0.first_name, last_name: r0.last_name, username: r0.username };
   } else u = b.initData ? checkMiniApp(b.initData, token) : checkWidget(b.widget, token);
   if (!u || !u.id) return res.status(401).json({ error: 'bad telegram signature' });

@@ -155,21 +155,36 @@ module.exports = async (req, res) => {
     if (mc && mc.chat && mc.chat.type !== 'private' && ['member', 'administrator'].includes(mc.new_chat_member.status) && !['member', 'administrator'].includes(mc.old_chat_member.status)) {
       await L.tg('sendMessage', { chat_id: mc.chat.id, text: GROUP_HELLO });
     }
+    // кнопка «Підтвердити вхід»: прив'язуємо токен входу до того, хто натиснув (лише у власному приватному чаті з ботом, кнопка живе 10 хвилин)
+    const cq = u.callback_query;
+    if (cq && typeof cq.data === 'string' && /^login_[a-f0-9]{32}$/.test(cq.data)) {
+      const f = cq.from || {}, msg = cq.message || {};
+      const own = msg.chat && msg.chat.type === 'private' && String(msg.chat.id) === String(f.id);
+      const fresh = msg.date && Date.now() / 1000 - msg.date < 600;
+      if (!own || !fresh) {
+        await L.tg('answerCallbackQuery', { callback_query_id: cq.id, text: fresh ? 'Цю кнопку може натиснути лише той, хто входить.' : 'Посилання застаріло — натисни «Увійти через Telegram» на сайті ще раз.', show_alert: true });
+      } else {
+        const row = { token: cq.data.slice(6), tg_id: f.id, first_name: f.first_name || null, last_name: f.last_name || null, username: f.username || null };
+        await L.sb('tg_logins?on_conflict=token', { method: 'POST', prefer: 'resolution=ignore-duplicates,return=minimal', body: row });
+        // бот один на обидві бази: якщо у Vercel задано тестову базу, той самий токен входу пишемо й туди — тоді вхід через бота працює і на тестовому сайті
+        const tUrl = String(process.env.TEST_SUPABASE_URL || '').trim(), tKey = String(process.env.TEST_SUPABASE_SERVICE_KEY || '').replace(/\s+/g, '');
+        if (tUrl && tKey) {
+          try { await fetch(`${tUrl}/rest/v1/tg_logins?on_conflict=token`, { method: 'POST', headers: { apikey: tKey, Authorization: `Bearer ${tKey}`, 'Content-Type': 'application/json', Prefer: 'resolution=ignore-duplicates,return=minimal' }, body: JSON.stringify(row) }); } catch (e) {}
+        }
+        await L.tg('answerCallbackQuery', { callback_query_id: cq.id, text: 'Вхід підтверджено' });
+        await L.tg('editMessageText', { chat_id: msg.chat.id, message_id: msg.message_id, text: '✅ Вхід підтверджено. Повернись у браузер — гра вже знає, що це ти.' });
+      }
+    }
     const m = u.message;
     if (m && typeof m.text === 'string') {
       const chat = m.chat, isPrivate = chat.type === 'private';
       const cmd = m.text.trim().split(/[\s@]/)[0].toLowerCase();
       const arg = m.text.trim().split(/\s+/)[1] || '';
       if (cmd === '/start' && isPrivate && /^login_[a-f0-9]{32}$/.test(arg)) {
-        // вхід на сайт через бота: браузер відкрив t.me/upl30_bot?start=login_<токен>, прив'язуємо токен до цього Telegram-акаунта
-        const f = m.from || {};
-        await L.sb('tg_logins?on_conflict=token', { method: 'POST', prefer: 'resolution=ignore-duplicates,return=minimal', body: { token: arg.slice(6), tg_id: f.id, first_name: f.first_name || null, last_name: f.last_name || null, username: f.username || null } });
-        // бот один на обидві бази: якщо у Vercel задано тестову базу, той самий токен входу пишемо й туди — тоді вхід через бота працює і на тестовому сайті
-        const tUrl = String(process.env.TEST_SUPABASE_URL || '').trim(), tKey = String(process.env.TEST_SUPABASE_SERVICE_KEY || '').replace(/\s+/g, '');
-        if (tUrl && tKey) {
-          try { await fetch(`${tUrl}/rest/v1/tg_logins?on_conflict=token`, { method: 'POST', headers: { apikey: tKey, Authorization: `Bearer ${tKey}`, 'Content-Type': 'application/json', Prefer: 'resolution=ignore-duplicates,return=minimal' }, body: JSON.stringify({ token: arg.slice(6), tg_id: f.id, first_name: f.first_name || null, last_name: f.last_name || null, username: f.username || null }) }); } catch (e) {}
-        }
-        await L.tg('sendMessage', { chat_id: chat.id, text: '✅ Вхід підтверджено. Повернись у браузер — гра вже знає, що це ти.\n\nЯкщо ти не намагався увійти на upl-30-0.vercel.app, просто проігноруй це повідомлення.' });
+        // вхід на сайт через бота: браузер відкрив t.me/upl30_bot?start=login_<токен>. Одразу не прив'язуємо — посилання могли підсунути;
+        // прив'язуємо лише після кнопки «Підтвердити вхід» (callback нижче) від цього ж користувача
+        await L.tg('sendMessage', { chat_id: chat.id, text: '🔐 Вхід у 30-0 УПЛ на сайті upl-30-0.vercel.app.\n\nНатисни «Підтвердити вхід», лише якщо це ти щойно натиснув «Увійти через Telegram» у своєму браузері. Якщо ні — просто проігноруй це повідомлення.',
+          reply_markup: { inline_keyboard: [[{ text: '✅ Підтвердити вхід', callback_data: arg }]] } });
       } else if (cmd === '/start' || cmd === '/help') {
         await L.tg('sendMessage', { chat_id: chat.id, text: isPrivate ? HELLO : GROUP_HELLO, reply_markup: { inline_keyboard: [[playButton(isPrivate)]] } });
       } else if (cmd === '/play') {
