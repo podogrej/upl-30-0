@@ -2,7 +2,7 @@
 // POST {season_id}: сервер бере запис сезону з журналу, перевіряє seed, склад, рейтинги й правила формату
 // і перераховує сезон тим самим рушієм, що й гра (lib/engine.js). Результат: seasons.verified = true/false.
 const crypto = require('crypto');
-const { sb } = require('./_device.js');   // запити до бази ключем сервера
+const { sb, rateLimit } = require('./_device.js');   // запити до бази ключем сервера
 const xiHash = xi => crypto.createHash('sha256').update(xi.map(x => `${x.id}|${x.slot}|${x.c}|${x.y}`).join(';')).digest('hex');
 let E = null;
 function engine() { if (!E) E = require('../lib/engine.js'); return E; }
@@ -19,7 +19,7 @@ function yearOk(row, E, chalYearOk) {
 
 // Сайт попередньої версії ще відкритий у гравців (кеш браузера, Mini App). Якщо його сезон повністю сходиться з новим рушієм
 // (симуляція між цими версіями не мінялася) — приймаємо; не сходиться (напр. у гравця змінилася позиція в пулі) — «не перевірити» (null), не «підробка».
-const PREV_VERSIONS = ['0.53', '0.52', '0.51'];
+const PREV_VERSIONS = ['0.54', '0.53', '0.52', '0.51'];
 
 // головна перевірка: повертає [true|false|null, пояснення]; null — перевірити неможливо (стара версія тощо)
 function check(row, seedRow, opts = {}) {
@@ -124,6 +124,7 @@ module.exports = async (req, res) => {
   try {
     let b = req.body || {}; if (typeof b === 'string') b = JSON.parse(b);
     const id = +b.season_id; if (!id) return res.status(400).json({ error: 'season_id?' });
+    if (await rateLimit(req, res, 'verify')) return;   // за IP (0.55)
     const r = await verifyById(id);
     if (r.status) return res.status(r.status).json({ error: r.error });
     res.status(200).json(r);

@@ -1,18 +1,36 @@
 // Античит без браузера: справжні api/seed.js і api/verify.js, база — у пам'яті.
+// З 0.55 ще: /api/backup (секрет Cron, gzip у сховищі, скільки файлів лишати), вступ у лігу групи лише учасником (getChatMember — заглушка),
+// обмеження частоти (rate_hit — лічильник у пам'яті) → 429.
 // Чесний сезон (склад з рейтингами effRating, seed від сервера, перерахунок тим самим рушієм) має пройти,
 // кожна підробка — ні. Запуск: node tools/tests/cheat.js
 const path = require('path'), crypto = require('crypto');
 const ROOT = path.join(__dirname, '..', '..');
-process.env.SUPABASE_SERVICE_KEY = 'svc';
-const DB = { season_seeds: [], seasons: [], daily_results: [], challenges: [], challenge_results: [], trophies: [], league_results: [] }; let sid = 0;
+process.env.SUPABASE_SERVICE_KEY = 'svc'; process.env.TG_TOKEN = '123:TEST'; process.env.CRON_SECRET = 'cron-secret-0123456789';
+const DB = { season_seeds: [], seasons: [], daily_results: [], challenges: [], challenge_results: [], trophies: [], league_results: [], leagues: [], league_members: [], league_boards: [] }; let sid = 0;
+// 0.55: сховище Supabase (backups), Telegram (getChatMember), лічильник rate_hit
+const STORE = {}, MEMBERS = {}, RATE = {}; let RATE_ON = false;
+const jres = j => ({ ok: true, status: 200, json: async () => j, text: async () => JSON.stringify(j) });
 // база 0.53: секрети пристроїв (device_ok), перемикач кроку 2, унікальна офіційна спроба дня (В2)
 const SECRETS = {}; let LEGACY_OPEN = true, SQL053 = true;
 const err = (status, j) => ({ ok: false, status, text: async () => JSON.stringify(j) });
 global.fetch = async (url, o = {}) => {
   const u = new URL(url); const t = u.pathname.split('/').pop(); const m = o.method || 'GET';
+  if (u.hostname === 'api.telegram.org') {
+    const a = JSON.parse(o.body || '{}');
+    if (t === 'getChatMember') { const st = (MEMBERS[a.chat_id] || {})[a.user_id]; return jres(st ? { ok: true, result: { status: st, is_member: st !== 'left' } } : { ok: false, description: 'Bad Request: user not found' }); }
+    return jres({ ok: true, result: { message_id: 1 } });
+  }
+  if (u.pathname.startsWith('/storage/v1/')) {
+    const rest = u.pathname.slice('/storage/v1/'.length);
+    if (m === 'POST' && rest.startsWith('object/list/backups')) return jres(Object.keys(STORE).sort().map(name => ({ name })));
+    if (m === 'DELETE' && rest === 'object/backups') { JSON.parse(o.body).prefixes.forEach(n => { delete STORE[n]; }); return jres([]); }
+    if (m === 'POST' && rest.startsWith('object/backups/')) { STORE[decodeURIComponent(rest.slice('object/backups/'.length))] = Buffer.from(o.body); return jres({ Key: rest }); }
+    return err(400, { message: 'storage?' });
+  }
   if (u.pathname.includes('/rpc/')) {
     const a = JSON.parse(o.body || '{}');
     if (!SQL053) return err(404, { code: 'PGRST202', message: 'Could not find the function public.' + t });
+    if (t === 'rate_hit') { if (!RATE_ON) return jres(true); RATE[a.p_key] = (RATE[a.p_key] || 0) + 1; return jres(RATE[a.p_key] <= a.p_limit); }
     if (t === 'legacy_writes_open') return { ok: true, status: 200, text: async () => JSON.stringify(LEGACY_OPEN) };
     if (t === 'device_ok') {
       if (String(a.p_secret || '').length < 16) return err(400, { code: '22023', message: 'device?' });
@@ -207,6 +225,74 @@ function honestXi(formation) {
   ok('save без device_ok у базі — 503 fallback (браузер пише як 0.52)', fb.c === 503 && fb.j.fallback === true);
   ok('seed без device_ok у базі — працює', (await call(seedH, { device_id: me, secret: mySecret, xi, formation, mode: 'normal', format: 'classic', year })).c === 200);
   SQL053 = true;
+
+  // ===== 0.55: резервна копія (/api/backup) =====
+  const zlib = require('zlib');
+  const backupH = require(path.join(ROOT, 'api', 'backup.js'));
+  const callReq = (h, req) => new Promise(res => { h({ method: 'GET', query: {}, headers: {}, ...req }, { status(c) { this.c = c; return this; }, json(j) { res({ c: this.c, j }); } }); });
+  ok('backup: без заголовка — 401', (await callReq(backupH, {})).c === 401 && !Object.keys(STORE).length);
+  ok('backup: чужий секрет — 401', (await callReq(backupH, { headers: { authorization: 'Bearer wrong' } })).c === 401 && !Object.keys(STORE).length);
+  { const cs = process.env.CRON_SECRET; process.env.CRON_SECRET = '';
+    ok('backup: CRON_SECRET не задано — 401 (закрито за замовчуванням)', (await callReq(backupH, { headers: { authorization: 'Bearer ' } })).c === 401);
+    process.env.CRON_SECRET = cs; }
+  const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Kyiv', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+  const dAgo = n => new Date(Date.UTC(+today.slice(0, 4), +today.slice(5, 7) - 1, +today.slice(8, 10)) - n * 864e5).toISOString().slice(0, 10);
+  const mondayAgo = min => { for (let n = min; ; n++) if (new Date(dAgo(n)).getUTCDay() === 1) return n; };
+  const nonMondayAgo = min => { for (let n = min; ; n++) if (new Date(dAgo(n)).getUTCDay() !== 1) return n; };
+  const keep = [dAgo(1), dAgo(13), dAgo(mondayAgo(20)), dAgo(mondayAgo(50))].map(d => d + '.json.gz').concat(['notes.txt']);
+  const drop = [dAgo(nonMondayAgo(14)), dAgo(nonMondayAgo(30)), dAgo(mondayAgo(56)), dAgo(mondayAgo(90))].map(d => d + '.json.gz');
+  for (const n of keep.concat(drop)) STORE[n] = Buffer.from('old');
+  const bk = await callReq(backupH, { headers: { authorization: 'Bearer ' + process.env.CRON_SECRET } });
+  let dump = null; try { dump = JSON.parse(zlib.gunzipSync(STORE[today + '.json.gz'])); } catch (e) {}
+  ok('backup: з секретом — файл YYYY-MM-DD.json.gz, gzip JSON з усіма таблицями', bk.c === 200 && !!dump && backupH.TABLES.every(T => Array.isArray(dump.tables[T.t])),
+    `${bk.c} ${bk.j.file || bk.j.error} ${bk.j.bytes} Б`);
+  ok('backup: рядки й кількості сходяться (seasons, daily_results, trophies)', !!dump && dump.counts.seasons === DB.seasons.length && dump.tables.seasons.length === DB.seasons.length
+    && dump.tables.seasons.some(r => Array.isArray(r.xi)) && dump.counts.daily_results === DB.daily_results.length && dump.counts.trophies === DB.trophies.length, dump && JSON.stringify(dump.counts));
+  ok('backup: лишились 14 днів + понеділки за 8 тижнів, старші видалено, чужі файли не чіпаємо', keep.every(n => STORE[n]) && drop.every(n => !STORE[n]), `видалено ${(bk.j.deleted || []).join(', ')}`);
+  const bk2 = await callReq(backupH, { headers: { authorization: 'Bearer ' + process.env.CRON_SECRET } });
+  ok('backup: повторний запуск того ж дня — перезапис, без помилок', bk2.c === 200 && Object.keys(STORE).filter(n => n.startsWith(today)).length === 1);
+
+  // ===== 0.55: ліги груп Telegram — вступ лише учасником групи (аудит В1) =====
+  const leagueH = require(path.join(ROOT, 'api', 'league.js'));
+  const hm = (k, d) => crypto.createHmac('sha256', k).update(d).digest();
+  const initData = (user, start_param) => { const p = new URLSearchParams({ auth_date: String(Math.floor(Date.now() / 1000)), user: JSON.stringify(user), start_param });
+    const dcs = [...p.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([k, v]) => `${k}=${v}`).join('\n');
+    p.set('hash', hm(hm('WebAppData', process.env.TG_TOKEN), dcs).toString('hex')); return p.toString(); };
+  const CHAT = -100123;
+  DB.leagues.push({ chat_id: CHAT, title: 'Група друзів' });
+  MEMBERS[CHAT] = { 501: 'member', 502: 'administrator', 503: 'left', 504: 'kicked', 505: 'restricted' };
+  const join = uid => call(leagueH, { initData: initData({ id: uid, first_name: 'U' + uid }, 'g' + CHAT) });
+  const inLeague = uid => DB.league_members.some(x => String(x.chat_id) === String(CHAT) && String(x.tg_user_id) === String(uid));
+  const j1 = await join(501);
+  ok('ліга: учасник групи вступає', j1.c === 200 && j1.j.joined && j1.j.joined.length === 1 && inLeague(501), `${j1.c} ${JSON.stringify(j1.j)}`);
+  ok('ліга: адміністратор групи вступає', (await join(502)).c === 200 && inLeague(502));
+  ok('ліга: обмежений учасник (restricted) вступає', (await join(505)).c === 200 && inLeague(505));
+  for (const [uid, why] of [[503, 'вийшов з групи'], [504, 'вигнаний'], [599, 'не з цієї групи']]) {
+    const x = await join(uid); ok(`ліга: ${why} — 403, у лігу не додано`, x.c === 403 && !inLeague(uid), `${x.c}`); }
+  const x6 = await call(leagueH, { initData: initData({ id: 599, first_name: 'U599' }, 'g' + CHAT), result: { w: 20, d: 5, l: 5, pts: 65, place: 2, gf: 60, ga: 30, day: today } });
+  ok('ліга: чужий із результатом — вступ пропущено (результат лише в його ліги)', x6.c === 200 && !(x6.j.joined || []).length && !inLeague(599) && !DB.league_results.some(r => String(r.tg_user_id) === '599'), `${x6.c} ${JSON.stringify(x6.j)}`);
+  ok('ліга: підробний підпис — 401', (await call(leagueH, { initData: initData({ id: 501 }, 'g' + CHAT).replace(/hash=[0-9a-f]+/, 'hash=00') })).c === 401);
+
+  // ===== 0.55: обмеження частоти → 429 =====
+  RATE_ON = true;
+  const rdev = crypto.randomUUID(), rsec = 'rate-secret-0123456789abcd';
+  const codes = [];
+  for (let i = 0; i < 21; i++) codes.push((await call(seedH, { device_id: rdev, secret: rsec, xi, formation, mode: 'normal', format: 'classic', year })).c);
+  const last = await call(seedH, { device_id: rdev, secret: rsec, xi, formation, mode: 'normal', format: 'classic', year });
+  ok('rate: /api/seed — 20 за хвилину з пристрою, далі 429 з поясненням українською', codes.slice(0, 20).every(c => c === 200) && codes[20] === 429 && last.c === 429 && /Забагато/.test(last.j.error), codes.join(','));
+  ok('rate: інший пристрій не зачеплено', (await call(seedH, { device_id: crypto.randomUUID(), secret: 'other-secret-0123456789ab', xi, formation, mode: 'normal', format: 'classic', year })).c === 200);
+  const n429 = DB.season_seeds.length;
+  ok('rate: після 429 seed не видається', (await call(seedH, { device_id: rdev, secret: rsec, xi, formation, mode: 'normal', format: 'classic', year })).c === 429 && DB.season_seeds.length === n429);
+  const vcodes = []; for (let i = 0; i < 31; i++) vcodes.push((await callReq(verH, { method: 'POST', headers: { 'x-forwarded-for': '10.0.0.7, 172.16.0.1' }, body: { season_id: 1 } })).c);
+  ok('rate: /api/verify — за IP (x-forwarded-for), 31-й — 429', vcodes.slice(0, 30).every(c => c === 200) && vcodes[30] === 429, vcodes.slice(28).join(','));
+  ok('rate: /api/verify з іншої IP — працює', (await callReq(verH, { method: 'POST', headers: { 'x-forwarded-for': '10.0.0.8' }, body: { season_id: 1 } })).c === 200);
+  const scodes = []; for (let i = 0; i < 41; i++) scodes.push((await call(saveH, { kind: 'trophies', device_id: me, secret: mySecret, ids: ['nice'] })).c);
+  ok('rate: /api/save — 40 за хвилину з пристрою, далі 429', scodes.slice(0, 40).every(c => c === 200) && scodes[40] === 429, scodes.slice(38).join(','));
+  const ipDev = []; for (let i = 0; i < 81; i++) ipDev.push((await callReq(seedH, { method: 'POST', headers: { 'x-forwarded-for': '10.9.9.9' }, body: { device_id: crypto.randomUUID(), secret: 'ip-secret-0123456789abcdef', xi, formation, mode: 'normal', format: 'classic', year } })).c);
+  ok('rate: підміна device_id не допомагає — ширший ліміт на IP (80), далі 429', ipDev.slice(0, 80).every(c => c === 200) && ipDev[80] === 429, ipDev.slice(78).join(','));
+  SQL053 = false;
+  ok('rate: SQL 0.55 ще не виконано (rate_hit немає) — пропускаємо', (await call(seedH, { device_id: rdev, secret: rsec, xi, formation, mode: 'normal', format: 'classic', year })).c === 200);
+  SQL053 = true; RATE_ON = false;
   console.log(`нога у складі: ${foot ? `${foot.n} ${foot.slot} нога ${E.DATA.foot[foot.id]} r0 ${foot.r0} → r ${foot.r}` : 'нема'}`);
   console.log(bad ? `ПОМИЛКИ: ${bad}` : 'УСІ ПІДРОБКИ ВІДХИЛЕНО');
   process.exit(bad ? 1 : 0);
