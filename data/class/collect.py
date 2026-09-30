@@ -21,7 +21,7 @@
      (молодіжні U17–U23, олімпійські, «B» — не рахуються як основна збірна);
    - /player/<id>/performance-game → усі матчі гравця в базі TM; рахуємо зіграні (participationState = played)
      матчі в турнірах типу 10 (єврокубки клубів: CL, CLQ, EL, ELQ, UEFA, UCOL, ECLQ, Кубок кубків, Інтертото, Суперкубок УЄФА).
-3. www.transfermarkt.com/ceapi/transferHistory/list/<id> → найбільша сума трансферу (оренда «Loan fee» окремо).
+   - /transfer/history/player/<id> → найбільша сума трансферу (платна оренда — окремо).
 4. Вікіпедія (action=raw, кілька сторінок): «Ukrainian Footballer of the Year» (опитування «Український футбол», топ-3 з 1991;
    премія «Команди» 1995–2016 і «Команди1» 2017–2020, топ-3), шаблон «Ukrainian Premier League top scorers»,
    «<рік> Ballon d'Or» (місця 1–30), «UEFA Team of the Year» (опитування вболівальників UEFA.com 2001–2020).
@@ -357,13 +357,21 @@ def get_perf(t):
 
 
 def get_transfers(t):
+    """tmapi /transfer/history/player/<id> → [[дата, клуб звідки (id), клуб куди (id), сума текстом, ринкова вартість, сума €, тип]]"""
     if t in TRF:
         return TRF[t]
-    d = fetch_json(f'https://www.transfermarkt.com/ceapi/transferHistory/list/{t}', 'www', 6)
-    if d is None or 'transfers' not in d:
+    d = fetch_json(f'{TMAPI}/transfer/history/player/{t}', 'tmapi', 1.5)
+    if not d or not d.get('success'):
         return None
-    TRF[t] = [[x.get('dateUnformatted', ''), (x.get('from') or {}).get('clubName', ''), (x.get('to') or {}).get('clubName', ''),
-               x.get('fee', ''), x.get('marketValue', '')] for x in d['transfers']]
+    out = []
+    for x in ((d.get('data') or {}).get('history') or {}).get('terminated', []):
+        det = x.get('details') or {}
+        fee = det.get('fee') or {}
+        c = fee.get('compact') or {}
+        out.append([(det.get('date') or '')[:10], (x.get('transferSource') or {}).get('clubId', ''), (x.get('transferDestination') or {}).get('clubId', ''),
+                    (c.get('prefix', '') + c.get('content', '') + c.get('suffix', '')).strip(), ((det.get('marketValue') or {}).get('value')),
+                    fee.get('value'), (x.get('typeDetails') or {}).get('type', '')])
+    TRF[t] = out
     jsave('tm_transfers.json', TRF)
     return TRF[t]
 
@@ -523,7 +531,8 @@ def main():
     collect_tm()
     resolve_ids(search=True)
     collect_tm()
-    club_names([h[0] for v in NAT.values() for h in v] + [c for v in PERF.values() for c in v.get('euro_by_club', {})])
+    club_names([h[0] for v in NAT.values() for h in v] + [c for v in PERF.values() for c in v.get('euro_by_club', {})]
+               + [str(x[i]) for v in TRF.values() for x in v for i in (1, 2)])
     aw = awards_raw()
     # зіставлення: назва статті → наша людина. Спершу грубий фільтр за іменем (TM), потім Wikidata P2446 = наш TM id;
     # якщо у Wikidata немає TM id або стаття-перенаправлення — лише однозначний збіг повного імені (≥ 0.9), з позначкою.
@@ -601,18 +610,18 @@ def write(by_tm, unmatched):
             tr = TRF.get(t)
             if tr is not None:
                 best, loan = None, None
-                for d, fr, to, fee, mv in tr:
-                    v = money(fee)
-                    if v is None:
+                for d, fr, to, fee, mv, v, typ in tr:
+                    fr, to = CLUBS.get(str(fr), str(fr)), CLUBS.get(str(to), str(to))
+                    if not v:
                         continue
-                    if 'loan' in fee.lower():
+                    if 'LOAN' in (typ or '').upper():
                         loan = max(loan or 0, v)
                     elif best is None or v > best[0]:
                         best = (v, f'{d[:4]} {fr} → {to}')
                 if best:
                     r['max_fee_eur'], r['max_fee_move'] = best
                 r['max_loan_fee_eur'] = loan or ''
-                src.append(f'https://www.transfermarkt.com/ceapi/transferHistory/list/{t}')
+                src.append(f'{TMAPI}/transfer/history/player/{t}')
             if t not in NAT or t not in PERF or t not in TRF:
                 note.append('дані TM зібрано не повністю (бюджет/помилка)')
             a = by_tm.get(t, [])
@@ -627,7 +636,7 @@ def write(by_tm, unmatched):
         w = csv.DictWriter(f, fieldnames=list(rows[0].keys()))
         w.writeheader()
         w.writerows(rows)
-    full = sum(1 for r in rows if r['tm_id'] and r['caps'] != '' and r['euro_apps'] != '' and r['sources'].count('ceapi'))
+    full = sum(1 for r in rows if r['tm_id'] and r['caps'] != '' and r['euro_apps'] != '' and r['sources'].count('transfer/history'))
     log('рядків', len(rows), 'з TM id', sum(1 for r in rows if r['tm_id']), 'повних', full,
         'з нагородами', sum(1 for r in rows if r['awards']))
     log('нагороди без збігу (топ):', unmatched.most_common(15))
