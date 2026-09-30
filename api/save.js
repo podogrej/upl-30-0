@@ -7,7 +7,7 @@
 //   kind 'chal_result' {row}           → результат прийнятого виклику → {ok}
 // Результат виклику дня окремо не пишеться: його пише сервер із перевіреного сезону (api/verify.js, syncDaily).
 // 503 {fallback:true} — у базі ще немає device_ok (SQL 0.53 не виконано): браузер тоді пише як 0.52.
-const { sb, deviceOk, tgUser, body } = require('./_device.js');
+const { sb, deviceOk, tgUser, body, rateLimit } = require('./_device.js');
 const { verifyById } = require('./verify.js');
 
 const int = (v, lo, hi) => { const n = Number(v); return Number.isInteger(n) && n >= lo && n <= hi ? n : null; };
@@ -47,6 +47,8 @@ module.exports = async (req, res) => {
   let stage = 'body';
   try {
     const b = body(req);
+    stage = 'rate';
+    if (await rateLimit(req, res, 'save', b.device_id)) return;
     stage = 'device';
     const dev = await deviceOk(b.device_id, b.secret);
     if (dev.status) return res.status(dev.status).json({ error: dev.error, fallback: dev.fallback || undefined });

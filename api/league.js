@@ -1,6 +1,7 @@
 // 30-0 УПЛ — ліги груп Telegram (адреса /api/league)
 // POST {initData, result?}: перевіряє підпис Telegram, додає гравця в лігу групи (якщо гру відкрито з кнопки групи)
 //   і записує офіційний результат виклику дня в усі його ліги, оновлюючи табло в чатах.
+//   Вступ — лише якщо бот бачить гравця учасником групи (getChatMember, з 0.55), у табло — лише перевірені сезони (з 0.52).
 // GET ?chat=ID: дані ліги для картки в грі.
 const L = (() => {   // спільні функції (вбудовано, щоб файл не залежав від інших)
 const crypto = require('crypto');
@@ -112,6 +113,16 @@ async function upsertBoard(chat_id, day, { forceNew = false } = {}) {
 return { SB_URL, env, esc, tg, sb, kyivDate, dayNo, dayShort, checkMiniApp, nameOf, playUrl, playKb, sortRes, onlyVerified, standings, boardText, upsertBoard };
 })();
 
+// чи є користувач учасником групи (бот має бути в групі). Помилка Telegram — «ні» (закрито за замовчуванням)
+const MEMBER = new Set(['member', 'administrator', 'creator']);
+async function isMember(chat_id, user_id) {
+  try {
+    const r = await L.tg('getChatMember', { chat_id, user_id });
+    const st = r && r.ok && r.result ? r.result.status : null;
+    return MEMBER.has(st) || (st === 'restricted' && r.result.is_member !== false);
+  } catch (e) { return false; }
+}
+
 module.exports = async (req, res) => {
   let stage = 'start';
   try {
@@ -139,7 +150,13 @@ module.exports = async (req, res) => {
     if (m) {
       const chat_id = m[1];
       const [lg] = await L.sb(`leagues?chat_id=eq.${chat_id}&select=chat_id,title`) || [];
-      if (lg) {
+      // В1 (0.55): вступити можна лише в лігу групи, де бот бачить гравця учасником (getChatMember). Інакше — 403
+      // (з результатом у запиті — вступ пропускаємо, результат іде лише в ліги, де гравець уже є).
+      if (lg && !(await isMember(chat_id, u.id))) {
+        if (!b.result) return res.status(403).json({ error: 'not a member of this chat' });
+        lg.denied = true;
+      }
+      if (lg && !lg.denied) {
         await L.sb('league_members?on_conflict=chat_id,tg_user_id', { method: 'POST', prefer: 'resolution=merge-duplicates,return=minimal', body: { chat_id, tg_user_id: u.id, name } });
         joined.push({ chat_id, title: lg.title });
       }

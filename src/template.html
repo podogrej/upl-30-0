@@ -448,7 +448,7 @@ td .sub{font-size:11px;color:var(--muted);margin-top:2px;display:flex;gap:6px;al
     </div>
 </div>
 <div class="overlay" id="viewBox" hidden><div class="box"><div class="vhead"><h3 id="viewTitle">Склад</h3><button class="ghost" id="viewClose">Закрити</button></div><div id="viewBody"></div></div></div>
-<div class="foot">30-0 УПЛ · <a href="#" id="newsBtn">Що нового у версії 0.54<b id="newsDot" hidden></b></a> · <a href="#" id="themeBtn" class="thm" role="switch" aria-checked="false" aria-label="Світла тема"></a> · неофіційний фан-проєкт</div>
+<div class="foot">30-0 УПЛ · <a href="#" id="newsBtn">Що нового у версії 0.55<b id="newsDot" hidden></b></a> · <a href="#" id="themeBtn" class="thm" role="switch" aria-checked="false" aria-label="Світла тема"></a> · неофіційний фан-проєкт</div>
 <script id="pool" type="application/json">__POOL__</script>
 <script>
 (function(){
@@ -931,11 +931,14 @@ function tierOf(r){
 }
 /*__TROPHIES__*/
 // seed сезону видає сервер (після того, як склад зібрано), щоб результат не можна було підібрати перебором; офлайн — локальний seed
+// 429 (забагато запитів за хвилину, з 0.55): сезон грається з локальним seed, під результатом — м'яка примітка (RATE_NOTE)
+let RATE_NOTE='';
 async function fetchSeed(year){
   if(!ONLINE)return null;
   const ctl=typeof AbortController!=='undefined'?new AbortController():null;const tm=setTimeout(()=>ctl&&ctl.abort(),3500);
   try{const r=await _fetch('/api/seed',{method:'POST',headers:{'Content-Type':'application/json'},signal:ctl&&ctl.signal,
       body:JSON.stringify({device_id:deviceId(),secret:devSecret(),xi:S.slots.map(s=>({id:s.player.id,slot:s.slot,c:s.player.club,y:s.player.y})),formation:S.formation,mode:S.mode,format:S.format,year,daily:!!(S.daily&&!S.daily.practice)})});
+    if(r.status===429){const j=await r.json().catch(()=>({}));RATE_NOTE=j.error||'Забагато запитів за хвилину. Зачекай трохи й спробуй ще раз.';}
     if(!r.ok)return null;const j=await r.json();return j&&j.seed?j:null;}catch(e){return null;}finally{clearTimeout(tm);}
 }
 let SIM_BUSY=false;
@@ -947,7 +950,7 @@ async function playSeason(year){
   if(S.locked&&S.year&&!year){year=S.year;srv=S.srv;S.srv=null;}   // рік і seed видано під час фіксації складу
   else{if(S.daily){year=DAILY.year;}else if(S.chal){year=S.chal.year;}if(!year)year=oppYear();srv=await fetchSeed(year);}
   sb.disabled=false;sb.textContent=sbt;SIM_BUSY=false;
-  const seed=srv?srv.seed:Math.floor(Math.random()*2147483647);rnd=mulberry32(seed);const r=simulate(xi,mode,year);rnd=Math.random;r.seed=seed;r.seedId=srv?srv.seed_id:null;S.result=r;
+  const seed=srv?srv.seed:Math.floor(Math.random()*2147483647);rnd=mulberry32(seed);const r=simulate(xi,mode,year);rnd=Math.random;r.seed=seed;r.seedId=srv?srv.seed_id:null;r.slow=srv?'':RATE_NOTE;RATE_NOTE='';S.result=r;
   // xP: той самий склад проти того самого сезону, 300 прогонів
   if(S.pre&&year===S.year){r.xp=S.pre.xp;r.egf=S.pre.egf;r.ega=S.pre.ega;}
   else{let sp=0,sg=0,sa=0;const N=300;for(let k=0;k<N;k++){const q=simulate(xi,mode,year,true);sp+=q.pts;sg+=q.gf;sa+=q.ga;}r.xp=sp/N;r.egf=sg/N;r.ega=sa/N;}
@@ -1085,16 +1088,16 @@ function logSeason(r){
     xi:S.slots.map(s=>{const p=s.player;const q=r.players.find(v=>v.id===p.id)||{};return {n:p.name,id:p.id,slot:s.slot,r:p.r,r0:p.r0,c:p.club,y:p.y,f:q.form||0,g:q.g||0,a:q.a||0,rt:q.rt?Math.round(q.rt*100)/100:null};}),
     tbl:r.table.map(t=>({n:t.n,w:t.w,d:t.d,l:t.l,gf:t.gf,ga:t.ga,pts:t.pts,me:t.id==='USER'}))};
   // 0.53: сезон пише й одразу перевіряє сервер (/api/save, секрет пристрою); запасний шлях — прямий запис, як 0.52
-  saveApi('season',{row}).then(j=>{r.rowId=j.id;loadHomeStats();verifiedUi(r,j);}).catch(e=>{if(!e.legacy){console.warn('save',e);return;}
+  saveApi('season',{row}).then(j=>{r.rowId=j.id;loadHomeStats();verifiedUi(r,j);}).catch(e=>{if(!e.legacy){if(e.status===429){r.slow=e.message;verifiedUi(r,{});}console.warn('save',e);return;}
     Object.assign(row,tgFields());const ok=rows=>{if(rows&&rows[0])r.rowId=rows[0].id;loadHomeStats();if(r.rowId&&r.seedId)verifySeason(r);};
     const tryPost=(n)=>sbPost('seasons',row).then(ok).catch(e=>{const m=String(e&&e.message).match(/'([a-z_]+)' column/);if(m&&n>0&&m[1] in row){delete row[m[1]];if(m[1]==='tg_user_id')delete row.tg_name;tryPost(n-1);}else console.warn('log',e);});tryPost(6);});
 }
 // сервер перераховує сезон і ставить позначку «перевірено»
 async function verifySeason(r){
-  try{const res=await _fetch('/api/verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({season_id:r.rowId})});verifiedUi(r,await res.json());}catch(e){}
+  try{const res=await _fetch('/api/verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({season_id:r.rowId})});const j=await res.json();if(res.status===429)r.slow=j.error;verifiedUi(r,j);}catch(e){}
 }
 function verifiedUi(r,j){r.verified=j.verified;
-    const el=document.getElementById('verLine');if(el&&S.result===r){el.hidden=j.verified!==true;el.innerHTML=ic('check-decagram','sm')+'Результат перевірено сервером';}
+    const el=document.getElementById('verLine');if(el&&S.result===r){el.hidden=j.verified!==true&&!r.slow;if(j.verified===true)el.innerHTML=ic('check-decagram','sm')+'Результат перевірено сервером';else if(r.slow)el.textContent=r.slow;}
     // з 0.52 результат дня в таблицю пише сервер (з перевіреного сезону) — надсилати вручну вже не треба
     if(j.verified===true&&S.result===r&&S.daily&&!S.daily.practice){lsSet("upl30_sent_"+DAY,true);const f=document.getElementById('lbForm'),m=document.getElementById('lbMsg');if(f&&!f.hidden){f.hidden=true;m.textContent='Твій результат уже в таблиці дня.';document.getElementById('lbAcct').hidden=true;loadLb(document.getElementById('lbTable'));}}
 }
@@ -1218,7 +1221,7 @@ function shareTextOf(r,noLink,noGrid){   // noGrid: підпис до картк
   return `${head}${gold?'\n'+tier:''}\n\n${rec}\n${r.pts} ${ptsWord(r.pts)} · ${r.place} місце · голи ${r.gf}:${r.ga}${noGrid?'':'\n\n'+gridOf(r)}${noGrid?'\n':''}${top}${stk}${tro}${link}`;
 }
 function renderShare(r){
-  {const v=document.getElementById('verLine');if(v)v.hidden=true;}
+  {const v=document.getElementById('verLine');if(v){v.hidden=!r.slow;if(r.slow)v.textContent=r.slow;}}
   document.getElementById('shareText').value=shareTextOf(r);
   document.getElementById('shareImg').hidden=true;document.getElementById('shareHint').hidden=true;document.getElementById('cardActs').hidden=true;document.getElementById('copyMsg').textContent='';
 }
@@ -1236,7 +1239,7 @@ document.getElementById('cardBtn').onclick=async()=>{try{await document.fonts.re
 document.getElementById('cardTgBtn').onclick=async()=>{const msg=document.getElementById('cardMsg'),b=document.getElementById('cardTgBtn');if(!CARD_CANVAS)return;b.disabled=true;msg.textContent='Надсилаємо…';
   try{const r=await _fetch('/api/card',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({initData:TG.initData,image:CARD_CANVAS.toDataURL('image/jpeg',0.9),caption:S.result?shareTextOf(S.result,false,true):''})});
     const j=await r.json().catch(()=>({}));
-    if(j.need_start){msg.innerHTML='Спочатку відкрий чат з ботом і натисни «Start», потім спробуй ще раз. <button class="ghost" id="openBotBtn2" style="padding:4px 10px">Відкрити @'+TG_BOT+'</button>';document.getElementById('openBotBtn2').onclick=()=>TG.openTelegramLink('https://t.me/'+TG_BOT+'?start=card');}else msg.textContent=j.ok?'Готово — картка в чаті з @'+TG_BOT+'.':'Не вдалося надіслати ('+String(j.error||r.status).slice(0,80)+').';}
+    if(j.need_start){msg.innerHTML='Спочатку відкрий чат з ботом і натисни «Start», потім спробуй ще раз. <button class="ghost" id="openBotBtn2" style="padding:4px 10px">Відкрити @'+TG_BOT+'</button>';document.getElementById('openBotBtn2').onclick=()=>TG.openTelegramLink('https://t.me/'+TG_BOT+'?start=card');}else msg.textContent=j.ok?'Готово — картка в чаті з @'+TG_BOT+'.':r.status===429?String(j.error):'Не вдалося надіслати ('+String(j.error||r.status).slice(0,80)+').';}
   catch(e){msg.textContent='Не вдалося надіслати: немає зв’язку.';}
   b.disabled=false;};
 document.getElementById('cardShareBtn').onclick=()=>{const msg=document.getElementById('cardMsg');if(!CARD_CANVAS)return;
@@ -1273,9 +1276,8 @@ function drawCard(r){
 }
 document.getElementById('replayBtn').onclick=()=>playSeason(null);
 // ---------- «Що нового»: коротко й по-людськи про останню версію (технічний журнал — CHANGELOG.md у репозиторії)
-const WHATSNEW={v:'0.54',date:'30.09.2026',items:[
-  ['account-group','Без двійників','Прибрали дублікати гравців: одного футболіста більше не можна взяти в склад двічі.'],
-  ['soccer-field','Виправили дані','Позиції, імена й громадянство кількох гравців — за Transfermarkt і протоколами сезонів.']]};
+const WHATSNEW={v:'0.55',date:'30.09.2026',items:[
+  ['shield-check','Надійніше','Щоденні резервні копії бази й захист від зловживань.']]};
 function openNews(){const box=document.getElementById('viewBox');document.getElementById('viewTitle').textContent=`Що нового · версія ${WHATSNEW.v}`;
   document.getElementById('viewBody').innerHTML=`<div class="news">${WHATSNEW.items.map(([e,h,d])=>`<div class="ni">${ic(e,'lg')}<div><b>${esc(h)}</b><p>${esc(d)}</p></div></div>`).join('')}</div>`;
   box.hidden=false;lsSet('upl30_news_seen',WHATSNEW.v);document.getElementById('newsDot').hidden=true;}

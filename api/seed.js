@@ -4,7 +4,7 @@
 // З 0.53 браузер надсилає й секрет пристрою (secret): чужий пристрій не «спалить» офіційну спробу дня (аудит К5).
 // Без секрету (сайт 0.52) — лише до кроку 2 (sql/v054_close_writes.sql → legacy_writes_open() = false).
 const crypto = require('crypto');
-const { sb, deviceOk, legacyOpen, body, kyivDate, uuidRe } = require('./_device.js');
+const { sb, deviceOk, legacyOpen, body, kyivDate, uuidRe, rateLimit } = require('./_device.js');
 const xiHash = xi => crypto.createHash('sha256').update(xi.map(x => `${x.id}|${x.slot}|${x.c}|${x.y}`).join(';')).digest('hex');
 
 module.exports = async (req, res) => {
@@ -14,6 +14,8 @@ module.exports = async (req, res) => {
     const b = body(req);
     if (!uuidRe.test(String(b.device_id || ''))) return res.status(400).json({ error: 'device_id?' });
     if (!Array.isArray(b.xi) || b.xi.length !== 11) return res.status(400).json({ error: 'xi?' });
+    stage = 'rate';
+    if (await rateLimit(req, res, 'seed', b.device_id)) return;
     stage = 'device';
     if (b.secret != null) {
       const d = await deviceOk(b.device_id, b.secret);

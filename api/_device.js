@@ -49,6 +49,27 @@ function tgUser(initData) {
   if (!u || !u.id) return null;
   return { tg_user_id: +u.id, tg_name: ([u.first_name, u.last_name].filter(Boolean).join(' ') || u.username || '').slice(0, 64) };
 }
+// Обмеження частоти (0.55): лічильник у базі (rate_hits, функція rate_hit — лише service_role, sql/v055_backups.sql),
+// бо в пам'яті функції Vercel його не втримати — екземплярів багато. Ліміт на пристрій (device_id) і, ширший, на IP (x-forwarded-for):
+// так не допоможе й підміна device_id. Без device_id — лише IP. Помилка бази або SQL 0.55 ще не виконано — пропускаємо
+// (грі важливіше працювати, ніж лічити).
+const RATE_MSG = 'Забагато запитів за хвилину. Зачекай трохи й спробуй ще раз.';
+const LIMITS = { seed: 20, save: 40, verify: 30, card: 10, auth: 60 };   // auth: вхід через бота опитує кожні 2,5 с   // запитів за хвилину на пристрій; на IP — у IP_X разів більше
+const IP_X = 4;
+const ipOf = req => String((req.headers && (req.headers['x-forwarded-for'] || req.headers['x-real-ip'])) || '').split(',')[0].trim().slice(0, 64) || 'unknown';
+async function rateHit(key, limit) {
+  try { return (await sb('rpc/rate_hit', { method: 'POST', body: { p_key: key, p_limit: limit } })) !== false; }
+  catch (e) { if (!missingFn(e)) console.warn('rate', e.message); return true; }
+}
+// true — відповідь 429 уже надіслано, обробник має вийти
+async function rateLimit(req, res, name, device) {
+  const dev = uuidRe.test(String(device || '')) ? String(device).toLowerCase() : null;
+  const checks = [rateHit(`${name}:ip:${ipOf(req)}`, dev ? LIMITS[name] * IP_X : LIMITS[name])];
+  if (dev) checks.push(rateHit(`${name}:d:${dev}`, LIMITS[name]));
+  if ((await Promise.all(checks)).every(Boolean)) return false;
+  res.status(429).json({ error: RATE_MSG, rate: true });
+  return true;
+}
 const body = req => { let b = req.body || {}; if (typeof b === 'string') b = JSON.parse(b); return b; };
 const kyivDate = (d = new Date()) => new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Kyiv', year: 'numeric', month: '2-digit', day: '2-digit' }).format(d);
-module.exports = { sb, deviceOk, legacyOpen, tgUser, body, kyivDate, uuidRe, env };
+module.exports = { sb, deviceOk, legacyOpen, tgUser, body, kyivDate, uuidRe, env, rateLimit, RATE_MSG, LIMITS };

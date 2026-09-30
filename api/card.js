@@ -7,6 +7,7 @@
 //   так не потрібен особистий чат із ботом. Якщо сховища немає — запасний шлях через особистий чат (потрібен Start).
 //   Змінні: SUPABASE_URL (у тесті), SUPABASE_SERVICE_KEY.
 const crypto = require('crypto');
+const { rateLimit } = require('./_device.js');   // обмеження частоти (0.55)
 const env = k => String(process.env[k] || '').replace(/\s+/g, '');
 const SB_URL = (process.env.SUPABASE_URL || 'https://qruhcbwycrnfgzzdbljr.supabase.co').trim();
 async function storeCard(buf, ext) {   // → публічна адреса картки або null
@@ -42,6 +43,8 @@ module.exports = async (req, res) => {
     const token = env('TG_TOKEN'); if (!token) return res.status(500).json({ error: 'TG_TOKEN не задано' });
     stage = 'body';
     let b = req.body || {}; if (typeof b === 'string') b = JSON.parse(b);
+    stage = 'rate';
+    if (await rateLimit(req, res, 'card')) return;   // за IP (0.55)
     stage = 'signature';
     const u = checkMiniApp(String(b.initData || ''), token);
     if (!u || !u.id) return res.status(401).json({ error: 'bad telegram signature' });
