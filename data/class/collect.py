@@ -542,8 +542,13 @@ def main():
     def base(title):
         return re.sub(r'\s*\(.*?\)', '', title)
 
+    memo = {}
+
     def close(title):
-        return [t for t, n in tmnames.items() if n and sim(base(title), n) >= 0.8]
+        if title not in memo:
+            b = latin(base(title))
+            memo[title] = [t for t, n in tmnames.items() if n and difflib.SequenceMatcher(None, b, latin(n)).ratio() >= 0.8]
+        return memo[title]
     titles = [a[0] for a in aw if close(a[0])]
     titles_to_tm(titles)
     by_tm = collections.defaultdict(list)

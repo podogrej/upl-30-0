@@ -98,14 +98,13 @@ function f5Begin(){
   F5.teams=Array.from({length:F5.n},(_,i)=>f5Team(F5.names[i].trim(),(F5.teams_[i]||'').trim(),F5.forms[i]));
   F5.seed=Math.floor(Math.random()*2147483647);const r=f5Rng('wheel');F5.wheel=[];for(let i=0;i<2000;i++)F5.wheel.push(DATA.clubs.indexOf(pickWeighted(DATA.clubs,r)));
   F5.seqAll={ptr:0};F5.seqs=[];F5.takenAll=new Set();F5.pick=0;F5.solo=0;F5.replay=0;F5.phase='draft';F5.handoff=true;F5.cs=null;f5Render();}
-function f5Card(slot,p,body){
-  return `<div class="tg"><span class="pos">${F5_L[slot]}</span>${body.r0||''}</div>`+(p?`<div class="nm${nmCls(p.name)}" title="${esc(p.name)}">${esc(cardName(p.name))}</div>${body.mid||''}<div class="club">${esc(clubShort(p.club))} ${SEA_SHORT(p.y)}</div>`:`<div class="nm emp">—</div><div></div>`);}
+function f5Card(slot,p,body){return chipInner(F5_L[slot],p,body);}
 function f5Pitch(team,opts={}){
   const F=F5_FORMS[team.form],n=F.rows.length,Y=n===4?[14,38.5,63,87]:[18,52,86];const X=k=>k===1?[50]:[30,70];let h=PITCH_MK,i=0;
   F.rows.forEach((row,ri)=>{const xs=X(row.length);row.forEach((slot,j)=>{const s=team.slots[i++];const p=s.player;
-    const body=p?(opts.rt?{mid:`<div class="avg">${opts.rt(p).toFixed(1)}</div>`,r0:`<span class="r0">${p.r}</span>`}:opts.reveal?{mid:`<div class="r reveal">${p.r}</div>`}:{}):{};
-    h+=`<div class="slot ${slot}${p?' filled':''}" style="left:${xs[j]}%;top:${Y[ri]}%">${f5Card(slot,p,body)}</div>`;});});
-  return `<div class="pitch p5" style="--sw:25%">${h}</div>`;}
+    const body=p?(opts.rt?{pill:avgPill(opts.rt(p).toFixed(1)),r0:p.r}:opts.reveal?{pill:rPill(p.r,true)}:{}):{};
+    h+=`<div class="slot ${slot}${p?' filled':' empty'}" style="left:${xs[j]}%;top:${Y[ri]}%">${f5Card(slot,p,body)}</div>`;});});
+  return `<div class="pitch p5">${h}</div>`;}
 function f5Head(t){return `<b>${esc(f5Label(t))}</b>${t.team?` <span class="muted">· ${esc(t.name)}</span>`:''}`;}
 function f5Render(){
   const el=document.getElementById('f5');if(!el||!F5)return;const f=F5;
