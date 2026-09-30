@@ -19,10 +19,9 @@ function yearOk(row, E, chalYearOk) {
 
 // Сайт попередньої версії ще відкритий у гравців (кеш браузера, Mini App). Якщо його сезон повністю сходиться з новим рушієм
 // (симуляція між цими версіями не мінялася) — приймаємо; не сходиться (напр. у гравця змінилася позиція в пулі) — «не перевірити» (null), не «підробка».
-// 0.57 змінила рейтинги (v2) і refA/refD: сезон зі старого сайту (0.56 і раніше) з новим рушієм не зійдеться ніколи, тому список порожній —
-// такі сезони зберігаються й лишаються в історії гравця з verified = null («не перевірити»), але не «підробка» і не в таблицях.
-// Наступний випуск без змін у пулі й симуляції — дописати сюди '0.57'.
-const PREV_VERSIONS = [];
+// 0.57 змінила рейтинги (v2) і refA/refD: сезони 0.56 і раніше з новим рушієм не зійдуться — вони зберігаються з verified = null («не перевірити»).
+// 0.58: пул і симуляція ті самі, що в 0.57 (у рушії додано лише ERAS і спільний plUk для тексту рівня) — сезони сайту 0.57 приймаємо.
+const PREV_VERSIONS = ['0.57'];
 
 // головна перевірка: повертає [true|false|null, пояснення]; null — перевірити неможливо (стара версія тощо)
 function check(row, seedRow, opts = {}) {
@@ -44,6 +43,10 @@ function checkCore(row, seedRow, { chalYearOk = false } = {}) {
   if (!E.FORMATS[row.format]) return [false, 'невідомий формат'];
   if (!E.MODES[row.mode]) return [false, 'невідомий режим'];
   if (!yearOk(row, E, chalYearOk)) return [false, `суперники ${row.year} не для формату ${row.format}`];
+  // епоха (0.58): seasons.era є, лише коли в базі з'явиться колонка; тоді всі клуб-сезони складу мають бути не раніше її початку
+  const era = row.era == null || row.era === 'all' ? null : E.ERAS && E.ERAS[row.era];
+  if (row.era != null && row.era !== 'all' && !era) return [false, `невідома епоха ${row.era}`];
+  if (era && row.day) return [false, 'виклик дня — без епохи'];
   const xi = row.xi || [];
   if (xi.length !== 11) return [false, 'не 11 гравців'];
   if (xiHash(xi) !== seedRow.xi_hash) return [false, 'склад змінено після видачі seed'];
@@ -64,6 +67,7 @@ function checkCore(row, seedRow, { chalYearOk = false } = {}) {
     if (row.format === 'derby' && !E.FORMATS.derby.clubs.includes(club.c)) return [false, 'дербі: чужий клуб'];
     if (row.format === 'oneclub' && row.club && club.c !== row.club) return [false, 'один клуб: чужий клуб'];
     if (row.format === 'anti' && p[3] < E.ANTI_MIN_APPS) return [false, 'антисезон: замало матчів'];
+    if (era && club.y < era.y0) return [false, `епоха «${era.name}»: ${x.c} ${x.y}`];
   }
   if (row.day) {   // виклик дня: та сама схема, суперники й колесо
     const d = E.dailySetupFor(String(row.day).slice(0, 10));

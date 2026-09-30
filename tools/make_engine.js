@@ -88,7 +88,7 @@ if (extraN.length !== 3) throw new Error('extra statements not found: ' + extraN
 extraN.forEach(n => { for (const x of freeNames(n)) visit(x); });
 const extra = extraN.map(n => code.slice(n.start, n.end));
 // ім'я, яке дописуємо нижче вручну (dailySetupFor, run, module.exports), має бути в рушії
-['LEAGUE_CULT', 'LEAGUE_LEGENDS', 'LEAGUES', 'YEARS16', 'hashStr', 'mulberry32', 'pickWeighted'].forEach(visit);
+['LEAGUE_CULT', 'LEAGUE_LEGENDS', 'LEAGUES', 'YEARS16', 'ERAS', 'hashStr', 'mulberry32', 'pickWeighted'].forEach(visit);
 const idxs = [...new Set([...need].map(k => decl[k].idx))].sort((a, b) => a - b);
 let out = idxs.map(i => code.slice(body[i].start, body[i].end)).join('\n');
 const pool = fs.readFileSync(ROOT + '/src/pool.json', 'utf8');
@@ -115,7 +115,7 @@ function run({ xi, mode, format, year, seed }){
   rnd = Math.random; S.format = 'classic';
   return r;
 }
-module.exports = { VERSION: '${VERSION}', DATA, FORMATIONS, FORMATS, GROUP_OF, MODES, YEARS16, LEAGUE_CULT, LEAGUE_LEGENDS, LEAGUES, ANTI_MIN_APPS, effRating, mulberry32, hashStr, dailySetupFor, run, setFormat: f => { S.format = f; } };
+module.exports = { VERSION: '${VERSION}', DATA, FORMATIONS, FORMATS, GROUP_OF, MODES, YEARS16, LEAGUE_CULT, LEAGUE_LEGENDS, LEAGUES, ERAS, ANTI_MIN_APPS, effRating, mulberry32, hashStr, dailySetupFor, run, setFormat: f => { S.format = f; } };
 `;
 fs.mkdirSync(ROOT + '/lib', { recursive: true });
 fs.writeFileSync(ROOT + '/lib/engine.js', mod);

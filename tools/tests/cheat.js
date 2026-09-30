@@ -11,7 +11,7 @@ const DB = { season_seeds: [], seasons: [], daily_results: [], challenges: [], c
 const STORE = {}, MEMBERS = {}, RATE = {}; let RATE_ON = false;
 const jres = j => ({ ok: true, status: 200, json: async () => j, text: async () => JSON.stringify(j) });
 // база 0.53: секрети пристроїв (device_ok), перемикач кроку 2, унікальна офіційна спроба дня (В2)
-const SECRETS = {}; let LEGACY_OPEN = true, SQL053 = true;
+const SECRETS = {}; let LEGACY_OPEN = true, SQL053 = true, ERA_COL = true;
 const err = (status, j) => ({ ok: false, status, text: async () => JSON.stringify(j) });
 global.fetch = async (url, o = {}) => {
   const u = new URL(url); const t = u.pathname.split('/').pop(); const m = o.method || 'GET';
@@ -43,6 +43,7 @@ global.fetch = async (url, o = {}) => {
   if (m === 'POST' && t === 'season_seeds') { const b = JSON.parse(o.body); if (b.official && DB.season_seeds.some(x => x.official && x.daily && x.device_id === b.device_id && x.day === b.day)) return err(409, { code: '23505', message: 'duplicate key value violates unique constraint "season_seeds_official_uq"' }); }
   if (m === 'POST' && t !== 'season_seeds' && t !== 'daily_results' && !u.searchParams.get('on_conflict')) {   // рядки, які пише /api/save
     const list = [].concat(JSON.parse(o.body));
+    if (t === 'seasons' && !ERA_COL && list.some(b => 'era' in b)) return err(400, { code: 'PGRST204', message: "Could not find the 'era' column of 'seasons' in the schema cache" });   // 0.58: колонки era ще немає
     for (const b of list) { if (t === 'seasons') b.id = 1000 + DB.seasons.length; if (t === 'challenges' && DB.challenges.some(x => x.id === b.id)) return err(409, { code: '23505' }); DB[t].push(b); }
     return { ok: true, status: 201, text: async () => JSON.stringify(list) };
   }
@@ -106,6 +107,14 @@ function honestXi(formation) {
   await tamper('сезон з сайту 0.56 (до рейтингів v2) — не перевірити (null), не підробка', r => { r.version = '0.56'; }, null);
   await tamper('підробка з сайту 0.56 — не перевірено (null)', r => { r.version = '0.56'; r.xi[0].r = 99; }, null);
   await tamper('старша версія 0.49 — не перевірити (null)', r => { r.version = '0.49'; }, null);
+  // 0.58: пул і симуляція як у 0.57 — сезон сайту 0.57 приймаємо; підробку з нього — «не перевірити»
+  await tamper('сезон з сайту 0.57 — перевірено', r => { r.version = '0.57'; }, true);
+  await tamper('підробка з сайту 0.57 — не перевірено (null)', r => { r.version = '0.57'; r.xi[0].r = 99; }, null);
+  // 0.58: епоха (seasons.era, коли з'явиться колонка) — склад лише з клуб-сезонів епохи
+  { const early = Math.min(...legit.xi.map(x => x.y));
+    await tamper(`епоха «Сучасність», а в складі сезон ${early}`, r => { r.era = 'y2015'; }, early >= 2015);
+    await tamper('епоха «Усі роки» — як без епохи', r => { r.era = 'all'; }, true);
+    await tamper('невідома епоха', r => { r.era = 'y1900'; }, false); }
   await tamper('r0 підроблено (показ у таблицях і на картці)', r => { r.xi[0].r0 = 99; }, false);
   await tamper('r0 немає (старий клієнт) — пропускаємо', r => { r.xi.forEach(x => { delete x.r0; }); }, true);
   // seed видано під одні умови, а сезон записано з іншими
@@ -201,6 +210,15 @@ function honestXi(formation) {
   ok('save: у чужий пристрій (чужий секрет) — 401', atk.c === 401 && DB.seasons.length === n0 + 1, atk.j.error);
   const fake = await call(saveH, { kind: 'season', device_id: me, secret: mySecret, row: { ...season, w: 30, d: 0, l: 0, pts: 90 } });
   ok('save: неможливий/підроблений рахунок не стає перевіреним', fake.c === 400 || fake.j.verified !== true, `${fake.c} ${fake.j.verified}`);
+  // 0.58: епоха — пишемо, якщо є колонка; немає колонки — сезон однаково записано (без era); сміття не пишемо
+  await call(saveH, { kind: 'season', device_id: me, secret: mySecret, row: { ...season, era: 'y2015' } });
+  ok('save: епоха записується в seasons.era', DB.seasons[DB.seasons.length - 1].era === 'y2015');
+  await call(saveH, { kind: 'season', device_id: me, secret: mySecret, row: { ...season, era: '<b>' } });
+  ok('save: некоректна епоха не пишеться', !('era' in DB.seasons[DB.seasons.length - 1]));
+  ERA_COL = false; const nE = DB.seasons.length;
+  const noCol = await call(saveH, { kind: 'season', device_id: me, secret: mySecret, row: { ...season, era: 'y2010' } });
+  ok('save: без колонки era сезон однаково записано', noCol.c === 200 && DB.seasons.length === nE + 1 && !('era' in DB.seasons[nE]), `${noCol.c} ${noCol.j.error || ''}`);
+  ERA_COL = true;
   const tr = await call(saveH, { kind: 'trophies', device_id: me, secret: mySecret, ids: ['nice', 'nice', 'bad id!', 'x'.repeat(40)] });
   ok('save: трофеї — лише коректні id, без дублів', tr.c === 200 && DB.trophies.filter(x => x.device_id === me).map(x => x.trophy).join() === 'nice');
   ok('save: трофей у чужий пристрій — 401', (await call(saveH, { kind: 'trophies', device_id: victim, secret: 'attacker-secret-0123456789', ids: ['hack'] })).c === 401 && !DB.trophies.some(x => x.device_id === victim));

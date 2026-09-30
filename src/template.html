@@ -82,8 +82,13 @@ button.ghost{border-color:var(--line);background:transparent;color:var(--ink2);p
 .reel .strip.go{transition:transform 1.5s cubic-bezier(.16,.84,.22,1.02)}#reelYear .strip.go{transition-duration:1.9s}
 .reel .season{font-size:18px;font-weight:700;color:var(--ink)}
 .reel::before,.reel::after{content:'';position:absolute;left:0;right:0;height:12px;pointer-events:none;z-index:1}.reel::before{top:0;background:linear-gradient(var(--bg),transparent)}.reel::after{bottom:0;background:linear-gradient(transparent,var(--bg))}
-@media (prefers-reduced-motion:reduce){.reel .strip.go{transition:none}.reel.landed .strip>div,.pl.in,section.enter,section.back{animation:none!important}}
+@media (prefers-reduced-motion:reduce){.reel .strip.go{transition:none}.reel.landed .strip>div,.pl.in,.plpos,section.enter,section.back{animation:none!important}}
 .pl.on{border-color:var(--amber2);box-shadow:0 0 0 2px var(--amber2)}
+/* кнопки позицій під гравцем у колесі (0.58, як у 38-0): лише вільні позиції, куди він може стати */
+.plpos{display:flex;flex-wrap:wrap;gap:6px;padding:2px 0 8px 42px;animation:plin .2s ease-out both}
+.plpos button{--gc:var(--line);min-width:56px;min-height:40px;padding:8px 12px;border-radius:8px;font-family:var(--font-mono);font-size:13.5px;font-weight:700;border:1.5px solid var(--gc);background:color-mix(in srgb,var(--gc) 16%,var(--surface));color:var(--ink)}
+.plpos button:hover{background:color-mix(in srgb,var(--gc) 30%,var(--surface))}
+.plpos .GK{--gc:var(--gk)}.plpos .DF{--gc:var(--df)}.plpos .MF{--gc:var(--mf)}.plpos .FW{--gc:var(--fw)}
 .squad{display:grid;gap:4px;margin-top:10px}
 .pl,.sqHead{display:grid;grid-template-columns:32px minmax(0,1fr) repeat(var(--nst,4),29px) var(--rtw,38px);gap:4px;}.noast,.sqHead.noast{--nst:3}.nor,.sqHead.nor{--rtw:0px}.sqHead b{font-weight:inherit}.sqHead i{display:none;font-style:normal}
 @media (max-width:360px){.pl,.sqHead{grid-template-columns:28px minmax(0,1fr) repeat(var(--nst,4),23px) var(--rtw,32px);gap:3px}.squad .pl{padding:8px}.sqHead{padding:0 9px;font-size:8px}.pl .nm{font-size:13.5px}.pl .st{font-size:11px}.pl .rt{font-size:14px}.sqHead b{display:none}.sqHead i{display:inline}}
@@ -208,6 +213,7 @@ button.ghost.big0{padding:11px 18px;font-size:15px;font-family:var(--font-body);
 .pl.in{animation:plin .32s ease-out both}@keyframes plin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 .rr{display:inline-flex;align-items:center;gap:8px}.rr>.mono{font-size:13px;color:var(--amber);font-weight:700}
 .seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}.seg button{border:0;border-radius:0;background:transparent;color:var(--ink2);padding:7px 11px;font-size:13px;font-weight:600}.seg button+button{border-left:1px solid var(--line)}.seg button:hover{color:var(--ink);background:var(--bg2)}
+.seg.era{display:flex;width:100%;max-width:520px}.seg.era button{flex:1 1 0;padding:10px 4px;font-size:13.5px;white-space:nowrap}.seg.era button.on,.seg.era button.on:hover{background:var(--ink);color:var(--bg)}
 #squad.rin .pl .rt{animation:rtin .35s ease-out both}@keyframes rtin{from{opacity:0;transform:scale(.7)}to{opacity:1;transform:none}}
 section.enter{animation:secin .26s cubic-bezier(.2,.8,.2,1) both}section.back{animation:secback .26s cubic-bezier(.2,.8,.2,1) both}
 @keyframes secin{from{opacity:0;transform:translateX(28px)}to{opacity:1;transform:none}}@keyframes secback{from{opacity:0;transform:translateX(-28px)}to{opacity:1;transform:none}}
@@ -339,6 +345,7 @@ td .sub{font-size:11px;color:var(--muted);margin-top:2px;display:flex;gap:6px;al
     <h3>Формат</h3>
     <div class="grid modes" id="formats"></div>
     <div class="row" id="clubPickRow" hidden style="margin-top:10px"><label for="clubPick" class="muted">Клуб:</label><select id="clubPick"></select></div>
+    <div id="eraBox"><h3 id="eraH">Роки</h3><div class="seg era" id="eras" role="radiogroup" aria-labelledby="eraH"></div></div>
     <h3>Схема</h3>
     <div class="grid formations" id="formations"></div>
     <h3>Режим</h3>
@@ -456,7 +463,7 @@ td .sub{font-size:11px;color:var(--muted);margin-top:2px;display:flex;gap:6px;al
     </div>
 </div>
 <div class="overlay" id="viewBox" hidden><div class="box"><div class="vhead"><h3 id="viewTitle">Склад</h3><button class="ghost" id="viewClose">Закрити</button></div><div id="viewBody"></div></div></div>
-<div class="foot">30-0 УПЛ · <a href="#" id="newsBtn">Що нового у версії 0.57<b id="newsDot" hidden></b></a> · <a href="#" id="themeBtn" class="thm" role="switch" aria-checked="false" aria-label="Світла тема"></a> · неофіційний фан-проєкт</div>
+<div class="foot">30-0 УПЛ · <a href="#" id="newsBtn">Що нового у версії 0.58<b id="newsDot" hidden></b></a> · <a href="#" id="themeBtn" class="thm" role="switch" aria-checked="false" aria-label="Світла тема"></a> · неофіційний фан-проєкт</div>
 <script id="pool" type="application/json">__POOL__</script>
 <script>
 (function(){
@@ -542,6 +549,9 @@ const FORMATS = {
   anti:{name:"Антисезон 0-30",desc:"Збери найгірший склад і програй усі 30. Лише пам'ять."},
   legends:{name:"Ліга легенд",desc:"Ті самі 15 культових клубів, але кожен у своєму найкращому сезоні."}};
 const ANTI_MIN_APPS=10;
+// епохи (0.58): колесо дає лише клуб-сезони від y0 (рік = початок сезону: 2015 = 2015/16); суперники ті самі. Виклик дня, «Виклик другу» й «Один клуб» — завжди всі роки.
+// Ключ пишеться в seasons.era (коли з'явиться колонка) і сервер перевіряє склад (api/verify.js)
+const ERAS={all:{name:'Усі роки',y0:0},y2000:{name:'З 2000-х',y0:2000},y2010:{name:'З 2010-х',y0:2010},y2015:{name:'Сучасність',y0:2015}};
 const ATT_W={GK:0,CB:0.15,RB:0.35,LB:0.35,RWB:0.5,LWB:0.5,CDM:0.4,CM:0.6,CAM:0.85,RM:0.7,LM:0.7,RW:0.9,LW:0.9,ST:1.0};
 const DEF_W={GK:1.4,CB:1.1,RB:0.85,LB:0.85,RWB:0.7,LWB:0.7,CDM:0.75,CM:0.5,CAM:0.25,RM:0.4,LM:0.4,RW:0.2,LW:0.2,ST:0.1};
 const REF_A=5.6, REF_D=7.3, FE=0.5;
@@ -561,18 +571,19 @@ function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
 function pick(a){return a[Math.floor(rnd()*a.length)];}
 function normal(){let u=0,v=0;while(u===0)u=rnd();while(v===0)v=rnd();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
 function poisson(l){const L=Math.exp(-l);let k=0,p=1;do{k++;p*=rnd();}while(p>L);return k-1;}
-// відмінок після числа: 1 сезон, 2 сезони, 5 сезонів (11–14 — «сезонів»)
+// відмінок після числа: 1 сезон, 2 сезони, 5 сезонів (11–14 — «сезонів»). Єдиний у грі (0.58: копії в підсумках, картці, тексті, трофеях і акаунті прибрано)
 function plUk(n,one,few,many){const a=Math.abs(n)%10,b=Math.abs(n)%100;return a===1&&b!==11?one:a>=2&&a<=4&&(b<12||b>14)?few:many;}
-function ptsWord(n){const a=n%10,b=n%100;return (a===1&&b!==11)?'очко':(a>=2&&a<=4&&(b<12||b>14))?'очки':'очок';}
+function ptsWord(n){return plUk(n,'очко','очки','очок');}
 function seasonLabel(y){return y+"/"+String(y+1).slice(2);}
 /*__ICONS__*/
 // статичні кнопки: <!--i:назва--> → іконка
 (function(){const w=document.createTreeWalker(document.body,NodeFilter.SHOW_COMMENT);const cs=[];while(w.nextNode())cs.push(w.currentNode);for(const c of cs){const m=/^i:([a-z0-9-]+)$/.exec(c.data);if(m){const s=document.createElement('span');s.innerHTML=ic(m[1]);c.replaceWith(s.firstChild);}}})();
 function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
-let BEST=lsGet("upl30_best_v2")||{}; {const old=lsGet("upl30_best"); if(old&&!BEST.classic)BEST.classic=old;}
+let BEST=lsGet("upl30_best_v2")||{};
+{const old=lsGet("upl30_best");if(old){if(!BEST.classic){BEST.classic=old;lsSet("upl30_best_v2",BEST);}try{localStorage.removeItem("upl30_best");}catch(e){}}}   // рекорд до 0.39 → upl30_best_v2, старий ключ прибираємо (0.58)
 
 // ---------- state
-let S={pending:null,move:null,format:"classic",club:lsGet("upl30_club")||null,formation:"4-4-2",mode:"normal",slots:[],taken:new Set(),wheel:null,rerolls:0,result:null,daily:null};
+let S={pending:null,move:null,format:"classic",club:lsGet("upl30_club")||null,era:ERAS[lsGet("upl30_era")]?lsGet("upl30_era"):'all',formation:"4-4-2",mode:"normal",slots:[],taken:new Set(),wheel:null,rerolls:0,result:null,daily:null};
 // зірковий ухил колеса: сильні клуб-сезони випадають частіше (вага exp(k·(сила−85)), сила = середній рейтинг топ-11); 0 — вимкнено
 const STAR_BIAS=0.04;   // сильні сезони частіше; топ-4 свого сезону ×1.5; «Динамо» й «Шахтар» ×0.8, щоб у «зірковій чверті» колеса були й Дніпро, Металіст, Зоря, Чорноморець
 for(const c of DATA.clubs){const r=c.pl.map(p=>p[2]).sort((a,b)=>b-a).slice(0,11);c.q=r.reduce((a,b)=>a+b,0)/r.length;c.w=Math.exp(STAR_BIAS*(c.q-85))*(c.pos<=4?1.5:1)*(c.c==='dynamo-kyiv'||c.c==='shakhtar-donetsk'?0.8:1);}
@@ -587,6 +598,8 @@ function dailySetup(){
   return {formation,year,seq,ptr:0};
 }
 const DAILY=dailySetup();
+// чистка (0.58): результат і позначка «надіслано» виклику дня (upl30_daily_<день>, upl30_sent_<день>) потрібні лише сьогодні — старші за 14 днів стираємо
+try{const old=dayAdd(DAY,-14);for(let i=localStorage.length-1;i>=0;i--){const k=localStorage.key(i),m=/^upl30_(?:daily|sent)_(\d{4}-\d{2}-\d{2})$/.exec(k||'');if(m&&m[1]<old)localStorage.removeItem(k);}}catch(e){}
 setTimeout(()=>{try{loadHomeStats();}catch(e){}try{renderTrBtn();trRetro();}catch(e){}try{chalLoad();}catch(e){}try{f5Boot();}catch(e){}},0);
 MODES.daily={name:"Виклик дня",desc:"",damp:0.8,star:2,rerolls:1,showRatings:false,reveal:true};
 function dayAdd(day,n){return new Date(Date.UTC(+day.slice(0,4),+day.slice(5,7)-1,+day.slice(8,10))+n*864e5).toISOString().slice(0,10);}
@@ -610,9 +623,11 @@ function newSlots(f){S.locked=false;S.pre=null;S.srv=null;S.year=null;return FOR
 function openSlots(){return S.slots.filter(s=>!s.player);}
 function bestSlot(p){let best=null;for(const s of openSlots()){const r=effRating(p,s.slot);if(r!=null&&(!best||r>best.r))best={s,r};}return best;}
 function eligible(cs){const anti=S.format==="anti";return cs.pl.filter(p=>!S.taken.has(canon(p[5]))&&(!anti||p[3]>=ANTI_MIN_APPS)&&bestSlot(p));}
-function wheelPool(){if(S.daily||S.format==="classic"||S.format==="anti"||S.format==="legends")return DATA.clubs;
-  if(S.format==="derby")return DATA.clubs.filter(c=>FORMATS.derby.clubs.includes(c.c));
-  return DATA.clubs.filter(c=>c.c===S.club);}
+function eraOf(){return S.daily||S.challenge||S.format==='oneclub'?'all':S.era;}   // епоха поточної гри
+function wheelPool(){const y0=ERAS[eraOf()].y0;let cs=DATA.clubs;
+  if(!S.daily&&S.format==="derby")cs=cs.filter(c=>FORMATS.derby.clubs.includes(c.c));
+  else if(!S.daily&&S.format==="oneclub")cs=cs.filter(c=>c.c===S.club);
+  return y0?cs.filter(c=>c.y>=y0):cs;}
 function isOk(cs,p){return !S.taken.has(canon(p[5]))&&(S.format!=="anti"||p[3]>=ANTI_MIN_APPS)&&!!bestSlot(p);}
 
 // ---------- лічильники пулу (головна, «Про гру», опис форматів) — рахуємо з DATA, а не вписуємо руками
@@ -630,21 +645,29 @@ const DSTAT=(()=>{const ids=new Set(),cl=new Set(),ys=new Set(),dy=new Set();let
 // ---------- step 1
 const fEl=document.getElementById('formations'), mEl=document.getElementById('modes');
 const fmEl=document.getElementById('formats');
-for(const k in FORMATS){const d=document.createElement('div');d.className='opt'+(k===S.format?' on':'');d.tabIndex=0;d.innerHTML=`<b>${FORMATS[k].name}</b><small>${FORMATS[k].desc}</small>`;d.onclick=()=>{S.format=k;[...fmEl.children].forEach(c=>c.classList.remove('on'));d.classList.add('on');document.getElementById('clubPickRow').hidden=k!=="oneclub";showBest();};d.onkeydown=e=>{if(e.key==='Enter'||e.key===' ')d.click();};fmEl.appendChild(d);}
+for(const k in FORMATS){const d=document.createElement('div');d.className='opt'+(k===S.format?' on':'');d.tabIndex=0;d.innerHTML=`<b>${FORMATS[k].name}</b><small>${FORMATS[k].desc}</small>`;d.onclick=()=>{S.format=k;[...fmEl.children].forEach(c=>c.classList.remove('on'));d.classList.add('on');document.getElementById('clubPickRow').hidden=k!=="oneclub";document.getElementById('eraBox').hidden=k==="oneclub";showBest();};d.onkeydown=e=>{if(e.key==='Enter'||e.key===' ')d.click();};fmEl.appendChild(d);}
 (function(){const cnt={};for(const c of DATA.clubs){cnt[c.c]=cnt[c.c]||{n:c.n,k:0};cnt[c.c].k++;}
   const sel=document.getElementById('clubPick');Object.entries(cnt).filter(([,v])=>v.k>=6).sort((a,b)=>b[1].k-a[1].k||a[1].n.localeCompare(b[1].n,'uk')).forEach(([id,v])=>{const o=document.createElement('option');o.value=id;o.textContent=`${v.n} · ${v.k} сез.`;if(id===S.club)o.selected=true;sel.appendChild(o);});
   {const o=document.createElement('option');o.value='';o.textContent='— обери клуб —';o.disabled=true;if(!S.club)o.selected=true;sel.prepend(o);}   // з 0.50 клуб обирає гравець (раніше за замовчуванням були «Карпати»)
   sel.onchange=()=>{S.club=sel.value;lsSet('upl30_club',S.club);sel.classList.remove('need');showBest();};})();
 for(const f in FORMATIONS){const d=document.createElement('div');d.className='opt'+(f===S.formation?' on':'');d.tabIndex=0;d.innerHTML=`<b>${f}</b><small>${FORMATIONS[f].tag}</small>`;d.onclick=()=>{S.formation=f;[...fEl.children].forEach(c=>c.classList.remove('on'));d.classList.add('on');};d.onkeydown=e=>{if(e.key==='Enter'||e.key===' ')d.click();};fEl.appendChild(d);}
 for(const m in MODES){if(m==='daily'||m==='practice'||m==='hardcore')continue;const d=document.createElement('div');d.className='opt'+(m===S.mode?' on':'');d.tabIndex=0;d.innerHTML=`<b>${MODES[m].name}</b><small>${MODES[m].desc}</small>`;d.onclick=()=>{S.mode=m;[...mEl.children].forEach(c=>c.classList.remove('on'));d.classList.add('on');};d.onkeydown=e=>{if(e.key==='Enter'||e.key===' ')d.click();};mEl.appendChild(d);}
+{const el=document.getElementById('eras');   // епоха (0.58): вибір пам'ятаємо
+  const mark=()=>[...el.children].forEach(x=>{const on=x.dataset.era===S.era;x.classList.toggle('on',on);x.setAttribute('aria-checked',String(on));});
+  for(const k in ERAS){const b=document.createElement('button');b.type='button';b.setAttribute('role','radio');b.dataset.era=k;b.textContent=ERAS[k].name;b.onclick=()=>{S.era=k;lsSet('upl30_era',k);mark();};el.appendChild(b);}
+  mark();}
 function showBest(){const el=document.getElementById('bestLine');const key=S.format==='oneclub'?'oneclub:'+S.club:S.format;const best=BEST[key];el.textContent='';if(best)el.textContent=`Найкращий результат: ${best.W}-${best.D}-${best.L}, ${best.pts} ${ptsWord(best.pts)}, ${best.place} місце (${best.formation}, ${MODES[best.mode].name})`;}
 showBest();
 let CUR_SEC=1;
-function go(n){const back=n===1&&CUR_SEC!==1;[1,2,3,4,5].forEach(i=>{const el=document.getElementById('s'+i);const was=el.hidden;el.hidden=(i!==n);if(i===n&&(was||CUR_SEC!==n)){el.classList.remove('enter','back');void el.offsetWidth;el.classList.add(back?'back':'enter');}});document.getElementById('statsCard').hidden=n!==1||!STATS_ON;CUR_SEC=n;window.scrollTo({top:0});}
-document.getElementById('dailyBtn').onclick=()=>{S.daily={practice:!!lsGet("upl30_daily_"+DAY)};S.chal=null;S.challenge=null;S.format='classic';[...fmEl.children].forEach((c,i)=>c.classList.toggle('on',i===0));document.getElementById('clubPickRow').hidden=true;DAILY.ptr=0;S.formation=DAILY.formation;S.mode="daily";S.result=null;
+// Clarity (лише на боєвому адресі, build.py): мітка поточного екрана — щоб записи й теплові карти фільтрувались за екраном (Filters → Custom tags → screen)
+const SEC_NAME={1:'home',2:'draft',3:'result',4:'setup',5:'five'};
+function screenTag(name){try{if(window.clarity)window.clarity('set','screen',name);}catch(e){}}
+function go(n){const back=n===1&&CUR_SEC!==1;screenTag(SEC_NAME[n]);[1,2,3,4,5].forEach(i=>{const el=document.getElementById('s'+i);const was=el.hidden;el.hidden=(i!==n);if(i===n&&(was||CUR_SEC!==n)){el.classList.remove('enter','back');void el.offsetWidth;el.classList.add(back?'back':'enter');}});document.getElementById('statsCard').hidden=n!==1||!STATS_ON;CUR_SEC=n;window.scrollTo({top:0});}
+screenTag('home');   // стартовий екран (інші — через go())
+document.getElementById('dailyBtn').onclick=()=>{S.daily={practice:!!lsGet("upl30_daily_"+DAY)};S.chal=null;S.challenge=null;S.format='classic';[...fmEl.children].forEach((c,i)=>c.classList.toggle('on',i===0));document.getElementById('clubPickRow').hidden=true;document.getElementById('eraBox').hidden=false;DAILY.ptr=0;S.formation=DAILY.formation;S.mode="daily";S.result=null;
   S.slots=newSlots(S.formation);S.taken=new Set();S.wheel=null;S.rerolls=MODES.daily.rerolls;S.showR=false;S.moveMode=false;document.getElementById('modeLabel').textContent=`Виклик дня · ${S.formation}`;renderDraft();go(2);};
 renderDailyCard();
-document.getElementById('startBtn').onclick=()=>{if(S.format==='oneclub'&&!S.club){const sel=document.getElementById('clubPick');sel.classList.add('need');sel.focus();return;}S.daily=null;S.result=null;S.challenge=null;S.chal=S.format==='classic'?chalNewGame():null;if(S.mode==="daily")S.mode="normal";if(S.format==='anti')S.mode='hardcore';S.slots=newSlots(S.formation);S.taken=new Set();S.wheel=null;S.rerolls=MODES[S.mode].rerolls;S.showR=false;S.moveMode=false;document.getElementById('modeLabel').textContent=fmtLabel()+S.formation+" · "+modeName();renderDraft();go(2);};
+document.getElementById('startBtn').onclick=()=>{if(S.format==='oneclub'&&!S.club){const sel=document.getElementById('clubPick');sel.classList.add('need');sel.focus();return;}S.daily=null;S.result=null;S.challenge=null;S.chal=S.format==='classic'&&S.era==='all'?chalNewGame():null;if(S.mode==="daily")S.mode="normal";if(S.format==='anti')S.mode='hardcore';S.slots=newSlots(S.formation);S.taken=new Set();S.wheel=null;S.rerolls=MODES[S.mode].rerolls;S.showR=false;S.moveMode=false;document.getElementById('modeLabel').textContent=fmtLabel()+S.formation+" · "+modeName();renderDraft();go(2);};
 document.getElementById('restartBtn').onclick=()=>go(S.daily||S.challenge?1:4);
 document.getElementById('homeBtn').onclick=()=>go(1);
 document.getElementById('freeOpen').onclick=()=>{myNameShow();go(4);};document.getElementById('moveBtn').onclick=()=>{S.moveMode=!S.moveMode;S.move=null;const h=document.getElementById('moveHint');h.hidden=!S.moveMode;h.textContent='Тапни гравця, потім місце, куди його поставити. Підсвічуються лише позиції, де він реально грав.';renderDraft();};
@@ -793,7 +816,7 @@ function spin(mode){
   const w=document.getElementById('wheel');w.hidden=false;document.getElementById('spinBtn').hidden=true;
   document.getElementById('squad').innerHTML='';document.getElementById('rerollRow').style.visibility='hidden';
   const spinClub=mode!=='year',spinYear=mode!=='club';
-  const names=[...new Set(DATA.clubs.map(c=>c.n))];const years=Object.keys(DATA.seasons).map(Number).sort();
+  const y0=ERAS[eraOf()].y0,WP=DATA.clubs.filter(c=>c.y>=y0),names=[...new Set(WP.map(c=>c.n))],years=[...new Set(WP.map(c=>c.y))].sort();   // на барабанах — клуби й сезони лише своєї епохи
   // барабан: вертикальна стрічка з випадкових значень, що плавно гальмує на потрібному
   const roll=(id,cls,items,final,n)=>new Promise(res=>{const reel=document.getElementById(id);const strip=reel.querySelector('.strip');
     if(!n){strip.className='strip';strip.style.transform='';strip.innerHTML=`<div class="${cls}">${esc(final)}</div>`;res();return;}
@@ -820,12 +843,13 @@ function renderWheel(){
   const anti=S.format==='anti';const list=[...cs.pl].map(p=>({p,ok:isOk(cs,p)})).sort((a,b)=>(b.ok-a.ok)||(anti?a.p[0].localeCompare(b.p[0],'uk'):sortR?b.p[2]-a.p[2]:(b.p[3]-a.p[3]||b.p[4]-a.p[4])));
   let sep=false;
   for(const {p,ok} of list){if(!ok&&!sep){sep=true;const h=document.createElement('div');h.className='muted';h.style.cssText='font-size:12px;margin:8px 0 2px';h.textContent=S.taken.size?'Позиція зайнята або не підходить — переставте когось у складі, щоб відкрити':'Не підходять під вільні позиції';sq.appendChild(h);}
-    const b=document.createElement('button');b.className='pl';b.disabled=!ok;
+    const b=document.createElement('button');b.className='pl';b.disabled=!ok;b.dataset.id=p[5];
     const st=v=>v==null?'<span class="st d">–</span>':`<span class="st">${v}</span>`;
     b.className='pl'+(S.pending===p?' on':'');
     b.innerHTML=`<span class="pos ${GROUP_OF[p[6]]||p[1]}" title="${POSFULL[p[6]]}">${POSNAME[p[6]]}</span><span class="nm" title="${POSFULL[p[6]]}">${esc(p[0])}${nickOf(p[5])}${altTags(p)}</span>`+(anti?'<span></span><span></span><span></span>'+(hasAst?'<span></span>':''):st(p[3])+st(p[4])+(hasAst?st(p[8]):'')+(!CS_POS.has(p[6])?'<span class="st"></span>':p[9]==null?st(null):`<span class="st"${cs.cs_est?' title="Оцінка за командною статистикою"':''}>${''}${p[9]}</span>`))   /* асисти (p[8]) — лише де є повні дані (2012/13+); сухі — лише оборонним позиціям */+`<span class="rt">${show?p[2]:''}</span>`;
     if(S.wheelFresh){b.classList.add('in');b.style.animationDelay=Math.min(sq.children.length,14)*28+'ms';}
-    b.onclick=()=>choose(p);sq.appendChild(b);}
+    b.onclick=()=>choose(p);sq.appendChild(b);
+    if(S.pending===p&&ok)sq.appendChild(posBox(p,b));}
   S.wheelFresh=false;
 }
 // альтернативні позиції гравця: реальні (з даних) і сусідні з невеликим штрафом, до трьох
@@ -833,16 +857,24 @@ const ALT_SLOTS=['GK','CB','RB','LB','RWB','LWB','CDM','CM','CAM','RM','LM','RW'
 function altTags(p){if(S.format==='anti'||p[6]==='GK')return '';const main=p[6];
   const a=ALT_SLOTS.filter(s=>s!==main).map(s=>({s,pen:slotPenalty(main,p[7],s)})).filter(o=>o.pen!=null&&o.pen<=3).sort((x,y)=>x.pen-y.pen).slice(0,3);
   return a.length?`<small class="alts">також ${a.map(o=>`<i class="${GROUP_OF[o.s]}">${POSNAME[o.s]}</i>`).join(' ')}</small>`:'';}
+// вільні позиції схеми, куди гравець може стати (те саме правило, що й підсвітка на полі): по одній на код позиції, основна — першою.
+// Дві вільні однакові (ЦЗ, ЦЗ) — ставимо на останню з них, як і раніше. Штрафи не показуємо: кнопка = місце дозволене (DECISIONS п. 15)
+function posOpts(p){const m=new Map();for(const s of openSlots())if(effRating(p,s.slot)!=null)m.set(s.slot,s);
+  const ord=s=>s.slot===p[6]?-1:ALT_SLOTS.indexOf(s.slot);return [...m.values()].sort((a,b)=>ord(a)-ord(b));}
 function choose(p){
-  const opts=openSlots().map(s=>({s,r:effRating(p,s.slot)})).filter(o=>o.r!=null);if(!opts.length)return;
-  const distinct=[...new Map(opts.map(o=>[o.s.slot,o])).values()];
-  if(distinct.length===1){place(p,distinct[0].s);return;}
-  // кілька вільних позицій: підсвічуємо їх на полі, гравець ставиться тапом по позиції
+  const opts=posOpts(p);if(!opts.length)return;
+  if(opts.length===1){place(p,opts[0]);return;}
+  // кілька вільних позицій (0.58, як у 38-0): під гравцем — кнопки позицій, і ті самі позиції підсвічені на полі
   S.pending=S.pending===p?null:p;S.move=null;renderDraft();
   if(S.pending){const hint=document.getElementById('moveHint');const seen=lsGet('upl30_hint_place')||0;
-    if(seen<3){hint.hidden=false;hint.textContent=`Тапни підсвічену позицію, куди поставити ${p[0]}.`;lsSet('upl30_hint_place',seen+1);}
-    document.getElementById('pitch').scrollIntoView({behavior:'smooth',block:'start'});}
+    if(seen<3){hint.hidden=false;hint.textContent=`Обери позицію для ${p[0]}: кнопкою під ним або тапом по підсвіченому місцю на полі.`;lsSet('upl30_hint_place',seen+1);}
+    const f=document.querySelector('#squad .plpos button');if(f)f.focus({preventScroll:true});}
 }
+// кнопки позицій під гравцем; Escape — скасувати вибір
+function posBox(p,row){const opts=posOpts(p),box=document.createElement('div');box.className='plpos';box.setAttribute('role','group');box.setAttribute('aria-label',`Позиція для ${p[0]}`);
+  opts.forEach(s=>{const x=document.createElement('button');x.type='button';x.className=GROUP_OF[s.slot];x.dataset.slot=s.slot;x.title=POSFULL[s.slot];x.textContent=POSNAME[s.slot];x.onclick=()=>place(p,s);box.appendChild(x);});
+  box.onkeydown=e=>{if(e.key==='Escape'){S.pending=null;renderDraft();const r=[...document.querySelectorAll('#squad .pl')].find(b=>b.dataset.id===p[5]);if(r)r.focus();}};
+  return box;}
 function place(p,s){
   const r=effRating(p,s.slot);
   s.player={name:p[0],pos:GROUP_OF[s.slot],slot:s.slot,main:p[6],alts:p[7],r,r0:p[2],apps:p[3],goals:p[4],ast:p[8],cs:p[9],nat:p[10],by:p[11],cc:S.wheel.c,id:p[5],club:S.wheel.n,y:S.wheel.y};S.taken.add(canon(p[5]));S.wheel=null;S.move=null;S.pending=null;renderDraft();
@@ -980,7 +1012,7 @@ function tierOf(r){
   if(S.format==='anti'){
     if(r.L===30)return ["АНТИЛЕГЕНДА · 0-0-30",true];
     if(r.W===0&&r.place===16)return ["Жодної перемоги · останнє місце",true];
-    if(r.place===16)return ["Останнє місце · "+r.W+" "+(r.W%10===1&&r.W%100!==11?"зайва перемога":(r.W%10>=2&&r.W%10<=4&&(r.W%100<12||r.W%100>14))?"зайві перемоги":"зайвих перемог"),false];
+    if(r.place===16)return ["Останнє місце · "+r.W+" "+plUk(r.W,"зайва перемога","зайві перемоги","зайвих перемог"),false];
     if(r.place>=14)return ["Виліт, але не останні · "+r.place+" місце",false];
     return ["Занадто сильні для антисезону · "+r.place+" місце",false];}
   if(r.W===30)return ["ІДЕАЛЬНИЙ СЕЗОН · 30-0-0",true];
@@ -1020,8 +1052,7 @@ async function playSeason(year){
   else{let sp=0,sg=0,sa=0;const N=300;for(let k=0;k<N;k++){const q=simulate(xi,mode,year,true);sp+=q.pts;sg+=q.gf;sa+=q.ga;}r.xp=sp/N;r.egf=sg/N;r.ega=sa/N;}
   const [tier,gold]=tierOf(r);const te=document.getElementById('tier');te.textContent=tier;te.classList.toggle('gold',gold);
   document.getElementById('seasonLine').textContent=(LEAGUE_NAME[r.year]?`${LEAGUE_NAME[r.year]}: твоя 11-ка проти 15 культових клубів УПЛ. `:`Чемпіонат ${seasonLabel(r.year)}: твоя 11-ка грала замість «${r.replaced}» (останнє місце того сезону). `)+`${S.formation} · ${modeName()}.`;
-  const pl=(n,a,b,c)=>{const x=n%10,y=n%100;return x===1&&y!==11?a:x>=2&&x<=4&&(y<12||y>14)?b:c;};
-  document.getElementById('recTiles').innerHTML=`<div class="tile W"><b>${r.W}</b><span>${pl(r.W,'перемога','перемоги','перемог')}</span></div><div class="tile D"><b>${r.D}</b><span>${pl(r.D,'нічия','нічиї','нічиїх')}</span></div><div class="tile L"><b>${r.L}</b><span>${pl(r.L,'поразка','поразки','поразок')}</span></div>`;
+  document.getElementById('recTiles').innerHTML=`<div class="tile W"><b>${r.W}</b><span>${plUk(r.W,'перемога','перемоги','перемог')}</span></div><div class="tile D"><b>${r.D}</b><span>${plUk(r.D,'нічия','нічиї','нічиїх')}</span></div><div class="tile L"><b>${r.L}</b><span>${plUk(r.L,'поразка','поразки','поразок')}</span></div>`;
   document.getElementById('sumTiles').innerHTML=`<div class="tile hot"><b>${r.pts}</b><span>${ptsWord(r.pts)}</span></div><div class="tile"><b>${r.place}</b><span>місце</span></div><div class="tile"><b>${r.gf}:${r.ga}</b><span>голи</span></div>`;
   const luck=r.pts-r.xp;
   document.getElementById('xRow').innerHTML=`<span class="chip">xG <b>${r.xgf.toFixed(1)}</b> · забили ${r.gf}</span><span class="chip">xGA <b>${r.xga.toFixed(1)}</b> · пропустили ${r.ga}</span><span class="chip ${Math.abs(luck)>=4?'hot':''}">${luck>=0?'Везіння':'Невезіння'}: ${luck>=0?'+':''}${luck.toFixed(1)} очк.</span>`;
@@ -1151,6 +1182,7 @@ function logSeason(r){
     tier,golden:!!r.golden,perfect:r.W===30,seed_id:r.seedId||null,practice:S.mode==='practice'||!!(S.daily&&S.daily.practice),day:S.daily?DAY:null,
     xi:S.slots.map(s=>{const p=s.player;const q=r.players.find(v=>v.id===p.id)||{};return {n:p.name,id:p.id,slot:s.slot,r:p.r,r0:p.r0,c:p.club,y:p.y,f:q.form||0,g:q.g||0,a:q.a||0,rt:q.rt?Math.round(q.rt*100)/100:null};}),
     tbl:r.table.map(t=>({n:t.n,w:t.w,d:t.d,l:t.l,gf:t.gf,ga:t.ga,pts:t.pts,me:t.id==='USER'}))};
+  if(eraOf()!=='all')row.era=eraOf();   // 0.58: епоха — лише коли не «Усі роки»; поки в seasons немає колонки era, сервер її відкидає (api/save.js)
   // 0.53: сезон пише й одразу перевіряє сервер (/api/save, секрет пристрою); запасний шлях — прямий запис, як 0.52
   saveApi('season',{row}).then(j=>{r.rowId=j.id;loadHomeStats();verifiedUi(r,j);}).catch(e=>{if(!e.legacy){if(e.status===429){r.slow=e.message;verifiedUi(r,{});}console.warn('save',e);return;}
     Object.assign(row,tgFields());const ok=rows=>{if(rows&&rows[0])r.rowId=rows[0].id;loadHomeStats();if(r.rowId&&r.seedId)verifySeason(r);};
@@ -1195,13 +1227,13 @@ function boardHtml(rows,b){
   const me=deviceId(),pid=PLAYER&&PLAYER.id;
   return `<div class="tbl clickable"><table><tr><th>#</th><th>Гравець</th><th class="num">В-Н-П</th><th class="num">Г</th><th class="num">О</th></tr>`+rows.map((r,i)=>`<tr data-q="id=eq.${numOr0(r.id)}"${(pid&&r.player_id===pid)||r.device_id===me?' class="me"':''}><td class="num">${i+1}</td><td>${esc(pname(r))}${r.w===30?' <span class="lv lv-p">30-0</span>':''}<div class="sub"><span>${esc(r.formation)}</span>${lvChip(r.mode)}${b==='oneclub'&&r.club?`<span>${esc(CLUBN[r.club]||r.club)}</span>`:''}</div></td><td class="num">${numOr0(r.w)}-${numOr0(r.d)}-${numOr0(r.l)}</td><td class="num">${numOr0(r.gf)}:${numOr0(r.ga)}</td><td class="num"><b>${numOr0(r.pts)}</b></td></tr>`).join('')+`</table></div><p class="muted" style="font-size:12px;margin-top:6px">Лише сезони, перевірені сервером. Рівні очки: місце в сезоні → різниця м'ячів → забиті → хто раніше. Тап по рядку — склад.</p>`;}
 let BOARD='main';
-function openBoard(b){BOARD=b||BOARD;const box=document.getElementById('viewBox'),body=document.getElementById('viewBody');document.getElementById('viewTitle').textContent='Таблиця · 11×11';box.hidden=false;
+function openBoard(b){BOARD=b||BOARD;screenTag('table');const box=document.getElementById('viewBox'),body=document.getElementById('viewBody');document.getElementById('viewTitle').textContent='Таблиця · 11×11';box.hidden=false;
   body.innerHTML=`<div class="tabs" style="margin-top:0" role="tablist">${Object.entries(BOARDS).map(([k,v])=>`<button class="tab${k===BOARD?' on':''}" data-board="${k}" role="tab">${v.name}</button>`).join('')}</div><p class="muted" style="font-size:12.5px;margin:10px 0 8px">${BOARDS[BOARD].note}</p><div id="boardBody"><p class="muted">Завантаження…</p></div>`;
   body.querySelectorAll('[data-board]').forEach(t=>t.onclick=()=>openBoard(t.dataset.board));
   loadBoard(BOARD);}
 async function loadBoard(b){const el=document.getElementById('boardBody');try{const rows=await sbGetFallback([boardQ(b,true),boardQ(b,false)]);if(BOARD===b&&el.isConnected)el.innerHTML=boardHtml(rows,b);}catch(e){if(el.isConnected)el.innerHTML='<p class="muted">Таблиця зараз недоступна.</p>';}}
 document.getElementById('allTimeBtn').onclick=()=>openBoard('main');
-document.getElementById('boardOpen').onclick=()=>{if(!ONLINE){document.getElementById('viewTitle').textContent='Таблиця · 11×11';document.getElementById('viewBody').innerHTML='<p class="muted">Таблиця працює на сайті upl-30-0.vercel.app і в Telegram-боті @upl30_bot.</p>';document.getElementById('viewBox').hidden=false;return;}openBoard('main');};
+document.getElementById('boardOpen').onclick=()=>{if(!ONLINE){screenTag('table');document.getElementById('viewTitle').textContent='Таблиця · 11×11';document.getElementById('viewBody').innerHTML='<p class="muted">Таблиця працює на сайті upl-30-0.vercel.app і в Telegram-боті @upl30_bot.</p>';document.getElementById('viewBox').hidden=false;return;}openBoard('main');};
 function pitchHtml(formation,xi){const G=pitchGeo(formation);const F=FORMATIONS[formation]||FORMATIONS['4-4-2'];let h=PITCH_MK;F.slots.forEach((sl,i)=>{const p=xi[i];if(!p)return;const pt=G.pts[i];h+=`<div class="slot filled ${GROUP_OF[p.slot]||''}" style="left:${pt.x}%;top:${pt.y}%">${slotInner(p.slot,p,{pill:rPill(numOr0(baseR(p)))})}</div>`;});return `<div class="pitch">${h}</div>`;}
 // дані сезону з бази (xi, tbl — jsonb, їх пише браузер): числа — лише через Number, текст — лише через esc
 const numOr0=x=>Number(x)||0;
@@ -1220,7 +1252,7 @@ function viewHtml(s){
     <div class="tbl"><table><tr><th>Гравець</th><th>Поз.</th><th class="num">Рейт.</th><th class="num">Форма</th><th class="num">Г</th><th class="num">А</th><th class="num">Оцінка</th></tr>${[...xi].sort((a,b)=>(b.rt||0)-(a.rt||0)).map(p=>`<tr><td>${esc(p.n)}</td><td>${POSNAME[p.slot]||''}</td><td class="num">${numOr0(baseR(p))}</td><td class="num" style="color:${p.f>=3?'var(--win)':p.f<=-3?'var(--loss)':'inherit'}">${p.f>0?'+':''}${p.f||0}</td><td class="num">${p.g||0}</td><td class="num">${p.a||0}</td><td class="num"><b style="color:${rc(p.rt||0)}">${p.rt!=null?Number(p.rt).toFixed(2):'—'}</b></td></tr>`).join('')}</table></div>
     ${tb.length?`<h3>Турнірна таблиця</h3><div class="tbl"><table><tr><th>#</th><th>Команда</th><th class="num">В</th><th class="num">Н</th><th class="num">П</th><th class="num">Г</th><th class="num">О</th></tr>${tb.map((t,i)=>`<tr${t.me?' class="me"':''}><td class="num">${i+1}</td><td>${esc(t.n)}</td><td class="num">${t.w}</td><td class="num">${t.d}</td><td class="num">${t.l}</td><td class="num">${t.gf}:${t.ga}</td><td class="num"><b>${t.pts}</b></td></tr>`).join('')}</table></div>`:''}`;
 }
-async function openView(q,back){const box=document.getElementById('viewBox'),body=document.getElementById('viewBody');box.hidden=false;document.getElementById('viewTitle').textContent='Склад';body.innerHTML='<p class="muted">Завантаження…</p>';
+async function openView(q,back){screenTag('view');const box=document.getElementById('viewBox'),body=document.getElementById('viewBody');box.hidden=false;document.getElementById('viewTitle').textContent='Склад';body.innerHTML='<p class="muted">Завантаження…</p>';
   const bk=back?`<div class="row" style="margin-bottom:10px"><button class="ghost" id="viewBack">← До таблиці</button></div>`:'';
   try{const rows=await sbGetFallback([`seasons?select=*,players(name,anon_name)&${q}&limit=1`,`seasons?select=*&${q}&limit=1`]);if(!rows.length){body.innerHTML=bk+'<p class="muted">Склад для цього результату не збережено.</p>';}else body.innerHTML=bk+viewHtml(rows[0]);}catch(e){body.innerHTML=bk+'<p class="muted">Не вдалося завантажити.</p>';}
   const vb=document.getElementById('viewBack');if(vb)vb.onclick=()=>openBoard();}
@@ -1228,8 +1260,9 @@ document.getElementById('trBtn').onclick=()=>openTrophies();
 document.getElementById('chalBtn').onclick=chalShare;document.getElementById('chalCopyBtn').onclick=chalCopy;
 document.getElementById('acctBtn').onclick=()=>{ACCT_MSG='';openAcct();};
 document.getElementById('lbAcctGo').onclick=()=>{ACCT_MSG='';openAcct();};
-document.getElementById('viewClose').onclick=()=>{document.getElementById('viewBox').hidden=true;};
-document.getElementById('viewBox').onclick=e=>{if(e.target.id==='viewBox')e.target.hidden=true;};
+function viewHide(){document.getElementById('viewBox').hidden=true;screenTag(SEC_NAME[CUR_SEC]);}   // вікно закрито — знову екран під ним
+document.getElementById('viewClose').onclick=viewHide;
+document.getElementById('viewBox').onclick=e=>{if(e.target.id==='viewBox')viewHide();};
 document.addEventListener('click',e=>{const tr=e.target.closest&&e.target.closest('.clickable tr[data-q]');if(tr)openView(tr.dataset.q,!!tr.closest('#boardBody'));});
 /*__ACCOUNT__*/
 /*__CHALLENGE__*/
@@ -1272,11 +1305,12 @@ function gridOf(r){const m={W:"🟩",D:"🟨",L:"🟥"};let s="";r.log.forEach((
 // «Один клуб: Карпати (Львів) · », «Дербі · »; для класики — порожньо
 // назва складності для підписів; в антисезоні всередині режим «Хардкор» (прибраний з вибору) — не показуємо
 function modeName(){return S.format==='anti'?'Лише пам\'ять':MODES[S.mode].name;}
-function fmtLabel(){if(S.format==='classic')return '';if(S.format==='oneclub')return `${FORMATS.oneclub.name}: ${(DATA.clubs.find(c=>c.c===S.club)||{}).n||''} · `;return FORMATS[S.format].name+' · ';}
+function fmtLabel(){const e=eraOf(),era=e==='all'?'':ERAS[e].name+' · ';   // «З 2010-х · »
+  if(S.format==='classic')return era;if(S.format==='oneclub')return `${FORMATS.oneclub.name}: ${(DATA.clubs.find(c=>c.c===S.club)||{}).n||''} · `;return FORMATS[S.format].name+' · '+era;}
 function shareTextOf(r,noLink,noGrid){   // noGrid: підпис до картки — квадратики вже намальовані на ній
   const [tier,gold]=tierOf(r);const fmt=fmtLabel();
   const head=S.daily?`⚽ 30-0 УПЛ · Виклик дня`:`⚽ 30-0 УПЛ · ${fmt}${S.formation} · ${modeName()}`;
-  const wd=(n,a,b,c)=>{const x=n%10,y=n%100;return n+' '+(x===1&&y!==11?a:x>=2&&x<=4&&(y<12||y>14)?b:c);};
+  const wd=(n,a,b,c)=>n+' '+plUk(n,a,b,c);
   const rec=`${wd(r.W,'перемога','перемоги','перемог')}, ${wd(r.D,'нічия','нічиї','нічиїх')}, ${wd(r.L,'поразка','поразки','поразок')}`;
   const top=r.scorers[0]?`\nНайкращий бомбардир: ${r.scorers[0].name} — ${r.scorers[0].g}`:'';
   const stk=S.daily&&r.streak&&r.streak.count>1?`\n🔥 Серія: ${r.streak.count} дн. поспіль${r.streak.used?' (❄️ заморозка)':''}`:'';
@@ -1321,13 +1355,12 @@ function drawCard(r){
   const [tier,gold]=tierOf(r);const T0=gold?300:225;   // рівень («Чемпіони», «30-0-0»…) лише для особливих сезонів; місце й так є в плитці
   if(gold){g.fillStyle='#ff7a1a';let fs=54;g.font=`700 ${fs}px ${DISP}`;while(g.measureText(tier).width>W-160&&fs>30){fs-=2;g.font=`700 ${fs}px ${DISP}`;}g.fillText(tier,80,262);}
   // два ряди плиток: П / Н / П, потім очки / місце / голи — великі цифри й читабельні підписи
-  const pl=(n,a,b,c)=>{const x=n%10,y=n%100;return x===1&&y!==11?a:x>=2&&x<=4&&(y<12||y>14)?b:c;};
   const tile=(x,y,w,h,val,lab,accent,valCol)=>{g.fillStyle='rgba(255,255,255,.05)';g.beginPath();g.roundRect?g.roundRect(x,y,w,h,18):g.rect(x,y,w,h);g.fill();
     if(accent){g.fillStyle=accent;g.beginPath();g.roundRect?g.roundRect(x,y,w,8,[18,18,0,0]):g.rect(x,y,w,8);g.fill();}
     g.fillStyle=valCol||'#f4f1ea';let fs=76;g.font=`700 ${fs}px ${DISP}`;while(g.measureText(val).width>w-48&&fs>40){fs-=4;g.font=`700 ${fs}px ${DISP}`;}g.fillText(val,x+26,y+94);
     g.fillStyle='#b3aea4';g.font=`600 28px ${BODY}`;g.fillText(lab,x+26,y+136);};
   const tw=(W-160-2*24)/3,th=160;
-  [[String(r.W),pl(r.W,'перемога','перемоги','перемог'),'#30D158'],[String(r.D),pl(r.D,'нічия','нічиї','нічиїх'),'#FFD60A'],[String(r.L),pl(r.L,'поразка','поразки','поразок'),'#FF453A']].forEach(([v,l,a],k)=>tile(80+k*(tw+24),T0,tw,th,v,l,a));
+  [[String(r.W),plUk(r.W,'перемога','перемоги','перемог'),'#30D158'],[String(r.D),plUk(r.D,'нічия','нічиї','нічиїх'),'#FFD60A'],[String(r.L),plUk(r.L,'поразка','поразки','поразок'),'#FF453A']].forEach(([v,l,a],k)=>tile(80+k*(tw+24),T0,tw,th,v,l,a));
   [[String(r.pts),ptsWord(r.pts),null,'#ff9a3d'],[String(r.place),'місце'],[`${r.gf}:${r.ga}`,'голи']].forEach(([v,l,a,c],k)=>tile(80+k*(tw+24),T0+th+20,tw,th,v,l,a,c));
   const col={W:'#30D158',D:'#FFD60A',L:'#FF453A'};const gap=12,sw=(W-160-9*gap)/10,sh=48,gy=T0+2*th+50;r.log.forEach((m,i)=>{const cx=80+(i%10)*(sw+gap),cy=gy+Math.floor(i/10)*(sh+gap);g.fillStyle=col[m.res];g.beginPath();g.roundRect?g.roundRect(cx,cy,sw,sh,10):g.rect(cx,cy,sw,sh);g.fill();});
   const sy=gy+3*(sh+gap)+44;g.fillStyle='#b3aea4';g.font=`600 24px ${MONO}`;g.fillText((S.teamName||'Твоя 11-ка').toUpperCase(),80,sy);
@@ -1340,11 +1373,11 @@ function drawCard(r){
 }
 document.getElementById('replayBtn').onclick=()=>playSeason(null);
 // ---------- «Що нового»: коротко й по-людськи про останню версію (технічний журнал — CHANGELOG.md у репозиторії)
-const WHATSNEW={v:'0.57',date:'30.09.2026',items:[
-  ['star-circle','Нові рейтинги','Зірки — справжні зірки: до сезону додано клас гравця (збірна, єврокубки, трансфери, нагороди). 90+ — лише в 11 легенд, 97 — у Шевченка.'],
-  ['sail-boat','Моряки Григорчука','«Чорноморець» 2011–2014 — +3 до рейтингу. Любов автора, офіційно.'],
-  ['account-group','Виправлені картки','Близнюки Мазури, Капанадзе, Пашаєви та ще кілька гравців, яких плутали, тепер окремо.']]};
-function openNews(){const box=document.getElementById('viewBox');document.getElementById('viewTitle').textContent=`Що нового · версія ${WHATSNEW.v}`;
+const WHATSNEW={v:'0.58',date:'30.09.2026',items:[
+  ['soccer-field','Кнопки позицій','Тапни гравця в колесі — під ним з\'являться вільні позиції, куди він може стати. Тапнув — і він уже на полі.'],
+  ['history','Епохи','У вільній грі можна обрати роки: усі, з 2000-х, з 2010-х або лише сучасність (з 2015/16). Колесо крутить тільки ці сезони.'],
+  ['trophy','Новий секретний трофей','Хто знайде — той знайде.']]};
+function openNews(){screenTag('news');const box=document.getElementById('viewBox');document.getElementById('viewTitle').textContent=`Що нового · версія ${WHATSNEW.v}`;
   document.getElementById('viewBody').innerHTML=`<div class="news">${WHATSNEW.items.map(([e,h,d])=>`<div class="ni">${ic(e,'lg')}<div><b>${esc(h)}</b><p>${esc(d)}</p></div></div>`).join('')}</div>`;
   box.hidden=false;lsSet('upl30_news_seen',WHATSNEW.v);document.getElementById('newsDot').hidden=true;}
 document.getElementById('newsBtn').onclick=e=>{e.preventDefault();openNews();};
@@ -1356,6 +1389,6 @@ themeLabel();
 document.getElementById('newsDot').hidden=lsGet('upl30_news_seen')===WHATSNEW.v;
 /*__FIVE__*/
 document.getElementById('f5Open').onclick=f5Start;
-window.__dbg={renderWheel,viewHtml,renderPitch,pitchHtml,f5Pitch,F5_FORMS,F5_L,POSNAME,cardName,clubShort,simulate,shareTextOf,trCtxNow,trAward,trStore,seasonForm,FORMATIONS,GROUP_OF,MODES,P,DATA,TROPHIES,trEval,PERSON,effRating,get S(){return S;},rerun(seed,year,xi){rnd=mulberry32(seed);const r=simulate(xi||S.slots.map(s=>s.player),MODES[S.mode],year);rnd=Math.random;return {W:r.W,D:r.D,L:r.L,gf:r.gf,ga:r.ga,place:r.place};}};
+window.__dbg={renderWheel,posOpts,eraOf,ERAS,plUk,ptsWord,viewHtml,renderPitch,pitchHtml,f5Pitch,F5_FORMS,F5_L,POSNAME,cardName,clubShort,simulate,shareTextOf,trCtxNow,trAward,trStore,seasonForm,FORMATIONS,GROUP_OF,MODES,P,DATA,TROPHIES,trEval,PERSON,effRating,get S(){return S;},rerun(seed,year,xi){rnd=mulberry32(seed);const r=simulate(xi||S.slots.map(s=>s.player),MODES[S.mode],year);rnd=Math.random;return {W:r.W,D:r.D,L:r.L,gf:r.gf,ga:r.ga,place:r.place};}};
 })();
 </script>
