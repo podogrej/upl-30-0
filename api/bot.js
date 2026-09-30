@@ -1,5 +1,5 @@
 // 30-0 УПЛ — Telegram-бот (Vercel serverless function, адреса: /api/bot)
-// Змінні оточення у Vercel: TG_TOKEN, TG_SECRET, TG_BOT, SUPABASE_SERVICE_KEY
+// Змінні оточення у Vercel: TG_TOKEN, TG_SECRET (обов'язкова, інакше 401), TG_BOT, SUPABASE_SERVICE_KEY
 const L = (() => {   // спільні функції (вбудовано, щоб файл не залежав від інших)
 const crypto = require('crypto');
 const SB_URL = (process.env.SUPABASE_URL || 'https://qruhcbwycrnfgzzdbljr.supabase.co').trim();   // у тестовому оточенні Vercel — адреса тестової бази
@@ -146,7 +146,9 @@ async function league(chat, from) {
 
 module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(200).send('30-0 УПЛ bot is alive');
-  if (L.env('TG_SECRET') && req.headers['x-telegram-bot-api-secret-token'] !== L.env('TG_SECRET'))
+  // вебхук приймає лише запити від Telegram із секретом (setWebhook … secret_token = TG_SECRET); без TG_SECRET у Vercel — 401 для всіх
+  const secret = L.env('TG_SECRET'), got = String((req.headers && req.headers['x-telegram-bot-api-secret-token']) || '');
+  if (!secret || got.length !== secret.length || !require('crypto').timingSafeEqual(Buffer.from(got), Buffer.from(secret)))
     return res.status(401).send('bad secret');
   try {
     const u = req.body || {};

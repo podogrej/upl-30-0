@@ -1,5 +1,6 @@
 // 30-0 УПЛ — вечірній підсумок дня в лігах (запускає Vercel Cron з vercel.json, ~21:00 за Києвом)
 // Пише в групу один раз на день і лише якщо хтось грав. Повторний виклик нічого не надсилає.
+// Змінна оточення у Vercel: CRON_SECRET (обов'язкова, інакше 401).
 const L = (() => {   // спільні функції (вбудовано, щоб файл не залежав від інших)
 const crypto = require('crypto');
 const SB_URL = (process.env.SUPABASE_URL || 'https://qruhcbwycrnfgzzdbljr.supabase.co').trim();   // у тестовому оточенні Vercel — адреса тестової бази
@@ -110,11 +111,14 @@ async function upsertBoard(chat_id, day, { forceNew = false } = {}) {
 return { SB_URL, env, esc, tg, sb, kyivDate, dayNo, dayShort, checkMiniApp, nameOf, playUrl, playKb, sortRes, onlyVerified, standings, boardText, upsertBoard };
 })();
 
+const safeEq = (a, b) => { const x = Buffer.from(String(a)), y = Buffer.from(String(b)); return x.length === y.length && require('crypto').timingSafeEqual(x, y); };
+
 module.exports = async (req, res) => {
+  // Vercel Cron сам надсилає заголовок «Authorization: Bearer <CRON_SECRET>», якщо змінну CRON_SECRET задано у Vercel.
+  // Без змінної або з чужим ключем — 401 (раніше без змінної cron був відкритий усім). Ручний запуск — лише з тим самим заголовком.
   const cronSecret = L.env('CRON_SECRET');
-  const auth = req.headers.authorization || '';
-  const manual = req.query && req.query.key && req.query.key === L.env('TG_SECRET');
-  if (cronSecret && auth !== `Bearer ${cronSecret}` && !manual) return res.status(401).json({ error: 'unauthorized' });
+  const auth = String((req.headers && req.headers.authorization) || '');
+  if (!cronSecret || !safeEq(auth, `Bearer ${cronSecret}`)) return res.status(401).json({ error: 'unauthorized' });
   try {
     const day = (req.query && /^\d{4}-\d{2}-\d{2}$/.test(req.query.day || '')) ? req.query.day : L.kyivDate();
     const rows = await L.sb(`league_results?day=eq.${day}&select=chat_id`) || [];
