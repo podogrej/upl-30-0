@@ -1,0 +1,124 @@
+<!doctype html><html lang="uk"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>УПЛ класика — home</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;900&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&family=Oswald:wght@500;600;700&family=Golos+Text:wght@400;500;600;700;800&display=swap"><style>
+:root{--bg:#0b1430;--bg2:#0f1b3d;--surface:#132346;--surface2:#1a2d59;--line:#26396b;--ink:#ffffff;--ink2:#b9c2de;--muted:#7f8aad;--accent:#e0287a;--accent2:#ff831e;--violet:#8b3fd0;--onaccent:#ffffff;--win:#2fd07a;--draw:#f5b83d;--loss:#ff4d5e;--grad:linear-gradient(90deg,#7e24b0 0%,#d41e6f 55%,#ff831e 100%);--fd:'Unbounded',sans-serif;--fb:'Manrope',sans-serif;--fm:'JetBrains Mono',monospace;--r:14px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--fb);font-size:15px;line-height:1.4;-webkit-font-smoothing:antialiased}
+.wrap{max-width:430px;margin:0 auto;padding:0 16px 28px}
+.ico{width:20px;height:20px;fill:currentColor;flex:none;display:block}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
+/* шапка як у 38-0: зліва «Головна», справа «Увійти» */
+.top{display:flex;align-items:center;justify-content:space-between;height:56px;border-bottom:1px solid var(--line);margin:0 -16px;padding:0 16px;}
+.top .home{display:flex;align-items:center;gap:8px;font-weight:700;font-size:15px}
+.top .mark{font-family:var(--fd);font-weight:900;font-size:15px;letter-spacing:-.01em;background:var(--grad);-webkit-background-clip:text;color:transparent}
+.top .signin{font-weight:700;font-size:14px;padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface)}
+.top .back{display:flex;align-items:center;gap:2px;font-weight:600;color:var(--ink2);font-size:15px;margin-left:-6px}
+/* головна */
+.hero{text-align:center;padding:40px 0 24px}
+.logo{font-family:var(--fd);font-weight:900;line-height:.92;letter-spacing:-.03em;font-size:76px}
+.logo span{display:block;background:var(--grad);-webkit-background-clip:text;color:transparent}
+
+
+.lead{color:var(--ink2);font-size:15px;margin:14px auto 0;max-width:30ch}
+.cta{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;height:58px;border-radius:var(--r);font-family:var(--fd);font-weight:700;font-size:18px;color:var(--onaccent);background:var(--grad);box-shadow:0 8px 24px -8px rgba(212,30,111,.55)}
+.cta.sm{height:50px;font-size:16px}
+.btn2{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;height:50px;border-radius:var(--r);border:1px solid var(--line);background:var(--surface);font-weight:700;font-size:15px}
+.hint{text-align:center;font-size:13px;color:var(--muted);margin-top:10px}
+.sec{font-family:var(--fm);font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:26px 0 8px;display:flex;justify-content:space-between}
+.list{border:1px solid var(--line);border-radius:var(--r);background:var(--surface);overflow:hidden}
+.li{display:grid;grid-template-columns:auto 1fr auto auto;gap:12px;align-items:center;padding:0 14px;min-height:56px}
+.li+.li{border-top:1px solid var(--line)}
+.li .ic{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent)}
+
+
+.li .ic .ico{width:18px;height:18px}
+.li b{font-weight:700;font-size:15px}.li .m{font-size:13px;color:var(--muted);white-space:nowrap}
+.li>.ico{width:18px;height:18px;fill:var(--muted)}
+.li.hot{background:color-mix(in srgb,var(--accent) 9%,var(--surface))}
+.li.hot b{color:var(--accent)}
+
+.new{font-family:var(--fm);font-size:10px;font-weight:600;letter-spacing:.06em;padding:3px 7px;border-radius:999px;color:var(--onaccent);background:var(--grad);}
+.stats{display:flex;justify-content:space-between;margin-top:22px;padding:0 2px;color:var(--muted);font-size:12px}
+.stats b{font-family:var(--fd);font-size:18px;color:var(--ink);font-weight:700;margin-right:4px}
+details{border:1px solid var(--line);border-radius:var(--r);background:var(--surface);margin-top:8px}
+details summary{list-style:none;display:flex;justify-content:space-between;align-items:center;padding:14px;font-weight:700;font-size:15px}
+details summary::-webkit-details-marker{display:none}details summary .ico{fill:var(--muted)}
+.foot{text-align:center;font-family:var(--fm);font-size:11px;color:var(--muted);margin-top:26px}
+.foot a{color:var(--ink2);text-decoration:none;font-weight:600}
+/* поле */
+.pitch{position:relative;border-radius:16px;overflow:hidden;border:1px solid}
+.pitch .stripes,.pitch .lines{position:absolute;inset:0;width:100%;height:100%}
+.pc{position:absolute;transform:translate(-50%,-22px);display:grid;justify-items:center;width:92px;text-align:center}
+.chip{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-family:var(--fb);font-weight:800;font-size:11px;letter-spacing:.02em}
+.chip.empty{border:1.5px dashed var(--slot);color:var(--slot);background:var(--slotbg)}
+.chip.tgt{border:2px solid var(--accent);color:var(--accent);background:color-mix(in srgb,var(--accent) 16%,transparent);box-shadow:0 0 0 5px color-mix(in srgb,var(--accent) 22%,transparent)}
+
+.pc b{font-size:12.5px;font-weight:700;color:var(--pl);margin-top:5px;line-height:1.1;white-space:nowrap}
+.pc small{font-size:10px;color:var(--ps);white-space:nowrap;line-height:1.2}
+.pc .rt{position:absolute;top:-7px;left:calc(50% + 12px);font-style:normal;font-family:var(--fm);font-weight:600;font-size:10.5px;padding:1px 5px;border-radius:999px;background:var(--grad);color:var(--onaccent)}
+/* драфт */
+.dbar{display:flex;align-items:baseline;justify-content:space-between;margin:12px 0 10px}
+.dbar h1{font-family:var(--fd);font-weight:700;font-size:20px;}
+.dbar h1 em{font-style:normal;color:var(--muted);font-weight:600}
+.dbar .f{font-family:var(--fm);font-size:12px;color:var(--ink2);padding:5px 9px;border:1px solid var(--line);border-radius:8px}
+.wheel{margin-top:14px;display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:12px 14px;border-radius:var(--r);background:var(--surface);border:1px solid var(--line)}
+.crest{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-family:var(--fd);font-weight:900;font-size:14px}
+.wheel b{display:block;font-family:var(--fd);font-weight:700;font-size:16px;}
+.wheel span{font-family:var(--fm);font-size:12px;color:var(--ink2)}
+.rr{display:flex;align-items:center;gap:6px;height:38px;padding:0 12px;border-radius:10px;border:1px solid var(--line);font-weight:700;font-size:14px;color:var(--ink2)}
+.rr .ico{width:17px;height:17px}
+.pl{display:grid;grid-template-columns:40px 1fr auto;gap:10px;align-items:center;padding:10px 14px;min-height:54px}
+.pl+.pl{border-top:1px solid var(--line)}
+.pos{font-family:var(--fb);font-weight:800;font-size:10.5px;text-align:center;padding:4px 0;border-radius:6px;color:var(--ink2);background:var(--bg2)}
+.pl b{font-weight:700;font-size:15px;display:block}.pl .n small{display:block;font-size:12px;color:var(--muted)}
+.pl .st{font-family:var(--fm);font-size:12px;color:var(--muted);text-align:right;white-space:nowrap}
+.pl.off{opacity:.42}.pl.off .st{font-family:var(--fb)}
+.pl.sel{background:color-mix(in srgb,var(--accent) 10%,var(--surface));box-shadow:inset 3px 0 0 var(--accent)}
+
+.put{grid-column:2/-1;display:flex;gap:8px;align-items:center;margin-top:8px}
+.put button{height:40px;min-width:62px;padding:0 14px;border-radius:10px;font-weight:800;font-size:14px;color:var(--onaccent);background:var(--violet)}
+.put button:first-child{background:var(--grad)}
+.put span{font-size:12px;color:var(--muted);margin-left:2px}
+/* підсумки */
+.res{text-align:center;padding:18px 0 4px}
+.res .k{font-family:var(--fm);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.res h1{font-family:var(--fd);font-weight:900;font-size:30px;line-height:1.05;margin-top:6px;}
+.res h1 span{background:var(--grad);-webkit-background-clip:text;color:transparent}
+.score{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:16px}
+.score div{border:1px solid var(--line);border-radius:var(--r);background:var(--surface);padding:10px 8px;text-align:center;position:relative;overflow:hidden}
+.score b{display:block;font-family:var(--fd);font-weight:700;font-size:28px;line-height:1.1;font-variant-numeric:tabular-nums}
+.score span{font-size:12px;color:var(--muted)}
+.score .W{box-shadow:inset 0 3px 0 var(--win)}.score .D{box-shadow:inset 0 3px 0 var(--draw)}.score .L{box-shadow:inset 0 3px 0 var(--loss)}
+.score .P{grid-column:span 1;background:var(--grad);border:0;color:#fff}
+.score .P span{color:inherit;opacity:.85}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
+/* ліги */
+.h1c{text-align:center;padding:26px 0 6px}.h1c h1{font-family:var(--fd);font-weight:900;font-size:26px;letter-spacing:-.01em;}
+.h1c p{color:var(--ink2);font-size:14px;margin:8px auto 18px;max-width:32ch}
+.lg{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:12px 14px;min-height:64px}
+.lg+.lg{border-top:1px solid var(--line)}
+.lg .ic{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;background:var(--bg2);color:var(--ink2)}.lg .ic .ico{width:19px;height:19px}
+.lg b{display:flex;align-items:center;gap:6px;font-size:15px;font-weight:700}.lg .t span{display:block;font-size:12.5px;color:var(--ink2);margin-top:2px}
+.tag{font-family:var(--fm);font-size:10px;font-weight:600;padding:2px 6px;border-radius:5px;border:1px solid var(--line);color:var(--ink2)}
+.place{text-align:right;font-family:var(--fd);font-weight:700;font-size:22px;line-height:1}.place small{display:block;font-family:var(--fb);font-size:11px;font-weight:600;color:var(--muted);margin-top:3px}
+.place.g{background:var(--grad);-webkit-background-clip:text;color:transparent}
+
+.timer{font-family:var(--fm);font-weight:600;font-size:13px;padding:6px 9px;border-radius:8px;border:1px solid var(--accent2);color:var(--accent2)}
+
+</style></head><body><div class="wrap"><header class="top"><span class="home"><span class="mark">30-0 УПЛ</span></span><button class="signin">Увійти</button></header>
+<div class="hero"><div class="logo">30-0<span>УПЛ</span></div>
+<p class="lead">Збери 11-ку з історії УПЛ і пройди сезон без жодної втрати очок.</p></div>
+<button class="cta">Грати</button>
+<div class="sec"><span>Режими</span></div>
+<div class="list">
+<div class="li hot"><i class="ic"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 19H5V8h14m-3-7v2H8V1H6v2H5c-1.1 0-2 .9-2 2v14a2 2 0 0 0 2 2h14c1.11 0 2-.89 2-2V5a2 2 0 0 0-2-2h-1V1m-7.12 11H7.27l2.92 2.11-1.11 3.45L12 15.43l2.92 2.13-1.12-3.44L16.72 12h-3.6L12 8.56z"/></svg></i><b>Виклик дня</b><span class="new">30.09</span><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.59 16.58 13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg></div>
+<div class="li"><i class="ic"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5.5A3.5 3.5 0 0 1 15.5 9a3.5 3.5 0 0 1-3.5 3.5A3.5 3.5 0 0 1 8.5 9 3.5 3.5 0 0 1 12 5.5M5 8c.56 0 1.08.15 1.53.42-.15 1.43.27 2.85 1.13 3.96C7.16 13.34 6.16 14 5 14a3 3 0 0 1-3-3 3 3 0 0 1 3-3m14 0a3 3 0 0 1 3 3 3 3 0 0 1-3 3c-1.16 0-2.16-.66-2.66-1.62a5.54 5.54 0 0 0 1.13-3.96c.45-.27.97-.42 1.53-.42M5.5 18.25c0-2.07 2.91-3.75 6.5-3.75s6.5 1.68 6.5 3.75V20h-13zM0 20v-1.5c0-1.39 1.89-2.56 4.45-2.9-.59.68-.95 1.62-.95 2.65V20zm24 0h-3.5v-1.75c0-1.03-.36-1.97-.95-2.65 2.56.34 4.45 1.51 4.45 2.9z"/></svg></i><b>Грати з друзями</b><span class="m">2 ліги</span><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.59 16.58 13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg></div>
+<div class="li"><i class="ic"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 15H6l7-14v8h5l-7 14z"/></svg></i><b>Дербі</b><span class="m">Динамо — Шахтар</span><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.59 16.58 13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg></div>
+<div class="li"><i class="ic"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 21.35-1.45-1.32C5.4 15.36 2 12.27 2 8.5 2 5.41 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.08C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.41 22 8.5c0 3.77-3.4 6.86-8.55 11.53z"/></svg></i><b>Один клуб</b><span class="m"></span><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.59 16.58 13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg></div>
+<div class="li"><i class="ic"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4h6v8h4.84L12 19.84 4.16 12H9z"/></svg></i><b>Антисезон</b><span class="m">0-30</span><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.59 16.58 13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg></div></div>
+<div class="sec"><span>Ще</span></div>
+<div class="list">
+<div class="li"><i class="ic"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 13v-2h14v2zm0 6v-2h14v2zM7 7V5h14v2zM3 8V5H2V4h2v4zm-1 9v-1h3v4H2v-1h2v-.5H3v-1h1V17zm2.25-7a.75.75 0 0 1 .75.75c0 .2-.08.39-.21.52L3.12 13H5v1H2v-.92L4 11H2v-1z"/></svg></i><b>Таблиця</b><span class="m"></span><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.59 16.58 13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg></div>
+<div class="li"><i class="ic"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 2c-.9 0-2 1-2 2H8c0-1-1.1-2-2-2H2v9c0 1 1 2 2 2h2.2c.4 2 1.7 3.7 4.8 4v2.08C8 19.54 8 22 8 22h8s0-2.46-3-2.92V17c3.1-.3 4.4-2 4.8-4H20c1 0 2-1 2-2V2zM6 11H4V4h2zm14 0h-2V4h2z"/></svg></i><b>Трофеї</b><span class="m">23 з 118</span><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.59 16.58 13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg></div></div>
+<div class="stats"><span><b>34</b>сезони</span><span><b>524</b>клуб-сезони</span><span><b>4 547</b>футболістів</span></div>
+<details><summary>Як грати <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M7.41 8.58 12 13.17l4.59-4.59L18 10l-6 6-6-6z"/></svg></summary></details>
+<details><summary>Питання та відповіді <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M7.41 8.58 12 13.17l4.59-4.59L18 10l-6 6-6-6z"/></svg></summary></details><div class="foot">30-0 УПЛ · <a href="#">Що нового у версії 0.69</a> · неофіційний фан-проєкт</div></div></body></html>
