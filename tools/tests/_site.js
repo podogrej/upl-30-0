@@ -8,7 +8,7 @@ const SB_STUB=user=>`window.supabase={createClient(){let cb=()=>{};return {auth:
   async verifyOtp(){setTimeout(()=>cb('SIGNED_IN',{access_token:'AT',user:${JSON.stringify(user||{id:'u1',email:'tg-1@users.upl-30-0.vercel.app',user_metadata:{full_name:'Андрій'},app_metadata:{}})}}),20);return {error:null};},
   async signOut(){cb('SIGNED_OUT',null);},async signInWithOAuth(){return {error:null};},async setSession(){return {error:null};}}};}};`;
 // база PostgREST у пам'яті. cfg[таблиця]={pk:[...], uq:[[...]], auto:'id', def:{...}, cols:[...] (інших колонок «немає» — 400), onInsert(row)};
-// rpc[ім'я]=(args)=>відповідь; select=…players(name,anon_name) підтягує гравця з таблиці players, якщо вона є
+// rpc[ім'я]=(args)=>відповідь; select=…players(name,anon_name[,public_id]) підтягує гравця з таблиці players, якщо вона є
 function makeDB(cfg={},rpc={}){
   const DB={};let seq=0;for(const t of Object.keys(cfg))DB[t]=[];
   const val=v=>v==='null'?null:v==='true'?true:v==='false'?false:v;
@@ -29,9 +29,9 @@ function makeDB(cfg={},rpc={}){
       if(miss)return out(400,{code:'42703',message:`column ${t}.${miss} does not exist`});
       if(/players\(/.test(sel)&&!DB.players)return out(400,{code:'PGRST200',message:`Could not find a relationship between '${t}' and 'players' in the schema cache`});
       let rows=DB[t].filter(match);
-      if(/players\(/.test(sel))rows=rows.map(r=>{const p=DB.players.find(x=>x.id===r.player_id);return {...r,players:p?{name:p.name,anon_name:p.anon_name}:null};});const o=u.searchParams.get('order');
+      if(/players\(/.test(sel))rows=rows.map(r=>{const p=DB.players.find(x=>x.id===r.player_id);return {...r,players:p?{name:p.name,anon_name:p.anon_name,public_id:p.public_id}:null};});const o=u.searchParams.get('order');
       if(o)for(const p of o.split(',').reverse()){const [c,d]=p.split('.');rows=[...rows].sort((a,b)=>(a[c]>b[c]?1:a[c]<b[c]?-1:0)*(d==='desc'?-1:1));}
-      const lim=u.searchParams.get('limit');if(lim)rows=rows.slice(0,+lim);return out(200,rows);}
+      const off=u.searchParams.get('offset');if(off)rows=rows.slice(+off);const lim=u.searchParams.get('limit');if(lim)rows=rows.slice(0,+lim);return out(200,rows);}
     if(method==='POST'){const list=[].concat(JSON.parse(body));const res=[];
       for(const row0 of list){const miss=Object.keys(row0).find(bad);if(miss)return out(400,{code:'PGRST204',message:`Could not find the '${miss}' column of '${t}' in the schema cache`});
         const row={...(C.def||{}),...row0};if(C.onInsert)C.onInsert(row,headers);if(C.auto&&row[C.auto]==null)row[C.auto]=++seq;row.created_at=row.created_at||new Date().toISOString();

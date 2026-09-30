@@ -6,13 +6,16 @@
 #    спільний пристрій не зливає два акаунти (В6), одна офіційна спроба дня (В2), дублі — NOTICE без падіння;
 #  - крок 2 (v054_close_writes.sql, двічі): прямий запис anon/authenticated закрито, читання й сервер працюють;
 #  - 0.55 (v055_backups.sql, двічі): сховище backups приватне, anon/authenticated не читають і не бачать файлів; rate_hit — лише сервер.
+#  - 0.59 (v059_player_page.sql, двічі): імена лише латиницею (правила, транслітерація, міграція старих імен і її повтор), унікальність без регістру, 30 днів, public_id, сторінка гравця, видалення акаунта,
+#    лічильники за гравцем, жодного нового прямого запису для anon; база зі збігами імен і база зі старою версією v059 — доводяться до правил.
+#  База — UTF8 з локаллю C (lower() не чіпає кирилицю — як найгірший випадок; ключ імені робить переклад сам).
 # Потрібні бінарники Postgres (/usr/lib/postgresql/*/bin). Запуск з кореня: bash tools/tests/setup.sh   (KEEP=1 — не зупиняти базу)
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 BIN=$(ls -d /usr/lib/postgresql/*/bin 2>/dev/null | sort -V | tail -1); [ -x "$BIN/initdb" ] || { echo "SQL: немає Postgres — пропускаю"; exit 2; }
 D=$(mktemp -d /tmp/upl-pg.XXXXXX); PORT=${PGPORT_TEST:-5439}
 AS=""; [ "$(id -u)" = 0 ] && { chown postgres "$D"; AS="su postgres -s /bin/bash -c"; }
 run(){ if [ -n "$AS" ]; then $AS "$*"; else bash -c "$*"; fi; }
-run "$BIN/initdb -D $D/data -A trust -U postgres >/dev/null" || { echo "SQL: initdb не вдався"; exit 2; }
+run "$BIN/initdb -D $D/data -A trust -U postgres -E UTF8 --locale=C >/dev/null" || { echo "SQL: initdb не вдався"; exit 2; }
 run "$BIN/pg_ctl -D $D/data -o '-k $D -p $PORT -c listen_addresses=' -l $D/log -w start >/dev/null" || { cat "$D/log"; exit 2; }
 [ -z "$KEEP" ] && trap 'run "$BIN/pg_ctl -D $D/data -m fast stop >/dev/null"; rm -rf "$D"' EXIT
 P="$BIN/psql -h $D -p $PORT -U postgres -q -X -v ON_ERROR_STOP=1"
@@ -200,6 +203,127 @@ $P -d t1 -c "insert into rate_hits(key, minute, n) select 'old'||g, now() - inte
 chk "v055: старі хвилини прибираються" service_role "
   declare i int; begin for i in 1..400 loop perform rate_hit('clean', 1000); end loop;
   assert (select count(*) from rate_hits where key like 'old%') = 0, 'не прибрано'; end;"
+# ===== 0.59: сторінка гравця й імена (лише латиниця, рішення власника 30.09.2026) =====
+$P -d t1 -c "select count(*) from pg_policies" -tA > "$D/pol_before" 2>/dev/null
+$P -d t1 -c "insert into players(anon_name, name) values ('Brave Fox', 'Вітя'), ('Calm Owl', 'andré'), ('Bold Hawk', 'Anna Maria'), ('Quiet Lynx', 'Щербак')" >/dev/null   # старі імена: кирилиця, «é», пробіл і великі літери
+snap(){ $P -d t1 -tAc "select string_agg(id || ':' || coalesce(name, '-') || ':' || anon_name || ':' || coalesce(name_changed_at::text, '-'), ',' order by id) from players"; }
+if $P -d t1 -f "$ROOT/sql/v059_player_page.sql" -tA >"$D/ren1" 2>"$D/err"; then ok "запуск 1: v059_player_page.sql"; else bad "запуск 1: v059_player_page.sql — $(grep -v NOTICE "$D/err" | head -3)"; fi
+S1=$(snap)
+if $P -d t1 -f "$ROOT/sql/v059_player_page.sql" -tA >"$D/ren2" 2>"$D/err"; then ok "запуск 2: v059_player_page.sql"; else bad "запуск 2: v059_player_page.sql — $(grep -v NOTICE "$D/err" | head -3)"; fi
+if grep -qx "Вітя|vitia" "$D/ren1" && grep -qx "andré|andre" "$D/ren1" && grep -qx "Anna Maria|anna_maria" "$D/ren1" && grep -qx "Щербак|shcherbak" "$D/ren1" && [ ! -s "$D/ren2" ] && [ "$S1" = "$(snap)" ]
+then ok "міграція імен: «було → стало» (Вітя → vitia, andré → andre, Anna Maria → anna_maria, Щербак → shcherbak); повторний запуск нічого не змінює"
+else bad "міграція імен — 1: $(tr '\n' ' ' < "$D/ren1") · 2: $(tr '\n' ' ' < "$D/ren2")"; fi
+if $P -d t1 -f "$ROOT/sql/v059_name_conflicts.sql" -tA >"$D/conf" 2>"$D/err" && [ ! -s "$D/conf" ]; then ok "v059_name_conflicts.sql читається; після міграції — порожньо"; else bad "v059_name_conflicts.sql — $(head -3 "$D/err") $(head -3 "$D/conf")"; fi
+if $P -d t1 -f "$ROOT/sql/v053_writes.sql" >/dev/null 2>"$D/err" && $P -d t1 -f "$ROOT/sql/v055_backups.sql" >/dev/null 2>>"$D/err"; then ok "v053/v055 після v059 — без помилок"; else bad "v053/v055 після v059 — $(grep -v NOTICE "$D/err" | head -3)"; fi
+chk "v059: нових політик немає, anon/authenticated не пишуть у players і player_links" postgres "
+  assert (select count(*) from pg_policies)::text = '$(cat "$D/pol_before")', 'кількість політик змінилась';
+  assert not has_table_privilege('anon', 'players', 'insert') or not exists (select 1 from pg_policies where tablename = 'players' and cmd <> 'SELECT'), 'players: політика запису';
+  assert not exists (select 1 from pg_policies where tablename in ('players','player_links') and cmd <> 'SELECT'), 'запис у players/player_links';
+  assert (select count(*) from pg_indexes where indexname in ('players_name_uq', 'players_public_id_uq')) = 2, 'індекси';"
+chk "v059: після міграції всі живі імена за правилами, унікальні; анонімні — «silent_owl»; переписаним — одна зміна без очікування" postgres "
+  assert (select count(*) from players where name is not null and merged_into is null and deleted_at is null and name_problem(name) is not null) = 0, 'імена не за правилами';
+  assert (select count(*) from players where anon_name !~ '^[a-z0-9_]+\$') = 0, (select string_agg(anon_name, ',') from players where anon_name !~ '^[a-z0-9_]+\$');
+  assert (select name_changed_at is null from players where name = 'vitia'), 'name_changed_at';"
+chk "v059: public_id у всіх гравців, унікальний, 8 символів; новий гравець теж отримує" postgres "
+  assert (select count(*) from players where public_id is null or public_id !~ '^[a-z2-9]{8}\$') = 0, 'public_id';
+  pid := player_for_device('cccccccc-0000-4000-a000-000000000009'); assert (select public_id is not null from players where id = pid), 'новий без public_id';"
+chk "v059: нове анонімне ім'я — латиниця, нижній регістр, «_» замість пробілу" postgres "
+  declare a text := anon_name(); begin assert a ~ '^[a-z]+_[a-z]+\$', a; end;"
+chk "name_translit: офіційна транслітерація (КМУ 2010) і чистка" postgres "
+  declare t text[][] := array[['Андрій','andrii'],['Вітя','vitia'],['Щербак','shcherbak'],['Юлія','yuliia'],['Євген','yevhen'],['Андрій Шевченко','andrii_shevchenko'],
+    ['Олексій','oleksii'],['Костянтин','kostiantyn'],['Згорани','zghorany'],['В’ячеслав','viacheslav'],['Їжак','yizhak'],['Юрій Йосипенко','yurii_yosypenko'],
+    ['Ярослав Ґонта','yaroslav_gonta'],['Сергій','serhii'],['ЩУКА','shchuka'],['Эдуард Ёлкин','eduard_yolkyn'],['Подъезд Ы','podezd_y'],['André','andre'],
+    ['Anna-Maria','anna_maria'],['🔥 Max 🔥','max'],['  __Vitya..7__ ','vitya.7'],['Олександра Костянтинівна','oleksandra_kostianty']]; i int; begin
+  for i in 1 .. array_length(t, 1) loop assert name_translit(t[i][1]) = t[i][2], t[i][1] || ' → ' || name_translit(t[i][1]) || ' (треба ' || t[i][2] || ')'; end loop; end;"
+chk "name_problem: довжина, лише a-z 0-9 _ ., літера, краї, мат (корені латиницею; «^hui» — лише з початку слова)" postgres "
+  declare t text[][] := array[['ab','name_len'],['andrii.s',''],['vitya_7',''],['12345','name_chars'],['Andrii','name_chars'],['андрій','name_chars'],['andrii sh','name_chars'],
+    ['_andrii','name_edge'],['andrii.','name_edge'],['super_hui','name_bad'],['hui123','name_bad'],['chuiko',''],['pizdets','name_bad'],['blyad.x','name_bad'],['m_u_d_a_k','name_bad'],
+    ['FUCK','name_chars'],['xfuckx','name_bad'],[repeat('a', 21),'name_len']]; i int; begin
+  for i in 1 .. array_length(t, 1) loop assert coalesce(name_problem(t[i][1]), '') = t[i][2], t[i][1] || ' → ' || coalesce(name_problem(t[i][1]), 'ok'); end loop; end;"
+chk "set_player_name: нижній регістр, пробіл → «_»; той самий ключ — без відліку 30 днів" anon "
+  j := set_player_name('$DEV', '$SEC', 'Andrii Sh'); assert j->>'name' = 'andrii_sh' and j->>'public_id' is not null, j::text;
+  j := set_player_name('$DEV', '$SEC', 'ANDRII_SH'); assert j->>'name' = 'andrii_sh', 'другий раз ' || j::text;"
+chk "set_player_name: правила — 2 символи, кирилиця, лише цифри, краї, мат, 21 символ" anon "
+  begin j := set_player_name('$DEV', '$SEC', 'ab'); assert false, '2 символи'; exception when sqlstate '22023' then assert sqlerrm = 'name_len', sqlerrm; end;
+  begin j := set_player_name('$DEV', '$SEC', 'андрій'); assert false, 'кирилиця'; exception when sqlstate '22023' then assert sqlerrm = 'name_chars', sqlerrm; end;
+  begin j := set_player_name('$DEV', '$SEC', '12345'); assert false, 'цифри'; exception when sqlstate '22023' then assert sqlerrm = 'name_chars', sqlerrm; end;
+  begin j := set_player_name('$DEV', '$SEC', 'andrii_'); assert false, 'краї'; exception when sqlstate '22023' then assert sqlerrm = 'name_edge', sqlerrm; end;
+  begin j := set_player_name('$DEV', '$SEC', 'Super_HUI'); assert false, 'мат'; exception when sqlstate '22023' then assert sqlerrm = 'name_bad', sqlerrm; end;
+  begin j := set_player_name('$DEV', '$SEC', repeat('a', 21)); assert false, '21'; exception when sqlstate '22023' then assert sqlerrm = 'name_len', sqlerrm; end;
+  assert (player_hello('$DEV', '$SEC'))->>'name' = 'andrii_sh', 'ім''я змінилось';"
+chk "set_player_name: зайняте без урахування регістру (у базі «vitia» з «Вітя») — name_taken" anon "
+  begin j := set_player_name('$NDEV', '$SEC2', 'VITIA'); assert false, 'взяв зайняте'; exception when sqlstate '23505' then assert sqlerrm = 'name_taken', sqlerrm; end;"
+chk "set_player_name: сайт 0.58 шле перше ім'я кирилицею — сервер переписує латиницею; друга зміна — лише через 30 днів (name_wait:дата)" anon "
+  j := set_player_name('$EDEV', '$SEC2', 'Сергій'); assert j->>'name' = 'serhii' and j->>'name_next' is null, j::text;
+  j := set_player_name('$EDEV', '$SEC2', 'serhii.2'); assert j->>'name' = 'serhii.2' and j->>'name_next' is not null, j::text;
+  begin j := set_player_name('$EDEV', '$SEC2', 'serhii3'); assert false, 'друга зміна'; exception when sqlstate '22023' then assert sqlerrm like 'name_wait:____-__-__', sqlerrm; end;
+  begin j := set_player_name('$EDEV', '$SEC2', ''); assert false, 'скинув'; exception when sqlstate '22023' then assert sqlerrm like 'name_wait:%', sqlerrm; end;
+  begin j := set_player_name('$EDEV', '$SEC2', 'Сергій'); assert false, 'кирилиця з іменем'; exception when sqlstate '22023' then assert sqlerrm = 'name_chars', sqlerrm; end;"
+chk "set_player_name: чужий секрет — відмова (як раніше)" anon "
+  begin j := set_player_name('$DEV', 'attacker-attacker-attacker', 'hacked'); assert false, 'перейменував'; exception when sqlstate '28000' then null; end;"
+chk "set_player_auto_name: з Telegram/Google — транслітерація, зайняте — з номером, коротке — анонімний, є ім'я — не чіпає" anon "
+  j := set_player_auto_name('dddddddd-0000-4000-a000-000000000001', '$SEC', 'Андрій'); assert j->>'name' = 'andrii', j::text;
+  j := set_player_auto_name('dddddddd-0000-4000-a000-000000000002', '$SEC', 'АНДРІЙ'); assert j->>'name' = 'andrii2' and j->>'name_next' is null, j::text;
+  j := set_player_auto_name('dddddddd-0000-4000-a000-000000000003', '$SEC', 'Ю'); assert j->>'name' is null and j->>'anon_name' ~ '^[a-z]+_[a-z]+\$', j::text;
+  j := set_player_auto_name('dddddddd-0000-4000-a000-000000000004', '$SEC', 'Олександра Костянтинівна'); assert j->>'name' = 'oleksandra_kostianty', j::text;
+  j := set_player_auto_name('dddddddd-0000-4000-a000-000000000005', '$SEC', 'Oleksandra Kostiantynivna'); assert j->>'name' = 'oleksandra_kostiant2', j::text;
+  j := set_player_auto_name('dddddddd-0000-4000-a000-000000000001', '$SEC', 'Петро'); assert j->>'name' = 'andrii', 'перейменував ' || j::text;
+  begin j := set_player_auto_name('dddddddd-0000-4000-a000-000000000001', 'attacker-attacker-attacker', 'x'); assert false, 'чужий секрет'; exception when sqlstate '28000' then null; end;
+  begin perform name_free('abc', null); assert false, 'name_free для anon'; exception when insufficient_privilege then null; end;"
+chk "унікальний індекс: навіть сервер не запише друге «SERHII.2»" service_role "
+  begin update players set name = 'SERHII.2', merged_into = null where id = t_link('device', '$NDEV'); assert false, 'дубль'; exception when unique_violation then null; end;"
+chk "merge_players з однаковими іменами не падає на унікальному індексі" postgres "
+  declare a uuid; b uuid; begin
+  insert into players(anon_name) values ('m1') returning id into a; insert into players(anon_name) values ('m2') returning id into b;
+  update players set name = 'merge_me' where id = a; perform merge_players(a, b);
+  assert (select name from players where id = b) = 'merge_me' and (select merged_into from players where id = a) = b, 'злиття';
+  end;"
+chk "player_profile_pub (anon): ім'я, цифри, трофеї; без device_id" anon "
+  j := player_profile_pub((player_hello('$DEV', '$SEC'))->>'public_id');
+  assert j->>'name' = 'andrii_sh' and (j->>'seasons')::int >= 1 and j->'best' is not null and json_typeof(j->'trophies') = 'array', j::text;
+  assert j::text !~ '$DEV' and j::text !~ 'device', 'є device_id';
+  assert player_profile_pub('nosuchid') is null, 'невідомий';"
+chk "game_stats / trophy_stats: «гравців» за player_id" anon "
+  assert (game_stats()->>'players')::int = (select count(distinct coalesce(player_id::text, device_id::text)) from seasons), 'game_stats';
+  assert (trophy_stats()->>'players')::int >= 1, 'trophy_stats';"
+chk "delete_player: чужий секрет — відмова" anon "
+  begin j := delete_player('$DEV', 'attacker-attacker-attacker'); assert false, 'видалив'; exception when sqlstate '28000' then null; end;"
+chk "delete_player: ім'я й прив'язки стерто, результати лишились під анонімним іменем, пристрій — новий гравець" authenticated "
+  declare old uuid := t_link('device', '$LDEV'); pub text := (select public_id from players where id = t_link('device', '$LDEV')); n int := (select count(*) from seasons where player_id = t_link('device', '$LDEV')); begin
+  update players set name = 'на видалення' where id = old;
+  j := delete_player('$LDEV', '$SEC2'); assert (j->>'ok')::boolean, j::text;
+  assert (select name is null and deleted_at is not null from players where id = old), 'гравець';
+  assert (select count(*) from player_links where player_id = old) = 0, 'прив''язки';
+  assert (select count(*) from seasons where player_id = old) = n and (select count(*) from seasons where player_id = old and (nickname is not null or tg_name is not null)) = 0, 'сезони';
+  assert (player_profile_pub(pub))->>'deleted' = 'true', 'профіль';
+  j := player_hello('$LDEV', '$SEC2'); assert (j->>'id')::uuid <> old and j->>'name' is null, 'пристрій не новий';
+  end;"
+chk "delete_player: вхід іншого гравця — відмова" authenticated "
+  begin j := delete_player('$DEV', '$SEC'); assert false, 'видалив чужого'; exception when sqlstate '28000' then null; end;" ',"sub":"'$U2'"'
+# база, де збіги імен уже є: v059_name_conflicts.sql їх показує; v059 дає молодшому номер і створює індекс
+$P -c "create database t3" >/dev/null
+if { $P -d t3 -f "$ROOT/tools/tests/stub.sql" && $P -d t3 -f "$ROOT/sql/new_db_part_A.sql" && $P -d t3 -f "$ROOT/sql/v039_part_B.sql" \
+     && $P -d t3 -c "insert into players(anon_name, name, created_at) values ('a', 'Вітя', now() - interval '2 days'), ('b', 'вітя ', now() - interval '1 day'), ('c', 'Oleg', now()), ('d', 'vitia', now())" \
+     && $P -d t3 -f "$ROOT/sql/v053_writes.sql"; } >/dev/null 2>"$D/err" \
+   && [ "$($P -d t3 -f "$ROOT/sql/v059_name_conflicts.sql" -tA 2>>"$D/err" | grep -c "^збіг")" = 2 ] \
+   && $P -d t3 -f "$ROOT/sql/v059_player_page.sql" >/dev/null 2>>"$D/err" \
+   && [ "$($P -d t3 -tAc "select count(*) from pg_indexes where indexname = 'players_name_uq'")" = 1 ] \
+   && [ "$($P -d t3 -tAc "select string_agg(anon_name || '=' || name, ',' order by anon_name) from players")" = "a=vitia2,b=vitia3,c=oleg,d=vitia" ]
+then ok "збіги імен: v059_name_conflicts.sql показує; v059 — ім'я за правилами лишається (vitia), переписані — з номером (vitia2, vitia3), індекс створено"
+else bad "база зі збігами імен — $(grep -v NOTICE "$D/err" | head -2) $($P -d t3 -tAc "select string_agg(anon_name || '=' || name, ',' order by anon_name) from players")"; fi
+# тестова база, де вже виконано ПОПЕРЕДНЮ версію v059 (імена кирилицею в нижньому регістрі, індекс на name_key): нова версія доводить до латиниці
+OLD059=$(git -C "$ROOT" show 8765782:sql/v059_player_page.sql 2>/dev/null)
+if [ -z "$OLD059" ]; then echo "(стара v059 недоступна в git — пропускаю)"; else
+$P -c "create database t4" >/dev/null
+if { $P -d t4 -f "$ROOT/tools/tests/stub.sql" && $P -d t4 -f "$ROOT/sql/new_db_part_A.sql" && $P -d t4 -f "$ROOT/sql/v039_part_B.sql" && $P -d t4 -f "$ROOT/sql/v053_writes.sql" \
+     && $P -d t4 -c "insert into players(anon_name, name) values ('Silent Owl', 'Вітя'), ('Brave Fox', 'Андрій Ш')" && echo "$OLD059" | $P -d t4 \
+     && [ "$($P -d t4 -tAc "select count(*) from pg_indexes where indexname = 'players_name_uq'")" = 1 ] \
+     && $P -d t4 -f "$ROOT/sql/v059_player_page.sql" && $P -d t4 -f "$ROOT/sql/v059_player_page.sql"; } >/dev/null 2>"$D/err" \
+   && [ "$($P -d t4 -tAc "select string_agg(name || '/' || anon_name || '/' || coalesce(name_changed_at::text, '-'), ',' order by name) from players where name is not null")" = "andrii_sh/brave_fox/-,vitia/silent_owl/-" ] \
+   && [ "$($P -d t4 -tAc "select count(*) from pg_indexes where indexname = 'players_name_uq'")" = 1 ]
+then ok "база зі старою v059: нова версія переписує імена латиницею (вітя → vitia, андрій ш → andrii_sh), анонімні — silent_owl, двічі без помилок"
+else bad "база зі старою v059 — $(grep -v NOTICE "$D/err" | head -2) $($P -d t4 -tAc "select string_agg(name, ',') from players where name is not null")"; fi
+fi
 echo "база: $D (порт $PORT)"
 [ $FAIL = 0 ] && echo "SQL: УСЕ ГАРАЗД ($N перевірок)" || echo "SQL: ПРОБЛЕМИ $FAIL/$N"
 exit $((FAIL>0))

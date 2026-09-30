@@ -15,7 +15,7 @@ const OUT=process.argv[2]||path.join(ROOT,'tools','tests','out');fs.mkdirSync(OU
  await pg.click('#viewClose');T.check(await pg.$eval('#newsDot',e=>e.hidden),'після перегляду крапки немає');
  await pg.reload();await pg.waitForTimeout(1000);T.check(await pg.$eval('#newsDot',e=>e.hidden),'після перезавантаження крапки теж немає');
  // вхід через бота
- await pg.click('#acctBtn');await pg.waitForTimeout(300);await pg.locator('#viewBox .box').screenshot({path:path.join(OUT,'acct.png')});
+ await pg.click('#acctBtn');await pg.waitForTimeout(300);await pg.click('#ppLogin');await pg.waitForTimeout(300);await pg.locator('#viewBox .box').screenshot({path:path.join(OUT,'acct.png')});
  const href=await pg.getAttribute('#acctBot','href');const tok=(/start=login_([0-9a-f]{32})$/.exec(href||'')||[])[1];
  T.check(/^https:\/\/t\.me\/upl30_bot\?start=login_/.test(href||'')&&!!tok,'посилання на бота з токеном: '+href);
  T.check(!!(await pg.$('#acctG')),'на сайті є кнопка Google');
@@ -24,8 +24,8 @@ const OUT=process.argv[2]||path.join(ROOT,'tools','tests','out');fs.mkdirSync(OU
  T.check(auth.length>=1&&auth.every(a=>a.login_token===tok),`поки «Start» не натиснуто — опитування /api/auth (${auth.length}) з тим самим токеном`);
  T.check(/Чекаємо підтвердження/.test(await pg.textContent('#viewBody')),'підказка «Чекаємо підтвердження»');
  mode='ok';await pg.waitForTimeout(3500);
- const btn=(await pg.textContent('#acctBtn')).trim(),body=(await pg.textContent('#viewBody')).replace(/\s+/g,' ');
- T.check(btn==='Андрій'&&/Ти увійшов як Андрій через Telegram/.test(body),`увійшов: кнопка «${btn}», ${body.slice(0,80)}`);
+ const body=(await pg.textContent('#viewBody')).replace(/\s+/g,' ');await pg.click('#viewClose');const page=(await pg.textContent('#pp')).replace(/\s+/g,' ');
+ T.check(/Ти увійшов як Андрій через Telegram/.test(body)&&/Увійшов через Telegram/.test(page),`увійшов: ${body.slice(0,60)}; сторінка: «Увійшов через Telegram»`);
  const n=auth.length;await pg.waitForTimeout(3000);T.check(auth.length===n,'після входу опитування зупинилось');
  T.check(!errs.length,'помилок на сторінці немає '+errs.join(' | '));
  await b.close();process.exit(T.done());})();
