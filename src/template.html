@@ -341,6 +341,7 @@ td .sub{font-size:11px;color:var(--muted);margin-top:2px;display:flex;gap:6px;al
       <details><summary>Чому рейтинги приховані під час драфту?</summary><p>Щоб грала пам'ять і футбольне чуття, а не таблиця. Рейтинги відкриваються, щойно ти зібрав 11 гравців, — перед сезоном. У «Хардкорі» — ніколи.</p></details>
       <details><summary>Що таке xP, xG і «везіння»?</summary><p>xP — скільки очок твій склад у середньому набирає проти цих суперників (300 симуляцій). xG — очікувані голи. Везіння — різниця між реальними очками й xP.</p></details>
       <details><summary>Як грати з друзями?</summary><p>Три способи: однаковий «Виклик дня» і таблиця дня; посилання «Кинути виклик другу» після сезону; режим 5×5 на одному пристрої. А ще можна додати @upl30_bot у Telegram-групу й написати /league — бот вестиме табло групи.</p></details>
+      <details><summary>Що ви збираєте?</summary><p>Анонімно дивимося, куди натискають, щоб покращувати гру (сервіс Microsoft Clarity). Імен і паролів не бачимо.</p></details>
       <details><summary>Чи треба реєструватися?</summary><p>Ні. Вхід через Google або Telegram потрібен лише, щоб трофеї, серія й рекорди не загубилися й були на всіх пристроях.</p></details>
       <details><summary>Звідки дані?</summary><p>Склади, матчі, голи та підсумкові таблиці всіх сезонів Вищої ліги й Прем'єр-ліги 1992–2026 з відкритих джерел. Асисти — з 2012/13 і за 2021/22, сухі матчі до 2012 — оцінка за командною статистикою (≈).</p></details>
     </div>
@@ -481,7 +482,7 @@ td .sub{font-size:11px;color:var(--muted);margin-top:2px;display:flex;gap:6px;al
     </div>
 </div>
 <div class="overlay" id="viewBox" hidden><div class="box"><div class="vhead"><h3 id="viewTitle">Склад</h3><button class="ghost" id="viewClose">Закрити</button></div><div id="viewBody"></div></div></div>
-<div class="foot">30-0 УПЛ · <a href="#" id="newsBtn">Що нового у версії 0.50<b id="newsDot" hidden></b></a> · <a href="#" id="themeBtn" class="thm" role="switch" aria-checked="false" aria-label="Світла тема"></a> · неофіційний фан-проєкт</div>
+<div class="foot">30-0 УПЛ · <a href="#" id="newsBtn">Що нового у версії 0.51<b id="newsDot" hidden></b></a> · <a href="#" id="themeBtn" class="thm" role="switch" aria-checked="false" aria-label="Світла тема"></a> · неофіційний фан-проєкт</div>
 <script id="pool" type="application/json">__POOL__</script>
 <script>
 (function(){
@@ -1282,12 +1283,13 @@ function drawCard(r){
 }
 document.getElementById('replayBtn').onclick=()=>playSeason(null);
 // ---------- «Що нового»: коротко й по-людськи про останню версію (технічний журнал — CHANGELOG.md у репозиторії)
-const WHATSNEW={v:'0.50',date:'29.09.2026',items:[
+const WHATSNEW={v:'0.51',date:'30.09.2026',items:[
   ['soccer-field','Один рейтинг — усюди','Гравець має той рейтинг, з яким випав у колесі, — на полі, у складі, в таблицях і на картці. Скільки він дасть команді, вирішує поле: на своїй позиції — повністю.'],
   ['star','Робоча нога','Тепер важить, якою ногою грають флангові гравці. Спробуй здогадатися, кого куди краще ставити.'],
   ['trophy','Ліга культових клубів','Суперники тепер завжди одні й ті самі: 15 культових клубів УПЛ — Динамо, Шахтар, Дніпро, Металіст, обидва Металурги, Іллічівець, Чорноморець і ще сім. Шанси в усіх рівні.'],
   ['crown','Ліга легенд','Новий режим: ті самі клуби, але кожен у своєму найкращому сезоні. 30-0 тут — майже диво.'],
-  ['share-variant','Картка й «Один клуб»','На картці менший логотип і видно режим. В «Одному клубі» клуб тепер обираєш ти, а перекрутка міняє лише сезон. Антисезон трохи складніший.']]};
+  ['share-variant','Картка й «Один клуб»','На картці менший логотип і видно режим. В «Одному клубі» клуб тепер обираєш ти, а перекрутка міняє лише сезон. Антисезон трохи складніший.'],
+  ['eye','Що ми збираємо','Анонімно дивимося, куди натискають, щоб покращувати гру. Деталі — у питаннях унизу головної.']]};
 function openNews(){const box=document.getElementById('viewBox');document.getElementById('viewTitle').textContent=`Що нового · версія ${WHATSNEW.v}`;
   document.getElementById('viewBody').innerHTML=`<div class="news">${WHATSNEW.items.map(([e,h,d])=>`<div class="ni">${ic(e,'lg')}<div><b>${esc(h)}</b><p>${esc(d)}</p></div></div>`).join('')}</div>`;
   box.hidden=false;lsSet('upl30_news_seen',WHATSNEW.v);document.getElementById('newsDot').hidden=true;}
