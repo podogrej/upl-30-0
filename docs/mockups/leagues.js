@@ -80,8 +80,8 @@ module.exports = ({ page, header, I, icon, avatar, ME }) => {
 <div class="lg-k"><span>Спроби на день</span></div><div class="lg-opts">${opt('1 спроба', 'без права на помилку')}${opt('3 спроби', '', 1)}</div>
 <div class="lg-k"><span>У залік туру</span></div><div class="lg-opts">${opt('Найкраща', 'твій максимум за день', 1)}${opt('Остання', 'ризиковано: переграв — замінив')}</div>
 <div class="lg-k"><span>Перекрути колеса</span></div><div class="lg-opts c3">${opt('3', 'легко')}${opt('1', 'нормально', 1)}${opt('0', 'хардкор')}</div>
-<div class="lg-k"><span>Рейтинги</span></div><div class="lg-opts">${opt('Видно', '', 1)}${opt('На пам\'ять', 'рейтинги приховані')}</div>
-<div class="lg-k"><span>Епоха</span></div><div class="lg-opts">${opt('Усі роки', '1992–2026', 1)}${opt('З 2000-х', '2000/01–2025/26')}${opt('З 2010-х', '2010/11–2025/26')}${opt('Сучасність', 'з 2016/17')}</div>
+<div class="lg-k"><span>Рейтинги гравців</span></div><div class="lg-opts">${opt('Видно', '', 1)}${opt('На пам\'ять', 'рейтинги приховані')}</div>
+<div class="lg-k"><span>Епоха</span></div><div class="lg-opts">${opt('Усі роки', '1992–2026', 1)}${opt('З 2000-х', '2000/01–2025/26')}${opt('З 2010-х', '2010/11–2025/26')}${opt('Сучасність', 'з 2015/16')}</div>
 <div style="height:18px"></div><button class="lg-big">Створити й грати</button><p class="lg-hint">Далі — посилання для друзів і твоя перша спроба.</p>`);
 
   // 3. Ліга 11×11
@@ -102,9 +102,9 @@ module.exports = ({ page, header, I, icon, avatar, ME }) => {
   files.lg_4_lobby5 = P('5×5 — склади', `<div class="lg-h" style="text-align:left"><h1 style="font-size:22px">Кубок кума <span class="lg-tag f5" style="vertical-align:4px">5×5</span></h1></div>
 <p class="muted" style="font-size:13px">6 з 10 · перекрут 1 · рейтинги видно · кожен з кожним → фінал</p>
 <div class="lg-card lg-timer"><b>02:14:37</b><span>до початку турніру (21:00). Потім сервер одразу зіграє всі матчі.</span></div>
-<div class="lg-card" style="margin-top:10px;grid-template-columns:auto 1fr auto;align-items:center">${I('check-circle')}<div><b>Твоя п'ятірка готова</b><div class="muted" style="font-size:12px">Суперники побачать склад лише після старту</div></div><button class="ghost">Переглянути</button></div>
+<div class="lg-card" style="margin-top:10px;grid-template-columns:auto 1fr auto;align-items:center">${I('check-circle')}<div><b>Твоя п'ятірка готова</b><div class="muted" style="font-size:12px">Склади відкриті — можна подивитися суперників</div></div><button class="ghost">Переглянути</button></div>
 <div class="lg-k"><span>Учасники</span><span>5 з 6 готові</span></div>
-<div class="lg-tbl">${L5.map(([id, n, ok]) => `<div class="lg-tr" style="grid-template-columns:28px 1fr auto">${av(id)}<span>${n}</span>${ok ? '<span class="lg-ok">готовий</span>' : '<span class="lg-wait">збирає…</span>'}</div>`).join('')}</div>
+<div class="lg-tbl">${L5.map(([id, n, ok]) => `<div class="lg-tr" style="grid-template-columns:28px 1fr auto">${av(id)}<span>${n}</span>${ok ? '<span class="lg-ok">склад ›</span>' : '<span class="lg-wait">збирає…</span>'}</div>`).join('')}</div>
 <div style="height:10px"></div><button class="ghost" style="width:100%">Почати зараз (для творця)</button>
 <div class="lg-k"><span>Запросити</span></div><div class="lg-link"><input value="upl-30-0.vercel.app/l/kum" readonly><button class="primary">${I('share-variant')}</button></div>`);
 
