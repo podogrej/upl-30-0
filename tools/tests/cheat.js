@@ -95,6 +95,18 @@ function honestXi(formation) {
   await tamper('seed для іншого режиму', r => { r.mode = 'hard'; }, false);
   await tamper('seed для іншого року суперників', r => { r.year = E.LEAGUE_LEGENDS; }, false);
   await tamper('позначка 30-0 без 30 перемог', r => { r.perfect = true; }, false);
+  // 0.54: одна людина під двома id (DATA.alias) — «гравець двічі», навіть якщо seed видано й перерахунок сходиться
+  { const place = (id, used) => { for (const c of E.DATA.clubs) for (const p of c.pl) if (p[5] === id) for (let i = 0; i < xi.length; i++) {
+      if (used.has(i)) continue; const r = E.effRating(p, xi[i].slot); if (r != null) return { i, x: { n: p[0], id, slot: xi[i].slot, r, r0: p[2], c: c.n, y: c.y } }; } };
+    let pair = null;
+    for (const [d, k] of Object.entries(E.DATA.alias || {})) { const a = place(d, new Set()); const b = a && place(k, new Set([a.i])); if (a && b) { pair = [a, b]; break; } }
+    if (!pair) { bad++; console.log('✗ немає пари псевдонімів для перевірки'); }
+    else {
+      const x2 = xi.map(x => ({ ...x })); for (const q of pair) x2[q.i] = q.x;
+      const s2 = await call(seedH, { device_id: device, xi: x2, formation, mode: 'normal', format: 'classic', year });
+      const q = E.run({ xi: x2.map(x => ({ id: x.id, name: x.n, slot: x.slot, pos: E.GROUP_OF[x.slot], r: x.r })), mode: 'normal', format: 'classic', year, seed: s2.j.seed });
+      await tamper(`одна людина двічі: ${pair[0].x.id} = ${pair[1].x.id}`, r => { Object.assign(r, { xi: x2, seed: s2.j.seed, seed_id: s2.j.seed_id, w: q.W, d: q.D, l: q.L, pts: q.pts, place: q.place, gf: q.gf, ga: q.ga }); }, false);
+    } }
   // рік суперників поза форматом: seed видано на слабкий справжній сезон, виклику з таким роком немає
   const weak = E.YEARS16[0];
   const sw = await call(seedH, { device_id: device, xi, formation, mode: 'normal', format: 'classic', year: weak });

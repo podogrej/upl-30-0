@@ -1,6 +1,6 @@
 // ---------- ТРОФЕЇ: видимі (умова відома), секретні (лише кількість), віхи за кількістю сезонів; повторювані мають лічильник ×N
-const PERSON={};   // person_id → {main, nat, by, clubs:Set}
-for(const c of DATA.clubs)for(const p of c.pl){const q=PERSON[p[5]]||(PERSON[p[5]]={main:p[6],nat:p[10],by:p[11],clubs:new Set()});q.clubs.add(c.c);}
+const PERSON={};   // person_id → {main, nat, by, clubs:Set}; clubs — спільний Set усієї людини (дубль id і canonical, DATA.alias)
+{const CL={};for(const c of DATA.clubs)for(const p of c.pl){const k=canon(p[5]);const cl=CL[k]||(CL[k]=new Set());const q=PERSON[p[5]]||(PERSON[p[5]]={main:p[6],nat:p[10],by:p[11],clubs:cl});cl.add(c.c);}}
 const CLUBS_NOW=new Set(DATA.clubs.filter(c=>c.y===Math.max(...DATA.clubs.map(x=>x.y))).map(c=>c.c));
 const UA=0;   // DATA.nats[0] = «Україна»
 const TR_CATS=[["season","Сезон"],["squad","Склад"],["players","Гравці"],["modes","Режими та складність"],["daily","Виклик дня"],["secret","Секретні"]];
@@ -102,7 +102,7 @@ const TROPHIES=[
   {id:"pyvo",i:"🍺",n:"По пиву?",d:"Алієв і Мілевський в одному складі",cat:"secret",sec:1,t:c=>c.xi.some(x=>x.id==='tm:9796')&&c.xi.some(x=>x.id==='tm:9800')},
   {id:"palianytsia",i:"🍞",n:"Скажи «паляниця»",d:"Олександр Паляниця у складі",cat:"secret",sec:1,t:c=>c.xi.some(x=>x.id==='w:1972-02-29:palianitsia')},
   {id:"oleksandry",i:"👥",n:"Олександрія",d:"11 Олександрів в одному складі",cat:"secret",sec:1,t:c=>c.xi.filter(x=>firstName(x.name)==='Олександр').length>=11},
-  {id:"zarobitchany",i:"🧳",n:"Заробітчани",d:"5+ українців, які грали в клубах Європи",cat:"secret",sec:1,t:c=>c.xi.filter(x=>ABROAD.has(x.id)).length>=5},
+  {id:"zarobitchany",i:"🧳",n:"Заробітчани",d:"5+ українців, які грали в клубах Європи",cat:"secret",sec:1,t:c=>c.xi.filter(x=>ABROAD.has(x.id)||ABROAD.has(canon(x.id))).length>=5},
   {id:"trio",i:"🍻",n:"Третім будеш?",d:"Алієв, Мілевський і Бухал в одному складі",cat:"secret",sec:1,t:c=>['tm:9796','tm:9800','tm:381268'].every(id=>c.xi.some(x=>x.id===id))},
   {id:"rada",i:"🏛️",n:"Верховна Рада",d:"6+ гравців із прізвищами народних депутатів",cat:"secret",sec:1,t:c=>c.xi.filter(x=>RADA.has(normSur(x.name))).length>=6},
   // «рекорди ганьби» в класиці (з 0.50: у звичайних режимах слабка команда не має нижньої межі сили; в антисезоні — має)

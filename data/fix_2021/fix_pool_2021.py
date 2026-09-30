@@ -11,15 +11,16 @@
 Нові id — за правилом етапу 3 (build_stage3.py): w:<дата народження>:<перший за абеткою ключ імені з ru-запису>.
 
 Рейтинг: формула етапу 4 (recompute_2021.py) на виправленому сезоні → round → (stretch_top лише для 90+, тут не потрібен)
-→ pool_ratings_raw.json → логіка smooth_cameo.py для змінених карток і для карток тих самих людей, у яких змінилася
+→ pool_ratings_raw.json → smooth_cameo.smoothed() (імпорт, не копія) для змінених карток і для карток тих самих людей, у яких змінилася
 «опора» згладжування (щоб повторний запуск smooth_cameo.py нічого не міняв).
 """
 import json, os, re, sys, unicodedata
-from collections import defaultdict
 
 D = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, D)
 import recompute_2021 as RC
+sys.path.insert(0, os.path.join(D, '..', 'ratings'))
+import smooth_cameo as SC   # smoothed(pool, raw) — та сама формула, що в data/ratings/smooth_cameo.py
 
 POOL, RAW = RC.POOL, RC.RAW
 Y = 2021
@@ -135,26 +136,19 @@ def main():
         assert r < 90, f'{c}/{i}: {r} ≥ 90 — потрібен stretch_top за квотами всієї бази, вручну не ставимо'
         raw[f"{Y}|{c}|{i}"] = r
 
-    # ---- smooth_cameo.py (та сама логіка) для змінених карток і людей, яких це зачепило ----
-    FULL, MIN_REF_APPS, WINDOW = 15, 10, 2
-    key = lambda c, i: f"{c['y']}|{c['c']}|{i}"
-    per = defaultdict(list)
-    for c in pool['clubs']:
-        for i, p in enumerate(c['pl']): per[p[5]].append((c['y'], p[3] or 0, raw[key(c, i)]))
+    # ---- smooth_cameo.py (імпорт тієї самої функції, з 0.54 — без копії формули) для змінених карток і людей, яких це зачепило ----
     pids = old_pids | {clubs[c]['pl'][i][5] for c, i in touched}
     tk = {f"{Y}|{c}|{i}" for c, i in touched}
+    sm = SC.smoothed(pool, raw)
     changed = []
     for c in pool['clubs']:
         for i, p in enumerate(c['pl']):
-            r, a = raw[key(c, i)], p[3] or 0
-            ref = [fr for fy, fa, fr in per[p[5]] if fa >= MIN_REF_APPS and abs(fy - c['y']) <= WINDOW and fy != c['y']]
-            new = r if (a >= FULL or not ref) else round((a / FULL) * r + (1 - a / FULL) * sum(ref) / len(ref))
-            new = max(45, min(99, new))
+            k = SC.key(c, i); new = sm[k]
             if new == p[2]: continue
-            if key(c, i) in tk or p[5] in pids:
-                changed.append((key(c, i), p[0], p[2], new)); p[2] = new
+            if k in tk or p[5] in pids:
+                changed.append((k, p[0], p[2], new)); p[2] = new
             else:
-                raise SystemExit(f'smooth_cameo розходиться з пулом на чужій картці {key(c, i)} {p[0]}: {p[2]} → {new}')
+                raise SystemExit(f'smooth_cameo розходиться з пулом на чужій картці {k} {p[0]}: {p[2]} → {new}')
 
     assert len(raw) == sum(len(c['pl']) for c in pool['clubs']) and all(v is not None for v in raw.values())   # pool['meta'] не чіпаємо
     out = json.dumps(pool, **DUMP)

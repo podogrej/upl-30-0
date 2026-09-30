@@ -448,11 +448,13 @@ td .sub{font-size:11px;color:var(--muted);margin-top:2px;display:flex;gap:6px;al
     </div>
 </div>
 <div class="overlay" id="viewBox" hidden><div class="box"><div class="vhead"><h3 id="viewTitle">Склад</h3><button class="ghost" id="viewClose">Закрити</button></div><div id="viewBody"></div></div></div>
-<div class="foot">30-0 УПЛ · <a href="#" id="newsBtn">Що нового у версії 0.53<b id="newsDot" hidden></b></a> · <a href="#" id="themeBtn" class="thm" role="switch" aria-checked="false" aria-label="Світла тема"></a> · неофіційний фан-проєкт</div>
+<div class="foot">30-0 УПЛ · <a href="#" id="newsBtn">Що нового у версії 0.54<b id="newsDot" hidden></b></a> · <a href="#" id="themeBtn" class="thm" role="switch" aria-checked="false" aria-label="Світла тема"></a> · неофіційний фан-проєкт</div>
 <script id="pool" type="application/json">__POOL__</script>
 <script>
 (function(){
 const DATA = JSON.parse(document.getElementById('pool').textContent);
+// одна людина під двома id (дубль із різних джерел, data/aliases/aliases.csv): людей порівнюємо за canonical id — «гравець двічі», трофеї, лічильники
+const ALIAS=DATA.alias||{};const canon=id=>ALIAS[id]||id;
 // схеми як список слотів по рядах (зверху атака, знизу воротар; зліва направо = лівий → правий фланг)
 const FORMATIONS = {
   "4-4-2":  {tag:"Класика",       rows:[["ST","ST"],["LM","CM","CM","RM"],["LB","CB","CB","RB"],["GK"]]},
@@ -598,15 +600,15 @@ function renderDailyCard(){
 function newSlots(f){S.locked=false;S.pre=null;S.srv=null;S.year=null;return FORMATIONS[f].slots.map(slot=>({slot,pos:GROUP_OF[slot],player:null}));}
 function openSlots(){return S.slots.filter(s=>!s.player);}
 function bestSlot(p){let best=null;for(const s of openSlots()){const r=effRating(p,s.slot);if(r!=null&&(!best||r>best.r))best={s,r};}return best;}
-function eligible(cs){const anti=S.format==="anti";return cs.pl.filter(p=>!S.taken.has(p[5])&&(!anti||p[3]>=ANTI_MIN_APPS)&&bestSlot(p));}
+function eligible(cs){const anti=S.format==="anti";return cs.pl.filter(p=>!S.taken.has(canon(p[5]))&&(!anti||p[3]>=ANTI_MIN_APPS)&&bestSlot(p));}
 function wheelPool(){if(S.daily||S.format==="classic"||S.format==="anti"||S.format==="legends")return DATA.clubs;
   if(S.format==="derby")return DATA.clubs.filter(c=>FORMATS.derby.clubs.includes(c.c));
   return DATA.clubs.filter(c=>c.c===S.club);}
-function isOk(cs,p){return !S.taken.has(p[5])&&(S.format!=="anti"||p[3]>=ANTI_MIN_APPS)&&!!bestSlot(p);}
+function isOk(cs,p){return !S.taken.has(canon(p[5]))&&(S.format!=="anti"||p[3]>=ANTI_MIN_APPS)&&!!bestSlot(p);}
 
 // ---------- лічильники пулу (головна, «Про гру», опис форматів) — рахуємо з DATA, а не вписуємо руками
 const DSTAT=(()=>{const ids=new Set(),cl=new Set(),ys=new Set(),dy=new Set();let cards=0;
-  for(const c of DATA.clubs){cl.add(c.c);ys.add(c.y);if(FORMATS.derby.clubs.includes(c.c))dy.add(c.y);cards+=c.pl.length;for(const p of c.pl)ids.add(p[5]);}
+  for(const c of DATA.clubs){cl.add(c.c);ys.add(c.y);if(FORMATS.derby.clubs.includes(c.c))dy.add(c.y);cards+=c.pl.length;for(const p of c.pl)ids.add(canon(p[5]));}
   return {cs:DATA.clubs.length,persons:ids.size,cards,clubs:cl.size,seasons:ys.size,derbyS:dy.size,y0:Math.min(...ys),y1:Math.max(...ys)};})();
 {const n=x=>x.toLocaleString('uk-UA'),set=(id,h)=>{const e=document.getElementById(id);if(e)e.innerHTML=h;};
   set('facts0',`<span><b>${DSTAT.seasons}</b> ${plUk(DSTAT.seasons,'сезон','сезони','сезонів')}</span><span><b>${n(DSTAT.cs)}</b> ${plUk(DSTAT.cs,'клуб-сезон','клуб-сезони','клуб-сезонів')}</span><span><b>${n(DSTAT.persons)}</b> ${plUk(DSTAT.persons,'футболіст','футболісти','футболістів')}</span>`);
@@ -780,7 +782,7 @@ function choose(p){
 }
 function place(p,s){
   const r=effRating(p,s.slot);
-  s.player={name:p[0],pos:GROUP_OF[s.slot],slot:s.slot,main:p[6],alts:p[7],r,r0:p[2],apps:p[3],goals:p[4],ast:p[8],cs:p[9],nat:p[10],by:p[11],cc:S.wheel.c,id:p[5],club:S.wheel.n,y:S.wheel.y};S.taken.add(p[5]);S.wheel=null;S.move=null;S.pending=null;renderDraft();
+  s.player={name:p[0],pos:GROUP_OF[s.slot],slot:s.slot,main:p[6],alts:p[7],r,r0:p[2],apps:p[3],goals:p[4],ast:p[8],cs:p[9],nat:p[10],by:p[11],cc:S.wheel.c,id:p[5],club:S.wheel.n,y:S.wheel.y};S.taken.add(canon(p[5]));S.wheel=null;S.move=null;S.pending=null;renderDraft();
   {const n=S.slots.filter(x=>x.player).length,seen=lsGet('upl30_hint_move')||0;if(n===2&&seen<2){const h=document.getElementById('moveHint');h.hidden=false;h.textContent='Порада: кнопка «Переставити гравців» під полем дозволяє поміняти позиції.';lsSet('upl30_hint_move',seen+1);}}
   if(S.slots.every(x=>x.player))document.getElementById('lockBtn').click();   // склад зібрано — одразу рейтинги, прогноз і «Зіграти сезон» (через кнопку, щоб рушій не тягнув UI)
 }
@@ -1271,9 +1273,9 @@ function drawCard(r){
 }
 document.getElementById('replayBtn').onclick=()=>playSeason(null);
 // ---------- «Що нового»: коротко й по-людськи про останню версію (технічний журнал — CHANGELOG.md у репозиторії)
-const WHATSNEW={v:'0.53',date:'30.09.2026',items:[
-  ['shield-check','Результати пише сервер','Сезони, трофеї, виклики й результат дня тепер записує сервер — ніхто не допише їх у чужий профіль.'],
-  ['account-circle','Спільний пристрій','Якщо на одному телефоні по черзі входять двоє, їхні профілі більше не зливаються в один.']]};
+const WHATSNEW={v:'0.54',date:'30.09.2026',items:[
+  ['account-group','Без двійників','Прибрали дублікати гравців: одного футболіста більше не можна взяти в склад двічі.'],
+  ['soccer-field','Виправили дані','Позиції, імена й громадянство кількох гравців — за Transfermarkt і протоколами сезонів.']]};
 function openNews(){const box=document.getElementById('viewBox');document.getElementById('viewTitle').textContent=`Що нового · версія ${WHATSNEW.v}`;
   document.getElementById('viewBody').innerHTML=`<div class="news">${WHATSNEW.items.map(([e,h,d])=>`<div class="ni">${ic(e,'lg')}<div><b>${esc(h)}</b><p>${esc(d)}</p></div></div>`).join('')}</div>`;
   box.hidden=false;lsSet('upl30_news_seen',WHATSNEW.v);document.getElementById('newsDot').hidden=true;}
