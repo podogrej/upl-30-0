@@ -25,9 +25,9 @@
 4. Вікіпедія (action=raw, кілька сторінок): «Ukrainian Footballer of the Year» (опитування «Український футбол», топ-3 з 1991;
    премія «Команди» 1995–2016 і «Команди1» 2017–2020, топ-3), шаблон «Ukrainian Premier League top scorers»,
    «<рік> Ballon d'Or» (місця 1–30), «UEFA Team of the Year» (опитування вболівальників UEFA.com 2001–2020).
-   Посилання зі сторінок → Wikidata (wbgetentities, P2446) → Transfermarkt ID → наша людина.
+   Посилання зі сторінок → Wikidata (SPARQL за sitelink, P2446) → Transfermarkt ID → наша людина.
 
-Обмеження швидкості: ≥ 6 с між запитами до www.transfermarkt.com (при «Human Verification» — пауза 90 с і повтор),
+Обмеження швидкості: ≥ 6 с між запитами до www.transfermarkt.com (лише пошук; при «Human Verification» — пауза 90 с і повтор),
 ≥ 1.5 с між запитами до tmapi, ≥ 3 с до Вікіпедії. Один процес, без браузера.
 
 Запуск з кореня репозиторію:
@@ -91,7 +91,7 @@ log('кандидатів', len(CAND))
 def latin(s):
     s = unicodedata.normalize('NFKD', s.replace('ł', 'l').replace('Ł', 'L'))
     s = ''.join(ch for ch in s if not unicodedata.combining(ch)).lower()
-    for a, b in (('shch', 's'), ('sch', 's'), ('ch', 'c'), ('sh', 's'), ('zh', 'j'), ('kh', 'h'), ('ts', 'c'), ('tz', 'c'), ('w', 'v'), ('y', 'i'), ('j', 'i')):
+    for a, b in (('shch', 's'), ('sch', 's'), ('ch', 'c'), ('sh', 's'), ('zh', 'j'), ('kh', 'h'), ('ts', 'c'), ('tz', 'c'), ('w', 'v'), ('x', 'ks'), ('y', 'i'), ('j', 'i')):
         s = s.replace(a, b)
     return re.sub('[^a-z]', '', s)
 
@@ -376,14 +376,6 @@ def get_transfers(t):
     return TRF[t]
 
 
-def money(s):
-    m = re.search(r'€\s?([\d.,]+)\s?(bn|m|k|Th\.)?', s or '')
-    if not m:
-        return None
-    v = float(m.group(1).replace(',', ''))
-    return int(v * {'bn': 1e9, 'm': 1e6, 'k': 1e3, 'Th.': 1e3}.get(m.group(2), 1))
-
-
 # ---------- 3. нагороди з Вікіпедії ----------
 WT = {}
 
@@ -485,26 +477,23 @@ TITLES = jload('wd_titles.json', {})   # enwiki title → [qid, [tm ids]]
 
 
 def titles_to_tm(titles):
+    """назва статті англ. Вікіпедії → [QID, [TM id]] через SPARQL (sitelink). Перенаправлення SPARQL не розв'язує —
+    для них лишається зіставлення за іменем (див. main)."""
     need = [t for t in dict.fromkeys(titles) if t not in TITLES]
-    for k in range(0, len(need), 50):
-        part = need[k:k + 50]
-        u = ('https://www.wikidata.org/w/api.php?action=wbgetentities&sites=enwiki&redirects=yes&props=claims|sitelinks&sitefilter=enwiki&format=json&titles='
-             + urllib.parse.quote('|'.join(part)))
-        d = fetch_json(u, 'wikidata', 2)
-        if not d:
+    for k in range(0, len(need), 40):
+        part = need[k:k + 40]
+        v = ' '.join('"%s"@en' % t.replace('\\', '').replace('"', '\\"') for t in part)
+        rows = sparql('SELECT ?t ?p ?tm WHERE { VALUES ?t {%s} ?a schema:about ?p; schema:isPartOf <https://en.wikipedia.org/>; schema:name ?t. '
+                      'OPTIONAL { ?p wdt:P2446 ?tm } }' % v, 't,')
+        if rows is None:
             continue
-        for q, e in (d.get('entities') or {}).items():
-            if q.startswith('-'):
-                continue
-            tm = [c['mainsnak']['datavalue']['value'] for c in e.get('claims', {}).get('P2446', []) if 'datavalue' in c['mainsnak']]
-            ti = ((e.get('sitelinks') or {}).get('enwiki') or {}).get('title', '')
-            TITLES[ti] = [q, tm]
-        # заголовки-перенаправлення: wbgetentities повертає цільову сторінку; позначимо вхідні як оброблені
-        norm = {x['from']: x['to'] for x in (d.get('redirects') or [])} if isinstance(d.get('redirects'), list) else {}
         for t in part:
-            tt = norm.get(t, t)
-            if t not in TITLES:
-                TITLES[t] = TITLES.get(tt, ['', []])
+            TITLES[t] = ['', []]
+        for r in rows:
+            e = TITLES[r['t']]
+            e[0] = r['p'].rsplit('/', 1)[-1]
+            if r.get('tm') and r['tm'] not in e[1]:
+                e[1].append(r['tm'])
         jsave('wd_titles.json', TITLES)
 
 

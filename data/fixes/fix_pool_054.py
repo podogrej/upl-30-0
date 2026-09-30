@@ -95,7 +95,7 @@ def main():
                 p[11] = BIRTH_YEAR[p[5]]
 
     # рейтинг: згладжування камео після зміни «чия картка» — лише для карток зачеплених людей
-    sm = SC.smoothed(pool, raw)
+    sm = SC.final(pool, raw)   # итоговый рейтинг (сглаживание + с 0.57 рейтинги v2)
     for c in pool['clubs']:
         for i, p in enumerate(c['pl']):
             k = SC.key(c, i)
