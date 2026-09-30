@@ -25,10 +25,20 @@ function yearOk(row, E, chalYearOk) {
   return row.format === 'classic' && !row.day && E.YEARS16.includes(y) && !!chalYearOk;
 }
 
+// Сайт попередньої версії ще відкритий у гравців (кеш браузера, Mini App). Якщо його сезон повністю сходиться з новим рушієм
+// (симуляція між цими версіями не мінялася) — приймаємо; не сходиться (напр. у гравця змінилася позиція в пулі) — «не перевірити» (null), не «підробка».
+const PREV_VERSIONS = ['0.51'];
+
 // головна перевірка: повертає [true|false|null, пояснення]; null — перевірити неможливо (стара версія тощо)
-function check(row, seedRow, { chalYearOk = false } = {}) {
+function check(row, seedRow, opts = {}) {
   const E = engine();
-  if (row.version && row.version !== E.VERSION) return [null, `версія гри ${row.version} ≠ рушій ${E.VERSION}`];
+  if (!row.version || row.version === E.VERSION) return checkCore(row, seedRow, opts);
+  if (!PREV_VERSIONS.includes(row.version)) return [null, `версія гри ${row.version} ≠ рушій ${E.VERSION}`];
+  const [v, note] = checkCore(row, seedRow, opts);
+  return v === true ? [true, `ok (версія ${row.version})`] : [null, `версія гри ${row.version}: ${note}`];
+}
+function checkCore(row, seedRow, { chalYearOk = false } = {}) {
+  const E = engine();
   if (!seedRow) return [false, 'seed не видавався сервером'];
   if (String(seedRow.device_id) !== String(row.device_id)) return [false, 'seed іншого пристрою'];
   if (+seedRow.seed !== +row.seed) return [false, 'seed не збігається'];
