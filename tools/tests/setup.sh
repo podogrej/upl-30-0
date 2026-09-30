@@ -4,7 +4,8 @@
 #  - гравець v0.39: player_hello, set_player_name, секрет пристрою (чужий пристрій не перейменує), тригер player_id, strip_verified;
 #  - 0.53 (v053_writes.sql, двічі): device_ok лише для сервера, старий пристрій без секрету не забирає чужу історію (К6),
 #    спільний пристрій не зливає два акаунти (В6), одна офіційна спроба дня (В2), дублі — NOTICE без падіння;
-#  - крок 2 (v054_close_writes.sql, двічі): прямий запис anon/authenticated закрито, читання й сервер працюють.
+#  - крок 2 (v054_close_writes.sql, двічі): прямий запис anon/authenticated закрито, читання й сервер працюють;
+#  - 0.55 (v055_backups.sql, двічі): сховище backups приватне, anon/authenticated не читають і не бачать файлів; rate_hit — лише сервер.
 # Потрібні бінарники Postgres (/usr/lib/postgresql/*/bin). Запуск з кореня: bash tools/tests/setup.sh   (KEEP=1 — не зупиняти базу)
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 BIN=$(ls -d /usr/lib/postgresql/*/bin 2>/dev/null | sort -V | tail -1); [ -x "$BIN/initdb" ] || { echo "SQL: немає Postgres — пропускаю"; exit 2; }
@@ -169,6 +170,36 @@ chk "крок 2: сервер пише (player_id — з пристрою), devi
   insert into trophies(device_id, trophy) values ('$LDEV', 'srv') on conflict do nothing;
   insert into daily_results(day, device_id, nickname, w, d, l, pts, place, gf, ga, formation, xi, verified) values ((now() at time zone 'Europe/Kyiv')::date, '$LDEV', 'Сервер', 10, 10, 10, 40, 8, 30, 30, '4-4-2', '[]', true);
   assert not legacy_writes_open(), 'legacy ще відкрито';"
+# ===== 0.55: резервні копії й обмеження частоти =====
+$P -d t1 -c "update storage.buckets set public = true where id = 'backups'" >/dev/null
+for pass in 1 2; do
+  if $P -d t1 -f "$ROOT/sql/v055_backups.sql" >/dev/null 2>"$D/err"; then ok "запуск $pass: v055_backups.sql"; else bad "запуск $pass: v055_backups.sql — $(grep -v NOTICE "$D/err" | head -3)"; fi
+done
+$P -d t1 -c "update storage.buckets set public = true where id = 'backups'" -f "$ROOT/sql/v055_backups.sql" >/dev/null 2>"$D/err"
+$P -d t1 -c "insert into storage.objects(bucket_id, name) values ('backups', '2026-09-30.json.gz'), ('cards', '2026-09-30/x.jpg')" >/dev/null
+chk "v055: сховище backups приватне (навіть якщо хтось увімкнув public — повторний запуск вимикає), cards — як було" postgres "
+  assert (select not public and file_size_limit > 0 from storage.buckets where id = 'backups'), 'backups public';
+  assert (select public from storage.buckets where id = 'cards'), 'cards зачеплено';
+  assert (select count(*) from pg_policies where schemaname = 'storage') = 0, 'є політики на storage';"
+for role in anon authenticated; do
+chk "v055: $role не читає й не бачить файлів резервних копій, не пише туди" $role "
+  assert (select count(*) from storage.objects where bucket_id = 'backups') = 0, 'бачить файли';
+  begin insert into storage.objects(bucket_id, name) values ('backups', 'hack.json.gz'); assert false, 'записав'; exception when insufficient_privilege then null; end;"
+chk "v055: $role не викликає rate_hit і не читає rate_hits" $role "
+  declare b boolean; begin
+  begin b := rate_hit('x', 5); assert false, 'викликав'; exception when insufficient_privilege then null; end;
+  begin perform count(*) from rate_hits; assert false, 'читає'; exception when insufficient_privilege then null; end;
+  end;"
+done
+chk "v055: rate_hit (сервер) — ліміт за хвилину на ключ, інші ключі окремо" service_role "
+  assert rate_hit('seed:d:1', 3) and rate_hit('seed:d:1', 3) and rate_hit('seed:d:1', 3), 'в межах ліміту';
+  assert not rate_hit('seed:d:1', 3), 'четвертий пропущено';
+  assert rate_hit('seed:d:2', 3), 'інший ключ';
+  assert rate_hit(null, 3) and rate_hit(repeat('x', 200), 3), 'дивний ключ — пропускаємо';"
+$P -d t1 -c "insert into rate_hits(key, minute, n) select 'old'||g, now() - interval '1 hour', 1 from generate_series(1,50) g" >/dev/null
+chk "v055: старі хвилини прибираються" service_role "
+  declare i int; begin for i in 1..400 loop perform rate_hit('clean', 1000); end loop;
+  assert (select count(*) from rate_hits where key like 'old%') = 0, 'не прибрано'; end;"
 echo "база: $D (порт $PORT)"
 [ $FAIL = 0 ] && echo "SQL: УСЕ ГАРАЗД ($N перевірок)" || echo "SQL: ПРОБЛЕМИ $FAIL/$N"
 exit $((FAIL>0))

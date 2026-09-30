@@ -15,3 +15,8 @@ grant anon, authenticated, service_role to authenticator;
 -- сховище Supabase (для cards_bucket.sql)
 create schema if not exists storage;
 create table if not exists storage.buckets (id text primary key, name text, public boolean, file_size_limit bigint, allowed_mime_types text[]);
+-- файли сховища (для v055_backups.sql): як у Supabase — RLS увімкнено, anon/authenticated мають права на таблицю, доступ вирішують політики
+create table if not exists storage.objects (id uuid primary key default gen_random_uuid(), bucket_id text references storage.buckets(id), name text, owner uuid, metadata jsonb, created_at timestamptz default now());
+alter table storage.objects enable row level security;
+grant usage on schema storage to anon, authenticated, service_role;
+grant select, insert, update, delete on storage.objects, storage.buckets to anon, authenticated, service_role;
