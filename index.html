@@ -15,36 +15,14 @@ if(location.hostname==='upl-30-0.vercel.app'){(function(c,l,a,r,i,t,y){c[a]=c[a]
 <body>
 <title>30-0 УПЛ</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;900&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
-<script>(function(){try{var m=/[?&]skin=([a-z]+)/.exec(location.search);var k=m?m[1]:(localStorage.getItem('upl30_skin')||'board');if(k==='upl'){k='board';localStorage.setItem('upl30_skin',k);}if(m)localStorage.setItem('upl30_skin',k);if(k&&k!=='classic')document.documentElement.setAttribute('data-skin',k);}catch(e){document.documentElement.setAttribute('data-skin','board');}try{var pm=/[?&]pitch=([a-z]+)/.exec(location.search);var pk=pm?pm[1]:localStorage.getItem('upl30_pitch');if(pm)localStorage.setItem('upl30_pitch',pk);if(pk&&pk!=='night')document.documentElement.setAttribute('data-pitch',pk);}catch(e){}try{var t=/[?&]theme=(light|dark)/.exec(location.search);var th=t?t[1]:(localStorage.getItem('upl30_theme')||'dark');if(t)localStorage.setItem('upl30_theme',th);document.documentElement.setAttribute('data-theme',th);}catch(e){document.documentElement.setAttribute('data-theme','dark');}})();</script>
+<script>(function(){try{localStorage.removeItem('upl30_skin');localStorage.removeItem('upl30_pitch');}catch(e){}/* скіни й варіанти газону прибрано в 0.52 — старі вибори стираємо */try{var t=/[?&]theme=(light|dark)/.exec(location.search);var th=t?t[1]:(localStorage.getItem('upl30_theme')||'dark');if(t)localStorage.setItem('upl30_theme',th);document.documentElement.setAttribute('data-theme',th);}catch(e){document.documentElement.setAttribute('data-theme','dark');}})();</script>
 <style>
 :root{
-  --bg:#f3f1e8; --bg2:#e9e6d9; --surface:#fbfaf5; --line:#d6d2c2; --ink:#1c2a22; --ink2:#5a675e; --muted:#8a948c;
-  --pitch:#1f7a3f; --pitch2:#176331; --chalk:#ffffff; --amber:#c98a12; --amber2:#f2b632;
-  --win:#1f7a3f; --draw:#a8891b; --loss:#b4372c; --gk:#c98a12; --df:#2f6db5; --mf:#1f7a3f; --fw:#b4372c;
+  --bg:#f5f3ef; --bg2:#ebe8e2; --surface:#fffdf9; --line:#dcd7ce; --ink:#161514; --ink2:#5c5850; --muted:#928c82; --pitch:#2f6b45; --pitch2:#234f33; --chalk:#ffffff; --amber:#c44f00; --amber2:#ff8a2a; --win:#34C759; --draw:#FFCC00; --loss:#FF3B30; --gk:#FFCC00; --df:#007AFF; --mf:#34C759; --fw:#FF3B30;
   --radius:10px; --font-display:"Unbounded","Manrope",system-ui,sans-serif; --font-body:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif; --font-mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
 }
-@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
-  --bg:#0f1713; --bg2:#0b110e; --surface:#172219; --line:#2a3a30; --ink:#eaf0e6; --ink2:#a9b6ad; --muted:#728078;
-  --pitch:#2f9a4f; --pitch2:#1f6f39; --chalk:#e8f0e8; --amber:#f2b632; --amber2:#ffd166;
-  --win:#3fb65e; --draw:#d9b23a; --loss:#e0574a; --gk:#f2b632; --df:#5ea0e8; --mf:#3fb65e; --fw:#e0574a; color-scheme:dark; }}
-:root[data-theme="dark"]{
-  --bg:#0f1713; --bg2:#0b110e; --surface:#172219; --line:#2a3a30; --ink:#eaf0e6; --ink2:#a9b6ad; --muted:#728078;
-  --pitch:#2f9a4f; --pitch2:#1f6f39; --chalk:#e8f0e8; --amber:#f2b632; --amber2:#ffd166;
-  --win:#3fb65e; --draw:#d9b23a; --loss:#e0574a; --gk:#f2b632; --df:#5ea0e8; --mf:#3fb65e; --fw:#e0574a; color-scheme:dark; }
-
-/* ---------- оформлення (скіни): data-skin на <html>; кожен має світлу й темну версію */
-:root[data-skin="night"]{--bg:#eef2f8; --bg2:#e2e8f2; --surface:#ffffff; --line:#cfd8e6; --ink:#111a33; --ink2:#4a5675; --muted:#8490aa; --pitch:#1f7a64; --pitch2:#175c4b; --chalk:#ffffff; --amber:#a87800; --amber2:#ffcf2e; --win:#1f8a55; --draw:#b8900f; --loss:#d23c3c; --gk:#c99a00; --df:#2e6fe0; --mf:#1f8a55; --fw:#d23c3c;}
-@media (prefers-color-scheme: dark){ :root[data-skin="night"]:not([data-theme="light"]){--bg:#0b1222; --bg2:#080d19; --surface:#121b30; --line:#243152; --ink:#eef2fb; --ink2:#a7b2cc; --muted:#6f7b98; --pitch:#1f6e5c; --pitch2:#134536; --chalk:#e8f0f8; --amber:#ffcf2e; --amber2:#ffdd57; --win:#3ec27a; --draw:#e0b83a; --loss:#ef5a5a; --gk:#ffcf2e; --df:#5b9dff; --mf:#3ec27a; --fw:#ef5a5a; color-scheme:dark;}}
-:root[data-skin="night"][data-theme="dark"]{--bg:#0b1222; --bg2:#080d19; --surface:#121b30; --line:#243152; --ink:#eef2fb; --ink2:#a7b2cc; --muted:#6f7b98; --pitch:#1f6e5c; --pitch2:#134536; --chalk:#e8f0f8; --amber:#ffcf2e; --amber2:#ffdd57; --win:#3ec27a; --draw:#e0b83a; --loss:#ef5a5a; --gk:#ffcf2e; --df:#5b9dff; --mf:#3ec27a; --fw:#ef5a5a; color-scheme:dark;}
-:root[data-skin="board"]{--bg:#f5f3ef; --bg2:#ebe8e2; --surface:#fffdf9; --line:#dcd7ce; --ink:#161514; --ink2:#5c5850; --muted:#928c82; --pitch:#2f6b45; --pitch2:#234f33; --chalk:#ffffff; --amber:#c44f00; --amber2:#ff8a2a; --win:#34C759; --draw:#FFCC00; --loss:#FF3B30; --gk:#FFCC00; --df:#007AFF; --mf:#34C759; --fw:#FF3B30;}
-@media (prefers-color-scheme: dark){ :root[data-skin="board"]:not([data-theme="light"]){--bg:#121212; --bg2:#0b0b0b; --surface:#1c1c1d; --line:#303032; --ink:#f4f1ea; --ink2:#b3aea4; --muted:#7c776f; --pitch:#2c563b; --pitch2:#1c3a27; --chalk:#f0ede6; --amber:#ff7a1a; --amber2:#ff9a3d; --win:#30D158; --draw:#FFD60A; --loss:#FF453A; --gk:#FFD60A; --df:#0A84FF; --mf:#30D158; --fw:#FF453A; color-scheme:dark;}}
-:root[data-skin="board"][data-theme="dark"]{--bg:#121212; --bg2:#0b0b0b; --surface:#1c1c1d; --line:#303032; --ink:#f4f1ea; --ink2:#b3aea4; --muted:#7c776f; --pitch:#2c563b; --pitch2:#1c3a27; --chalk:#f0ede6; --amber:#ff7a1a; --amber2:#ff9a3d; --win:#30D158; --draw:#FFD60A; --loss:#FF453A; --gk:#FFD60A; --df:#0A84FF; --mf:#30D158; --fw:#FF453A; color-scheme:dark;}
-:root[data-skin="programme"]{--bg:#f4ecdc; --bg2:#eadfca; --surface:#fbf6ea; --line:#d8cbb0; --ink:#1b2340; --ink2:#4d5470; --muted:#8a8570; --pitch:#4f7a3a; --pitch2:#3a5e2b; --chalk:#fbf6ea; --amber:#c8202f; --amber2:#ffd54a; --win:#3d7a34; --draw:#b8901c; --loss:#c8202f; --gk:#c79a1e; --df:#2a4f9c; --mf:#3d7a34; --fw:#c8202f;}
-@media (prefers-color-scheme: dark){ :root[data-skin="programme"]:not([data-theme="light"]){--bg:#161b2e; --bg2:#10152a; --surface:#1e2540; --line:#333c5e; --ink:#f4ecdc; --ink2:#c2bba6; --muted:#878399; --pitch:#4a763a; --pitch2:#33552a; --chalk:#f4ecdc; --amber:#ff5a5f; --amber2:#ffd54a; --win:#6cc25c; --draw:#e6c04a; --loss:#ff5a5f; --gk:#ffd54a; --df:#7ea6ff; --mf:#6cc25c; --fw:#ff5a5f; color-scheme:dark;}}
-:root[data-skin="programme"][data-theme="dark"]{--bg:#161b2e; --bg2:#10152a; --surface:#1e2540; --line:#333c5e; --ink:#f4ecdc; --ink2:#c2bba6; --muted:#878399; --pitch:#4a763a; --pitch2:#33552a; --chalk:#f4ecdc; --amber:#ff5a5f; --amber2:#ffd54a; --win:#6cc25c; --draw:#e6c04a; --loss:#ff5a5f; --gk:#ffd54a; --df:#7ea6ff; --mf:#6cc25c; --fw:#ff5a5f; color-scheme:dark;}
-:root[data-skin="mint"]{--bg:#eef6f1; --bg2:#e1eee6; --surface:#ffffff; --line:#cbe0d3; --ink:#0d2a1f; --ink2:#46625a; --muted:#84998f; --pitch:#12805a; --pitch2:#0c6647; --chalk:#ffffff; --amber:#e0442f; --amber2:#ffb3a4; --win:#12805a; --draw:#c79a1e; --loss:#e0442f; --gk:#e89a1a; --df:#2f6db5; --mf:#12805a; --fw:#e0442f;}
-@media (prefers-color-scheme: dark){ :root[data-skin="mint"]:not([data-theme="light"]){--bg:#0b1c17; --bg2:#081511; --surface:#112a22; --line:#21443a; --ink:#e9f5ef; --ink2:#a4c2b6; --muted:#6d8d81; --pitch:#149167; --pitch2:#0b5c41; --chalk:#e9f5ef; --amber:#ff6b5a; --amber2:#ffb3a4; --win:#36c98c; --draw:#e6c04a; --loss:#ff6b5a; --gk:#ffb347; --df:#6aa8ff; --mf:#36c98c; --fw:#ff6b5a; color-scheme:dark;}}
-:root[data-skin="mint"][data-theme="dark"]{--bg:#0b1c17; --bg2:#081511; --surface:#112a22; --line:#21443a; --ink:#e9f5ef; --ink2:#a4c2b6; --muted:#6d8d81; --pitch:#149167; --pitch2:#0b5c41; --chalk:#e9f5ef; --amber:#ff6b5a; --amber2:#ffb3a4; --win:#36c98c; --draw:#e6c04a; --loss:#ff6b5a; --gk:#ffb347; --df:#6aa8ff; --mf:#36c98c; --fw:#ff6b5a; color-scheme:dark;}
+/* тема: data-theme ставить скрипт вище завжди (light/dark, за замовчуванням темна), тож окремий @media (prefers-color-scheme) не потрібен */
+:root[data-theme="dark"]{--bg:#121212; --bg2:#0b0b0b; --surface:#1c1c1d; --line:#303032; --ink:#f4f1ea; --ink2:#b3aea4; --muted:#7c776f; --pitch:#2c563b; --pitch2:#1c3a27; --chalk:#f0ede6; --amber:#ff7a1a; --amber2:#ff9a3d; --win:#30D158; --draw:#FFD60A; --loss:#FF453A; --gk:#FFD60A; --df:#0A84FF; --mf:#30D158; --fw:#FF453A; color-scheme:dark;}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.5;padding-inline:16px;padding-block:0 32px;margin:0}
@@ -81,9 +59,6 @@ button.ghost{border-color:var(--line);background:transparent;color:var(--ink2);p
 .pitch{position:relative;width:100%;max-width:460px;margin-inline:auto;aspect-ratio:68/105;container-type:inline-size;border-radius:12px;overflow:hidden;color:#fff;
   background:repeating-linear-gradient(180deg,var(--turf1) 0 10%,var(--turf2) 10% 20%)}
 :root{--turf1:#173a27;--turf2:#143322;--chalkline:rgba(255,255,255,.42)}
-:root[data-pitch=classic]{--turf1:var(--pitch);--turf2:color-mix(in srgb,var(--pitch) 86%,#000);--chalkline:rgba(255,255,255,.5)}
-:root[data-pitch=flat]{--turf1:#1e4a38;--turf2:#1e4a38;--chalkline:rgba(255,255,255,.3)}
-:root[data-pitch=bright]{--turf1:#1f8a42;--turf2:#1b7b3a;--chalkline:rgba(255,255,255,.6)}
 .pitch svg.mk{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 .pitch svg.mk *{fill:none;stroke:var(--chalkline);stroke-width:.45}.pitch svg.mk .dot{fill:var(--chalkline);stroke:none}
 .slot{position:absolute;transform:translate(-50%,-50%);width:var(--sw,21%);aspect-ratio:1;background:rgba(10,14,12,.72);border:1.5px dashed rgba(255,255,255,.6);border-top:4px solid var(--c,#fff);
