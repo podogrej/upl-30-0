@@ -102,8 +102,9 @@ function honestXi(formation) {
   await tamper('seed не від сервера', r => { r.seed_id = null; }, false);
   await tamper('гравець не з того клубу', r => { r.xi[1].c = 'Динамо (Київ)'; r.xi[1].y = 1992; }, false);
   await tamper('слоти переставлено', r => { const t = r.xi[0].slot; r.xi[0].slot = r.xi[10].slot; r.xi[10].slot = t; }, false);
-  await tamper('сезон з сайту попередньої версії 0.51 (симуляція та сама) — приймаємо', r => { r.version = '0.51'; }, true);
-  await tamper('підробка з сайту 0.51 — не перевірено (null)', r => { r.version = '0.51'; r.xi[0].r = 99; }, null);
+  // з 0.57 PREV_VERSIONS порожній: рейтинги v2 і refA/refD змінилися — сезон зі старого сайту «не перевірити», але не «підробка»
+  await tamper('сезон з сайту 0.56 (до рейтингів v2) — не перевірити (null), не підробка', r => { r.version = '0.56'; }, null);
+  await tamper('підробка з сайту 0.56 — не перевірено (null)', r => { r.version = '0.56'; r.xi[0].r = 99; }, null);
   await tamper('старша версія 0.49 — не перевірити (null)', r => { r.version = '0.49'; }, null);
   await tamper('r0 підроблено (показ у таблицях і на картці)', r => { r.xi[0].r0 = 99; }, false);
   await tamper('r0 немає (старий клієнт) — пропускаємо', r => { r.xi.forEach(x => { delete x.r0; }); }, true);

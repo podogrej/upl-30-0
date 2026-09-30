@@ -70,7 +70,7 @@ const TROPHIES=[
   {id:"ghosts",i:"👻",n:"Тіні забутих клубів",d:"Усі 11 — з клубів, яких немає в УПЛ 2025/26",cat:"secret",sec:1,t:c=>c.xi.every(x=>!CLUBS_NOW.has(x.cc))},
   {id:"crimea",i:"🌊",n:"Кримський рейс",d:"3+ гравці «Таврії» чи «Севастополя»",cat:"secret",sec:1,t:c=>c.xi.filter(x=>x.cc==='tavriya-simferopol'||x.cc==='sevastopol').length>=3},
   {id:"cross",i:"🔀",n:"Ні нашим, ні вашим",d:"Двоє гравців, які грали і за «Динамо», і за «Шахтар»",cat:"secret",sec:1,t:c=>c.xi.filter(x=>{const q=PERSON[x.id];return q&&q.clubs.has('dynamo-kyiv')&&q.clubs.has('shakhtar-donetsk');}).length>=2},
-  {id:"mediocre",i:"🧢",n:"З грязі в князі",d:"Чемпіон із середнім рейтингом складу нижче 80",cat:"secret",sec:1,t:c=>c.reveal&&notAnti(c)&&c.r.place===1&&c.xi.reduce((s,x)=>s+x.r0,0)/c.xi.length<80},
+  {id:"mediocre",i:"🧢",n:"З грязі в князі",d:"Чемпіон із середнім рейтингом складу нижче 78",cat:"secret",sec:1,t:c=>c.reveal&&notAnti(c)&&c.r.place===1&&c.xi.reduce((s,x)=>s+x.r0,0)/c.xi.length<78},
   {id:"cursed",i:"🧿",n:"Прокляття xG",d:"xP 70+, але не чемпіон",cat:"secret",sec:1,t:c=>notAnti(c)&&c.r.xp>=70&&c.r.place>1},
   {id:"heist",i:"💰",n:"Пограбування",d:"Чемпіон з xP нижче 55",cat:"secret",sec:1,t:c=>notAnti(c)&&c.r.place===1&&c.r.xp<55},
   {id:"fairy",i:"✨",n:"Сила в єдності",d:"Усі 11 гравців провели сезон у плюсовій формі (+1 і вище)",cat:"secret",sec:1,t:c=>c.pl.length===11&&c.pl.every(p=>p.form>=1)},
