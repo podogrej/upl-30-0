@@ -256,7 +256,7 @@ def ok_identity(pid, e):
 IDMAP = jload('idmap.json', {})    # person_id → {tm, how} або {tm: '', how: 'not found'}
 
 
-def resolve_ids():
+def resolve_ids(search=True):
     links = known_links()
     wd_dates({p.split(':')[1] for p in CAND if p.startswith('w:') and '-00' not in p})
     # перший прохід: tm: і кандидати без пошуку TM
@@ -279,8 +279,8 @@ def resolve_ids():
             if ok_identity(pid, TMPL.get(t, {'err': 1})):
                 IDMAP[pid] = {'tm': t, 'how': how}
                 break
-    # запасний шлях — пошук transfermarkt.com (лише для тих, кого ще не знайшли)
-    for pid in CAND:
+    # запасний шлях — пошук transfermarkt.com (лише для тих, кого ще не знайшли); робиться після основного збору
+    for pid in (CAND if search else []):
         if (pid in IDMAP and (IDMAP[pid].get('tm') or IDMAP[pid].get('searched'))) or pid.startswith('tm:') or '-00' in pid or over_budget() or CACHE_ONLY:
             continue
         slug = pid.split(':', 2)[2]
@@ -501,9 +501,8 @@ def titles_to_tm(titles):
 
 
 # ---------- головний прохід ----------
-def main():
-    resolve_ids()
-    order = [p for p in CAND if IDMAP[p].get('tm')]
+def collect_tm():
+    order = [p for p in CAND if IDMAP.get(p, {}).get('tm')]
     log('з TM id', len(order), 'з', len(CAND))
     tm_players([IDMAP[p]['tm'] for p in order])
     done = 0
@@ -517,6 +516,13 @@ def main():
         n, pf, tr = get_nat(t), get_perf(t), get_transfers(t)
         done += 1
         log(done, p, P[p]['name'], P[p]['max'], 'nat' if n is not None else 'nat?', 'perf' if pf is not None else 'perf?', 'trf' if tr is not None else 'trf?')
+
+
+def main():
+    resolve_ids(search=False)
+    collect_tm()
+    resolve_ids(search=True)
+    collect_tm()
     club_names([h[0] for v in NAT.values() for h in v] + [c for v in PERF.values() for c in v.get('euro_by_club', {})])
     aw = awards_raw()
     # зіставлення: назва статті → наша людина. Спершу грубий фільтр за іменем (TM), потім Wikidata P2446 = наш TM id;
