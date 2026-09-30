@@ -30,11 +30,6 @@ body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-siz
 header.top{position:sticky;top:0;z-index:40;display:flex;align-items:center;justify-content:space-between;gap:12px;margin-inline:-16px;padding:10px 16px;background:color-mix(in srgb,var(--bg) 90%,transparent);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
 button.nav{display:inline-flex;align-items:center;gap:8px;border-color:var(--line);background:var(--surface);color:var(--ink);padding:7px 12px 7px 8px;font-size:14px;white-space:nowrap;max-width:48vw;overflow:hidden;text-overflow:ellipsis}
 button.nav .ic{margin:0;width:22px;height:22px}
-.brand{font-family:var(--font-display);font-weight:900;font-size:28px;letter-spacing:-.02em;line-height:1}
-.brand small{display:block;font-family:var(--font-body);font-weight:600;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink2);margin-top:6px}
-.steps{display:flex;gap:6px;font-family:var(--font-mono);font-size:12px;color:var(--muted)}
-.steps span{padding:3px 8px;border:1px solid var(--line);border-radius:999px}
-.steps span.on{color:var(--bg);background:var(--ink);border-color:var(--ink)}
 h1,h2,h3{font-family:var(--font-display);text-wrap:balance;margin:0}
 h2{font-size:20px;font-weight:700;margin-block:22px 10px}
 h3{font-size:14px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--ink2);margin-block:16px 8px}
@@ -153,8 +148,6 @@ summary{cursor:pointer;font-weight:600}
 .daily .meta{display:flex;flex-wrap:wrap;gap:6px}
 .chip{font-family:var(--font-mono);font-size:12px;padding:3px 9px;border:1px solid var(--line);border-radius:999px;color:var(--ink2);background:var(--bg)}
 .chip.hot{border-color:var(--amber);color:var(--amber)}
-.or{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:12px;letter-spacing:.1em;text-transform:uppercase;margin-top:18px}
-.or::before,.or::after{content:"";flex:1;border-top:1px solid var(--line)}
 /* live reveal */
 .live{margin-top:14px;border:2px solid var(--ink);border-radius:14px;background:var(--surface);padding:16px;display:grid;gap:12px}
 .lvTop{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:baseline;justify-content:space-between}
@@ -202,11 +195,9 @@ button:has(.ic) .ic{margin-left:-4px}
 .plc{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:6px;font-family:var(--font-mono);font-weight:700;font-size:12px;color:#161514}.plc.p1{background:#f2c14e}.plc.p2{background:#c9c6bf}.plc.p3{background:#d08a4e}
 .pitch.p5{aspect-ratio:68/94;max-width:420px}
 .f5grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;margin-top:8px}.f5grid>div{display:grid;gap:6px}
-.f5p input{font:inherit;padding:9px 12px;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);color:var(--ink);flex:1 1 160px;min-width:0}
 .f5score{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center;font-weight:700}.f5score span:first-child{text-align:right}.f5score b{font-family:var(--font-display);font-size:clamp(30px,8vw,46px);white-space:nowrap}
 .f5evs{display:grid;gap:4px}.f5ev{display:flex;gap:8px;align-items:baseline;font-size:14px}.f5ev.s1{flex-direction:row-reverse;text-align:right}
 .tier .ic.lg{vertical-align:-6px}
-.brand{cursor:pointer}
 .hero0{padding-block:26px 8px;display:grid;gap:12px;justify-items:center;text-align:center}
 .badge0{font-family:var(--font-mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--amber2);border:1px solid color-mix(in srgb,var(--amber) 45%,transparent);border-radius:99px;padding:4px 12px}
 .logo0{font-family:var(--font-display);font-weight:900;font-size:clamp(56px,17vw,96px);line-height:.95;letter-spacing:-.03em}.logo0 span{color:var(--amber)}
@@ -289,7 +280,7 @@ td .sub{font-size:11px;color:var(--muted);margin-top:2px;display:flex;gap:6px;al
 @keyframes tropop{0%{transform:scale(.6);opacity:0}100%{transform:scale(1);opacity:1}}
 @media (prefers-reduced-motion:reduce){.tro.pop{animation:none}}
 .nudge{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;padding:10px 12px;border:1px dashed var(--amber2);border-radius:10px;font-size:14px}
-@media (max-width:480px){ th,td{padding:6px 5px;font-size:12px} th{font-size:10px;letter-spacing:.04em} .brand{font-size:24px} .steps{display:none} }
+@media (max-width:480px){ th,td{padding:6px 5px;font-size:12px} th{font-size:10px;letter-spacing:.04em} }
 </style>
 
 <div class="wrap">
@@ -594,8 +585,7 @@ function trBadge(t,got){const g=ICO[TR_GLYPH[t.id]]||ICO.trophy;const l=ICO.lock
 // статичні кнопки: <!--i:назва--> → іконка
 (function(){const w=document.createTreeWalker(document.body,NodeFilter.SHOW_COMMENT);const cs=[];while(w.nextNode())cs.push(w.currentNode);for(const c of cs){const m=/^i:([a-z0-9-]+)$/.exec(c.data);if(m){const s=document.createElement('span');s.innerHTML=ic(m[1]);c.replaceWith(s.firstChild);}}})();
 function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
-let BEST=lsGetEarly("upl30_best_v2")||{}; {const old=lsGetEarly("upl30_best"); if(old&&!BEST.classic)BEST.classic=old;}
-function lsGetEarly(k){try{return JSON.parse(localStorage.getItem(k)||"null");}catch(e){return null;}}
+let BEST=lsGet("upl30_best_v2")||{}; {const old=lsGet("upl30_best"); if(old&&!BEST.classic)BEST.classic=old;}
 
 // ---------- state
 let S={pending:null,move:null,format:"classic",club:lsGet("upl30_club")||null,formation:"4-4-2",mode:"normal",slots:[],taken:new Set(),wheel:null,rerolls:0,result:null,daily:null};
@@ -604,9 +594,7 @@ const STAR_BIAS=0.04;   // сильні сезони частіше; топ-4 с
 for(const c of DATA.clubs){const r=c.pl.map(p=>p[2]).sort((a,b)=>b-a).slice(0,11);c.q=r.reduce((a,b)=>a+b,0)/r.length;c.w=Math.exp(STAR_BIAS*(c.q-85))*(c.pos<=4?1.5:1)*(c.c==='dynamo-kyiv'||c.c==='shakhtar-donetsk'?0.8:1);}
 function pickWeighted(cands,r){if(S.format==='anti'||!STAR_BIAS)return cands[Math.floor(r()*cands.length)];let tot=0;for(const c of cands)tot+=c.w;let x=r()*tot;for(const c of cands){x-=c.w;if(x<=0)return c;}return cands[cands.length-1];}
 // ---------- daily challenge
-const LAUNCH=Date.UTC(2026,8,28);
 const DAY=kyivDate();
-const DAY_NO=Math.max(1,Math.round((Date.UTC(+DAY.slice(0,4),+DAY.slice(5,7)-1,+DAY.slice(8,10))-LAUNCH)/864e5)+1);
 function dailySetup(){
   const r=mulberry32(hashStr("upl30|"+DAY+"|setup"));
   const fs=Object.keys(FORMATIONS);const formation=fs[Math.floor(r()*fs.length)];
@@ -664,13 +652,11 @@ for(const k in FORMATS){const d=document.createElement('div');d.className='opt'+
   {const o=document.createElement('option');o.value='';o.textContent='— обери клуб —';o.disabled=true;if(!S.club)o.selected=true;sel.prepend(o);}   // з 0.50 клуб обирає гравець (раніше за замовчуванням були «Карпати»)
   sel.onchange=()=>{S.club=sel.value;lsSet('upl30_club',S.club);sel.classList.remove('need');showBest();};})();
 for(const f in FORMATIONS){const d=document.createElement('div');d.className='opt'+(f===S.formation?' on':'');d.tabIndex=0;d.innerHTML=`<b>${f}</b><small>${FORMATIONS[f].tag}</small>`;d.onclick=()=>{S.formation=f;[...fEl.children].forEach(c=>c.classList.remove('on'));d.classList.add('on');};d.onkeydown=e=>{if(e.key==='Enter'||e.key===' ')d.click();};fEl.appendChild(d);}
-if(S.mode==='hardcore')S.mode='hard';   // «Хардкор» прибрано з вибору в 0.46 (всередині лишився для антисезону)
 for(const m in MODES){if(m==='daily'||m==='practice'||m==='hardcore')continue;const d=document.createElement('div');d.className='opt'+(m===S.mode?' on':'');d.tabIndex=0;d.innerHTML=`<b>${MODES[m].name}</b><small>${MODES[m].desc}</small>`;d.onclick=()=>{S.mode=m;[...mEl.children].forEach(c=>c.classList.remove('on'));d.classList.add('on');};d.onkeydown=e=>{if(e.key==='Enter'||e.key===' ')d.click();};mEl.appendChild(d);}
-function shortName(n){const t=n.split(' ');return t.length<2?n:t[0][0]+'. '+t.slice(1).join(' ');}
 function showBest(){const el=document.getElementById('bestLine');const key=S.format==='oneclub'?'oneclub:'+S.club:S.format;const best=BEST[key];el.textContent='';if(best)el.textContent=`Найкращий результат: ${best.W}-${best.D}-${best.L}, ${best.pts} ${ptsWord(best.pts)}, ${best.place} місце (${best.formation}, ${MODES[best.mode].name})`;}
 showBest();
 let CUR_SEC=1;
-function go(n){const back=n===1&&CUR_SEC!==1;[1,2,3,4,5].forEach(i=>{const el=document.getElementById('s'+i);const was=el.hidden;el.hidden=(i!==n);if(i===n&&(was||CUR_SEC!==n)){el.classList.remove('enter','back');void el.offsetWidth;el.classList.add(back?'back':'enter');}const st=document.getElementById('st'+i);if(st)st.classList.toggle('on',i===n);});document.getElementById('statsCard').hidden=n!==1||!STATS_ON;CUR_SEC=n;window.scrollTo({top:0});}
+function go(n){const back=n===1&&CUR_SEC!==1;[1,2,3,4,5].forEach(i=>{const el=document.getElementById('s'+i);const was=el.hidden;el.hidden=(i!==n);if(i===n&&(was||CUR_SEC!==n)){el.classList.remove('enter','back');void el.offsetWidth;el.classList.add(back?'back':'enter');}});document.getElementById('statsCard').hidden=n!==1||!STATS_ON;CUR_SEC=n;window.scrollTo({top:0});}
 document.getElementById('dailyBtn').onclick=()=>{S.daily={practice:!!lsGet("upl30_daily_"+DAY)};S.chal=null;S.challenge=null;S.format='classic';[...fmEl.children].forEach((c,i)=>c.classList.toggle('on',i===0));document.getElementById('clubPickRow').hidden=true;DAILY.ptr=0;S.formation=DAILY.formation;S.mode="daily";S.result=null;
   S.slots=newSlots(S.formation);S.taken=new Set();S.wheel=null;S.rerolls=MODES.daily.rerolls;S.showR=false;S.moveMode=false;document.getElementById('modeLabel').textContent=`Виклик дня · ${S.formation}`;renderDraft();go(2);};
 renderDailyCard();
@@ -1229,7 +1215,6 @@ async function playSeason(year){
   document.getElementById('tieNote').textContent=tn;
   document.getElementById('zoneLegend').hidden=S.format==='anti';
   const mvp=[...r.players].sort((a,b)=>b.rt-a.rt)[0];
-  const rc=v=>v>=7.5?'var(--win)':v>=6.9?'var(--mf)':v>=6.5?'var(--draw)':'var(--loss)';
   document.getElementById('playerStats').innerHTML=`<tr><th>Гравець</th><th class="num">Оцінка</th><th>Поз.</th>${MODES[S.mode].showRatings||MODES[S.mode].reveal?'<th class="num">Рейт.</th>':''}<th class="num">Форма</th><th class="num">Голи</th><th class="num">Асисти</th><th class="num">8.0+</th></tr>`+[...r.players].sort((a,b)=>b.rt-a.rt).map(p=>`<tr${p===mvp?' class="me"':''}><td>${esc(p.name)}${p===mvp?' ★':''}</td><td class="num avgc">${p.rt.toFixed(2)}</td><td title="${POSFULL[p.slot||p.pos]}">${POSNAME[p.slot||p.pos]}</td>${MODES[S.mode].showRatings||MODES[S.mode].reveal?`<td class="num">${slotBase(p.id)??p.r}</td>`:''}<td class="num" style="color:${p.form>=3?'var(--win)':p.form<=-3?'var(--loss)':'inherit'}">${p.form>0?'+':''}${p.form}</td><td class="num">${p.g}</td><td class="num">${p.a}</td><td class="num">${p.m8}</td></tr>`).join('');
   document.getElementById('mvpLine2').innerHTML=`${ic('star','sm')}Гравець сезону: <b>${esc(mvp.name)}</b> · ${mvp.rt.toFixed(2)}`;
   const fp=[...r.players].sort((a,b)=>b.form-a.form);const fmtF=p=>`${esc(p.name)} ${p.form>0?'+':''}${p.form}`;
@@ -1238,7 +1223,6 @@ async function playSeason(year){
   const avg=(xi.reduce((s,x)=>s+baseR(x),0)/11).toFixed(1);
   document.getElementById('myXiTitle').textContent=S.teamName||'Твоя 11-ка';
   document.getElementById('modelNote').textContent=(MODES[S.mode].reveal||MODES[S.mode].showRatings?`Середній рейтинг XI ${avg}`:`Лише пам'ять: рейтинги не розкриваються`)+` · індекс атаки ${r.t.att.toFixed(1)} · індекс оборони ${r.t.def.toFixed(1)}` + (r.t.gap>12?` · лінії розбалансовані (розрив ${r.t.gap.toFixed(0)}), штраф`:'') + `. Очікувані голи проти середньої команди: ${(seasonOf(r.year).base*r.u.att).toFixed(2)} за матч, пропущені ${(seasonOf(r.year).base*r.u.def).toFixed(2)}.`;
-  const score=r.pts*100+(30-r.place);
   if(S.daily){
     if(!S.daily.practice){lsSet("upl30_daily_"+DAY,{W:r.W,D:r.D,L:r.L,pts:r.pts,place:r.place,gf:r.gf,ga:r.ga,xp:Math.round(r.xp*10)/10});
       const su=streakUpdate();r.streak=su;renderDailyCard();}
@@ -1267,7 +1251,6 @@ function goalMins(m){const n=m.who.length;if(!n)return [];const R=mulberry32(has
   const mins=Array.from({length:n},()=>1+Math.floor(R()*90)).sort((a,b)=>a-b);
   return m.who.map((nm,i)=>{const t=nm.split(' ');const sur=t.length>1?t.slice(1).join(' '):nm;const mi=mins[i];return (mi===90&&R()<0.6?`90+${1+Math.floor(R()*5)}`:mi)+`' ${sur}`;});}
 function whoMin(m){return goalMins(m).join(', ');}
-function whoStr(a){const c={};for(const n of a){const t=n.split(' ');const k=t.length>1?t.slice(1).join(' '):n;c[k]=(c[k]||0)+1;}return Object.entries(c).map(([k,v])=>v>1?`${k} ${v}`:k).join(', ');}
 function tickReveal(){
   const {r}=REV;if(REV.i>=r.log.length){finishReveal();return;}
   const m=r.log[REV.i],k=REV.i+1;let w=0,d=0,l=0;for(let q=0;q<k;q++){const x=r.log[q].res;if(x==='W')w++;else if(x==='D')d++;else l++;}
@@ -1615,7 +1598,7 @@ const CHAL_ALPH='abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 function chalId(){let s='';const a=new Uint32Array(8);try{crypto.getRandomValues(a);}catch(e){for(let i=0;i<8;i++)a[i]=Math.floor(Math.random()*4e9);}for(const x of a)s+=CHAL_ALPH[x%CHAL_ALPH.length];return s;}
 function wheelSeq(seed){const r=mulberry32(seed);const seq=[];for(let i=0;i<600;i++){const c=pickWeighted(DATA.clubs,r);seq.push(DATA.clubs.indexOf(c));}return seq;}
 // нова вільна гра: seed колеса й сезон суперників визначаються наперед (щоб гру можна було повторити у виклику)
-function chalNewGame(seed,year){seed=seed||Math.floor(Math.random()*2147483647);const r=mulberry32(seed^0x5bd1e995);return {seed,year:year||LEAGUE_CULT,seq:wheelSeq(seed),ptr:0};}
+function chalNewGame(seed,year){seed=seed||Math.floor(Math.random()*2147483647);return {seed,year:year||LEAGUE_CULT,seq:wheelSeq(seed),ptr:0};}
 let CHAL=null;   // виклик, який зараз відкрито за посиланням
 const chalName=()=>{const el=document.getElementById('chalName');const v=el&&el.value.trim();if(v&&v.length>=2){if(!TGU)nickSet(v);return v;}return (TGU?[TGU.first_name,TGU.last_name].filter(Boolean).join(' '):'')||myName()||'Друг';};
 function chalLinkWeb(id){return `https://upl-30-0.vercel.app/?c=${id}`;}

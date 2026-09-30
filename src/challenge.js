@@ -4,7 +4,7 @@ const CHAL_ALPH='abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 function chalId(){let s='';const a=new Uint32Array(8);try{crypto.getRandomValues(a);}catch(e){for(let i=0;i<8;i++)a[i]=Math.floor(Math.random()*4e9);}for(const x of a)s+=CHAL_ALPH[x%CHAL_ALPH.length];return s;}
 function wheelSeq(seed){const r=mulberry32(seed);const seq=[];for(let i=0;i<600;i++){const c=pickWeighted(DATA.clubs,r);seq.push(DATA.clubs.indexOf(c));}return seq;}
 // нова вільна гра: seed колеса й сезон суперників визначаються наперед (щоб гру можна було повторити у виклику)
-function chalNewGame(seed,year){seed=seed||Math.floor(Math.random()*2147483647);const r=mulberry32(seed^0x5bd1e995);return {seed,year:year||LEAGUE_CULT,seq:wheelSeq(seed),ptr:0};}
+function chalNewGame(seed,year){seed=seed||Math.floor(Math.random()*2147483647);return {seed,year:year||LEAGUE_CULT,seq:wheelSeq(seed),ptr:0};}
 let CHAL=null;   // виклик, який зараз відкрито за посиланням
 const chalName=()=>{const el=document.getElementById('chalName');const v=el&&el.value.trim();if(v&&v.length>=2){if(!TGU)nickSet(v);return v;}return (TGU?[TGU.first_name,TGU.last_name].filter(Boolean).join(' '):'')||myName()||'Друг';};
 function chalLinkWeb(id){return `https://upl-30-0.vercel.app/?c=${id}`;}
