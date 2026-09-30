@@ -57,12 +57,13 @@ async function run(MODE,b){const T=checker('v39 '+MODE);const v39=MODE==='new';c
  T.check(!!(await pg.$('#viewBack'))&&!!(await pg.$('#viewBody .slot')),'рядок відкриває сезон із кнопкою «До таблиці»');
  await pg.click('#viewBack');await pg.waitForTimeout(500);T.check((await pg.$$('#boardBody tr[data-q]')).length===1,'«До таблиці» повертає таблицю');await pg.click('#viewClose');
  if(v39){
-  await pg.click('#freeOpen');await pg.click('#myNameEdit');await pg.waitForFunction(()=>typeof PP!=='undefined'&&PP&&!PP.loading);await pg.waitForTimeout(200);   // профіль завантажився — сторінка вже не перемалюється під час вводуT.check(await pg.$eval('#s6',e=>!e.hidden),'«Змінити на своїй сторінці» відкриває сторінку');
-  await pg.fill('#ppNameIn','Andriy 2');   // поле саме робить «andriy_2»await pg.click('#ppNameSave');await pg.waitForTimeout(500);
+  await pg.click('#freeOpen');await pg.click('#myNameEdit');await pg.waitForTimeout(400);T.check(await pg.$eval('#s6',e=>!e.hidden),'«Змінити на своїй сторінці» відкриває сторінку');
+  await pg.fill('#ppNameIn','Andriy 2');await pg.click('#ppNameSave');await pg.waitForTimeout(500);
   rows=await board();T.check(rows[0]==='* andriy_2','перейменування на своїй сторінці → у таблиці «andriy_2»: '+rows[0]+' · '+await pg.evaluate(()=>(document.getElementById('ppNameMsg')||{}).textContent));await pg.click('#viewClose');
   await pg.click('#acctBtn');await pg.waitForTimeout(300);await pg.fill('#ppNameIn','');await pg.click('#ppNameSave');await pg.waitForTimeout(500);
   T.check(/ти знову/.test(await pg.textContent('#ppNameMsg')),'порожнє ім\'я — знову анонімний');await pg.click('#homeBtn');
   rows=await board();T.check(rows[0]==='* '+player.anon_name.toLowerCase(),'у таблиці анонімне ім\'я: '+rows[0]);await pg.click('#viewClose');
+  // «Andriy 2» — поле саме робить «andriy_2»
   // чужий пристрій (той самий device_id, інший секрет) не перейменує — перевірка секрету на боці бази, тут лише як імітація; справжня — setup.sh
  }
  T.check(!errs.length,'помилок на сторінці немає '+errs.join(' | '));
