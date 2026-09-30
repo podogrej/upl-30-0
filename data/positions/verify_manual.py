@@ -132,7 +132,7 @@ def tm_profile(tid, tries=3):
     return e
 
 
-SEARCH = jload('positions_tm_search.json', {})   # запит → [tm id] з пошуку transfermarkt.com
+SEARCH = {k: v for k, v in jload('positions_tm_search.json', {}).items() if all(isinstance(x, list) for x in v)}   # запит → [[slug, tm id]]
 
 
 def tm_search(q, tries=3):
@@ -150,10 +150,10 @@ def tm_search(q, tries=3):
             return tm_search(q, tries - 1)
         return None
     ids = []
-    for t in re.findall(r'/profil/spieler/(\d+)', h):
-        if t not in ids:
-            ids.append(t)
-    SEARCH[q] = ids[:8]
+    for sl, t in re.findall(r'href="/([a-z0-9-]+)/profil/spieler/(\d+)"', h):
+        if [sl, t] not in ids:
+            ids.append([sl, t])
+    SEARCH[q] = ids[:10]
     jsave('positions_tm_search.json', SEARCH)
     return SEARCH[q]
 
@@ -191,9 +191,12 @@ for r in todo:
         _, d, slug = pid.split(':', 2)
         c = sorted(((name_sim(pid, lab) if lab else 0, tid) for lab, tid in WD.get(d, [])), reverse=True)
         tids = [tid for s, tid in c if s >= 0.7][:2]
-        if not tids:
-            sur = names.get(pid, '').split(' ')[-1]
-            tids = tm_search(translit(sur) if sur else slug) or []
+        if not tids:   # кілька варіантів написання прізвища латиницею (Гармаш → harmash / garmash, Чернат → chernat / cernat)
+            t = translit(names.get(pid, '').split(' ')[-1]) or slug
+            g = t.replace('kh', 'h').replace('h', 'g')
+            qs = [t, slug, g, g.replace('y', 'i'), g.replace('ts', 'c').replace('ch', 'c'), re.sub('i$', 'y', t.replace('ie', 'ye')), re.sub('ov$', 'ev', g)]
+            for q in dict.fromkeys(q for q in qs if len(q) >= 3):
+                tids += [t for sl, t in (tm_search(q) or []) if t not in tids and name_sim(pid, sl.replace('-', ' ')) >= 0.7]
     for tid in tids:
         e = tm_profile(tid)
         if 'err' in e:
