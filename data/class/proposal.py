@@ -1,18 +1,18 @@
 """Аналіз для рейтингів v2: «клас» гравця з data/class/class.csv і три варіанти змішування з сезонним рейтингом.
-Нічого в грі не змінює. Запуск з кореня: python3 data/class/proposal.py  → друкує таблиці для data/class/proposal.md
+Нічого в грі не змінює (аналіз перед 0.57; з 0.57 у пулі вже рейтинги v2 — data/ratings/class_v2.py, тож «було» тут уже не сезонний S). Запуск з кореня: python3 data/class/proposal.py  → друкує таблиці для data/class/proposal.md
 і пише data/class/class_score.csv (person_id, name, клас і складові).
 
-Клас C (0…1) = зважене середнє складових (кожна 0…1):
-  збірна   0.30 · sqrt(min(caps, 100) / 100)                     — основна збірна, будь-яка країна
-  єврокубки 0.25 · sqrt(min(euro_apps, 100) / 100)               — матчі клубних єврокубків у базі TM
-  гроші    0.20 · log(max(пік вартості, найбільший трансфер) / €0.5 млн) / log(€50 млн / €0.5 млн), 0…1
-  нагороди 0.25 · min(1, бали / 12)                               — бали нижче
+Клас C (0…1) = зважене середнє складових (кожна 0…1) — формула в data/ratings/class_v2.py (class_score):
+  збірна   0.25 · min(caps, 120) / 120                            — основна збірна, будь-яка країна
+  єврокубки 0.25 · min(euro_apps, 150) / 150                      — матчі клубних єврокубків у базі TM
+  гроші    0.20 · log(max(пік вартості, найбільший трансфер) / €1 млн) / log(60), 0…1
+  нагороди 0.30 · min(1, бали / 20)                               — бали нижче
 Бали: Золотий м'яч — місце 1–3: 6, 4–10: 4, 11–30: 2 (за кожен рік); «Український футбол» (УФ) 1-е місце 3, 2–3-є 1.5;
 «Команда»/«Команда1» 1-е місце 2, 2–3-є 1; найкращий бомбардир УПЛ 1.5; команда року UEFA (опитування) 2.
 Гроші: у Transfermarkt ринкові вартості є лише приблизно з 2004 року, тож у ветеранів 90-х (народжені ≤ 1977) там лише
 вартість кінця кар'єри. Для них клас = більше з двох: з грошима або без них (вага ділиться між іншими складовими).
 """
-import csv, json, math, collections, re
+import csv, json, math, collections, re, sys
 
 pool = json.load(open('src/pool.json'))
 cards = collections.defaultdict(list)
@@ -22,49 +22,9 @@ for c in pool['clubs']:
 rows = {r['person_id']: r for r in csv.DictReader(open('data/class/class.csv'))}
 
 
-def num(v):
-    try:
-        return float(v)
-    except (TypeError, ValueError):
-        return None
-
-
-def award_points(s):
-    pts = 0.0
-    for a in [x.strip() for x in (s or '').split(';') if x.strip()]:
-        m = re.search(r'#(\d+)', a)
-        k = int(m.group(1)) if m else 0
-        if a.startswith("Ballon"):
-            pts += 6 if k <= 3 else 4 if k <= 10 else 2
-        elif a.startswith('UF '):
-            pts += 3 if k == 1 else 1.5
-        elif a.startswith('Komanda'):
-            pts += 2 if k == 1 else 1
-        elif a.startswith('UPL top scorer'):
-            pts += 1.5
-        elif a.startswith('UEFA Team'):
-            pts += 2
-    return pts
-
-
-W = {'intl': .25, 'euro': .25, 'money': .20, 'awards': .30}
-
-
-def class_score(r):
-    parts, w = {}, dict(W)
-    parts['intl'] = min(num(r['caps']) or 0, 120) / 120
-    parts['euro'] = min(num(r['euro_apps']) or 0, 150) / 150
-    mv = max(num(r['peak_mv_eur']) or 0, num(r['max_fee_eur']) or 0)
-    dob = r['dob'] or (r['person_id'].split(':')[1] if r['person_id'].startswith('w:') else '')
-    parts['money'] = max(0.0, min(1.0, math.log(mv / 1e6) / math.log(60))) if mv > 0 else 0.0
-    veteran = dob[:4].isdigit() and int(dob[:4]) <= 1977
-    parts['awards'] = min(1.0, award_points(r['awards']) / 20)
-    full = sum(parts[k] * v for k, v in w.items())
-    if veteran:   # вартості TM є лише з ~2004: ветерану 90-х «гроші» можуть лише додати, але не зменшити клас
-        w.pop('money')
-        no_money = sum(parts[k] * v for k, v in w.items()) / sum(w.values())
-        return max(full, no_money), parts
-    return full, parts
+# клас C і його складові — та сама функція, що в підсумковому кроці data/ratings/class_v2.py (з 0.57), без копії формули
+sys.path.insert(0, 'data/ratings')
+from class_v2 import class_score, W   # noqa: E402
 
 
 C, PARTS = {}, {}
