@@ -41,7 +41,7 @@ async function chalLoad(force){
 function renderChal(){
   const el=document.getElementById('chalCard');if(!el)return;if(!CHAL){el.hidden=true;return;}const c=CHAL;
   el.hidden=false;el.innerHTML=`<div class="kicker">${ic('sword-cross','sm')}Виклик</div><div class="ttl">${esc(c.name)}: ${c.pts} ${ptsWord(c.pts)}</div>
-    <div class="meta"><span class="chip">${c.w}-${c.d}-${c.l} · ${c.place} місце</span><span class="chip">Схема ${esc(c.formation)}</span><span class="chip">${MODES[c.mode]?MODES[c.mode].name:esc(c.mode)}</span><span class="chip">Суперники: сезон ${seasonLabel(c.year)}</span><span class="chip">Те саме колесо</span></div>
+    <div class="meta"><span class="chip">${c.w}-${c.d}-${c.l} · ${c.place} місце</span><span class="chip">Схема ${esc(c.formation)}</span><span class="chip">${MODES[c.mode]?MODES[c.mode].name:esc(c.mode)}</span><span class="chip">Суперники: ${esc(oppLabel(+c.year))}</span><span class="chip">Те саме колесо</span></div>
     ${c.results&&c.results.length?`<div class="tbl"><table>${c.results.slice(0,8).map(x=>`<tr><td>${esc(x.name)}</td><td class="num">${x.w}-${x.d}-${x.l}</td><td class="num"><b>${x.pts}</b></td><td>${x.pts>c.pts?ic('check-circle','sm')+'побив':x.pts===c.pts?ic('handshake','sm')+'нічия':'—'}</td></tr>`).join('')}</table></div>`:''}
     <div class="row"><button class="primary" id="chalGo">Прийняти виклик</button></div>`;
   document.getElementById('chalGo').onclick=chalStart;

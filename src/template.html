@@ -332,13 +332,13 @@ td .sub{font-size:11px;color:var(--muted);margin-top:2px;display:flex;gap:6px;al
     <div class="sec0">Ще</div>
     <button class="row0" id="boardOpen"><!--i:format-list-numbered--><span><b>Таблиця</b><small>Усі сезони всіх гравців</small></span><!--i:chevron-right--></button>
     <button class="row0" id="trBtn"><!--i:trophy--><span><b>Трофеї<em id="trCount"></em></b><small id="trTotal">Частина — секретні</small></span><!--i:chevron-right--></button>
-    <div class="facts0"><span><b>34</b> сезони</span><span><b>524</b> клуб-сезони</span><span><b>4 557</b> футболістів</span></div>
+    <div class="facts0" id="facts0"><span><b>34</b> сезони</span><span><b>524</b> клуб-сезони</span><span><b>4 546</b> футболістів</span></div>
     <h2 id="howH">Як грати</h2>
     <div class="how0"><div><b>1</b><span>Обери схему й режим — або просто тисни «Виклик дня».</span></div><div><b>2</b><span>Крути колесо: воно дає клуб і сезон. Бери одного гравця на вільну позицію.</span></div><div><b>3</b><span>Зібрав 11 — відкрий рейтинги й прогноз, а потім зіграй 30 турів.</span></div></div>
     <h2>Питання та відповіді</h2>
     <div class="faq0">
       <details><summary>Звідки рейтинги гравців?</summary><p>Рейтинг рахується окремо за кожен сезон: голи, асисти, частка зіграних матчів, успіх команди, для оборонців — пропущені й сухі матчі. Гравця порівнюють лише з гравцями його лінії в тому самому сезоні, тому 90-ті й 2020-ті стоять поруч. 99 — лише в найкращих сезонах в історії.</p></details>
-      <details><summary>Чому рейтинги приховані під час драфту?</summary><p>Щоб грала пам'ять і футбольне чуття, а не таблиця. Рейтинги відкриваються, щойно ти зібрав 11 гравців, — перед сезоном. У «Хардкорі» — ніколи.</p></details>
+      <details><summary>Чому рейтинги приховані під час драфту?</summary><p>Щоб грала пам'ять і футбольне чуття, а не таблиця. Рейтинги відкриваються, щойно ти зібрав 11 гравців, — перед сезоном. В антисезоні — ніколи: там грає лише пам'ять.</p></details>
       <details><summary>Що таке xP, xG і «везіння»?</summary><p>xP — скільки очок твій склад у середньому набирає проти цих суперників (300 симуляцій). xG — очікувані голи. Везіння — різниця між реальними очками й xP.</p></details>
       <details><summary>Як грати з друзями?</summary><p>Три способи: однаковий «Виклик дня» і таблиця дня; посилання «Кинути виклик другу» після сезону; режим 5×5 на одному пристрої. А ще можна додати @upl30_bot у Telegram-групу й написати /league — бот вестиме табло групи.</p></details>
       <details><summary>Що ви збираєте?</summary><p>Анонімно дивимося, куди натискають, щоб покращувати гру (сервіс Microsoft Clarity). Імен і паролів не бачимо.</p></details>
@@ -347,13 +347,13 @@ td .sub{font-size:11px;color:var(--muted);margin-top:2px;display:flex;gap:6px;al
     </div>
     <details><summary>Про гру та дані</summary>
       <div class="facts">
-        <div class="fact"><b>34</b><span>сезони, 1992/93 – 2025/26</span></div>
-        <div class="fact"><b>51</b><span>клуб за всю історію</span></div>
-        <div class="fact"><b>16 250</b><span>гравець-сезонів</span></div>
-        <div class="fact"><b>4 557</b><span>футболістів</span></div>
+        <div class="fact" id="fcSeasons"><b>34</b><span>сезони, 1992/93 – 2025/26</span></div>
+        <div class="fact" id="fcClubs"><b>51</b><span>клуб за всю історію</span></div>
+        <div class="fact" id="fcCards"><b>16 256</b><span>гравець-сезонів</span></div>
+        <div class="fact" id="fcPersons"><b>4 546</b><span>футболістів</span></div>
       </div>
       <p>Рейтинг кожного гравця рахується за його сезон: голи й асисти за матч, частка зіграних матчів, місце команди, пропущені та сухі матчі для воротарів. Порівняння йде всередині сезону та позиції, тож зірки 90-х і 2020-х стоять поруч.</p>
-      <p>Симуляція: кожен матч розігрується як два пуассонівські потоки голів. Атака твоєї команди складається з нападу й півзахисту, оборона з воротаря, захисту й півзахисту. Суперники — реальні 15 клубів випадкового сезону з їхніми справжніми голами «за» і «проти»; ти замінюєш команду, що посіла останнє місце. Домашнє поле дає невелику перевагу, форма коливається від матчу до матчу.</p>
+      <p>Симуляція: кожен матч розігрується як два пуассонівські потоки голів. Атака твоєї команди складається з нападу й півзахисту, оборона з воротаря, захисту й півзахисту. Суперники — «Ліга культових клубів»: 15 клубів, що зробили історію УПЛ, кожен із середньою силою за свої сезони в лізі на 16 команд. У «Лізі легенд» — ті самі клуби, але кожен у своєму найкращому сезоні. Домашнє поле дає невелику перевагу, форма коливається від матчу до матчу.</p>
       <p class="muted">Прототип, неофіційний фан-проєкт. Рейтинги розрахункові й ще будуть донастроюватися.</p>
       <p class="muted" style="font-size:12px">Іконки: Material Design Icons (Pictogrammers, Apache 2.0) і Font Awesome Free (CC BY 4.0).</p>
     </details>
@@ -584,6 +584,8 @@ function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
 function pick(a){return a[Math.floor(rnd()*a.length)];}
 function normal(){let u=0,v=0;while(u===0)u=rnd();while(v===0)v=rnd();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
 function poisson(l){const L=Math.exp(-l);let k=0,p=1;do{k++;p*=rnd();}while(p>L);return k-1;}
+// відмінок після числа: 1 сезон, 2 сезони, 5 сезонів (11–14 — «сезонів»)
+function plUk(n,one,few,many){const a=Math.abs(n)%10,b=Math.abs(n)%100;return a===1&&b!==11?one:a>=2&&a<=4&&(b<12||b>14)?few:many;}
 function ptsWord(n){const a=n%10,b=n%100;return (a===1&&b!==11)?'очко':(a>=2&&a<=4&&(b<12||b>14))?'очки':'очок';}
 function seasonLabel(y){return y+"/"+String(y+1).slice(2);}
 /*__ICONS__*/
@@ -639,6 +641,18 @@ function wheelPool(){if(S.daily||S.format==="classic"||S.format==="anti"||S.form
   return DATA.clubs.filter(c=>c.c===S.club);}
 function isOk(cs,p){return !S.taken.has(p[5])&&(S.format!=="anti"||p[3]>=ANTI_MIN_APPS)&&!!bestSlot(p);}
 
+// ---------- лічильники пулу (головна, «Про гру», опис форматів) — рахуємо з DATA, а не вписуємо руками
+const DSTAT=(()=>{const ids=new Set(),cl=new Set(),ys=new Set(),dy=new Set();let cards=0;
+  for(const c of DATA.clubs){cl.add(c.c);ys.add(c.y);if(FORMATS.derby.clubs.includes(c.c))dy.add(c.y);cards+=c.pl.length;for(const p of c.pl)ids.add(p[5]);}
+  return {cs:DATA.clubs.length,persons:ids.size,cards,clubs:cl.size,seasons:ys.size,derbyS:dy.size,y0:Math.min(...ys),y1:Math.max(...ys)};})();
+{const n=x=>x.toLocaleString('uk-UA'),set=(id,h)=>{const e=document.getElementById(id);if(e)e.innerHTML=h;};
+  set('facts0',`<span><b>${DSTAT.seasons}</b> ${plUk(DSTAT.seasons,'сезон','сезони','сезонів')}</span><span><b>${n(DSTAT.cs)}</b> ${plUk(DSTAT.cs,'клуб-сезон','клуб-сезони','клуб-сезонів')}</span><span><b>${n(DSTAT.persons)}</b> ${plUk(DSTAT.persons,'футболіст','футболісти','футболістів')}</span>`);
+  set('fcSeasons',`<b>${DSTAT.seasons}</b><span>${plUk(DSTAT.seasons,'сезон','сезони','сезонів')}, ${seasonLabel(DSTAT.y0)} – ${seasonLabel(DSTAT.y1)}</span>`);
+  set('fcClubs',`<b>${DSTAT.clubs}</b><span>${plUk(DSTAT.clubs,'клуб','клуби','клубів')} за всю історію</span>`);
+  set('fcCards',`<b>${n(DSTAT.cards)}</b><span>${plUk(DSTAT.cards,'гравець-сезон','гравець-сезони','гравець-сезонів')}</span>`);
+  set('fcPersons',`<b>${n(DSTAT.persons)}</b><span>${plUk(DSTAT.persons,'футболіст','футболісти','футболістів')}</span>`);
+  FORMATS.classic.desc=`Усі ${DSTAT.cs} ${plUk(DSTAT.cs,'клуб-сезон','клуб-сезони','клуб-сезонів')}.`;
+  FORMATS.derby.desc=`Лише «Динамо» і «Шахтар» за ${DSTAT.derbyS} ${plUk(DSTAT.derbyS,'сезон','сезони','сезонів')}.`;}
 // ---------- step 1
 const fEl=document.getElementById('formations'), mEl=document.getElementById('modes');
 const fmEl=document.getElementById('formats');
@@ -833,7 +847,7 @@ function renderPre(){
     (lg?`<p style="margin:0">Суперники — ${lg}: ${sea.teams.slice(0,-1).map(t=>esc(t[1])).join(', ')}. ${S.year===LEAGUE_CULT?'Кожен клуб — із середньою силою за свою історію в УПЛ.':'Кожен клуб — у своєму найкращому сезоні.'}</p>`:`<p style="margin:0">Суперники — справжня УПЛ ${seasonLabel(S.year)}. Твоя 11-ка займе місце «${esc(last?last[1]:'')}», що тоді фінішував останнім.</p>`)+
     (open?`<div class="tiles t2"><div class="tile"><b>${avg.toFixed(1)}</b><span>середній рейтинг</span></div><div class="tile hot"><b>${S.pre.xp.toFixed(1)}</b><span>очікувані очки (xP)</span></div></div>`+
       `<p class="muted cap">Найсильніший — ${esc(mx.name)} (${baseR(mx)}), найслабший — ${esc(mn.name)} (${baseR(mn)}). xP — скільки очок у середньому набирає цей склад проти цих суперників за 300 симуляцій. Справжній сезон може піти краще чи гірше: форма гравців і везіння.</p>`
-    :`<p class="muted cap">Хардкор: рейтинги й прогноз не показуються.</p>`);
+    :`<p class="muted cap">Лише пам'ять: рейтинги й прогноз не показуються.</p>`);
 }
 
 // ---------- engine
@@ -1001,7 +1015,7 @@ async function playSeason(year){
   document.querySelectorAll('#tabs .tab').forEach((b,i)=>b.classList.toggle('on',i===0));['t1','t2'].forEach((id,i)=>document.getElementById(id).hidden=i!==0);
   const avg=(xi.reduce((s,x)=>s+baseR(x),0)/11).toFixed(1);
   document.getElementById('myXiTitle').textContent=S.teamName||'Твоя 11-ка';
-  document.getElementById('modelNote').textContent=(MODES[S.mode].reveal||MODES[S.mode].showRatings?`Середній рейтинг XI ${avg}`:`Хардкор: рейтинги не розкриваються`)+` · індекс атаки ${r.t.att.toFixed(1)} · індекс оборони ${r.t.def.toFixed(1)}` + (r.t.gap>12?` · лінії розбалансовані (розрив ${r.t.gap.toFixed(0)}), штраф`:'') + `. Очікувані голи проти середньої команди: ${(seasonOf(r.year).base*r.u.att).toFixed(2)} за матч, пропущені ${(seasonOf(r.year).base*r.u.def).toFixed(2)}.`;
+  document.getElementById('modelNote').textContent=(MODES[S.mode].reveal||MODES[S.mode].showRatings?`Середній рейтинг XI ${avg}`:`Лише пам'ять: рейтинги не розкриваються`)+` · індекс атаки ${r.t.att.toFixed(1)} · індекс оборони ${r.t.def.toFixed(1)}` + (r.t.gap>12?` · лінії розбалансовані (розрив ${r.t.gap.toFixed(0)}), штраф`:'') + `. Очікувані голи проти середньої команди: ${(seasonOf(r.year).base*r.u.att).toFixed(2)} за матч, пропущені ${(seasonOf(r.year).base*r.u.def).toFixed(2)}.`;
   const score=r.pts*100+(30-r.place);
   if(S.daily){
     if(!S.daily.practice){lsSet("upl30_daily_"+DAY,{W:r.W,D:r.D,L:r.L,pts:r.pts,place:r.place,gf:r.gf,ga:r.ga,xp:Math.round(r.xp*10)/10});
