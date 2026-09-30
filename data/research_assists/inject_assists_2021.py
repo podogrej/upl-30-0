@@ -1,6 +1,10 @@
 """Вписати асисти 2021/22 (assists_2021_more.csv) у src/pool.json: поле p[8] гравців клуб-сезону 2021.
 Запуск з кореня репозиторію: python3 data/research_assists/inject_assists_2021.py
 Потім: python3 src/build.py && node tools/make_engine.js
+Повторний запуск безпечний (0.54): рядки, чиї картки data/fix_2021/fix_pool_2021.py віддав іншій людині (REPLACED), пропускаються —
+асисти тих карток ставить сам fix_pool_2021.py.
+0.54: рядок «Чорноморець — Данило Алефіренко» виправлено на «Даниїл Сухоручко» (tm:539448): на sports.ru у Чорноморці 2021/22 — Сухоручко
+(1 М, 4 хв), Алефіренко — у Зорі (data/fixes/fix_pool_054.py).
 """
 import json, os
 D = os.path.dirname(os.path.abspath(__file__))
@@ -24,7 +28,8 @@ for c in pool['clubs']:
             p[8] = ast[key]; done.add(key)
     if any(k[0] == c['c'] for k in ast):
         assert all(p[8] is not None for p in c['pl']), c['c']
-missing = set(ast) - done
+REPLACED = {('desna-chernihiv', 'tm:49016', 'Євген Паст'), ('kolos-kovalivka', 'tm:463845', 'Олександр Демченко')}   # fix_pool_2021.py
+missing = set(ast) - done - REPLACED
 assert not missing, missing
 json.dump(pool, open(POOL, 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
 print('assists written:', len(done))

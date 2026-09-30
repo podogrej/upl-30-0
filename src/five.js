@@ -23,7 +23,7 @@ const f5Form=x=>Object.prototype.hasOwnProperty.call(F5_FORMS,x)?x:'1-2-1';
 function f5Team(name,team,form){return {name,team,form,slots:F5_FORMS[form].rows.flat().map(slot=>({slot,player:null})),rerolls:F5_REROLLS,taken:new Set()};}
 function f5Seat(){const n=F5.teams.length;return F5.mode==='turns'?F5.pick%n:F5.solo;}   // по черзі: суворо A-B-A-B
 function f5Taken(team){return F5.mode==='turns'?F5.takenAll:team.taken;}
-function f5Eligible(cs,team){const tk=f5Taken(team);return cs.pl.filter(p=>!tk.has(p[5])&&f5Fits(team,p));}
+function f5Eligible(cs,team){const tk=f5Taken(team);return cs.pl.filter(p=>!tk.has(canon(p[5]))&&f5Fits(team,p));}
 function f5Spin(){
   const ti=f5Seat(),team=F5.teams[ti];let cs=null;
   const seq=F5.mode==='turns'?F5.seqAll:(F5.seqs[ti]=F5.seqs[ti]||{ptr:0});
@@ -34,7 +34,7 @@ function f5Reroll(){const team=F5.teams[f5Seat()];if(team.rerolls<=0)return;team
 function f5Choose(p){const team=F5.teams[f5Seat()];const s=f5Open(team).find(s=>s.slot===f5G(p));if(s)f5Place(p,s);}
 function f5Place(p,s){if(F5.online){f5OnPlace(p,s);return;}const ti=f5Seat(),team=F5.teams[ti],cs=F5.cs;
   s.player={name:p[0],id:p[5],slot:s.slot,r:p[2],apps:p[3],goals:p[4],club:cs.n,c:cs.c,y:cs.y};
-  f5Taken(team).add(p[5]);F5.cs=null;F5.pick++;
+  f5Taken(team).add(canon(p[5]));F5.cs=null;F5.pick++;
   const full=t=>t.slots.every(x=>x.player);
   if(F5.mode==='solo'&&full(team)){F5.solo++;F5.handoff=F5.solo<F5.teams.length;}
   if(F5.teams.every(full))F5.phase='ready';
@@ -136,7 +136,7 @@ function f5Render(){
         (f.mode==='turns'&&f.pick>0?`<h3>Склади</h3><div class="f5grid">${f.teams.map(t=>`<div>${f5Head(t)}${f5Pitch(t)}</div>`).join('')}</div>`:'');
       document.getElementById('f5Ready').onclick=()=>{f.handoff=false;f5Spin();};return;}
     const cs=f.cs;const need=new Set(f5Open(team).map(s=>s.slot));
-    const list=cs?[...cs.pl].map(p=>({p,ok:!f5Taken(team).has(p[5])&&need.has(f5G(p))})).sort((a,b)=>(b.ok-a.ok)||(b.p[3]-a.p[3])):[];
+    const list=cs?[...cs.pl].map(p=>({p,ok:!f5Taken(team).has(canon(p[5]))&&need.has(f5G(p))})).sort((a,b)=>(b.ok-a.ok)||(b.p[3]-a.p[3])):[];
     el.innerHTML=`<div class="row" style="justify-content:space-between;margin-block:14px 8px"><div>${f5Head(team)} <span class="muted mono">${5-f5Open(team).length}/5 · ${team.form}</span></div><span class="muted mono">${f.mode==='turns'?`хід ${f.pick+1}/${total}`:''}</span></div>
       ${f5Pitch(team)}
       <div class="wheel" style="margin-top:12px"><div class="reels"><div class="reel"><div class="strip"><div class="club">${cs?esc(cs.n):''}</div></div></div><div class="reel"><div class="strip"><div class="season">${cs?seasonLabel(cs.y):''}</div></div></div></div>
@@ -222,7 +222,7 @@ async function f5Sync(){
   const myN=picks.filter(k=>k.seat===o.seat).length,key=(F5.mode==='turns'?picks.length:myN)+'|'+n;const keepCs=F5.phase==='draft'&&F5.cs&&F5.myTurnKey===key;const cs0=F5.cs;
 F5.teams=pl.map(p=>f5Team(String(p.name||''),String(p.team||''),f5Form(p.form)));F5.takenAll=new Set();F5.seqAll={ptr:0};F5.seqs=[];
   for(const k of picks){const team=F5.teams[k.seat];if(!team)continue;const cs=DATA.clubs[k.club_idx];const pp=cs&&cs.pl.find(x=>x[5]===k.person_id);const s=team.slots[k.slot_idx];if(!pp||!s)continue;
-    s.player={name:pp[0],id:pp[5],slot:s.slot,r:pp[2],apps:pp[3],goals:pp[4],club:cs.n,c:cs.c,y:cs.y};f5Taken(team).add(pp[5]);
+    s.player={name:pp[0],id:pp[5],slot:s.slot,r:pp[2],apps:pp[3],goals:pp[4],club:cs.n,c:cs.c,y:cs.y};f5Taken(team).add(canon(pp[5]));
     if(F5.mode==='turns')F5.seqAll.ptr=k.ptr;else (F5.seqs[k.seat]=F5.seqs[k.seat]||{ptr:0}).ptr=k.ptr;}
   F5.pick=picks.length;F5.cs=keepCs?cs0:null;
   if(F5.teams.every(t=>t.slots.every(x=>x.player))){F5.phase='ready';f5StopPoll();if(o.host&&room.status!=='done')F5_SB(`f5_rooms?id=eq.${o.id}`,{method:'PATCH',prefer:'return=minimal',body:{status:'done'}}).catch(()=>{});f5Render();return;}
@@ -266,7 +266,7 @@ function f5RenderOnline(el){const f=F5,o=f.online;
     el.innerHTML=`<div class="daily"><div class="kicker">Кімната ${esc(o.id)} · ${f.mode==='turns'?`хід ${f.pick+1} з ${n*5}`:'кожен драфтить сам'}</div><div class="ttl">${f.mode==='turns'?`Ходить ${esc(f5Label(who))}`:(f5Open(mine).length?'Крутимо колесо…':'Твій склад готовий — чекаємо інших')}</div><p class="muted" style="margin:0">Оновлюється автоматично.</p></div>
       <h3>Склади</h3><div class="f5grid">${f.teams.map((t,i)=>`<div>${f5Head(t)}${i===o.seat?' <span class="chip">ти</span>':''}${f.mode==='solo'&&i!==o.seat?`<p class="muted" style="margin:0">${5-f5Open(t).length}/5 — склад побачиш після драфту</p>`:f5Pitch(t)}</div>`).join('')}</div>`;return;}
   const cs=f.cs,team=mine,need=new Set(f5Open(team).map(s=>s.slot));
-  const list=[...cs.pl].map(p=>({p,ok:!f5Taken(team).has(p[5])&&need.has(f5G(p))})).sort((a,b)=>(b.ok-a.ok)||(b.p[3]-a.p[3]));
+  const list=[...cs.pl].map(p=>({p,ok:!f5Taken(team).has(canon(p[5]))&&need.has(f5G(p))})).sort((a,b)=>(b.ok-a.ok)||(b.p[3]-a.p[3]));
   el.innerHTML=`<div class="row" style="justify-content:space-between;margin-block:14px 8px"><div>${f5Head(team)} <span class="muted mono">${5-f5Open(team).length}/5 · ${team.form}</span></div><span class="chip hot">твій хід</span></div>
     ${f5Pitch(team)}
     <div class="wheel" style="margin-top:12px"><div class="reels"><div class="reel"><div class="strip"><div class="club">${esc(cs.n)}</div></div></div><div class="reel"><div class="strip"><div class="season">${seasonLabel(cs.y)}</div></div></div></div>

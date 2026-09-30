@@ -19,7 +19,7 @@ function yearOk(row, E, chalYearOk) {
 
 // Сайт попередньої версії ще відкритий у гравців (кеш браузера, Mini App). Якщо його сезон повністю сходиться з новим рушієм
 // (симуляція між цими версіями не мінялася) — приймаємо; не сходиться (напр. у гравця змінилася позиція в пулі) — «не перевірити» (null), не «підробка».
-const PREV_VERSIONS = ['0.52', '0.51'];
+const PREV_VERSIONS = ['0.53', '0.52', '0.51'];
 
 // головна перевірка: повертає [true|false|null, пояснення]; null — перевірити неможливо (стара версія тощо)
 function check(row, seedRow, opts = {}) {
@@ -46,7 +46,8 @@ function checkCore(row, seedRow, { chalYearOk = false } = {}) {
   if (xiHash(xi) !== seedRow.xi_hash) return [false, 'склад змінено після видачі seed'];
   const F = E.FORMATIONS[row.formation]; if (!F) return [false, 'невідома схема'];
   if (F.slots.join() !== xi.map(x => x.slot).join()) return [false, 'позиції не відповідають схемі'];
-  if (new Set(xi.map(x => x.id)).size !== 11) return [false, 'гравець двічі'];
+  const canon = id => (E.DATA.alias && E.DATA.alias[id]) || id;   // одна людина під двома id (data/aliases) — теж «двічі»
+  if (new Set(xi.map(x => canon(x.id))).size !== 11) return [false, 'гравець двічі'];
   E.setFormat(row.format);
   for (const x of xi) {
     const club = E.DATA.clubs.find(c => c.n === x.c && c.y === +x.y);

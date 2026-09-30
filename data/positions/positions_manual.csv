@@ -920,7 +920,6 @@ w:1988-08-16:zavarov,CM,CAM,low,en.wikipedia.org/wiki/Valeriy_Zavarov
 w:1976-07-22:kretov,CM,,low,matchtv.ru/athlete/anatolii-kretov
 w:1983-02-24:erik,CB,,low,en.wikipedia.org/wiki/Eric_Kamdem_Kamdem
 w:1989-11-21:kiva,CM,,low,en.wikipedia.org/wiki/Andriy_Kiva
-w:1981-00-00:pshenichnih,RB,CB,mid,knowledge
 w:1973-01-31:lozovski,CB,,low,group
 w:1967-06-25:voronejski,CB,,low,group
 w:1962-03-18:hruslov,CB,CDM,low,en.wikipedia.org/wiki/Vyacheslav_Khruslov
@@ -1855,3 +1854,7 @@ w:2003-00-00:kozishkurt,CM,,low,group_default
 w:2003-00-00:nedes,CB,,low,group_default
 w:2001-00-00:ilia,CB,,low,group_default
 w:2002-00-00:amar,CB,,high,en.wikipedia.org/wiki/Amar_Kvakić
+tm:271432,ST,,tm,https://www.transfermarkt.com/-/profil/spieler/271432
+tm:348269,CB,,tm_generic,https://www.transfermarkt.com/-/profil/spieler/348269
+tm:381920,CM,,tm_generic,https://www.transfermarkt.com/-/profil/spieler/381920
+tm:477185,ST,,tm_generic,https://www.transfermarkt.com/-/profil/spieler/477185

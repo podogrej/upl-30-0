@@ -5,3 +5,4 @@ dist/
 tools/tests/*.png
 tools/tests/preview.html
 tools/tests/out/
+tools/results_*.json

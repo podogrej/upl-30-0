@@ -1,9 +1,11 @@
-// Замір складності 30-0: «розумний гравець» збирає склад з колеса за правилами гри, рушій (site/lib/engine.js) симулює сезон.
-// node harness.js  → results.json
+// Замір складності 30-0: «розумний гравець» збирає склад з колеса за правилами гри, рушій (lib/engine.js) симулює сезон.
+// Запуск з кореня: node tools/sim30.js [сезонів, 2000] [expert|fan|casual]  → tools/results_<тип|all>.json (у .gitignore). Результати — у DECISIONS («Замір …»).
+// Змінні: SIM_SEE=eff|base (що бачить бот), SIM_ENGINE=<шлях> (інший рушій, напр. «до» правки).
 const E = require(process.env.SIM_ENGINE || __dirname + '/../lib/engine.js');   // SIM_ENGINE — інший рушій (напр. «до» правки)
 const SEE = process.env.SIM_SEE || 'eff';   // eff — бот бачить рейтинг зі штрафом за позицію й ногою; base — лише базовий рейтинг картки, як живий гравець з 0.50
 const { DATA, FORMATIONS, FORMATS, GROUP_OF, MODES, YEARS16, ANTI_MIN_APPS, effRating, mulberry32, hashStr } = E;
 const FORMS = Object.keys(FORMATIONS);
+const canon = id => (DATA.alias && DATA.alias[id]) || id;
 
 function normal(r) { let u = 0, v = 0; while (!u) u = r(); v = r(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
 function pickW(cands, r, uniform) {
@@ -20,11 +22,11 @@ function play(cfg) {
   const anti = cfg.format === 'anti';
   const formation = cfg.daily ? cfg.daily.formation : cfg.formation;
   const slots = FORMATIONS[formation].slots.map(slot => ({ slot, p: null }));
-  const taken = new Set();
+  const taken = new Set();   // людей — за canonical id (DATA.alias), як S.taken у грі
   const noise = {};   // сприйняття гравця стабільне протягом драфту: знаєш когось як «сильного» — він сильний для тебе весь драфт
   const perceived = (p, slot) => { const er = effRating(p, slot); if (er == null) return null; if (!(p[5] in noise)) noise[p[5]] = normal(r) * cfg.sigma; return (SEE === 'base' ? p[2] : er) + noise[p[5]]; };
   const pool = anti || cfg.format === 'classic' || cfg.format === 'legends' || cfg.daily ? DATA.clubs : cfg.format === 'derby' ? DATA.clubs.filter(c => FORMATS.derby.clubs.includes(c.c)) : DATA.clubs.filter(c => c.c === cfg.club);
-  const okP = p => !taken.has(p[5]) && (!anti || p[3] >= ANTI_MIN_APPS);
+  const okP = p => !taken.has(canon(p[5])) && (!anti || p[3] >= ANTI_MIN_APPS);
   const best = cs => {   // найкращий (для анти — найгірший) хід у цьому клуб-сезоні
     let b = null;
     for (const p of cs.pl) { if (!okP(p)) continue;
@@ -43,7 +45,7 @@ function play(cfg) {
   for (let k = 0; k < 11; k++) {
     let cs = spin(), b = best(cs);
     while (rerolls > 0 && !anti && b.v < REROLL_BELOW) { rerolls--; cs = spinFresh(); b = best(cs); }
-    b.s.p = b.p; taken.add(b.p[5]);
+    b.s.p = b.p; taken.add(canon(b.p[5]));
   }
   const xi = slots.map(s => ({ id: s.p[5], name: s.p[0], slot: s.slot, pos: GROUP_OF[s.slot], r: effRating(s.p, s.slot) }));
   const year = cfg.daily ? cfg.daily.year : cfg.year || (E.LEAGUE_CULT ? (cfg.format === 'legends' ? E.LEAGUE_LEGENDS : E.LEAGUE_CULT) : YEARS16[Math.floor(r() * YEARS16.length)]);   // з 0.50 — ліга культових клубів; старий рушій — випадковий сезон
