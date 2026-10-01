@@ -110,17 +110,17 @@ function honestXi(formation) {
   await tamper('підробка з сайту 0.56 — не перевірено (null)', r => { r.version = '0.56'; r.xi[0].r = 99; }, null);
   await tamper('старша версія 0.49 — не перевірити (null)', r => { r.version = '0.49'; }, null);
   // 0.60: нога LM/RM змінила симуляцію лише для таких гравців — сезон сайту 0.59, що сходиться, приймаємо; підробку — «не перевірити»; 0.58 — вже «не перевірити»
-  // 0.65: PREV_VERSIONS = 0.64, 0.63 — приймаємо, лише якщо рушій 0.65 повторив сезон (інакше null); 0.62 — вже «не перевірити»
+  // 0.66: PREV_VERSIONS = 0.65, 0.64 — приймаємо, лише якщо рушій 0.66 повторив сезон (інакше null); 0.63 і старші — «не перевірити»
+  await tamper('сезон з сайту 0.65 — перевірено', r => { r.version = '0.65'; }, true);
   await tamper('сезон з сайту 0.64 — перевірено', r => { r.version = '0.64'; }, true);
-  await tamper('сезон з сайту 0.63 — перевірено', r => { r.version = '0.63'; }, true);
-  await tamper('сезон з сайту 0.62 — не перевірити (null)', r => { r.version = '0.62'; }, null);
+  await tamper('сезон з сайту 0.63 — не перевірити (null)', r => { r.version = '0.63'; }, null);
   await tamper('підробка з сайту 0.62 — не перевірено (null)', r => { r.version = '0.62'; r.xi[0].r = 99; }, null);
   await tamper('сезон з сайту 0.61 — не перевірити (null)', r => { r.version = '0.61'; }, null);
   // 0.64: класика сайту 0.63 — проти культових клубів (seed видано під LEAGUE_CULT): приймаємо
   { const sc = await call(seedH, { device_id: device, xi, formation, mode: 'normal', format: 'classic', year: E.LEAGUE_CULT });
     const q = E.run({ xi: SX(xi), mode: 'normal', format: 'classic', year: E.LEAGUE_CULT, seed: sc.j.seed });
     const cult = r => Object.assign(r, { year: E.LEAGUE_CULT, seed: sc.j.seed, seed_id: sc.j.seed_id, w: q.W, d: q.D, l: q.L, pts: q.pts, place: q.place, gf: q.gf, ga: q.ga });
-    await tamper('класика сайту 0.63 проти культових клубів — перевірено', r => { cult(r); r.version = '0.63'; }, true);
+    await tamper('класика сайту минулої версії (0.64) проти культових клубів — перевірено', r => { cult(r); r.version = '0.64'; }, true);
     await tamper('класика 0.64 проти культових клубів без виклику другу — ні', r => { cult(r); }, false);
     await tamper('антисезон проти «Ліги легенд» — ні', r => { cult(r); r.format = 'anti'; r.year = E.LEAGUE_LEGENDS; }, false); }
   // 0.58: епоха (seasons.era, коли з'явиться колонка) — склад лише з клуб-сезонів епохи

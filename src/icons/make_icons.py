@@ -8,7 +8,7 @@ SRC=os.path.join(os.path.dirname(os.path.abspath(__file__)),'..')
 UI=['trophy','fire','snowflake','sword-cross','calendar-star','ferris-wheel','soccer-field','format-list-numbered','share-variant','send',
     'account-circle','bullhorn','lock-open-variant','chart-bar','incognito','eye','check-circle','check-decagram','handshake','content-copy','image',
     'star','lock','google','star-four-points','account-group','new-box','chart-box','medal','crown','home','chevron-right','weather-night','white-balance-sunny','view-column','format-quote-open','history',
-    'pencil','logout','alert-outline','email-outline','calendar-check','account-multiple-check','bookshelf','eye-outline','link-variant','palette','monitor','timer-sand']
+    'pencil','logout','alert-outline','email-outline','calendar-check','account-multiple-check','bookshelf','eye-outline','link-variant','palette','monitor','timer-sand','home-outline']
 TR={ # трофей → гліф
  'champ':'trophy','silver':'podium-silver','top3':'star','unbeaten':'shield-star','perfect':'diamond-stone','mid8':'scale-balance','relegated':'trending-down',
  'goals80':'soccer','fortress':'wall','iron':'door-closed-lock','nodraw':'sword-cross','sieve':'dots-grid','lucky':'clover','unlucky':'weather-pouring',

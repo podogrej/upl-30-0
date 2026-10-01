@@ -43,7 +43,7 @@ const fail=[];let n=0;const check=(ok,msg)=>{n++;console.log((ok?'✓ ':'✗ ')+
  for(let k=0;k<40&&!saves.find(x=>x.kind==='season');k++)await pg.waitForTimeout(200);   // запис іде після анімацій підсумку; на повільній машині (GitHub Actions) — довше 1,2 с
  const sv=saves.find(x=>x.kind==='season');
  check(sv&&sv.row.mode==='pick'&&sv.row.format==='classic'&&sv.row.show_r===true,'запис сезону: mode pick, format classic, show_r (рейтинги відкривали) — '+(sv?JSON.stringify({m:sv.row.mode,f:sv.row.format,r:sv.row.show_r}):'немає'));
- check(res.big&&res.tiles==='tgShareBtn,chalOpen:h'&&res.chal,'«Поділитися» (0.63 — одна кнопка; виклику у «Виборі сезону» немає): '+res.tiles);
+ check(res.big&&res.tiles==='tgShareBtn,chalOpen:h,againBtn'&&res.chal,'«Поділитися» (0.63 — одна кнопка; виклику у «Виборі сезону» немає; 0.66 — «Новий драфт» теж під карткою): '+res.tiles);
  await pg.locator('#shareBox').screenshot({path:path.join(OUT,'v060_share.png')});
  // ---- рідкісний новий трофей — з ефектом (секретний)
  const sec=await pg.evaluate(()=>{const t=window.__dbg.TROPHIES.find(x=>x.sec&&!x.gone);window.__dbg.renderNewTro({tro:{got:[t.id,'champ'],fresh:[t.id,'champ']}});

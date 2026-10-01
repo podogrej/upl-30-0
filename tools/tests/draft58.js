@@ -88,7 +88,9 @@ const findPl=(pg,multi)=>pg.evaluate(multi=>{const D=window.__dbg,S=D.S;const bs
    await pg.keyboard.press('Enter');await pg.waitForTimeout(120);const n1=await pg.evaluate(()=>window.__dbg.S.slots.filter(s=>s.player).length);
    check(a&&c&&n1===n0+1,'позиції: з клавіатури (Enter — кнопки, Escape — скасувати, Enter — поставити)');kb=true;continue;}
   if(si>=0&&!single){const n0=await pg.evaluate(()=>window.__dbg.S.slots.filter(s=>s.player).length);await (await pg.$$('#squad .pl'))[si].click();await pg.waitForTimeout(100);
-   check(await pg.evaluate(n0=>window.__dbg.S.slots.filter(s=>s.player).length===n0+1&&!document.querySelector('#squad .plpos'),n0),'позиції: одна вільна позиція — ставимо одразу, без кнопок');single=true;continue;}
+   const one=await pg.evaluate(n0=>window.__dbg.S.slots.filter(s=>s.player).length===n0&&document.querySelectorAll('#squad .plpos button').length===1,n0);
+   await pg.click('#squad .plpos button');await pg.waitForTimeout(100);
+   check(one&&await pg.evaluate(n0=>window.__dbg.S.slots.filter(s=>s.player).length===n0+1,n0),'позиції: одна вільна позиція — одна кнопка, гравець стає після її натискання (0.66: два натискання)');single=true;continue;}
   await (await pg.$('#squad .pl:not([disabled])')).click();await pg.waitForTimeout(60);const pb=await pg.$('#squad .plpos button');if(pb)await pb.click();
  }
  check(tested>=2&&kb&&single,`позиції: перевірено всі випадки (кнопки ${tested}, клавіатура ${kb}, одна позиція ${single})`);

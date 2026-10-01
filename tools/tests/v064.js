@@ -13,14 +13,13 @@ async function pickOne(pg){await pg.click('#spinBtn');await pg.waitForSelector('
  // головна: два розділи
  const home=await pg.evaluate(()=>{const s=[...document.querySelectorAll('#s1 .sec0')].map(x=>x.textContent);const o=id=>document.getElementById(id).compareDocumentPosition(document.getElementById('secFriends'));
    return {s,daily:o('dailyCard')&Node.DOCUMENT_POSITION_FOLLOWING,pick:o('pickOpen')&Node.DOCUMENT_POSITION_FOLLOWING,fl:o('flOpen')&Node.DOCUMENT_POSITION_PRECEDING};});
- T.check(home.s.join()==='Сам,З друзями'&&home.daily&&home.pick&&home.fl,'головна: «Сам» (драфт дня, вибір сезону) і «З друзями» (ліга) '+JSON.stringify(home));
+ T.check(home.s.join()==='Одиночна гра,З друзями'&&home.daily&&home.pick&&home.fl,'головна: «Сам» (драфт дня, вибір сезону) і «З друзями» (ліга) '+JSON.stringify(home));
  await pg.screenshot({path:path.join(OUT,'v064_home.png'),fullPage:true});
  // драфт: гравець летить на поле
  await pg.click('#freeOpen');await pg.click('#startBtn');
  await pg.click('#spinBtn');await pg.waitForSelector('#squad .pl:not([disabled])',{timeout:8000});await (await pg.$('#squad .pl:not([disabled])')).click();await pg.waitForTimeout(40);
- const pb=await pg.$('#squad .plpos button');const fly=pg.waitForSelector('.fly0',{timeout:1500}).then(()=>true).catch(()=>false);if(pb)await pb.click();
- T.check(await fly,'гравець «летить» на поле (.fly0)');await pg.waitForTimeout(700);
- T.check(await pg.evaluate(()=>!document.querySelector('.fly0')&&!document.querySelector('.slot.flyw')),'після польоту плашки немає, кружок на полі видно');
+ const pb=await pg.$('#squad .plpos button');const land=pg.waitForSelector('#pitch .disc.land0',{timeout:1500}).then(()=>true).catch(()=>false);if(pb)await pb.click();
+ T.check(await land,'0.66: гравець не «летить», лише відгук кружка на полі (.land0)');await pg.waitForTimeout(500);
  for(let i=1;i<11;i++)await pickOne(pg);
  await pg.waitForSelector('#simBtn:not([hidden])');await pg.click('#simBtn');await pg.waitForSelector('#live:not([hidden])');
  const goal=await pg.waitForFunction(()=>document.querySelector('#lvMatch .goal0'),null,{timeout:12000}).then(()=>true).catch(()=>false);
@@ -46,8 +45,8 @@ async function pickOne(pg){await pg.click('#spinBtn');await pg.waitForSelector('
  T.check(!errs.length,'помилок на сторінці немає '+errs.join(' | '));
  // «Зменшити рух»: без польоту, без конфеті
  const R=await open(b,{reducedMotion:'reduce'});
- await R.pg.click('#freeOpen');await R.pg.click('#startBtn');const f2=R.pg.waitForSelector('.fly0',{timeout:800}).then(()=>true).catch(()=>false);await pickOne(R.pg);
- T.check(!(await f2),'«Зменшити рух»: гравець не летить');
+ await R.pg.click('#freeOpen');await R.pg.click('#startBtn');const f2=R.pg.waitForSelector('#pitch .disc.land0',{timeout:800}).then(()=>true).catch(()=>false);await pickOne(R.pg);
+ T.check(!(await f2),'«Зменшити рух»: без анімації кружка');
  await R.pg.evaluate(f=>window.__dbg.champModal(f),fake(25,3,2,1));await R.pg.waitForTimeout(200);
  T.check(await R.pg.evaluate(()=>{const m=document.querySelector('.champ0');const c=m&&m.querySelector('canvas');return !!m&&c.width===300;}),'«Зменшити рух»: вікно є, конфеті немає');
  T.check(!R.errs.length,'помилок немає (зменшений рух) '+R.errs.join(' | '));
