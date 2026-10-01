@@ -15,7 +15,7 @@ body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-siz
 .wrap{max-width:760px;margin:0 auto}
 header.top{position:sticky;top:0;z-index:40;display:flex;align-items:center;justify-content:space-between;gap:12px;margin-inline:-16px;padding:10px 16px;background:color-mix(in srgb,var(--bg) 90%,transparent);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
 button.nav{display:inline-flex;align-items:center;gap:8px;border-color:var(--line);background:var(--surface);color:var(--ink);padding:7px 12px 7px 8px;font-size:14px;white-space:nowrap;max-width:48vw;overflow:hidden;text-overflow:ellipsis}
-button.nav .ic{margin:0;width:22px;height:22px}
+button.nav .ic{margin:0;width:20px;height:20px;background:none;color:var(--ink)}button.nav .ic .ico{width:20px;height:20px}   /* 0.66: «Головна» — проста контурна іконка кольору тексту, як Home у 38-0 */
 h1,h2,h3{font-family:var(--font-display);text-wrap:balance;margin:0}
 h2{font-size:20px;font-weight:700;margin-block:22px 10px}
 h3{font-size:14px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--ink2);margin-block:16px 8px}
@@ -159,7 +159,7 @@ summary{cursor:pointer;font-weight:600}
 .lvRec{font-family:var(--font-display);font-weight:700;font-size:28px;font-variant-numeric:tabular-nums}
 .lvStats{display:flex;gap:18px}.lvStats>div{display:grid;justify-items:center;min-width:3.2em}.lvStats span{font-size:12px;color:var(--muted)}
 .lvRes{width:22px;height:22px;border-radius:6px}.lvRes.W{background:var(--win)}.lvRes.D{background:var(--draw)}.lvRes.L{background:var(--loss)}
-.lvMatch{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
+.lvMatch{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;min-height:64px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
 .lvMatch .sc{font-family:var(--font-display);font-weight:700;font-size:24px;font-variant-numeric:tabular-nums}
 .lvMatch .who{font-size:13px;color:var(--ink2)}
 .lvGrid{display:grid;grid-template-columns:repeat(15,1fr);gap:4px;width:100%;max-width:520px;justify-self:center}
@@ -571,7 +571,7 @@ section>h3:first-child,.box h3:first-of-type,#viewBody>h3:first-child,#viewBody>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><linearGradient id="trg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9a2bb5"/><stop offset=".55" stop-color="#e0287a"/><stop offset="1" stop-color="#ff831e"/></linearGradient></defs></svg>
 <div class="wrap">
   <header class="top">
-    <button class="nav" id="homeBtn" title="На головну"><!--i:home-->Головна</button>
+    <button class="nav" id="homeBtn" title="На головну"><!--i:home-outline-->Головна</button>
     <button class="nav" id="acctBtn" hidden>Увійти</button>
   </header>
 
@@ -1181,7 +1181,7 @@ function renderWheel(){
     // 0.63 (власник): матчі, голи, асисти й сухі не показуємо — порядок за матчами; рейтинг — лише за перемикачем; кілька позицій — кнопками праворуч у рядку
     const row=document.createElement('div');row.className='plrow'+(ok?'':' off')+(S.pending===p?' on':'');
     const b=document.createElement('button');b.className='pl'+(S.pending===p?' on':'');b.disabled=!ok;b.dataset.id=p[5];
-    b.innerHTML=`<span class="pos ${GROUP_OF[p[6]]||p[1]}" title="${POSFULL[p[6]]}">${POSNAME[p[6]]}</span><span class="nm" title="${POSFULL[p[6]]}">${esc(p[0])}${nickOf(p[5])}${altTags(p)}</span><span class="rt">${show?p[2]:''}</span>`;
+    b.innerHTML=`<span class="pos ${GROUP_OF[p[6]]||p[1]}" title="${POSFULL[p[6]]}">${POSNAME[p[6]]}</span><span class="nm" title="${POSFULL[p[6]]}">${esc(p[0])}${nickOf(p[5])}${S.pending===p?'':altTags(p)}</span><span class="rt">${show?p[2]:''}</span>`;
     if(S.wheelFresh){row.classList.add('in');row.style.animationDelay=Math.min(sq.children.length,14)*28+'ms';}
     b.onclick=()=>choose(p);row.appendChild(b);
     if(S.pending===p&&ok){const box=posBox(p,b);row.appendChild(box);sq.appendChild(row);fitPos(row,box,b);}
@@ -1250,7 +1250,7 @@ function renderPre(){
   const el=document.getElementById('preBox');const xi=S.slots.map(s=>s.player);const open=ratingsOpen();
   const avg=xi.reduce((s,x)=>s+baseR(x),0)/11;
   const sea=seasonOf(S.year);const last=sea&&sea.teams[sea.teams.length-1];const lg=LEAGUE_NAME[S.year];
-  const opp=lg?`<p>${lg}: ${sea.teams.slice(0,-1).map(t=>esc(t[1])).join(', ')}. ${S.year===LEAGUE_CULT?'Кожен клуб — із середньою силою за свою історію в УПЛ.':'Кожен клуб — у сезоні з найсильнішим складом (середній рейтинг 11 найкращих гравців).'}</p>`
+  const opp=lg?`<p>${lg}: ${sea.teams.slice(0,-1).map(t=>esc(shortTeam(t[1]))).join(', ')}. ${S.year===LEAGUE_CULT?'Кожен клуб — із середньою силою за свою історію в УПЛ.':'Кожен клуб — у сезоні з найсильнішим складом (середній рейтинг 11 найкращих гравців).'}</p>`
     :`<p>Справжня УПЛ ${seasonLabel(S.year)}. Твоя 11-ка займе місце «${esc(last?last[1]:'')}», що тоді фінішував останнім.</p>`;
   const oppD=`<details class="tip"><summary>Суперники — ${lg||'УПЛ '+seasonLabel(S.year)}</summary>${opp}</details>`;
   if(!open){el.innerHTML=`<div class="kicker">Склад зафіксовано</div><p class="muted cap">Лише пам'ять: рейтинги й прогноз не показуються.</p>${oppD}`;return;}
@@ -1376,6 +1376,9 @@ function simulate(xi0,mode,seasonYear,light){
   const scorers=players.filter(v=>v.g>0).sort((a,b)=>b.g-a.g);
   return {year:y,replaced:last[1],form,W:me.w,D:me.d,L:me.l,pts:me.pts,gf:me.gf,ga:me.ga,xgf,xga,place,table,log,snaps,scorers,players,golden,tie,t,u};
 }
+// 0.66 (власник): назва клубу без міста, якщо клуб із такою назвою один («Арсенал», «Ворскла»); якщо ні — перша літера міста («Металург З.»)
+const CLUB_CITIES=(()=>{const m={};for(const c of DATA.clubs){const r=/^(.*?) \(([^)]+)\)$/.exec(c.n);if(r)(m[r[1]]=m[r[1]]||new Set()).add(r[2]);}return m;})();
+function shortTeam(n){return String(n||'').replace(/^(.*?) \(([^)]+)\)/,(x,b,city)=>CLUB_CITIES[b]&&CLUB_CITIES[b].size>1?`${b} ${city[0]}.`:b);}
 const ZONE=(pl,n)=>pl<=2?'z-cl':pl===3?'z-el':pl===4?'z-co':pl>=n-1?'z-rl':'';
 function tierOf(r){
   if(S.format==='anti'){
@@ -1429,9 +1432,9 @@ async function playSeason(year){
   renderPitch(document.getElementById('pitch2'),S.slots,true);
   document.getElementById('scorers').innerHTML=r.scorers.slice(0,6).map(s=>`<span class="mono">${s.g}</span> ${esc(s.name)}`).join(' · ')||'—';
   document.getElementById('mDet').open=matchMedia('(min-width:1000px)').matches;   // на великому екрані праворуч від поля місця вистачає — матчі розгорнуто
-  document.getElementById('matches').innerHTML=r.log.map(m=>`<div class="m" title="${esc(whoMin(m))} · xG ${m.xg.toFixed(1)}:${m.xga.toFixed(1)}"><span class="res ${m.res}"></span><span class="op">${esc(m.opp)}</span><span class="sc">${m.ug}:${m.og}</span></div>`).join('');
+  document.getElementById('matches').innerHTML=r.log.map(m=>`<div class="m" title="${esc(whoMin(m))} · xG ${m.xg.toFixed(1)}:${m.xga.toFixed(1)}"><span class="res ${m.res}"></span><span class="op">${esc(shortTeam(m.opp))}</span><span class="sc">${m.ug}:${m.og}</span></div>`).join('');
   const f1=v=>v.toFixed(1),sg=v=>(v>0?'+':'')+v;
-  document.getElementById('table').innerHTML=`<tr><th></th><th>Команда</th><th class="num">І</th><th class="num">В</th><th class="num">Н</th><th class="num">П</th><th class="num">Голи</th><th class="num">РМ</th><th class="num">О</th><th class="num">xG</th><th class="num">xGA</th><th class="num">Г−xG</th></tr>`+r.table.map((t,i)=>`<tr class="${ZONE(i+1,r.table.length)}${t.id==='USER'?' me':''}"><td class="num">${i+1}</td><td>${esc(t.n)}</td><td class="num">${t.w+t.d+t.l}</td><td class="num">${t.w}</td><td class="num">${t.d}</td><td class="num">${t.l}</td><td class="num">${t.gf}:${t.ga}</td><td class="num">${sg(t.gf-t.ga)}</td><td class="num"><b>${t.pts}</b></td><td class="num">${f1(t.xg)}</td><td class="num">${f1(t.xga)}</td><td class="num">${(t.gf-t.xg>=0?'+':'')+(t.gf-t.xg).toFixed(1)}</td></tr>`).join('');
+  document.getElementById('table').innerHTML=`<tr><th></th><th>Команда</th><th class="num">І</th><th class="num">В</th><th class="num">Н</th><th class="num">П</th><th class="num">Голи</th><th class="num">РМ</th><th class="num">О</th><th class="num">xG</th><th class="num">xGA</th><th class="num">Г−xG</th></tr>`+r.table.map((t,i)=>`<tr class="${ZONE(i+1,r.table.length)}${t.id==='USER'?' me':''}"><td class="num">${i+1}</td><td>${esc(shortTeam(t.n))}</td><td class="num">${t.w+t.d+t.l}</td><td class="num">${t.w}</td><td class="num">${t.d}</td><td class="num">${t.l}</td><td class="num">${t.gf}:${t.ga}</td><td class="num">${sg(t.gf-t.ga)}</td><td class="num"><b>${t.pts}</b></td><td class="num">${f1(t.xg)}</td><td class="num">${f1(t.xga)}</td><td class="num">${(t.gf-t.xg>=0?'+':'')+(t.gf-t.xg).toFixed(1)}</td></tr>`).join('');
   // 0.66: загальний регламент — у «Питаннях і відповідях»; тут лише те, що стосується твого сезону
   let tn='';
   if(r.tie)tn=`Ти ${r.tie.above?'вище':'нижче'} за «${r.tie.opp}» при однаковій кількості очок: вирішив показник «${r.tie.why}». `;
@@ -1482,11 +1485,11 @@ function tickReveal(){
   document.getElementById('lvRound').textContent=`Тур ${k} / ${r.log.length}`;
   document.getElementById('lvRec').textContent=`${w}-${d}-${l}`;document.getElementById('lvPts').textContent=w*3+d;
   // 0.66 (власник): один матч; результат — кольором квадрата, без літер і без «@»; тур уже є вгорі — у картці лише автори голів
-  document.getElementById('lvMatch').innerHTML=`<div class="lvMatch"><span class="lvRes ${m.res}"></span><div><b>${esc(m.opp)}</b><div class="who">${m.who.length?esc(whoMin(m)):'&nbsp;'}</div></div><span class="sc">${m.ug}:${m.og}</span></div>`;
+  document.getElementById('lvMatch').innerHTML=`<div class="lvMatch"><span class="lvRes ${m.res}"></span><div><b>${esc(shortTeam(m.opp))}</b>${m.who.length?`<div class="who">${esc(whoMin(m))}</div>`:''}</div><span class="sc">${m.ug}:${m.og}</span></div>`;
   document.getElementById('lvGrid').children[REV.i].className=m.res+' nw';
   if(m.res==='W')restartAnim(document.getElementById('lvMatch').firstChild,'goal0');   // 0.65: спалах — лише перемога, зеленим (власник 01.10)
   const snap=r.snaps[k-1];const ui=snap.findIndex(t=>t.id==='USER');const rows=snap.map((t,i)=>({...t,i})).filter(t=>t.i<4||t.i===ui||t.i===snap.length-1);
-  document.getElementById('lvTable').innerHTML=`<tr><th></th><th>Команда</th><th class="num">І</th><th class="num">РМ</th><th class="num">О</th></tr>`+rows.map(t=>`<tr class="${ZONE(t.i+1,snap.length)}${t.id==='USER'?' me':''}"><td class="num">${t.i+1}</td><td>${esc(t.n)}</td><td class="num">${t.p}</td><td class="num">${t.gd>0?'+':''}${t.gd}</td><td class="num"><b>${t.pts}</b></td></tr>`).join('');
+  document.getElementById('lvTable').innerHTML=`<tr><th></th><th>Команда</th><th class="num">І</th><th class="num">РМ</th><th class="num">О</th></tr>`+rows.map(t=>`<tr class="${ZONE(t.i+1,snap.length)}${t.id==='USER'?' me':''}"><td class="num">${t.i+1}</td><td>${esc(shortTeam(t.n))}</td><td class="num">${t.p}</td><td class="num">${t.gd>0?'+':''}${t.gd}</td><td class="num"><b>${t.pts}</b></td></tr>`).join('');
   REV.i++;
 }
 function finishReveal(){clearInterval(REV.t);renderNewTro(REV.r);acctNudge(REV.r);document.getElementById('live').hidden=true;document.getElementById('final').hidden=false;window.scrollTo({top:0});
