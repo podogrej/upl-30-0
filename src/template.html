@@ -1,5 +1,6 @@
 <title>30-0 УПЛ</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;900&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;900&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" media="print" onload="this.media='all'">   <!-- 0.67: шрифти не блокують показ сторінки -->
 <script>(function(){try{localStorage.removeItem('upl30_skin');localStorage.removeItem('upl30_pitch');localStorage.removeItem('upl30_league_title');}catch(e){}/* скіни й варіанти газону прибрано в 0.52 — старі вибори стираємо */try{var t=/[?&]theme=(light|dark)/.exec(location.search);var th=t?t[1]:(localStorage.getItem('upl30_theme')||'dark');if(t)localStorage.setItem('upl30_theme',th);document.documentElement.setAttribute('data-theme',th);}catch(e){document.documentElement.setAttribute('data-theme','dark');}})();</script>
 <style>
 :root{
@@ -785,7 +786,7 @@ section>h3:first-child,.box h3:first-of-type,#viewBody>h3:first-child,#viewBody>
 <script id="pool" type="application/json">__POOL__</script>
 <script>
 (function(){
-const DATA = JSON.parse(document.getElementById('pool').textContent);
+const DATA = window.__POOL||JSON.parse(document.getElementById('pool').textContent);   // сайт — окремий файл pool.*.js (кеш), артефакт — вбудовано
 // одна людина під двома id (дубль із різних джерел, data/aliases/aliases.csv): людей порівнюємо за canonical id — «гравець двічі», трофеї, лічильники
 const ALIAS=DATA.alias||{};const canon=id=>ALIAS[id]||id;
 // схеми як список слотів по рядах (зверху атака, знизу воротар; зліва направо = лівий → правий фланг)
@@ -1897,6 +1898,7 @@ const WHATSNEW={v:'0.67',date:'02.10.2026',items:[
   ['shield-star','Один клуб','Режим повернувся: найкращий XI одного клубу за всю історію УПЛ. На головній і в таблицях.'],
   ['share-variant','Картка в Telegram','Нова картка: рахунок, бомбардир і гравець сезону, склад і «Зможеш краще?». Більше не приходить наполовину сірою; табло ліги чату й прогноз перед сезоном з\'являються швидше.'],
   ['star','Трофеї','Повторні трофеї — без «ще раз · ×N», лише нові виділені.'],
+  ['timer-sand','Швидше відкривається','Сайт вантажиться швидше, особливо після оновлень: база гравців запам\'ятовується телефоном. Нова іконка сайту.'],
   ['lock','Чесна таблиця','Сервер суворіше перевіряє сезони; перестановка складу перед драфтом дня більше не «з\'їдає» офіційну спробу.']]};
 function openNews(){screenTag('news');const box=document.getElementById('viewBox');document.getElementById('viewTitle').textContent=`Що нового · версія ${WHATSNEW.v}`;
   document.getElementById('viewBody').innerHTML=`<div class="news">${WHATSNEW.items.map(([e,h,d])=>`<div class="ni">${ic(e,'lg')}<div><b>${esc(h)}</b><p>${esc(d)}</p></div></div>`).join('')}</div>`;
