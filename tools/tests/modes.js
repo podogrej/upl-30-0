@@ -1,4 +1,4 @@
-// Режими гри в одному браузері: живий показ сезону (тур за туром, «Швидше», «Пропустити»), дербі (лише «Динамо» і «Шахтар»),
+// Режими гри в одному браузері: живий показ сезону (тур за туром, «Одразу до фіналу»), дербі (лише «Динамо» і «Шахтар»),
 // один клуб (вибір клубу, усі гравці з нього), антисезон (гравці з 10+ матчами), виклик дня (після офіційної спроби кнопка вимкнена).
 // Тексти й картки цих сезонів перевіряє scenarios.js. Запуск з кореня: node tools/tests/modes.js
 const {openPage}=require('./_page.js');const {checker}=require('./_site.js');
@@ -11,7 +11,7 @@ const clubsOf=pg=>pg.evaluate(()=>[...new Set(window.__dbg.S.slots.map(s=>s.play
  await free(pg,1);await draft(pg);await pg.click('#simBtn');await pg.waitForSelector('#live:not([hidden])',{timeout:15000});await pg.waitForTimeout(2000);
  const live=await pg.evaluate(()=>({round:document.getElementById('lvRound').textContent,rec:document.getElementById('lvRec').textContent,fin:document.getElementById('final').hidden,cells:document.querySelectorAll('#lvGrid i[class]').length}));
  T.check(/^Тур \d+ \/ 30$/.test(live.round)&&/^\d+-\d+-\d+$/.test(live.rec)&&live.fin&&live.cells>=2&&live.cells<30,`живий показ: ${live.round}, ${live.rec}, ${live.cells} клітинок, підсумок схований`);
- await pg.click('#fastBtn');await pg.waitForTimeout(300);await pg.click('#skipBtn');await pg.waitForTimeout(300);
+ await pg.click('#skipBtn');await pg.waitForTimeout(300);
  const fin=await pg.evaluate(()=>({fin:!document.getElementById('final').hidden,live:document.getElementById('live').hidden,m:document.getElementById('matches').children.length,share:document.getElementById('shareText').value}));
  T.check(fin.fin&&fin.live,'«Пропустити»: підсумок показано, живий показ сховано');
  T.check(fin.m>=30&&/30-0 УПЛ/.test(fin.share),`підсумок: ${fin.m} рядків матчів, текст «${fin.share.split('\n')[0]}»`);

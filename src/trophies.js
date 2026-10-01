@@ -219,11 +219,13 @@ function renderNewTro(r){
   if(!a||!a.got.length){el.hidden=true;return;}
   const s=trStore();const fresh=new Set(a.fresh);
   const all=[...new Set(a.got)].map(trDef).filter(Boolean);const nw=all.filter(t=>fresh.has(t.id)).sort((x,y)=>(y.sec?1:0)-(x.sec?1:0)),rep=all.filter(t=>!fresh.has(t.id));
-  // з 0.50: нові — великими картками зверху (секретні першими), повторні — нижче компактним рядком «Ще раз» з лічильником
   // 0.60: рідкісний новий трофей (рідкісний/епічний/легендарний за часткою гравців або секретний) — з'являється з ефектом, як рідкісна карта
   const tierOf=t=>{const x=typeof trTier==='function'?trTier(t):null;return x&&x[1]!=='common'?x:null;};
   const rareCls=t=>{const x=tierOf(t);return x?` rarein rt-${x[1]}`:t.sec?' rarein rt-secret':'';};
   const rareTag=t=>{const x=tierOf(t);return x?`<em class="rtag rt-${x[1]}">${x[2]}</em>`:'';};
-  el.hidden=false;el.innerHTML=(nw.length?`<div class="kicker" style="margin-bottom:6px">${nw.length>1?'Нові трофеї':'Новий трофей'}</div><div class="trg">`+nw.map((t,k)=>`<div class="tro on pop new${t.sec?' sec':''}${rareCls(t)}" style="animation-delay:${k*120+(rareCls(t)?250:0)}ms"><span class="tri">${trBadge(t,true)}</span><div class="trt"><b>${esc(t.n)}</b>${trQ(t)}<span>${esc(t.d)}</span>${t.sec?'<em class="trsx">секретний!</em>':''}${rareTag(t)}</div></div>`).join('')+`</div>`:'')
-    +(rep.length?`<div class="kicker" style="margin:${nw.length?'12px':'0'} 0 6px">${nw.length?'Ще раз':'Трофеї сезону'}</div><div class="trrep">`+rep.map(t=>`<span class="trchip${t.sec?' sec':''}" title="${esc(t.d)}">${trBadge(t,true)}<b>${esc(t.n)}</b><i>×${(s.t[t.id]||{}).n||1}</i></span>`).join('')+`</div>`:'');
+  // 0.63 (власник): перші 6 — великими картками (нові першими, повторні теж, з «×N»), 7-й і далі — дрібніше, рядком
+  const list=[...nw,...rep],big=list.slice(0,6),small=list.slice(6),isNew=t=>fresh.has(t.id),cnt=t=>(s.t[t.id]||{}).n||1;
+  el.hidden=false;el.innerHTML=`<div class="kicker" style="margin-bottom:6px">${nw.length&&!rep.length?(nw.length>1?'Нові трофеї':'Новий трофей'):'Трофеї сезону'}</div><div class="trg">`
+    +big.map((t,k)=>`<div class="tro on pop${isNew(t)?' new':''}${t.sec?' sec':''}${isNew(t)?rareCls(t):''}" style="animation-delay:${k*120+(isNew(t)&&rareCls(t)?250:0)}ms"><span class="tri">${trBadge(t,true)}</span><div class="trt"><b>${esc(t.n)}</b>${trQ(t)}<span>${esc(t.d)}</span>${isNew(t)?(t.sec?'<em class="trsx">секретний!</em>':'')+rareTag(t):`<em class="trsx">ще раз · ×${cnt(t)}</em>`}</div></div>`).join('')+`</div>`
+    +(small.length?`<div class="trrep" style="margin-top:8px">`+small.map(t=>`<span class="trchip${t.sec?' sec':''}" title="${esc(t.d)}">${trBadge(t,true)}<b>${esc(t.n)}</b><i>×${cnt(t)}</i></span>`).join('')+`</div>`:'');
 }
