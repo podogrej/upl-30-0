@@ -54,7 +54,7 @@ function tgUser(initData) {
 // так не допоможе й підміна device_id. Без device_id — лише IP. Помилка бази або SQL 0.55 ще не виконано — пропускаємо
 // (грі важливіше працювати, ніж лічити).
 const RATE_MSG = 'Забагато запитів за хвилину. Зачекай трохи й спробуй ще раз.';
-const LIMITS = { seed: 20, save: 40, verify: 30, card: 10, auth: 60 };   // auth: вхід через бота опитує кожні 2,5 с   // запитів за хвилину на пристрій; на IP — у IP_X разів більше
+const LIMITS = { seed: 20, save: 40, verify: 30, card: 10, auth: 60, fl5: 30 };   // fl5 — сторінку ліги 5×5 після кінця збору відкривають усі учасники   // auth: вхід через бота опитує кожні 2,5 с   // запитів за хвилину на пристрій; на IP — у IP_X разів більше
 const IP_X = 4;
 const ipOf = req => String((req.headers && (req.headers['x-forwarded-for'] || req.headers['x-real-ip'])) || '').split(',')[0].trim().slice(0, 64) || 'unknown';
 async function rateHit(key, limit) {
