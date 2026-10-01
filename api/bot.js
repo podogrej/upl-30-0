@@ -1,6 +1,7 @@
 // 30-0 УПЛ — Telegram-бот (Vercel serverless function, адреса: /api/bot)
 // Змінні оточення у Vercel: TG_TOKEN, TG_SECRET (обов'язкова, інакше 401), TG_BOT, SUPABASE_SERVICE_KEY
-const L = require('./_league.js');   // спільні функції ліг груп (0.60: одна копія замість трьох)const SITE = 'https://upl-30-0.vercel.app/';
+const L = require('./_league.js');   // спільні функції ліг груп (0.60: одна копія замість трьох)
+const SITE = 'https://upl-30-0.vercel.app/';   // 0.62.1: з 0.60 рядок випадково опинився в коментарі — /start, /play, /top в особистому чаті падали
 const SB_KEY = (process.env.SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_pEszTOPsCHLgpiPpwB4JKg_SS-X07hY').trim(); // публічний ключ, як і на сайті
 
 function playButton(isPrivate) {
