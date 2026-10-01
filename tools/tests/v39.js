@@ -5,6 +5,7 @@
 // SQL-частину (секрет пристрою, тригери, RLS, повторний запуск) перевіряє справжній Postgres: bash tools/tests/setup.sh
 // Запуск з кореня: node tools/tests/v39.js [new|old|both] (за замовчуванням both)
 const path=require('path'),fs=require('fs');const {ROOT,launch,makeDB,callApi,openSite,draftSeason,checker}=require('./_site.js');
+const openSet=p=>p.evaluate(()=>{const d=document.getElementById('ppSet');if(d)d.open=true;});   // 0.62: «Налаштування» згорнуто
 const OUT=path.join(ROOT,'tools','tests','out');fs.mkdirSync(OUT,{recursive:true});
 process.env.SUPABASE_SERVICE_KEY='svc';
 const seedH=require(path.join(ROOT,'api','seed.js')),verH=require(path.join(ROOT,'api','verify.js')),saveH=require(path.join(ROOT,'api','save.js'));
@@ -33,15 +34,15 @@ async function run(MODE,b){const T=checker('v39 '+MODE);const v39=MODE==='new';c
   await pg.click('#acctBtn');await pg.waitForTimeout(400);   // 0.59: аватарка → своя сторінка з налаштуваннями імені
   T.check(await pg.$eval('#ppNameIn',e=>e.placeholder)===player.anon_name&&/Поки ти в таблицях як/.test(await pg.textContent('#ppNameMsg')),'своя сторінка: поле імені з анонімним «'+player.anon_name+'»');
   await pg.screenshot({path:path.join(OUT,'v39_acct.png')});
-  await pg.fill('#ppNameIn','Andrii');await pg.click('#ppNameSave');await pg.waitForTimeout(500);
+  await openSet(pg);await pg.fill('#ppNameIn','Andrii');await pg.click('#ppNameSave');await pg.waitForTimeout(500);
   T.check(/Збережено: andrii/.test(await pg.textContent('#ppNameMsg'))&&P.players[0].name==='andrii','ім\'я збережено в профілі гравця (нижній регістр)');await pg.click('#homeBtn');
  }else{
   T.check(!player,'без players.sql гравця немає, сайт працює');
   await pg.click('#acctBtn');await pg.waitForTimeout(400);T.check(!(await pg.$('#ppNameIn')),'своя сторінка без поля імені');await pg.click('#homeBtn');
  }
  // вільна гра, «Складний»
- await pg.click('#freeOpen');const nameRow=await pg.$eval('#myNameRow',e=>!e.hidden);
- T.check(v39?nameRow&&await pg.$eval('#myName',e=>e.textContent)==='andrii':!nameRow,'налаштування: рядок імені '+(v39?'з «andrii»':'схований'));
+ await pg.click('#freeOpen');const hdrName=await pg.$eval('#acctBtn',e=>e.hidden?'':(e.querySelector('.me-n')||{}).textContent||'');
+ T.check(v39?hdrName==='andrii':!hdrName,'шапка (0.62, замість рядка імені в налаштуваннях): '+(v39?'«andrii» поруч з аватаркою':'без імені')+' — «'+hdrName+'»');
  await pg.click('#formats .opt[data-fmt="classic"]');await pg.click('#modes .opt:nth-child(2)');await pg.click('#startBtn');await draftSeason(pg);await pg.waitForTimeout(1500);
  const ver=await pg.$eval('#verLine',e=>e.hidden?'':e.textContent);T.check(/перевірено сервером/.test(ver),'«Результат перевірено сервером»');
  const row=DB.seasons[DB.seasons.length-1]||{};
@@ -57,10 +58,10 @@ async function run(MODE,b){const T=checker('v39 '+MODE);const v39=MODE==='new';c
  T.check(!!(await pg.$('#viewBack'))&&!!(await pg.$('#viewBody .slot')),'рядок відкриває сезон із кнопкою «До таблиці»');
  await pg.click('#viewBack');await pg.waitForTimeout(500);T.check((await pg.$$('#boardBody tr[data-q]')).length===1,'«До таблиці» повертає таблицю');await pg.click('#viewClose');
  if(v39){
-  await pg.click('#freeOpen');await pg.click('#myNameEdit');await pg.waitForTimeout(400);T.check(await pg.$eval('#s6',e=>!e.hidden),'«Змінити на своїй сторінці» відкриває сторінку');
-  await pg.fill('#ppNameIn','Andriy 2');await pg.click('#ppNameSave');await pg.waitForTimeout(500);
+  T.check(/\S/.test(await pg.textContent('#acctBtn .me-n')),'шапка: поруч з аватаркою — ім\'я (0.62)');await pg.click('#acctBtn');await pg.waitForTimeout(400);T.check(await pg.$eval('#s6',e=>!e.hidden),'аватарка з ім\'ям у шапці відкриває свою сторінку');
+  await openSet(pg);await pg.fill('#ppNameIn','Andriy 2');await pg.click('#ppNameSave');await pg.waitForTimeout(500);
   rows=await board();T.check(rows[0]==='* andriy_2','перейменування на своїй сторінці → у таблиці «andriy_2»: '+rows[0]+' · '+await pg.evaluate(()=>(document.getElementById('ppNameMsg')||{}).textContent));await pg.click('#viewClose');
-  await pg.click('#acctBtn');await pg.waitForTimeout(300);await pg.fill('#ppNameIn','');await pg.click('#ppNameSave');await pg.waitForTimeout(500);
+  await pg.click('#acctBtn');await pg.waitForTimeout(300);await openSet(pg);await pg.fill('#ppNameIn','');await pg.click('#ppNameSave');await pg.waitForTimeout(500);
   T.check(/ти знову/.test(await pg.textContent('#ppNameMsg')),'порожнє ім\'я — знову анонімний');await pg.click('#homeBtn');
   rows=await board();T.check(rows[0]==='* '+player.anon_name.toLowerCase(),'у таблиці анонімне ім\'я: '+rows[0]);await pg.click('#viewClose');
   // «Andriy 2» — поле саме робить «andriy_2»

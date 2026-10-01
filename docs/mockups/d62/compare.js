@@ -1,0 +1,16 @@
+// Пари «було → стало» для власника: docs/mockups/d62/cmp_*.png. Запуск: node docs/mockups/d62/compare.js (після shoot.js було і стало)
+const path=require('path'),fs=require('fs');const {launch}=require('../../../tools/tests/_site.js');
+const D=__dirname;const b64=f=>'data:image/png;base64,'+fs.readFileSync(path.join(D,f)).toString('base64');
+const PAIRS=[['1_home','Головна','Одна головна кнопка «Грати», «Як грати?» — посилання. Драфт дня без фішок: один рядок правил і «Грати». Режими — короткими рядками без підписів. Великий лічильник «сезонів зіграно» (як у 38-0). «Як грати» — перше питання в списку.'],
+ ['2_settings','Вільна гра','Опис — лише у вибраного формату. Схеми — сіткою 3×2 без підписів. «Твоє ім\'я» прибрано (воно в шапці). Назва команди — згорнуто. «Почати драфт» прилипає до низу екрана.'],
+ ['3_wheel','Колесо','Зверху — прогрес «5 з 11» смужкою. Клуб і сезон — один шрифт в одній плашці. Замість «↻ 2» і «8 місце в тому сезоні» — зрозумілі рядки. «Рейтинги» — перемикач у шапці списку, колонки М · Г · П · С. Гравці — рядками без рамок; ті, що не підходять, — згорнуто.'],
+ ['4_result','Підсумки','Три великі цифри замість шести плиток. Нові трофеї — значками. Одна головна кнопка «Новий драфт»; «Поділитися» — три рівні кнопки. Матчі — смужкою з 30 кольорів, список — згорнуто.'],
+ ['5_player','Моя сторінка','Три великі цифри + рядок решти. Трофеї — лише відкриті, решта за «Усі трофеї». «Налаштування» (ім\'я, пошта, вихід) — згорнуто.']];
+(async()=>{const b=await launch();const pg=await b.newPage({viewport:{width:900,height:800}});
+ const css=`body{margin:0;background:#0b0b0b;color:#f4f1ea;font:15px/1.45 system-ui,sans-serif;padding:20px}h1{font-size:22px;margin:0 0 6px}p{margin:0 0 16px;color:#b3aea4;max-width:820px}.g{display:grid;grid-template-columns:390px 390px;gap:40px;align-items:start}.g div b{display:block;margin-bottom:8px;font-size:14px;letter-spacing:.08em;text-transform:uppercase;color:#7c776f}.g div:last-child b{color:#ff7a1a}img{display:block;width:100%;border-radius:12px;box-shadow:0 0 0 1px #303032}`;
+ for(const [k,t,d] of PAIRS){await pg.setContent(`<style>${css}</style><h1>${t}: було → стало</h1><p>${d}</p><div class="g"><div><b>Було</b><img src="${b64('було_'+k+'.png')}"></div><div><b>Стало</b><img src="${b64('стало_'+k+'.png')}"></div></div>`);
+   await pg.waitForTimeout(200);await pg.screenshot({path:path.join(D,'cmp_'+k+'.png'),fullPage:true});console.log('✓ cmp_'+k);}
+ await pg.setViewportSize({width:1240,height:800});
+ await pg.setContent(`<style>${css}.v{display:grid;gap:24px}.v b{display:block;margin-bottom:8px;font-size:14px;letter-spacing:.08em;text-transform:uppercase;color:#7c776f}.v div:last-child b{color:#ff7a1a}</style><h1>iPad / комп'ютер: драфт у дві колонки</h1><p>Ліворуч поле (не прокручується), праворуч колесо й список гравців. Зараз на iPad усе в одну вузьку колонку, і після кожного вибору треба гортати вниз-вгору.</p><div class="v"><div><b>Було</b><img src="${b64('було_ipad_3_wheel.png')}"></div><div><b>Стало</b><img src="${b64('стало_ipad_3_wheel.png')}"></div></div>`);
+ await pg.waitForTimeout(200);await pg.screenshot({path:path.join(D,'cmp_6_ipad.png'),fullPage:true});console.log('✓ cmp_6_ipad');
+ await b.close();})();
