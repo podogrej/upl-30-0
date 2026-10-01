@@ -11,7 +11,7 @@ const DEV='aaaaaaaa-0000-4000-a000-000000000001';
    xi:[{n:'Сергій Ребров',id:'x1',slot:'ST',r:95,c:'Динамо (Київ)',y:1997,f:2,g:26,a:5,rt:7.9},{n:'Андрій Шевченко',id:'x2',slot:'ST',r:96,c:'Динамо (Київ)',y:1997,f:1,g:20,a:6,rt:7.7}]});
  const {b,pg,errs}=await openSite({db,init:`if(!localStorage.getItem('upl30_device'))localStorage.setItem('upl30_device','"${DEV}"');`,viewport:{width:430,height:900},wait:1500});
  const got=()=>db.DB.trophies.map(x=>x.trophy);
- T.check(['champ','top3','unbeaten','ms1'].every(t=>got().includes(t))&&db.DB.trophies.every(x=>x.device_id===DEV),'заднім числом видано й записано: '+got().join(', '));
+ T.check(['champ','unbeaten','ms1'].every(t=>got().includes(t))&&!got().includes('top3')&&db.DB.trophies.every(x=>x.device_id===DEV),'заднім числом видано й записано: '+got().join(', '));
  const st0=await pg.evaluate(()=>({s:window.__dbg.trStore().seasons,retro:localStorage.getItem('upl30_tr_retro'),cnt:document.getElementById('trCount').textContent}));
  T.check(st0.s===1&&st0.retro==='1'&&/· \d+/.test(st0.cnt),`після видачі: сезонів ${st0.s}, кнопка «Трофеї${st0.cnt}»`);
  for(let k=0;k<2;k++){

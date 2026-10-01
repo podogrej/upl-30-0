@@ -36,7 +36,9 @@ function seasonRow(r) {
     // епоха (0.58) — лише не «Усі роки» (сайт інакше її не надсилає). Колонки seasons.era поки немає: insert() повторить запис без неї
     ...(/^y\d{4}$/.test(String(r.era || '')) ? { era: String(r.era) } : {}),
     // 0.60: у драфті вмикали «Показати рейтинги» (seasons.show_r; колонки ще немає — insert() повторить без неї)
-    ...(r.show_r === true ? { show_r: true } : {}) };
+    ...(r.show_r === true ? { show_r: true } : {}),
+    // 0.61: спроба ліги з друзями (код ліги); зараховує сервер після перевірки (api/verify.js → fl_record)
+    ...(/^[a-z2-9]{6}$/.test(String(r.fl_id || '')) ? { fl_id: String(r.fl_id) } : {}) };
 }
 // вставка з повтором без колонки, якої в базі ще немає (як робив браузер)
 async function insert(table, row, qs = '', prefer = 'return=representation') {
@@ -65,7 +67,7 @@ module.exports = async (req, res) => {
       if (!ins || !ins.id) return res.status(500).json({ error: 'no id' });
       stage = 'verify';
       const v = await verifyById(ins.id);
-      return res.status(200).json({ id: ins.id, verified: v.verified, note: v.note });
+      return res.status(200).json({ id: ins.id, verified: v.verified, note: v.note, fl: v.fl });
     }
     if (b.kind === 'trophies') {
       const ids = [...new Set((Array.isArray(b.ids) ? b.ids : []).map(String))].filter(t => /^[A-Za-z0-9_]{1,24}$/.test(t)).slice(0, 100);

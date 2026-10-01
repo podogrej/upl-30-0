@@ -10,7 +10,7 @@ UI=['trophy','fire','snowflake','sword-cross','calendar-star','ferris-wheel','so
     'star','lock','google','star-four-points','account-group','new-box','chart-box','medal','crown','home','chevron-right','weather-night','white-balance-sunny','view-column','format-quote-open','history',
     'pencil','logout','alert-outline','email-outline','calendar-check','account-multiple-check','bookshelf','eye-outline','link-variant']
 TR={ # трофей → гліф
- 'champ':'trophy','top3':'star','unbeaten':'shield-star','perfect':'diamond-stone','mid8':'scale-balance','relegated':'trending-down',
+ 'champ':'trophy','silver':'podium-silver','top3':'star','unbeaten':'shield-star','perfect':'diamond-stone','mid8':'scale-balance','relegated':'trending-down',
  'goals80':'soccer','fortress':'wall','iron':'door-closed-lock','nodraw':'sword-cross','sieve':'dots-grid','lucky':'clover','unlucky':'weather-pouring',
  'allua':'flag-variant','nations':'earth','band7':'stadium-variant','band5':'account-group','abc':'alphabetical-variant','tannoy':'bullhorn',
  'pegs':'swap-horizontal','vets':'human-cane','striker':'target','assist':'magic-staff','eight':'star-shooting','hardchamp':'fire','hcchamp':'eye-off',

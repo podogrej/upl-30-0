@@ -4,7 +4,7 @@ const path=require('path'),fs=require('fs');const {ROOT,launch}=require('./_page
 const SITE='https://upl.test/',SB_HOST='qruhcbwycrnfgzzdbljr.supabase.co';
 const CORS={'access-control-allow-origin':'*','access-control-allow-headers':'*','access-control-allow-methods':'GET,POST,PATCH,DELETE,OPTIONS'};
 // заглушка supabase-js: без сесії; verifyOtp «входить» користувачем opts.user
-const SB_STUB=user=>`window.supabase={createClient(){let cb=()=>{};return {auth:{onAuthStateChange(f){cb=f;},async getSession(){return {data:{session:null}};},
+const SB_STUB=(user,signed)=>`window.supabase={createClient(){let cb=()=>{};return {auth:{onAuthStateChange(f){cb=f;},async getSession(){return {data:{session:${signed?'{access_token:\'AT\',user:'+JSON.stringify(user||{id:'u1',email:'g1@example.com',user_metadata:{full_name:'Андрій'},app_metadata:{provider:'google'}})+'}':'null'}}};},
   async verifyOtp(){setTimeout(()=>cb('SIGNED_IN',{access_token:'AT',user:${JSON.stringify(user||{id:'u1',email:'tg-1@users.upl-30-0.vercel.app',user_metadata:{full_name:'Андрій'},app_metadata:{}})}}),20);return {error:null};},
   async signOut(){cb('SIGNED_OUT',null);},async signInWithOAuth(){return {error:null};},async setSession(){return {error:null};}}};}};`;
 // база PostgREST у пам'яті. cfg[таблиця]={pk:[...], uq:[[...]], auto:'id', def:{...}, cols:[...] (інших колонок «немає» — 400), onInsert(row)};
@@ -65,7 +65,7 @@ async function openSite(opts={}){
       if(u.host===SB_HOST){if(m==='OPTIONS')return r.fulfill({status:204,headers:CORS});
         if(!opts.db)return r.abort();log.push(m+' '+u.pathname);const x=opts.db.handle(m,u.href,req.postData(),req.headers());
         return r.fulfill({status:x.status,headers:{...CORS,'content-type':'application/json'},body:x.body});}
-      if(u.host==='cdn.jsdelivr.net'&&/supabase/.test(u.pathname))return r.fulfill({contentType:'application/javascript',body:SB_STUB(opts.user)});
+      if(u.host==='cdn.jsdelivr.net'&&/supabase/.test(u.pathname))return r.fulfill({contentType:'application/javascript',body:SB_STUB(opts.user,opts.signed)});   // signed: уже ввійшов (0.61)
       if(u.host==='telegram.org'&&opts.tg)return r.fulfill({contentType:'application/javascript',body:`window.Telegram={WebApp:Object.assign({ready(){},expand(){},openTelegramLink(u){(window.__tgLinks=window.__tgLinks||[]).push(u);},onEvent(){},isVersionAtLeast(){return false;}},${JSON.stringify(opts.tg)})};`});
       if(/fonts\.(googleapis|gstatic)\.com/.test(u.host))return r.continue();
       return r.abort();

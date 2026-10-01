@@ -20,7 +20,8 @@ const normSur=n=>surname(n).toLowerCase().replace(/[’ʼ`]/g,"'");   // мат�
 const TROPHIES=[
   // сезон
   {id:"champ",i:"🏆",n:"Чемпіони",d:"Виграй чемпіонат",cat:"season",rep:1,t:c=>notAnti(c)&&c.r.place===1},
-  {id:"top3",i:"⭐",n:"Бронза теж метал",d:"Фініш у трійці",cat:"season",rep:1,t:c=>notAnti(c)&&c.r.place<=3},
+  {id:"silver",i:"🥈",n:"Вічно другі",d:"Фініш на 2-му місці",cat:"season",rep:1,t:c=>notAnti(c)&&c.r.place===2},   // 0.61 (власник 01.10)
+  {id:"top3",i:"⭐",n:"Бронза теж метал",d:"Фініш на 3-му місці",cat:"season",rep:1,t:c=>notAnti(c)&&c.r.place===3},   // 0.61: лише 3-є місце (було «у трійці»); видані раніше за 1–2 місце лишаються
   {id:"unbeaten",i:"🛡️",n:"Не здамся без бою",d:"Сезон без поразок",cat:"season",rep:1,t:c=>notAnti(c)&&c.r.L===0},
   {id:"perfect",i:"💎",n:"30-0",d:"Виграй усі 30 матчів",cat:"season",rep:1,t:c=>notAnti(c)&&c.r.W===30},
   {id:"mid8",i:"😐",n:"Золота середина",d:"Фініш рівно на 8-му місці",cat:"season",rep:1,t:c=>notAnti(c)&&c.r.place===8},

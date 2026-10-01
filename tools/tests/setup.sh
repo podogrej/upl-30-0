@@ -10,6 +10,7 @@
 #    лічильники за гравцем, жодного нового прямого запису для anon; база зі збігами імен і база зі старою версією v059 — доводяться до правил.
 #  - 0.60 (v060_one_player.sql, двічі): питання «Це ти?» при другому вході, відповідь лише тим самим входом, злиття з журналом і відкат (unmerge_players),
 #    «andré» лише власнику (і повторний v059 його не чіпає), пошта для новин (правила, не публічна, стирається з акаунтом), show_r, «Вибір сезону» на сторінці гравця.
+#  - 0.61 (v061_leagues.sql, двічі): ліги 11×11 — створення й вступ лише з входом, коди, зарахування спроб (перевірений сезон, правила й епоха ліги, ліміт спроб), таблиці «за місце» і «сума», найкраща/остання спроба, «Мої ліги».
 #  База — UTF8 з локаллю C (lower() не чіпає кирилицю — як найгірший випадок; ключ імені робить переклад сам).
 # Потрібні бінарники Postgres (/usr/lib/postgresql/*/bin). Запуск з кореня: bash tools/tests/setup.sh   (KEEP=1 — не зупиняти базу)
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
@@ -392,6 +393,78 @@ chk "v060: «Видалити акаунт» стирає пошту" anon "
 chk "v060: player_profile — «Вибір сезону» окремим режимом" postgres "
   insert into seasons(device_id, mode, format, formation, w, d, l, pts, place, gf, ga) values ('$DEV', 'pick', 'classic', '4-4-2', 25, 3, 2, 78, 1, 70, 20);
   j := player_profile(t_link('device', '$DEV')); assert j->'best'->'pick' is not null and (j->'best'->'pick'->>'pts')::int = 78, j::text;"
+# ===== 0.61: ліги 11×11 на сайті (fl_*) =====
+$P -d t1 -c "select count(*) from pg_policies" -tA > "$D/pol_before61" 2>/dev/null
+for pass in 1 2; do
+  if $P -d t1 -f "$ROOT/sql/v061_leagues.sql" >/dev/null 2>"$D/err"; then ok "запуск $pass: v061_leagues.sql"; else bad "запуск $pass: v061_leagues.sql — $(grep -v NOTICE "$D/err" | head -3)"; fi
+done
+LD=ffffffff-0000-4000-a000-000000000061
+$P -d t1 >/dev/null 2>"$D/err" <<SQL || { cat "$D/err"; exit 1; }
+create function t_fl_season(p_dev uuid, p_fl text, p_pts int, p_mode text default 'normal') returns bigint language plpgsql security definer as \$\$
+declare i bigint; vw int := p_pts / 3; vd int := p_pts % 3; begin
+  insert into seasons(device_id, mode, format, formation, w, d, l, pts, place, gf, ga, fl_id) values (p_dev, p_mode, 'classic', '4-4-2', vw, vd, 30 - vw - vd, p_pts, 3, 50, 30, p_fl) returning id into i;
+  perform set_config('request.jwt.claims', '{"role":"service_role"}', true); update seasons set verified = true where id = i; return i; end \$\$;
+create function t_fl_entries() returns bigint language sql security definer as \$\$ select count(*) from fl_entries \$\$;
+SQL
+chk "v061: нових політик немає; таблиці ліг закриті для anon/authenticated; seasons.fl_id" postgres "
+  assert (select count(*) from pg_policies)::text = '$(cat "$D/pol_before61")', 'кількість політик';
+  assert not has_table_privilege('anon', 'fl_leagues', 'select') and not has_table_privilege('authenticated', 'fl_entries', 'insert') and not has_table_privilege('authenticated', 'fl_members', 'insert'), 'права';
+  assert exists (select 1 from information_schema.columns where table_name = 'seasons' and column_name = 'fl_id'), 'fl_id';"
+chk "v061: anon не створює й не вступає; fl_record — лише сервер" anon "
+  begin j := fl_create('$MX', '$SEC', 'Тест', 3, 3, 'best', 'place', 1, 'show', 'all'); assert false, 'anon створив'; exception when insufficient_privilege then null; end;
+  begin j := fl_join('$MX', '$SEC', 'abcdef'); assert false, 'anon вступив'; exception when insufficient_privilege then null; end;
+  begin perform fl_record(1); assert false, 'anon fl_record'; exception when insufficient_privilege then null; end;"
+chk "v061: створити лігу — лише свій пристрій; неправильні правила — fl_bad" authenticated "
+  begin j := fl_create('$NDEV', '$SEC2', 'Тест', 3, 3, 'best', 'place', 1, 'show', 'all'); assert false, 'чужий пристрій'; exception when sqlstate '28000' then null; end;
+  begin j := fl_create('$MX', '$SEC', 'Тест', 5, 3, 'best', 'place', 1, 'show', 'all'); assert false, '5 днів'; exception when sqlstate '22023' then assert sqlerrm = 'fl_bad', sqlerrm; end;
+  begin j := fl_create('$MX', '$SEC', 'x', 3, 3, 'best', 'place', 1, 'show', 'all'); assert false, 'коротка назва'; exception when sqlstate '22023' then null; end;" ',"sub":"'$UG'"'
+chk "v061: створити лігу — код 6 символів, творець — учасник, тур 1 з 3" authenticated "
+  j := fl_create('$MX', '$SEC', '  Банка   на воротах ', 3, 1, 'best', 'place', 1, 'memory', 'y2010');
+  assert j->>'id' ~ '^[a-z2-9]{6}\$' and j->>'name' = 'Банка на воротах' and (j->>'day_n')::int = 1 and json_array_length(j->'board') = 1 and j->>'ratings' = 'memory', j::text;" ',"sub":"'$UG'"'
+FLID=$($P -d t1 -tAc "select id from fl_leagues order by created_at limit 1")
+$P -d t1 >/dev/null 2>"$D/err" <<SQL || { cat "$D/err"; exit 1; }
+select player_hello('$LD', '$SEC');
+SQL
+chk "v061: друг вступає за кодом (з входом на своєму пристрої); повторно — без змін" authenticated "
+  k := link_account('$LD', '$SEC');
+  j := fl_join('$LD', '$SEC', upper('$FLID')); assert json_array_length(j->'board') = 2, j::text;
+  j := fl_join('$LD', '$SEC', '$FLID'); assert json_array_length(j->'board') = 2, 'двічі ' || j::text;
+  begin j := fl_join('$LD', '$SEC', 'nonexi'); assert false, 'неіснуюча'; exception when sqlstate '22023' then assert sqlerrm = 'fl_none', sqlerrm; end;" ',"sub":"'$UT'"'
+chk "v061: зарахування — лише перевірений сезон «Звичайний» з епохою ліги; 1 спроба на день; не учасник — ні" postgres "
+  declare a bigint; b bigint; c bigint; x bigint; y bigint; z bigint; begin
+  a := t_fl_season('$MX', '$FLID', 70); update seasons set era = 'y2010' where id = a;
+  b := t_fl_season('$LD', '$FLID', 60); update seasons set era = 'y2010' where id = b;
+  assert fl_record(a) = 1 and fl_record(b) = 1, 'перші спроби';
+  assert fl_record(a) = 1, 'повтор того самого сезону';
+  c := t_fl_season('$MX', '$FLID', 80); update seasons set era = 'y2010' where id = c; assert fl_record(c) is null, 'друга спроба при tries=1';
+  x := t_fl_season('$MX', '$FLID', 80, 'hard'); update seasons set era = 'y2010' where id = x; assert fl_record(x) is null, 'режим hard';
+  y := t_fl_season('$MX', '$FLID', 80); assert fl_record(y) is null, 'епоха all замість y2010';
+  z := t_fl_season('$NDEV', '$FLID', 90); update seasons set era = 'y2010' where id = z; assert fl_record(z) is null, 'не учасник';
+  assert t_fl_entries() = 2, 'записів ' || t_fl_entries();
+  end;"
+chk "v061: таблиці — «за місце»: 1-й отримує K=2, 2-й — 1; тур сьогодні; без device_id" anon "
+  j := fl_get('$FLID');
+  assert (j->'board'->0->>'total')::int = 2 and (j->'board'->1->>'total')::int = 1 and (j->'board'->0->>'wins')::int = 1, j::text;
+  assert json_array_length(j->'tour') = 2 and (j->'tour'->0->>'pts')::int = 70 and (j->'tour'->0->>'tries')::int = 1, 'тур ' || (j->'tour')::text;
+  assert j::text !~ '$MX' and j::text !~ 'device', 'є device_id';
+  assert fl_get('nonexi') is null, 'неіснуюча';"
+chk "v061: «Мої ліги» — назва, учасники, моє місце, спроби сьогодні" anon "
+  j := fl_mine('$LD', '$SEC'); assert json_array_length(j) = 1 and (j->0->>'members')::int = 2 and (j->0->>'place')::int = 2 and (j->0->>'tries_today')::int = 1 and j->0->>'name' = 'Банка на воротах', j::text;
+  begin j := fl_mine('$LD', 'attacker-attacker-attacker'); assert false, 'чужий секрет'; exception when sqlstate '28000' then null; end;"
+chk "v061: створити лігу «сума», 3 спроби, у залік остання" authenticated "
+  j := fl_create('$MX', '$SEC', 'Сума', 1, 3, 'last', 'sum', 3, 'show', 'all'); assert j->>'take' = 'last', j::text;" ',"sub":"'$UG'"'
+chk "v061: «сума» і «остання спроба»: у залік остання, очки сезону" postgres "
+  declare id text := (select id from fl_leagues where name = 'Сума'); a bigint; b bigint; begin
+  a := t_fl_season('$MX', id, 75); b := t_fl_season('$MX', id, 41);
+  assert fl_record(a) = 1 and fl_record(b) = 2, 'спроби';
+  j := fl_get(id); assert (j->'board'->0->>'total')::int = 41, 'остання ' || j::text;
+  end;"
+$P -d t1 -c "insert into user_state(user_id, data) values ('$UT', '{\"upl30_tr\":{\"t\":{\"champ\":{\"n\":2,\"at\":\"2026-09-01\"}},\"seasons\":5}}') on conflict (user_id) do update set data = excluded.data" >/dev/null
+chk "v061: «Це ти?» → «так» повертає локальний прогрес старого входу (prev_state) для злиття на сайті" authenticated "
+  declare o uuid := t_new_offer(t_link('auth', '$UT'), t_link('auth', '$UG')); begin
+  j := merge_answer('$MX', '$SEC', o, true);
+  assert (j->'prev_state'->'upl30_tr'->>'seasons')::int = 5, j::text;
+  end;" ',"sub":"'$UG'"'
 # база, де збіги імен уже є: v059_name_conflicts.sql їх показує; v059 дає молодшому номер і створює індекс
 $P -c "create database t3" >/dev/null
 if { $P -d t3 -f "$ROOT/tools/tests/stub.sql" && $P -d t3 -f "$ROOT/sql/new_db_part_A.sql" && $P -d t3 -f "$ROOT/sql/v039_part_B.sql" \
