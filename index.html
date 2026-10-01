@@ -106,7 +106,8 @@ button.ghost{border-color:var(--line);background:transparent;color:var(--ink2);p
 .pl.on{border-color:var(--amber2);box-shadow:0 0 0 2px var(--amber2)}
 /* 0.66.1 (власник): вибраний гравець — рамка навколо всього рядка, кнопки позицій усередині неї */
 .plrow.on{background:var(--card);border-radius:12px;box-shadow:0 0 0 1.5px var(--amber2);border-bottom-color:transparent;margin:4px 0}.plrow.on .pl.on{box-shadow:none;border-color:transparent;background:none}
-.plrow.on.wrap>.plpos{justify-self:stretch;padding:2px 12px 12px 46px;margin:0 2px}   /* 0.67 (як у 38-0): розкрита картка гравця — кольорові кнопки позицій під ним */
+.plrow.on.wrap>.plpos{justify-self:stretch;padding:0 12px 12px;margin:-4px 2px 0;gap:8px}.plrow.on.wrap>.plpos button{flex:1;min-height:36px;padding:5px 10px}   /* 0.67 (власник, запис 38-0): телефон — кнопки позицій одразу під прізвищем, на всю ширину */
+@media (min-width:601px){.plrow.on.wrap>.plpos{grid-column:1/-1;grid-row:1;justify-self:end;align-self:center;flex-wrap:nowrap;padding:0 10px 0 0;margin:0}.plrow.on.wrap>.plpos button{flex:none;min-height:34px;min-width:52px;padding:4px 10px;font-size:14px}#squad:not(.nor) .plrow.on.wrap>.plpos{padding-right:58px}.plrow.on .pl .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-right:var(--pw,130px)}}   /* iPad і ширше — в одному рядку праворуч, лівіше від рейтингу */
 .plrow .plpos button{min-height:40px;min-width:58px;padding:7px 12px;border:0;border-radius:9px;background:color-mix(in srgb,var(--gc) 18%,transparent);color:color-mix(in srgb,var(--gc) 72%,var(--ink));box-shadow:inset 0 0 0 1.5px var(--gc);font:800 15px var(--font-body)}.plrow .plpos button:hover{background:color-mix(in srgb,var(--gc) 30%,transparent)}
 /* 0.67 (власник, варіант E): значки позицій у списку — колір лише в рамці й літерах, шрифт сайту */
 #squad .pl .pos{--gc:var(--line);font:800 11px var(--font-body);padding:3px 0;border-radius:6px;background:color-mix(in srgb,var(--gc) 18%,transparent)!important;color:color-mix(in srgb,var(--gc) 72%,var(--ink))!important;box-shadow:inset 0 0 0 1.5px var(--gc)}
@@ -1246,7 +1247,7 @@ function renderWheel(){
     b.innerHTML=`<span class="pos ${GROUP_OF[p[6]]||p[1]}" title="${POSFULL[p[6]]}">${POSNAME[p[6]]}</span><span class="nm" title="${POSFULL[p[6]]}">${esc(p[0])}${nickOf(p[5])}${S.pending===p?'':altTags(p)}</span><span class="rt">${show?p[2]:''}</span>`;
     if(S.wheelFresh){row.classList.add('in');row.style.animationDelay=Math.min(sq.children.length,14)*28+'ms';}
     b.onclick=()=>choose(p);row.appendChild(b);
-    if(S.pending===p&&ok){const box=posBox(p,b);row.classList.add('wrap');row.appendChild(box);sq.appendChild(row);}   // 0.67 (як у 38-0): кнопки позицій завжди під гравцем, на телефоні й iPad
+    if(S.pending===p&&ok){const box=posBox(p,b);row.classList.add('wrap');row.appendChild(box);sq.appendChild(row);row.style.setProperty('--pw',box.offsetWidth+8+'px');}   // 0.67 (як у 38-0): кнопки позицій завжди під гравцем, на телефоні й iPad
     else sq.appendChild(row);}
   S.wheelFresh=false;
 }
