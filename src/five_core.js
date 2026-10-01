@@ -12,8 +12,13 @@ const F5_GOAL={GK:0,DF:0.3,MF:0.7,FW:1.2}, F5_AST={GK:0.05,DF:0.4,MF:1,FW:0.6};
 const F5_BASE=2.6, F5_BETA=0.05;
 // пенальті в матчі (0.63, docs/leagues_online.md): ймовірність, що команді призначать пенальті; VAR перевіряє частину й іноді скасовує
 const F5_PEN={award:0.13,varCheck:0.3,varCancel:0.35};
-// навик пенальтиста: поки без даних Transfermarkt/FIFA — оцінка за лінією, рейтингом і голами (рішення власника 30.09: «кого немає ніде — оцінка»)
-function f5PenSkill(p){const line={FW:0.05,MF:0.03,DF:0,GK:-0.25}[p.slot]||0;return Math.max(0.45,Math.min(0.92,0.7+line+((p.r||70)-75)*0.006+Math.min(20,p.goals||0)*0.003));}
+// 0.65: навик пенальті з даних Transfermarkt (src/pen_skill.js, data/penalties/skill.md): бьющий — байєсова реалізація, воротар — частка відбитих.
+// Кого немає в даних — середня реалізація (воротар як бьющий — 0.70). Розкид між людьми малий, тож у грі він підсилений ×F5_PEN_A.
+const F5_PEN_A=3;
+function f5PenSkill(p){const d=F5_PK[p.id];return d?d[0]/1000:p.slot==='GK'?0.7:F5_PM;}
+function f5PenRate(p){const d=F5_PK[p.id];return d?d[1]:0;}   // штатний пенальтист: пенальті за матч ×1000
+function f5GkSave(g){const d=F5_GK[g.id];return d!=null?d/1000:F5_GM;}
+function f5PenP(by,gk,lo,hi){return Math.max(lo,Math.min(hi,F5_PM+F5_PEN_A*(f5PenSkill(by)-F5_PM)-F5_PEN_A*(f5GkSave(gk)-F5_GM)));}
 function f5Idx(team){let a=0,wa=0,d=0,wd=0;for(const s of team.slots){const r=s.player.r+(s.player.form||0);a+=F5_ATT[s.slot]*r;wa+=F5_ATT[s.slot];d+=F5_DEF[s.slot]*r;wd+=F5_DEF[s.slot];}return {att:a/wa,def:d/wd};}
 function f5Match(A,B,knockout,R){
   const N=()=>{let u=0,v=0;while(u===0)u=R();while(v===0)v=R();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);};
@@ -21,7 +26,8 @@ function f5Match(A,B,knockout,R){
   const pick=(T,W,excl)=>{let tot=0;for(const s of T.slots)if(s.player.id!==excl)tot+=W[s.slot]*Math.max(1,s.player.r-40);let x=R()*tot;
     for(const s of T.slots){if(s.player.id===excl)continue;x-=W[s.slot]*Math.max(1,s.player.r-40);if(x<=0)return s.player;}return T.slots[T.slots.length-1].player;};
   const gkOf=T=>T.slots.find(s=>s.slot==='GK').player;
-  const takers=T=>T.slots.map(s=>s.player).sort((x,y)=>f5PenSkill(y)-f5PenSkill(x)||String(x.id).localeCompare(String(y.id)));
+  // хто б'є: навик (до 0.01), далі штатний пенальтист (пенальті за матч), далі голи, далі id — без випадковості
+  const takers=T=>T.slots.map(s=>s.player).sort((x,y)=>Math.round(f5PenSkill(y)*100)-Math.round(f5PenSkill(x)*100)||f5PenRate(y)-f5PenRate(x)||(y.goals||0)-(x.goals||0)||String(x.id).localeCompare(String(y.id)));
   const ia=f5Idx(A),ib=f5Idx(B);
   const la=F5_BASE*Math.exp(F5_BETA*(ia.att-ib.def)+N()*0.15),lb=F5_BASE*Math.exp(F5_BETA*(ib.att-ia.def)+N()*0.15);
   const ev=[],ep=[];const add=(T,side,n)=>{for(let k=0;k<n;k++){const sc=pick(T,F5_GOAL);const as=R()<0.6?pick(T,F5_AST,sc.id):null;ev.push({min:1+Math.floor(R()*40),side,sc,as});}};
@@ -30,14 +36,14 @@ function f5Match(A,B,knockout,R){
   for(const [T,O,side] of [[A,B,0],[B,A,1]]){
     if(R()>=F5_PEN.award)continue;const min=1+Math.floor(R()*40);
     if(R()<F5_PEN.varCheck){const cancel=R()<F5_PEN.varCancel;ep.push({min,side,k:'var',ok:!cancel});if(cancel)continue;}
-    const by=takers(T)[0],gk=gkOf(O),pr=Math.max(0.5,Math.min(0.93,f5PenSkill(by)-((gk.r||75)-75)*0.004));
+    const by=takers(T)[0],gk=gkOf(O),pr=f5PenP(by,gk,0.5,0.93);
     const res=R()<pr?'goal':R()<0.6?'save':'miss';ep.push({min,side,k:'pen',by,gk,res});
     if(res==='goal'){ev.push({min,side,sc:by,as:null,pen:true});if(side)gb++;else ga++;}}
   ev.sort((x,y)=>x.min-y.min||x.side-y.side);ep.sort((x,y)=>x.min-y.min||x.side-y.side);
   // серія пенальті (лише плей-офф): 5 ударів — найкращі пенальтисти, далі до першого промаху
   let pens=null,so=null;
   if(knockout&&ga===gb){so=[];const ta=takers(A),tb=takers(B);let a=0,b=0;
-    const kick=(T,O,side,k)=>{const by=T[k%T.length],gk=gkOf(O),pr=Math.max(0.55,Math.min(0.92,f5PenSkill(by)-((gk.r||75)-75)*0.004)),ok=R()<pr;so.push({side,by,ok});return ok?1:0;};
+    const kick=(T,O,side,k)=>{const by=T[k%T.length],gk=gkOf(O),pr=f5PenP(by,gk,0.55,0.92),ok=R()<pr;so.push({side,by,ok});return ok?1:0;};
     for(let k=0;k<5;k++){a+=kick(ta,B,0,k);b+=kick(tb,A,1,k);}
     for(let k=5;a===b&&k<40;k++){a+=kick(ta,B,0,k);b+=kick(tb,A,1,k);}
     if(a===b)a++;   // запобіжник: серія не нескінченна

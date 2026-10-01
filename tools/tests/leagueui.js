@@ -26,6 +26,6 @@ await pg.click('#homeBtn');
  const msg=await pg.$eval('#leagueMsg',e=>e.hidden?'':e.textContent);T.check(/табло групи: «Футбол по середах»/.test(msg),'повідомлення: '+msg);
  await pg.click('#againBtn');await pg.waitForTimeout(600);
  const after=await pg.$eval('#leagueCard',e=>e.textContent.replace(/\s+/g,' ').trim());
- T.check(/Сьогодні зіграли 2 з 3/.test(after)&&/уже в табло групи/.test(after)&&!(await pg.$('#leagueGo')),'картка після гри: '+after.slice(0,90));
+ T.check(/Сьогодні зіграли 2 з 3/.test(after)&&!/уже в табло групи/.test(after)&&!(await pg.$('#leagueGo')),'картка після гри (0.65: без «уже в табло групи», без кнопки): '+after.slice(0,90));
  T.check(!errs.length,'помилок на сторінці немає '+errs.join(' | '));
  await b.close();process.exit(T.done());})();

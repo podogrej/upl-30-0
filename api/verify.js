@@ -32,7 +32,7 @@ function yearOk(row, E, chalYearOk, prev) {
 // 0.62: лише дизайн (рушій і пул ті самі) — сезони сайту 0.61 приймаємо; 0.60 — як у 0.61.
 // 0.63: змінилась лише «Ліга легенд» (сезон клубу — за силою складу): сезони 0.62/0.61 у інших форматах сходяться й приймаються, у «Лізі легенд» — «не перевірити» (null).
 // 0.64: рушій той самий, класика тепер проти «Ліги легенд»; сезони 0.63 (класика й драфт дня проти культових клубів) приймаємо — yearOk(…, prev).
-const PREV_VERSIONS = ['0.63', '0.62'];
+const PREV_VERSIONS = ['0.64', '0.63'];   // 0.65 змінила симуляцію (баланс, хімія): сезони 0.64, дограні у вже відкритій вкладці, рушій 0.65 не відтворить — вони отримають null («не перевірено»), а не false
 
 // головна перевірка: повертає [true|false|null, пояснення]; null — перевірити неможливо (стара версія тощо)
 function check(row, seedRow, opts = {}) {
@@ -88,7 +88,9 @@ function checkCore(row, seedRow, { chalYearOk = false, prev = false } = {}) {
     if (onWheel < 10) return [false, `колесо дня: лише ${onWheel} з 11 клуб-сезонів`];   // 1 перекручування дозволено
   }
   if (row.perfect != null && !!row.perfect !== (+row.w === 30)) return [false, 'позначка 30-0 не відповідає результату'];
-  const sim = E.run({ xi: xi.map(x => ({ id: x.id, name: x.n, slot: x.slot, pos: E.GROUP_OF[x.slot], r: +x.r })), mode: row.mode, format: row.format, year: +row.year, seed: +row.seed });
+  // 0.65: код клубу й сезон — для «хімії» (гравці одного клубу)
+  const ccOf = x => (E.DATA.clubs.find(c => c.n === x.c && c.y === +x.y) || {}).c;
+  const sim = E.run({ xi: xi.map(x => ({ id: x.id, name: x.n, slot: x.slot, pos: E.GROUP_OF[x.slot], r: +x.r, cc: ccOf(x), y: +x.y })), mode: row.mode, format: row.format, year: +row.year, seed: +row.seed });
   const same = sim.W === row.w && sim.D === row.d && sim.L === row.l && sim.gf === row.gf && sim.ga === row.ga && sim.place === row.place && (row.pts == null || sim.pts === row.pts);
   return same ? [true, 'ok'] : [false, `перерахунок: ${sim.W}-${sim.D}-${sim.L} ${sim.gf}:${sim.ga} #${sim.place}`];
 }

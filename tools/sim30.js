@@ -47,14 +47,14 @@ function play(cfg) {
   const pickN = MODES[cfg.mode] && MODES[cfg.mode].pick;
   const spinPick = () => { const c0 = spinFresh(); const all = pool.filter(c => c.c === c0.c && best(c)); const opts = [];
     while (opts.length < pickN && all.length) opts.push(all.splice(Math.floor(r() * all.length), 1)[0]);
-    let bb = null; for (const c of opts) { const b = best(c); if (!bb || b.score > bb.score) bb = b; } return bb; };
+    let bb = null; for (const c of opts) { const b = best(c); if (b) { b.cc = c.c; b.y = c.y; } if (!bb || b.score > bb.score) bb = b; } return bb; };
   for (let k = 0; k < 11; k++) {
-    if (pickN && !cfg.daily) { const b = spinPick(); b.s.p = b.p; taken.add(canon(b.p[5])); continue; }
+    if (pickN && !cfg.daily) { const b = spinPick(); b.s.p = b.p; b.s.cc = b.cc; b.s.y = b.y; taken.add(canon(b.p[5])); continue; }
     let cs = spin(), b = best(cs);
     while (rerolls > 0 && !anti && b.v < REROLL_BELOW) { rerolls--; cs = spinFresh(); b = best(cs); }
-    b.s.p = b.p; taken.add(canon(b.p[5]));
+    b.s.p = b.p; b.s.cc = cs.c; b.s.y = cs.y; taken.add(canon(b.p[5]));
   }
-  const xi = slots.map(s => ({ id: s.p[5], name: s.p[0], slot: s.slot, pos: GROUP_OF[s.slot], r: effRating(s.p, s.slot) }));
+  const xi = slots.map(s => ({ id: s.p[5], name: s.p[0], slot: s.slot, pos: GROUP_OF[s.slot], r: effRating(s.p, s.slot), cc: s.cc, y: s.y }));
   const year = cfg.daily ? cfg.daily.year : cfg.year || (E.LEAGUE_CULT ? (cfg.format === 'legends' || (cfg.format === 'classic' && E.VERSION >= '0.64') ? E.LEAGUE_LEGENDS : E.LEAGUE_CULT) : YEARS16[Math.floor(r() * YEARS16.length)]);   // з 0.50 — ліга культових клубів, з 0.64 класика — «Ліга легенд» (як oppYear); старий рушій — випадковий сезон
   const mode = cfg.daily ? 'daily' : cfg.mode;
   const res = E.run({ xi, mode, format: cfg.format, year, seed: Math.floor(r() * 2147483647) });

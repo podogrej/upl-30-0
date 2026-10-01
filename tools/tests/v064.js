@@ -23,8 +23,8 @@ async function pickOne(pg){await pg.click('#spinBtn');await pg.waitForSelector('
  T.check(await pg.evaluate(()=>!document.querySelector('.fly0')&&!document.querySelector('.slot.flyw')),'після польоту плашки немає, кружок на полі видно');
  for(let i=1;i<11;i++)await pickOne(pg);
  await pg.waitForSelector('#simBtn:not([hidden])');await pg.click('#simBtn');await pg.waitForSelector('#live:not([hidden])');
- const goal=await pg.waitForFunction(()=>document.querySelector('#lvMatch.goal0'),null,{timeout:12000}).then(()=>true).catch(()=>false);
- T.check(goal,'живий показ: спалах голу (#lvMatch.goal0)');
+ const goal=await pg.waitForFunction(()=>document.querySelector('#lvMatch .goal0'),null,{timeout:12000}).then(()=>true).catch(()=>false);
+ T.check(goal,'живий показ: спалах перемоги (#lvMatch .goal0)');
  await pg.click('#skipBtn');await pg.waitForTimeout(120);
  const cu=await pg.evaluate(()=>({now:document.querySelector('#recTiles b.hot').textContent,pts:String(window.__dbg.S.result.pts)}));
  await pg.waitForTimeout(900);const cu2=await pg.evaluate(()=>document.querySelector('#recTiles b.hot').textContent);

@@ -1,6 +1,6 @@
 // Сценарії перед виходом: головна, тема, 4 сезони (класика, виклик дня, антисезон, дербі), текст і картка результату.
 // Запуск з кореня: node tools/tests/scenarios.js [папка для знімків]. Код виходу 0 — усе гаразд.
-const path=require('path'),fs=require('fs');const {ROOT,openPage,playSeason}=require('./_page.js');
+const path=require('path'),fs=require('fs');const {ROOT,openPage,playSeason,pickFmt}=require('./_page.js');
 const OUT=process.argv[2]||path.join(ROOT,'tools','tests','out');fs.mkdirSync(OUT,{recursive:true});
 const fail=[];const check=(ok,msg)=>{if(!ok)fail.push(msg);};
 (async()=>{const {b,pg,errs}=await openPage({colorScheme:'light'});
@@ -29,7 +29,7 @@ const fail=[];const check=(ok,msg)=>{if(!ok)fail.push(msg);};
  check(await pg.evaluate(()=>/^\d+$/.test((document.querySelector('#pitch .slot.filled .r')||{}).textContent||'')),'рейтинги: немає цифри на полі');
  // «Хардкора» в выборе нет (0.46); в антисезоне галочки нет
  check(await pg.evaluate(()=>{document.getElementById('homeBtn').click();document.getElementById('freeOpen').click();return [...document.querySelectorAll('#modes .opt b')].map(b=>b.textContent).join(',');})==='Звичайний,Складний','режими: у виборі не лише «Звичайний» і «Складний»');
- await pg.click('#formats .opt[data-fmt="anti"]');await pg.click('#startBtn');await pg.click('#spinBtn');await pg.waitForSelector('#squad .pl:not([disabled])',{timeout:8000});
+ await pickFmt(pg,'anti');await pg.click('#startBtn');await pg.click('#spinBtn');await pg.waitForSelector('#squad .pl:not([disabled])',{timeout:8000});
  check(await pg.evaluate(()=>document.getElementById('showRRow').hidden),'рейтинги: галочка є в антисезоні');
  await pg.evaluate(()=>document.getElementById('homeBtn').click());await pg.click('#freeOpen');await pg.click('#formats .opt[data-fmt="classic"]');await pg.click('#modes .opt:nth-child(1)');
  // «Переставити гравців»: без кнопки тап по гравцю нічого не робить, з кнопкою — підсвічує місця

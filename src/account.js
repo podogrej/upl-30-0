@@ -207,17 +207,21 @@ function leagueChat(){const sp=TG&&TG.initDataUnsafe&&TG.initDataUnsafe.start_pa
 async function leagueInit(){
   if(!IN_TG())return;const chat=leagueChat();
   try{if(/^g-?\d+$/.test(TG.initDataUnsafe.start_param||''))await _fetch('/api/league',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({initData:TG.initData})});}catch(e){}
-  if(chat)leagueLoad(chat);
+  if(chat){   // 0.65: місце під лігу одразу (з назвою з минулого разу), щоб головна не «стрибала», коли табло догрузиться
+    const el=document.getElementById('leagueCard'),t=lsGet('upl30_league_title');
+    if(el&&!LEAGUE){el.hidden=false;el.innerHTML=`<div class="kicker">Ліга групи</div><div class="ttl">${t?'«'+esc(t)+'»':'&nbsp;'}</div><div class="meta muted">Завантажуємо табло…</div>`;}
+    leagueLoad(chat);}
 }
-async function leagueLoad(chat){try{const r=await _fetch('/api/league?chat='+encodeURIComponent(chat));if(!r.ok)return;LEAGUE={chat,...await r.json()};renderLeague();}catch(e){}}
+async function leagueLoad(chat){try{const r=await _fetch('/api/league?chat='+encodeURIComponent(chat));if(!r.ok){if(!LEAGUE)document.getElementById('leagueCard').hidden=true;return;}LEAGUE={chat,...await r.json()};renderLeague();}catch(e){if(!LEAGUE)document.getElementById('leagueCard').hidden=true;}}
 function renderLeague(){
   const el=document.getElementById('leagueCard');if(!el)return;if(!LEAGUE){el.hidden=true;return;}
+  if(LEAGUE.title)lsSet('upl30_league_title',LEAGUE.title);
   const L=LEAGUE,medal=[1,2,3].map(k=>`<span class="plc p${k}">${k}</span>`);const played=lsGet("upl30_daily_"+DAY);
   el.hidden=false;el.innerHTML=`<div class="kicker">Ліга групи</div><div class="ttl">«${esc(L.title)}»</div>
     <div class="meta">Сьогодні зіграли ${L.today.length} з ${Math.max(L.members,L.today.length)}</div>
-    ${L.today.length?`<div class="tbl"><table>${L.today.slice(0,6).map((r,i)=>`<tr${(r.u&&PLAYER&&r.u===PLAYER.public_id)||(!r.u&&TGU&&r.name===[TGU.first_name,TGU.last_name].filter(Boolean).join(' '))?' class="me"':''}><td>${medal[i]||i+1}</td><td>${plink({players:{name:r.name,public_id:r.u}})}</td><td class="num">${r.w}-${r.d}-${r.l}</td><td class="num"><b>${r.pts}</b></td></tr>`).join('')}</table></div>`:'<p class="muted" style="margin:0">Ще ніхто не зіграв — будь першим!</p>'}
+    ${L.today.length?`<div class="tbl"><table>${L.today.slice(0,5).map((r,i)=>`<tr${(r.u&&PLAYER&&r.u===PLAYER.public_id)||(!r.u&&TGU&&r.name===[TGU.first_name,TGU.last_name].filter(Boolean).join(' '))?' class="me"':''}><td>${medal[i]||i+1}</td><td>${plink({players:{name:r.name,public_id:r.u}})}</td><td class="num">${r.w}-${r.d}-${r.l}</td><td class="num"><b>${r.pts}</b></td></tr>`).join('')}</table></div>`:'<p class="muted" style="margin:0">Ще ніхто не зіграв — будь першим!</p>'}
     ${L.standings&&L.standings.length>1?`<p class="muted" style="margin:0;font-size:13px">Залік (перемоги в днях): ${L.standings.slice(0,5).map(s=>`${plink({players:{name:s.name,public_id:s.u}})} ${s.wins}`).join(' · ')}</p>`:''}
-    <div class="row">${played?'<span class="best">Твій результат уже в табло групи</span>':'<button class="primary" id="leagueGo">Зіграти драфт дня</button>'}</div>`;
+    ${played?'':'<div class="row"><button class="primary" id="leagueGo">Зіграти драфт дня</button></div>'}`;
   const g=document.getElementById('leagueGo');if(g)g.onclick=()=>document.getElementById('dailyBtn').click();
 }
 async function leagueSubmit(r){
