@@ -52,7 +52,7 @@ function renderChal(){
   document.getElementById('chalGo').onclick=chalStart;
 }
 function chalStart(){
-  const c=CHAL;if(!c)return;S.daily=null;S.result=null;S.format='classic';S.mode=MODES[c.mode]&&c.mode!=='daily'?c.mode:'normal';S.formation=FORMATIONS[c.formation]?c.formation:'4-4-2';
+  const c=CHAL;if(!c)return;S.daily=null;S.result=null;S.format='classic';S.pickMode=false;S.mode=MODES[c.mode]&&c.mode!=='daily'?c.mode:'normal';S.formation=FORMATIONS[c.formation]?c.formation:'4-4-2';
   S.chal=chalNewGame(+c.seed,+c.year);S.challenge=c;
   S.slots=newSlots(S.formation);S.taken=new Set();S.wheel=null;S.rerolls=MODES[S.mode].rerolls;
   document.getElementById('modeLabel').textContent=`Виклик · ${S.formation} · ${MODES[S.mode].name}`;renderDraft();go(2);
@@ -60,7 +60,8 @@ function chalStart(){
 // після сезону: порівняння з викликом і запис результату
 function chalAfterSeason(r){
   const line=document.getElementById('chalLine'),box=document.getElementById('chalBox');
-  if(box)box.hidden=!(ONLINE&&S.chal&&!S.daily&&S.format==='classic');
+  const can=ONLINE&&S.chal&&!S.daily&&S.format==='classic';   // 0.60: плитка «Виклик» відкриває блок (варіант A)
+  if(box)box.hidden=true;const tile=document.getElementById('chalOpen');if(tile)tile.hidden=!can;
   const ni=document.getElementById('chalName');if(ni){ni.hidden=!!TGU;if(!ni.value)ni.value=myName();}
   document.getElementById('chalMsg').textContent='';
   if(!line)return;line.hidden=true;const c=S.challenge;if(!c)return;

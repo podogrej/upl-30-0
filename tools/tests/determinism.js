@@ -1,8 +1,8 @@
-// Браузер і сервер (lib/engine.js) мають порахувати сезон однаково: 8/8. Запуск з кореня: node tools/tests/determinism.js
+// Браузер і сервер (lib/engine.js) мають порахувати сезон однаково: 10/10 (з 0.60 — ще «Вибір сезону»). Запуск з кореня: node tools/tests/determinism.js
 const path=require('path');const {ROOT,openPage,playSeason}=require('./_page.js');
 const E=require(path.join(ROOT,'lib','engine.js'));
 (async()=>{const {b,pg,errs}=await openPage();
- const runs=[['classic',1,1],['classic',2,2],['classic',2,3],['derby',1,1],['oneclub',1,1],['anti',3,1],['daily',0,0],['classic',1,6],['legends',1,2]];
+ const runs=[['classic',1,1],['classic',2,2],['classic',2,3],['derby',1,1],['oneclub',1,1],['anti',3,1],['daily',0,0],['classic',1,6],['legends',1,2],['pick',0,4]];
  let ok=0;
  for(const [fmt,mode,form] of runs){
   await playSeason(pg,fmt,mode,form);

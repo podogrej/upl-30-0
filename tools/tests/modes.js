@@ -4,7 +4,7 @@
 const {openPage}=require('./_page.js');const {checker}=require('./_site.js');
 async function draft(pg){for(let i=0;i<11;i++){await pg.click('#spinBtn');await pg.waitForSelector('#squad .pl:not([disabled])',{timeout:8000});const btn=await pg.$('.pl:not([disabled])');await btn.click();await pg.waitForTimeout(80);const pk=await pg.$('#pitch .slot.target');if(pk){await pk.click();await pg.waitForTimeout(60);}}
   await pg.waitForSelector('#simBtn:not([hidden])');}
-async function free(pg,fi,before){await pg.evaluate(()=>document.getElementById('homeBtn').click());await pg.click('#freeOpen');await pg.click(`#formats .opt:nth-child(${fi})`);if(before)await before();await pg.click('#startBtn');}
+async function free(pg,fi,before){await pg.evaluate(()=>document.getElementById('homeBtn').click());await pg.click('#freeOpen');await pg.click(`#formats .opt[data-fmt="${['','classic','derby','oneclub','anti','legends'][fi]}"]`);if(before)await before();await pg.click('#startBtn');}
 const clubsOf=pg=>pg.evaluate(()=>[...new Set(window.__dbg.S.slots.map(s=>s.player.cc))]);
 (async()=>{const T=checker('modes');const {b,pg,errs}=await openPage();
  // класика: живий показ

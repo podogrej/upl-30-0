@@ -24,7 +24,7 @@ upl-30-0/
 ├─ index.html          сайт целиком (генерируется из src/, руками не править)
 ├─ privacy.html        политика конфиденциальности (нужна для входа через Google)
 ├─ vercel.json         настройки Vercel
-├─ api/                серверные функции Vercel: бот, вход, лиги, cron, резервная копия (backup), seed, запись результатов (save), проверка сезона, картинка; _device.js — общее (не адрес): секрет устройства, ограничение частоты
+├─ api/                серверные функции Vercel: бот, вход, лиги, cron, резервная копия (backup), seed, запись результатов (save), проверка сезона, картинка; _device.js — общее (не адрес): секрет устройства, ограничение частоты; _league.js — общее для лиг групп (бот, cron, league)
 ├─ lib/engine.js       серверный движок симуляции (генерируется, руками не править)
 ├─ src/                ИСХОДНИКИ ИГРЫ
 │  ├─ template.html    основа: разметка, стили, игра, таблицы
@@ -36,7 +36,7 @@ upl-30-0/
 │  ├─ icons.js         иконки (генерирует src/icons/make_icons.py)
 │  ├─ pool.json        все игроки и сезоны с рейтингами
 │  └─ build.py         сборка → ../index.html и ../dist/30-0-upl.html
-├─ sql/                все SQL по версиям; база с нуля: new_db_part_A.sql + v039_part_B.sql + cards_bucket.sql + v053_writes.sql (+ v054_close_writes.sql — шаг 2) + v055_backups.sql + v059_player_page.sql (v059_name_conflicts.sql — только чтение)
+├─ sql/                все SQL по версиям; база с нуля: new_db_part_A.sql + v039_part_B.sql + cards_bucket.sql + v053_writes.sql (+ v054_close_writes.sql — шаг 2) + v055_backups.sql + v059_player_page.sql (v059_name_conflicts.sql — только чтение) + v060_one_player.sql
 ├─ tools/              make_engine.js (движок для сервера), sim30.js (замер сложности), tests/
 ├─ data/               датасет УПЛ и пайплайн пула: как устроен и что запускать — data/README.md; check_pool.py — проверка пула
 └─ docs/               формулы, гейм-дизайн
@@ -118,7 +118,7 @@ upl-30-0/
 Нужны Node 18+, Python 3, Playwright с Chromium (`cd tools && npm i --no-save acorn acorn-walk playwright`).
 - Пул данных (с 0.54): `python3 data/check_pool.py` — инварианты `src/pool.json` (поля карточек, позиции, id, псевдонимы, `meta`, переходы посреди сезона); код выхода 1 и строки «ПОМИЛКА» при нарушении. Обязательна, если менялся пул (`data/README.md`).
 - Главные, работают из репозитория как есть (открывают `index.html`, сеть кроме шрифтов заблокирована — в базы ничего не пишут):
-  - `node tools/tests/determinism.js` — браузер и сервер совпали 9/9 (с 0.50 — ещё «Ліга легенд»);
+  - `node tools/tests/determinism.js` — браузер и сервер совпали 10/10 (с 0.50 — ещё «Ліга легенд», с 0.60 — «Вибір сезону»);
   - `node tools/tests/scenarios.js` — главная, тема, 4 сезона разных форматов, голы сходятся с матчами, текст и картка; снимки в `tools/tests/out/`.
   - В облачной среде Claude Chromium ходит через прокси: `PROXY_CA_SPKI` — отпечаток ключа CA прокси (`openssl x509 -in /root/.ccr/agent-proxy-ca.crt -pubkey -noout | openssl pkey -pubin -outform der | openssl dgst -sha256 -binary | base64`).
 - Остальные тесты в `tools/tests/` запускаются так же, из корня: `node tools/tests/<файл>`; каждый заканчивается строкой «УСЕ ГАРАЗД»:
@@ -127,6 +127,7 @@ upl-30-0/
   - `draft58` (с 0.58) — кнопки позиций под игроком в колесе (как на поле, клавиатура), эпохи (колесо, дерби, виклик дня без эпохи), метки экранов Clarity, чистка старых ключей localStorage, склонения, трофей «Гамарджоба»; снимки `posbtn.png`, `era_setup.png`, `era_320.png`;
   - `pitch_layout` (с 0.56) — фишки на поле не налазят друг на друга и не выходят за край: все схемы 11×11 и 5×5, самые длинные фамилии, ширины 320–1024;
   - `player_page` (с 0.59) — своя/чужая/без входа страница игрока, правила имени и сообщения, рідкість и фильтры шафы, ссылка из таблицы, удаление акаунта, имя в табло лиги, список мата одинаков в трёх местах; снимки `docs/mockups/player_page_059_*.png`;
+  - `v060` (с 0.60) — «Вибір сезону» (три сезона, без перекруток, `mode = 'pick'`), скрытый 5×5, FAQ, блок «Поділитися», пометка `show_r`, редкий трофей, лучший результат дня; снимки `v060_*.png`;
   - `v39` — профиль игрока, таблица, проверка сезона: браузер против базы в памяти (`_site.js`) и настоящих `api/*.js`; `node tools/tests/v39.js [new|old|both]`.
 - `bash tools/tests/setup.sh` — SQL на временном Postgres (заглушка Supabase `stub.sql`): повторный запуск `new_db_part_A.sql`, `v039_part_B.sql`, `cards_bucket.sql`, `v053_writes.sql`, `v054_close_writes.sql`, `v055_backups.sql`, RLS и функции игрока, секрет устройства (К6), общий телефон (В6), закрытие прямой записи (шаг 2), приватное хранилище копий и `rate_hit` (0.55), 0.59: правила и уникальность имён, 30 дней, `public_id`, `player_profile`, `delete_player`, база со совпадениями имён (база — UTF8, локаль C).
 

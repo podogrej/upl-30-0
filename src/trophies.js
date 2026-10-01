@@ -3,7 +3,7 @@ const PERSON={};   // person_id → {main, nat, by, clubs:Set}; clubs — спі
 {const CL={};for(const c of DATA.clubs)for(const p of c.pl){const k=canon(p[5]);const cl=CL[k]||(CL[k]=new Set());const q=PERSON[p[5]]||(PERSON[p[5]]={main:p[6],nat:p[10],by:p[11],clubs:cl});cl.add(c.c);}}
 const CLUBS_NOW=new Set(DATA.clubs.filter(c=>c.y===Math.max(...DATA.clubs.map(x=>x.y))).map(c=>c.c));
 const UA=0;   // DATA.nats[0] = «Україна»
-const TR_CATS=[["season","Сезон"],["squad","Склад"],["players","Гравці"],["modes","Режими та складність"],["daily","Виклик дня"],["secret","Секретні"]];
+const TR_CATS=[["season","Сезон"],["squad","Склад"],["players","Гравці"],["modes","Режими та складність"],["daily","Драфт дня"],["secret","Секретні"]];
 const surname=n=>{const t=String(n).split(' ');return t[t.length-1];};
 const firstName=n=>String(n).split(' ')[0];
 const byClub=xi=>{const m={};for(const x of xi)m[x.cc]=(m[x.cc]||0)+1;return Math.max(0,...Object.values(m));};
@@ -53,14 +53,14 @@ const TROPHIES=[
   {id:"antilast",i:"⬇️",n:"Нижче плінтуса",d:"Антисезон: фініш останнім",cat:"modes",rep:1,t:c=>c.format==='anti'&&c.r.place===16},
   {id:"anti0",i:"🪦",n:"Нуль без палички",d:"Антисезон: програй усі 30 матчів",cat:"modes",t:c=>c.format==='anti'&&c.r.L===30},
   {id:"antidry",i:"🥖",n:"Сухий пайок",d:"Антисезон: забий 5 голів або менше",cat:"modes",t:c=>c.format==='anti'&&c.r.gf<=5},
-  // виклик дня (перевіряються за лічильниками)
-  {id:"dchamp",i:"📅",n:"Герой дня",d:"Стань чемпіоном в офіційній спробі виклику дня",cat:"daily",rep:1,t:c=>c.dailyOfficial&&c.r.place===1},
-  {id:"s3",i:"🔥",n:"Бог любить трійцю",d:"Зіграй виклик дня 3 дні поспіль",cat:"daily",st:s=>s.streak>=3,prog:s=>[s.streak,3]},
+  // драфт дня (перевіряються за лічильниками)
+  {id:"dchamp",i:"📅",n:"Герой дня",d:"Стань чемпіоном в офіційній спробі драфту дня",cat:"daily",rep:1,t:c=>c.dailyOfficial&&c.r.place===1},
+  {id:"s3",i:"🔥",n:"Бог любить трійцю",d:"Зіграй драфт дня 3 дні поспіль",cat:"daily",st:s=>s.streak>=3,prog:s=>[s.streak,3]},
   {id:"s7",i:"🗓️",n:"Як на роботу",d:"7 днів поспіль",cat:"daily",st:s=>s.streak>=7,prog:s=>[s.streak,7]},
   {id:"s14",i:"📆",n:"Відпустка? Не чув",d:"14 днів поспіль",cat:"daily",st:s=>s.streak>=14,prog:s=>[s.streak,14]},
   {id:"s30",i:"🏛️",n:"Трудоголік",d:"30 днів поспіль",cat:"daily",st:s=>s.streak>=30,prog:s=>[s.streak,30]},
-  {id:"d10",i:"☕",n:"Завсідник",d:"Зіграй 10 викликів дня",cat:"daily",st:s=>s.dailies>=10,prog:s=>[s.dailies,10]},
-  {id:"d50",i:"🎖️",n:"Старожил",d:"Зіграй 50 викликів дня",cat:"daily",st:s=>s.dailies>=50,prog:s=>[s.dailies,50]},
+  {id:"d10",i:"☕",n:"Завсідник",d:"Зіграй 10 драфтів дня",cat:"daily",st:s=>s.dailies>=10,prog:s=>[s.dailies,10]},
+  {id:"d50",i:"🎖️",n:"Старожил",d:"Зіграй 50 драфтів дня",cat:"daily",st:s=>s.dailies>=50,prog:s=>[s.dailies,50]},
   // секретні
   {id:"golden",i:"🥇",n:"Як у 2006-му",d:"Стань чемпіоном через золотий матч",cat:"secret",sec:1,t:c=>notAnti(c)&&c.r.place===1&&!!c.r.golden},
   {id:"rebsh",i:"🤝",n:"Дует Лобановського",d:"Ребров і Шевченко в одному складі",cat:"secret",sec:1,t:c=>c.xi.some(x=>x.name==='Сергій Ребров')&&c.xi.some(x=>x.name==='Андрій Шевченко')},
@@ -219,6 +219,10 @@ function renderNewTro(r){
   const s=trStore();const fresh=new Set(a.fresh);
   const all=[...new Set(a.got)].map(trDef).filter(Boolean);const nw=all.filter(t=>fresh.has(t.id)).sort((x,y)=>(y.sec?1:0)-(x.sec?1:0)),rep=all.filter(t=>!fresh.has(t.id));
   // з 0.50: нові — великими картками зверху (секретні першими), повторні — нижче компактним рядком «Ще раз» з лічильником
-  el.hidden=false;el.innerHTML=(nw.length?`<div class="kicker" style="margin-bottom:6px">${nw.length>1?'Нові трофеї':'Новий трофей'}</div><div class="trg">`+nw.map((t,k)=>`<div class="tro on pop new${t.sec?' sec':''}" style="animation-delay:${k*120}ms"><span class="tri">${trBadge(t,true)}</span><div class="trt"><b>${esc(t.n)}</b>${trQ(t)}<span>${esc(t.d)}</span>${t.sec?'<em class="trsx">секретний!</em>':''}</div></div>`).join('')+`</div>`:'')
+  // 0.60: рідкісний новий трофей (рідкісний/епічний/легендарний за часткою гравців або секретний) — з'являється з ефектом, як рідкісна карта
+  const tierOf=t=>{const x=typeof trTier==='function'?trTier(t):null;return x&&x[1]!=='common'?x:null;};
+  const rareCls=t=>{const x=tierOf(t);return x?` rarein rt-${x[1]}`:t.sec?' rarein rt-secret':'';};
+  const rareTag=t=>{const x=tierOf(t);return x?`<em class="rtag rt-${x[1]}">${x[2]}</em>`:'';};
+  el.hidden=false;el.innerHTML=(nw.length?`<div class="kicker" style="margin-bottom:6px">${nw.length>1?'Нові трофеї':'Новий трофей'}</div><div class="trg">`+nw.map((t,k)=>`<div class="tro on pop new${t.sec?' sec':''}${rareCls(t)}" style="animation-delay:${k*120+(rareCls(t)?250:0)}ms"><span class="tri">${trBadge(t,true)}</span><div class="trt"><b>${esc(t.n)}</b>${trQ(t)}<span>${esc(t.d)}</span>${t.sec?'<em class="trsx">секретний!</em>':''}${rareTag(t)}</div></div>`).join('')+`</div>`:'')
     +(rep.length?`<div class="kicker" style="margin:${nw.length?'12px':'0'} 0 6px">${nw.length?'Ще раз':'Трофеї сезону'}</div><div class="trrep">`+rep.map(t=>`<span class="trchip${t.sec?' sec':''}" title="${esc(t.d)}">${trBadge(t,true)}<b>${esc(t.n)}</b><i>×${(s.t[t.id]||{}).n||1}</i></span>`).join('')+`</div>`:'');
 }

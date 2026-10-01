@@ -34,7 +34,9 @@ function seasonRow(r) {
     tier: str(r.tier, 80), golden: !!r.golden, perfect: !!r.perfect, seed_id: /^[0-9A-Za-z-]{1,64}$/.test(String(r.seed_id || '')) ? String(r.seed_id) : null, practice: !!r.practice,
     day: dayRe.test(String(r.day || '')) ? r.day : null, xi: r.xi.map(xiItem), tbl: (r.tbl || []).map(tblItem),
     // епоха (0.58) — лише не «Усі роки» (сайт інакше її не надсилає). Колонки seasons.era поки немає: insert() повторить запис без неї
-    ...(/^y\d{4}$/.test(String(r.era || '')) ? { era: String(r.era) } : {}) };
+    ...(/^y\d{4}$/.test(String(r.era || '')) ? { era: String(r.era) } : {}),
+    // 0.60: у драфті вмикали «Показати рейтинги» (seasons.show_r; колонки ще немає — insert() повторить без неї)
+    ...(r.show_r === true ? { show_r: true } : {}) };
 }
 // вставка з повтором без колонки, якої в базі ще немає (як робив браузер)
 async function insert(table, row, qs = '', prefer = 'return=representation') {

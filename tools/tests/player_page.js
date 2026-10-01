@@ -22,7 +22,7 @@ function mkDB(){
   const forDevice=d=>{let l=links[d];if(!l){const p={id:'p-'+(++n),name:null,anon_name:'silent_owl',public_id:'mepl'+String.fromCharCode(97+n).repeat(4)};players.push(p);l=links[d]={pid:p.id,secret:null};}return l;};
   const err=(status,code,message)=>({status,body:JSON.stringify({code,message})});
   const check=a=>{if(!a.p_device||String(a.p_secret||'').length<16)return {e:err(400,'22023','device?')};const l=forDevice(a.p_device);if(l.secret==null)l.secret=a.p_secret;else if(l.secret!==a.p_secret)return {e:err(401,'28000','device secret')};return {p:players.find(p=>p.id===l.pid)};};
-  const js=p=>({id:p.id,name:p.name||null,anon_name:p.anon_name,public_id:p.public_id,name_next:p.next||null});
+  const js=p=>({id:p.id,name:p.name||null,anon_name:p.anon_name,public_id:p.public_id,name_next:p.next||null,contact_email:p.email||null,news_optin:!!p.optin});   // пошта для новин — з 0.60
   const key=v=>String(v||'').trim().toLowerCase().replace(/\s+/g,'_');
   const TRANSLIT={'олег':'oleh'};   // name_translit у базі (перевіряє setup.sh); тут — лише потрібне тесту
   const rpc={
@@ -67,7 +67,7 @@ const order=pg=>pg.$$eval('#ppCab .tro.on[data-tr]',es=>es.map(e=>e.dataset.tr))
  T.check(await pg.$eval('#s6',e=>!e.hidden)&&await pg.$eval('#s1',e=>e.hidden),'аватарка відкриває свою сторінку');
  T.check((await pg.textContent('#ppName'))==='silent_owl'&&!!(await pg.$('.pp-warn'))&&/лише на цьому пристрої/.test(await pg.textContent('.pp-warn')),'без входу: анонімне ім\'я й попередження «лише на цьому пристрої»');
  const tiles=await pg.$$eval('.pp-tiles .tile',ts=>ts.map(t=>t.innerText.replace(/\s+/g,' ')));
- T.check(tiles.length===6&&/сезонів зіграно/.test(tiles[0])&&/серія виклику дня/.test(tiles[5])&&/^4 /.test(tiles[5]),'6 плиток: '+tiles.join(' | '));
+ T.check(tiles.length===6&&/сезонів зіграно/.test(tiles[0])&&/серія драфту дня/.test(tiles[5])&&/^4 /.test(tiles[5]),'6 плиток: '+tiles.join(' | '));
  // шафа: рідкість
  await pg.waitForTimeout(300);
  T.check(JSON.stringify(await order(pg))===JSON.stringify(['unbeaten','top3','champ']),'сортування «за рідкістю»: '+(await order(pg)).join(','));
