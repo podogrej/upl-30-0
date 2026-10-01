@@ -9,7 +9,7 @@
 Запуск з кореня репозиторію: python3 data/easter_positions/collect.py [хвилин_бюджету=150]
 CACHE_ONLY=1 — лише перебудувати CSV з кешу.
 """
-import json, csv, os, sys, time, subprocess, collections
+import json, csv, os, sys, time, subprocess, collections, re
 
 D = 'data/easter_positions'
 CACHE = os.path.join(D, 'cache')
@@ -32,8 +32,9 @@ pool = json.load(open('src/pool.json'))
 P = {}
 for c in pool['clubs']:
     for x in c['pl']:
-        e = P.setdefault(x[5], {'name': x[0], 'pos': collections.Counter(), 'cs': collections.defaultdict(set)})
+        e = P.setdefault(x[5], {'name': x[0], 'pos': collections.Counter(), 'cs': collections.defaultdict(set), 'apps': 0})
         e['pos'][x[6]] += (x[3] or 0) + 1
+        e['apps'] += x[3] or 0
         e['cs'][c['n']].add(c['y'])
 for e in P.values():
     e['main'] = e['pos'].most_common(1)[0][0]
@@ -104,6 +105,33 @@ def fetch(tm):
     return games
 
 
+YOUTH = re.compile(r'U\d\d|1[5-9]EU|2[01]EU|^UYL|JL$')
+
+
+def comp_kind(c):
+    c = c or ''
+    if YOUTH.search(c):
+        return 'молодь'
+    if c == 'FS':
+        return 'товариський'
+    return 'офіційний'
+
+
+def identity(e, games, gk):
+    """Чи той самий це гравець у TM: матчі УПЛ (UKR1) і основна позиція."""
+    ukr = sum(1 for g in games if g['c'] == 'UKR1')
+    known = [g['p'] for g in games if g['p']]
+    gkn = sum(1 for p in known if p == 1)
+    bad = []
+    if e['apps'] >= 10 and ukr < 0.2 * e['apps']:
+        bad.append(f'у TM {ukr} матчів УПЛ проти {e["apps"]} у пулі')
+    if gk and len(known) >= 10 and gkn < 0.3 * len(known):
+        bad.append(f'у TM воротарем лише {gkn} з {len(known)} матчів з позицією')
+    if not gk and len(known) >= 10 and sum(1 for p in known if p in (2, 3, 4, 5)) < 0.3 * len(known):
+        bad.append('у TM захисником менше 30% матчів (інша людина або зміна амплуа)')
+    return ('СУМНІВНИЙ: ' + '; '.join(bad)) if bad else 'OK'
+
+
 rows, stats = [], collections.Counter()
 for i, pid in enumerate(order):
     if not CACHE_ONLY and (time.time() - T0) / 60 > BUDGET:
@@ -116,6 +144,8 @@ for i, pid in enumerate(order):
     e = P[pid]
     pc = collections.Counter(g['p'] for g in games)
     gk = e['main'] == 'GK'
+    idc = identity(e, games, gk)
+    known_n = sum(1 for g in games if g['p'])
     for g in games:
         p = g['p']
         note = ''
@@ -129,13 +159,14 @@ for i, pid in enumerate(order):
             note = 'польовий у воротах'
         if not note:
             continue
-        note += f"; рахунок {g['sc']}; клуб TM {g['cl']} проти {g['op']}; позиції за кар'єру TM: " + \
+        note += f"; {comp_kind(g['c'])}; id {idc}; рахунок {g['sc']}; клуб TM {g['cl']} проти {g['op']}; позиції за кар'єру TM: " + \
             ', '.join(f"{POS.get(k, k)}×{v}" for k, v in pc.most_common(4))
         rows.append({'id': pid, 'name': e['name'], 'main_pos': e['main'], 'club_seasons': club_seasons(e),
                      'match_date': g['d'], 'competition': g['c'], 'played_position': POS.get(p, 'Goalkeeper' if gk else p),
                      'minutes': g['min'], 'goals': g['gl'],
                      'source_url': f"https://www.transfermarkt.com/spielbericht/index/spielbericht/{g['g']}",
-                     'note': note, '_tm': tm})
+                     'note': note, '_tm': tm, '_kind': comp_kind(g['c']), '_id': idc, '_known': known_n,
+                     '_cat': note.split(';')[0], '_pos': p})
     if i % 50 == 0:
         log(i, pid, e['name'], len(rows))
 
@@ -145,6 +176,25 @@ with open(os.path.join(D, 'candidates.csv'), 'w', newline='') as f:
     w.writeheader()
     for r in sorted(rows, key=lambda r: (r['main_pos'] != 'GK', r['name'], r['match_date'])):
         w.writerow(r)
+# зведення по людях для README: окремо епізоди (офіційні матчі дорослих, людина підтверджена)
+agg = collections.defaultdict(lambda: collections.Counter())
+info = {}
+for r in rows:
+    k = (r['id'], r['_cat'])
+    info[k] = r
+    agg[k]['all'] += 1
+    if r['_kind'] == 'офіційний' and r['_id'] == 'OK':
+        agg[k]['off'] += 1
+        agg[k]['min'] += r['minutes'] or 0
+        agg[k]['gl'] += r['goals'] or 0
+with open(os.path.join(D, 'summary.csv'), 'w', newline='') as f:
+    w = csv.writer(f)
+    w.writerow(['id', 'name', 'main_pos', 'category', 'official_matches_ok', 'all_matches', 'minutes_official', 'goals_official',
+                'tm_known_position_matches', 'identity', 'club_seasons', 'tm_profile'])
+    for k, c in sorted(agg.items(), key=lambda kv: (kv[1]['off'] == 0, -kv[1]['off'])):
+        r = info[k]
+        w.writerow([r['id'], r['name'], r['main_pos'], r['_cat'], c['off'], c['all'], c['min'], c['gl'], r['_known'], r['_id'],
+                    r['club_seasons'], f"https://www.transfermarkt.com/x/profil/spieler/{r['_tm']}"])
 json.dump({'checked': stats['ok'], 'nodata': stats['nodata'], 'failed': failed, 'candidates_total': len(order), 'rows': len(rows)},
           open(os.path.join(D, 'cache', '_stats.json'), 'w'), ensure_ascii=False)
 log('готово', dict(stats), 'рядків', len(rows), 'невдалих', len(failed))
