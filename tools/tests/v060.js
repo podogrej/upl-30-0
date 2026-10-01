@@ -35,6 +35,7 @@ const fail=[];let n=0;const check=(ok,msg)=>{n++;console.log((ok?'✓ ':'✗ ')+
  const res=await pg.evaluate(()=>({mode:window.__dbg.S.mode,share:document.getElementById('shareText').value,
    tiles:[...document.querySelectorAll('#shareBox > button')].map(b=>b.id+(b.hidden?':h':'')).join(','),big:!document.getElementById('tgShareBtn').hidden,chal:document.getElementById('chalBox').hidden}));
  check(res.mode==='pick'&&/Вибір сезону/.test(res.share),'сезон: режим pick, у тексті «Вибір сезону»');
+ for(let k=0;k<40&&!saves.find(x=>x.kind==='season');k++)await pg.waitForTimeout(200);   // запис іде після анімацій підсумку; на повільній машині (GitHub Actions) — довше 1,2 с
  const sv=saves.find(x=>x.kind==='season');
  check(sv&&sv.row.mode==='pick'&&sv.row.format==='classic'&&sv.row.show_r===true,'запис сезону: mode pick, format classic, show_r (рейтинги відкривали) — '+(sv?JSON.stringify({m:sv.row.mode,f:sv.row.format,r:sv.row.show_r}):'немає'));
  check(res.big&&res.tiles==='tgShareBtn,chalOpen:h'&&res.chal,'«Поділитися» (0.63 — одна кнопка; виклику у «Виборі сезону» немає): '+res.tiles);
