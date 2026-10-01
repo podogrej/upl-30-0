@@ -5,6 +5,7 @@ const crypto = require('crypto');
 const { sb, rateLimit } = require('./_device.js');   // запити до бази ключем сервера
 const xiHash = xi => crypto.createHash('sha256').update(xi.map(x => `${x.id}|${x.slot}|${x.c}|${x.y}`).join(';')).digest('hex');
 let E = null;
+const CHAL_OLD_BEFORE = '2026-10-01T14:56:00Z';   // мерж 0.64 (#30): з цього моменту виклики створюються лише проти «Ліги легенд»
 function engine() { if (!E) E = require('../lib/engine.js'); return E; }
 
 // рік суперників, дозволений для сезону: для формату — той, що дає гра (oppYear: «Ліга легенд» або «Ліга культових клубів»).
@@ -17,7 +18,7 @@ function yearOk(row, E, chalYearOk, prev) {
   if (row.format === 'legends') return y === E.LEAGUE_LEGENDS;
   if (row.format !== 'classic') return y === E.LEAGUE_CULT;
   if (y === E.LEAGUE_LEGENDS) return true;
-  if (y === E.LEAGUE_CULT) return !!prev || (!row.day && !!chalYearOk);
+  if (y === E.LEAGUE_CULT) return !row.day && !!chalYearOk;   // 0.67 (аудит P1-2): без винятку для «старої версії» — його можна було підробити полем version
   return !row.day && E.YEARS16.includes(y) && !!chalYearOk;
 }
 
@@ -32,7 +33,8 @@ function yearOk(row, E, chalYearOk, prev) {
 // 0.62: лише дизайн (рушій і пул ті самі) — сезони сайту 0.61 приймаємо; 0.60 — як у 0.61.
 // 0.63: змінилась лише «Ліга легенд» (сезон клубу — за силою складу): сезони 0.62/0.61 у інших форматах сходяться й приймаються, у «Лізі легенд» — «не перевірити» (null).
 // 0.64: рушій той самий, класика тепер проти «Ліги легенд»; сезони 0.63 (класика й драфт дня проти культових клубів) приймаємо — yearOk(…, prev).
-const PREV_VERSIONS = ['0.65', '0.64'];   // 0.66 знову змінила симуляцію (баланс, «сезон-диво», штрафи позицій): сезони 0.65/0.64 з відкритих вкладок рушій 0.66 не відтворить — null («не перевірено»), а не false
+const PREV_VERSIONS = [];   // 0.67: симуляція знову змінилась (баланс v3); старі вкладки — null («не перевірено»). Порожньо також закриває підробку version (аудит P1-2)
+// було: ['0.65', '0.64']   // 0.66 знову змінила симуляцію (баланс, «сезон-диво», штрафи позицій): сезони 0.65/0.64 з відкритих вкладок рушій 0.66 не відтворить — null («не перевірено»), а не false
 
 // головна перевірка: повертає [true|false|null, пояснення]; null — перевірити неможливо (стара версія тощо)
 function check(row, seedRow, opts = {}) {
@@ -132,7 +134,8 @@ async function verifyById(id) {
   }
   let chalYearOk = false;
   if (row.format === 'classic' && !row.day && row.year != null && Number.isInteger(+row.year) && (engine().YEARS16.includes(+row.year) || +row.year === engine().LEAGUE_CULT)) {
-    const ch = await sb(`challenges?year=eq.${+row.year}&formation=eq.${encodeURIComponent(String(row.formation || ''))}&select=id&limit=1`) || [];
+    // 0.67 (аудит P1-1): лише виклики, створені до 0.64 (тоді виклик міг мати справжній сезон УПЛ); нові виклики — завжди «Ліга легенд»
+    const ch = await sb(`challenges?year=eq.${+row.year}&formation=eq.${encodeURIComponent(String(row.formation || ''))}&created_at=lt.${CHAL_OLD_BEFORE}&select=id&limit=1`) || [];
     chalYearOk = ch.length > 0;
   }
   let v, note;

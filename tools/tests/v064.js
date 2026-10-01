@@ -35,7 +35,7 @@ async function pickOne(pg){await pg.click('#spinBtn');await pg.waitForSelector('
  const m1=await pg.evaluate(()=>{const m=document.querySelector('.champ0');return m&&{h:m.querySelector('h2').textContent,p:m.querySelector('p').textContent,cup:!!m.querySelector('.cup svg'),cv:!!m.querySelector('canvas'),bg:getComputedStyle(m).backgroundColor};});
  T.check(m1&&m1.h==='30-0!'&&m1.cup&&m1.cv&&/rgba/.test(m1.bg),'30-0: вікно з кубком, конфеті й затемненням '+JSON.stringify(m1));
  await pg.screenshot({path:path.join(OUT,'v064_champ.png')});
- await pg.click('.champ0 button');T.check(!(await pg.$('.champ0')),'«Далі» закриває вікно');
+ T.check(!!(await pg.$('.champ0 .cshare')),'0.67: у вікні — «Поділитися»');await pg.click('.champ0 .cclose');T.check(!(await pg.$('.champ0')),'«Весь сезон» закриває вікно');
  await pg.evaluate(f=>window.__dbg.champModal(f),fake(22,5,3,1));await pg.waitForTimeout(300);
  T.check(await pg.evaluate(()=>/Ти молодець/.test(document.querySelector('.champ0 p').textContent)),'чемпіон: «Ти молодець!»');
  await pg.keyboard.press('Escape');T.check(!(await pg.$('.champ0')),'Escape закриває вікно');
