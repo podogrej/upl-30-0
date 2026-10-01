@@ -410,7 +410,7 @@ button.stick0{position:sticky;bottom:12px;z-index:5;max-width:none;margin-top:20
 .rtog input:checked{background:var(--amber)}.rtog input:checked::after{transform:translateX(14px);background:#fff}
 .squad{gap:0}
 .pl .nm{font-size:15px}
-.offbtn{margin-top:6px;border:0;background:none;text-align:left;padding:12px 4px;color:var(--ink2);font-size:14px;font-weight:500}
+.offhd{margin:14px 0 2px;padding:0 4px;color:var(--muted);font-size:13px}
 /* підсумки */
 .hero{gap:10px}
 .hero .tier{font-size:28px}
@@ -467,7 +467,7 @@ table.lbt th.n,table.lbt td.n{width:28px;padding-left:2px;padding-right:2px;text
 .plrow .pl{flex:1;min-width:0;display:grid;grid-template-columns:32px minmax(0,1fr) auto;gap:10px;border:0;border-radius:8px;background:none;padding:10px 4px}
 .plrow .pl:hover{background:var(--card)}.plrow.on .pl{background:var(--card)}
 .plrow .pl .rt{min-width:28px}
-.plrow.off{display:none}.squad.offopen .plrow.off{display:flex}
+.plrow.off .pl{opacity:.38}
 .plrow .plpos{flex:none;padding:0 2px 0 0;animation:plin .2s ease-out both}.plrow .plpos button{min-width:48px;min-height:38px;padding:6px 10px}
 .plrow.in{animation:plin .32s ease-out both}
 /* підсумки */
@@ -1073,7 +1073,7 @@ function spin(mode){
   if(!cs){alertNoCands();return;}
   S.wheel=cs;S.move=null;S.pending=null;
   const w=document.getElementById('wheel');w.hidden=false;document.getElementById('spinBtn').hidden=true;
-  document.getElementById('squad').innerHTML='';document.getElementById('rerollRow').style.visibility='hidden';S.offOpen=false;
+  document.getElementById('squad').innerHTML='';document.getElementById('rerollRow').style.visibility='hidden';
   const spinClub=mode!=='year',spinYear=mode!=='club';
   const y0=ERAS[eraOf()].y0,WP=DATA.clubs.filter(c=>c.y>=y0),names=[...new Set(WP.map(c=>c.n))],years=[...new Set(WP.map(c=>c.y))].sort();   // на барабанах — клуби й сезони лише своєї епохи
   Promise.all([reelRoll('reelClub','club',names,cs.n,spinClub?22:0),reelRoll('reelYear','season',years.map(seasonLabel),seasonLabel(cs.y),spinYear?30:0)]).then(()=>{if(S.wheel===cs){S.wheelFresh=true;renderWheel();}});
@@ -1093,8 +1093,7 @@ function renderWheel(){
   const anti=S.format==='anti';const list=[...cs.pl].map(p=>({p,ok:isOk(cs,p)})).sort((a,b)=>(b.ok-a.ok)||(anti?a.p[0].localeCompare(b.p[0],'uk'):sortR?b.p[2]-a.p[2]:(b.p[3]-a.p[3]||b.p[4]-a.p[4])));
   let sep=false;const nOk=list.filter(x=>x.ok).length,nOff=list.length-nOk;
   document.getElementById('sqTop').hidden=false;document.getElementById('sqCnt').textContent=`Гравці · ${nOk}`;
-  sq.classList.toggle('offopen',!!S.offOpen);
-  for(const {p,ok} of list){if(!ok&&!sep){sep=true;const h=document.createElement('button');h.className='offbtn';h.textContent=`${S.offOpen?'Сховати':'Ще'} ${nOff} ${plUk(nOff,'не підходить','не підходять','не підходять')} під вільні позиції ${S.offOpen?'▴':'▾'}`;h.title=S.taken.size?'Позиція зайнята або не підходить — переставте когось у складі, щоб відкрити':'';h.onclick=()=>{S.offOpen=!S.offOpen;renderWheel();};sq.appendChild(h);}
+  for(const {p,ok} of list){if(!ok&&!sep){sep=true;const h=document.createElement('div');h.className='offhd';h.textContent=S.taken.size?`Не підходять під вільні позиції (${nOff}) — переставте когось у складі, щоб відкрити`:`Не підходять під вільні позиції (${nOff})`;sq.appendChild(h);}   // 0.63: знову відкрито одразу (Ігор: згорнутий список — гірше)
     // 0.63 (власник): матчі, голи, асисти й сухі не показуємо — порядок за матчами; рейтинг — лише за перемикачем; кілька позицій — кнопками праворуч у рядку
     const row=document.createElement('div');row.className='plrow'+(ok?'':' off')+(S.pending===p?' on':'');
     const b=document.createElement('button');b.className='pl'+(S.pending===p?' on':'');b.disabled=!ok;b.dataset.id=p[5];
