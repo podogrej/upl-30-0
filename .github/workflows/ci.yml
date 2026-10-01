@@ -1,0 +1,37 @@
+# Автоперевірки (0.64): на кожен push у test і на pull request у main. Те саме, що bash tools/tests/all.sh локально.
+name: Перевірки
+on:
+  push:
+    branches: [test]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  checks:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Шрифти й Postgres
+        run: sudo apt-get update -q && sudo apt-get install -y -q postgresql fonts-noto-core
+      - name: Залежності інструментів
+        working-directory: tools
+        run: npm install --no-audit --no-fund && npx playwright install --with-deps chromium
+      - name: Усі перевірки
+        run: bash tools/tests/all.sh
+      - name: Знімки екрана
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: snimky
+          path: tools/tests/out/
+          retention-days: 7

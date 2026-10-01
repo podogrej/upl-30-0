@@ -80,7 +80,7 @@ function honestXi(formation) {
   return xi;
 }
 (async () => {
-  const device = crypto.randomUUID(), formation = '4-3-3', year = E.LEAGUE_CULT;   // з 0.50 суперники класики — «Ліга культових клубів»
+  const device = crypto.randomUUID(), formation = '4-3-3', year = E.LEAGUE_LEGENDS;   // з 0.64 суперники класики — «Ліга легенд» (0.50–0.63 — «Ліга культових клубів»)
   const xi = honestXi(formation);
   const s = await call(seedH, { device_id: device, xi, formation, mode: 'normal', format: 'classic', year });
   const sim = E.run({ xi: xi.map(x => ({ id: x.id, name: x.n, slot: x.slot, pos: E.GROUP_OF[x.slot], r: x.r })), mode: 'normal', format: 'classic', year, seed: s.j.seed });
@@ -108,11 +108,18 @@ function honestXi(formation) {
   await tamper('підробка з сайту 0.56 — не перевірено (null)', r => { r.version = '0.56'; r.xi[0].r = 99; }, null);
   await tamper('старша версія 0.49 — не перевірити (null)', r => { r.version = '0.49'; }, null);
   // 0.60: нога LM/RM змінила симуляцію лише для таких гравців — сезон сайту 0.59, що сходиться, приймаємо; підробку — «не перевірити»; 0.58 — вже «не перевірити»
-  // 0.63: PREV_VERSIONS = 0.62, 0.61 (змінилась лише «Ліга легенд»); 0.60 — вже «не перевірити»
+  // 0.64: PREV_VERSIONS = 0.63, 0.62 (рушій той самий, класика тепер проти «Ліги легенд»); 0.61 — вже «не перевірити»
+  await tamper('сезон з сайту 0.63 — перевірено', r => { r.version = '0.63'; }, true);
   await tamper('сезон з сайту 0.62 — перевірено', r => { r.version = '0.62'; }, true);
-  await tamper('сезон з сайту 0.61 — перевірено', r => { r.version = '0.61'; }, true);
-  await tamper('підробка з сайту 0.61 — не перевірено (null)', r => { r.version = '0.61'; r.xi[0].r = 99; }, null);
-  await tamper('сезон з сайту 0.60 — не перевірити (null)', r => { r.version = '0.60'; }, null);
+  await tamper('підробка з сайту 0.62 — не перевірено (null)', r => { r.version = '0.62'; r.xi[0].r = 99; }, null);
+  await tamper('сезон з сайту 0.61 — не перевірити (null)', r => { r.version = '0.61'; }, null);
+  // 0.64: класика сайту 0.63 — проти культових клубів (seed видано під LEAGUE_CULT): приймаємо
+  { const sc = await call(seedH, { device_id: device, xi, formation, mode: 'normal', format: 'classic', year: E.LEAGUE_CULT });
+    const q = E.run({ xi: xi.map(x => ({ id: x.id, name: x.n, slot: x.slot, pos: E.GROUP_OF[x.slot], r: x.r })), mode: 'normal', format: 'classic', year: E.LEAGUE_CULT, seed: sc.j.seed });
+    const cult = r => Object.assign(r, { year: E.LEAGUE_CULT, seed: sc.j.seed, seed_id: sc.j.seed_id, w: q.W, d: q.D, l: q.L, pts: q.pts, place: q.place, gf: q.gf, ga: q.ga });
+    await tamper('класика сайту 0.63 проти культових клубів — перевірено', r => { cult(r); r.version = '0.63'; }, true);
+    await tamper('класика 0.64 проти культових клубів без виклику другу — ні', r => { cult(r); }, false);
+    await tamper('антисезон проти «Ліги легенд» — ні', r => { cult(r); r.format = 'anti'; r.year = E.LEAGUE_LEGENDS; }, false); }
   // 0.58: епоха (seasons.era, коли з'явиться колонка) — склад лише з клуб-сезонів епохи
   { const early = Math.min(...legit.xi.map(x => x.y));
     await tamper(`епоха «Сучасність», а в складі сезон ${early}`, r => { r.era = 'y2015'; }, early >= 2015);
@@ -124,7 +131,7 @@ function honestXi(formation) {
   await tamper('seed для іншої схеми', r => { r.formation = '4-4-2'; }, false);
   await tamper('seed для іншого формату', r => { r.format = 'derby'; }, false);
   await tamper('seed для іншого режиму', r => { r.mode = 'hard'; }, false);
-  await tamper('seed для іншого року суперників', r => { r.year = E.LEAGUE_LEGENDS; }, false);
+  await tamper('seed для іншого року суперників', r => { r.year = E.LEAGUE_CULT; }, false);
   await tamper('позначка 30-0 без 30 перемог', r => { r.perfect = true; }, false);
   // 0.54: одна людина під двома id (DATA.alias) — «гравець двічі», навіть якщо seed видано й перерахунок сходиться
   { const place = (id, used) => { for (const c of E.DATA.clubs) for (const p of c.pl) if (p[5] === id) for (let i = 0; i < xi.length; i++) {

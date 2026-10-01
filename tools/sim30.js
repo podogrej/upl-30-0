@@ -55,7 +55,7 @@ function play(cfg) {
     b.s.p = b.p; taken.add(canon(b.p[5]));
   }
   const xi = slots.map(s => ({ id: s.p[5], name: s.p[0], slot: s.slot, pos: GROUP_OF[s.slot], r: effRating(s.p, s.slot) }));
-  const year = cfg.daily ? cfg.daily.year : cfg.year || (E.LEAGUE_CULT ? (cfg.format === 'legends' ? E.LEAGUE_LEGENDS : E.LEAGUE_CULT) : YEARS16[Math.floor(r() * YEARS16.length)]);   // з 0.50 — ліга культових клубів; старий рушій — випадковий сезон
+  const year = cfg.daily ? cfg.daily.year : cfg.year || (E.LEAGUE_CULT ? (cfg.format === 'legends' || (cfg.format === 'classic' && E.VERSION >= '0.64') ? E.LEAGUE_LEGENDS : E.LEAGUE_CULT) : YEARS16[Math.floor(r() * YEARS16.length)]);   // з 0.50 — ліга культових клубів, з 0.64 класика — «Ліга легенд» (як oppYear); старий рушій — випадковий сезон
   const mode = cfg.daily ? 'daily' : cfg.mode;
   const res = E.run({ xi, mode, format: cfg.format, year, seed: Math.floor(r() * 2147483647) });
   const avg = xi.reduce((a, x) => a + x.r, 0) / 11;

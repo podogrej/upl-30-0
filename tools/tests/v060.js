@@ -1,11 +1,13 @@
 // 0.60 «Один гравець»: «Вибір сезону» (колесо дає клуб → три сезони, без перекручувань, у базу — mode 'pick'), 5×5 сховано, FAQ,
 // блок «Поділитися» (варіант A), позначка «рейтинги відкриті» (show_r), рідкісний трофей з ефектом, кращий результат дня на гравця.
 // Запуск з кореня: node tools/tests/v060.js [папка для знімків]. Код виходу 0 — усе гаразд.
-const path=require('path'),fs=require('fs');const {ROOT,openPage}=require('./_page.js');
+const path=require('path'),fs=require('fs');const {ROOT}=require('./_page.js');const {openSite,makeDB}=require('./_site.js');
 const OUT=process.argv[2]||path.join(ROOT,'tools','tests','out');fs.mkdirSync(OUT,{recursive:true});
 const fail=[];let n=0;const check=(ok,msg)=>{n++;console.log((ok?'✓ ':'✗ ')+msg);if(!ok)fail.push(msg);};
-(async()=>{const {b,pg,errs}=await openPage();
- const saves=[];await pg.route(/\/api\/save/,r=>{try{saves.push(JSON.parse(r.request().postData()||'{}'));}catch(e){}r.fulfill({status:200,contentType:'application/json',body:'{"id":7,"verified":true}'});});
+(async()=>{
+ // сайт «як онлайн» (https://upl.test/, _site.js): свіжий Chromium (GitHub Actions) блокує запити до /api/* зі сторінки, відкритої з файлу
+ const saves=[];const db=makeDB({seasons:{auto:'id'},season_seeds:{auto:'id'},daily_results:{auto:'id'}});
+ const {b,pg,errs}=await openSite({db,api:{'/api/save':async req=>{saves.push(req.body||{});return {json:{id:7,verified:true}};},'/api/seed':async()=>({json:{seed:12345,seed_id:'s1'}})}});
  // ---- головна: «Новий режим», 5×5 сховано, FAQ актуальний
  const home=await pg.evaluate(()=>({pick:!document.getElementById('pickOpen').hidden,f5:document.getElementById('f5Open').hidden,
    faq:document.querySelector('.faq0').textContent.replace(/\s+/g,' '),daily:document.getElementById('dKicker').textContent+' / '+document.getElementById('dailyBtn').textContent}));   // 0.62: «Драфт дня» — у заголовку картки, кнопка — «Грати»
@@ -35,6 +37,7 @@ const fail=[];let n=0;const check=(ok,msg)=>{n++;console.log((ok?'✓ ':'✗ ')+
  const res=await pg.evaluate(()=>({mode:window.__dbg.S.mode,share:document.getElementById('shareText').value,
    tiles:[...document.querySelectorAll('#shareBox > button')].map(b=>b.id+(b.hidden?':h':'')).join(','),big:!document.getElementById('tgShareBtn').hidden,chal:document.getElementById('chalBox').hidden}));
  check(res.mode==='pick'&&/Вибір сезону/.test(res.share),'сезон: режим pick, у тексті «Вибір сезону»');
+ for(let k=0;k<40&&!saves.find(x=>x.kind==='season');k++)await pg.waitForTimeout(200);   // запис іде після анімацій підсумку; на повільній машині (GitHub Actions) — довше 1,2 с
  const sv=saves.find(x=>x.kind==='season');
  check(sv&&sv.row.mode==='pick'&&sv.row.format==='classic'&&sv.row.show_r===true,'запис сезону: mode pick, format classic, show_r (рейтинги відкривали) — '+(sv?JSON.stringify({m:sv.row.mode,f:sv.row.format,r:sv.row.show_r}):'немає'));
  check(res.big&&res.tiles==='tgShareBtn,chalOpen:h'&&res.chal,'«Поділитися» (0.63 — одна кнопка; виклику у «Виборі сезону» немає): '+res.tiles);

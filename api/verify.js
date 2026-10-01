@@ -10,11 +10,15 @@ function engine() { if (!E) E = require('../lib/engine.js'); return E; }
 // рік суперників, дозволений для сезону: для формату — той, що дає гра (oppYear: «Ліга легенд» або «Ліга культових клубів»).
 // Виняток — класика за старим «Викликом другу» (до 0.50 виклик міг мати справжній сезон УПЛ на 16 команд):
 // такий рік приймаємо, лише якщо в таблиці challenges є виклик з цим роком і схемою (chalYearOk рахує обробник нижче).
-function yearOk(row, E, chalYearOk) {
+function yearOk(row, E, chalYearOk, prev) {
   const y = +row.year;
-  const opp = row.format === 'legends' ? E.LEAGUE_LEGENDS : E.LEAGUE_CULT;
-  if (y === opp) return true;
-  return row.format === 'classic' && !row.day && E.YEARS16.includes(y) && !!chalYearOk;
+  // 0.64: класика (і «Вибір сезону», драфт дня) — проти «Ліги легенд»; «Ліга культових клубів» — лише сезони сайту 0.63 і раніше
+  // або виклик другу, створений до 0.64 (chalYearOk). Антисезон і приховані дербі / один клуб — як і раніше, культові клуби.
+  if (row.format === 'legends') return y === E.LEAGUE_LEGENDS;
+  if (row.format !== 'classic') return y === E.LEAGUE_CULT;
+  if (y === E.LEAGUE_LEGENDS) return true;
+  if (y === E.LEAGUE_CULT) return !!prev || (!row.day && !!chalYearOk);
+  return !row.day && E.YEARS16.includes(y) && !!chalYearOk;
 }
 
 // Сайт попередньої версії ще відкритий у гравців (кеш браузера, Mini App). Якщо його сезон повністю сходиться з новим рушієм
@@ -27,17 +31,18 @@ function yearOk(row, E, chalYearOk) {
 // 0.61: пул і симуляція як у 0.60 (ліги з друзями, трофеї, поле) — сезони сайту 0.60 приймаємо; 0.59 — як у 0.60.
 // 0.62: лише дизайн (рушій і пул ті самі) — сезони сайту 0.61 приймаємо; 0.60 — як у 0.61.
 // 0.63: змінилась лише «Ліга легенд» (сезон клубу — за силою складу): сезони 0.62/0.61 у інших форматах сходяться й приймаються, у «Лізі легенд» — «не перевірити» (null).
-const PREV_VERSIONS = ['0.62', '0.61'];
+// 0.64: рушій той самий, класика тепер проти «Ліги легенд»; сезони 0.63 (класика й драфт дня проти культових клубів) приймаємо — yearOk(…, prev).
+const PREV_VERSIONS = ['0.63', '0.62'];
 
 // головна перевірка: повертає [true|false|null, пояснення]; null — перевірити неможливо (стара версія тощо)
 function check(row, seedRow, opts = {}) {
   const E = engine();
   if (!row.version || row.version === E.VERSION) return checkCore(row, seedRow, opts);
   if (!PREV_VERSIONS.includes(row.version)) return [null, `версія гри ${row.version} ≠ рушій ${E.VERSION}`];
-  const [v, note] = checkCore(row, seedRow, opts);
+  const [v, note] = checkCore(row, seedRow, { ...opts, prev: true });
   return v === true ? [true, `ok (версія ${row.version})`] : [null, `версія гри ${row.version}: ${note}`];
 }
-function checkCore(row, seedRow, { chalYearOk = false } = {}) {
+function checkCore(row, seedRow, { chalYearOk = false, prev = false } = {}) {
   const E = engine();
   if (!seedRow) return [false, 'seed не видавався сервером'];
   if (String(seedRow.device_id) !== String(row.device_id)) return [false, 'seed іншого пристрою'];
@@ -48,7 +53,7 @@ function checkCore(row, seedRow, { chalYearOk = false } = {}) {
   if (seedRow.year != null && +seedRow.year !== +row.year) return [false, `рік: seed видано для ${seedRow.year}`];
   if (!E.FORMATS[row.format]) return [false, 'невідомий формат'];
   if (!E.MODES[row.mode]) return [false, 'невідомий режим'];
-  if (!yearOk(row, E, chalYearOk)) return [false, `суперники ${row.year} не для формату ${row.format}`];
+  if (!yearOk(row, E, chalYearOk, prev)) return [false, `суперники ${row.year} не для формату ${row.format}`];
   // епоха (0.58): seasons.era є, лише коли в базі з'явиться колонка; тоді всі клуб-сезони складу мають бути не раніше її початку
   const era = row.era == null || row.era === 'all' ? null : E.ERAS && E.ERAS[row.era];
   if (row.era != null && row.era !== 'all' && !era) return [false, `невідома епоха ${row.era}`];
@@ -77,7 +82,7 @@ function checkCore(row, seedRow, { chalYearOk = false } = {}) {
   }
   if (row.day) {   // виклик дня: та сама схема, суперники й колесо
     const d = E.dailySetupFor(String(row.day).slice(0, 10));
-    if (d.formation !== row.formation || d.year !== +row.year) return [false, 'не той виклик дня'];
+    if (d.formation !== row.formation || (d.year !== +row.year && !(prev && +row.year === E.LEAGUE_CULT))) return [false, 'не той виклик дня'];   // 0.63 і раніше — культові клуби
     const inSeq = new Set(d.seq.slice(0, 400));
     const onWheel = xi.filter(x => { const i = E.DATA.clubs.findIndex(c => c.n === x.c && c.y === +x.y); return inSeq.has(i); }).length;
     if (onWheel < 10) return [false, `колесо дня: лише ${onWheel} з 11 клуб-сезонів`];   // 1 перекручування дозволено
@@ -124,7 +129,7 @@ async function verifyById(id) {
     return { verified: row.verified, note: row.verify_note, cached: true, fl };
   }
   let chalYearOk = false;
-  if (row.format === 'classic' && !row.day && row.year != null && Number.isInteger(+row.year) && engine().YEARS16.includes(+row.year)) {
+  if (row.format === 'classic' && !row.day && row.year != null && Number.isInteger(+row.year) && (engine().YEARS16.includes(+row.year) || +row.year === engine().LEAGUE_CULT)) {
     const ch = await sb(`challenges?year=eq.${+row.year}&formation=eq.${encodeURIComponent(String(row.formation || ''))}&select=id&limit=1`) || [];
     chalYearOk = ch.length > 0;
   }

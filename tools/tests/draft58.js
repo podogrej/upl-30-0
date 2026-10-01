@@ -1,7 +1,7 @@
 // 0.58 «Зручність»: кнопки позицій під гравцем у колесі, епохи у вільній грі, мітки екранів для Clarity,
 // чистка старих ключів localStorage, один відмінок після числа (plUk), трофей «Гамарджоба».
 // Запуск з кореня: node tools/tests/draft58.js [папка для знімків]. Код виходу 0 — усе гаразд.
-const path=require('path'),fs=require('fs');const {ROOT,openPage}=require('./_page.js');
+const path=require('path'),fs=require('fs');const {ROOT,openPage,pickFmt}=require('./_page.js');
 const OUT=process.argv[2]||path.join(ROOT,'tools','tests','out');fs.mkdirSync(OUT,{recursive:true});
 const fail=[];const check=(ok,msg)=>{console.log((ok?'✓ ':'✗ ')+msg);if(!ok)fail.push(msg);};
 const home=pg=>pg.evaluate(()=>document.getElementById('homeBtn').click());
@@ -36,7 +36,7 @@ const findPl=(pg,multi)=>pg.evaluate(multi=>{const D=window.__dbg,S=D.S;const bs
  check(e0.vis&&e0.names==='Усі роки,З 2000-х,З 2010-х,Сучасність'&&e0.on==='Усі роки','епохи: 4 кнопки, за замовчуванням «Усі роки» ('+JSON.stringify(e0)+')');
  await pg.click('#eras button[data-era="y2015"]');
  check(await pg.evaluate(()=>localStorage.getItem('upl30_era')==='"y2015"'&&document.querySelector('#eras button.on').dataset.era==='y2015'&&document.querySelector('#eras button.on').getAttribute('aria-checked')==='true'),'епохи: вибір збережено');
- await pg.click('#formats .opt[data-fmt="oneclub"]');check(await pg.evaluate(()=>document.getElementById('eraBox').hidden),'епохи: в «Одному клубі» вибору немає');
+ await pickFmt(pg,'oneclub');check(await pg.evaluate(()=>document.getElementById('eraBox').hidden),'епохи: в «Одному клубі» вибору немає');
  await pg.click('#formats .opt[data-fmt="classic"]');check(await pg.evaluate(()=>!document.getElementById('eraBox').hidden),'епохи: у класиці вибір є');
  await pg.screenshot({path:path.join(OUT,'era_setup.png'),fullPage:true});
  await pg.setViewportSize({width:320,height:700});await pg.waitForTimeout(100);
@@ -52,7 +52,7 @@ const findPl=(pg,multi)=>pg.evaluate(multi=>{const D=window.__dbg,S=D.S;const bs
  await pg.reload();await pg.waitForTimeout(600);
  check(await pg.evaluate(()=>window.__dbg.S.era==='y2015'),'епохи: вибір пам\'ятається після перезавантаження');
  // дербі з 2010-х
- await pg.click('#freeOpen');await pg.click('#eras button[data-era="y2010"]');await pg.click('#formats .opt[data-fmt="derby"]');await pg.click('#startBtn');
+ await pg.click('#freeOpen');await pg.click('#eras button[data-era="y2010"]');await pickFmt(pg,'derby');await pg.click('#startBtn');
  const dy=[];for(let i=0;i<4;i++){await spin(pg);dy.push(await pg.evaluate(()=>{const w=window.__dbg.S.wheel;return w.c+' '+w.y;}));await (await pg.$('#squad .pl:not([disabled])')).click();await pg.waitForTimeout(60);const pb=await pg.$('#squad .plpos button');if(pb)await pb.click();}
  check(dy.every(s=>/^(dynamo-kyiv|shakhtar-donetsk) 20(1\d|2\d)$/.test(s)),'епохи: дербі з 2010-х — лише Динамо/Шахтар 2010+ ('+dy.join(', ')+')');
  // виклик дня — завжди всі роки

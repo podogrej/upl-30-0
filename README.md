@@ -117,9 +117,10 @@ upl-30-0/
 ## Проверки перед выпуском
 
 Нужны Node 18+, Python 3, Playwright с Chromium (`cd tools && npm i --no-save acorn acorn-walk playwright`).
+- **Всё одной командой (с 0.64):** `bash tools/tests/all.sh` — сборка и свежесть сгенерированных файлов, пул, сервер стартует из `api/` + `lib/`, determinism, scenarios, ключевые тесты, SQL в Postgres; в конце «УСІ ПЕРЕВІРКИ: УСЕ ГАРАЗД» или список упавшего (`QUICK=1` — без длинных тестов интерфейса). То же самое запускает GitHub Actions (`.github/workflows/ci.yml`) на каждый push в `test` и PR в `main` — результат виден в PR («Перевірки»).
 - Пул данных (с 0.54): `python3 data/check_pool.py` — инварианты `src/pool.json` (поля карточек, позиции, id, псевдонимы, `meta`, переходы посреди сезона); код выхода 1 и строки «ПОМИЛКА» при нарушении. Обязательна, если менялся пул (`data/README.md`).
 - Главные, работают из репозитория как есть (открывают `index.html`, сеть кроме шрифтов заблокирована — в базы ничего не пишут):
-  - `node tools/tests/determinism.js` — браузер и сервер совпали 10/10 (с 0.50 — ещё «Ліга легенд», с 0.60 — «Вибір сезону»);
+  - `node tools/tests/determinism.js` — браузер и сервер совпали 10/10 (с 0.50 — ещё «Ліга легенд», с 0.60 — «Вибір сезону»; спрятанные в 0.64 форматы выбираются через `pickFmt`);
   - `node tools/tests/scenarios.js` — главная, тема, 4 сезона разных форматов, голы сходятся с матчами, текст и картка; снимки в `tools/tests/out/`.
   - В облачной среде Claude Chromium ходит через прокси: `PROXY_CA_SPKI` — отпечаток ключа CA прокси (`openssl x509 -in /root/.ccr/agent-proxy-ca.crt -pubkey -noout | openssl pkey -pubin -outform der | openssl dgst -sha256 -binary | base64`).
 - Остальные тесты в `tools/tests/` запускаются так же, из корня: `node tools/tests/<файл>`; каждый заканчивается строкой «УСЕ ГАРАЗД»:

@@ -149,18 +149,24 @@ function fl5DraftHtml(){const d=FL.data,t=FL.d5,cs=t.cs,n=t.slots.filter(s=>s.pl
       <div class="squad">${list.map(p=>`<div class="plrow"><button class="pl" data-p5="${esc(p[5])}"><span class="pos ${f5G(p)}">${F5_L[f5G(p)]}</span><span class="nm">${esc(p[0])}</span><span class="rt"></span></button></div>`).join('')}</div></div>`}
     <button class="ghost" id="fl5Back" style="margin-top:14px">До ліги</button>`;}
 // сторінка ліги 5×5: збір → турнір → підсумок
+// 0.64: скільки лишилось до кінця збору (нагадування на сторінці ліги); останні 15 хвилин — помітніше
+function fl5Left(d){const ms=new Date(d.deadline)-new Date(d.now||Date.now());if(!(ms>0))return '';const m=Math.ceil(ms/60000),h=Math.floor(m/60),mm=m%60;
+  const t=h?`${h} год${mm?` ${mm} хв`:''}`:`${m} хв`;return `<p class="fl5left${m<=15?' soon':''}">${ic('timer-sand','sm')}До кінця збору — ${t}</p>`;}
+// 0.64: трофеї за зіграний турнір (раз на лігу; лише учасник зі своєю п'ятіркою)
+function fl5Award(d){const me=PLAYER&&PLAYER.public_id,res=d.result;if(!me||!res||res.cancelled||!res.teams)return;const team=res.teams.findIndex(t=>t.u===me);if(team<0)return;
+  const {fresh}=trAwardF5(d.id,res,team);if(fresh.length)setTimeout(()=>{const el=document.getElementById('fl5Tro');if(el){el.hidden=false;el.innerHTML=`<div class="sec0">Нові трофеї</div><div class="tro0">${fresh.map(id=>{const t=trDef(id);return t?`<span>${trBadge(t,true)}${esc(t.n)}</span>`:'';}).join('')}</div>`;}},0);}
 function fl5LeagueHtml(){const d=FL.data,me=PLAYER&&PLAYER.public_id,member=flMe(d),my=d.fives.find(f=>f.u===me),res=d.result,owner=me&&d.owner===me;
   const rules=`${d.board.length} ${plUk(d.board.length,'гравець','гравці','гравців')} з 10 · перекрути ${d.rerolls}${d.ratings==='memory'?' · на пам\'ять':''}${d.era!=='all'&&ERAS[d.era]?' · '+ERAS[d.era].name.toLowerCase():''}`;
   const nm=i=>res&&res.teams&&res.teams[i]?res.teams[i].name:'?';
   const score=m=>`${m.ga}:${m.gb}${m.pens?` <span class="muted">(пен. ${m.pens[0]}:${m.pens[1]})</span>`:''}`;
   let card;
   if(res&&res.cancelled)card=`<div class="fl-tour"><b>Ліга скасована</b><p class="muted" style="margin:0">До кінця збору склад зібрали менше двох гравців.</p></div>`;
-  else if(res){const fin=[...res.matches].reverse().find(m=>m.stage==='final')||res.matches[res.matches.length-1];
-    card=`<div class="fl-tour fl5champ"><div class="kicker">${ic('trophy','sm')}Турнір зіграно</div><div class="ttl">${esc(nm(res.champ))}</div><p class="muted" style="margin:0">${res.n===2?`Серія ${res.wins[0]}:${res.wins[1]} · ${esc(nm(0))} — ${esc(nm(1))}`:`Фінал: ${esc(nm(fin.i))} ${score(fin)} ${esc(nm(fin.j))}`}</p></div>`;}
+  else if(res){const fin=[...res.matches].reverse().find(m=>m.stage==='final')||res.matches[res.matches.length-1];fl5Award(d);
+    card=`<div class="fl-tour fl5champ"><div class="kicker">${ic('trophy','sm')}Турнір зіграно</div><div class="ttl">${esc(nm(res.champ))}</div><p class="muted" style="margin:0">${res.n===2?`Серія ${res.wins[0]}:${res.wins[1]} · ${esc(nm(0))} — ${esc(nm(1))}`:`Фінал: ${esc(nm(fin.i))} ${score(fin)} ${esc(nm(fin.j))}`}</p>${member?`<button class="primary big0" id="fl5Rev">Реванш</button><p class="muted" style="margin:0;font-size:13px">Нова ліга з тими самими правилами — надішли посилання тій самій компанії.</p>`:''}</div>`;}
   else if(fl5Due(d))card=`<div class="fl-tour"><b>Збір закінчився — розігруємо турнір…</b></div>`;
   else{const btn=!member?(SESSION?`<button class="primary big0" id="flJoin">Приєднатися й зібрати п'ятірку</button>`:`<button class="primary big0" id="flLogin">Увійти, щоб приєднатися</button>`)
       :my?`<p style="margin:0">${ic('check-circle','sm')}Твій склад відправлено. Чекаємо на інших.</p>`:`<button class="primary big0" id="fl5Go">Зібрати п'ятірку</button>`;
-    card=`<div class="fl-tour"><div class="fl-th"><b>Збір складів</b><span class="mono muted">до ${flTime(d.deadline)}</span></div>
+    card=`<div class="fl-tour"><div class="fl-th"><b>Збір складів</b><span class="mono muted">до ${flTime(d.deadline)}</span></div>${fl5Left(d)}
       <p class="muted" style="margin:0">Зібрали ${d.fives.length} з ${d.board.length}. Коли час вийде${owner?' або ти натиснеш «Почати зараз»':''}, сервер зіграє турнір: ${d.board.length<=2?'серія до двох перемог':d.board.length<=7?'група «кожен з кожним» і фінал':'група, півфінали й фінал'}.</p>
       ${btn}${owner&&d.fives.length>=2?`<button class="ghost" id="fl5Start">Почати зараз</button>`:''}<p class="muted" id="flMsg" style="font-size:13px;margin:0"></p></div>`;}
   const mrow=(m,k)=>`<button class="fl5m" data-m5="${k}"><span class="st">${FL5_STAGE[m.stage]||''}</span><span class="a">${esc(nm(m.i))}</span><b>${score(m)}</b><span class="b">${esc(nm(m.j))}</span></button>`;
@@ -174,7 +180,7 @@ function fl5LeagueHtml(){const d=FL.data,me=PLAYER&&PLAYER.public_id,member=flMe
   out+=`<div class="sec0">Склади <span>${d.fives.length}</span></div><div class="fl5teams">${d.fives.map(f=>`<div class="fl5t${f.u===me?' me':''}"><b>${esc(f.name)}</b> <span class="muted mono">${esc(f.form)}</span><div class="fl5xi">${(f.xi||[]).map(x=>`<span><i class="pos ${esc(x.slot)}">${F5_L[x.slot]||''}</i>${esc(x.name||'')}</span>`).join('')}</div></div>`).join('')}
     ${!res?waiting.map(b=>`<div class="fl5t off"><b>${esc(b.name)}</b> <span class="muted">збирає склад…</span></div>`).join(''):''}</div>`;
   const link=flLink(d.id);
-  return `<div class="fl-head"><h1>${esc(d.name)} ${flBadge('5')}</h1><p class="muted">${esc(rules)}</p></div>${card}${out}
+  return `<div class="fl-head"><h1>${esc(d.name)} ${flBadge('5')}</h1><p class="muted">${esc(rules)}</p></div>${card}<div id="fl5Tro" hidden></div>${out}
     ${!res&&!fl5Due(d)?`<div class="sec0">Запросити</div><div class="fl-inv"><input readonly value="${esc(link)}" id="flLinkIn" aria-label="Посилання на лігу"><button class="primary" id="flShare" aria-label="Поділитися посиланням">${icon('share-variant')}</button></div><p class="muted" id="flShareMsg" style="font-size:13px"></p>`:''}
     <button class="ghost" id="flBack" style="margin-top:14px">Усі мої ліги</button>`;}
 // матч: рахунок, епізоди по хвилинах (голи, пенальті, VAR), серія пенальті; «Дивитися наживо» — епізоди по одному
@@ -198,6 +204,9 @@ function fl5MatchHtml(){const d=FL.data,res=d.result,m=res.matches[FL.mi],nm=s=>
     <button class="ghost" id="fl5Back" style="margin-top:14px">До ліги</button>`;}
 function fl5Wire($,el){
   if($('fl5Go'))$('fl5Go').onclick=fl5Draft;
+  // 0.64 «Реванш»: форма нової ліги 5×5 з тими самими правилами й назвою «Реванш: …» (збір можна змінити) — далі звичайне посилання-запрошення
+  if($('fl5Rev'))$('fl5Rev').onclick=()=>{const d=FL.data,nm=Array.from('Реванш: '+String(d.name).replace(/^Реванш: /,'')).slice(0,40).join('');const names=[nm,...flShuffle().filter(x=>x!==nm)];
+    FL={view:'create',form:{names,name:nm,fmt:'5',hours:3,days:3,scoring:'place',tries:3,take:'best',rerolls:d.rerolls,ratings:d.ratings,era:ERAS[d.era]?d.era:'all'}};screenTag('league_new');flRender();window.scrollTo({top:0});};
   if($('fl5Back'))$('fl5Back').onclick=()=>{clearInterval(FL.liveT);FL.view='league';FL.live=null;flRender();flLoad();};
   el.querySelectorAll('[data-f5form]').forEach(b=>b.onclick=()=>{FL.d5.form=b.dataset.f5form;lsSet('upl30_fl5_form',FL.d5.form);fl5Slots();flRender();});
   el.querySelectorAll('[data-p5]').forEach(b=>b.onclick=()=>{const p=FL.d5.cs&&FL.d5.cs.pl.find(q=>q[5]===b.dataset.p5);if(p)fl5Pick(p);});
