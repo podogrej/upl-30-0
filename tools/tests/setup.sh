@@ -465,6 +465,52 @@ chk "v061: «Це ти?» → «так» повертає локальний п�
   j := merge_answer('$MX', '$SEC', o, true);
   assert (j->'prev_state'->'upl30_tr'->>'seasons')::int = 5, j::text;
   end;" ',"sub":"'$UG'"'
+# ===== 0.63: ліги 5×5 (fl_create5, fl5_submit, fl5_start, fl5_store) =====
+for pass in 1 2; do
+  if $P -d t1 -f "$ROOT/sql/v063_fives.sql" >/dev/null 2>"$D/err"; then ok "запуск $pass: v063_fives.sql"; else bad "запуск $pass: v063_fives.sql — $(grep -v NOTICE "$D/err" | head -3)"; fi
+done
+chk "v063: fl_fives закрита; нових політик немає; ліга 11×11 після v063 — ті самі таблиці" postgres "
+  assert (select count(*) from pg_policies)::text = '$(cat "$D/pol_before61")', 'кількість політик';
+  assert not has_table_privilege('anon', 'fl_fives', 'select') and not has_table_privilege('authenticated', 'fl_fives', 'insert'), 'права';
+  j := fl_get('$FLID'); assert (j->'board'->0->>'total')::int = 2 and (j->'board'->1->>'total')::int = 1 and j->>'fmt' = '11' and json_array_length(j->'fives') = 0, j::text;"
+chk "v063: anon не створює 5×5, не надсилає склад, не стартує й не пише турнір" anon "
+  begin j := fl_create5('$MX', '$SEC', 'П''ятірки', 3, 1, 'show', 'all'); assert false, 'anon створив'; exception when insufficient_privilege then null; end;
+  begin j := fl5_submit('$MX', '$SEC', 'abcdef', '1-2-1', '[]'); assert false, 'anon склад'; exception when insufficient_privilege then null; end;
+  begin j := fl5_start('$MX', '$SEC', 'abcdef'); assert false, 'anon старт'; exception when insufficient_privilege then null; end;
+  begin perform fl5_store('abcdef', '{}'); assert false, 'anon турнір'; exception when insufficient_privilege then null; end;"
+chk "v063: створити 5×5 — збір 3 год; неправильний час — fl_bad" authenticated "
+  begin j := fl_create5('$MX', '$SEC', 'Тест', 2, 1, 'show', 'all'); assert false, '2 год'; exception when sqlstate '22023' then assert sqlerrm = 'fl_bad', sqlerrm; end;
+  j := fl_create5('$MX', '$SEC', 'Кубок кума', 3, 1, 'memory', 'all');
+  assert j->>'fmt' = '5' and (j->>'over')::boolean = false and json_array_length(j->'fives') = 0 and (j->>'deadline')::timestamptz between now() + interval '2 hours 59 minutes' and now() + interval '3 hours 1 minute', j::text;" ',"sub":"'$UG'"'
+F5ID=$($P -d t1 -tAc "select id from fl_leagues where fmt = '5' order by created_at desc limit 1")
+# у 0.61 «Це ти?» злило гравця LD з гравцем MX — для 5×5 потрібен окремий друг: новий пристрій і новий вхід
+L3=ffffffff-0000-4000-a000-000000000063; U3=33333333-0000-4000-a000-000000000063
+$P -d t1 -c "select player_hello('$L3', '$SEC')" >/dev/null
+chk "v063: друг — новий вхід на своєму пристрої" authenticated "k := link_account('$L3', '$SEC');" ',"sub":"'$U3'"'
+XI='[{"id":"a","slot":"GK"},{"id":"b","slot":"DF"},{"id":"c","slot":"MF"},{"id":"d","slot":"MF"},{"id":"e","slot":"FW"}]'
+chk "v063: склад — лише учасник; 5 гравців і відома схема; вдруге — без змін" authenticated "
+  begin j := fl5_submit('$L3', '$SEC', '$F5ID', '1-2-1', '$XI'); assert false, 'не учасник'; exception when sqlstate '22023' then assert sqlerrm = 'fl_member', sqlerrm; end;
+  j := fl_join('$L3', '$SEC', '$F5ID');
+  begin j := fl5_submit('$L3', '$SEC', '$F5ID', '3-3', '$XI'); assert false, 'схема'; exception when sqlstate '22023' then assert sqlerrm = 'fl_bad', sqlerrm; end;
+  begin j := fl5_submit('$L3', '$SEC', '$F5ID', '1-2-1', '[1,2,3,4]'); assert false, '4 гравці'; exception when sqlstate '22023' then assert sqlerrm = 'fl_bad', sqlerrm; end;
+  j := fl5_submit('$L3', '$SEC', '$F5ID', '1-2-1', '$XI'); assert json_array_length(j->'fives') = 1 and j->'fives'->0->>'form' = '1-2-1', j::text;
+  j := fl5_submit('$L3', '$SEC', '$F5ID', '2-2', '$XI'); assert j->'fives'->0->>'form' = '1-2-1', 'змінив склад ' || j::text;" ',"sub":"'$U3'"'
+chk "v063: «Почати зараз» — лише творець і від 2 складів" authenticated "
+  begin j := fl5_start('$L3', '$SEC', '$F5ID'); assert false, 'не творець'; exception when sqlstate '22023' then assert sqlerrm = 'fl_owner', sqlerrm; end;" ',"sub":"'$U3'"'
+chk "v063: творець — спершу 1 склад (fl_few), потім свій склад і старт: збір закрито" authenticated "
+  begin j := fl5_start('$MX', '$SEC', '$F5ID'); assert false, '1 склад'; exception when sqlstate '22023' then assert sqlerrm = 'fl_few', sqlerrm; end;
+  j := fl5_submit('$MX', '$SEC', '$F5ID', '2-2', '$XI');
+  j := fl5_start('$MX', '$SEC', '$F5ID'); assert (j->>'deadline')::timestamptz <= now() and json_array_length(j->'fives') = 2, j::text;" ',"sub":"'$UG'"'
+chk "v063: після кінця збору — не вступити й не надіслати склад" authenticated "
+  begin j := fl_join('$NDEV', '$SEC2', '$F5ID'); assert false, 'вступив'; exception when sqlstate '22023' then assert sqlerrm in ('fl_over', 'login?'), sqlerrm; when sqlstate '28000' then null; end;
+  begin j := fl5_submit('$L3', '$SEC', '$F5ID', '1-2-1', '$XI'); assert false, 'склад після'; exception when sqlstate '22023' then assert sqlerrm = 'fl_over', sqlerrm; end;" ',"sub":"'$U3'"'
+chk "v063: турнір пише лише сервер, один раз; ліга завершена; у «Моїх лігах» — 5×5 з моїм складом" postgres "
+  assert fl5_store('$F5ID', '{\"v\":1,\"champ\":0}') = true, 'перший запис';
+  assert fl5_store('$F5ID', '{\"v\":1,\"champ\":1}') = false, 'другий запис';
+  j := fl_get('$F5ID'); assert (j->>'over')::boolean and (j->'result'->>'champ')::int = 0 and j->>'played_at' is not null, j::text;
+  j := fl_mine('$L3', '$SEC'); assert exists (select 1 from json_array_elements(j) x where x->>'fmt' = '5' and (x->>'my_five')::boolean and (x->>'over')::boolean and (x->>'fives')::int = 2), j::text;"
+chk "v063: сезон з кодом ліги 5×5 не зараховується" postgres "
+  declare a bigint; begin a := t_fl_season('$MX', '$F5ID', 70); assert fl_record(a) is null, 'зараховано'; end;"
 # база, де збіги імен уже є: v059_name_conflicts.sql їх показує; v059 дає молодшому номер і створює індекс
 $P -c "create database t3" >/dev/null
 if { $P -d t3 -f "$ROOT/tools/tests/stub.sql" && $P -d t3 -f "$ROOT/sql/new_db_part_A.sql" && $P -d t3 -f "$ROOT/sql/v039_part_B.sql" \

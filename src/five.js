@@ -2,15 +2,8 @@
 // Драфт «по черзі» (A-B-A-B з одного колеса, взятий гравець зникає для всіх) або «кожен сам» (однакове колесо, склади можуть збігатися).
 // 2 гравці — один матч; 3–10 — «кожен з кожним» і фінал двох найкращих. Нічия в матчі на вибування — пенальті.
 // Усе випадкове в матчі йде від seed гри, щоб онлайн у всіх учасників вийшов однаковий результат.
-const F5_FORMS={
-  "1-2-1":{tag:"Ромб",rows:[["FW"],["MF","MF"],["DF"],["GK"]]},
-  "2-2":{tag:"Квадрат",rows:[["FW","FW"],["DF","DF"],["GK"]]},
-  "2-1-1":{tag:"Надійна",rows:[["FW"],["MF"],["DF","DF"],["GK"]]},
-  "1-1-2":{tag:"Ва-банк",rows:[["FW","FW"],["MF"],["DF"],["GK"]]}};
-const F5_L={GK:"ВР",DF:"ЗХ",MF:"ПЗ",FW:"НП"};
-const F5_ATT={GK:0,DF:0.35,MF:0.8,FW:1.1}, F5_DEF={GK:1.6,DF:1.2,MF:0.6,FW:0.2};
-const F5_GOAL={GK:0,DF:0.3,MF:0.7,FW:1.2}, F5_AST={GK:0.05,DF:0.4,MF:1,FW:0.6};
-const F5_BASE=2.6, F5_BETA=0.05, F5_REROLLS=1, F5_MAX=10;
+// рушій матчу (F5_FORMS, f5Match, f5Winner…) — у src/five_core.js (0.63: спільний із сервером)
+const F5_REROLLS=1, F5_MAX=10;
 const F5_TEAMS=["ФК Диван","Динамо Двір","Шахтар Гаражний","Металіст Під'їзд","Зірка Району","Спартак Балкон","Арсенал Кухня","Олімпік Лавочка","Карпати Кава","Ворскла Вечір"];
 let F5=null;
 const f5G=p=>GROUP_OF[p[6]]||p[1];                     // лінія гравця: ВР/ЗХ/ПЗ/НП
@@ -41,31 +34,8 @@ function f5Place(p,s){if(F5.online){f5OnPlace(p,s);return;}const ti=f5Seat(),tea
   else if(F5.mode==='turns')F5.handoff=true;
   if(F5.phase==='draft'&&!F5.handoff){f5Spin();return;}
   f5Render();window.scrollTo({top:0});}
-// ---------- рушій матчу (випадковість — від seed гри)
-function f5Idx(team){let a=0,wa=0,d=0,wd=0;for(const s of team.slots){const r=s.player.r+(s.player.form||0);a+=F5_ATT[s.slot]*r;wa+=F5_ATT[s.slot];d+=F5_DEF[s.slot]*r;wd+=F5_DEF[s.slot];}return {att:a/wa,def:d/wd};}
-function f5Match(A,B,knockout,R){
-  const N=()=>{let u=0,v=0;while(u===0)u=R();while(v===0)v=R();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);};
-  const P=l=>{const L=Math.exp(-l);let k=0,p=1;do{k++;p*=R();}while(p>L);return k-1;};
-  const pick=(T,W,excl)=>{let tot=0;for(const s of T.slots)if(s.player.id!==excl)tot+=W[s.slot]*Math.max(1,s.player.r-40);let x=R()*tot;
-    for(const s of T.slots){if(s.player.id===excl)continue;x-=W[s.slot]*Math.max(1,s.player.r-40);if(x<=0)return s.player;}return T.slots[T.slots.length-1].player;};
-  const ia=f5Idx(A),ib=f5Idx(B);
-  const la=F5_BASE*Math.exp(F5_BETA*(ia.att-ib.def)+N()*0.15),lb=F5_BASE*Math.exp(F5_BETA*(ib.att-ia.def)+N()*0.15);
-  const ev=[];const add=(T,side,n)=>{for(let k=0;k<n;k++){const sc=pick(T,F5_GOAL);const as=R()<0.6?pick(T,F5_AST,sc.id):null;ev.push({min:1+Math.floor(R()*40),side,sc,as});}};
-  const ga=P(la),gb=P(lb);add(A,0,ga);add(B,1,gb);ev.sort((x,y)=>x.min-y.min||x.side-y.side);
-  let pens=null;
-  if(knockout&&ga===gb){const gk=T=>T.slots.find(s=>s.slot==='GK').player.r,sh=T=>{const o=T.slots.filter(s=>s.slot!=='GK').map(s=>s.player.r);return o.reduce((q,v)=>q+v,0)/o.length;};
-    const pa=Math.min(.92,Math.max(.6,.76+(sh(A)-gk(B))/250)),pb=Math.min(.92,Math.max(.6,.76+(sh(B)-gk(A))/250));
-    let a=0,b=0;for(let k=0;k<5;k++){a+=R()<pa;b+=R()<pb;}while(a===b){a+=R()<pa;b+=R()<pb;}pens=[a,b];}
-  const rate=(T,side,gf,gaa)=>T.slots.map(s=>{const p=s.player;const g=ev.filter(e=>e.side===side&&e.sc.id===p.id).length,a=ev.filter(e=>e.side===side&&e.as&&e.as.id===p.id).length;
-    let v=6.5+(gf>gaa?0.4:gf<gaa?-0.4:0)+(p.r-80)*0.02+N()*0.35+g*0.9+a*0.5;
-    if(s.slot==='GK')v+=gaa===0?0.9:-Math.max(0,gaa-2)*0.25;if(s.slot==='DF'&&gaa<=1)v+=0.3;
-    return {id:p.id,name:p.name,slot:s.slot,g,a,rt:Math.max(3,Math.min(10,v))};});
-  return {A,B,ga,gb,ev,pens,la,lb,ra:rate(A,0,ga,gb),rb:rate(B,1,gb,ga)};}
-function f5Winner(m){return m.ga>m.gb?0:m.ga<m.gb?1:m.pens?(m.pens[0]>m.pens[1]?0:1):-1;}
 function f5Play(){
-  const R=f5Rng('play'+(F5.replay||0));
-  for(const t of F5.teams){let u=0,v=0;while(u===0)u=R();while(v===0)v=R();const tf=Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)*2;
-    for(const s of t.slots){let a=0,b=0;while(a===0)a=R();while(b===0)b=R();s.player.form=Math.max(-8,Math.min(8,Math.round(tf+Math.sqrt(-2*Math.log(a))*Math.cos(2*Math.PI*b)*3)));}}
+  const R=f5Rng('play'+(F5.replay||0));f5SetForm(F5.teams,R);
   const T=F5.teams,res={matches:[],final:null,table:null};
   if(T.length===2)res.final=f5Match(T[0],T[1],true,R);
   else{for(let i=0;i<T.length;i++)for(let j=i+1;j<T.length;j++)res.matches.push(f5Match(T[i],T[j],false,R));

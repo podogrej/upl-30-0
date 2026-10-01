@@ -2,7 +2,7 @@
 # → ../index.html (сайт для Vercel, усе всередині) і ../dist/30-0-upl.html (прототип без онлайну для артефакту)
 import os
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
-tpl=open('template.html').read().replace('/*__ICONS__*/',open('icons.js').read()).replace('/*__TROPHIES__*/',open('trophies.js').read()).replace('/*__PLAYER__*/',open('player.js').read()).replace('/*__LEAGUES__*/',open('leagues.js').read()).replace('/*__ACCOUNT__*/',open('account.js').read()).replace('/*__CHALLENGE__*/',open('challenge.js').read()).replace('/*__FIVE__*/',open('five.js').read()); pool=open('pool.json').read().replace('</','<\\/')
+tpl=open('template.html').read().replace('/*__ICONS__*/',open('icons.js').read()).replace('/*__TROPHIES__*/',open('trophies.js').read()).replace('/*__PLAYER__*/',open('player.js').read()).replace('/*__LEAGUES__*/',open('leagues.js').read()).replace('/*__ACCOUNT__*/',open('account.js').read()).replace('/*__CHALLENGE__*/',open('challenge.js').read()).replace('/*__FIVE__*/',open('five_core.js').read().split('\nif(typeof module')[0]+'\n'+open('five.js').read()); pool=open('pool.json').read().replace('</','<\\/')
 # кольори клубів (data/club_colors.csv, code = c у pool.json) → константа CLUB_COLORS {code:[c1,c2,c3]}; клуб без c1 (Темп) — не пишемо, гра малює нейтральну фішку
 import csv,json
 _cc={r['code']:[r['c1'],r['c2'],r['c3']] for r in csv.DictReader(open('../data/club_colors.csv',encoding='utf-8')) if r['c1']}

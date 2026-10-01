@@ -172,6 +172,8 @@ function ppSettingsHtml(){
     ${PLAYER?`<label for="ppNameIn"><b>Ім'я</b> <span class="muted" style="font-size:12px">— одне на всі таблиці, ліги й результати</span></label>
     <div class="row"><input id="ppNameIn" maxlength="20" autocomplete="nickname" autocapitalize="none" autocorrect="off" spellcheck="false" value="${esc(PLAYER.name||'')}" placeholder="${esc(PLAYER.anon_name||'')}"><button class="ghost" id="ppNameSave">Зберегти</button></div>
     <p class="muted pp-hint" id="ppNameMsg">${nx?`Змінити знову можна з ${fmtLong(nx)}.`:`3–20 символів: латинські літери a–z, цифри, «_» і «.». Змінювати можна раз на 30 днів.`}${PLAYER.name?'':` Поки ти в таблицях як <b>${esc(PLAYER.anon_name||'')}</b>.`}</p>`:''}
+    <label for="ppTeam"><b>Назва команди</b> <span class="muted" style="font-size:12px">— на полі й у картці результату</span></label>
+    <div class="row"><input id="ppTeam" maxlength="22" placeholder="Твоя 11-ка" value="${esc(lsGet('upl30_team')||'')}"></div>
     ${PLAYER&&'contact_email' in PLAYER?`<label for="ppMail"><b>Пошта для новин</b> <span class="muted" style="font-size:12px">— необов'язково, видно лише тобі</span></label>
     <div class="row"><input id="ppMail" type="email" maxlength="254" autocomplete="email" autocapitalize="none" spellcheck="false" value="${esc(PLAYER.contact_email||'')}" placeholder="name@gmail.com"><button class="ghost" id="ppMailSave">Зберегти</button></div>
     <label class="rtog" style="margin:0;font-weight:400"><input type="checkbox" id="ppNews"${PLAYER.news_optin?' checked':''}> Іноді надсилати новини 30-0 (великі оновлення, не частіше разу на місяць)</label>
@@ -195,6 +197,7 @@ function ppWire(){
     try{const p=await playerRpc('set_player_contact',{p_email:v,p_optin:!!$('ppNews').checked});playerSet(p);const m2=$('ppMailMsg');if(m2){m2.classList.remove('bad');m2.textContent=p.contact_email?(p.news_optin?'Збережено. Новини — лише про великі оновлення.':'Збережено. Новин не надсилатимемо.'):'Пошту стерто.';}}
     catch(e){m.classList.add('bad');m.textContent=/email_bad/.test(String(e.message))?'Схоже, в адресі помилка.':'Не вдалося зберегти. Спробуй ще раз.';}};
   if($('ppMailSave'))$('ppMailSave').onclick=mailSave;
+  if($('ppTeam'))$('ppTeam').oninput=e=>lsSet('upl30_team',e.target.value.trim().slice(0,22));   // 0.63: назва команди — тут, а не у вільній грі
   if($('ppNews'))$('ppNews').onchange=()=>{if(($('ppMail').value||'').trim())mailSave();else{$('ppNews').checked=false;const m=$('ppMailMsg');m.textContent='Спершу впиши пошту.';}};
   if($('ppOut'))$('ppOut').onclick=acctLogout;
   if($('ppDel'))$('ppDel').onclick=()=>{$('ppDelBox').hidden=false;$('ppDel').hidden=true;};
