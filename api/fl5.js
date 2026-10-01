@@ -1,10 +1,10 @@
 // 30-0 УПЛ — турнір ліги 5×5 (0.63, адреса /api/fl5). POST {id}: якщо збір складів закінчився, а турнір ще не зіграно — сервер
 // перевіряє склади за пулом гри (гравець справді є в цьому клуб-сезоні, лінія збігається зі схемою, епоха ліги, без повторів),
-// розігрує весь турнір рушієм src/five_core.js із seed ліги (однаково для всіх, перевірно) і зберігає (fl5_store — лише сервер, один раз).
+// розігрує весь турнір рушієм lib/five_core.js (копія src/five_core.js) із seed ліги (однаково для всіх, перевірно) і зберігає (fl5_store — лише сервер, один раз).
 // Відповідь — ліга (fl_get). Складів менше 2 — ліга скасовується (result.cancelled). Змінні: SUPABASE_SERVICE_KEY (+ SUPABASE_URL у тесті).
 const { sb, body, rateLimit } = require('./_device.js');
 const E = require('../lib/engine.js');
-const C = require('../src/five_core.js');
+const C = require('../lib/five_core.js');   // копія src/five_core.js (tools/make_engine.js): src/ на Vercel не викладається
 
 const canon = id => (E.DATA.alias && E.DATA.alias[id]) || id;
 const lineOf = p => E.GROUP_OF[p[6]] || p[1];   // лінія гравця для 5×5: GK / DF / MF / FW
