@@ -1815,7 +1815,8 @@ function shareTextLink(){const text=S.result?shareTextOf(S.result,true,true):doc
 let CARD_PREP=null;
 const tgShareOk=()=>!!(ONLINE&&TG&&TG.initData&&TG.shareMessage&&TG.isVersionAtLeast&&TG.isVersionAtLeast('8.0'));
 const cardPost=(r,prefetch)=>_fetch('/api/card',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({initData:TG.initData,image:CARD_CANVAS.toDataURL('image/jpeg',0.9),caption:shareTextOf(r,true,true),share:true,prefetch:!!prefetch})}).then(x=>x.json()).catch(()=>({}));
-function cardPrep(r){CARD_PREP={r,p:(async()=>{try{await document.fonts.ready;}catch(e){}drawCard(r);return tgShareOk()?cardPost(r,true):{};})()};}
+function cardPrep(r){if(S.result!==r||!S.slots.every(x=>x.player))return;   // гравець уже пішов далі (новий драфт) — картку не малюємо
+  CARD_PREP={r,p:(async()=>{try{await document.fonts.ready;}catch(e){}if(S.result!==r)return {};drawCard(r);return tgShareOk()?cardPost(r,true):{};})()};}
 document.getElementById('tgShareBtn').onclick=async()=>{const b=document.getElementById('tgShareBtn'),msg=document.getElementById('copyMsg');if(!S.result)return;
   const pre=CARD_PREP&&CARD_PREP.r===S.result?CARD_PREP:null;CARD_PREP=null;
   if(pre){b.disabled=true;await pre.p;b.disabled=false;}else{try{await document.fonts.ready;}catch(e){}drawCard(S.result);}
