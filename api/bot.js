@@ -50,7 +50,11 @@ module.exports = async (req, res) => {
     const u = req.body || {};
     // бота додали в групу
     const mc = u.my_chat_member;
-    if (mc && mc.chat && mc.chat.type !== 'private' && ['member', 'administrator'].includes(mc.new_chat_member.status) && !['member', 'administrator'].includes(mc.old_chat_member.status)) {
+    const joined = mc && mc.chat && ['member', 'administrator'].includes(mc.new_chat_member.status) && !['member', 'administrator'].includes(mc.old_chat_member.status);
+    // 0.67: службовий канал для карток (api/card.js, TG_CARDS_CHAT) — бот-адмін каналу пише його ID, щоб власник вписав його у Vercel
+    if (mc && mc.chat && mc.chat.type === 'channel' && mc.new_chat_member.status === 'administrator' && mc.old_chat_member.status !== 'administrator') {
+      await L.tg('sendMessage', { chat_id: mc.chat.id, text: `Канал для карток підключено ✅\nID каналу: ${mc.chat.id}\nУпиши його у Vercel → Settings → Environment Variables як TG_CARDS_CHAT і зроби Redeploy.` });
+    } else if (joined && mc.chat.type !== 'private' && mc.chat.type !== 'channel') {
       await L.tg('sendMessage', { chat_id: mc.chat.id, text: GROUP_HELLO });
     }
     // кнопка «Підтвердити вхід»: прив'язуємо токен входу до того, хто натиснув (лише у власному приватному чаті з ботом, кнопка живе 10 хвилин)

@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'push' }}   # аудит P2-19: перевірку PR не скасовуємо
 jobs:
   checks:
     runs-on: ubuntu-24.04

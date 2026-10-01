@@ -53,7 +53,7 @@ async function run(MODE,b){const T=checker('v39 '+MODE);const v39=MODE==='new';c
  // таблиця 11×11
  let rows=await board();T.check(rows.length===1&&rows[0].startsWith('* ')&&(!v39||rows[0].includes('andrii')),'таблиця: мій рядок '+JSON.stringify(rows));
  await pg.screenshot({path:path.join(OUT,`v39_board_${MODE}.png`)});
- T.check(await pg.evaluate(()=>{const t=document.querySelector('#viewBody .tabs');return !document.querySelector('[data-board="anti"]')&&t&&t.hidden;}),'0.65: вкладки «Антисезон» немає, одна вкладка — без ряду вкладок');
+ T.check(await pg.evaluate(()=>{const t=document.querySelector('#viewBody .tabs');return !document.querySelector('[data-board="anti"]')&&!!document.querySelector('[data-board="oneclub"]')&&t&&!t.hidden;}),'0.67: вкладки «Антисезон» немає, є «Один клуб» (режим повернуто)');
  await pg.click('#boardBody tr.me');await pg.waitForTimeout(500);
  T.check(!!(await pg.$('#viewBack'))&&!!(await pg.$('#viewBody .slot')),'рядок відкриває сезон із кнопкою «До таблиці»');
  await pg.click('#viewBack');await pg.waitForTimeout(500);T.check((await pg.$$('#boardBody tr[data-q]')).length===1,'«До таблиці» повертає таблицю');await pg.click('#viewClose');

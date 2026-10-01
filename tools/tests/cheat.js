@@ -51,8 +51,8 @@ global.fetch = async (url, o = {}) => {
     for (const b of [].concat(JSON.parse(o.body))) { const ks = u.searchParams.get('on_conflict').split(','); if (!DB[t].some(x => ks.every(k => String(x[k]) === String(b[k])))) DB[t].push(b); }
     return { ok: true, status: 201, text: async () => '' };
   }
-  const f = [...u.searchParams].filter(([k, v]) => /^(eq|is)\./.test(v));
-  const match = r => f.every(([k, v]) => { const x = v.slice(v.indexOf('.') + 1); return v.startsWith('is.') && x === 'null' ? r[k] == null : String(r[k]) === x; });
+  const f = [...u.searchParams].filter(([k, v]) => /^(eq|is|lt)\./.test(v));   // 0.67: lt. — для «викликів до 0.64» (created_at)
+  const match = r => f.every(([k, v]) => { const x = v.slice(v.indexOf('.') + 1); if (v.startsWith('lt.')) return r[k] != null && String(r[k]) < x; return v.startsWith('is.') && x === 'null' ? r[k] == null : String(r[k]) === x; });
   const ok = j => ({ ok: true, status: 200, text: async () => j == null ? '' : JSON.stringify(j) });
   const rep = /return=representation/.test((o.headers || {}).Prefer || '');
   if (m === 'GET') return ok((DB[t] || []).filter(match));
@@ -110,17 +110,16 @@ function honestXi(formation) {
   await tamper('підробка з сайту 0.56 — не перевірено (null)', r => { r.version = '0.56'; r.xi[0].r = 99; }, null);
   await tamper('старша версія 0.49 — не перевірити (null)', r => { r.version = '0.49'; }, null);
   // 0.60: нога LM/RM змінила симуляцію лише для таких гравців — сезон сайту 0.59, що сходиться, приймаємо; підробку — «не перевірити»; 0.58 — вже «не перевірити»
-  // 0.66: PREV_VERSIONS = 0.65, 0.64 — приймаємо, лише якщо рушій 0.66 повторив сезон (інакше null); 0.63 і старші — «не перевірити»
-  await tamper('сезон з сайту 0.65 — перевірено', r => { r.version = '0.65'; }, true);
-  await tamper('сезон з сайту 0.64 — перевірено', r => { r.version = '0.64'; }, true);
-  await tamper('сезон з сайту 0.63 — не перевірити (null)', r => { r.version = '0.63'; }, null);
+  // 0.67: PREV_VERSIONS порожній — сезони будь-якої старої версії «не перевірити» (null); підробити version, щоб пройти, вже не можна (аудит P1-2)
+  await tamper('сезон з сайту 0.66 — не перевірити (null)', r => { r.version = '0.66'; }, null);
+  await tamper('сезон з сайту 0.65 — не перевірити (null)', r => { r.version = '0.65'; }, null);
   await tamper('підробка з сайту 0.62 — не перевірено (null)', r => { r.version = '0.62'; r.xi[0].r = 99; }, null);
   await tamper('сезон з сайту 0.61 — не перевірити (null)', r => { r.version = '0.61'; }, null);
   // 0.64: класика сайту 0.63 — проти культових клубів (seed видано під LEAGUE_CULT): приймаємо
   { const sc = await call(seedH, { device_id: device, xi, formation, mode: 'normal', format: 'classic', year: E.LEAGUE_CULT });
     const q = E.run({ xi: SX(xi), mode: 'normal', format: 'classic', year: E.LEAGUE_CULT, seed: sc.j.seed });
     const cult = r => Object.assign(r, { year: E.LEAGUE_CULT, seed: sc.j.seed, seed_id: sc.j.seed_id, w: q.W, d: q.D, l: q.L, pts: q.pts, place: q.place, gf: q.gf, ga: q.ga });
-    await tamper('класика сайту минулої версії (0.64) проти культових клубів — перевірено', r => { cult(r); r.version = '0.64'; }, true);
+    await tamper('класика з підробленою старою версією проти культових клубів — не перевірено (аудит P1-2)', r => { cult(r); r.version = '0.64'; }, null);
     await tamper('класика 0.64 проти культових клубів без виклику другу — ні', r => { cult(r); }, false);
     await tamper('антисезон проти «Ліги легенд» — ні', r => { cult(r); r.format = 'anti'; r.year = E.LEAGUE_LEGENDS; }, false); }
   // 0.58: епоха (seasons.era, коли з'явиться колонка) — склад лише з клуб-сезонів епохи
@@ -153,7 +152,10 @@ function honestXi(formation) {
   const sw = await call(seedH, { device_id: device, xi, formation, mode: 'normal', format: 'classic', year: weak });
   await tamper('класика проти справжнього сезону без виклику', r => { r.year = weak; r.seed = sw.j.seed; r.seed_id = sw.j.seed_id; const q = E.run({ xi: SX(xi), mode: 'normal', format: 'classic', year: weak, seed: sw.j.seed });
     Object.assign(r, { w: q.W, d: q.D, l: q.L, pts: q.pts, place: q.place, gf: q.gf, ga: q.ga }); }, false);
-  DB.challenges.push({ id: 'abcdefgh', year: weak, formation });
+  DB.challenges.push({ id: 'newchal1', year: weak, formation, created_at: '2026-10-02T10:00:00Z' });   // 0.67 (аудит P1-1): новий виклик не відкриває слабкий сезон
+  await tamper('той самий сезон, є лише НОВИЙ виклик з цим роком — ні', r => { r.year = weak; r.seed = sw.j.seed; r.seed_id = sw.j.seed_id; const q = E.run({ xi: SX(xi), mode: 'normal', format: 'classic', year: weak, seed: sw.j.seed });
+    Object.assign(r, { w: q.W, d: q.D, l: q.L, pts: q.pts, place: q.place, gf: q.gf, ga: q.ga }); }, false);
+  DB.challenges.push({ id: 'abcdefgh', year: weak, formation, created_at: '2026-09-25T10:00:00Z' });
   await tamper('той самий сезон, але є старий «Виклик другу» з цим роком', r => { r.year = weak; r.seed = sw.j.seed; r.seed_id = sw.j.seed_id; const q = E.run({ xi: SX(xi), mode: 'normal', format: 'classic', year: weak, seed: sw.j.seed });
     Object.assign(r, { w: q.W, d: q.D, l: q.L, pts: q.pts, place: q.place, gf: q.gf, ga: q.ga }); }, true);
 

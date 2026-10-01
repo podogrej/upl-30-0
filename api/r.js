@@ -1,10 +1,9 @@
 // 30-0 УПЛ — посилання на результат з превʼю для месенджерів (0.63): /r/<id сезону> (vercel.json → /api/r?id=<id>)
 // Віддає маленьку сторінку з og:title / og:description / og:image (Telegram, WhatsApp, Viber малюють картку) і одразу веде на сайт,
 // де відкривається цей склад (?s=<id>). Читає лише публічні поля сезону публічним ключем — як і сайт. Змінні: SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY (у тесті).
-const SB_URL = (process.env.SUPABASE_URL || 'https://qruhcbwycrnfgzzdbljr.supabase.co').trim();
+const { SB_URL, plUk } = require('./_lib.js');
 const SB_KEY = (process.env.SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_pEszTOPsCHLgpiPpwB4JKg_SS-X07hY').trim();   // публічний ключ, як на сайті
 const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-const plUk = (n, a, b, c) => { const m = n % 10, h = n % 100; return m === 1 && h !== 11 ? a : m >= 2 && m <= 4 && (h < 12 || h > 14) ? b : c; };
 const FMT = { classic: 'Класика', derby: 'Класичне дербі', oneclub: 'Один клуб', anti: 'Антисезон', legends: 'Ліга легенд' };
 
 async function season(id) {
