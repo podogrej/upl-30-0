@@ -549,6 +549,8 @@ button.primary,.big0.primary{background:var(--grad);background-size:var(--gw,100
 .x0 .ico{width:20px;height:20px;fill:var(--amber)}.x0 b{font:700 18px var(--font-display);color:var(--ink);font-variant-numeric:tabular-nums}.x0 span{font-size:11px;color:var(--muted)}
 .x0>div.hot b{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
 details.x0q{margin-top:2px}details.x0q summary{font-size:13px;color:var(--muted)}
+/* 0.64 (власник 01.10): В-Н-П на підсумках — одним кольором, без зеленого/жовтого/червоного */
+#recTiles i{color:inherit!important}
 /* 0.64 (власник 01.10: «дуже мало повітря») — шафа трофеїв: відступи між розділами, картками, рядком секретних і віхами */
 #viewBody h3{margin:36px 0 12px}#viewBody h3:first-of-type{margin-top:22px}
 #viewBody .trg{gap:12px}
@@ -2765,7 +2767,7 @@ function drawCard(r){   // 0.64: картка в стилі сайту — те�
   // головна плитка: В-Н-П · очки · місце (як на сайті), під ними голи й xG
   const hh=300;rr(80,y,W-160,hh,32);g.fillStyle='rgba(255,255,255,.06)';g.fill();g.strokeStyle='rgba(224,40,122,.35)';g.lineWidth=2;g.stroke();
   const cw=(W-160)/3,col={W:'#2fd07a',D:'#f5b83d',L:'#ff4d5e'};
-  {const parts=[[String(r.W),col.W],['-',INK],[String(r.D),col.D],['-',INK],[String(r.L),col.L]];g.font=`800 84px ${DISP}`;let tw=parts.reduce((a,[t])=>a+g.measureText(t).width,0),fs=84;
+  {const parts=[[String(r.W),INK],['-',INK],[String(r.D),INK],['-',INK],[String(r.L),INK]];   /* 0.64: одним кольором, як на сайті */g.font=`800 84px ${DISP}`;let tw=parts.reduce((a,[t])=>a+g.measureText(t).width,0),fs=84;
     while(tw>cw-30&&fs>48){fs-=4;g.font=`800 ${fs}px ${DISP}`;tw=parts.reduce((a,[t])=>a+g.measureText(t).width,0);}let x=80+cw/2-tw/2;for(const [t,cl] of parts){g.fillStyle=cl;g.fillText(t,x,y+150);x+=g.measureText(t).width;}}
   const big=(t,k,fill)=>{g.font=`800 96px ${DISP}`;const tw=g.measureText(t).width,x=80+cw*k+cw/2-tw/2;g.fillStyle=fill?fill(x,x+tw):INK;g.fillText(t,x,y+152);};
   big(String(r.pts),1,grad);big(String(r.place),2);
