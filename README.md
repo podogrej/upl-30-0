@@ -37,7 +37,7 @@ upl-30-0/
 │  ├─ icons.js         иконки (генерирует src/icons/make_icons.py)
 │  ├─ pool.json        все игроки и сезоны с рейтингами
 │  └─ build.py         сборка → ../index.html и ../dist/30-0-upl.html
-├─ sql/                все SQL по версиям; база с нуля: new_db_part_A.sql + v039_part_B.sql + cards_bucket.sql + v053_writes.sql (+ v054_close_writes.sql — шаг 2) + v055_backups.sql + v059_player_page.sql (v059_name_conflicts.sql — только чтение) + v060_one_player.sql + v061_leagues.sql
+├─ sql/                все SQL по версиям; база с нуля: new_db_part_A.sql + v039_part_B.sql + cards_bucket.sql + v053_writes.sql (+ v054_close_writes.sql — шаг 2) + v055_backups.sql + v059_player_page.sql (v059_name_conflicts.sql — только чтение) + v060_one_player.sql + v061_leagues.sql; старые SQL — в `sql/archive/`, не запускать
 ├─ tools/              make_engine.js (движок для сервера), sim30.js (замер сложности), tests/
 ├─ data/               датасет УПЛ и пайплайн пула: как устроен и что запускать — data/README.md; check_pool.py — проверка пула
 └─ docs/               формулы, гейм-дизайн

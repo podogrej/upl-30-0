@@ -15,7 +15,7 @@ if(location.hostname==='upl-30-0.vercel.app'){(function(c,l,a,r,i,t,y){c[a]=c[a]
 <body>
 <title>30-0 УПЛ</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;900&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
-<script>(function(){try{localStorage.removeItem('upl30_skin');localStorage.removeItem('upl30_pitch');}catch(e){}/* скіни й варіанти газону прибрано в 0.52 — старі вибори стираємо */try{var t=/[?&]theme=(light|dark)/.exec(location.search);var th=t?t[1]:(localStorage.getItem('upl30_theme')||'dark');if(t)localStorage.setItem('upl30_theme',th);document.documentElement.setAttribute('data-theme',th);}catch(e){document.documentElement.setAttribute('data-theme','dark');}})();</script>
+<script>(function(){try{localStorage.removeItem('upl30_skin');localStorage.removeItem('upl30_pitch');localStorage.removeItem('upl30_league_title');}catch(e){}/* скіни й варіанти газону прибрано в 0.52 — старі вибори стираємо */try{var t=/[?&]theme=(light|dark)/.exec(location.search);var th=t?t[1]:(localStorage.getItem('upl30_theme')||'dark');if(t)localStorage.setItem('upl30_theme',th);document.documentElement.setAttribute('data-theme',th);}catch(e){document.documentElement.setAttribute('data-theme','dark');}})();</script>
 <style>
 :root{
   --bg:#f4f5fa; --bg2:#eceef6; --surface:#ffffff; --line:#dfe3ef; --ink:#132346; --ink2:#4a5578; --muted:#8a93b0; --pitch:#2a4fa8; --pitch2:#1d3a80; --chalk:#ffffff; --amber:#6d2abb; --amber2:#d8177b; --win:#12a150; --draw:#c98a00; --loss:#e0263b; --grad:linear-gradient(90deg,#7e24b0,#d41e6f,#ff831e); --gk:#FFCC00; --df:#007AFF; --mf:#34C759; --fw:#FF3B30;
@@ -1160,15 +1160,14 @@ function pickSeason(keepClub,keepYear){
 }
 // барабан: вертикальна стрічка з випадкових значень, що плавно гальмує на потрібному (n=0 — одразу значення)
 function reelRoll(id,cls,items,final,n){return new Promise(res=>{const reel=document.getElementById(id);const strip=reel.querySelector('.strip');
-  if(!n){strip.className='strip';strip.style.transform='';strip.innerHTML=`<div class="${cls}">${esc(final)}</div>`;res();return;}
+  if(!n||LESS_MOTION()){strip.className='strip';strip.style.transform='';strip.innerHTML=`<div class="${cls}">${esc(final)}</div>`;res();return;}
   const seq=[];for(let i=0;i<n;i++)seq.push(items[Math.floor(Math.random()*items.length)]);seq.push(final);
   const down=id==='reelYear';if(down)seq.reverse();   // 0.66 (власник): клуб крутиться знизу вгору, сезон — згори вниз
   strip.className='strip';strip.innerHTML=seq.map(v=>`<div class="${cls}">${esc(v)}</div>`).join('');
-  reel.classList.remove('landed');reel.classList.add('spinning');
   const ih=strip.firstElementChild.offsetHeight||56;   // 0.63: висота рядка з CSS (була вписана 64 px — після 0.62 барабан проскакував і смикався)
   strip.style.transform=down?`translateY(-${n*ih}px)`:'translateY(0)';
   requestAnimationFrame(()=>requestAnimationFrame(()=>{strip.classList.add('go');strip.style.transform=down?'translateY(0)':`translateY(-${n*ih}px)`;}));
-  let done=false;const fin=()=>{if(done)return;done=true;strip.className='strip';strip.style.transform='';strip.innerHTML=`<div class="${cls}">${esc(final)}</div>`;reel.classList.remove('spinning');reel.classList.add('landed');res();};
+  let done=false;const fin=()=>{if(done)return;done=true;strip.className='strip';strip.style.transform='';strip.innerHTML=`<div class="${cls}">${esc(final)}</div>`;res();};
   strip.addEventListener('transitionend',fin,{once:true});setTimeout(fin,2300);});}
 // «Вибір сезону» (0.60): колесо дає клуб, гравець обирає один із трьох його сезонів (випадкових, де є кого взяти); перекручувань немає
 function pickOpts(club){const all=wheelPool().filter(c=>c.c===club&&eligible(c).length>0);const n=MODES.pick.pick,out=[];
@@ -1282,7 +1281,8 @@ async function lockDraft(){
   // 0.65: seed з сервера і 300 прогонів xP — паралельно; прогони порціями, щоб екран не «замирав», а смужка показувала хід розрахунку
   const pb=document.getElementById('preBox');pb.hidden=false;pb.innerHTML='<div class="kicker">Рахуємо прогноз…</div><div class="bar"><i id="xpBar"></i></div>';
   pb.scrollIntoView({behavior:'smooth',block:'center'});
-  const seedP=fetchSeed(year);
+  // 0.67 (аудит P1-4): для драфту дня seed беремо лише при «Зіграти сезон» — інакше перестановка після прогнозу «з'їдала» офіційну спробу
+  const seedP=S.daily&&!S.daily.practice?Promise.resolve(null):fetchSeed(year);
   let sp=0,sg=0,sa=0;const N=300,CH=25,pl=[];
   for(let k=0;k<N;k++){const q=simulate(xi,mode,year,true);sp+=q.pts;sg+=q.gf;sa+=q.ga;pl.push(q.place);
     if(k%CH===CH-1){const b=document.getElementById('xpBar');if(b)b.style.width=Math.round((k+1)/N*100)+'%';await new Promise(r=>setTimeout(r,0));if(tok!==S.lockTok)return;}}
@@ -1715,7 +1715,7 @@ async function playSeason(year){
   if(SIM_BUSY)return;SIM_BUSY=true;const sb=document.getElementById('simBtn');const sbt=sb.textContent;sb.disabled=true;sb.textContent='Готуємо сезон…';
   const xi=S.slots.map(s=>s.player);const mode=MODES[S.mode];
   let srv=null;
-  if(S.locked&&S.year&&!year){year=S.year;srv=S.srv;S.srv=null;}   // рік і seed видано під час фіксації складу
+  if(S.locked&&S.year&&!year){year=S.year;srv=S.srv;S.srv=null;if(!srv&&S.daily&&!S.daily.practice)srv=await fetchSeed(year);}   // рік і seed видано під час фіксації складу
   else{if(S.daily){year=DAILY.year;}else if(S.chal){year=S.chal.year;}if(!year)year=oppYear();srv=await fetchSeed(year);}
   sb.disabled=false;sb.textContent=sbt;SIM_BUSY=false;
   const seed=srv?srv.seed:Math.floor(Math.random()*2147483647);rnd=mulberry32(seed);const r=simulate(xi,mode,year);rnd=Math.random;r.seed=seed;r.seedId=srv?srv.seed_id:null;r.slow=srv?'':RATE_NOTE;RATE_NOTE='';S.result=r;
@@ -2900,13 +2900,13 @@ function drawCard(r){   // 0.64: картка в стилі сайту — те�
 document.getElementById('replayBtn').onclick=()=>playSeason(null);
 document.getElementById('chalOpen').onclick=()=>{const b=document.getElementById('chalBox'),t=document.getElementById('chalOpen');b.hidden=!b.hidden;t.classList.toggle('on',!b.hidden);if(!b.hidden){b.scrollIntoView({behavior:'smooth',block:'center'});const n=document.getElementById('chalName');if(n&&!n.hidden&&!n.value)n.focus();}};
 // ---------- «Що нового»: коротко й по-людськи про останню версію (технічний журнал — CHANGELOG.md у репозиторії)
-const WHATSNEW={v:'0.66',date:'01.10.2026',items:[
-  ['trophy','Шанс є в кожного','Склад 83 стає чемпіоном приблизно в кожному шістнадцятому сезоні, 85 — у кожному сьомому. Навіть у дуже скромного складу є крихітний шанс на «сезон-диво». Форма гравців скаче менше.'],
-  ['soccer-field','Позиції за лініями','Атакувальний півзахисник може зіграти в центрі поля, опорний — у центрі чи в захисті, вінгер — крайнім півзахисником свого флангу. Що далі від рідної позиції — то трохи слабше.'],
-  ['star','Вибір гравця — у два дотики','Тапни гравця — з\'являться кнопки позицій (на телефоні — під прізвищем), тапни позицію — гравець у складі. Без випадкових виборів.'],
-  ['timer-sand','Живий сезон','Один матч, яскраві кольори, результат — кольором. Колесо: клуб крутиться вгору, сезон — униз.'],
-  ['send','Ліга Telegram-чату','Табло чату видно одразу, без очікування. «Поділитися» відкривається швидше — картку готуємо заздалегідь.'],
-  ['format-list-numbered','Дрібниці','Оновлені «Питання та відповіді»; у таблиці знову є місце; «Новий драфт» і «Поділитися» на iPad — компактні.']]};
+const WHATSNEW={v:'0.67',date:'02.10.2026',items:[
+  ['trophy','Баланс як у 38-0','Верх таблиці щільніший: сильний склад майже завжди в п\'ятірці, але чемпіонство — рідкість (склад 85 — приблизно кожен дванадцятий сезон, 88 — кожен четвертий).'],
+  ['chart-bar','Вердикт сезону','У підсумках — прогноз місця й вердикт: «Усе за сценарієм», «Краще за прогноз», «Зірвали банк»… І оцінка ліній словами: атака, півзахист, захист, воротар.'],
+  ['crown','Чемпіонство','У вікні чемпіона — одразу кнопка «Поділитися».'],
+  ['soccer-field','Драфт','Над полем — схема, перекрути крапками, «7/11» і кнопка «Спочатку». Вибраний гравець — у рамці разом із кнопками позицій. Колесо без рожевої обводки.'],
+  ['star','Трофеї','Повторні трофеї — без «ще раз · ×N», лише нові виділені.'],
+  ['lock','Чесна таблиця','Сервер суворіше перевіряє сезони; перестановка складу перед драфтом дня більше не «з\'їдає» офіційну спробу.']]};
 function openNews(){screenTag('news');const box=document.getElementById('viewBox');document.getElementById('viewTitle').textContent=`Що нового · версія ${WHATSNEW.v}`;
   document.getElementById('viewBody').innerHTML=`<div class="news">${WHATSNEW.items.map(([e,h,d])=>`<div class="ni">${ic(e,'lg')}<div><b>${esc(h)}</b><p>${esc(d)}</p></div></div>`).join('')}</div>`;
   box.hidden=false;lsSet('upl30_news_seen',WHATSNEW.v);document.getElementById('newsDot').hidden=true;}
