@@ -105,7 +105,10 @@ button.ghost{border-color:var(--line);background:transparent;color:var(--ink2);p
 /* 0.66.1 (власник): вибраний гравець — рамка навколо всього рядка, кнопки позицій усередині неї */
 .plrow.on{background:var(--card);border-radius:12px;box-shadow:0 0 0 1.5px var(--amber2);border-bottom-color:transparent;margin:4px 0}.plrow.on .pl.on{box-shadow:none;border-color:transparent;background:none}
 .plrow.on.wrap>.plpos{justify-self:stretch;padding:2px 12px 12px 46px;margin:0 2px}   /* 0.67 (як у 38-0): розкрита картка гравця — кольорові кнопки позицій під ним */
-.plrow .plpos button{min-height:38px;min-width:56px;padding:7px 12px;border:0;border-radius:8px;background:var(--gc);color:#fff;font:700 14px var(--font-mono)}.plrow .plpos button.GK{color:#1a1400}.plrow .plpos button:hover{background:var(--gc);filter:brightness(1.1)}
+.plrow .plpos button{min-height:40px;min-width:58px;padding:7px 12px;border:0;border-radius:9px;background:color-mix(in srgb,var(--gc) 18%,transparent);color:color-mix(in srgb,var(--gc) 72%,var(--ink));box-shadow:inset 0 0 0 1.5px var(--gc);font:800 15px var(--font-body)}.plrow .plpos button:hover{background:color-mix(in srgb,var(--gc) 30%,transparent)}
+/* 0.67 (власник, варіант E): значки позицій у списку — колір лише в рамці й літерах, шрифт сайту */
+#squad .pl .pos{--gc:var(--line);font:800 11px var(--font-body);padding:3px 0;border-radius:6px;background:color-mix(in srgb,var(--gc) 18%,transparent)!important;color:color-mix(in srgb,var(--gc) 72%,var(--ink))!important;box-shadow:inset 0 0 0 1.5px var(--gc)}
+#squad .pl .pos.GK{--gc:var(--gk)}#squad .pl .pos.DF{--gc:var(--df)}#squad .pl .pos.MF{--gc:var(--mf)}#squad .pl .pos.FW{--gc:var(--fw)}
 /* кнопки позицій під гравцем у колесі (0.58, як у 38-0): лише вільні позиції, куди він може стати */
 .plpos{display:flex;flex-wrap:wrap;gap:6px;padding:2px 0 8px 42px;animation:plin .2s ease-out both}
 .plpos button{--gc:var(--line);min-width:56px;min-height:40px;padding:8px 12px;border-radius:8px;font-family:var(--font-mono);font-size:13.5px;font-weight:700;border:1.5px solid var(--gc);background:color-mix(in srgb,var(--gc) 16%,var(--surface));color:var(--ink)}
@@ -1853,10 +1856,10 @@ const tgShareOk=()=>!!(ONLINE&&TG&&TG.initData&&TG.shareMessage&&TG.isVersionAtL
 function cardThumb(){const t=document.createElement('canvas');t.width=320;t.height=400;t.getContext('2d').drawImage(CARD_CANVAS,0,0,320,400);return t.toDataURL('image/jpeg',0.8);}
 const cardPost=(r,prefetch)=>_fetch('/api/card',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({initData:TG.initData,image:CARD_CANVAS.toDataURL('image/jpeg',0.85),thumb:cardThumb(),caption:shareTextOf(r,true,true),share:true,prefetch:!!prefetch})}).then(x=>x.json()).catch(()=>({}));
 function cardPrep(r){if(S.result!==r||!S.slots.every(x=>x.player))return;   // гравець уже пішов далі (новий драфт) — картку не малюємо
-  CARD_PREP={r,p:(async()=>{try{await document.fonts.ready;}catch(e){}if(S.result!==r)return {};drawCard(r);return tgShareOk()?cardPost(r,true):{};})()};}
+  CARD_PREP={r,p:(async()=>{await cardFonts();if(S.result!==r)return {};drawCard(r);return tgShareOk()?cardPost(r,true):{};})()};}
 document.getElementById('tgShareBtn').onclick=async()=>{const b=document.getElementById('tgShareBtn'),msg=document.getElementById('copyMsg');if(!S.result)return;
   const pre=CARD_PREP&&CARD_PREP.r===S.result?CARD_PREP:null;CARD_PREP=null;
-  if(pre){b.disabled=true;await pre.p;b.disabled=false;}else{try{await document.fonts.ready;}catch(e){}drawCard(S.result);}
+  if(pre){b.disabled=true;await pre.p;b.disabled=false;}else{await cardFonts();drawCard(S.result);}
   const inTg=!!(ONLINE&&TG&&TG.initData);
   if(tgShareOk()){
     b.disabled=true;msg.textContent=pre?'':'Готуємо картку…';
@@ -2855,7 +2858,7 @@ function renderShare(r){
 document.getElementById('copyBtn').onclick=()=>{const ta=document.getElementById('shareText');const msg=document.getElementById('cardMsg');if(S.result)ta.value=shareTextOf(S.result);   // посилання /r/<id> — уже після збереження сезону
   const fallback=()=>{ta.focus();ta.select();msg.textContent='Текст виділено — скопіюй вручну';};
   try{navigator.clipboard.writeText(ta.value).then(()=>{msg.textContent='Скопійовано';},fallback);}catch(e){fallback();}};
-async function showCard(){try{await document.fonts.ready;}catch(e){}
+async function showCard(){await cardFonts();
   const url=drawCard(S.result);const img=document.getElementById('shareImg');img.src=url;img.hidden=false;
   const inTg=!!(ONLINE&&TG&&TG.initData);let canFile=false;
   try{canFile=!inTg&&!!navigator.canShare&&navigator.canShare({files:[new File([new Blob(['x'],{type:'image/png'})],'x.png',{type:'image/png'})]});}catch(e){}
@@ -2872,6 +2875,8 @@ document.getElementById('cardTgBtn').onclick=async()=>{const msg=document.getEle
 document.getElementById('cardShareBtn').onclick=()=>{const msg=document.getElementById('cardMsg');if(!CARD_CANVAS)return;
   CARD_CANVAS.toBlob(bl=>{const f=new File([bl],'30-0-upl.png',{type:'image/png'});navigator.share({files:[f],text:S.result?shareTextOf(S.result,false,true):''}).catch(e=>{if(e&&e.name!=='AbortError')msg.textContent='Не вдалося відкрити меню «Поділитися».';});},'image/png');};
 let CARD_CANVAS=null;
+// 0.67 (власник: «щось не так зі шрифтами»): шрифти картки вантажимо явно — fonts.ready чекає лише ті, що вже є на сторінці
+async function cardFonts(){try{if(document.fonts&&document.fonts.load)await Promise.race([Promise.all(['900 44px Unbounded','700 84px Unbounded','700 28px Manrope','600 28px Manrope','600 24px "JetBrains Mono"'].map(f=>document.fonts.load(f,'30-0 УПЛ Голи'))),new Promise(r=>setTimeout(r,2500))]);}catch(e){}}
 function drawCard(r){   // 0.64: картка в стилі сайту — темно-синій фон УПЛ, градієнт UPL.TV (смуга, лого, очки), одна велика плитка з результатом
   const W=1080,H=1350,c=document.createElement('canvas');CARD_CANVAS=c;c.width=W;c.height=H;const g=c.getContext('2d');
   const DISP='"Unbounded", "Manrope", sans-serif', BODY='"Manrope", sans-serif', MONO='"JetBrains Mono", monospace';
@@ -2882,13 +2887,12 @@ function drawCard(r){   // 0.64: картка в стилі сайту — те�
   const bg=g.createRadialGradient(W*.15,0,0,W*.15,0,H*1.1);bg.addColorStop(0,'#1d2d63');bg.addColorStop(.55,'#0b1430');bg.addColorStop(1,'#0a1129');g.fillStyle=bg;g.fillRect(0,0,W,H);
   g.fillStyle=grad(0,W);g.fillRect(0,0,W,12);g.fillRect(0,H-12,W,12);
   g.font=`900 44px ${DISP}`;g.fillStyle=INK;g.fillText('30-0',80,128);const lw=g.measureText('30-0 ').width,uw=g.measureText('УПЛ').width;g.fillStyle=grad(80+lw,80+lw+uw);g.fillText('УПЛ',80+lw,128);
-  const head=S.daily?`ДРАФТ ДНЯ · ${DAY.slice(8,10)}.${DAY.slice(5,7)}.${DAY.slice(0,4)}`:`${fmtLabel().toUpperCase()}${S.formation} · ${modeName().toUpperCase()}`;
-  g.fillStyle=INK2;fit(head,f=>`600 ${f}px ${MONO}`,W-160,26,18);g.fillText(head,80,182);
-  const [tier,gold]=tierOf(r);let y=230;   // рівень («Чемпіони», «30-0-0»…) — лише для особливих сезонів
+  if(S.daily){const head=`ДРАФТ ДНЯ · ${DAY.slice(8,10)}.${DAY.slice(5,7)}.${DAY.slice(0,4)}`;g.fillStyle=INK2;g.font=`600 26px ${MONO}`;g.fillText(head,80,182);}   // 0.67 (власник): без схеми й режиму
+  const [tier,gold]=tierOf(r);let y=S.daily?230:180;   // рівень («Чемпіони», «30-0-0»…) — лише для особливих сезонів
   if(gold){const fs=fit(tier,f=>`800 ${f}px ${DISP}`,W-160,64,34);const tw=g.measureText(tier).width;g.fillStyle=grad(80,80+tw);g.fillText(tier,80,y+fs);y+=fs+40;}
   // головна плитка: В-Н-П · очки · місце (як на сайті), під ними голи й xG
   const hh=300;rr(80,y,W-160,hh,32);g.fillStyle='rgba(255,255,255,.06)';g.fill();g.strokeStyle='rgba(224,40,122,.35)';g.lineWidth=2;g.stroke();
-  const cw=(W-160)/3,col={W:'#2fd07a',D:'#f5b83d',L:'#ff4d5e'};
+  const cw=(W-160)/3;
   {const parts=[[String(r.W),INK],['-',INK],[String(r.D),INK],['-',INK],[String(r.L),INK]];   /* 0.64: одним кольором, як на сайті */g.font=`800 84px ${DISP}`;let tw=parts.reduce((a,[t])=>a+g.measureText(t).width,0),fs=84;
     while(tw>cw-30&&fs>48){fs-=4;g.font=`800 ${fs}px ${DISP}`;tw=parts.reduce((a,[t])=>a+g.measureText(t).width,0);}let x=80+cw/2-tw/2;for(const [t,cl] of parts){g.fillStyle=cl;g.fillText(t,x,y+150);x+=g.measureText(t).width;}}
   const big=(t,k,fill)=>{g.font=`800 96px ${DISP}`;const tw=g.measureText(t).width,x=80+cw*k+cw/2-tw/2;g.fillStyle=fill?fill(x,x+tw):INK;g.fillText(t,x,y+152);};
@@ -2897,16 +2901,22 @@ function drawCard(r){   // 0.64: картка в стилі сайту — те�
   g.fillStyle='rgba(255,255,255,.08)';g.fillRect(120,y+228,W-240,2);
   {const t=`Голи ${r.gf}:${r.ga}`+(r.xgf!=null?` · xG ${r.xgf.toFixed(1)} : ${r.xga.toFixed(1)}`:'');g.font=`600 30px ${BODY}`;g.fillStyle=INK2;const tw=g.measureText(t).width;g.fillText(t,W/2-tw/2,y+276);}
   y+=hh+44;
-  // форма: 30 турів, 3 ряди по 10
-  const gap=12,sw=(W-160-9*gap)/10,sh=44;r.log.forEach((m,i)=>{rr(80+(i%10)*(sw+gap),y+Math.floor(i/10)*(sh+gap),sw,sh,12);g.fillStyle=col[m.res];g.fill();});
-  y+=3*(sh+gap)+50;
+  // 0.67 (власник, як у 38-0): замість смужок матчів — дві плитки: найкращий бомбардир і гравець сезону
+  {const top=r.scorers&&r.scorers[0],mvp=(r.players||[]).slice().sort((a,b)=>b.rt-a.rt)[0];const tw=(W-160-24)/2,th=150;
+    [[`⚽  БОМБАРДИР`,top?top.name:'—',top?`${top.g} ${plUk(top.g,'гол','голи','голів')}`:''],[`⭐  ГРАВЕЦЬ СЕЗОНУ`,mvp?mvp.name:'—',mvp?`оцінка ${mvp.rt.toFixed(2)}`:'']].forEach(([k,n,v],i)=>{const x=80+i*(tw+24);
+      rr(x,y,tw,th,24);g.fillStyle='rgba(255,255,255,.05)';g.fill();
+      g.fillStyle=MUTED;g.font=`600 22px ${MONO}`;g.fillText(k,x+28,y+44);
+      g.fillStyle=INK;let fs=fit(n,f=>`700 ${f}px ${BODY}`,tw-56,34,24);g.fillText(n,x+28,y+92);
+      g.fillStyle='#ff5aa0';g.font=`700 26px ${BODY}`;g.fillText(v,x+28,y+128);});
+    y+=th+56;}
   g.fillStyle=MUTED;g.font=`600 24px ${MONO}`;g.fillText((S.teamName||'Твоя 11-ка').toUpperCase(),80,y);
   const LN={FW:0,MF:1,DF:2,GK:3},PC={GK:'#f5b83d',DF:'#4d8dff',MF:'#2fd07a',FW:'#ff4d5e'};
   const xi=S.slots.map(s=>s.player).map((p,i)=>[p,i]).sort((a,b)=>(LN[a[0].pos]-LN[b[0].pos])||(a[1]-b[1])).map(x=>x[0]);const colsX=[80,560];
   xi.forEach((p,i)=>{const cx=colsX[i<6?0:1],cy=y+48+(i<6?i:i-6)*46;g.fillStyle=PC[p.pos];g.beginPath();g.arc(cx+8,cy-10,8,0,7);g.fill();
     g.fillStyle=INK;g.font=`700 28px ${BODY}`;let nm=p.name;while(g.measureText(nm).width>330&&nm.length>4)nm=nm.slice(0,-2)+'…';g.fillText(nm,cx+28,cy);
     if(ratingsOpen()){g.fillStyle='#ff5aa0';g.font=`700 28px ${DISP}`;g.fillText(String(baseR(p)),cx+380,cy);}});
-  g.fillStyle=MUTED;g.font=`500 24px ${BODY}`;const luck=r.xp!=null?r.pts-r.xp:null;g.fillText((luck!=null&&ratingsOpen()?`${luck>=0?'Везіння':'Невезіння'} ${luck>=0?'+':'−'}${Math.abs(luck).toFixed(1)} очк. · `:'')+'upl-30-0.vercel.app',80,H-56);
+  g.fillStyle=INK;g.font=`700 34px ${DISP}`;g.fillText('Зможеш краще?',80,H-104);   // як «Think you can beat this?» у 38-0
+  g.fillStyle=MUTED;g.font=`500 26px ${BODY}`;g.fillText('upl-30-0.vercel.app',80,H-56);
   return c.toDataURL('image/png');
 }
 document.getElementById('replayBtn').onclick=()=>playSeason(null);
@@ -2920,7 +2930,7 @@ const WHATSNEW={v:'0.67',date:'02.10.2026',items:[
   ['restart','Колесо','Клуб і сезон крутяться в один бік — знизу вгору, плавно гальмують, як у 38-0. У «Виборі сезону» — лише клуб, без «?».'],
   ['trophy','Емодзі замість значків','Кнопки, рядки й трофеї — знову з емодзі. Вікно чемпіона — великий 🏆 і проста біла кнопка «Поділитися».'],
   ['shield-star','Один клуб','Режим повернувся: найкращий XI одного клубу за всю історію УПЛ. На головній і в таблицях.'],
-  ['share-variant','Картка в Telegram','Картка більше не приходить наполовину сірою; табло ліги чату й прогноз перед сезоном з\'являються швидше.'],
+  ['share-variant','Картка в Telegram','Нова картка: рахунок, бомбардир і гравець сезону, склад і «Зможеш краще?». Більше не приходить наполовину сірою; табло ліги чату й прогноз перед сезоном з\'являються швидше.'],
   ['star','Трофеї','Повторні трофеї — без «ще раз · ×N», лише нові виділені.'],
   ['lock','Чесна таблиця','Сервер суворіше перевіряє сезони; перестановка складу перед драфтом дня більше не «з\'їдає» офіційну спробу.']]};
 function openNews(){screenTag('news');const box=document.getElementById('viewBox');document.getElementById('viewTitle').textContent=`Що нового · версія ${WHATSNEW.v}`;
