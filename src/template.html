@@ -80,15 +80,16 @@ button.ghost{border-color:var(--line);background:transparent;color:var(--ink2);p
 .wheel .season{font-family:var(--font-mono);color:var(--ink2)}
 .reels{display:grid;grid-template-columns:1fr 104px;gap:8px;align-items:center}
 .reel{padding:0 12px;border:1px solid var(--line);border-radius:12px;background:var(--bg);height:64px;overflow:hidden;position:relative;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--amber) 0%,transparent);transition:box-shadow .3s}
-.reel.spinning{box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--amber) 45%,transparent)}
-.reel.landed .strip>div{animation:land .45s cubic-bezier(.2,1.4,.4,1)}@keyframes land{0%{transform:scale(.94);opacity:.6}100%{transform:none;opacity:1}}
 .reel .strip{display:grid;will-change:transform}.reel .strip>div{height:64px;display:grid;align-content:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .reel .strip.go>div{filter:blur(.6px)}.reel .strip.go>div:last-child,#reelYear .strip.go>div:first-child{filter:none}#reelYear .strip.go>div:last-child{filter:blur(.6px)}
 .reel .strip.go{transition:transform 1.5s cubic-bezier(.16,.84,.22,1.02)}#reelYear .strip.go{transition-duration:1.9s}
 .reel .season{font-size:18px;font-weight:700;color:var(--ink)}
 .reel::before,.reel::after{content:'';position:absolute;left:0;right:0;height:12px;pointer-events:none;z-index:1}.reel::before{top:0;background:linear-gradient(var(--bg),transparent)}.reel::after{bottom:0;background:linear-gradient(transparent,var(--bg))}
-@media (prefers-reduced-motion:reduce){.reel .strip.go{transition:none}.reel.landed .strip>div,.pl.in,.plpos,section.enter,section.back{animation:none!important}}
+@media (prefers-reduced-motion:reduce){.reel .strip.go{transition:none}.pl.in,.plpos,section.enter,section.back{animation:none!important}}
 .pl.on{border-color:var(--amber2);box-shadow:0 0 0 2px var(--amber2)}
+/* 0.66.1 (власник): вибраний гравець — рамка навколо всього рядка, кнопки позицій усередині неї */
+.plrow.on{background:var(--card);border-radius:12px;box-shadow:0 0 0 1.5px var(--amber2);border-bottom-color:transparent;margin:4px 0}.plrow.on .pl.on{box-shadow:none;border-color:transparent;background:none}
+.plrow.on.wrap>.plpos{padding:0 12px 12px 46px}
 /* кнопки позицій під гравцем у колесі (0.58, як у 38-0): лише вільні позиції, куди він може стати */
 .plpos{display:flex;flex-wrap:wrap;gap:6px;padding:2px 0 8px 42px;animation:plin .2s ease-out both}
 .plpos button{--gc:var(--line);min-width:56px;min-height:40px;padding:8px 12px;border-radius:8px;font-family:var(--font-mono);font-size:13.5px;font-weight:700;border:1.5px solid var(--gc);background:color-mix(in srgb,var(--gc) 16%,var(--surface));color:var(--ink)}
