@@ -104,9 +104,8 @@ button.ghost{border-color:var(--line);background:transparent;color:var(--ink2);p
 .pl.on{border-color:var(--amber2);box-shadow:0 0 0 2px var(--amber2)}
 /* 0.66.1 (власник): вибраний гравець — рамка навколо всього рядка, кнопки позицій усередині неї */
 .plrow.on{background:var(--card);border-radius:12px;box-shadow:0 0 0 1.5px var(--amber2);border-bottom-color:transparent;margin:4px 0}.plrow.on .pl.on{box-shadow:none;border-color:transparent;background:none}
-.plrow.on.wrap>.plpos{padding:10px 12px 12px;margin:0 2px;border-top:1px solid var(--line)}   /* 0.67 (як у 38-0): розкрита картка гравця — «Постав на (N)» і кольорові кнопки з повною назвою */
-.plpos .plab{flex-basis:100%;font:600 11px var(--font-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--amber2)}
-.plrow .plpos button{min-height:38px;padding:7px 12px;border:0;border-radius:8px;background:var(--gc);color:#fff;font:600 14px var(--font-body);min-width:0}.plrow .plpos button.GK{color:#1a1400}.plrow .plpos button:hover{background:var(--gc);filter:brightness(1.1)}
+.plrow.on.wrap>.plpos{justify-self:stretch;padding:10px 12px 12px;margin:0 2px;border-top:1px solid var(--line)}   /* 0.67 (як у 38-0): розкрита картка гравця — кольорові кнопки позицій під ним */
+.plrow .plpos button{min-height:38px;min-width:56px;padding:7px 12px;border:0;border-radius:8px;background:var(--gc);color:#fff;font:700 14px var(--font-mono)}.plrow .plpos button.GK{color:#1a1400}.plrow .plpos button:hover{background:var(--gc);filter:brightness(1.1)}
 /* кнопки позицій під гравцем у колесі (0.58, як у 38-0): лише вільні позиції, куди він може стати */
 .plpos{display:flex;flex-wrap:wrap;gap:6px;padding:2px 0 8px 42px;animation:plin .2s ease-out both}
 .plpos button{--gc:var(--line);min-width:56px;min-height:40px;padding:8px 12px;border-radius:8px;font-family:var(--font-mono);font-size:13.5px;font-weight:700;border:1.5px solid var(--gc);background:color-mix(in srgb,var(--gc) 16%,var(--surface));color:var(--ink)}
@@ -184,7 +183,8 @@ summary{cursor:pointer;font-weight:600}
 .lvGrid i{aspect-ratio:1;border-radius:4px;background:var(--bg2);border:1px solid var(--line)}
 .lvGrid i.W{background:var(--win);border-color:var(--win)} .lvGrid i.D{background:var(--draw);border-color:var(--draw)} .lvGrid i.L{background:var(--loss);border-color:var(--loss)}
 .lvTable td{padding:4px 8px}
-select.need{border-color:var(--loss);box-shadow:0 0 0 2px color-mix(in srgb,var(--loss) 35%,transparent)}select{font:inherit;padding:9px 12px;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);color:var(--ink);max-width:100%}
+select.need{border-color:var(--loss);box-shadow:0 0 0 2px color-mix(in srgb,var(--loss) 35%,transparent)}select{font:inherit;font-family:var(--font-body);font-size:16px;padding:12px 42px 12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%237f8aad' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E") no-repeat right 12px center/22px;color:var(--ink);max-width:100%;-webkit-appearance:none;appearance:none}   /* 0.67 (власник: стрілка наїжджала, дивний шрифт): своя стрілка праворуч, шрифт сайту */
+#clubPickRow{display:grid;gap:6px}#clubPickRow select{width:100%}
 /* leaderboard */
 .lb{display:grid;gap:10px;margin-top:14px;border:1px solid var(--line);border-radius:14px;background:var(--surface);padding:14px}
 .lb input{font:inherit;padding:9px 12px;border:1px solid var(--line);border-radius:var(--radius);background:var(--bg);color:var(--ink);min-width:0;flex:1 1 160px}
@@ -1262,8 +1262,7 @@ function choose(p){
 }
 // кнопки позицій під гравцем; Escape — скасувати вибір
 function posBox(p,row){const opts=posOpts(p),box=document.createElement('div');box.className='plpos';box.setAttribute('role','group');box.setAttribute('aria-label',`Позиція для ${p[0]}`);
-  const lab=document.createElement('div');lab.className='plab';lab.textContent=`Постав на (${opts.length})`;box.appendChild(lab);
-  opts.forEach(s=>{const x=document.createElement('button');x.type='button';x.className=GROUP_OF[s.slot];x.dataset.slot=s.slot;x.title=POSFULL[s.slot];x.textContent=`${POSFULL[s.slot][0].toUpperCase()+POSFULL[s.slot].slice(1)} (${POSNAME[s.slot]})`;x.onclick=()=>place(p,s);box.appendChild(x);});
+  opts.forEach(s=>{const x=document.createElement('button');x.type='button';x.className=GROUP_OF[s.slot];x.dataset.slot=s.slot;x.title=POSFULL[s.slot];x.textContent=POSNAME[s.slot];x.onclick=()=>place(p,s);box.appendChild(x);});   // 0.67 (власник): лише коротко «ЦЗ», без «Постав на» — кілька позицій в один рядок
   box.onkeydown=e=>{if(e.key==='Escape'){S.pending=null;renderDraft();const r=[...document.querySelectorAll('#squad .pl')].find(b=>b.dataset.id===p[5]);if(r)r.focus();}};
   return box;}
 // 0.67 (Вітя: «блимає, коли береш гравця знизу списку»): без порожнього екрана й плавного стрибка — одразу, в тому ж кадрі, кнопка колеса внизу екрана
@@ -2915,7 +2914,7 @@ const WHATSNEW={v:'0.67',date:'02.10.2026',items:[
   ['trophy','Баланс як у 38-0','Верх таблиці щільніший: сильний склад майже завжди в п\'ятірці, але чемпіонство — рідкість (склад 85 — приблизно кожен дванадцятий сезон, 88 — кожен четвертий).'],
   ['chart-bar','Вердикт сезону','У підсумках — прогноз місця й вердикт: «Усе за сценарієм», «Краще за прогноз», «Зірвали банк»… І оцінка ліній словами: атака, півзахист, захист, воротар.'],
   ['crown','Чемпіонство','У вікні чемпіона — одразу кнопка «Поділитися».'],
-  ['soccer-field','Драфт','Над полем — схема, перекрути крапками, «7/11» і кнопка «Спочатку». Вибраний гравець розкривається карткою «Постав на» з кнопками позицій. «Переставити гравців» — велика кнопка під полем. Екран більше не блимає, коли береш гравця знизу списку.'],
+  ['soccer-field','Драфт','Над полем — схема, перекрути крапками, «7/11» і кнопка «Спочатку». Вибраний гравець розкривається, під ним — кольорові кнопки позицій. «Переставити гравців» — велика кнопка під полем. Екран більше не блимає, коли береш гравця знизу списку.'],
   ['restart','Колесо','Клуб і сезон крутяться в один бік — знизу вгору, плавно гальмують, як у 38-0. У «Виборі сезону» — лише клуб, без «?».'],
   ['trophy','Емодзі замість значків','Кнопки, рядки й трофеї — знову з емодзі. Вікно чемпіона — великий 🏆 і проста біла кнопка «Поділитися».'],
   ['shield-star','Один клуб','Режим повернувся: найкращий XI одного клубу за всю історію УПЛ. На головній і в таблицях.'],

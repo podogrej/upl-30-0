@@ -6,6 +6,7 @@
 //   Спершу картка кладеться у публічне сховище Supabase (bucket «cards», SQL: sql/cards_bucket.sql) і йде як photo_url —
 //   так не потрібен особистий чат із ботом. Якщо сховища немає — запасний шлях через особистий чат (потрібен Start).
 //   Змінні: SUPABASE_URL (у тесті), SUPABASE_SERVICE_KEY.
+//   З 0.67 спершу — службовий канал TG_CARDS_CHAT (див. cachePhoto); немає змінної або канал не відповів — сховище, як раніше.
 const crypto = require('crypto');
 const { rateLimit } = require('./_device.js');   // обмеження частоти (0.55)
 const env = k => String(process.env[k] || '').replace(/\s+/g, '');
@@ -15,6 +16,18 @@ async function storeCard(buf, ext) {   // → публічна адреса ка
   const path = `${new Date().toISOString().slice(0, 10)}/${crypto.randomBytes(9).toString('hex')}.${ext}`;
   const r = await fetch(`${SB_URL}/storage/v1/object/cards/${path}`, { method: 'POST', headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': `image/${ext === 'png' ? 'png' : 'jpeg'}`, 'x-upsert': 'false' }, body: buf });
   return r.ok ? `${SB_URL}/storage/v1/object/public/cards/${path}` : null;
+}
+// 0.67: найнадійніше — картку один раз завантажує сам бот у службовий канал (TG_CARDS_CHAT, бот — адмін каналу), далі вона йде
+// як фото, що вже лежить у Telegram (photo_file_id): Telegram нічого не качає за адресою, тож картка не може обірватися
+async function cachePhoto(token, buf, ext) {   // → file_id або null
+  const chat = env('TG_CARDS_CHAT'); if (!chat) return null;
+  const fd = new FormData();
+  fd.append('chat_id', chat); fd.append('disable_notification', 'true');
+  fd.append('photo', new Blob([buf], { type: `image/${ext === 'png' ? 'png' : 'jpeg'}` }), `30-0-upl.${ext === 'png' ? 'png' : 'jpg'}`);
+  const r = await fetch(`https://api.telegram.org/bot${token}/sendPhoto`, { method: 'POST', body: fd });
+  const j = await r.json().catch(() => ({}));
+  const ph = (j.ok && j.result && j.result.photo) || [];
+  return ph.length ? ph[ph.length - 1].file_id : null;
 }
 async function warm(url) {   // прочитати файл повністю (до 4 с), щоб Telegram отримав його з кешу сховища цілим
   const ac = new AbortController(), t = setTimeout(() => ac.abort(), 4000);
@@ -58,6 +71,9 @@ module.exports = async (req, res) => {
     const buf = Buffer.from(m[2], 'base64');
     if (buf.length > 3.5e6) return res.status(413).json({ error: 'image too large' });
     if (b.share) {
+      stage = 'channel';
+      const fid = await cachePhoto(token, buf, m[1]).catch(() => null);
+      if (fid) { stage = 'prepare'; return res.status(200).json(await prepare(token, u, { photo_file_id: fid }, b.caption)); }
       stage = 'store';
       const url = await storeCard(buf, m[1] === 'png' ? 'png' : 'jpg').catch(() => null);
       if (url) {

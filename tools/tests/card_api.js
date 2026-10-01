@@ -28,7 +28,11 @@ let fail = 0; const check = (ok, m) => { if (!ok) { fail++; console.log('✗', m
   check(c === 200 && j.ok && !j.prepared && calls.join() === 'sendPhoto', 'звичайна картка собі: лише sendPhoto');
   calls.length = 0;
   [c, j] = await run({ initData: initData({ id: 42, first_name: 'A' }), image: img, caption: 'hi', share: true });
-  check(j.ok && j.prepared === 'PREP1' && calls.join() === 'storage,savePreparedInlineMessage' && /^https:\/\/sb\.test\/storage\/v1\/object\/public\/cards\//.test(prepBody.result.photo_url), 'share через сховище: без особистого чату, photo_url з публічного bucket');
+  check(j.ok && j.prepared === 'PREP1' && calls.join() === 'storage,storage,savePreparedInlineMessage' && /^https:\/\/sb\.test\/storage\/v1\/object\/public\/cards\//.test(prepBody.result.photo_url), 'share через сховище: без особистого чату, photo_url з публічного bucket (і одне читання файлу перед відправкою, 0.67)');
+  process.env.TG_CARDS_CHAT = '-100777'; calls.length = 0;
+  [c, j] = await run({ initData: initData({ id: 42, first_name: 'A' }), image: img, caption: 'hi', share: true });
+  check(j.ok && j.prepared === 'PREP1' && calls.join() === 'sendPhoto,savePreparedInlineMessage' && prepBody.result.photo_file_id === 'BIG' && !prepBody.result.photo_url, '0.67: службовий канал — картка йде як file_id, без сховища');
+  delete process.env.TG_CARDS_CHAT;
   STORAGE_OK = false; calls.length = 0;
   [c, j] = await run({ initData: initData({ id: 42, first_name: 'A' }), image: img, caption: 'hi', share: true });
   await new Promise(r => setTimeout(r, 10));
