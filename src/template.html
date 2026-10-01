@@ -410,7 +410,7 @@ a.plink{color:inherit;text-decoration:underline;text-decoration-color:color-mix(
       <details><summary>Що таке «Драфт дня»?</summary><p>Одна схема, одні суперники й одне колесо на день для всіх. Офіційна спроба — одна, результат іде в таблицю дня. Грай щодня, щоб тримати серію: один пропущений день на тиждень прощається (❄️ заморозка).</p></details>
       <details><summary>Що таке «Вибір сезону»?</summary><p>Колесо дає лише клуб, а сезон обираєш сам — з трьох випадкових сезонів цього клубу. Перекручувань немає, назад не повернешся. Результат іде в загальну таблицю з позначкою режиму.</p></details>
       <details><summary>Що таке xP, xG і «везіння»?</summary><p>xP — скільки очок твій склад у середньому набирає проти цих суперників (300 симуляцій). xG — очікувані голи. Везіння — різниця між реальними очками й xP.</p></details>
-      <details><summary>Як грати з друзями?</summary><p>Однаковий «Драфт дня» і таблиця дня; після сезону — плитка «Виклик»: друг зіграє з тим самим колесом і суперниками. А ще можна додати @upl30_bot у Telegram-групу й написати /league — бот вестиме табло групи. Скоро — ліги з друзями просто на сайті й 5×5 онлайн.</p></details>
+      <details><summary>Як грати з друзями?</summary><p>«Грати з друзями» на головній: створи лігу, задай правила й надішли посилання — щодня тур, очки додаються. А ще: однаковий «Драфт дня» і таблиця дня; після сезону — плитка «Виклик»; @upl30_bot у Telegram-групі з /league веде табло групи. Скоро — 5×5 онлайн.</p></details>
       <details><summary>Чи треба реєструватися?</summary><p>Ні. Вхід через Google або Telegram потрібен, щоб трофеї, серія й рекорди не загубилися й були на всіх пристроях. Ім'я одне на всі таблиці — змінити його можна на своїй сторінці (тап по аватарці вгорі). Увійшов і через Google, і через Telegram — гра запитає «Це ти?» і об'єднає історію.</p></details>
       <details><summary>Що ви збираєте?</summary><p>Анонімно дивимося, куди натискають, щоб покращувати гру (Microsoft Clarity). Якщо увійдеш — ім'я та ідентифікатор входу. Пошту — лише якщо сам впишеш її на своїй сторінці для новин. Паролів не бачимо. Усе своє можна стерти кнопкою «Видалити акаунт» на своїй сторінці. <a href="privacy.html">Докладніше</a>.</p></details>
       <details><summary>Звідки дані?</summary><p>Склади, матчі, голи та підсумкові таблиці всіх сезонів Вищої ліги й Прем'єр-ліги 1992–2026 з відкритих джерел. Асисти — з 2012/13 і за 2021/22, сухі матчі до 2012 — оцінка за командною статистикою (≈).</p></details>
@@ -563,7 +563,7 @@ a.plink{color:inherit;text-decoration:underline;text-decoration-color:color-mix(
     </div>
 </div>
 <div class="overlay" id="viewBox" hidden><div class="box"><div class="vhead"><h3 id="viewTitle">Склад</h3><button class="ghost" id="viewClose">Закрити</button></div><div id="viewBody"></div></div></div>
-<div class="foot">30-0 УПЛ · <a href="#" id="newsBtn">Що нового у версії 0.60<b id="newsDot" hidden></b></a> · <a href="#" id="themeBtn" class="thm" role="switch" aria-checked="false" aria-label="Світла тема"></a> · неофіційний фан-проєкт</div>
+<div class="foot">30-0 УПЛ · <a href="#" id="newsBtn">Що нового у версії 0.61<b id="newsDot" hidden></b></a> · <a href="#" id="themeBtn" class="thm" role="switch" aria-checked="false" aria-label="Світла тема"></a> · неофіційний фан-проєкт</div>
 <script id="pool" type="application/json">__POOL__</script>
 <script>
 (function(){
@@ -793,8 +793,8 @@ const PITCH_MK=`<svg class="mk" viewBox="0 0 68 105" preserveAspectRatio="none" 
 // лесенка (0.56): у ряду з 4–5 фішок крайні стоять вище, центральна — нижче, щоб підписи сусідів не зачіпались; зсув у % висоти поля (мінус — угору)
 const LADDER_SD=5;
 function ladderOf(row){if(row.length===4)return [-1,0,0,-1];
-  if(row.length===5&&row.every(s=>GROUP_OF[s]==='MF'))return [-1.8,0,1,0,-1.8];
-  if(row.length===5&&row.every(s=>GROUP_OF[s]==='DF'))return [-2.4,0,1,0,-2.4];
+  if(row.length===5&&row.every(s=>GROUP_OF[s]==='MF'))return [-2.7,0,1,0,-2.7];   // 0.61: було −1.8 — на 320–390 px підписи крайнього налазили на кружок центрального
+  if(row.length===5&&row.every(s=>GROUP_OF[s]==='DF'))return [-2.8,0,1,0,-2.8];   // 0.61: було −2.4 (підписи на 320 px)
   return null;}
 function pitchGeo(formation){const F=FORMATIONS[formation]||FORMATIONS['4-4-2'];const n=F.rows.length;
   const Y=n===5?[12,31,50,70,90]:[16,42,68,90];
@@ -848,7 +848,7 @@ function renderPitch(el,slots,withClub){
 // (кружок, плашку, підписи); кружок не рухається. Якщо зсуву не вистачає (найдовші прізвища на вузькому екрані) — цей підпис трохи дрібніше (до 85%, на полі вужчому за 300px — до 80%),
 // а якщо й тоді налазить на плашку сусіда — плашку переносимо на лівий бік його кружка (лише туди, де вона нічого не закриває).
 // Ширина тексту — через Range. Запускається після кожної перемальовки поля (MutationObserver), зміни розміру (ResizeObserver) і довантаження шрифтів.
-function fitPitch(pe){if(!pe.clientWidth)return;const P=pe.getBoundingClientRect(),rg=document.createRange(),M=4,KMIN=P.width<300?0.8:0.85;   // найвужче поле (<300px) — до 80%
+function fitPitch(pe){if(!pe.clientWidth)return;const P=pe.getBoundingClientRect(),rg=document.createRange(),M=4,KMIN=P.width<300?0.72:P.width<340?0.78:0.85;   // вузьке поле — дрібніше: <300px до 72%, <340px до 78% (0.61: на 320–390 px підписи 3-5-2 і 5-3-2 налазили)
   const fixed=[],labs=[];
   pe.querySelectorAll('.slot').forEach((sl,ci)=>{const d=sl.querySelector('.disc');if(!d)return;const r=d.getBoundingClientRect();fixed.push({ci,l:r.left,r:r.right,t:r.top,b:r.bottom});
     const pl=d.querySelector('.pill');if(pl){pl.classList.remove('flip');const l=r.left+d.clientLeft+pl.offsetLeft,t=r.top+d.clientTop+pl.offsetTop;fixed.push({ci,pl,cx:(r.left+r.right)/2,l,r:l+pl.offsetWidth,t,b:t+pl.offsetHeight});}   // offset* — без анімації «pop»
@@ -1517,14 +1517,12 @@ document.getElementById('replayBtn').onclick=()=>playSeason(null);
 document.getElementById('chalOpen').onclick=()=>{const b=document.getElementById('chalBox'),t=document.getElementById('chalOpen');b.hidden=!b.hidden;t.classList.toggle('on',!b.hidden);if(!b.hidden){b.scrollIntoView({behavior:'smooth',block:'center'});const n=document.getElementById('chalName');if(n&&!n.hidden&&!n.value)n.focus();}};
 document.getElementById('tgMeBtn').onclick=async()=>{try{await document.fonts.ready;}catch(e){}if(!S.result)return;drawCard(S.result);document.getElementById('cardActs').hidden=false;document.getElementById('cardTgBtn').click();};
 // ---------- «Що нового»: коротко й по-людськи про останню версію (технічний журнал — CHANGELOG.md у репозиторії)
-const WHATSNEW={v:'0.60',date:'01.10.2026',items:[
-  ['calendar-check','Новий режим «Вибір сезону»','Колесо дає лише клуб, а сезон обираєш сам — з трьох. Без перекручувань, результат іде в загальну таблицю. На головній — «Новий режим».'],
-  ['calendar-star','«Виклик дня» тепер «Драфт дня»','Та сама гра: одне колесо для всіх, одна спроба, таблиця дня. Якщо маєш два результати за день — у таблиці лишається кращий.'],
-  ['account-multiple-check','Один гравець на два входи','Увійшов і через Google, і через Telegram? Гра запитає «Це ти?» — і об\'єднає сезони, трофеї й серію.'],
-  ['share-variant','Поділитися — простіше','Одна велика кнопка «Поділитися карткою», під нею — картка, текст, виклик другу. А на своїй сторінці — «Поділитися шафою» трофеїв.'],
-  ['trophy','Рідкісні трофеї — з ефектом','Новий рідкісний чи секретний трофей тепер вилітає в підсумках сезону з відблиском.'],
-  ['eye','Відкриті рейтинги — з позначкою','Якщо в драфті вмикаєш «Показати рейтинги гравців», у таблиці поруч із результатом видно «рейтинги відкриті».'],
-  ['email-outline','Пошта для новин','На своїй сторінці можна лишити пошту й галочку «Іноді надсилати новини» — лише про великі оновлення.']]};
+const WHATSNEW={v:'0.61',date:'01.10.2026',items:[
+  ['account-group','Ліги з друзями','«Грати з друзями» на головній: створи лігу на 1, 3 чи 7 днів, задай правила й надішли посилання друзям — у WhatsApp, Viber чи Telegram. Щодня тур, у кожного своє колесо, очки додаються до кінця ліги.'],
+  ['format-list-numbered','Таблиці ліги','Загальна таблиця й таблиця сьогоднішнього туру. Очки «за місце» (1-й отримує стільки, скільки зіграло) або «сума» очок сезону.'],
+  ['account-circle','Мої ліги','На своїй сторінці — у яких лігах граєш і яке місце.'],
+  ['trophy','Срібло й бронза','Новий трофей «Вічно другі» — за 2-ге місце. «Бронза теж метал» тепер лише за 3-тє (уже отримані лишаються).'],
+  ['soccer-field','Поле на вузьких екранах','Прізвища й клуби на полі більше не налазять одне на одне на маленьких телефонах.']]};
 function openNews(){screenTag('news');const box=document.getElementById('viewBox');document.getElementById('viewTitle').textContent=`Що нового · версія ${WHATSNEW.v}`;
   document.getElementById('viewBody').innerHTML=`<div class="news">${WHATSNEW.items.map(([e,h,d])=>`<div class="ni">${ic(e,'lg')}<div><b>${esc(h)}</b><p>${esc(d)}</p></div></div>`).join('')}</div>`;
   box.hidden=false;lsSet('upl30_news_seen',WHATSNEW.v);document.getElementById('newsDot').hidden=true;}

@@ -10,6 +10,7 @@
 --  2. seasons.fl_id — сезон зіграно як спробу ліги (пише сервер, /api/save).
 --  3. fl_create, fl_join — лише з входом (Google/Telegram) на своєму пристрої. fl_get — ліга за кодом (правила, учасники, таблиці) — для всіх.
 --     fl_mine — мої ліги (для «Грати з друзями» і сторінки гравця). fl_record(season) — зарахувати сезон (лише сервер).
+--  4. merge_answer (0.60) — ще й повертає локальний прогрес старого входу (user_state) для злиття на сайті.
 
 -- 1. таблиці
 create table if not exists public.fl_leagues (
@@ -187,6 +188,31 @@ begin
 end $$;
 revoke execute on function public.fl_record(bigint) from public, anon, authenticated;
 grant execute on function public.fl_record(bigint) to service_role;
+
+-- 4. «Це ти?» (0.60) + локальний прогрес (баг 0.60): на «так» повертаємо user_state старого входу (prev_state) — сайт зливає його
+--    з поточним (трофеї, серія, рекорди) тим самим правилом, що й при вході (acctMerge), і зберігає в акаунт поточного входу
+create or replace function public.merge_answer(p_device uuid, p_secret text, p_offer uuid, p_yes boolean) returns json language plpgsql security definer set search_path = public as $$
+declare uid uuid := auth.uid(); dev uuid; acc uuid; o merge_offers%rowtype; fresh boolean; prev jsonb;
+begin
+  if uid is null then raise exception 'login?' using errcode = '28000'; end if;
+  dev := public.device_check(p_device, p_secret);
+  acc := public.player_for_auth(uid);
+  select * into o from merge_offers where id = p_offer for update;
+  if not found or acc is null or o.dst <> acc or dev <> acc or o.answered_at is not null then
+    raise exception 'offer?' using errcode = '22023';
+  end if;
+  update merge_offers set answered_at = now(), answer = case when p_yes then 'yes' else 'no' end where id = p_offer;
+  if p_yes and exists (select 1 from players where id = o.src and merged_into is null and deleted_at is null) then
+    select us.data into prev from user_state us
+     where us.user_id in (select key::uuid from player_links where player_id = o.src and kind = 'auth' and key ~ '^[0-9a-f-]{36}$')
+     order by us.updated_at desc limit 1;
+    fresh := not exists (select 1 from seasons where player_id = acc and not practice);
+    perform public.merge_players_logged(o.src, acc, 'offer ' || p_offer::text, fresh);
+  end if;
+  return (public.player_json(acc)::jsonb || jsonb_build_object('prev_state', prev))::json;
+end $$;
+revoke execute on function public.merge_answer(uuid, text, uuid, boolean) from public, anon;
+grant execute on function public.merge_answer(uuid, text, uuid, boolean) to authenticated;
 
 -- результат запуску
 select 'ліг' as "що", count(*)::text as "скільки" from public.fl_leagues

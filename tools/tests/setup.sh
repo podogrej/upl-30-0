@@ -459,6 +459,12 @@ chk "v061: «сума» і «остання спроба»: у залік ост
   assert fl_record(a) = 1 and fl_record(b) = 2, 'спроби';
   j := fl_get(id); assert (j->'board'->0->>'total')::int = 41, 'остання ' || j::text;
   end;"
+$P -d t1 -c "insert into user_state(user_id, data) values ('$UT', '{\"upl30_tr\":{\"t\":{\"champ\":{\"n\":2,\"at\":\"2026-09-01\"}},\"seasons\":5}}') on conflict (user_id) do update set data = excluded.data" >/dev/null
+chk "v061: «Це ти?» → «так» повертає локальний прогрес старого входу (prev_state) для злиття на сайті" authenticated "
+  declare o uuid := t_new_offer(t_link('auth', '$UT'), t_link('auth', '$UG')); begin
+  j := merge_answer('$MX', '$SEC', o, true);
+  assert (j->'prev_state'->'upl30_tr'->>'seasons')::int = 5, j::text;
+  end;" ',"sub":"'$UG'"'
 # база, де збіги імен уже є: v059_name_conflicts.sql їх показує; v059 дає молодшому номер і створює індекс
 $P -c "create database t3" >/dev/null
 if { $P -d t3 -f "$ROOT/tools/tests/stub.sql" && $P -d t3 -f "$ROOT/sql/new_db_part_A.sql" && $P -d t3 -f "$ROOT/sql/v039_part_B.sql" \

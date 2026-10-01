@@ -113,9 +113,9 @@ function flPlay(){const d=FL&&FL.data;if(!d)return;
 function flAfterSave(r,j){if(!S.league||S.result!==r)return;const el=document.getElementById('leagueMsg');if(!el)return;
   if(j&&j.verified===true){el.hidden=false;el.textContent=j.fl?`Спробу ${j.fl} зараховано в лігу «${S.league.name}».`:j.fl===null?`Цю спробу не зараховано в лігу «${S.league.name}»: спроби на сьогодні вичерпано або тур закінчився.`:'';}}
 // «Мої ліги» на своїй сторінці гравця
-async function ppLeagues(){const el=document.getElementById('ppLeagues');if(!el)return;let mine=[];try{mine=await playerRpc('fl_mine');}catch(e){}
-  if(!document.getElementById('ppLeagues'))return;
+async function ppLeagues(){if(!document.getElementById('ppLeagues'))return;let mine=[];try{mine=await playerRpc('fl_mine');}catch(e){}
+  const el=document.getElementById('ppLeagues');if(!el)return;   // сторінку могли перемалювати, поки чекали відповіді — беремо свіжий блок
   el.innerHTML=`<div class="pp-sec"><h3>Мої ліги</h3><button class="ghost" id="ppFl">${mine.length?'Усі':'Створити'}</button></div>`+(mine.length?mine.slice(0,5).map(x=>`<button class="fl-row" data-l="${esc(x.id)}">${ic(x.over?'trophy':'account-group')}<span class="t"><b>${esc(x.name)}</b><small>${x.over?'завершена':`день ${numOr0(x.day_n)} з ${numOr0(x.days)}`} · ${numOr0(x.members)} ${plUk(x.members,'гравець','гравці','гравців')}</small></span>${x.place?`<span class="fl-place"><b>${numOr0(x.place)}</b><small>місце</small></span>`:''}</button>`).join(''):`<p class="pp-empty">Ти ще не граєш у лігах з друзями.</p>`);
-  el.querySelectorAll('[data-l]').forEach(b=>b.onclick=()=>openLeague(b.dataset.l));document.getElementById('ppFl').onclick=openFriends;}
+  el.querySelectorAll('[data-l]').forEach(b=>b.onclick=()=>openLeague(b.dataset.l));el.querySelector('#ppFl').onclick=openFriends;}
 // відкрито посилання ?l=… — сторінка ліги
 if(ONLINE){const m=/[?&]l=([a-z2-9]{6})(?:&|$)/.exec(location.search);if(m)setTimeout(()=>openLeague(m[1]),0);}
