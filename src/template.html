@@ -683,7 +683,7 @@ table.lbt th.n,table.lbt td.n{width:28px;padding-left:2px;padding-right:2px;text
     </div>
 </div>
 <div class="overlay" id="viewBox" hidden><div class="box"><div class="vhead"><h3 id="viewTitle">Склад</h3><button class="ghost" id="viewClose">Закрити</button></div><div id="viewBody"></div></div></div>
-<div class="foot">30-0 УПЛ · <a href="#" id="newsBtn">Що нового у версії 0.62<b id="newsDot" hidden></b></a> · <a href="#" id="themeBtn" class="thm" role="switch" aria-checked="false" aria-label="Світла тема"></a> · неофіційний фан-проєкт</div>
+<div class="foot">30-0 УПЛ · <a href="#" id="newsBtn">Що нового у версії 0.63<b id="newsDot" hidden></b></a> · <a href="#" id="themeBtn" class="thm" role="switch" aria-checked="false" aria-label="Світла тема"></a> · неофіційний фан-проєкт</div>
 <script id="pool" type="application/json">__POOL__</script>
 <script>
 (function(){
@@ -1659,12 +1659,13 @@ function drawCard(r){
 document.getElementById('replayBtn').onclick=()=>playSeason(null);
 document.getElementById('chalOpen').onclick=()=>{const b=document.getElementById('chalBox'),t=document.getElementById('chalOpen');b.hidden=!b.hidden;t.classList.toggle('on',!b.hidden);if(!b.hidden){b.scrollIntoView({behavior:'smooth',block:'center'});const n=document.getElementById('chalName');if(n&&!n.hidden&&!n.value)n.focus();}};
 // ---------- «Що нового»: коротко й по-людськи про останню версію (технічний журнал — CHANGELOG.md у репозиторії)
-const WHATSNEW={v:'0.62',date:'01.10.2026',items:[
-  ['palette','Чистий дизайн','Менше рамок і підписів, однакові шрифти й відступи, одна головна кнопка на кожному екрані. Пояснення — згорнуто, відкриваються за потреби.'],
-  ['account-circle','Ім\'я в шапці','Поруч з аватаркою — твоє ім\'я: тисни, щоб відкрити свою сторінку.'],
-  ['soccer','Колесо','Прогрес драфту смужкою, клуб і сезон в одній плашці, «Перекрутити: 2» замість загадкового «↻ 2». «Рейтинги» — перемикач, гравці, що не підходять, — згорнуто.'],
-  ['trophy','Підсумки й своя сторінка','Три великі цифри замість шести плиток, матчі — смужкою з 30 кольорів. На своїй сторінці — лише відкриті трофеї, решта за «Усі трофеї».'],
-  ['monitor','iPad і комп\'ютер','Драфт у дві колонки: ліворуч поле, праворуч колесо й гравці — без гортання вгору-вниз.']]};
+const WHATSNEW={v:'0.63',date:'01.10.2026',items:[
+  ['account-group','5×5 з друзями онлайн','«Грати з друзями» → формат 5×5: кожен збирає свою п\'ятірку до кінця збору (1 година, 3 години чи доба), склади відкриті. Потім турнір: група, плей-оф, фінал (удвох — серія до двох перемог). Пенальті, VAR і серії пенальті — у кожному матчі можна подивитися епізоди наживо.'],
+  ['crown','Ліга легенд','Кожен культовий клуб — у сезоні з найсильнішим складом: Шахтар 12/13, Динамо 97/98, Чорноморець 13/14…'],
+  ['share-variant','Поділитися','Одна кнопка: картка й посилання, яке в месенджерах показує твій результат.'],
+  ['soccer','Колесо й гравці','Кнопки «Інший клуб / Інший сезон / Усе нове», кольори клубу лишаються, без зайвих цифр у списку; кілька позицій — кнопками праворуч. Без проміжного «Рахуємо прогноз».'],
+  ['trophy','Підсумки','На iPad — великі цифри, «Огляд» у дві колонки; до 6 трофеїв великими картками.'],
+  ['palette','Головна','«Режими» окремо від «Таблиці за весь час» і «Трофеїв», таблиця дня й відповіді виїжджають плавно, назва команди — на своїй сторінці.']]};
 function openNews(){screenTag('news');const box=document.getElementById('viewBox');document.getElementById('viewTitle').textContent=`Що нового · версія ${WHATSNEW.v}`;
   document.getElementById('viewBody').innerHTML=`<div class="news">${WHATSNEW.items.map(([e,h,d])=>`<div class="ni">${ic(e,'lg')}<div><b>${esc(h)}</b><p>${esc(d)}</p></div></div>`).join('')}</div>`;
   box.hidden=false;lsSet('upl30_news_seen',WHATSNEW.v);document.getElementById('newsDot').hidden=true;}
