@@ -13,7 +13,7 @@ async function pickOne(pg){await pg.click('#spinBtn');await pg.waitForSelector('
  // головна: два розділи
  const home=await pg.evaluate(()=>{const s=[...document.querySelectorAll('#s1 .sec0')].map(x=>x.textContent);const o=id=>document.getElementById(id).compareDocumentPosition(document.getElementById('secFriends'));
    return {s,daily:o('dailyCard')&Node.DOCUMENT_POSITION_FOLLOWING,pick:o('pickOpen')&Node.DOCUMENT_POSITION_FOLLOWING,fl:o('flOpen')&Node.DOCUMENT_POSITION_PRECEDING};});
- T.check(home.s.join()==='Сам,З друзями'&&home.daily&&home.pick&&home.fl,'головна: «Сам» (драфт дня, вибір сезону) і «З друзями» (ліга) '+JSON.stringify(home));
+ T.check(home.s.join()==='Одиночна гра,З друзями'&&home.daily&&home.pick&&home.fl,'головна: «Сам» (драфт дня, вибір сезону) і «З друзями» (ліга) '+JSON.stringify(home));
  await pg.screenshot({path:path.join(OUT,'v064_home.png'),fullPage:true});
  // драфт: гравець летить на поле
  await pg.click('#freeOpen');await pg.click('#startBtn');

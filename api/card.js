@@ -57,6 +57,7 @@ module.exports = async (req, res) => {
       stage = 'store';
       const url = await storeCard(buf, m[1] === 'png' ? 'png' : 'jpg').catch(() => null);
       if (url) { stage = 'prepare'; return res.status(200).json(await prepare(token, u, { photo_url: url, thumbnail_url: url, photo_width: 1080, photo_height: 1350 }, b.caption)); }
+      if (b.prefetch) return res.status(200).json({ ok: false, error: 'store' });   // 0.66: заготовка заздалегідь — без запасного шляху через особистий чат
     }
     stage = 'send';
     const fd = new FormData();

@@ -83,7 +83,7 @@ button.ghost{border-color:var(--line);background:transparent;color:var(--ink2);p
 .reel.spinning{box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--amber) 45%,transparent)}
 .reel.landed .strip>div{animation:land .45s cubic-bezier(.2,1.4,.4,1)}@keyframes land{0%{transform:scale(.94);opacity:.6}100%{transform:none;opacity:1}}
 .reel .strip{display:grid;will-change:transform}.reel .strip>div{height:64px;display:grid;align-content:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.reel .strip.go>div{filter:blur(.6px)}.reel .strip.go>div:last-child{filter:none}
+.reel .strip.go>div{filter:blur(.6px)}.reel .strip.go>div:last-child,#reelYear .strip.go>div:first-child{filter:none}#reelYear .strip.go>div:last-child{filter:blur(.6px)}
 .reel .strip.go{transition:transform 1.5s cubic-bezier(.16,.84,.22,1.02)}#reelYear .strip.go{transition-duration:1.9s}
 .reel .season{font-size:18px;font-weight:700;color:var(--ink)}
 .reel::before,.reel::after{content:'';position:absolute;left:0;right:0;height:12px;pointer-events:none;z-index:1}.reel::before{top:0;background:linear-gradient(var(--bg),transparent)}.reel::after{bottom:0;background:linear-gradient(transparent,var(--bg))}
@@ -128,7 +128,7 @@ tr.z-cl td:first-child{box-shadow:inset 3px 0 var(--z-cl)}tr.z-el td:first-child
 .tbl{overflow-x:auto;overflow-y:hidden}
 .matches{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:6px}
 .m{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center;padding:6px 8px;border:1px solid var(--line);border-radius:8px;font-size:13px;background:var(--surface)}
-.m .res{font-family:var(--font-mono);font-weight:600;width:20px;height:20px;border-radius:5px;display:grid;place-items:center;color:#fff;font-size:11px}
+.m .res{width:16px;height:16px;border-radius:5px}   /* 0.66: результат лише кольором */
 .res.W{background:var(--win)} .res.D{background:var(--draw)} .res.L{background:var(--loss)}
 .res.W,.res.D,.pos.GK,.pos.MF,.pos.CDM,.pos.CM,.pos.CAM,.pos.RM,.pos.LM{color:#111214!important}
 .m .sc{font-family:var(--font-mono);font-weight:600}
@@ -425,7 +425,7 @@ button.stick0{position:sticky;bottom:12px;z-index:5;max-width:none;margin-top:20
 @media (max-width:400px){.score0 b{font-size:25px}}
 .score0 i{font-style:normal}.score0 span{font-size:12px;color:var(--muted)}
 #newTro .tro{padding:8px 10px}#newTro .trt span:not(.trq){font-size:13px}
-#againBtn{flex:1}
+#againBtn{flex:0 1 420px}
 /* сторінка гравця */
 .pp-big3{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:18px;padding:16px 8px;border-radius:14px;background:var(--card);text-align:center}
 .pp-big3 .tile{border:0;background:none;padding:0}.pp-big3 .tile b{font:800 28px/1.05 var(--font-display)}.pp-big3 .tile span{font-size:12px;color:var(--muted);font-weight:500}
@@ -446,7 +446,7 @@ button.stick0{position:sticky;bottom:12px;z-index:5;max-width:none;margin-top:20
 .duo0{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:20px}
 .tile0{display:grid;justify-items:start;gap:10px;padding:16px 14px;border:0;border-radius:14px;background:var(--card);color:var(--ink);text-align:left;font-weight:600}
 .tile0 .ic{width:30px;height:30px;background:none;margin:0}.tile0 .ic .ico{width:22px;height:22px}.tile0 b{font-size:15px;line-height:1.25}.tile0 em{font-style:normal;color:var(--amber)}
-.about0{margin-top:20px;border:0;background:none;padding:12px 0;border-top:1px solid var(--line2);border-radius:0}.about0>summary{font-weight:700}
+.about0{margin-top:0;border:0;background:none;padding:14px 2px;border-radius:0}.about0>summary{font-weight:700}
 .foot0{display:flex;flex-wrap:wrap;justify-content:center;gap:6px 16px;margin-top:36px;padding-top:20px;border-top:1px solid var(--line2);font-size:13px}.foot0 a{color:var(--ink2);text-decoration:none}.foot0 a:hover{color:var(--amber)}
 table.lbt th.n,table.lbt td.n{width:28px;padding-left:2px;padding-right:2px;text-align:center}
 .lbfoot{margin-top:6px;font-size:13px}
@@ -459,7 +459,7 @@ table.lbt th.n,table.lbt td.n{width:28px;padding-left:2px;padding-right:2px;text
 .opt{transition:box-shadow .2s,background .2s}
 /* колесо */
 .cdot{display:inline-block;width:14px;height:14px;border-radius:50%;margin-right:10px;vertical-align:-1px;background:var(--c1,var(--line));box-shadow:inset 0 0 0 3px var(--c2,transparent),0 0 0 1px rgba(255,255,255,.18)}
-.reel .strip>div.club{display:flex;align-items:center}
+.reel .strip>div.club{display:flex;align-items:center}@media (max-width:600px){.reel .cdot{display:none}}   /* 0.66: на телефоні кружок клубу видно лише в коротких назвах — прибрано */
 .rr{display:grid;gap:6px}
 .rr .lbl{font-size:13px;color:var(--ink2)}.rr .lbl b{color:var(--ink)}
 .rr .seg{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;border:0;background:none;padding:0;overflow:visible}
@@ -472,13 +472,13 @@ table.lbt th.n,table.lbt td.n{width:28px;padding-left:2px;padding-right:2px;text
 .plrow .pl:hover{background:var(--card)}.plrow.on .pl{background:var(--card)}
 .plrow .pl .rt{min-width:28px}
 .plrow.off .pl{opacity:.38}
-.plrow{display:grid;grid-template-columns:minmax(0,1fr) auto 46px;column-gap:0}.plrow>.pl{grid-column:1/-1;grid-row:1;width:100%}
+.plrow{display:grid;grid-template-columns:minmax(0,1fr) auto 46px;column-gap:0;justify-self:stretch;width:100%}.plrow>.pl{grid-column:1/-1;grid-row:1;width:100%}
 .plrow>.plpos{grid-column:2;grid-row:1;z-index:1;flex-wrap:nowrap}.plrow.on:not(.wrap) .pl .nm{margin-right:calc(var(--pw,0px) + 8px)}
 .plrow.wrap>.plpos{grid-column:1/-1;grid-row:2;justify-self:start;flex-wrap:wrap;padding:0 4px 10px 46px}
 .plrow .plpos{flex:none;padding:0 6px 0 0;animation:plin .2s ease-out both}.plrow .plpos button{min-width:48px;min-height:38px;padding:6px 10px}
 .plrow.in{animation:plin .32s ease-out both}
 /* підсумки */
-.sharebtn{width:100%;padding:14px 18px;font-size:16px;font-weight:700;border:0;background:var(--grad);color:#fff}.sharebtn .ico{fill:#fff}
+.sharebtn{width:100%;max-width:420px;justify-self:center;padding:14px 18px;font:700 17px var(--font-display);border:0;background:var(--grad);color:#fff}.sharebtn .ico{fill:#fff}
 .sharebtn{display:flex;align-items:center;justify-content:center;gap:10px}.sharebtn .ic{background:none;margin:0 4px 0 -4px}.sharebtn.alt{background:var(--card);color:var(--ink)}.sharebtn.alt .ico{fill:var(--amber)}
 #chalOpen{display:block;margin:6px auto 0}
 #skipBtn{justify-self:center}
@@ -587,7 +587,7 @@ section>h3:first-child,.box h3:first-of-type,#viewBody>h3:first-child,#viewBody>
     <div class="daily" id="chalCard" hidden></div>
     <div class="daily" id="leagueCard" hidden></div>
     <!-- 0.64 (власник 01.10): головна поділена на одиночні режими й гру з друзями -->
-    <div class="sec0" id="secSolo">Сам</div>
+    <div class="sec0" id="secSolo">Одиночна гра</div>
     <div class="daily mode0" id="dailyCard">
       <div class="kicker" id="dKicker">Драфт дня</div>
       <div class="ttl" id="dTitle">Одне колесо для всіх, одна спроба</div>
@@ -604,13 +604,18 @@ section>h3:first-child,.box h3:first-of-type,#viewBody>h3:first-child,#viewBody>
     <div class="stat0" id="stat0"><div class="n" id="stat0n">4 546</div><div class="l" id="stat0l">футболістів у грі</div><div class="s" id="stat0s"></div></div>
     <h2>Питання та відповіді</h2>
     <div class="faq0">
-      <details id="howQ"><summary>Як грати?</summary><ol class="how0"><li>Обери схему й режим — або просто тисни «Драфт дня».</li><li>Крути колесо: воно дає клуб і сезон. Бери одного гравця на вільну позицію.</li><li>Зібрав 11 — відкрий рейтинги й прогноз, а потім зіграй 30 турів.</li></ol></details>
+      <!-- FAQ оновлено в 0.66; звіряти з грою перед кожною версією x.x9 (CLAUDE.md) -->
+      <details id="howQ"><summary>Як грати?</summary><ol class="how0"><li>Тисни «Грати» або «Драфт дня».</li><li>Крути колесо: воно дає клуб і сезон. Тапни гравця й обери позицію — так у складі з'являється один гравець.</li><li>Зібрав 11 — дивись прогноз (рейтинги, xP, шанси) і грай 30 турів.</li></ol></details>
       <details><summary>Звідки рейтинги гравців?</summary><p>Рейтинг рахується окремо за кожен сезон: голи, асисти, частка зіграних матчів, успіх команди, для оборонців — пропущені й сухі матчі. Гравця порівнюють лише з гравцями його лінії в тому самому сезоні, тому 90-ті й 2020-ті стоять поруч. Зверху — клас гравця: збірна, єврокубки, трансфери й нагороди, тож 90+ мають лише справжні зірки.</p></details>
-      <details><summary>Чому рейтинги приховані під час драфту?</summary><p>Щоб грала пам'ять і футбольне чуття, а не таблиця. Рейтинги відкриваються, щойно ти зібрав 11 гравців, — перед сезоном. Хочеш бачити одразу — увімкни в драфті «Показати рейтинги гравців», але тоді в таблиці поруч з результатом буде позначка «рейтинги відкриті». В антисезоні рейтингів немає: там грає лише пам'ять.</p></details>
+      <details><summary>Чому рейтинги приховані під час драфту?</summary><p>Щоб грала пам'ять і футбольне чуття, а не таблиця. Рейтинги відкриваються, щойно ти зібрав 11 гравців, — перед сезоном. Хочеш бачити одразу — увімкни в драфті «Рейтинги», але тоді в таблиці поруч з результатом буде позначка «рейтинги відкриті».</p></details>
+      <details><summary>Хто суперники?</summary><p>«Ліга легенд»: 15 клубів, що зробили історію УПЛ, — кожен у сезоні з найсильнішим складом. Твоя 11-ка займає 16-те місце в цій лізі й грає з кожним двічі.</p></details>
+      <details><summary>Гравець не на своїй позиції</summary><p>Гравця можна поставити на його позиції й на суміжні: атакувального півзахисника — у центр поля, опорного — у центр поля чи в захист, вінгера — крайнім півзахисником свого флангу. Що далі від рідної позиції — то трохи слабше він грає. Рейтинг у картці не змінюється, різниця працює лише в симуляції.</p></details>
+      <details><summary>Що таке «хімія»?</summary><p>Троє й більше гравців одного клубу грають разом краще, а якщо вони ще й з одного сезону — ще трохи краще. Бонус видно перед сезоном у рядку «Хімія».</p></details>
+      <details><summary>Що таке xP, шанси й «везіння»?</summary><p>xP — скільки очок твій склад у середньому набирає проти цих суперників за 300 симуляцій сезону. Шанси (чемпіон, Ліга чемпіонів, єврокубки, виліт) — як часто він так фінішує в цих симуляціях. Навіть у скромного складу є крихітний шанс на «сезон-диво». xG — очікувані голи. Везіння — різниця між набраними очками й xP.</p></details>
+      <details><summary>Як визначаються місця при рівності очок?</summary><p>За регламентом УПЛ: очки в особистих зустрічах → різниця м'ячів в особистих → забиті в особистих → загальна різниця м'ячів → загальна кількість забитих. За 1-ше місце — «золотий матч», за інші — жереб.</p></details>
       <details><summary>Що таке «Драфт дня»?</summary><p>Одна схема, одні суперники й одне колесо на день для всіх. Офіційна спроба — одна, результат іде в таблицю дня. Грай щодня, щоб тримати серію: один пропущений день на тиждень прощається (❄️ заморозка).</p></details>
       <details><summary>Що таке «Вибір сезону»?</summary><p>Колесо дає лише клуб, а сезон обираєш сам — з трьох випадкових сезонів цього клубу. Перекручувань немає, назад не повернешся. Результат іде в загальну таблицю з позначкою режиму.</p></details>
-      <details><summary>Що таке xP, xG і «везіння»?</summary><p>xP — скільки очок твій склад у середньому набирає проти цих суперників (300 симуляцій). xG — очікувані голи. Везіння — різниця між реальними очками й xP.</p></details>
-      <details><summary>Як грати з друзями?</summary><p>«Грати з друзями» на головній: створи лігу, задай правила й надішли посилання — щодня тур, очки додаються. А ще: однаковий «Драфт дня» і таблиця дня; після сезону — плитка «Виклик»; @upl30_bot у Telegram-групі з /league веде табло групи. Скоро — 5×5 онлайн.</p></details>
+      <details><summary>Як грати з друзями?</summary><p>«Ліга з друзями» на головній: створи лігу 11×11 або 5×5, задай правила й надішли посилання в чат. У Telegram-чаті бот @upl30_bot з командою /league веде табло драфту дня для всього чату. А ще — однаковий «Драфт дня» для всіх і кнопка «Кинути виклик другу» після сезону.</p></details>
       <details><summary>Чи треба реєструватися?</summary><p>Ні. Вхід через Google або Telegram потрібен, щоб трофеї, серія й рекорди не загубилися й були на всіх пристроях. Ім'я одне на всі таблиці — змінити його можна на своїй сторінці (тап по аватарці вгорі). Увійшов і через Google, і через Telegram — гра запитає «Це ти?» і об'єднає історію.</p></details>
       <details><summary>Що ви збираєте?</summary><p>Анонімно дивимося, куди натискають, щоб покращувати гру (Microsoft Clarity). Якщо увійдеш — ім'я та ідентифікатор входу. Пошту — лише якщо сам впишеш її на своїй сторінці для новин. Паролів не бачимо. Усе своє можна стерти кнопкою «Видалити акаунт» на своїй сторінці. <a href="privacy.html">Докладніше</a>.</p></details>
       <details><summary>Звідки дані?</summary><p>Склади, матчі, голи та підсумкові таблиці всіх сезонів Вищої ліги й Прем'єр-ліги 1992–2026 з відкритих джерел. Асисти — з 2012/13 і за 2021/22, сухі матчі до 2012 — оцінка за командною статистикою (≈).</p></details>
@@ -623,7 +628,7 @@ section>h3:first-child,.box h3:first-of-type,#viewBody>h3:first-child,#viewBody>
         <div class="fact" id="fcPersons"><b>4 546</b><span>футболістів</span></div>
       </div>
       <p>Рейтинг кожного гравця рахується за його сезон: голи й асисти за матч, частка зіграних матчів, місце команди, пропущені та сухі матчі для воротарів. Порівняння йде всередині сезону та позиції, тож зірки 90-х і 2020-х стоять поруч.</p>
-      <p>Симуляція: кожен матч розігрується як два пуассонівські потоки голів. Атака твоєї команди складається з нападу й півзахисту, оборона з воротаря, захисту й півзахисту. Суперники — «Ліга легенд»: 15 клубів, що зробили історію УПЛ, кожен у сезоні з найсильнішим складом (середній рейтинг 11 найкращих гравців; лише сезони ліги на 16 команд). В антисезоні — ті самі клуби із середньою силою за всі їхні сезони. Домашнє поле дає невелику перевагу, форма коливається від матчу до матчу.</p>
+      <p>Симуляція: кожен матч розігрується як два пуассонівські потоки голів. Атака твоєї команди складається з нападу й півзахисту, оборона з воротаря, захисту й півзахисту. Суперники — «Ліга легенд»: 15 клубів, що зробили історію УПЛ, кожен у сезоні з найсильнішим складом (середній рейтинг 11 найкращих гравців; лише сезони ліги на 16 команд). Домашнє поле дає невелику перевагу; форма гравців коливається від сезону до сезону й від матчу до матчу; гравці одного клубу дають «хімію».</p>
       <p class="muted">Прототип, неофіційний фан-проєкт. Рейтинги розрахункові й ще будуть донастроюватися.</p>
       <p class="muted" style="font-size:12px">Іконки: Material Design Icons (Pictogrammers, Apache 2.0) і Font Awesome Free (CC BY 4.0).</p>
     </details>
@@ -691,13 +696,12 @@ section>h3:first-child,.box h3:first-of-type,#viewBody>h3:first-child,#viewBody>
     <div class="hero" style="margin-top:14px">
       <div class="tier" id="tier"></div>
       <div class="score0" id="recTiles"></div>
-      <div class="x0" id="xRow"></div><details class="tip x0q"><summary>Що таке xG і везіння?</summary><p class="muted cap" id="xCap"></p></details>
+      <div class="x0" id="xRow"></div><p class="muted" id="verLine" hidden style="margin:0;font-size:13px;text-align:right"></p><details class="tip x0q"><summary>Що таке xG і везіння?</summary><p class="muted cap" id="xCap"></p></details>
       <div id="newTro" hidden></div>
       <div class="nudge" id="acctNudge" hidden></div>
       <p class="note" id="leagueMsg" hidden style="margin:0"></p>
       <p class="note" id="chalLine" hidden style="margin:0"></p>
-      <p class="muted" id="verLine" hidden style="margin:0;font-size:13px;text-align:right"></p>
-      <div class="row"><button class="primary" id="againBtn">Новий драфт</button><button class="ghost" id="replayBtn">Той самий склад, інший сезон</button></div>
+      <div class="row" style="justify-content:center"><button class="primary big0" id="againBtn">Новий драфт</button><button class="ghost" id="replayBtn">Той самий склад, інший сезон</button></div>
     </div>
     <div class="lb" id="lbBox" hidden>
       <h3 style="margin:0">Таблиця дня</h3>
@@ -755,7 +759,7 @@ section>h3:first-child,.box h3:first-of-type,#viewBody>h3:first-child,#viewBody>
 </div>
 <div class="overlay" id="viewBox" hidden><div class="box"><div class="vhead"><h3 id="viewTitle">Склад</h3><button class="ghost" id="viewClose">Закрити</button></div><div id="viewBody"></div></div></div>
 <nav class="foot0" aria-label="Розділи"><a href="#" data-go="dailyBtn">Драфт дня</a><a href="#" data-go="pickOpen">Вибір сезону</a><a href="#" data-go="flOpen">Ліга з друзями</a><a href="#" data-go="boardOpen">Таблиця</a><a href="#" data-go="trBtn">Трофеї</a><a href="#" data-go="howQ">Питання</a><a href="#" data-go="aboutBox">Про гру</a></nav>
-<div class="foot">30-0 УПЛ · <a href="#" id="newsBtn">Що нового у версії 0.65<b id="newsDot" hidden></b></a> · <a href="#" id="themeBtn" class="thm" role="switch" aria-checked="false" aria-label="Світла тема"></a> · неофіційний фан-проєкт</div>
+<div class="foot">30-0 УПЛ · <a href="#" id="newsBtn">Що нового у версії 0.66<b id="newsDot" hidden></b></a> · <a href="#" id="themeBtn" class="thm" role="switch" aria-checked="false" aria-label="Світла тема"></a> · неофіційний фан-проєкт</div>
 <script id="pool" type="application/json">__POOL__</script>
 <script>
 (function(){
@@ -774,22 +778,18 @@ for(const f in FORMATIONS)FORMATIONS[f].slots=FORMATIONS[f].rows.flat();
 const GROUP_OF={GK:"GK",CB:"DF",RB:"DF",LB:"DF",RWB:"DF",LWB:"DF",CDM:"MF",CM:"MF",CAM:"MF",RM:"MF",LM:"MF",RW:"FW",LW:"FW",ST:"FW",DF:"DF",MF:"MF",FW:"FW"};
 const POSNAME = {GK:"ВР",CB:"ЦЗ",RB:"ПЗ",LB:"ЛЗ",RWB:"ПВБ",LWB:"ЛВБ",CDM:"ОПЗ",CM:"ЦПЗ",CAM:"ЦАП",RM:"ППЗ",LM:"ЛПЗ",RW:"ПВ",LW:"ЛВ",ST:"НП",DF:"ЗХ",MF:"ПЛЗ",FW:"НП"};
 const POSFULL = {GK:"воротар",CB:"центральний захисник",RB:"правий захисник",LB:"лівий захисник",RWB:"правий вінгбек",LWB:"лівий вінгбек",CDM:"опорний півзахисник",CM:"центральний півзахисник",CAM:"атакувальний півзахисник",RM:"правий півзахисник",LM:"лівий півзахисник",RW:"правий вінгер",LW:"лівий вінгер",ST:"нападник",DF:"захисник",MF:"півзахисник",FW:"нападник"};
-// штраф до рейтингу за гру не на своїй позиції (сусідні → невеликий; далекі → великий; інше → не можна)
-const NEAR={
-  GK:{},
-  CB:{},
-  RB:{RWB:2},
-  LB:{LWB:2},
-  RWB:{RB:2,RM:3},
-  LWB:{LB:2,LM:3},
-  CDM:{CM:3},
-  CM:{CDM:3,CAM:3},
-  CAM:{CM:3},
-  RM:{RW:2,RWB:4},
-  LM:{LW:2,LWB:4},
-  RW:{RM:2},
-  LW:{LM:2},
-  ST:{}};   // з 0.46 — лише та сама роль під іншою назвою (фланговий захисник/вінгбек, крайній півзахисник/вінгер, центр поля); інші позиції — тільки де гравець реально зіграв 10+ матчів (alts)
+// 0.66 (власник 01.10): штраф позиції — за лініями (вертикаль: напад / півзахист / захист; горизонталь: центр / край).
+// POS_LIST — перехід на позицію, яку гравець справді грав (є в alts); POS_HIDDEN — суміжні позиції, яких немає в alts і в «також»,
+// але на поле поставити можна. Перехід рахується від основної позиції або від будь-якої з alts (беремо найменший штраф).
+const POS_LIST={
+  RW:{RM:0,ST:1,RWB:2,RB:2},LW:{LM:0,ST:1,LWB:2,LB:2},
+  RM:{RW:0,RWB:1,RB:1},LM:{LW:0,LWB:1,LB:1},
+  RB:{RWB:0,RM:1,CB:1},LB:{LWB:0,LM:1,CB:1},RWB:{RB:0,RM:1},LWB:{LB:0,LM:1},
+  ST:{RW:1,LW:1},
+  CAM:{CM:1,RM:3,LM:3,RW:3,LW:3},CM:{CDM:1,CAM:1},CDM:{CM:1,CB:1},
+  CB:{CDM:1,RB:1,LB:1,ST:4}};
+const POS_HIDDEN={CAM:{CM:1},CDM:{CM:1},CM:{CDM:1},RW:{RM:0},LW:{LM:0},RB:{RWB:0},LB:{LWB:0},RWB:{RB:0},LWB:{LB:0}};
+const POS_DEFAULT=2;   // позиція з alts, якої немає в POS_LIST (рідкісні поєднання з даних) — помірний штраф
 const GENERIC_PEN=2;   // «захисник/півзахисник» без уточнення: будь-який слот своєї групи з невеликим штрафом
 function parseAlts(s){const o={};for(const t of String(s||'').split(';')){if(!t)continue;const [c,sh]=t.split(':');o[c]=sh?parseFloat(sh):0.2;}return o;}
 // штраф гравця (main, alts) у слоті slot; null = не може грати
@@ -797,10 +797,11 @@ function slotPenalty(main,alts,slot){
   if(slot==="GK"||main==="GK")return main===slot?0:null;
   if(main===slot)return 0;
   if(main==="DF"||main==="MF"){const g=GROUP_OF[slot];if(g===main)return GENERIC_PEN;if(main==="MF"&&g==="FW")return 6;if(main==="DF"&&slot==="CDM")return 7;if(main==="MF"&&(slot==="RB"||slot==="LB"||slot==="RWB"||slot==="LWB"))return 7;return null;}
-  const A=parseAlts(alts);
-  if(slot in A)return A[slot]>=0.15?2:3;
-  const best=NEAR[main]&&NEAR[main][slot];
-  return best==null?null:best;
+  const A=parseAlts(alts),from=[main,...Object.keys(A)];let best=null;const take=v=>{if(v!=null&&(best==null||v<best))best=v;};
+  if(slot in A)for(const f of from)take(f===slot?null:(POS_LIST[f]||{})[slot]);
+  if(slot in A&&best==null)best=POS_DEFAULT;
+  for(const f of from)take((POS_HIDDEN[f]||{})[slot]);
+  return best;
 }
 // робоча нога (DATA.foot, джерело — data/foot/foot.csv): приховано, лише в симуляції; невідома нога → 0
 const FOOT_SIDE={LB:'L',LWB:'L',RB:'R',RWB:'R'};   // фланговий захисник: «не та» нога −2, своя чи обидві — 0
@@ -856,9 +857,13 @@ const REF_A=5.6, REF_D=7.3, FE=0.5;
 // refA/refD з 0.50 на 2.3 нижче: після стиснення верху шкали середній рейтинг зібраного складу впав на ~2.3 — складність та сама (замір у DECISIONS);
 // з 0.57 ще на 2.3 нижче (78.26/77.18 → 75.96/74.88): рейтинги v2 (стиснення понад 82 + клас) — середній рейтинг складу бота −2.5, очки ті самі (замір 0.57)
 // 0.65 (власник 01.10, орієнтир — 38-0): склад 85 без хімії — чемпіон ≈10–15% сезонів; refA/refD +2.89 (було 75.96/74.88), антисезон — на старих ref (antiRefA/D)
-const P={betaA:0.065,betaD:0.085,refA:78.85,refD:77.77,antiRefA:73.66,antiRefD:72.58,classFloorA:0.7,classCapD:1.6,capA:4.0,floorD:0.25,floorA:0.33,capD:3.0,home:0.12,formSd:0.15,balPen:0.01,seasonTeamSd:3.0,seasonPlayerSd:4.0,seasonFormCap:10};
+const P={betaA:0.048,betaD:0.062,refA:75.6,refD:74.6,antiRefA:73.66,antiRefD:72.58,classFloorA:0.85,classCapD:1.35,capA:4.0,floorD:0.25,floorA:0.33,capD:3.0,home:0.12,formSd:0.15,balPen:0.01,seasonTeamSd:2.5,seasonPlayerSd:2.5,seasonFormCap:10,miracleP:0.06,miracleTo:91};
 // форма сезону: у кожного гравця свій рік (σ 4), плюс спільний для команди «хімія» (σ 3); навіть зірка може провалити сезон, а середній склад — вистрілити
-function seasonForm(xi){const team=normal()*P.seasonTeamSd;const f={};for(const x of xi){f[x.id]=Math.max(-P.seasonFormCap,Math.min(P.seasonFormCap,Math.round(team+normal()*P.seasonPlayerSd)));}return f;}
+// 0.66 (власник: «у будь-якого складу має бути хоч якийсь шанс»): «сезон-диво» — з імовірністю miracleP уся команда грає ближче до рівня miracleTo
+// (слабкий склад — на +15…+19, сильний — щонайменше +4×0.6); в антисезоні дива немає. Межа форми гравця вгору розширюється на величину дива.
+function seasonForm(xi){const avgR=xi.reduce((a,x)=>a+x.r,0)/xi.length;
+  const team=normal()*P.seasonTeamSd+(S.format!=='anti'&&rnd()<P.miracleP?Math.max(4,P.miracleTo-avgR)*(0.6+0.4*rnd()):0);const f={};
+  for(const x of xi){f[x.id]=Math.max(-P.seasonFormCap,Math.min(P.seasonFormCap+Math.max(0,team),Math.round(team+normal()*P.seasonPlayerSd)));}return f;}
 
 // ---------- utils
 let rnd=Math.random;
@@ -1116,10 +1121,12 @@ function pickSeason(keepClub,keepYear){
 function reelRoll(id,cls,items,final,n){return new Promise(res=>{const reel=document.getElementById(id);const strip=reel.querySelector('.strip');
   if(!n){strip.className='strip';strip.style.transform='';strip.innerHTML=`<div class="${cls}">${esc(final)}</div>`;res();return;}
   const seq=[];for(let i=0;i<n;i++)seq.push(items[Math.floor(Math.random()*items.length)]);seq.push(final);
-  strip.className='strip';strip.style.transform='translateY(0)';strip.innerHTML=seq.map(v=>`<div class="${cls}">${esc(v)}</div>`).join('');
+  const down=id==='reelYear';if(down)seq.reverse();   // 0.66 (власник): клуб крутиться знизу вгору, сезон — згори вниз
+  strip.className='strip';strip.innerHTML=seq.map(v=>`<div class="${cls}">${esc(v)}</div>`).join('');
   reel.classList.remove('landed');reel.classList.add('spinning');
   const ih=strip.firstElementChild.offsetHeight||56;   // 0.63: висота рядка з CSS (була вписана 64 px — після 0.62 барабан проскакував і смикався)
-  requestAnimationFrame(()=>requestAnimationFrame(()=>{strip.classList.add('go');strip.style.transform=`translateY(-${n*ih}px)`;}));
+  strip.style.transform=down?`translateY(-${n*ih}px)`:'translateY(0)';
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{strip.classList.add('go');strip.style.transform=down?'translateY(0)':`translateY(-${n*ih}px)`;}));
   let done=false;const fin=()=>{if(done)return;done=true;strip.className='strip';strip.style.transform='';strip.innerHTML=`<div class="${cls}">${esc(final)}</div>`;reel.classList.remove('spinning');reel.classList.add('landed');res();};
   strip.addEventListener('transitionend',fin,{once:true});setTimeout(fin,2300);});}
 // «Вибір сезону» (0.60): колесо дає клуб, гравець обирає один із трьох його сезонів (випадкових, де є кого взяти); перекручувань немає
@@ -1181,10 +1188,10 @@ function renderWheel(){
     else sq.appendChild(row);}
   S.wheelFresh=false;
 }
-// альтернативні позиції гравця: реальні (з даних) і сусідні з невеликим штрафом, до трьох
+// альтернативні позиції гравця: лише реальні (з даних), до трьох
 const ALT_SLOTS=['GK','CB','RB','LB','RWB','LWB','CDM','CM','CAM','RM','LM','RW','LW','ST'];
 function altTags(p){if(S.format==='anti'||p[6]==='GK')return '';const main=p[6];
-  const a=ALT_SLOTS.filter(s=>s!==main).map(s=>({s,pen:slotPenalty(main,p[7],s)})).filter(o=>o.pen!=null&&o.pen<=3).sort((x,y)=>x.pen-y.pen).slice(0,3);
+  const A=parseAlts(p[7]);const a=ALT_SLOTS.filter(s=>s!==main&&s in A).map(s=>({s,pen:slotPenalty(main,p[7],s)})).filter(o=>o.pen!=null).sort((x,y)=>x.pen-y.pen).slice(0,3);   // 0.66: лише позиції, які гравець справді грав; приховані суміжні — без підпису
   return a.length?`<small class="alts">також ${a.map(o=>`<i class="${GROUP_OF[o.s]}">${POSNAME[o.s]}</i>`).join(' ')}</small>`:'';}
 // вільні позиції схеми, куди гравець може стати (те саме правило, що й підсвітка на полі): по одній на код позиції, основна — першою.
 // Дві вільні однакові (ЦЗ, ЦЗ) — ставимо на останню з них, як і раніше. Штрафи не показуємо: кнопка = місце дозволене (DECISIONS п. 15)
@@ -1192,17 +1199,16 @@ function posOpts(p){const m=new Map();for(const s of openSlots())if(effRating(p,
   const ord=s=>s.slot===p[6]?-1:ALT_SLOTS.indexOf(s.slot);return [...m.values()].sort((a,b)=>ord(a)-ord(b));}
 function choose(p){
   const opts=posOpts(p);if(!opts.length)return;
-  if(opts.length===1){place(p,opts[0]);return;}
-  // кілька вільних позицій (0.58, як у 38-0): під гравцем — кнопки позицій, і ті самі позиції підсвічені на полі
+  // 0.66 (власник): вибір у два натискання — під гравцем завжди кнопки позицій (навіть одна), ті самі позиції підсвічені на полі
   S.pending=S.pending===p?null:p;S.move=null;renderDraft();
   if(S.pending){const hint=document.getElementById('moveHint');const seen=lsGet('upl30_hint_place')||0;
-    if(seen<3){hint.hidden=false;hint.textContent=`Обери позицію для ${p[0]}: кнопкою праворуч або тапом по підсвіченому місцю на полі.`;lsSet('upl30_hint_place',seen+1);}
+    if(seen<3){hint.hidden=false;hint.textContent=`Обери позицію для ${p[0]}: кнопкою позиції або тапом по підсвіченому місцю на полі.`;lsSet('upl30_hint_place',seen+1);}
     const f=document.querySelector('#squad .plpos button');if(f)f.focus({preventScroll:true});}
 }
 // кнопки позицій під гравцем; Escape — скасувати вибір
 // 0.65 (власник): кнопки позицій — між ім'ям і рейтингом (рейтинг не зсувається); не вміщаються поруч з ім'ям — другим рядком
-function fitPos(row,box,b){row.style.setProperty('--pw',box.offsetWidth+'px');const nm=b.querySelector('.nm');
-  if(nm&&nm.getBoundingClientRect().width<110)row.classList.add('wrap');}
+function fitPos(row,box,b){row.style.setProperty('--pw',box.offsetWidth+'px');const nm=b.querySelector('.nm');   // 0.66: на телефоні — завжди під прізвищем
+  if(matchMedia('(max-width:600px)').matches||(nm&&nm.getBoundingClientRect().width<110))row.classList.add('wrap');}
 function posBox(p,row){const opts=posOpts(p),box=document.createElement('div');box.className='plpos';box.setAttribute('role','group');box.setAttribute('aria-label',`Позиція для ${p[0]}`);
   opts.forEach(s=>{const x=document.createElement('button');x.type='button';x.className=GROUP_OF[s.slot];x.dataset.slot=s.slot;x.title=POSFULL[s.slot];x.textContent=POSNAME[s.slot];x.onclick=()=>place(p,s);box.appendChild(x);});
   box.onkeydown=e=>{if(e.key==='Escape'){S.pending=null;renderDraft();const r=[...document.querySelectorAll('#squad .pl')].find(b=>b.dataset.id===p[5]);if(r)r.focus();}};
@@ -1238,7 +1244,7 @@ async function lockDraft(){
   renderPre();renderDraft();
 }
 // 0.65 (як у 38-0): нагорі — рейтинг, xP і прогноз місця; далі ймовірності смужками, сила ліній і «хімія»; пояснення й суперники — згорнуті
-const PRE_ODDS=[['Чемпіон',p=>p===1],['Ліга чемпіонів',p=>p<=2],['Єврокубки',p=>p<=4],['Виліт',p=>p>=15]];
+const PRE_ODDS=[['Чемпіон',p=>p===1,1],['Ліга чемпіонів',p=>p<=2],['Єврокубки',p=>p<=4],['Виліт',p=>p>=15]];
 const PRE_LINES=[['FW','Атака'],['MF','Півзахист'],['DF','Захист'],['GK','Воротар']];
 function renderPre(){
   const el=document.getElementById('preBox');const xi=S.slots.map(s=>s.player);const open=ratingsOpen();
@@ -1250,7 +1256,7 @@ function renderPre(){
   if(!open){el.innerHTML=`<div class="kicker">Склад зафіксовано</div><p class="muted cap">Лише пам'ять: рейтинги й прогноз не показуються.</p>${oppD}`;return;}
   const pl=(S.pre.pl||[]).slice().sort((a,b)=>a-b);const med=pl.length?pl[Math.floor(pl.length/2)]:0;
   const pct=f=>pl.length?Math.round(pl.filter(f).length/pl.length*100):0;
-  const odds=PRE_ODDS.map(([n,f])=>{const v=pct(f);return `<div class="prow"><span>${n}</span><div class="bar"><i style="width:${v}%"></i></div><b>${v}%</b></div>`;}).join('');
+  const odds=PRE_ODDS.map(([n,f,never0])=>{const v=pct(f);return `<div class="prow"><span>${n}</span><div class="bar"><i style="width:${v}%"></i></div><b>${v===0&&never0&&S.format!=='anti'?'&lt;1':v}%</b></div>`;}).join('');   // 0.66: шанс на титул є завжди (сезон-диво) — 0 показуємо як «<1%»
   const lines=PRE_LINES.map(([g,n])=>{const a=xi.filter(x=>x.pos===g);if(!a.length)return '';const v=a.reduce((s,x)=>s+x.r,0)/a.length;
     return `<div class="prow"><span>${n}</span><div class="bar"><i style="width:${Math.max(4,Math.min(100,(v-60)/39*100)).toFixed(0)}%"></i></div><b>${v.toFixed(0)}</b></div>`;}).join('');
   const ch=chemOf(xi);const chT=ch.groups.length?ch.groups.map(g=>{const p=xi.find(x=>x.cc===g.cc);return `${g.k} з «${esc(p?p.club:g.cc)}»`;}).join(', '):'';
@@ -1306,7 +1312,7 @@ function rankTeams(st,R){
 }
 function simulate(xi0,mode,seasonYear,light){
   let xgf=0,xga=0;
-  const form=light?{}:seasonForm(xi0);const xi=xi0.map(x=>({...x,r0:x.r,r:Math.max(40,Math.min(99,x.r+(form[x.id]||0)))}));   // у xP форма не входить: xP — очікування для складу, форма — частина «везіння»
+  const form=seasonForm(xi0);const xi=xi0.map(x=>({...x,r0:x.r,r:Math.max(40,Math.min(99,x.r+(form[x.id]||0)))}));   // з 0.66 форма (і «сезон-диво») входить і в xP та шанси перед сезоном — інакше слабкий склад бачив би 0%
   const y=seasonYear||oppYear();const sea=seasonOf(y);
   const t=teamIndices(xi), u=userMult(t,S.format==='anti'?{...mode,star:0}:mode);
   const last=sea.teams[sea.teams.length-1];
@@ -1423,13 +1429,14 @@ async function playSeason(year){
   renderPitch(document.getElementById('pitch2'),S.slots,true);
   document.getElementById('scorers').innerHTML=r.scorers.slice(0,6).map(s=>`<span class="mono">${s.g}</span> ${esc(s.name)}`).join(' · ')||'—';
   document.getElementById('mDet').open=matchMedia('(min-width:1000px)').matches;   // на великому екрані праворуч від поля місця вистачає — матчі розгорнуто
-  document.getElementById('matches').innerHTML=r.log.map(m=>`<div class="m" title="${esc(whoMin(m))} · xG ${m.xg.toFixed(1)}:${m.xga.toFixed(1)}"><span class="res ${m.res}">${m.res==='W'?'П':m.res==='D'?'Н':'Пр'}</span><span class="op">${m.home?'':'@ '}${esc(m.opp)}</span><span class="sc">${m.ug}:${m.og}</span></div>`).join('');
+  document.getElementById('matches').innerHTML=r.log.map(m=>`<div class="m" title="${esc(whoMin(m))} · xG ${m.xg.toFixed(1)}:${m.xga.toFixed(1)}"><span class="res ${m.res}"></span><span class="op">${esc(m.opp)}</span><span class="sc">${m.ug}:${m.og}</span></div>`).join('');
   const f1=v=>v.toFixed(1),sg=v=>(v>0?'+':'')+v;
   document.getElementById('table').innerHTML=`<tr><th></th><th>Команда</th><th class="num">І</th><th class="num">В</th><th class="num">Н</th><th class="num">П</th><th class="num">Голи</th><th class="num">РМ</th><th class="num">О</th><th class="num">xG</th><th class="num">xGA</th><th class="num">Г−xG</th></tr>`+r.table.map((t,i)=>`<tr class="${ZONE(i+1,r.table.length)}${t.id==='USER'?' me':''}"><td class="num">${i+1}</td><td>${esc(t.n)}</td><td class="num">${t.w+t.d+t.l}</td><td class="num">${t.w}</td><td class="num">${t.d}</td><td class="num">${t.l}</td><td class="num">${t.gf}:${t.ga}</td><td class="num">${sg(t.gf-t.ga)}</td><td class="num"><b>${t.pts}</b></td><td class="num">${f1(t.xg)}</td><td class="num">${f1(t.xga)}</td><td class="num">${(t.gf-t.xg>=0?'+':'')+(t.gf-t.xg).toFixed(1)}</td></tr>`).join('');
-  let tn="При рівності очок місця визначаються за регламентом УПЛ: очки в особистих зустрічах → різниця м'ячів в особистих → забиті в особистих → загальна різниця м'ячів → загальна кількість забитих; за 1-ше місце — «золотий матч», за інші — жереб.";
-  if(r.tie)tn=`Ти ${r.tie.above?'вище':'нижче'} за «${r.tie.opp}» при однаковій кількості очок: вирішив показник «${r.tie.why}». `+tn;
+  // 0.66: загальний регламент — у «Питаннях і відповідях»; тут лише те, що стосується твого сезону
+  let tn='';
+  if(r.tie)tn=`Ти ${r.tie.above?'вище':'нижче'} за «${r.tie.opp}» при однаковій кількості очок: вирішив показник «${r.tie.why}». `;
   if(r.golden){const g=r.golden;tn=`Золотий матч: ${g.a} — ${g.b} ${g.ga}:${g.gb}${g.pen?` (пен. ${g.pen[0]}:${g.pen[1]})`:''}, переміг ${g.wu ? 'ти' : '«'+g.winner+'»'} ${g.how}. `+tn;}
-  document.getElementById('tieNote').textContent=tn;
+  const tnEl=document.getElementById('tieNote');tnEl.textContent=tn;tnEl.hidden=!tn;
   document.getElementById('zoneLegend').hidden=S.format==='anti';
   const mvp=[...r.players].sort((a,b)=>b.rt-a.rt)[0];
   document.getElementById('playerStats').innerHTML=`<tr><th>Гравець</th><th class="num">Оцінка</th><th class="num">Поз.</th>${ratingsOpen()?'<th class="num">Рейт.</th>':''}<th class="num">Форма</th><th class="num">Голи</th><th class="num">Асисти</th><th class="num">8.0+</th></tr>`+[...r.players].sort((a,b)=>b.rt-a.rt).map(p=>`<tr${p===mvp?' class="me"':''}><td class="pn"><span>${esc(p.name)}</span></td><td class="num avgc">${p.rt.toFixed(2)}</td><td class="num" title="${POSFULL[p.slot||p.pos]}">${POSNAME[p.slot||p.pos]}</td>${ratingsOpen()?`<td class="num">${slotBase(p.id)??p.r}</td>`:''}<td class="num" style="color:${p.form>=3?'var(--win)':p.form<=-3?'var(--loss)':'inherit'}">${p.form>0?'+':''}${p.form}</td><td class="num">${p.g}</td><td class="num">${p.a}</td><td class="num">${p.m8}</td></tr>`).join('');
@@ -1483,7 +1490,7 @@ function tickReveal(){
   REV.i++;
 }
 function finishReveal(){clearInterval(REV.t);renderNewTro(REV.r);acctNudge(REV.r);document.getElementById('live').hidden=true;document.getElementById('final').hidden=false;window.scrollTo({top:0});
-  if(!REV.done){REV.done=true;countUp(document.querySelectorAll('#recTiles i, #recTiles b.hot'));champModal(REV.r);}}
+  if(!REV.done){REV.done=true;countUp(document.querySelectorAll('#recTiles i, #recTiles b.hot'));champModal(REV.r);if(ONLINE)setTimeout(()=>cardPrep(REV.r),600);}}
 document.getElementById('skipBtn').onclick=()=>finishReveal();
 document.querySelectorAll('#tabs .tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('#tabs .tab').forEach(x=>x.classList.toggle('on',x===b));['t1','t2'].forEach(id=>document.getElementById(id).hidden=id!==b.dataset.tab);});
 document.getElementById('againBtn').onclick=()=>{S.result=null;if(S.league){openLeague(S.league.id);return;}go(S.daily||S.challenge?1:4);};
@@ -1523,13 +1530,18 @@ function tgFields(){return TGU?{tg_user_id:TGU.id,tg_name:([TGU.first_name,TGU.l
 function shareTextLink(){const text=S.result?shareTextOf(S.result,true,true):document.getElementById('shareText').value;   // без квадратиків — вони для картки
   const url=`https://t.me/share/url?url=${encodeURIComponent(tgLink())}&text=${encodeURIComponent(text)}`;
   if(TG&&TG.openTelegramLink)TG.openTelegramLink(url);else window.open(url,'_blank');}
+// 0.66 (власник: «Поділитися» довго): картку малюємо й (у Telegram) готуємо повідомлення бота заздалегідь — щойно показано підсумок
+let CARD_PREP=null;
+const tgShareOk=()=>!!(ONLINE&&TG&&TG.initData&&TG.shareMessage&&TG.isVersionAtLeast&&TG.isVersionAtLeast('8.0'));
+const cardPost=(r,prefetch)=>_fetch('/api/card',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({initData:TG.initData,image:CARD_CANVAS.toDataURL('image/jpeg',0.9),caption:shareTextOf(r,true,true),share:true,prefetch:!!prefetch})}).then(x=>x.json()).catch(()=>({}));
+function cardPrep(r){CARD_PREP={r,p:(async()=>{try{await document.fonts.ready;}catch(e){}drawCard(r);return tgShareOk()?cardPost(r,true):{};})()};}
 document.getElementById('tgShareBtn').onclick=async()=>{const b=document.getElementById('tgShareBtn'),msg=document.getElementById('copyMsg');if(!S.result)return;
-  try{await document.fonts.ready;}catch(e){}drawCard(S.result);
+  const pre=CARD_PREP&&CARD_PREP.r===S.result?CARD_PREP:null;CARD_PREP=null;
+  if(pre){b.disabled=true;await pre.p;b.disabled=false;}else{try{await document.fonts.ready;}catch(e){}drawCard(S.result);}
   const inTg=!!(ONLINE&&TG&&TG.initData);
-  if(inTg&&TG.shareMessage&&TG.isVersionAtLeast&&TG.isVersionAtLeast('8.0')){
-    b.disabled=true;msg.textContent='Готуємо картку…';
-    try{const r=await _fetch('/api/card',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({initData:TG.initData,image:CARD_CANVAS.toDataURL('image/jpeg',0.9),caption:shareTextOf(S.result,true,true),share:true})});
-      const j=await r.json().catch(()=>({}));b.disabled=false;
+  if(tgShareOk()){
+    b.disabled=true;msg.textContent=pre?'':'Готуємо картку…';
+    try{let j=pre?await pre.p:null;if(!j||!j.prepared)j=await cardPost(S.result);b.disabled=false;   // заготовка не вдалася — звичайний шлях
       if(j.ok&&j.prepared){msg.textContent='';TG.shareMessage(j.prepared,ok=>{msg.textContent=ok?'Надіслано':'';});return;}
       if(j.need_start){msg.innerHTML='Спочатку відкрий чат з ботом і натисни «Start», потім спробуй ще раз. <button class="ghost" id="openBotBtn" style="padding:4px 10px">Відкрити @'+TG_BOT+'</button>';document.getElementById('openBotBtn').onclick=()=>TG.openTelegramLink('https://t.me/'+TG_BOT+'?start=card');return;}
     }catch(e){b.disabled=false;}
@@ -1818,13 +1830,13 @@ function drawCard(r){   // 0.64: картка в стилі сайту — те�
 document.getElementById('replayBtn').onclick=()=>playSeason(null);
 document.getElementById('chalOpen').onclick=()=>{const b=document.getElementById('chalBox'),t=document.getElementById('chalOpen');b.hidden=!b.hidden;t.classList.toggle('on',!b.hidden);if(!b.hidden){b.scrollIntoView({behavior:'smooth',block:'center'});const n=document.getElementById('chalName');if(n&&!n.hidden&&!n.value)n.focus();}};
 // ---------- «Що нового»: коротко й по-людськи про останню версію (технічний журнал — CHANGELOG.md у репозиторії)
-const WHATSNEW={v:'0.65',date:'01.10.2026',items:[
-  ['trophy','Чемпіонство — знову подвиг','Склад із середнім рейтингом 85 стає чемпіоном приблизно в кожному восьмому сезоні, як у 38-0. Програти всі 30 у класиці тепер майже неможливо — для цього є антисезон.'],
-  ['account-group','Хімія','Троє й більше гравців одного клубу грають краще разом, а з одного сезону — ще трохи краще. Бонус видно перед сезоном.'],
-  ['chart-bar','Перед сезоном','Прогноз місця, шанси на чемпіонство, єврокубки й виліт смужками, сила ліній. Прогноз рахується без «замирання» екрана.'],
-  ['timer-sand','Живий сезон','Останні три матчі — картками, перемоги спалахують зеленим, очки окремо від В-Н-П.'],
-  ['format-list-numbered','Підсумки й таблиці','Спершу місце, рівні плитки, яскрава кнопка «Поділитися», виклик другу — кнопкою. У таблицях «Голи» замість «Г», усе по центру.'],
-  ['home','Головна й драфт','Більше повітря, без стрілок, «Вибір сезону» — одразу в гру, колесо крутиться від дотику будь-де в зоні, кнопки позицій не зсувають рейтинг. Підвал із посиланнями на розділи.']]};
+const WHATSNEW={v:'0.66',date:'01.10.2026',items:[
+  ['trophy','Шанс є в кожного','Склад 83 стає чемпіоном приблизно в кожному шістнадцятому сезоні, 85 — у кожному сьомому. Навіть у дуже скромного складу є крихітний шанс на «сезон-диво». Форма гравців скаче менше.'],
+  ['soccer-field','Позиції за лініями','Атакувальний півзахисник може зіграти в центрі поля, опорний — у центрі чи в захисті, вінгер — крайнім півзахисником свого флангу. Що далі від рідної позиції — то трохи слабше.'],
+  ['star','Вибір гравця — у два дотики','Тапни гравця — з\'являться кнопки позицій (на телефоні — під прізвищем), тапни позицію — гравець у складі. Без випадкових виборів.'],
+  ['timer-sand','Живий сезон','Один матч, яскраві кольори, результат — кольором. Колесо: клуб крутиться вгору, сезон — униз.'],
+  ['send','Ліга Telegram-чату','Табло чату видно одразу, без очікування. «Поділитися» відкривається швидше — картку готуємо заздалегідь.'],
+  ['format-list-numbered','Дрібниці','Оновлені «Питання та відповіді»; у таблиці знову є місце; «Новий драфт» і «Поділитися» на iPad — компактні.']]};
 function openNews(){screenTag('news');const box=document.getElementById('viewBox');document.getElementById('viewTitle').textContent=`Що нового · версія ${WHATSNEW.v}`;
   document.getElementById('viewBody').innerHTML=`<div class="news">${WHATSNEW.items.map(([e,h,d])=>`<div class="ni">${ic(e,'lg')}<div><b>${esc(h)}</b><p>${esc(d)}</p></div></div>`).join('')}</div>`;
   box.hidden=false;lsSet('upl30_news_seen',WHATSNEW.v);document.getElementById('newsDot').hidden=true;}
