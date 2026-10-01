@@ -2,7 +2,7 @@
 // Адреса чужої сторінки — ?u=<public_id> (players.public_id, 8 символів). device_id і номер гравця в посиланні не світимо.
 // Дані: чужа — player_profile_pub (sql/v059_player_page.sql); своя — player_profile + локальні трофеї, серія, історія сезонів (seasons за своїм player_id).
 // ---------- аватарка: два кольори й простий узор із хешу публічного номера гравця (макет docs/mockups/header_avatar.png)
-const AV_PAL=['#ff7a1a','#1c1c1d','#c44f00','#f4f1ea','#ff9a3d','#3a3a3c'];
+const AV_PAL=['#e0287a','#0f1b3d','#9a2bb5','#ffffff','#ff5aa0','#26396b'];   // 0.64: кольори УПЛ (було оранжеве)
 const AV_PAIRS=[[0,1],[1,0],[2,3],[1,4],[5,0],[3,2],[0,5],[4,1]];
 function avHash(s){let h=2166136261;for(const c of String(s))h=Math.imul(h^c.charCodeAt(0),16777619);return h>>>0;}
 function avatarSvg(seed,size){

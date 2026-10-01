@@ -557,7 +557,8 @@ h3,.sec0,#fl .sec0,#viewBody h3{margin:36px 0 12px}
 section>h3:first-child,.box h3:first-of-type,#viewBody>h3:first-child,#viewBody>p+h3{margin-top:22px}
 .row0{margin-top:12px;padding:16px}.duo0{margin-top:12px;gap:12px}.daily{margin-top:12px;padding:18px;gap:12px}
 .sec0+.row0,.sec0+.daily,h3+.daily{margin-top:0}
-.trg,.tro0,#newTro .trgrid,.fl5ms,.fl5teams{gap:12px}
+.trg,#newTro .trgrid,.fl5ms,.fl5teams{gap:12px}
+.tro0{display:flex;flex-wrap:wrap;gap:8px}.tro0>span{display:inline-flex;align-items:center;gap:8px;padding:6px 14px 6px 6px;border-radius:99px;background:var(--surface);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--amber) 32%,transparent);font-size:14px;font-weight:600}.tro0 .hx{width:26px;height:26px}
 #viewBody .trsec,.trsec{margin:16px 0 0;font-size:14px;color:var(--muted)}
 .row:has(.chip.ms){gap:10px!important;margin-bottom:8px}
 /* трофеї «плитками» (референс власника): по одному в рядку, маленький значок біля назви, назва — градієнтом, опис під нею; закриті — приглушені */
@@ -1927,7 +1928,7 @@ document.addEventListener('click',e=>{const a=e.target.closest&&e.target.closest
 // Адреса чужої сторінки — ?u=<public_id> (players.public_id, 8 символів). device_id і номер гравця в посиланні не світимо.
 // Дані: чужа — player_profile_pub (sql/v059_player_page.sql); своя — player_profile + локальні трофеї, серія, історія сезонів (seasons за своїм player_id).
 // ---------- аватарка: два кольори й простий узор із хешу публічного номера гравця (макет docs/mockups/header_avatar.png)
-const AV_PAL=['#ff7a1a','#1c1c1d','#c44f00','#f4f1ea','#ff9a3d','#3a3a3c'];
+const AV_PAL=['#e0287a','#0f1b3d','#9a2bb5','#ffffff','#ff5aa0','#26396b'];   // 0.64: кольори УПЛ (було оранжеве)
 const AV_PAIRS=[[0,1],[1,0],[2,3],[1,4],[5,0],[3,2],[0,5],[4,1]];
 function avHash(s){let h=2166136261;for(const c of String(s))h=Math.imul(h^c.charCodeAt(0),16777619);return h>>>0;}
 function avatarSvg(seed,size){
