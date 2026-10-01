@@ -15,7 +15,10 @@ const fail=[];let n=0;const check=(ok,msg)=>{n++;console.log((ok?'✓ ':'✗ ')+
  check(/Що таке «Драфт дня»/.test(home.faq)&&/Що таке «Вибір сезону»/.test(home.faq)&&!/5×5 на одному пристрої/.test(home.faq)&&/Це ти\?/.test(home.faq),'FAQ: драфт дня, вибір сезону, «Це ти?», без 5×5 на одному пристрої');
  check(/^драфт дня/i.test(home.daily)&&/ \/ Грати$/.test(home.daily.trim())&&!/виклик дня/i.test(home.daily),'картка дня: «'+home.daily.trim()+'»');
  // ---- «Вибір сезону»: плитка формату, режимів немає
+ // 0.65: «Вибір сезону» з головної — одразу в драфт; налаштування — через «Грати» → плитка «Вибір сезону»
  await pg.click('#pickOpen');await pg.waitForTimeout(300);
+ check(await pg.evaluate(()=>!document.getElementById('s2').hidden&&window.__dbg.S.pickMode&&window.__dbg.S.format==='classic'),'«Вибір сезону» з головної — одразу драфт');
+ await pg.evaluate(()=>document.getElementById('homeBtn').click());await pg.click('#freeOpen');await pg.click('#formats .opt[data-fmt="pick"]');await pg.waitForTimeout(200);
  const setup=await pg.evaluate(()=>({on:(document.querySelector('#formats .opt.on')||{}).dataset.fmt,modes:document.getElementById('modesBox').hidden,S:{f:window.__dbg.S.format,p:window.__dbg.S.pickMode}}));
  check(setup.on==='pick'&&setup.modes&&setup.S.f==='classic'&&setup.S.p,'налаштування: плитка «Вибір сезону», вибору складності немає, у базі — класика');
  await pg.screenshot({path:path.join(OUT,'v060_setup.png'),fullPage:true});

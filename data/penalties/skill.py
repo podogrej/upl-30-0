@@ -12,8 +12,9 @@
 
 Запуск з кореня: python3 data/penalties/skill.py            # друкує підсумок
                  python3 data/penalties/skill.py --md       # + перезаписує data/penalties/skill.md
+                 python3 data/penalties/skill.py --js       # + таблиця для 5×5: src/pen_skill.js
 """
-import csv, sys, collections
+import csv, sys, collections, json
 
 ROWS = list(csv.DictReader(open('data/penalties/penalties.csv', newline='')))
 GROUP = {'ST': 'FW', 'LW': 'W', 'RW': 'W', 'CAM': 'AM', 'LM': 'W', 'RM': 'W', 'CM': 'MF', 'CDM': 'MF',
@@ -145,6 +146,15 @@ def main():
     print(txt)
     if '--md' in sys.argv:
         open('data/penalties/skill.md', 'w').write(txt)
+    if '--js' in sys.argv:   # 0.65: таблиця для 5×5 → src/pen_skill.js (лише ті, у кого є удари / пенальті у ворота)
+        tk = {r['person_id']: [round(sk * 1000), round(1000 * n / max(1, i(r['games_tm'])))] for sk, s, n, m, r in takers if n}
+        kp = {r['person_id']: round(sk * 1000) for sk, s, n, r in keepers if n}
+        js = ('// ЗГЕНЕРОВАНО: python3 data/penalties/skill.py --js (дані Transfermarkt, data/penalties). Не правити.\n'
+              '// F5_PK: id → [навик пенальтиста ×1000, пенальті за матч ×1000]; F5_GK: id воротаря → частка відбитих ×1000; F5_PM, F5_GM — середні\n'
+              f'const F5_PM={m0:.4f},F5_GM={gm:.4f};\n'
+              'const F5_PK=' + json.dumps(tk, ensure_ascii=False, separators=(',', ':')) + ';\n'
+              'const F5_GK=' + json.dumps(kp, ensure_ascii=False, separators=(',', ':')) + ';\n')
+        open('src/pen_skill.js', 'w').write(js)
 
 
 if __name__ == '__main__':

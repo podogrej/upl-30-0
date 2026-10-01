@@ -7,7 +7,9 @@ const E=require(path.join(ROOT,'lib','engine.js'));
  for(const [fmt,mode,form] of runs){
   await playSeason(pg,fmt,mode,form);
   const c=await pg.evaluate(()=>{const S=window.__dbg.S;const r=S.result;return {seed:r.seed,year:r.year,mode:S.mode,format:S.format,formation:S.formation,
-    xi:S.slots.map(s=>({id:s.player.id,name:s.player.name,slot:s.slot,pos:s.player.pos,r:s.player.r})),W:r.W,D:r.D,L:r.L,gf:r.gf,ga:r.ga,place:r.place}});
+    xi:S.slots.map(s=>({id:s.player.id,name:s.player.name,slot:s.slot,pos:s.player.pos,r:s.player.r,c:s.player.club,y:s.player.y})),W:r.W,D:r.D,L:r.L,gf:r.gf,ga:r.ga,place:r.place}});
+  // 0.65: код клубу для «хімії» сервер бере з пулу за назвою клубу й сезоном — так само, як api/verify.js
+  const ccOf=x=>(E.DATA.clubs.find(k=>k.n===x.c&&k.y===+x.y)||{}).c;c.xi=c.xi.map(x=>({...x,cc:ccOf(x),y:+x.y}));
   const s=E.run({xi:c.xi,mode:c.mode,format:c.format,year:c.year,seed:c.seed});
   const same=s.W===c.W&&s.D===c.D&&s.L===c.L&&s.gf===c.gf&&s.ga===c.ga&&s.place===c.place;if(same)ok++;
   console.log(fmt.padEnd(8),c.mode.padEnd(9),c.formation,'browser',`${c.W}-${c.D}-${c.L} ${c.gf}:${c.ga} #${c.place}`,'server',`${s.W}-${s.D}-${s.L} ${s.gf}:${s.ga} #${s.place}`,same?'✓':'✗ MISMATCH');
