@@ -82,7 +82,6 @@ async function acctTelegram(payload,silent){
     return 'ok';
   }catch(e){ACCT_ERR=`крок ${step}: ${e&&e.name&&e.name!=='Error'?e.name+': ':''}${String(e&&e.message||e).slice(0,160)}`;if(!silent){ACCT_MSG='Вхід через Telegram не вдався — '+ACCT_ERR;openAcct();}}
 }
-window.onTelegramAuth=u=>acctTelegram({widget:u});   // колбек віджета Telegram (віджет більше не показуємо — лишено для сумісності)
 // ---------- вхід через бота: браузер створює одноразовий токен, гравець тисне «Start» у @upl30_bot, сторінка чекає підтвердження
 function acctBotToken(){const a=new Uint8Array(16);crypto.getRandomValues(a);const t=[...a].map(b=>b.toString(16).padStart(2,'0')).join('');lsSet('upl30_login_tok',{t,at:Date.now()});return t;}
 function acctBotPending(){const o=lsGet('upl30_login_tok');return o&&o.t&&Date.now()-o.at<10*60e3?o.t:null;}

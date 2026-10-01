@@ -1,7 +1,8 @@
-// 30-0 УПЛ — вечірній підсумок дня в лігах (запускає Vercel Cron з vercel.json, ~21:00 за Києвом)
+// 30-0 УПЛ — вечірній підсумок дня в лігах (Vercel Cron з vercel.json о 18:00 UTC: 21:00 за Києвом улітку, 20:00 — узимку)
 // Пише в групу один раз на день і лише якщо хтось грав. Повторний виклик нічого не надсилає.
 // Змінна оточення у Vercel: CRON_SECRET (обов'язкова, інакше 401).
-const L = require('./_league.js');   // спільні функції ліг груп (0.60: одна копія замість трьох)
+const L = require('./_league.js');
+const { plUk } = require('./_lib.js');   // спільні функції ліг груп (0.60: одна копія замість трьох)
 const safeEq = (a, b) => { const x = Buffer.from(String(a)), y = Buffer.from(String(b)); return x.length === y.length && require('crypto').timingSafeEqual(x, y); };
 
 module.exports = async (req, res) => {
@@ -53,7 +54,7 @@ module.exports = async (req, res) => {
         const tab = Object.values(st).sort((a, b) => b.pts - a.pts || b.wins - a.wins);
         const medal = ['🥇', '🥈', '🥉'];
         let t = `<b>📅 Підсумок тижня ${L.dayShort(from)}–${L.dayShort(day)} — ліга «${L.esc(lg ? lg.title : '')}»</b>\n(сума очків за всі виклики тижня)\n\n`;
-        t += tab.map((s, i) => `${medal[i] || (i + 1) + '.'} ${L.esc(s.name)} — <b>${s.pts}</b> за ${s.days} ${s.days === 1 ? 'день' : s.days < 5 ? 'дні' : 'днів'}${s.wins ? `, перемог: ${s.wins}` : ''}`).join('\n');
+        t += tab.map((s, i) => `${medal[i] || (i + 1) + '.'} ${L.esc(s.name)} — <b>${s.pts}</b> за ${s.days} ${plUk(s.days, 'день', 'дні', 'днів')}${s.wins ? `, перемог: ${s.wins}` : ''}`).join('\n');
         t += `\n\n🏅 Гравець тижня: <b>${L.esc(tab[0].name)}</b>. Новий тиждень — з понеділка!`;
         await L.tg('sendMessage', { chat_id, text: t, parse_mode: 'HTML', reply_markup: L.playKb(chat_id), disable_web_page_preview: true });
         await L.sb('league_boards?on_conflict=chat_id,day', { method: 'POST', prefer: 'resolution=merge-duplicates,return=minimal', body: { chat_id, day, weekly_sent: true } });

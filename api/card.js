@@ -9,8 +9,7 @@
 //   З 0.67 спершу — службовий канал TG_CARDS_CHAT (див. cachePhoto); немає змінної або канал не відповів — сховище, як раніше.
 const crypto = require('crypto');
 const { rateLimit } = require('./_device.js');   // обмеження частоти (0.55)
-const env = k => String(process.env[k] || '').replace(/\s+/g, '');
-const SB_URL = (process.env.SUPABASE_URL || 'https://qruhcbwycrnfgzzdbljr.supabase.co').trim();
+const { SB_URL, env, miniApp } = require('./_lib.js');
 async function storeCard(buf, ext) {   // → публічна адреса картки або null
   const key = env('SUPABASE_SERVICE_KEY'); if (!key) return null;
   const path = `${new Date().toISOString().slice(0, 10)}/${crypto.randomBytes(9).toString('hex')}.${ext}`;
@@ -42,16 +41,7 @@ async function prepare(token, u, photo, caption) {
   const pj = await pr.json().catch(() => ({}));
   return pj.ok ? { ok: true, prepared: pj.result.id } : { ok: false, error: String(pj.description || pr.status).slice(0, 160) };
 }
-const hmac = (key, data) => crypto.createHmac('sha256', key).update(data).digest();
-
-function checkMiniApp(initData, token) {
-  const p = new URLSearchParams(initData); const hash = p.get('hash'); if (!hash) return null;
-  p.delete('hash');
-  const dcs = [...p.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([k, v]) => `${k}=${v}`).join('\n');
-  if (hmac(hmac('WebAppData', token), dcs).toString('hex') !== hash) return null;
-  if (Date.now() / 1000 - Number(p.get('auth_date') || 0) > 86400) return null;
-  try { return JSON.parse(p.get('user')); } catch (e) { return null; }
-}
+const checkMiniApp = (initData, token) => { const m = miniApp(initData, token); return m && m.user; };
 
 module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });

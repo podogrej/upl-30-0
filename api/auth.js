@@ -1,41 +1,9 @@
 // 30-0 УПЛ — вхід через Telegram (Vercel function, адреса /api/auth)
 // Перевіряє підпис Telegram (Mini App initData, віджет входу або вхід через бота login_token) і видає одноразовий токен входу Supabase.
 // Змінні оточення у Vercel: TG_TOKEN (токен бота), SUPABASE_SERVICE_KEY (Supabase → Settings → API Keys → secret key).
-const crypto = require('crypto');
 const { rateLimit } = require('./_device.js');   // обмеження частоти (0.55)
-const SB_URL = (process.env.SUPABASE_URL || 'https://qruhcbwycrnfgzzdbljr.supabase.co').trim();   // у тестовому оточенні Vercel — адреса тестової бази
-
-const hmac = (key, data) => crypto.createHmac('sha256', key).update(data).digest();
-
-function checkMiniApp(initData, token) {
-  const p = new URLSearchParams(initData); const hash = p.get('hash'); if (!hash) return null;
-  p.delete('hash');
-  const dcs = [...p.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([k, v]) => `${k}=${v}`).join('\n');
-  const secret = hmac('WebAppData', token);
-  if (hmac(secret, dcs).toString('hex') !== hash) return null;
-  if (Date.now() / 1000 - Number(p.get('auth_date') || 0) > 86400) return null;
-  try { return JSON.parse(p.get('user')); } catch (e) { return null; }
-}
-
-function checkWidget(w, token) {
-  if (!w || !w.hash) return null;
-  const { hash, ...rest } = w;
-  const dcs = Object.keys(rest).filter(k => rest[k] != null).sort().map(k => `${k}=${rest[k]}`).join('\n');
-  const secret = crypto.createHash('sha256').update(token).digest();
-  if (hmac(secret, dcs).toString('hex') !== hash) return null;
-  if (Date.now() / 1000 - Number(w.auth_date || 0) > 86400) return null;
-  return { id: w.id, first_name: w.first_name, last_name: w.last_name, username: w.username };
-}
-
-const env = k => String(process.env[k] || '').replace(/\s+/g, '');   // прибираємо випадкові пробіли й переноси з ключів
-
-async function sbRest(path, { method = 'GET', body, prefer } = {}) {
-  const key = env('SUPABASE_SERVICE_KEY');
-  const r = await fetch(`${SB_URL}/rest/v1/${path}`, { method, headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json', ...(prefer ? { Prefer: prefer } : {}) }, body: body ? JSON.stringify(body) : undefined });
-  const t = await r.text(); let j = null; try { j = t ? JSON.parse(t) : null; } catch (e) {}
-  if (!r.ok) throw new Error(`db ${r.status}: ${t.slice(0, 150)}`);
-  return j;
-}
+const { SB_URL, env, sb: sbRest, miniApp } = require('./_lib.js');
+const checkMiniApp = (initData, token) => { const m = miniApp(initData, token); return m && m.user; };
 
 async function admin(path, body) {
   const key = env('SUPABASE_SERVICE_KEY');
@@ -70,7 +38,7 @@ module.exports = async (req, res) => {
     if (!rows || !rows.length) return res.status(202).json({ pending: true });
     const r0 = rows[0];
     u = { id: r0.tg_id, first_name: r0.first_name, last_name: r0.last_name, username: r0.username };
-  } else u = b.initData ? checkMiniApp(b.initData, token) : checkWidget(b.widget, token);
+  } else u = b.initData ? checkMiniApp(b.initData, token) : null;   // віджет входу Telegram прибрано (0.67, аудит P2-3)
   if (!u || !u.id) return res.status(401).json({ error: 'bad telegram signature' });
   const email = `tg-${u.id}@users.upl-30-0.vercel.app`;   // службова адреса, листи туди не надсилаються
   const name = [u.first_name, u.last_name].filter(Boolean).join(' ') || u.username || 'Гравець';

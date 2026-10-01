@@ -1,6 +1,6 @@
 #!/bin/bash
 # Усі автоперевірки одним запуском (0.64): локально й у GitHub Actions (.github/workflows/ci.yml).
-# Запуск з кореня: bash tools/tests/all.sh   (QUICK=1 — без довгих тестів інтерфейсу)
+# Запуск з кореня: bash tools/tests/all.sh   (QUICK=1 — швидкий набір ~1 хв; JOBS=N — скільки тестів у браузері одночасно, типово 3)
 # Код виходу 0 — усе гаразд; інакше в кінці список того, що впало.
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"; cd "$ROOT" || exit 1
 LOG=$(mktemp -d); FAIL=(); PASS=0
@@ -14,13 +14,23 @@ gen_same(){ [ "$(md5sum $GEN)" = "$BEFORE" ] || { echo 'index.html / lib/* за�
 step "згенеровані файли свіжі (збірка нічого не змінила)" gen_same
 step "пул гравців (check_pool)" python3 data/check_pool.py
 step "сервер завантажується (як на Vercel)" node tools/tests/server_load.js
-step "детермінізм" node tools/tests/determinism.js
-step "сценарії" node tools/tests/scenarios.js
-if [ -z "$QUICK" ]; then
-  for t in cheat chal card_api modes v39 v060 v064 player_page tro news draft58 pitch_layout fl61 fl63 leagueui f5test2 f5online; do
-    [ -f "tools/tests/$t.js" ] && step "тест $t" node "tools/tests/$t.js"
-  done
-fi
+# швидкі тести без браузера — завжди
+for t in cheat card_api; do step "тест $t" node "tools/tests/$t.js"; done
+# тести в браузері (0.67): незалежні, тож ідуть по JOBS одночасно (типово 3) — найдовші першими; QUICK=1 — лише короткий набір
+UI="determinism scenarios fl63 f5online modes chal tro v064 fl61 leagueui v060 player_page v39 news draft58 pitch_layout f5test2"
+[ -n "$QUICK" ] && UI="draft58 v064"
+JOBS=${JOBS:-3}; declare -A T0
+for t in $UI; do [ -f "tools/tests/$t.js" ] || continue
+  while [ "$(jobs -rp | wc -l)" -ge "$JOBS" ]; do wait -n; done
+  T0[$t]=$SECONDS; ( node "tools/tests/$t.js" >"$LOG/ui_$t.log" 2>&1; echo $? >"$LOG/ui_$t.rc"; echo $SECONDS >"$LOG/ui_$t.end" ) &
+done
+wait
+for t in $UI; do [ -f "$LOG/ui_$t.rc" ] || continue
+  name="тест $t"; [ "$t" = determinism ] && name="детермінізм"; [ "$t" = scenarios ] && name="сценарії"
+  d=$(( $(cat "$LOG/ui_$t.end") - ${T0[$t]} ))
+  if [ "$(cat "$LOG/ui_$t.rc")" = 0 ]; then echo "✓ $name ($d с)"; else echo "✗ $name ($d с)"; tail -25 "$LOG/ui_$t.log" | sed 's/^/    /'; FAIL+=("$name"); fi
+  PASS=$((PASS+1))
+done
 if ls -d /usr/lib/postgresql/*/bin >/dev/null 2>&1; then step "SQL у Postgres (setup.sh)" bash tools/tests/setup.sh; else echo "· SQL: немає Postgres — пропускаю"; fi
 rm -rf "$LOG"
 echo

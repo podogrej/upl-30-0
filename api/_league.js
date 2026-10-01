@@ -1,9 +1,7 @@
 // 30-0 УПЛ — спільні функції ліг Telegram-груп для api/bot.js, api/cron.js, api/league.js (не адреса: файли з «_» Vercel не публікує).
 // До 0.60 цей блок був трьома однаковими копіями в кожному файлі (аудит 30.09, «Порядок»).
 const L = (() => {
-const crypto = require('crypto');
-const SB_URL = (process.env.SUPABASE_URL || 'https://qruhcbwycrnfgzzdbljr.supabase.co').trim();   // у тестовому оточенні Vercel — адреса тестової бази
-const env = k => String(process.env[k] || '').replace(/\s+/g, '');
+const { SB_URL, env, sb, kyivDate, miniApp } = require('./_lib.js');
 const esc = s => String(s == null ? '' : s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
 
 async function tg(method, body) {
@@ -13,37 +11,11 @@ async function tg(method, body) {
   return r.json();
 }
 
-// запити до бази з правами сервера (ключ лише у Vercel)
-async function sb(path, { method = 'GET', body, prefer } = {}) {
-  const key = env('SUPABASE_SERVICE_KEY');
-  const r = await fetch(`${SB_URL}/rest/v1/${path}`, {
-    method, headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json', ...(prefer ? { Prefer: prefer } : {}) },
-    body: body ? JSON.stringify(body) : undefined,
-  });
-  const t = await r.text(); let j = null; try { j = t ? JSON.parse(t) : null; } catch (e) {}
-  if (!r.ok) throw new Error(`db ${r.status}: ${t.slice(0, 150)}`);
-  return j;
-}
-
-function kyivDate(d = new Date()) {
-  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Kyiv', year: 'numeric', month: '2-digit', day: '2-digit' }).format(d);
-}
 const LAUNCH = Date.UTC(2026, 8, 28);
 const dayNo = day => Math.max(1, Math.round((Date.UTC(+day.slice(0, 4), +day.slice(5, 7) - 1, +day.slice(8, 10)) - LAUNCH) / 864e5) + 1);
 const dayShort = day => `${day.slice(8, 10)}.${day.slice(5, 7)}`;
 
-// перевірка підпису Mini App (initData) — повертає {user, start_param} або null
-function checkMiniApp(initData) {
-  const token = env('TG_TOKEN');
-  const p = new URLSearchParams(initData || ''); const hash = p.get('hash'); if (!hash) return null;
-  p.delete('hash');
-  const dcs = [...p.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([k, v]) => `${k}=${v}`).join('\n');
-  const secret = crypto.createHmac('sha256', 'WebAppData').update(token).digest();
-  if (crypto.createHmac('sha256', secret).update(dcs).digest('hex') !== hash) return null;
-  if (Date.now() / 1000 - Number(p.get('auth_date') || 0) > 86400) return null;
-  let user = null; try { user = JSON.parse(p.get('user')); } catch (e) {}
-  return user ? { user, start_param: p.get('start_param') || '' } : null;
-}
+const checkMiniApp = initData => miniApp(initData);   // {user, start_param} або null
 const nameOf = u => ([u.first_name, u.last_name].filter(Boolean).join(' ') || u.username || 'Гравець').slice(0, 40);
 
 const playUrl = chat_id => `https://t.me/${env('TG_BOT') || 'upl30_bot'}?startapp=g${chat_id}`;

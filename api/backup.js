@@ -6,8 +6,7 @@
 // Доступ: лише з заголовком «Authorization: Bearer <CRON_SECRET>» (Vercel Cron шле його сам); без змінної — 401.
 // Формат файлу: {"made":…, "source":…, "tables":{"players":[…], …}, "counts":{…}} — відновлення: tools/backup/restore_plan.md.
 const zlib = require('zlib'), crypto = require('crypto');
-const { sb, env, kyivDate } = require('./_device.js');
-const SB_URL = (process.env.SUPABASE_URL || 'https://qruhcbwycrnfgzzdbljr.supabase.co').trim();
+const { SB_URL, sb, env, kyivDate } = require('./_lib.js');
 const BUCKET = 'backups', PAGE = 1000, KEEP_DAYS = 14, KEEP_MONDAY_WEEKS = 8;
 const CARDS = 'cards', CARDS_KEEP_DAYS = 7;   // аудит P2-20 (власник 02.10: «так»): картки для Telegram (api/card.js, папки ГГГГ-ММ-ДД) — Telegram забирає їх одразу, тиждень із запасом
 // таблиця → порядок (первинний ключ). key — одна колонка: сторінки «після останнього» (keyset), інакше offset
