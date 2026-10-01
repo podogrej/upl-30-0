@@ -52,7 +52,7 @@ function renderChal(){
   document.getElementById('chalGo').onclick=chalStart;
 }
 function chalStart(){
-  const c=CHAL;if(!c)return;S.daily=null;S.result=null;S.format='classic';S.pickMode=false;S.mode=MODES[c.mode]&&c.mode!=='daily'?c.mode:'normal';S.formation=FORMATIONS[c.formation]?c.formation:'4-4-2';
+  const c=CHAL;if(!c)return;S.league=null;S.daily=null;S.result=null;S.format='classic';S.pickMode=false;S.mode=MODES[c.mode]&&c.mode!=='daily'?c.mode:'normal';S.formation=FORMATIONS[c.formation]?c.formation:'4-4-2';
   S.chal=chalNewGame(+c.seed,+c.year);S.challenge=c;
   S.slots=newSlots(S.formation);S.taken=new Set();S.wheel=null;S.rerolls=MODES[S.mode].rerolls;
   document.getElementById('modeLabel').textContent=`Виклик · ${S.formation} · ${MODES[S.mode].name}`;renderDraft();go(2);

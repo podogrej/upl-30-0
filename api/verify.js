@@ -104,14 +104,21 @@ async function syncDaily(row, seedRow) {
   return true;
 }
 
-// перевірка сезону за номером (спільна для /api/verify і /api/save): {verified, note, cached?}
+// 0.61: сезон зіграно як спробу ліги з друзями (seasons.fl_id) — після перевірки зараховуємо (fl_record у базі: правила ліги, ліміт спроб).
+// SQL 0.61 ще не виконано або спробу не зараховано — сезон однаково перевірено, повертаємо fl = null
+async function flRecord(row, id) {
+  if (!row.fl_id) return undefined;
+  try { const n = await sb('rpc/fl_record', { method: 'POST', body: { p_season: id } }); return n == null ? null : +n; } catch (e) { return null; }
+}
+// перевірка сезону за номером (спільна для /api/verify і /api/save): {verified, note, cached?, fl?}
 async function verifyById(id) {
   const [row] = await sb(`seasons?id=eq.${id}&select=*`) || [];
   if (!row) return { status: 404, error: 'no season' };
   const [seedRow] = row.seed_id ? (await sb(`season_seeds?id=eq.${encodeURIComponent(row.seed_id)}&select=*`) || []) : [];
   if (row.verified !== null && row.verified !== undefined) {
     if (row.verified === true) await syncDaily(row, seedRow);   // повторний виклик — пишемо перевірені цифри дня ще раз
-    return { verified: row.verified, note: row.verify_note, cached: true };
+    const fl = row.verified === true ? await flRecord(row, id) : undefined;
+    return { verified: row.verified, note: row.verify_note, cached: true, fl };
   }
   let chalYearOk = false;
   if (row.format === 'classic' && !row.day && row.year != null && Number.isInteger(+row.year) && engine().YEARS16.includes(+row.year)) {
@@ -125,7 +132,8 @@ async function verifyById(id) {
     await sb(`season_seeds?id=eq.${seedRow.id}`, { method: 'PATCH', prefer: 'return=minimal', body: { used_by: id } });
     await syncDaily({ ...row, verified: true }, { ...seedRow, used_by: id });
   }
-  return { verified: v, note };
+  const fl = v === true ? await flRecord(row, id) : undefined;
+  return { verified: v, note, fl };
 }
 
 // POST {season_id}: сайт 0.52 (записав сезон сам) і повторна перевірка. З 0.53 сезон пише й одразу перевіряє /api/save.

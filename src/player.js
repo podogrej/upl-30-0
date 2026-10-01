@@ -71,9 +71,11 @@ function ppRender(){
     if(own)h+=`<details class="pp-hist" id="ppHist"><summary>Останні сезони${p.seasons?` (${Math.min(10,p.seasons)} з ${p.seasons})`:''}</summary><div id="ppHistList"><p class="muted">Завантаження…</p></div></details><button class="primary wbtn" id="ppPlay">Зіграти новий сезон</button>`;
     else h+=`<div class="pp-sec"><h3>Історія</h3></div><div class="pp-lock">${icon('eye-off')}Історію сезонів бачить лише ${esc(name)}</div>`;
   }
+  if(own&&ONLINE&&!p.deleted)h+=`<div id="ppLeagues"></div>`;   // «Мої ліги» (0.61, src/leagues.js)
   if(own&&ONLINE)h+=ppSettingsHtml();
   el.innerHTML=h;
   if(!p.deleted)ppRenderCab();
+  if(own&&ONLINE&&!p.deleted)ppLeagues();
   ppWire();
 }
 // найкращий і найгірший XI за режимами (лише своя сторінка)
