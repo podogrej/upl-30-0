@@ -96,8 +96,8 @@ button.ghost{border-color:var(--line);background:transparent;color:var(--ink2);p
 .reels{display:grid;grid-template-columns:1fr 104px;gap:8px;align-items:center}
 .reel{padding:0 12px;border:1px solid var(--line);border-radius:12px;background:var(--bg);height:64px;overflow:hidden;position:relative;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--amber) 0%,transparent);transition:box-shadow .3s}
 .reel .strip{display:grid;will-change:transform}.reel .strip>div{height:64px;display:grid;align-content:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.reel .strip.go>div{filter:blur(.6px)}.reel .strip.go>div:first-child{filter:none}.reels.one{grid-template-columns:minmax(0,1fr)}.reels.one #reelYear{display:none}
-.reel .strip.go{transition:transform 1.5s cubic-bezier(.16,.84,.22,1.02)}#reelYear .strip.go{transition-duration:1.9s}
+.reels.one{grid-template-columns:minmax(0,1fr)}.reels.one #reelYear{display:none}
+.reel .strip.go{transition:transform 2.1s cubic-bezier(.15,.75,.2,1)}#reelYear .strip.go{transition-duration:2.25s}
 .reel .season{font-size:18px;font-weight:700;color:var(--ink)}
 .reel::before,.reel::after{content:'';position:absolute;left:0;right:0;height:12px;pointer-events:none;z-index:1}.reel::before{top:0;background:linear-gradient(var(--bg),transparent)}.reel::after{bottom:0;background:linear-gradient(transparent,var(--bg))}
 @media (prefers-reduced-motion:reduce){.reel .strip.go{transition:none}.pl.in,.plpos,section.enter,section.back{animation:none!important}}
@@ -207,6 +207,8 @@ td.avgc{font-family:var(--font-display);font-weight:700;font-size:15px;color:var
 .news{display:grid;gap:12px}.news .ni{display:grid;grid-template-columns:34px 1fr;gap:10px;align-items:start}.news .ni b{display:block}.news .ni span.e{font-size:20px;line-height:1.2}.news .ni p{margin:2px 0 0;color:var(--ink2);font-size:14px}
 .ic{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:6px;background:color-mix(in srgb,var(--amber) 16%,transparent);color:var(--amber2);flex:none;vertical-align:middle;font-style:normal}
 .ico{width:16px;height:16px;fill:currentColor;display:block}
+.ic.em{background:none;box-shadow:none;font-style:normal;font-size:17px;line-height:1;display:inline-grid;place-items:center}.ic.em.sm{font-size:14px}.ic.em.lg{font-size:24px}.row0>.ic.em:first-child{font-size:24px}
+.tre{display:inline-grid;place-items:center;width:42px;height:42px;border-radius:50%;background:var(--bg2);font-size:24px;line-height:1}.tre.off{filter:grayscale(1);opacity:.45}.chip .tre,.trchip .tre{width:22px;height:22px;font-size:14px;background:none}.tro0 .tre{width:26px;height:26px;font-size:17px}   /* 0.67: значки трофеїв — емодзі */
 .ic.sm{width:20px;height:20px;border-radius:5px;margin-right:6px}.ic.sm .ico{width:13px;height:13px}
 .ic.lg{width:34px;height:34px;border-radius:9px}.ic.lg .ico{width:20px;height:20px}
 button:has(.ic),a.btnlink:has(.ic){display:inline-flex;align-items:center;justify-content:center;gap:8px}
@@ -499,8 +501,8 @@ table.lbt th.n,table.lbt td.n{width:28px;padding-left:2px;padding-right:2px;text
 .plrow .plpos{flex:none;padding:0 6px 0 0;animation:plin .2s ease-out both}.plrow .plpos button{min-width:48px;min-height:38px;padding:6px 10px}
 .plrow.in{animation:plin .32s ease-out both}
 /* підсумки */
-.sharebtn{width:100%;max-width:420px;justify-self:center;padding:14px 18px;font:700 17px var(--font-display);border:0;background:var(--grad);color:#fff}.sharebtn .ico{fill:#fff}
-.sharebtn{display:flex;align-items:center;justify-content:center;gap:10px}.sharebtn .ic{background:none;margin:0 4px 0 -4px}.sharebtn.alt{background:var(--card);color:var(--ink)}.sharebtn.alt .ico{fill:var(--amber)}
+.sharebtn{width:100%;max-width:420px;justify-self:center;padding:14px 18px;font:700 17px var(--font-display);border:0;background:var(--ink);color:var(--bg)}   /* 0.67 (власник): «Поділитися» — суцільна світла кнопка з емодзі, без градієнта */
+.sharebtn{display:flex;align-items:center;justify-content:center;gap:10px}.sharebtn .ic{background:none;margin:0 2px 0 -4px}.sharebtn.alt{background:var(--card);color:var(--ink)}
 #chalOpen{display:block;margin:6px auto 0}
 #skipBtn{justify-self:center}
 @media (min-width:700px){
@@ -533,14 +535,13 @@ table.lbt th.n,table.lbt td.n{width:28px;padding-left:2px;padding-right:2px;text
 .champ0{position:fixed;inset:0;z-index:80;display:grid;place-items:center;padding:16px;background:rgba(5,8,20,.72);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);animation:fadein .25s ease-out}
 .champ0 canvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none}
 .champ0 .cbox{position:relative;z-index:1;width:min(340px,100%);text-align:center;padding:26px 20px 20px;border-radius:20px;background:var(--surface);color:var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.5);animation:cboxin .5s cubic-bezier(.2,1.3,.4,1)}
-.champ0 .cup{width:84px;height:84px;margin:0 auto 6px;display:grid;place-items:center;border-radius:50%;background:radial-gradient(circle,color-mix(in srgb,var(--amber) 35%,transparent),transparent 70%)}
-.champ0 .cup .ico{width:62px;height:62px;fill:var(--amber);filter:drop-shadow(0 4px 10px rgba(0,0,0,.35));animation:cupin .7s .15s cubic-bezier(.2,1.6,.4,1) both}
+.champ0 .cup{margin:0 auto 4px;font-size:72px;line-height:1.1;animation:cupin .7s .15s cubic-bezier(.2,1.6,.4,1) both}   /* 0.67 (власник: рожевий кубок — погано): кубок-емодзі */
 .champ0 h2{margin:4px 0 6px;font:800 34px/1 var(--font-display);letter-spacing:-.01em}
 .champ0 p{margin:0 0 6px;color:var(--ink2);font-size:15px}
 .champ0 .cl{font:700 16px var(--font-mono);color:var(--ink);margin-bottom:16px}
-.champ0 button{width:100%}.champ0 button.cclose{margin-top:10px}
+.champ0 button{width:100%}.champ0 button.cshare{background:var(--ink);color:var(--bg);border:0}.champ0 button.cclose{margin-top:6px;border:0;background:none;color:var(--ink2);text-decoration:underline;text-underline-offset:3px}
 @keyframes fadein{from{opacity:0}to{opacity:1}}@keyframes cboxin{from{opacity:0;transform:translateY(24px) scale(.9)}to{opacity:1;transform:none}}@keyframes cupin{0%{transform:scale(.2) rotate(-25deg);opacity:0}100%{transform:none;opacity:1}}
-@media (prefers-reduced-motion:reduce){.primary,.ghost,.row0,.tile0,.opt,.plpos button,.rr0 .seg button,.share0 button,.tab{transition:none}.slot .disc.land0,.lvMatch.goal0,.lvMatch.goal0 .sc,.lvGrid i.nw,.champ0,.champ0 .cbox,.champ0 .cup .ico{animation:none}}
+@media (prefers-reduced-motion:reduce){.primary,.ghost,.row0,.tile0,.opt,.plpos button,.rr0 .seg button,.share0 button,.tab{transition:none}.slot .disc.land0,.lvMatch.goal0,.lvMatch.goal0 .sc,.lvGrid i.nw,.champ0,.champ0 .cbox,.champ0 .cup{animation:none}}
 /* 0.64: ліги 5×5 — скільки лишилось до кінця збору */
 .fl5left{display:flex;align-items:center;gap:6px;margin:0;font-size:14px;color:var(--ink2)}.fl5left.soon{color:var(--amber);font-weight:700}
 #fl5Rev{margin-top:12px}
@@ -923,6 +924,15 @@ function trBadge(t,got){const g=ICO[TR_GLYPH[t.id]]||ICO.trophy;const l=ICO.lock
   return `<svg class="hx${got?'':' off'}" viewBox="0 0 100 100" style="--c:${got?(TR_COL[t.cat]||'var(--amber)'):'var(--muted)'}" aria-hidden="true"><path class="o" d="${HEX_D}"/><path class="in" d="${HEX_D}" transform="translate(50 50) scale(.84) translate(-50 -50)"/><svg x="29" y="29" width="42" height="42" viewBox="${g[0]}"><path class="g" d="${g[1]}"${g[2]?' fill-rule="evenodd"':''}/></svg>`+
     (got?'':`<circle class="lk" cx="80" cy="80" r="15"/><svg x="71" y="71" width="18" height="18" viewBox="${l[0]}"><path class="lg" d="${l[1]}"/></svg>`)+'</svg>';}
 
+// 0.67 (власник: «іконки не працюють — назад на емодзі»): кнопки, рядки й трофеї — емодзі; SVG лишаються лише там, де емодзі немає
+// (бренди Telegram і Google, «Головна», стрілки, перемикач теми)
+const EMOJI={trophy:'🏆',fire:'🔥','sword-cross':'⚔️','calendar-star':'📅','ferris-wheel':'🎡','soccer-field':'🏟️','format-list-numbered':'📊','share-variant':'📤',send:'📨',
+  'account-circle':'👤','lock-open-variant':'🔓','chart-bar':'📊',eye:'👁️','eye-off':'🙈','check-circle':'✅','check-decagram':'✅',handshake:'🤝','content-copy':'📋',image:'🖼️',
+  star:'⭐',lock:'🔒','account-group':'👥',medal:'🏅',crown:'👑','format-quote-open':'❝',history:'🕘',pencil:'✏️',logout:'🚪','alert-outline':'⚠️','calendar-check':'📅',
+  'account-multiple-check':'👥',bookshelf:'📚','timer-sand':'⏳',restart:'🔄','swap-horizontal':'🔁',soccer:'⚽','shield-star':'🛡️','trending-down':'📉',heart:'❤️'};
+function ic(n,cls){const e=EMOJI[n];return e?`<i class="ic em${cls?' '+cls:''}" aria-hidden="true">${e}</i>`:`<i class="ic${cls?' '+cls:''}">${icon(n)}</i>`;}
+function trBadge(t,got){const ms=/^ms(\d+)$/.exec(t.id||''),m=ms&&MILESTONES.find(x=>String(x[0])===ms[1]);
+  const e=t.id==='secret'?'✨':t.i||(m&&m[1])||'🏆';return `<span class="tre${got?'':' off'}" aria-hidden="true">${got||!t.sec?e:'❔'}</span>`;}
 // статичні кнопки: <!--i:назва--> → іконка
 (function(){const w=document.createTreeWalker(document.body,NodeFilter.SHOW_COMMENT);const cs=[];while(w.nextNode())cs.push(w.currentNode);for(const c of cs){const m=/^i:([a-z0-9-]+)$/.exec(c.data);if(m){const s=document.createElement('span');s.innerHTML=ic(m[1]);c.replaceWith(s.firstChild);}}})();
 function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
@@ -1165,13 +1175,13 @@ function pickSeason(keepClub,keepYear){
 function reelRoll(id,cls,items,final,n){return new Promise(res=>{const reel=document.getElementById(id);const strip=reel.querySelector('.strip');
   if(!n||LESS_MOTION()){strip.className='strip';strip.style.transform='';strip.innerHTML=`<div class="${cls}">${esc(final)}</div>`;res();return;}
   const seq=[];for(let i=0;i<n;i++)seq.push(items[Math.floor(Math.random()*items.length)]);seq.push(final);
-  seq.reverse();   // 0.67 (як у 38-0): обидва барабани крутяться згори вниз — підсумок першим у стрічці (у 0.66 були в різні боки — не сподобалось)
+  // 0.67 (власник, запис екрана 38-0): обидва барабани — знизу вгору (нова назва виїжджає знизу), ~2 с, плавне гальмування без «відскоку»
   strip.className='strip';strip.innerHTML=seq.map(v=>`<div class="${cls}">${esc(v)}</div>`).join('');
   const ih=strip.firstElementChild.offsetHeight||56;   // 0.63: висота рядка з CSS (була вписана 64 px — після 0.62 барабан проскакував і смикався)
-  strip.style.transform=`translateY(-${n*ih}px)`;
-  requestAnimationFrame(()=>requestAnimationFrame(()=>{strip.classList.add('go');strip.style.transform='translateY(0)';}));
+  strip.style.transform='translateY(0)';
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{strip.classList.add('go');strip.style.transform=`translateY(-${n*ih}px)`;}));
   let done=false;const fin=()=>{if(done)return;done=true;strip.className='strip';strip.style.transform='';strip.innerHTML=`<div class="${cls}">${esc(final)}</div>`;res();};
-  strip.addEventListener('transitionend',fin,{once:true});setTimeout(fin,2300);});}
+  strip.addEventListener('transitionend',fin,{once:true});setTimeout(fin,2700);});}
 // «Вибір сезону» (0.60): колесо дає клуб, гравець обирає один із трьох його сезонів (випадкових, де є кого взяти); перекручувань немає
 function pickOpts(club){const all=wheelPool().filter(c=>c.c===club&&eligible(c).length>0);const n=MODES.pick.pick,out=[];
   while(out.length<n&&all.length)out.push(all.splice(Math.floor(rnd()*all.length),1)[0]);return out.sort((a,b)=>a.y-b.y);}
@@ -1183,7 +1193,7 @@ function spinPick(){
   document.getElementById('wHint').textContent='';document.getElementById('seaPick').hidden=true;
   const y0=ERAS[eraOf()].y0,names=[...new Set(DATA.clubs.filter(c=>c.y>=y0).map(c=>shortTeam(c.n)))];
   document.querySelector('.reels').classList.add('one');   // 0.67 (власник, Вітя): у «Виборі сезону» лише клуб — без «?» замість сезону
-  reelRoll('reelClub','club',names,shortTeam(cs0.n),22).then(()=>{if(S.pickOpts===opts)renderPickOpts();});
+  reelRoll('reelClub','club',names,shortTeam(cs0.n),14).then(()=>{if(S.pickOpts===opts)renderPickOpts();});
 }
 function renderPickOpts(){const box=document.getElementById('seaPick'),o=S.pickOpts||[];box.hidden=false;
   document.getElementById('wHint').textContent=o.length>1?'Обери сезон — назад не повернешся':'У цього клубу лише один сезон, де є кого взяти';
@@ -1203,7 +1213,7 @@ function spin(mode){
   document.getElementById('squad').innerHTML='';document.getElementById('rerollRow').style.visibility='hidden';
   const spinClub=mode!=='year',spinYear=mode!=='club';
   const y0=ERAS[eraOf()].y0,WP=DATA.clubs.filter(c=>c.y>=y0),names=[...new Set(WP.map(c=>shortTeam(c.n)))],years=[...new Set(WP.map(c=>c.y))].sort();   // на барабанах — клуби й сезони лише своєї епохи
-  Promise.all([reelRoll('reelClub','club',names,shortTeam(cs.n),spinClub?22:0),reelRoll('reelYear','season',years.map(seasonLabel),seasonLabel(cs.y),spinYear?30:0)]).then(()=>{if(S.wheel===cs){S.wheelFresh=true;renderWheel();}});
+  Promise.all([reelRoll('reelClub','club',names,shortTeam(cs.n),spinClub?14:0),reelRoll('reelYear','season',years.map(seasonLabel),seasonLabel(cs.y),spinYear?16:0)]).then(()=>{if(S.wheel===cs){S.wheelFresh=true;renderWheel();}});
 }
 function alertNoCands(){document.getElementById('wheel').hidden=false;document.querySelector('#reelClub .strip').innerHTML='<div class="club">Гравців більше немає</div>';document.querySelector('#reelYear .strip').innerHTML='<div class="season"></div>';document.getElementById('squad').innerHTML='<p class="muted">У цьому клубі закінчились гравці на вільні позиції. Спробуй іншу схему.</p>';}
 function renderWheel(){
@@ -1912,7 +1922,7 @@ function champModal(r){if(!r||S.mode==='practice'||(navigator.webdriver&&!window
   const kind=anti?(r.L===r.log.length?'zero':null):r.W===r.log.length?'perfect':r.place===1?'champ':null;if(!kind)return;
   const T={perfect:['30-0!','Ідеальний сезон: 30 перемог з 30. Ти легенда!'],champ:['Чемпіон!','Твоя 11-ка виграла чемпіонат. Ти молодець!'],zero:['0-30!','Ідеальний антисезон: 30 поразок з 30. Це теж треба вміти.']}[kind];
   const o=document.createElement('div');o.className='champ0';o.setAttribute('role','dialog');o.setAttribute('aria-modal','true');o.setAttribute('aria-label',T[0]);
-  o.innerHTML=`<canvas></canvas><div class="cbox"><div class="cup">${icon('trophy')}</div><h2>${T[0]}</h2><p>${T[1]}</p><div class="cl">${r.W}-${r.D}-${r.L} · ${r.pts} ${ptsWord(r.pts)}</div><button class="primary big0 cshare" type="button">${ic('share-variant')}Поділитися</button><button class="ghost big0 cclose" type="button">Весь сезон</button></div>`;
+  o.innerHTML=`<canvas></canvas><div class="cbox"><div class="cup" aria-hidden="true">🏆</div><h2>${T[0]}</h2><p>${T[1]}</p><div class="cl">${r.W}-${r.D}-${r.L} · ${r.pts} ${ptsWord(r.pts)}</div><button class="primary big0 cshare" type="button">📤 Поділитися</button><button class="ghost big0 cclose" type="button">Весь сезон</button></div>`;
   document.body.appendChild(o);const btn=o.querySelector('.cclose');let stop=null;   // 0.67 (як у 38-0): головна дія — поділитися чемпіонством
   const close=()=>{if(stop)stop();o.remove();document.removeEventListener('keydown',key);};const key=e=>{if(e.key==='Escape')close();};
   btn.onclick=close;o.querySelector('.cshare').onclick=()=>{close();document.getElementById('tgShareBtn').click();};o.onclick=e=>{if(e.target===o)close();};document.addEventListener('keydown',key);btn.focus({preventScroll:true});
@@ -2906,7 +2916,8 @@ const WHATSNEW={v:'0.67',date:'02.10.2026',items:[
   ['chart-bar','Вердикт сезону','У підсумках — прогноз місця й вердикт: «Усе за сценарієм», «Краще за прогноз», «Зірвали банк»… І оцінка ліній словами: атака, півзахист, захист, воротар.'],
   ['crown','Чемпіонство','У вікні чемпіона — одразу кнопка «Поділитися».'],
   ['soccer-field','Драфт','Над полем — схема, перекрути крапками, «7/11» і кнопка «Спочатку». Вибраний гравець розкривається карткою «Постав на» з кнопками позицій. «Переставити гравців» — велика кнопка під полем. Екран більше не блимає, коли береш гравця знизу списку.'],
-  ['restart','Колесо','Клуб і сезон крутяться в один бік. У «Виборі сезону» — лише клуб, без «?».'],
+  ['restart','Колесо','Клуб і сезон крутяться в один бік — знизу вгору, плавно гальмують, як у 38-0. У «Виборі сезону» — лише клуб, без «?».'],
+  ['trophy','Емодзі замість значків','Кнопки, рядки й трофеї — знову з емодзі. Вікно чемпіона — великий 🏆 і проста біла кнопка «Поділитися».'],
   ['shield-star','Один клуб','Режим повернувся: найкращий XI одного клубу за всю історію УПЛ. На головній і в таблицях.'],
   ['share-variant','Картка в Telegram','Картка більше не приходить наполовину сірою; табло ліги чату й прогноз перед сезоном з\'являються швидше.'],
   ['star','Трофеї','Повторні трофеї — без «ще раз · ×N», лише нові виділені.'],

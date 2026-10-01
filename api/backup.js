@@ -9,6 +9,7 @@ const zlib = require('zlib'), crypto = require('crypto');
 const { sb, env, kyivDate } = require('./_device.js');
 const SB_URL = (process.env.SUPABASE_URL || 'https://qruhcbwycrnfgzzdbljr.supabase.co').trim();
 const BUCKET = 'backups', PAGE = 1000, KEEP_DAYS = 14, KEEP_MONDAY_WEEKS = 8;
+const CARDS = 'cards', CARDS_KEEP_DAYS = 7;   // аудит P2-20 (власник 02.10: «так»): картки для Telegram (api/card.js, папки ГГГГ-ММ-ДД) — Telegram забирає їх одразу, тиждень із запасом
 // таблиця → порядок (первинний ключ). key — одна колонка: сторінки «після останнього» (keyset), інакше offset
 const TABLES = [
   { t: 'players', order: 'id', key: 'id' },
@@ -63,6 +64,24 @@ async function storage(path, { method = 'GET', body, headers = {} } = {}) {
 }
 
 // які файли лишити: 14 останніх днів + понеділки за 8 тижнів (дата — з імені файлу)
+// картки старші за CARDS_KEEP_DAYS: список папок-днів → файли кожної (по PAGE) → видалення
+async function cleanCards(today) {
+  const json = { 'Content-Type': 'application/json' };
+  const list = prefix => storage(`object/list/${CARDS}`, { method: 'POST', body: JSON.stringify({ prefix, limit: PAGE, offset: 0, sortBy: { column: 'name', order: 'asc' } }), headers: json }).then(r => r || []);
+  const edge = new Date(Date.parse(today + 'T00:00:00Z') - CARDS_KEEP_DAYS * 864e5).toISOString().slice(0, 10);
+  const days = (await list('')).map(o => o.name).filter(n => /^\d{4}-\d{2}-\d{2}$/.test(n) && n < edge);
+  let n = 0;
+  for (const d of days) {
+    for (;;) {
+      const files = (await list(d + '/')).filter(o => o.id).map(o => `${d}/${o.name}`);
+      if (!files.length) break;
+      await storage(`object/${CARDS}`, { method: 'DELETE', body: JSON.stringify({ prefixes: files }), headers: json });
+      n += files.length;
+      if (files.length < PAGE) break;
+    }
+  }
+  return n;
+}
 function toDelete(names, today) {
   const t0 = Date.UTC(+today.slice(0, 4), +today.slice(5, 7) - 1, +today.slice(8, 10));
   return names.filter(name => {
@@ -116,7 +135,10 @@ module.exports = async (req, res) => {
     const list = await storage(`object/list/${BUCKET}`, { method: 'POST', body: JSON.stringify({ prefix: '', limit: 1000, offset: 0, sortBy: { column: 'name', order: 'asc' } }), headers: { 'Content-Type': 'application/json' } }) || [];
     const del = toDelete(list.map(o => o.name), day);
     if (del.length) await storage(`object/${BUCKET}`, { method: 'DELETE', body: JSON.stringify({ prefixes: del }), headers: { 'Content-Type': 'application/json' } });
-    const out = { ok: true, file: `${BUCKET}/${name}`, bytes: buf.length, counts, deleted: del, ms: Date.now() - t0 };
+    stage = 'cards';
+    let cardsDeleted = 0;
+    try { cardsDeleted = await cleanCards(day); } catch (e) { console.warn('backup: cards cleanup', e.message.slice(0, 120)); }   // копія вже збережена — чистка карток не валить бекап
+    const out = { ok: true, file: `${BUCKET}/${name}`, bytes: buf.length, counts, deleted: del, cardsDeleted, ms: Date.now() - t0 };
     console.log('backup', JSON.stringify(out));
     res.status(200).json(out);
   } catch (e) {
