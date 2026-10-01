@@ -185,7 +185,7 @@ select.need{border-color:var(--loss);box-shadow:0 0 0 2px color-mix(in srgb,var(
 /* expected */
 .xrow{display:flex;flex-wrap:wrap;gap:8px}
 .xrow .chip b{color:var(--ink);font-weight:700}
-.tiles{display:grid;gap:8px}.tiles.t3{grid-template-columns:repeat(3,minmax(0,1fr))}.tiles.t2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.tiles{display:grid;gap:8px}.tiles.t2{grid-template-columns:repeat(2,minmax(0,1fr))}
 .tile{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--bg);display:grid;gap:2px;min-width:0}
 .tile b{font-family:var(--font-display);font-weight:700;font-size:clamp(24px,6vw,34px);line-height:1.05;font-variant-numeric:tabular-nums;white-space:nowrap}
 .tile span{font-size:13px;color:var(--ink2);font-weight:600}
@@ -382,7 +382,7 @@ button.link0{border:0;background:none;padding:4px;color:var(--ink2);font:500 14p
 header.top{border-bottom-color:var(--line2)}
 #homeBtn{background:none;border-color:transparent;padding-left:2px}
 #acctBtn.avbtn{display:inline-flex;align-items:center;gap:8px;max-width:46vw;padding:3px 12px 3px 3px;border:1px solid var(--line2);border-radius:999px;background:var(--card);box-shadow:none;color:var(--ink);font:600 14px/1 var(--font-body)}
-#acctBtn.avbtn .av{border-radius:999px;flex:none}#acctBtn .me-n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#acctBtn.avbtn.noname{padding:3px}#acctBtn.avbtn .av{border-radius:999px;flex:none}#acctBtn .me-n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* головна */
 .hero0{padding-block:28px 4px;gap:14px}
 .badge0{border:0;padding:0;color:var(--muted)}
@@ -1792,7 +1792,7 @@ function ppHave(){const st=PP;const h={};
   for(const t of (st.prof&&st.prof.trophies)||[])if(!h[t.id])h[t.id]={n:1,at:t.at};
   return h;}
 // ---------- розмітка
-const ppTile=(n,l,sub,hot)=>`<div class="tile${hot?' hot':''}"><b>${n==null||n===''?'—':esc(String(n))}</b><span>${l}</span>${sub?`<small>${sub}</small>`:''}</div>`;
+const ppTile=(n,l,hot)=>`<div class="tile${hot?' hot':''}"><b>${n==null||n===''?'—':esc(String(n))}</b><span>${l}</span></div>`;
 function ppRender(){
   const el=document.getElementById('pp');if(!el||!PP)return;const st=PP,p=st.prof||{},own=st.own;
   if(!own&&!st.loading&&!st.prof){el.innerHTML=`<div class="pp-sec"><h3>Гравець</h3></div><p class="muted">${st.err?'Сторінка зараз недоступна. Спробуй пізніше.':'Такого гравця немає.'}</p><div class="row"><button class="primary" id="ppHome">На головну</button></div>`;document.getElementById('ppHome').onclick=()=>go(1);return;}
@@ -1808,7 +1808,7 @@ function ppRender(){
   if(p.deleted)h+=`<p class="muted" style="margin-top:14px">Гравець видалив акаунт. Його результати лишились у таблицях під анонімним іменем.</p>`;
   else{
     const rest=[p.win_pct!=null?`${p.win_pct}% перемог у матчах`:'',`сезонів 30-0: ${numOr0(p.perfect)}`,streak||own?`серія драфту дня: ${numOr0(streak)}`:''].filter(Boolean).join(' · ');
-    h+=`<div class="pp-big3 pp-tiles">${ppTile(seasons,plUk(numOr0(seasons),'сезон','сезони','сезонів'))}${ppTile(p.champions,'чемпіонств')}${ppTile(best,'рекорд, очок',null,true)}</div><p class="pp-rest">${rest}</p>`;
+    h+=`<div class="pp-big3 pp-tiles">${ppTile(seasons,plUk(numOr0(seasons),'сезон','сезони','сезонів'))}${ppTile(p.champions,'чемпіонств')}${ppTile(best,'рекорд, очок',true)}</div><p class="pp-rest">${rest}</p>`;
     const fc=p.fav_club&&p.fav_club.pct>=15?p.fav_club:null,fp=p.fav_player&&p.fav_player.k>1?p.fav_player:null;
     if(fc||fp)h+=`<div class="pp-fav">${fc?`<div>${ic('heart')}<div><span class="k">Улюблений клуб</span><b>${esc(fc.c)}</b></div><span class="v">${numOr0(fc.pct)}% вибору</span></div>`:''}${fp?`<div>${ic('account-circle')}<div><span class="k">Найчастіший гравець</span><b>${esc(fp.n)}</b></div><span class="v">×${numOr0(fp.k)}</span></div>`:''}</div>`;
     h+=`<div id="ppCab"></div>`;
@@ -1857,7 +1857,7 @@ function ppRenderCab(){
     ${cards.length>shown.length||st.all?`<button class="link0 pp-all" id="ppCabAll">${st.all?'Згорнути ▴':`Усі трофеї · ${total} ▾`}</button>`:''}
     ${secOff&&own&&st.all?`<p class="trsec">+${secOff} ${plUk(secOff,'секретний трофей чекає','секретні трофеї чекають','секретних трофеїв чекають')} ${icon('eye')}</p>`:''}
     ${own&&st.all?`<div class="row" style="gap:6px;margin-top:10px">${MILESTONES.map(([k,,nm])=>{const e=have['ms'+k];return `<span class="chip ms${e?' onc':''}">${trBadge({id:'ms'+k,cat:'milestone'},!!e)}${nm}${!e&&trStore().seasons<k?` · ${trStore().seasons}/${k}`:''}</span>`;}).join('')}</div>`:''}`;
-  el.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{st.f=b.dataset.f;st.all=false;ppRenderCab();});
+  el.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{st.f=b.dataset.f;ppRenderCab();});
   el.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>{st.s=b.dataset.s;ppRenderCab();});
   const all=document.getElementById('ppCabAll');if(all)all.onclick=()=>{st.all=!st.all;ppRenderCab();};
   const sh=document.getElementById('ppCabShare');if(sh)sh.onclick=()=>ppShareCab(on.filter(got),n,total);
@@ -2239,7 +2239,7 @@ async function playerRename(v){if(PLAYER&&PLAYER.name&&nameKey(v)===PLAYER.name)
   try{const p=await playerRpc('set_player_name',{p_name:c.name||''});playerSet(p);if(!c.name)lsSet("upl30_nick",null);return '';}catch(e){return nameErrOf(e);}}
 // ---------- інтерфейс
 // шапка (0.59): аватарка замість «Увійти» — тап відкриває свою сторінку
-function renderAcct(){const b=document.getElementById('acctBtn');if(!b)return;b.hidden=!ONLINE;b.className='avbtn';b.title='Моя сторінка';b.setAttribute('aria-label','Моя сторінка');b.innerHTML=avatarSvg(mySeed(),28)+`<span class="me-n">${esc(myName()||'Я')}</span>`;}   // 0.62: поруч з аватаркою — ім'я (кнопка на свою сторінку)
+function renderAcct(){const b=document.getElementById('acctBtn');if(!b)return;b.hidden=!ONLINE;b.className='avbtn';b.title='Моя сторінка';b.setAttribute('aria-label','Моя сторінка');const nm=myName();b.innerHTML=avatarSvg(mySeed(),28)+(nm?`<span class="me-n">${esc(nm)}</span>`:'');b.classList.toggle('noname',!nm);}   // 0.62: поруч з аватаркою — ім'я (кнопка на свою сторінку)
 function openAcct(){screenTag('account');
   const box=document.getElementById('viewBox'),body=document.getElementById('viewBody');document.getElementById('viewTitle').textContent='Акаунт';box.hidden=false;
   const msg=ACCT_MSG?`<p class="note">${esc(ACCT_MSG)}</p>`:'';

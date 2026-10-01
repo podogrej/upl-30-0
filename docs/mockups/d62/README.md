@@ -5,3 +5,4 @@
 
 Перезняти (з кореня): `node docs/mockups/d62/shoot.js було`, `node docs/mockups/d62/shoot.js стало`, `node docs/mockups/d62/compare.js`.
 Колесо випадкове, тому клуби на «було» і «стало» різні.
+«нове_*» — знімки справжньої версії 0.62 після перенесення в код (`node docs/mockups/d62/shoot.js нове`).

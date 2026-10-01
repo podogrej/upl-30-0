@@ -4,6 +4,7 @@
 // База — у пам'яті (_site.js), SQL-частину перевіряє bash tools/tests/setup.sh. Знімки 390 px: docs/mockups/player_page_059_*.png
 // Запуск з кореня: node tools/tests/player_page.js
 const path=require('path'),fs=require('fs');const {ROOT,launch,makeDB,callApi,openSite,checker}=require('./_site.js');
+const openSet=p=>p.evaluate(()=>{const d=document.getElementById('ppSet');if(d)d.open=true;});   // 0.62: «Налаштування» згорнуто
 const OUT=path.join(ROOT,'tools','tests','out'),MOCK=path.join(ROOT,'docs','mockups');fs.mkdirSync(OUT,{recursive:true});
 process.env.SUPABASE_SERVICE_KEY='svc';
 const T=checker('сторінка гравця');
@@ -66,14 +67,15 @@ const order=pg=>pg.$$eval('#ppCab .tro.on[data-tr]',es=>es.map(e=>e.dataset.tr))
  await pg.click('#acctBtn');await pg.waitForTimeout(700);
  T.check(await pg.$eval('#s6',e=>!e.hidden)&&await pg.$eval('#s1',e=>e.hidden),'аватарка відкриває свою сторінку');
  T.check((await pg.textContent('#ppName'))==='silent_owl'&&!!(await pg.$('.pp-warn'))&&/лише на цьому пристрої/.test(await pg.textContent('.pp-warn')),'без входу: анонімне ім\'я й попередження «лише на цьому пристрої»');
- const tiles=await pg.$$eval('.pp-tiles .tile',ts=>ts.map(t=>t.innerText.replace(/\s+/g,' ')));
- T.check(tiles.length===6&&/сезонів зіграно/.test(tiles[0])&&/серія драфту дня/.test(tiles[5])&&/^4 /.test(tiles[5]),'6 плиток: '+tiles.join(' | '));
+ const tiles=await pg.$$eval('.pp-tiles .tile',ts=>ts.map(t=>t.innerText.replace(/\s+/g,' ')));const rest=await pg.textContent('.pp-rest');
+ T.check(tiles.length===3&&/сезон/.test(tiles[0])&&/чемпіонств/.test(tiles[1])&&/серія драфту дня: 4/.test(rest),'3 великі цифри + рядок (0.62): '+tiles.join(' | ')+' · '+rest);
  // шафа: рідкість
  await pg.waitForTimeout(300);
  T.check(JSON.stringify(await order(pg))===JSON.stringify(['unbeaten','top3','champ']),'сортування «за рідкістю»: '+(await order(pg)).join(','));
  T.check(await pg.$eval('#ppCab .tro[data-tr="unbeaten"]',e=>e.classList.contains('rt-epic')&&/Епічний · є в 2% гравців/.test(e.textContent))
    &&await pg.$eval('#ppCab .tro[data-tr="top3"]',e=>e.classList.contains('rt-rare'))&&await pg.$eval('#ppCab .tro[data-tr="champ"]',e=>/Звичайний/.test(e.textContent)),'рівні рідкості: епічний 2%, рідкісний 10%, звичайний 60%');
  T.check(await pg.$$eval('#ppCab .tro.sec.rt-legend, #ppCab .tro.sec.rt-epic, #ppCab .tro.sec.rt-rare',e=>e.length)===0,'секретні трофеї без рівня рідкості');
+ await pg.click('#ppCabAll');await pg.waitForTimeout(100);   // 0.62: фільтри й сортування — за «Усі трофеї»
  await pg.click('#ppCab [data-s="recent"]');await pg.waitForTimeout(100);
  T.check(JSON.stringify(await order(pg))===JSON.stringify(['top3','unbeaten','champ']),'«Нещодавні»: '+(await order(pg)).join(','));
  const catOf=await pg.evaluate(()=>Object.fromEntries(window.__dbg.TROPHIES.map(t=>[t.id,t.cat])));
@@ -82,12 +84,12 @@ const order=pg=>pg.$$eval('#ppCab .tro.on[data-tr]',es=>es.map(e=>e.dataset.tr))
  T.check(shown.length>0&&shown.every(id=>catOf[id]==='season')&&/Сезон \d+\/\d+/.test(chip),`фільтр «Сезон»: ${shown.length} карток, «${chip}»`);
  await pg.click('#ppCab [data-f="all"]');await pg.click('#ppCab [data-s="rare"]');
  // ім'я: правила й повідомлення
- const rename=async v=>{await pg.fill('#ppNameIn',v);await pg.click('#ppNameSave');await pg.waitForTimeout(300);return pg.textContent('#ppNameMsg');};
+ const rename=async v=>{await openSet(pg);await pg.fill('#ppNameIn',v);await pg.click('#ppNameSave');await pg.waitForTimeout(300);return pg.textContent('#ppNameMsg');};
  T.check(/від 3 до 20/.test(await rename('ab')),'ім\'я з 2 символів — «від 3 до 20»');
  T.check(/Лише латинські літери a–z, цифри, «_» і «\.»/.test(await rename('андрій')),'кирилиця — «Лише латинські літери a–z, цифри, «_» і «.»»');
  T.check(/Починається й закінчується літерою або цифрою/.test(await rename('andrii_')),'«_» у кінці — «Починається й закінчується…»');
  T.check(/не підходить/.test(await rename('Super Hui')),'мат (латиницею) — «Таке ім\'я не підходить»');
- await pg.fill('#ppNameIn','Serhii Sh');T.check((await pg.inputValue('#ppNameIn'))==='serhii_sh','поле вводу: одразу малі літери й «_» замість пробілу');
+ await openSet(pg);await pg.fill('#ppNameIn','Serhii Sh');T.check((await pg.inputValue('#ppNameIn'))==='serhii_sh','поле вводу: одразу малі літери й «_» замість пробілу');
  const nCalls=M.calls.filter(c=>c[0]==='set_player_name').length;
  T.check(/вже зайняте/.test(await rename('ANDRII')),'зайняте (без урахування регістру) — «Це ім\'я вже зайняте»');
  T.check(M.calls.filter(c=>c[0]==='set_player_name').length===nCalls+1,'помилки правил ловить сайт, до бази йде лише перевірка зайнятості');
@@ -126,7 +128,7 @@ const order=pg=>pg.$$eval('#ppCab .tro.on[data-tr]',es=>es.map(e=>e.dataset.tr))
  await D.pg.click('#acctBtn');await D.pg.waitForTimeout(700);
  T.check((await D.pg.textContent('#ppName'))==='oleh'&&!(await D.pg.$('.pp-warn'))&&/Увійшов через Telegram/.test(await D.pg.textContent('.pp-acct')),'з входом: ім\'я з Telegram «Олег» → «oleh» (транслітерує база), без попередження, «Вийти»');
  await D.pg.screenshot({path:path.join(MOCK,'player_page_059_own.png'),fullPage:true});
- await D.pg.click('#ppDel');T.check(await D.pg.$eval('#ppDelBox',e=>!e.hidden),'«Видалити акаунт…» питає підтвердження');
+ await openSet(D.pg);await D.pg.click('#ppDel');T.check(await D.pg.$eval('#ppDelBox',e=>!e.hidden),'«Видалити акаунт…» питає підтвердження');
  await D.pg.locator('.pp-acct').screenshot({path:path.join(OUT,'pp_delete.png')});
  await D.pg.click('#ppDelYes');await D.pg.waitForTimeout(600);
  const left=await D.pg.evaluate(()=>Object.keys(localStorage).filter(k=>k.startsWith('upl30_')));

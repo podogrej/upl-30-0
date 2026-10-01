@@ -108,9 +108,11 @@ function honestXi(formation) {
   await tamper('підробка з сайту 0.56 — не перевірено (null)', r => { r.version = '0.56'; r.xi[0].r = 99; }, null);
   await tamper('старша версія 0.49 — не перевірити (null)', r => { r.version = '0.49'; }, null);
   // 0.60: нога LM/RM змінила симуляцію лише для таких гравців — сезон сайту 0.59, що сходиться, приймаємо; підробку — «не перевірити»; 0.58 — вже «не перевірити»
-  await tamper('сезон з сайту 0.59 — перевірено', r => { r.version = '0.59'; }, true);
-  await tamper('підробка з сайту 0.59 — не перевірено (null)', r => { r.version = '0.59'; r.xi[0].r = 99; }, null);
-  await tamper('сезон з сайту 0.58 — не перевірити (null)', r => { r.version = '0.58'; }, null);
+  // 0.62: лише дизайн — PREV_VERSIONS = 0.61, 0.60; 0.59 — вже «не перевірити»
+  await tamper('сезон з сайту 0.61 — перевірено', r => { r.version = '0.61'; }, true);
+  await tamper('сезон з сайту 0.60 — перевірено', r => { r.version = '0.60'; }, true);
+  await tamper('підробка з сайту 0.60 — не перевірено (null)', r => { r.version = '0.60'; r.xi[0].r = 99; }, null);
+  await tamper('сезон з сайту 0.59 — не перевірити (null)', r => { r.version = '0.59'; }, null);
   // 0.58: епоха (seasons.era, коли з'явиться колонка) — склад лише з клуб-сезонів епохи
   { const early = Math.min(...legit.xi.map(x => x.y));
     await tamper(`епоха «Сучасність», а в складі сезон ${early}`, r => { r.era = 'y2015'; }, early >= 2015);

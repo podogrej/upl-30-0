@@ -8,10 +8,10 @@ const fail=[];let n=0;const check=(ok,msg)=>{n++;console.log((ok?'✓ ':'✗ ')+
  const saves=[];await pg.route(/\/api\/save/,r=>{try{saves.push(JSON.parse(r.request().postData()||'{}'));}catch(e){}r.fulfill({status:200,contentType:'application/json',body:'{"id":7,"verified":true}'});});
  // ---- головна: «Новий режим», 5×5 сховано, FAQ актуальний
  const home=await pg.evaluate(()=>({pick:!document.getElementById('pickOpen').hidden,f5:document.getElementById('f5Open').hidden,
-   faq:document.querySelector('.faq0').textContent.replace(/\s+/g,' '),daily:document.getElementById('dailyBtn').textContent}));
+   faq:document.querySelector('.faq0').textContent.replace(/\s+/g,' '),daily:document.getElementById('dKicker').textContent+' / '+document.getElementById('dailyBtn').textContent}));   // 0.62: «Драфт дня» — у заголовку картки, кнопка — «Грати»
  check(home.pick&&home.f5,'головна: «Вибір сезону» є, 5×5 на одному телефоні сховано');
  check(/Що таке «Драфт дня»/.test(home.faq)&&/Що таке «Вибір сезону»/.test(home.faq)&&!/5×5 на одному пристрої/.test(home.faq)&&/Це ти\?/.test(home.faq),'FAQ: драфт дня, вибір сезону, «Це ти?», без 5×5 на одному пристрої');
- check(/драфт дня/i.test(home.daily)&&!/виклик дня/i.test(home.daily),'кнопка дня: «'+home.daily.trim()+'»');
+ check(/^драфт дня/i.test(home.daily)&&/ \/ Грати$/.test(home.daily.trim())&&!/виклик дня/i.test(home.daily),'картка дня: «'+home.daily.trim()+'»');
  // ---- «Вибір сезону»: плитка формату, режимів немає
  await pg.click('#pickOpen');await pg.waitForTimeout(300);
  const setup=await pg.evaluate(()=>({on:(document.querySelector('#formats .opt.on')||{}).dataset.fmt,modes:document.getElementById('modesBox').hidden,S:{f:window.__dbg.S.format,p:window.__dbg.S.pickMode}}));
@@ -37,7 +37,7 @@ const fail=[];let n=0;const check=(ok,msg)=>{n++;console.log((ok?'✓ ':'✗ ')+
  check(res.mode==='pick'&&/Вибір сезону/.test(res.share),'сезон: режим pick, у тексті «Вибір сезону»');
  const sv=saves.find(x=>x.kind==='season');
  check(sv&&sv.row.mode==='pick'&&sv.row.format==='classic'&&sv.row.show_r===true,'запис сезону: mode pick, format classic, show_r (рейтинги відкривали) — '+(sv?JSON.stringify({m:sv.row.mode,f:sv.row.format,r:sv.row.show_r}):'немає'));
- check(res.big&&res.tiles==='cardBtn,copyBtn,chalOpen:h,tgMeBtn:h'&&res.chal,'«Поділитися»: головна кнопка й плитки Картка/Текст (виклику у «Виборі сезону» немає, «Мені в TG» — лише в Telegram): '+res.tiles);
+ check(res.big&&res.tiles==='tgShareBtn,cardBtn,copyBtn,chalOpen:h,tgMeBtn:h'&&res.chal,'«Поділитися» (0.62 — плиткою в ряду): Поділитися/Картка/Текст (виклику у «Виборі сезону» немає, «Мені в TG» — лише в Telegram): '+res.tiles);
  await pg.locator('#shareBox').screenshot({path:path.join(OUT,'v060_share.png')});
  // ---- рідкісний новий трофей — з ефектом (секретний)
  const sec=await pg.evaluate(()=>{const t=window.__dbg.TROPHIES.find(x=>x.sec&&!x.gone);window.__dbg.renderNewTro({tro:{got:[t.id,'champ'],fresh:[t.id,'champ']}});
