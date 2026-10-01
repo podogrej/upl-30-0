@@ -536,12 +536,23 @@ button.primary,.big0.primary{background:var(--grad);background-size:var(--gw,100
 details.x0q{margin-top:2px}details.x0q summary{font-size:13px;color:var(--muted)}
 /* 0.64 (власник 01.10): В-Н-П на підсумках — одним кольором, без зеленого/жовтого/червоного */
 #recTiles i{color:inherit!important}
-/* 0.64 (власник 01.10: «дуже мало повітря») — шафа трофеїв: відступи між розділами, картками, рядком секретних і віхами */
-#viewBody h3{margin:36px 0 12px}#viewBody h3:first-of-type{margin-top:22px}
-#viewBody .trg{gap:12px}
-#viewBody .trsec{margin:16px 0 0;font-size:14px;color:var(--muted)}
-#viewBody .trg .tro{padding:14px 16px;column-gap:14px}
-#viewBody .row:has(.chip.ms){gap:10px!important;margin-bottom:8px}
+/* ===== 0.64 — єдині відступи (власник 01.10: «дуже мало повітря», зразок — шафа трофеїв): заголовок розділу — 36 px над, 12 під;
+   картки в стовпчик — 12 px між ними; усередині карток — 14–18 px. Діє на всіх екранах */
+h3,.sec0,#fl .sec0,#viewBody h3{margin:36px 0 12px}
+section>h3:first-child,.box h3:first-of-type,#viewBody>h3:first-child,#viewBody>p+h3{margin-top:22px}
+.row0{margin-top:12px;padding:16px}.duo0{margin-top:12px;gap:12px}.daily{margin-top:12px;padding:18px;gap:12px}
+.sec0+.row0,.sec0+.daily,h3+.daily{margin-top:0}
+.trg,.tro0,#newTro .trgrid,.fl5ms,.fl5teams{gap:12px}
+#viewBody .trsec,.trsec{margin:16px 0 0;font-size:14px;color:var(--muted)}
+.row:has(.chip.ms){gap:10px!important;margin-bottom:8px}
+/* трофеї «плитками» (референс власника): по одному в рядку, маленький значок біля назви, назва — градієнтом, опис під нею; закриті — приглушені */
+.tro{grid-template-columns:28px 1fr auto;column-gap:10px;row-gap:3px;align-items:start;padding:14px 16px}
+.tro .tri{grid-row:1;align-self:start;margin-top:-2px}.tro .hx{width:28px;height:28px}
+.tro .trt{gap:4px}.tro .trt b{font-size:15px;line-height:1.25}
+.tro.on .trt b{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;justify-self:start}
+.tro:not(.on){opacity:1;background:var(--surface);box-shadow:inset 0 0 0 1px var(--line)}.tro:not(.on) .trt b{color:var(--muted)}.tro:not(.on) .trt>span{color:var(--muted)}
+.tro .trt>span{font-size:13px;line-height:1.4}
+#newTro .tro{padding:14px 16px}
 </style>
 
 <!-- 0.64: градієнт UPL.TV для значків трофеїв (.hx — fill:url(#trg)) -->
