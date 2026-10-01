@@ -14,8 +14,10 @@ async function openPage(opts={}){
   const pg=await ctx.newPage();const errs=[];pg.on('pageerror',e=>errs.push(e.message));
   await pg.goto('file://'+path.join(ROOT,'index.html'));await pg.waitForTimeout(800);
   return {b,pg,errs};}
-// формат на екрані налаштувань: плитка, а сховані з 0.64 («Класичне дербі», «Один клуб», «Ліга легенд» — у рушії лишились для старих сезонів) — напряму через setFmt
-async function pickFmt(pg,fmt){if(await pg.$(`#formats .opt[data-fmt="${fmt}"]`))await pg.click(`#formats .opt[data-fmt="${fmt}"]`);else await pg.evaluate(k=>{const D=window.__dbg;D.setFmt(k);if(k==='oneclub')D.S.club='karpaty-lviv';},fmt);}
+// формат на екрані налаштувань: плитка, а сховані з 0.64 («Класичне дербі», «Ліга легенд» — у рушії лишились для старих сезонів) — напряму через setFmt
+// «Один клуб» (з 0.67 знову плиткою) — клуб обираємо в списку, як гравець
+async function pickFmt(pg,fmt){if(await pg.$(`#formats .opt[data-fmt="${fmt}"]`))await pg.click(`#formats .opt[data-fmt="${fmt}"]`);else await pg.evaluate(k=>window.__dbg.setFmt(k),fmt);
+  if(fmt==='oneclub')await pg.selectOption('#clubPick','karpaty-lviv');}
 // один сезон: формат (data-fmt плитки; 'pick' — «Вибір сезону», 'daily' — драфт дня), номер режиму й схеми у списках налаштувань (як їх бачить гравець)
 async function playSeason(pg,fmt,mode,form){
   await pg.evaluate(()=>document.getElementById('homeBtn').click());await pg.waitForTimeout(200);
