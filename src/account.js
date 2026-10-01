@@ -214,7 +214,7 @@ async function leagueInit(){
     else if(el&&!LEAGUE){el.hidden=false;el.innerHTML=`<div class="kicker">Ліга Telegram-чату</div><div class="ttl">&nbsp;</div><div class="meta muted">Завантажуємо табло…</div>`;}
     leagueLoad(chat);}
 }
-async function leagueLoad(chat){try{const r=await _fetch('/api/league?chat='+encodeURIComponent(chat));if(!r.ok){if(!LEAGUE)document.getElementById('leagueCard').hidden=true;return;}LEAGUE={chat,...await r.json()};lsSet('upl30_league_snap',LEAGUE);renderLeague();}catch(e){if(!LEAGUE)document.getElementById('leagueCard').hidden=true;}}
+async function leagueLoad(chat,fresh){try{const r=await _fetch('/api/league?chat='+encodeURIComponent(chat)+(fresh?'&t='+Date.now():''));if(!r.ok){if(!LEAGUE)document.getElementById('leagueCard').hidden=true;return;}LEAGUE={chat,...await r.json()};lsSet('upl30_league_snap',LEAGUE);renderLeague();}catch(e){if(!LEAGUE)document.getElementById('leagueCard').hidden=true;}}
 function renderLeague(){
   const el=document.getElementById('leagueCard');if(!el)return;if(!LEAGUE){el.hidden=true;return;}
   const L=LEAGUE,medal=[1,2,3].map(k=>`<span class="plc p${k}">${k}</span>`);const played=lsGet("upl30_daily_"+DAY);
@@ -231,6 +231,6 @@ async function leagueSubmit(r){
   try{const res=await _fetch('/api/league',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({initData:TG.initData,result:{w:r.W,d:r.D,l:r.L,pts:r.pts,place:r.place,gf:r.gf,ga:r.ga,xp:Math.round(r.xp*10)/10,formation:S.formation,day:DAY,trophies:tro,season_id:r.rowId||null}})});
     const j=await res.json().catch(()=>({}));
     if(el&&j.posted&&j.posted.length){el.hidden=false;el.textContent=`Результат додано в табло ${j.posted.length>1?'груп':'групи'}: ${j.posted.map(t=>'«'+t+'»').join(', ')}`;}
-    if(LEAGUE)leagueLoad(LEAGUE.chat);
+    if(LEAGUE)leagueLoad(LEAGUE.chat,true);   // повз кеш (15 с), щоб свій результат було видно одразу
   }catch(e){}
 }

@@ -20,13 +20,17 @@ module.exports = async (req, res) => {
     if (req.method === 'GET') {
       const chat = String(req.query.chat || '').replace(/[^0-9-]/g, '');
       if (!chat) return res.status(400).json({ error: 'chat?' });
-      const [lg] = await L.sb(`leagues?chat_id=eq.${chat}&select=title`) || [];
-      if (!lg) return res.status(404).json({ error: 'no league' });
       const day = L.kyivDate();
-      const today = (await L.onlyVerified(await L.sb(`league_results?chat_id=eq.${chat}&day=eq.${day}&select=name,w,d,l,pts,gf,ga,created_at,day,tg_user_id,season_id`) || []))
-        .sort(L.sortRes).map(({ name, u, w, d, l, pts, gf, ga, created_at }) => ({ name, u, w, d, l, pts, gf, ga, created_at }));
-      const members = (await L.sb(`league_members?chat_id=eq.${chat}&select=tg_user_id`) || []).length;
-      return res.status(200).json({ title: lg.title, day, today, members, standings: (await L.standings(chat)).slice(0, 10) });
+      // 0.67 (власник: табло на головній вантажиться довго): усі запити разом, а не один за одним; відповідь кешує Vercel на 15 с
+      const [[lg], todayRows, memberRows, st] = await Promise.all([
+        L.sb(`leagues?chat_id=eq.${chat}&select=title`).then(x => x || []),
+        L.sb(`league_results?chat_id=eq.${chat}&day=eq.${day}&select=name,w,d,l,pts,gf,ga,created_at,day,tg_user_id,season_id`).then(x => L.onlyVerified(x || [])),
+        L.sb(`league_members?chat_id=eq.${chat}&select=tg_user_id`).then(x => x || []),
+        L.standings(chat)]);
+      if (!lg) return res.status(404).json({ error: 'no league' });
+      const today = todayRows.sort(L.sortRes).map(({ name, u, w, d, l, pts, gf, ga, created_at }) => ({ name, u, w, d, l, pts, gf, ga, created_at }));
+      res.setHeader('Cache-Control', 'public, s-maxage=15, stale-while-revalidate=60');
+      return res.status(200).json({ title: lg.title, day, today, members: memberRows.length, standings: st.slice(0, 10) });
     }
     if (req.method !== 'POST') return res.status(405).json({ error: 'GET or POST' });
     let b = req.body || {}; if (typeof b === 'string') b = JSON.parse(b);

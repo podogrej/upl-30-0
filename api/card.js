@@ -1,7 +1,7 @@
 // 30-0 УПЛ — надіслати картку результату собі в Telegram (адреса /api/card)
 // У застосунку Telegram довге натискання на картинку в Mini App не дає її зберегти, тому бот надсилає картку в особистий чат:
 // звідти її можна зберегти, переслати друзям або викласти в сторіз.
-// POST {initData, image: "data:image/jpeg;base64,…", caption, share?}. Змінні оточення у Vercel: TG_TOKEN, TG_BOT.
+// POST {initData, image: "data:image/jpeg;base64,…", thumb?, caption, share?}. Змінні оточення у Vercel: TG_TOKEN, TG_BOT.
 // share=true: бот повертає id підготовленого повідомлення (savePreparedInlineMessage) для WebApp.shareMessage.
 //   Спершу картка кладеться у публічне сховище Supabase (bucket «cards», SQL: sql/cards_bucket.sql) і йде як photo_url —
 //   так не потрібен особистий чат із ботом. Якщо сховища немає — запасний шлях через особистий чат (потрібен Start).
@@ -15,6 +15,10 @@ async function storeCard(buf, ext) {   // → публічна адреса ка
   const path = `${new Date().toISOString().slice(0, 10)}/${crypto.randomBytes(9).toString('hex')}.${ext}`;
   const r = await fetch(`${SB_URL}/storage/v1/object/cards/${path}`, { method: 'POST', headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': `image/${ext === 'png' ? 'png' : 'jpeg'}`, 'x-upsert': 'false' }, body: buf });
   return r.ok ? `${SB_URL}/storage/v1/object/public/cards/${path}` : null;
+}
+async function warm(url) {   // прочитати файл повністю (до 4 с), щоб Telegram отримав його з кешу сховища цілим
+  const ac = new AbortController(), t = setTimeout(() => ac.abort(), 4000);
+  try { const r = await fetch(url, { signal: ac.signal }); await r.arrayBuffer(); } catch (e) {} finally { clearTimeout(t); }
 }
 async function prepare(token, u, photo, caption) {
   const bot = env('TG_BOT') || 'upl30_bot';
@@ -56,7 +60,17 @@ module.exports = async (req, res) => {
     if (b.share) {
       stage = 'store';
       const url = await storeCard(buf, m[1] === 'png' ? 'png' : 'jpg').catch(() => null);
-      if (url) { stage = 'prepare'; return res.status(200).json(await prepare(token, u, { photo_url: url, thumbnail_url: url, photo_width: 1080, photo_height: 1350 }, b.caption)); }
+      if (url) {
+        // 0.67: картка приходила наполовину сірою — Telegram не дочекався файлу зі сховища. Окреме мале прев'ю
+        // і одне повне читання файлу перед відправкою (сховище віддає його вже з кешу)
+        const tm = /^data:image\/jpeg;base64,(.+)$/.exec(String(b.thumb || ''));
+        const tbuf = tm && Buffer.from(tm[1], 'base64');
+        const thumb = tbuf && tbuf.length < 2e5 ? await storeCard(tbuf, 'jpg').catch(() => null) : null;
+        stage = 'warm';
+        await warm(url);
+        stage = 'prepare';
+        return res.status(200).json(await prepare(token, u, { photo_url: url, thumbnail_url: thumb || url, photo_width: 1080, photo_height: 1350 }, b.caption));
+      }
       if (b.prefetch) return res.status(200).json({ ok: false, error: 'store' });   // 0.66: заготовка заздалегідь — без запасного шляху через особистий чат
     }
     stage = 'send';
