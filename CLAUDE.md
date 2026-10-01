@@ -13,7 +13,7 @@
 - Публичные ключи (`sb_publishable_…`) и адреса баз можно держать в коде.
 
 ## Код
-- `index.html` и `lib/engine.js` генерируются, руками их не править. Собирать так: `python3 src/build.py`, потом `node tools/make_engine.js`.
+- `index.html`, `lib/engine.js` и `lib/five_core.js` генерируются, руками их не править. Собирать так: `python3 src/build.py`, потом `node tools/make_engine.js`. Сервер (`api/`) не может брать файлы из `src/`, `tools/`, `data/`, `docs/`, `sql/` — их нет на Vercel (`.vercelignore`); всё нужное серверу — в `lib/`.
 - Номер версии в подвале («Що нового у версії X.YY» в `src/template.html`) и `VERSION` в `lib/engine.js` должны совпадать: сервер проверяет сезон движком той же версии.
 - При каждом выпуске обновляй `WHATSNEW` (для игроков, по-украински), CHANGELOG.md и BACKLOG.md.
 - Любая правка симуляции или рейтингов: тест `determinism` должен совпасть во всех прогонах (10/10 с 0.60), а замер `tools/sim30.js` нужно повторить и записать в DECISIONS.

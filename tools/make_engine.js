@@ -119,4 +119,6 @@ module.exports = { VERSION: '${VERSION}', DATA, FORMATIONS, FORMATS, GROUP_OF, M
 `;
 fs.mkdirSync(ROOT + '/lib', { recursive: true });
 fs.writeFileSync(ROOT + '/lib/engine.js', mod);
+// рушій 5×5 (0.63) — копія src/five_core.js для сервера (api/fl5.js): src/ не викладається на Vercel (.vercelignore)
+fs.writeFileSync(ROOT + '/lib/five_core.js', '// ЗГЕНЕРОВАНО з src/five_core.js (node tools/make_engine.js) — не правити\n' + fs.readFileSync(ROOT + '/src/five_core.js', 'utf8'));
 console.log('engine: ' + need.size + ' declarations, ' + (mod.length / 1024).toFixed(0) + ' KB');
