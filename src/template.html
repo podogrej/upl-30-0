@@ -807,7 +807,7 @@ const YEARS16 = Object.keys(DATA.seasons).map(Number).filter(y=>DATA.seasons[y].
 // Номери 9001/9002 — умовні «сезони» (зберігаються в seasons.year; справжні сезони — роки 1992–2025).
 const CULT_CLUBS=['dynamo-kyiv','shakhtar-donetsk','dnipro','metalist-kharkiv','chornomorets-odesa','karpaty-lviv','metalurh-donetsk','metalurh-zaporizhzhia','mariupol','zorya-luhansk','tavriya-simferopol','vorskla-poltava','kryvbas','arsenal-kyiv','sevastopol'];
 const LEAGUE_CULT=9001, LEAGUE_LEGENDS=9002;
-const LEG_SOFT=0.85;
+const LEG_SOFT=1;   // 0.64: 0.85 (легенди м'якші); 0.65: у повну силу — складність тепер у P.refA/refD
 function buildLeague(best){const hist={};for(const y of YEARS16)for(const t of DATA.seasons[y].teams)(hist[t[0]]=hist[t[0]]||[]).push({y,t});
   const base=YEARS16.reduce((a,y)=>a+DATA.seasons[y].base,0)/YEARS16.length;
   // Ліга легенд (0.63): сезон клубу з найсильнішим складом — середній рейтинг 11 найкращих гравців (Шахтар 12/13, Динамо 97/98, Чорноморець 13/14…);
@@ -825,11 +825,11 @@ function seasonOf(y){return DATA.seasons[y]||LEAGUES[y];}
 function oppYear(){return S.format==='classic'||S.format==='legends'?LEAGUE_LEGENDS:LEAGUE_CULT;}
 function oppLabel(y){return LEAGUE_NAME[y]||('УПЛ '+seasonLabel(y));}
 const MODES = {
-  normal:{name:"Звичайний",desc:"Рейтинги відкриються перед сезоном. 2 перекручування.",damp:0.8,star:2,rerolls:2,showRatings:false,reveal:true},
-  hard:{name:"Складний",desc:"Без перекручувань, суперники в повну силу.",damp:1.0,star:0,rerolls:0,showRatings:false,reveal:true},
+  normal:{name:"Звичайний",desc:"Рейтинги відкриються перед сезоном. 2 перекручування.",damp:1,star:0,rerolls:2,showRatings:false,reveal:true},
+  hard:{name:"Складний",desc:"Без перекручувань, склад оцінюється ще суворіше.",damp:1.0,star:-1,rerolls:0,showRatings:false,reveal:true},
   hardcore:{name:"Хардкор",desc:"Рейтинги не відкриються навіть після сезону.",damp:1.0,star:0,rerolls:0,showRatings:false,reveal:false},
-  pick:{name:"Вибір сезону",desc:"Колесо дає клуб, сезон обираєш сам — з трьох. Без перекручувань.",damp:0.8,star:1,rerolls:0,showRatings:false,reveal:true,pick:3},
-  practice:{name:"Тренування",desc:"Рейтинги видно одразу. Для знайомства з грою: результат не йде в рекорди й таблиці.",damp:0.8,star:2,rerolls:2,showRatings:true,reveal:true}};
+  pick:{name:"Вибір сезону",desc:"Колесо дає клуб, сезон обираєш сам — з трьох. Без перекручувань.",damp:1,star:0,rerolls:0,showRatings:false,reveal:true,pick:3},
+  practice:{name:"Тренування",desc:"Рейтинги видно одразу. Для знайомства з грою: результат не йде в рекорди й таблиці.",damp:1,star:0,rerolls:2,showRatings:true,reveal:true}};
 const FORMATS = {
   classic:{name:"Класика",desc:"Усі 524 клуб-сезони."},
   derby:{name:"Класичне дербі",desc:"Лише «Динамо» і «Шахтар» за 34 сезони.",clubs:["dynamo-kyiv","shakhtar-donetsk"]},
@@ -845,7 +845,8 @@ const DEF_W={GK:1.4,CB:1.1,RB:0.85,LB:0.85,RWB:0.7,LWB:0.7,CDM:0.75,CM:0.5,CAM:0
 const REF_A=5.6, REF_D=7.3, FE=0.5;
 // refA/refD з 0.50 на 2.3 нижче: після стиснення верху шкали середній рейтинг зібраного складу впав на ~2.3 — складність та сама (замір у DECISIONS);
 // з 0.57 ще на 2.3 нижче (78.26/77.18 → 75.96/74.88): рейтинги v2 (стиснення понад 82 + клас) — середній рейтинг складу бота −2.5, очки ті самі (замір 0.57)
-const P={betaA:0.065,betaD:0.085,refA:75.96,refD:74.88,antiRef:2.3,capA:4.0,floorD:0.25,floorA:0.33,capD:3.0,home:0.12,formSd:0.15,balPen:0.01,seasonTeamSd:3.0,seasonPlayerSd:4.0,seasonFormCap:10};
+// 0.65 (власник 01.10, орієнтир — 38-0): склад 85 без хімії — чемпіон ≈10–15% сезонів; refA/refD +2.89 (було 75.96/74.88), антисезон — на старих ref (antiRefA/D)
+const P={betaA:0.065,betaD:0.085,refA:78.85,refD:77.77,antiRefA:73.66,antiRefD:72.58,classFloorA:0.7,classCapD:1.6,capA:4.0,floorD:0.25,floorA:0.33,capD:3.0,home:0.12,formSd:0.15,balPen:0.01,seasonTeamSd:3.0,seasonPlayerSd:4.0,seasonFormCap:10};
 // форма сезону: у кожного гравця свій рік (σ 4), плюс спільний для команди «хімія» (σ 3); навіть зірка може провалити сезон, а середній склад — вистрілити
 function seasonForm(xi){const team=normal()*P.seasonTeamSd;const f={};for(const x of xi){f[x.id]=Math.max(-P.seasonFormCap,Math.min(P.seasonFormCap,Math.round(team+normal()*P.seasonPlayerSd)));}return f;}
 
@@ -889,7 +890,7 @@ const DAILY=dailySetup();
 // чистка (0.58): результат і позначка «надіслано» драфту дня (upl30_daily_<день>, upl30_sent_<день>) потрібні лише сьогодні — старші за 14 днів стираємо
 try{const old=dayAdd(DAY,-14);for(let i=localStorage.length-1;i>=0;i--){const k=localStorage.key(i),m=/^upl30_(?:daily|sent)_(\d{4}-\d{2}-\d{2})$/.exec(k||'');if(m&&m[1]<old)localStorage.removeItem(k);}}catch(e){}
 setTimeout(()=>{try{loadHomeStats();}catch(e){}try{renderTrBtn();trRetro();}catch(e){}try{chalLoad();}catch(e){}try{f5Boot();}catch(e){}},0);
-MODES.daily={name:"Драфт дня",desc:"",damp:0.8,star:2,rerolls:1,showRatings:false,reveal:true};
+MODES.daily={name:"Драфт дня",desc:"",damp:1,star:0,rerolls:1,showRatings:false,reveal:true};
 function dayAdd(day,n){return new Date(Date.UTC(+day.slice(0,4),+day.slice(5,7)-1,+day.slice(8,10))+n*864e5).toISOString().slice(0,10);}
 function weekKey(day){const wd=(new Date(Date.UTC(+day.slice(0,4),+day.slice(5,7)-1,+day.slice(8,10))).getUTCDay()+6)%7;return dayAdd(day,-wd);}
 // серія драфту дня з «заморозкою»: один пропущений день на тиждень не обнуляє серію
@@ -1227,19 +1228,29 @@ function renderPre(){
 }
 
 // ---------- engine
+// 0.65 «хімія» (власник 01.10, як «весь Ліверпуль» у 38-0): гравці одного клубу дають бонус до атаки й оборони (у пунктах рейтингу);
+// група з одного клуб-сезону — ще трохи. x.cc — код клубу, x.y — сезон; немає (старий клієнт) — хімії немає. В антисезоні не діє.
+const CHEM_CLUB=[0,0,0,0.5,1,1.6,2.2,2.8,3.3,3.7,4,4.2],CHEM_SEASON=0.25,CHEM_CAP=5;
+function chemOf(xi){if(S.format==='anti')return {pts:0,groups:[]};const by={},bs={};for(const x of xi){if(!x.cc)continue;by[x.cc]=(by[x.cc]||0)+1;const k=x.cc+'|'+x.y;bs[k]=(bs[k]||0)+1;}
+  let pts=0;const groups=[];for(const [cc,k] of Object.entries(by)){pts+=CHEM_CLUB[Math.min(k,11)];if(k>=3)groups.push({cc,k});}
+  for(const k of Object.values(bs))if(k>=3)pts+=CHEM_SEASON*(k-2);
+  return {pts:Math.min(CHEM_CAP,+pts.toFixed(2)),groups:groups.sort((a,b)=>b.k-a.k)};}
 function teamIndices(xi){
   let wa=0,wd=0,sa=0,sd=0;const lines={};
   for(const x of xi){const k=x.slot||x.pos;wa+=ATT_W[k];wd+=DEF_W[k];sa+=ATT_W[k]*(x.r-50);sd+=DEF_W[k]*(x.r-50);(lines[x.pos]=lines[x.pos]||[]).push(x.r);}
   const na=FE*REF_A+(1-FE)*wa, nd=FE*REF_D+(1-FE)*wd;
   const means=Object.values(lines).map(a=>a.reduce((s,v)=>s+v,0)/a.length);
-  return {att:sa/na+50,def:sd/nd+50,gap:Math.max(...means)-Math.min(...means)};
+  const ch=chemOf(xi);
+  return {att:sa/na+50+ch.pts,def:sd/nd+50+ch.pts,gap:Math.max(...means)-Math.min(...means),chem:ch};
 }
 function userMult(t,mode){
   const pen=Math.max(0,t.gap-12)*P.balPen;
-  const anti=S.format==='anti';   // з 0.50 межі знизу — лише в антисезоні (там 0-30 має бути важким); у класиці «рекорди ганьби» лишаються
-  const sh=anti?P.antiRef:0;   // з 0.57 в антисезоні ref як до 0.57: слабких карток (< 70) рейтинги v2 не зачепили, а −2.3 зробило б 0-30 удвічі важчим
-  const a=Math.exp(P.betaA*(t.att+mode.star-P.refA-sh)-pen), d=Math.exp(-P.betaD*(t.def+mode.star-P.refD-sh)+pen);
-  return {att:Math.max(anti?P.floorA:0,Math.min(a,P.capA)),def:Math.min(anti?P.capD:Infinity,Math.max(d,P.floorD))};
+  const anti=S.format==='anti';
+  // антисезон: ref як до 0.65 (antiRefA/D); межі знизу floorA/capD — 0-30 має бути важким.
+  // 0.65 (власник 01.10): і в класиці слабкий склад має межу сили (classFloorA/classCapD, вища за антисезонну), щоб 0-30 у класиці було важчим, ніж в антисезоні
+  const ra=anti?P.antiRefA:P.refA, rd=anti?P.antiRefD:P.refD;
+  const a=Math.exp(P.betaA*(t.att+mode.star-ra)-pen), d=Math.exp(-P.betaD*(t.def+mode.star-rd)+pen);
+  return {att:Math.max(anti?P.floorA:P.classFloorA,Math.min(a,P.capA)),def:Math.min(anti?P.capD:P.classCapD,Math.max(d,P.floorD))};
 }
 // ---------- правила УПЛ для рівних очок: 1) очки в особистих зустрічах, 2) різниця м'ячів в особистих, 3) забиті в особистих,
 // 4) загальна різниця, 5) загальні забиті; за 1-ше місце при повній рівності — «золотий матч», за інші — жереб
