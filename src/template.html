@@ -562,7 +562,11 @@ section>h3:first-child,.box h3:first-of-type,#viewBody>h3:first-child,#viewBody>
 .tro .tri{grid-row:1;align-self:center;margin:0;display:grid;place-items:center}.tro .hx{width:40px;height:40px}
 .tro .trt{gap:4px}.tro .trt b{font-size:15px;line-height:1.25}
 .tro.on .trt b{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;justify-self:start}
-.tro:not(.on){opacity:1;background:var(--surface);box-shadow:inset 0 0 0 1px var(--line)}.tro:not(.on) .trt b{color:var(--muted)}.tro:not(.on) .trt>span{color:var(--muted)}
+.tro:not(.on){opacity:1;background:var(--surface);box-shadow:inset 0 0 0 1px var(--line)}
+/* 0.66 (Ігор: «забагато цього кольору»): на підсумках назви трофеїв — білим, рамки спокійні, без рожевого світіння; градієнтна — лише «Поділитися» */
+#newTro .tro.on .trt b{background:none;color:var(--ink)}
+#newTro .tro,#newTro .tro.new,#newTro .tro.rarein{box-shadow:inset 0 0 0 1px var(--line)}#newTro .tro.rarein{animation:rarein .9s cubic-bezier(.2,.9,.25,1.2) both}
+#againBtn.primary{background:var(--card);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line)}.tro:not(.on) .trt b{color:var(--muted)}.tro:not(.on) .trt>span{color:var(--muted)}
 .tro .trt>span{font-size:13px;line-height:1.4}
 #newTro .tro{padding:14px 16px}
 </style>
@@ -1138,9 +1142,9 @@ function spinPick(){
   const w=document.getElementById('wheel');w.hidden=false;document.getElementById('spinBtn').hidden=true;
   document.getElementById('squad').innerHTML='';document.getElementById('sqTop').hidden=true;document.getElementById('showRRow').hidden=true;document.getElementById('rerollRow').hidden=true;
   document.getElementById('wHint').textContent='';document.getElementById('seaPick').hidden=true;
-  const y0=ERAS[eraOf()].y0,names=[...new Set(DATA.clubs.filter(c=>c.y>=y0).map(c=>c.n))];
+  const y0=ERAS[eraOf()].y0,names=[...new Set(DATA.clubs.filter(c=>c.y>=y0).map(c=>shortTeam(c.n)))];
   document.querySelector('#reelYear .strip').innerHTML='<div class="season">?</div>';
-  reelRoll('reelClub','club',names,cs0.n,22).then(()=>{if(S.pickOpts===opts)renderPickOpts();});
+  reelRoll('reelClub','club',names,shortTeam(cs0.n),22).then(()=>{if(S.pickOpts===opts)renderPickOpts();});
 }
 function renderPickOpts(){const box=document.getElementById('seaPick'),o=S.pickOpts||[];box.hidden=false;
   document.getElementById('wHint').textContent=o.length>1?'Обери сезон — назад не повернешся':'У цього клубу лише один сезон, де є кого взяти';
@@ -1159,16 +1163,18 @@ function spin(mode){
   const w=document.getElementById('wheel');w.hidden=false;document.getElementById('spinBtn').hidden=true;
   document.getElementById('squad').innerHTML='';document.getElementById('rerollRow').style.visibility='hidden';
   const spinClub=mode!=='year',spinYear=mode!=='club';
-  const y0=ERAS[eraOf()].y0,WP=DATA.clubs.filter(c=>c.y>=y0),names=[...new Set(WP.map(c=>c.n))],years=[...new Set(WP.map(c=>c.y))].sort();   // на барабанах — клуби й сезони лише своєї епохи
-  Promise.all([reelRoll('reelClub','club',names,cs.n,spinClub?22:0),reelRoll('reelYear','season',years.map(seasonLabel),seasonLabel(cs.y),spinYear?30:0)]).then(()=>{if(S.wheel===cs){S.wheelFresh=true;renderWheel();}});
+  const y0=ERAS[eraOf()].y0,WP=DATA.clubs.filter(c=>c.y>=y0),names=[...new Set(WP.map(c=>shortTeam(c.n)))],years=[...new Set(WP.map(c=>c.y))].sort();   // на барабанах — клуби й сезони лише своєї епохи
+  Promise.all([reelRoll('reelClub','club',names,shortTeam(cs.n),spinClub?22:0),reelRoll('reelYear','season',years.map(seasonLabel),seasonLabel(cs.y),spinYear?30:0)]).then(()=>{if(S.wheel===cs){S.wheelFresh=true;renderWheel();}});
 }
 function alertNoCands(){document.getElementById('wheel').hidden=false;document.querySelector('#reelClub .strip').innerHTML='<div class="club">Гравців більше немає</div>';document.querySelector('#reelYear .strip').innerHTML='<div class="season"></div>';document.getElementById('squad').innerHTML='<p class="muted">У цьому клубі закінчились гравці на вільні позиції. Спробуй іншу схему.</p>';}
 function renderWheel(){
   const cs=S.wheel;const sortR=MODES[S.mode].showRatings;const show=sortR||!!S.showR;
   // «Показати рейтинги»: за замовчуванням вимкнено, діє до кінця драфту; порядок гравців не змінює. Немає в «Хардкорі» й антисезоні
   {const row=document.getElementById('showRRow');row.hidden=sortR||!ratingsOpen()||S.format==='anti';document.getElementById('antiHint').hidden=S.format!=='anti';document.getElementById('showR').checked=!!S.showR;}
-  document.querySelector('#reelClub .strip').innerHTML=`<div class="club"><i class="cdot" style="${clubPal(cs.c)}"></i>${esc(cs.n)}</div>`;   // 0.63: кольори клубу лишаються, коли барабан зупинився
-  document.querySelector('#reelYear .strip').innerHTML=`<div class="season">${seasonLabel(cs.y)}</div>`;
+  // 0.63: кольори клубу лишаються, коли барабан зупинився; 0.66 (Вітя): перемальовуємо лише якщо змінилось — інакше перемикач «Рейтинги» змушував назву й сезон «пульсувати»
+  const setStrip=(sel,html)=>{const el=document.querySelector(sel);if(el.innerHTML!==html)el.innerHTML=html;};
+  setStrip('#reelClub .strip',`<div class="club"><i class="cdot" style="${clubPal(cs.c)}"></i>${esc(shortTeam(cs.n))}</div>`);   // 0.66: коротка назва — повна не влазила на телефоні
+  setStrip('#reelYear .strip',`<div class="season">${seasonLabel(cs.y)}</div>`);
   document.getElementById('wHint').textContent=`Місце клубу в тому сезоні: ${cs.pos}`+(S.format==='anti'?` · лише гравці з ${ANTI_MIN_APPS}+ матчами`:'');
   const rr=document.getElementById('rerollRow');rr.style.visibility='visible';document.getElementById('rerollClub').hidden=document.getElementById('rerollBtn').hidden=S.format==='oneclub';   // в «Одному клубі» клуб не міняється — лише сезон
   rr.hidden=S.rerolls<=0;document.getElementById('rerollCnt').textContent=S.rerolls;
