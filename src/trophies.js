@@ -191,7 +191,7 @@ async function trRetro(){
   }catch(e){}
 }
 // ---------- UI: кнопка на головній, шафа трофеїв, нові трофеї після сезону
-function renderTrBtn(){const s=trStore();const n=Object.values(s.t).filter(e=>e.n).length;{const tt=document.getElementById('trTotal');if(tt){const n=TROPHIES.filter(t=>!t.gone).length+MILESTONES.length;tt.textContent=`${n} ${plUk(n,'трофей','трофеї','трофеїв')}, частина — секретні`;}}const b=document.getElementById('trCount');if(b)b.textContent=n?` · ${n}`:'';}
+function renderTrBtn(){const s=trStore();const n=Object.values(s.t).filter(e=>e.n).length;const b=document.getElementById('trCount');if(b)b.textContent=n?` · ${n}`:'';}
 function trCard(t,e,pct,prog){
   const got=e&&e.n;const p=pct!=null?`<span class="trp">${pct===0?'ще ніхто не відкрив':`є в ${pct<1?'<1':Math.round(pct)}% гравців`}</span>`:'';
   const pr=!got&&prog?`<span class="trp">${Math.min(prog[0],prog[1])}/${prog[1]}</span>`:'';

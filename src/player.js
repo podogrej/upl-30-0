@@ -63,12 +63,13 @@ function ppRender(){
   h+=`<div class="pp-head">${avatarSvg(seed,64)}<div style="min-width:0"><div class="pp-name"><h1 id="ppName">${esc(name)}</h1>${own&&ONLINE&&PLAYER?`<button id="ppEdit" title="Змінити ім'я" aria-label="Змінити ім'я">${icon('pencil')}</button>`:''}</div><div class="pp-since">${p.since?'грає з '+fmtLong(p.since):st.loading?'…':''}</div></div></div>`;
   if(p.deleted)h+=`<p class="muted" style="margin-top:14px">Гравець видалив акаунт. Його результати лишились у таблицях під анонімним іменем.</p>`;
   else{
-    h+=`<div class="tiles t2 pp-tiles">${ppTile(seasons,'сезонів зіграно')}${ppTile(p.champions,'чемпіонств')}${ppTile(best,'найкращий сезон','очок · класика',true)}${ppTile(p.perfect,'сезонів 30-0')}${ppTile(p.win_pct!=null?p.win_pct+'%':null,'перемог у матчах')}${ppTile(streak||(own?0:null),'серія драфту дня','днів поспіль · рекорд')}</div>`;
+    const rest=[p.win_pct!=null?`${p.win_pct}% перемог у матчах`:'',`сезонів 30-0: ${numOr0(p.perfect)}`,streak||own?`серія драфту дня: ${numOr0(streak)}`:''].filter(Boolean).join(' · ');
+    h+=`<div class="pp-big3 pp-tiles">${ppTile(seasons,plUk(numOr0(seasons),'сезон','сезони','сезонів'))}${ppTile(p.champions,'чемпіонств')}${ppTile(best,'рекорд, очок',null,true)}</div><p class="pp-rest">${rest}</p>`;
     const fc=p.fav_club&&p.fav_club.pct>=15?p.fav_club:null,fp=p.fav_player&&p.fav_player.k>1?p.fav_player:null;
     if(fc||fp)h+=`<div class="pp-fav">${fc?`<div>${ic('heart')}<div><span class="k">Улюблений клуб</span><b>${esc(fc.c)}</b></div><span class="v">${numOr0(fc.pct)}% вибору</span></div>`:''}${fp?`<div>${ic('account-circle')}<div><span class="k">Найчастіший гравець</span><b>${esc(fp.n)}</b></div><span class="v">×${numOr0(fp.k)}</span></div>`:''}</div>`;
     h+=`<div id="ppCab"></div>`;
     if(own)h+=ppXiHtml(p);
-    if(own)h+=`<details class="pp-hist" id="ppHist"><summary>Останні сезони${p.seasons?` (${Math.min(10,p.seasons)} з ${p.seasons})`:''}</summary><div id="ppHistList"><p class="muted">Завантаження…</p></div></details><button class="primary wbtn" id="ppPlay">Зіграти новий сезон</button>`;
+    if(own)h+=`<details class="pp-hist" id="ppHist"><summary>Останні сезони${p.seasons?` (${Math.min(10,p.seasons)} з ${p.seasons})`:''}</summary><div id="ppHistList"><p class="muted">Завантаження…</p></div></details>`;
     else h+=`<div class="pp-sec"><h3>Історія</h3></div><div class="pp-lock">${icon('eye-off')}Історію сезонів бачить лише ${esc(name)}</div>`;
   }
   if(own&&ONLINE&&!p.deleted)h+=`<div id="ppLeagues"></div>`;   // «Мої ліги» (0.61, src/leagues.js)
@@ -97,7 +98,7 @@ function ppRenderCab(){
   if(st.s==='recent')on.sort((a,b)=>String(have[b.id].at||'').localeCompare(String(have[a.id].at||''))||rk(a)-rk(b));
   else on.sort((a,b)=>rk(a)-rk(b)||String(have[b.id].at||'').localeCompare(String(have[a.id].at||'')));
   off.sort((a,b)=>rk(a)-rk(b));
-  const cards=[...on,...off];const LIM=12;const shown=st.all?cards:cards.slice(0,LIM);
+  const cards=[...on,...off];const shown=st.all?cards:on;   // 0.62: згорнуто — лише відкриті
   const card=t=>{const e=have[t.id];
     if(!own&&t.sec&&e&&!(mine[t.id]&&mine[t.id].n))return `<div class="tro on sec"><span class="tri">${trBadge({id:'secret',cat:'secret'},true)}</span><div class="trt"><b>Секретний трофей</b><span>Відкрий його сам, щоб дізнатися, за що він</span><span class="trp">секретний${e.at?' · '+fmtShort(e.at):''}</span></div></div>`;
     const tier=trTier(t),p=trPct(t.id);
@@ -106,15 +107,15 @@ function ppRenderCab(){
   const cnt=c=>{const l=LIVE.filter(t=>inCat(t,c));return `${l.filter(got).length}/${l.length}`;};
   el.innerHTML=`<div class="pp-sec"><h3>Трофеї</h3><span class="best">Відкрито ${n} з ${total}</span></div><div class="pp-bar"><i style="width:${total?Math.round(100*n/total):0}%"></i></div>
     ${own&&n?`<button class="ghost wbtn" id="ppCabShare">${ic('bookshelf','sm')}Поділитися шафою</button><div id="ppCabOut" hidden class="pp-cabout"><img id="ppCabImg" alt="Шафа трофеїв"><div class="row"><button class="primary" id="ppCabSend" hidden>${ic('share-variant','sm')}Поділитися</button><span class="muted" id="ppCabMsg" style="font-size:13px"></span></div></div>`:''}
-    <div class="pp-filt" role="tablist">${cats.filter(([c])=>c==='all'||LIVE.some(t=>t.cat===c)).map(([c,l])=>`<button class="chip${st.f===c?' onc':''}" data-f="${c}" role="tab" aria-selected="${st.f===c}">${l} <i>${cnt(c)}</i></button>`).join('')}</div>
-    <div class="seg pp-sort"><button data-s="rare" class="${st.s==='rare'?'on':''}">За рідкістю</button><button data-s="recent" class="${st.s==='recent'?'on':''}">Нещодавні</button></div>
+    ${st.all?`<div class="pp-filt" role="tablist">${cats.filter(([c])=>c==='all'||LIVE.some(t=>t.cat===c)).map(([c,l])=>`<button class="chip${st.f===c?' onc':''}" data-f="${c}" role="tab" aria-selected="${st.f===c}">${l} <i>${cnt(c)}</i></button>`).join('')}</div>
+    <div class="seg pp-sort"><button data-s="rare" class="${st.s==='rare'?'on':''}">За рідкістю</button><button data-s="recent" class="${st.s==='recent'?'on':''}">Нещодавні</button></div>`:''}
     ${shown.length?`<div class="trg">${shown.map(card).join('')}</div>`:`<p class="pp-empty">${own?'Тут поки порожньо — зіграй сезон.':'Поки жодного трофея.'}</p>`}
-    ${cards.length>shown.length?`<button class="ghost wbtn" id="ppCabAll">Показати всі · ${cards.length}</button>`:''}
-    ${secOff&&own?`<p class="trsec">+${secOff} ${plUk(secOff,'секретний трофей чекає','секретні трофеї чекають','секретних трофеїв чекають')} ${icon('eye')}</p>`:''}
-    ${own?`<div class="row" style="gap:6px;margin-top:10px">${MILESTONES.map(([k,,nm])=>{const e=have['ms'+k];return `<span class="chip ms${e?' onc':''}">${trBadge({id:'ms'+k,cat:'milestone'},!!e)}${nm}${!e&&trStore().seasons<k?` · ${trStore().seasons}/${k}`:''}</span>`;}).join('')}</div>`:''}`;
+    ${cards.length>shown.length||st.all?`<button class="link0 pp-all" id="ppCabAll">${st.all?'Згорнути ▴':`Усі трофеї · ${total} ▾`}</button>`:''}
+    ${secOff&&own&&st.all?`<p class="trsec">+${secOff} ${plUk(secOff,'секретний трофей чекає','секретні трофеї чекають','секретних трофеїв чекають')} ${icon('eye')}</p>`:''}
+    ${own&&st.all?`<div class="row" style="gap:6px;margin-top:10px">${MILESTONES.map(([k,,nm])=>{const e=have['ms'+k];return `<span class="chip ms${e?' onc':''}">${trBadge({id:'ms'+k,cat:'milestone'},!!e)}${nm}${!e&&trStore().seasons<k?` · ${trStore().seasons}/${k}`:''}</span>`;}).join('')}</div>`:''}`;
   el.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{st.f=b.dataset.f;st.all=false;ppRenderCab();});
   el.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>{st.s=b.dataset.s;ppRenderCab();});
-  const all=document.getElementById('ppCabAll');if(all)all.onclick=()=>{st.all=true;ppRenderCab();};
+  const all=document.getElementById('ppCabAll');if(all)all.onclick=()=>{st.all=!st.all;ppRenderCab();};
   const sh=document.getElementById('ppCabShare');if(sh)sh.onclick=()=>ppShareCab(on.filter(got),n,total);
 }
 // «Поділитися шафою» (0.60): картинка 1080×1350 — ім'я, «відкрито N з M», до 12 трофеїв (рідкісні першими). Поза Telegram — системне меню з файлом,
@@ -167,7 +168,7 @@ async function ppHistLoad(more){
 function ppSettingsHtml(){
   const nx=PLAYER&&PLAYER.name_next&&PLAYER.name_next>new Date().toISOString()?PLAYER.name_next:null;
   const via=SESSION?((SESSION.user.app_metadata&&SESSION.user.app_metadata.provider)==='google'?'Google':'Telegram'):'';
-  return `<div class="pp-sec"><h3>Налаштування</h3></div><div class="pp-acct">
+  return `<details class="pp-hist" id="ppSet"><summary>Налаштування</summary><div class="pp-acct">
     ${PLAYER?`<label for="ppNameIn"><b>Ім'я</b> <span class="muted" style="font-size:12px">— одне на всі таблиці, ліги й результати</span></label>
     <div class="row"><input id="ppNameIn" maxlength="20" autocomplete="nickname" autocapitalize="none" autocorrect="off" spellcheck="false" value="${esc(PLAYER.name||'')}" placeholder="${esc(PLAYER.anon_name||'')}"><button class="ghost" id="ppNameSave">Зберегти</button></div>
     <p class="muted pp-hint" id="ppNameMsg">${nx?`Змінити знову можна з ${fmtLong(nx)}.`:`3–20 символів: латинські літери a–z, цифри, «_» і «.». Змінювати можна раз на 30 днів.`}${PLAYER.name?'':` Поки ти в таблицях як <b>${esc(PLAYER.anon_name||'')}</b>.`}</p>`:''}
@@ -178,12 +179,11 @@ function ppSettingsHtml(){
     ${SESSION?`<div class="who">${icon(via==='Google'?'google':'telegram')}Увійшов через ${via}</div><div class="row"><button class="ghost" id="ppOut">${ic('logout','sm')}Вийти</button></div>`
       :`<span class="muted" style="font-size:13px">Увійди, щоб трофеї, рекорди й серія зберігались на всіх пристроях.</span><div class="row"><button class="primary" id="ppLogin2">Увійти</button></div>`}
     ${PLAYER?`<button class="pp-del" id="ppDel">${SESSION?'Видалити акаунт…':'Видалити мої дані…'}</button><div id="ppDelBox" hidden class="pp-delbox"><p>Ім'я, вхід і прив'язку цього пристрою буде стерто назавжди. Результати лишаться в таблицях під анонімним іменем, але вже не будуть пов’язані з тобою. Трофеї й серія на цьому пристрої теж зникнуть.</p><div class="row"><button class="danger" id="ppDelYes">Так, видалити</button><button class="ghost" id="ppDelNo">Скасувати</button></div><p class="muted" id="ppDelMsg" style="margin:0"></p></div>`:''}
-  </div>`;}
+  </div></details>`;}
 function ppWire(){
   const $=id=>document.getElementById(id);
   for(const id of ['ppLogin','ppLogin2'])if($(id))$(id).onclick=()=>{ACCT_MSG='';openAcct();};
-  if($('ppEdit'))$('ppEdit').onclick=()=>{const f=$('ppNameIn');if(f){f.scrollIntoView({behavior:'smooth',block:'center'});f.focus();}};
-  if($('ppPlay'))$('ppPlay').onclick=()=>go(4);
+  if($('ppEdit'))$('ppEdit').onclick=()=>{const f=$('ppNameIn');if(f){$('ppSet').open=true;f.scrollIntoView({behavior:'smooth',block:'center'});f.focus();}};
   const hd=$('ppHist');if(hd)hd.ontoggle=()=>{if(hd.open&&!(PP&&PP.hist))ppHistLoad(false);};
   // поле імені: одразу малі літери й «_» замість пробілу (курсор лишається на місці)
   if($('ppNameIn'))$('ppNameIn').oninput=e=>{const f=e.target,v=f.value,w=v.toLowerCase().replace(/\s/g,'_');if(w!==v){const c=f.selectionStart;f.value=w;try{f.setSelectionRange(c,c);}catch(x){}}};
