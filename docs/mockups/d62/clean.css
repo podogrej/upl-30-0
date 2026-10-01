@@ -1,0 +1,132 @@
+/* 0.62 «Чистий дизайн» — макет поверх гри (палітра та сама; кольори УПЛ — пізніше).
+   Шкала шрифтів: 12 · 14 · 16 · 20 · 28 (+ лого). Display — лише заголовки й великі числа; моно — лише цифри.
+   Відступи: 8 · 12 · 16 · 24. Картки: без рамки, напівпрозоре тло, радіус 14. Одна головна кнопка на екран. */
+:root{--r:14px;--card:color-mix(in srgb,var(--surface) 72%,transparent);--line2:color-mix(in srgb,var(--line) 55%,transparent)}
+
+/* ---------- шапка: «Головна» — тихо, праворуч аватарка + ім'я (кнопка на свою сторінку) */
+header.top{border-bottom:1px solid var(--line2)}
+button.nav#homeBtn{background:none;border-color:transparent;padding-left:2px;font-weight:600}
+.me{display:inline-flex!important;align-items:center;gap:8px;border:1px solid var(--line2)!important;background:var(--card)!important;border-radius:999px!important;padding:3px 12px 3px 3px!important;color:var(--ink);font:600 14px/1 var(--font-body);box-shadow:none!important}
+.me svg{border-radius:999px!important;width:28px;height:28px}
+
+/* ---------- загальне */
+h3{font:600 12px/1.2 var(--font-mono);letter-spacing:.08em;color:var(--muted);margin-block:24px 8px}
+.sec0{color:var(--muted);margin:28px 0 -2px;font-size:12px}
+.opt,.row0,.daily,.wheel,.hero,.tile,.how0>div,.pre{border-color:transparent!important;background:var(--card)}
+.opt.on{box-shadow:inset 0 0 0 1.5px var(--amber);border-color:transparent}
+
+/* ---------- головна */
+.hero0{padding-block:28px 4px;gap:14px}
+.badge0{border:0;padding:0;color:var(--muted);font-size:11px}
+.lead0{font-size:16px}
+#howGo{border:0;background:none;color:var(--ink2);font:500 14px var(--font-body);text-decoration:underline;text-underline-offset:3px;padding:4px;margin-top:-6px}
+.daily{gap:8px;padding:16px}
+.daily .kicker{font-size:12px}
+.daily .ttl{font-size:20px}
+.dmeta{font-size:14px;color:var(--ink2)}
+#dMeta{display:none!important}
+.daily .row{gap:8px}
+.daily #dailyBtn{flex:1}
+.row0{padding:14px 14px;margin-top:6px;border-radius:var(--r)}
+.row0 small{display:none}
+.row0 b{font-weight:600;font-size:16px}
+.row0 .tag0{font:700 11px var(--font-mono);color:var(--amber);letter-spacing:.06em;margin-left:8px;text-transform:uppercase}
+.row0>.ic:first-child{width:30px;height:30px;background:none}
+.stat0{margin-top:28px;text-align:center;padding:20px 12px;border-radius:var(--r);background:var(--card)}
+.stat0 .n{font:800 44px/1 var(--font-display);font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.stat0 .l{color:var(--ink2);font-size:14px;margin-top:4px}
+.stat0 .s{display:flex;justify-content:center;gap:20px;margin-top:14px;font-size:12px;color:var(--muted)}
+.stat0 .s b{display:block;font:700 16px var(--font-display);color:var(--ink)}
+#facts0{display:none!important}
+#howH,.how0{display:none!important}
+.faq0 details,details.faqx{margin:0;border:0;border-bottom:1px solid var(--line2);border-radius:0;background:none;padding:14px 2px}
+.faq0 summary{font-weight:600;font-size:15px}
+#s1>h2{font-size:20px;margin-top:32px}
+
+/* ---------- вільна гра: налаштування */
+#s4 h2{font-size:20px}
+#formats{gap:6px}
+#formats .opt{padding:12px 14px}
+#formats .opt:not(.on) small{display:none}
+#formats .opt b,.formations .opt b,#modes .opt b{font-size:16px;font-family:var(--font-body);font-weight:700}
+.formations{grid-template-columns:repeat(3,1fr)!important;gap:6px}
+.formations .opt{padding:10px 8px;text-align:center}
+.formations .opt small{display:none}
+#modes{grid-template-columns:1fr 1fr!important;gap:6px}
+#modes .opt small{font-size:12px}
+#myNameH,#myNameRow{display:none!important}
+.team0 summary{color:var(--ink2);font-size:14px;margin-top:20px}
+#startBtn{max-width:none}   /* у грі — прилипає до низу екрана */
+
+/* ---------- драфт */
+.dtop{display:grid;gap:6px;margin:14px 0 10px}
+.dtop .l1{display:flex;justify-content:space-between;align-items:baseline;font-size:14px}
+.dtop .l1 b{font:700 16px var(--font-display)}
+.dtop .l1 span{color:var(--muted);font-size:12px}
+.dtop .bar{height:4px;border-radius:9px;background:var(--line2);overflow:hidden}.dtop .bar i{display:block;height:100%;background:var(--amber);border-radius:9px}
+#s2>.row:first-child{display:none!important}
+#moveBtn{background:none;border:0;color:var(--ink2);font-size:14px;padding:6px 2px}
+.wheel{padding:16px;gap:12px}
+.reels{grid-template-columns:1fr auto;gap:0;border-radius:12px;background:var(--bg);align-items:stretch}
+.reel{border:0;background:none;height:56px}
+.reel .strip>div{height:56px}
+.reel::before,.reel::after{display:none}
+#reelYear{padding-right:14px}
+.wheel .club,.reel .season{font:700 18px/1.1 var(--font-display)}
+.reel .season{color:var(--ink2);font-size:16px!important}
+#reelYear{padding:0 12px 0 4px!important}
+.wheel .club{font-size:17px!important}
+#wHint{display:none}
+.why0{font-size:14px;color:var(--ink2)}
+.wheel>.row{display:none!important}
+.rr0{display:flex;align-items:center;gap:8px;justify-content:space-between}
+.rr0 .lbl{font-size:14px;color:var(--ink2);white-space:nowrap}.rr0 .lbl b{color:var(--ink);font-weight:700}
+.rr0 .seg{display:flex;gap:0;background:var(--bg);border-radius:10px;padding:3px}
+.rr0 .seg button{border:0;background:none;color:var(--ink);font:600 14px var(--font-body);padding:7px 10px;border-radius:8px;white-space:nowrap}
+.lh0{display:flex;justify-content:space-between;align-items:center;margin-top:4px;font-size:14px;font-weight:600}
+.lh0 .sw{display:inline-flex;align-items:center;gap:8px;color:var(--ink2);font-weight:500}
+.lh0 .sw i{width:36px;height:22px;border-radius:99px;background:var(--line);position:relative}.lh0 .sw i::after{content:'';position:absolute;left:3px;top:3px;width:16px;height:16px;border-radius:99px;background:var(--ink2)}
+#showRRow{display:none!important}
+.sqHead{font:600 11px var(--font-mono)!important;color:var(--muted)!important;padding:0 4px 2px!important}
+.sqHead b{display:none}.sqHead i{display:inline;font-style:normal}
+.squad{gap:0!important}
+.squad .pl{border:0;border-bottom:1px solid var(--line2);border-radius:0;background:none;padding:10px 4px}
+.pl .nm{font-size:15px}
+.pl .alts{font-size:11px}
+.more0{margin-top:10px;padding:12px 4px;color:var(--ink2);font-size:14px;border-top:1px solid var(--line2)}
+.hide0{display:none!important}
+
+/* ---------- підсумки */
+.hero{border-color:transparent!important}
+.hero .tier{font-size:28px}
+#seasonLine{font-size:14px}
+.score0{display:grid;grid-template-columns:repeat(3,1fr);text-align:center;gap:6px;margin-top:4px}
+.score0 b{display:block;font:800 28px/1 var(--font-display);font-variant-numeric:tabular-nums}
+.score0 span{font-size:12px;color:var(--muted)}
+#recTiles,#sumTiles,#xRow{display:none!important}
+.hero details.tip{font-size:14px}
+.tro0{display:flex;gap:8px;flex-wrap:wrap}
+.tro0 span{display:inline-flex;align-items:center;gap:6px;padding:6px 12px 6px 6px;border-radius:99px;background:var(--bg);font-size:14px;font-weight:600}
+#newTro{display:none!important}
+.share0{display:flex;gap:8px;justify-content:center}
+.share0 button{flex:1}
+.mt0 summary{font-weight:600;padding:14px 2px;border-bottom:1px solid var(--line2)}
+
+/* ---------- сторінка гравця */
+.pp-big3{display:grid;grid-template-columns:repeat(3,1fr);text-align:center;gap:6px;margin:18px 0 6px;padding:16px 8px;border-radius:var(--r);background:var(--card)}
+.pp-big3 b{display:block;font:800 28px/1 var(--font-display);font-variant-numeric:tabular-nums}
+.pp-big3 span{font-size:12px;color:var(--muted)}
+
+/* ---------- iPad / ПК: драфт у дві колонки (ліворуч поле, праворуч колесо й гравці) */
+@media (min-width:1000px){
+  .wrap:has(#s2:not([hidden])){max-width:1120px}
+  #s2:not([hidden]){display:grid;grid-template-columns:minmax(0,440px) minmax(0,1fr);column-gap:28px;align-items:start}
+  #s2>.dtop{grid-column:1/-1}
+  #s2>#pitch{grid-column:1;grid-row:2/span 3;position:sticky;top:72px;max-width:440px}
+  #s2>.row:has(#moveBtn){grid-column:1;grid-row:5}
+  #s2>.grid{grid-column:2;grid-row:2/span 4;margin-top:0!important}
+}
+
+.share0 button{display:inline-flex;justify-content:center;align-items:center;gap:6px;padding:10px 8px;font-size:14px}
+.dtop u{text-underline-offset:3px;cursor:pointer}
+details.mt0{border:0!important;background:none!important;padding:0!important}
