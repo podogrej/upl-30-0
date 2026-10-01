@@ -103,7 +103,7 @@ ${extra.join('\n')}
 function dailySetupFor(day){
   const r=mulberry32(hashStr("upl30|"+day+"|setup"));
   const fs=Object.keys(FORMATIONS);const formation=fs[Math.floor(r()*fs.length)];
-  const year=LEAGUE_CULT;   // з 0.50 — «Ліга культових клубів» (як dailySetup у template.html)
+  const year=LEAGUE_LEGENDS;   // з 0.64 — «Ліга легенд» (0.50–0.63 — «Ліга культових клубів»), як dailySetup у template.html
   const prev=S.format;S.format='classic';
   const wr=mulberry32(hashStr("upl30|"+day+"|wheel"));const seq=[];for(let i=0;i<600;i++){const c=pickWeighted(DATA.clubs,wr);seq.push(DATA.clubs.indexOf(c));}
   S.format=prev;return {formation,year,seq};

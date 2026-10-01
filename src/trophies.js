@@ -3,7 +3,7 @@ const PERSON={};   // person_id → {main, nat, by, clubs:Set}; clubs — спі
 {const CL={};for(const c of DATA.clubs)for(const p of c.pl){const k=canon(p[5]);const cl=CL[k]||(CL[k]=new Set());const q=PERSON[p[5]]||(PERSON[p[5]]={main:p[6],nat:p[10],by:p[11],clubs:cl});cl.add(c.c);}}
 const CLUBS_NOW=new Set(DATA.clubs.filter(c=>c.y===Math.max(...DATA.clubs.map(x=>x.y))).map(c=>c.c));
 const UA=0;   // DATA.nats[0] = «Україна»
-const TR_CATS=[["season","Сезон"],["squad","Склад"],["players","Гравці"],["modes","Режими та складність"],["daily","Драфт дня"],["secret","Секретні"]];
+const TR_CATS=[["season","Сезон"],["squad","Склад"],["players","Гравці"],["modes","Режими та складність"],["daily","Драфт дня"],["friends","З друзями"],["secret","Секретні"]];
 const surname=n=>{const t=String(n).split(' ');return t[t.length-1];};
 const firstName=n=>String(n).split(' ')[0];
 const byClub=xi=>{const m={};for(const x of xi)m[x.cc]=(m[x.cc]||0)+1;return Math.max(0,...Object.values(m));};
@@ -49,8 +49,8 @@ const TROPHIES=[
   // режими
   {id:"hardchamp",i:"🔥",n:"Без права на помилку",d:"Стань чемпіоном у режимі «Складний»",cat:"modes",rep:1,t:c=>c.mode==='hard'&&notAnti(c)&&c.r.place===1},
   {id:"hcchamp",i:"🙈",n:"Кіт у мішку",d:"Стань чемпіоном у «Хардкорі» (режим прибрано в 0.46)",cat:"modes",rep:1,gone:1,t:c=>c.mode==='hardcore'&&notAnti(c)&&c.r.place===1},
-  {id:"derbychamp",i:"⚡",n:"Класика жанру",d:"Стань чемпіоном у «Класичному дербі»",cat:"modes",rep:1,t:c=>c.format==='derby'&&c.r.place===1},
-  {id:"oneclubchamp",i:"❤️",n:"Два кольори",d:"Стань чемпіоном у режимі «Один клуб»",cat:"modes",rep:1,t:c=>c.format==='oneclub'&&c.r.place===1},
+  {id:"derbychamp",i:"⚡",n:"Класика жанру",d:"Стань чемпіоном у «Класичному дербі» (режим сховано в 0.64)",cat:"modes",rep:1,gone:1,t:c=>c.format==='derby'&&c.r.place===1},
+  {id:"oneclubchamp",i:"❤️",n:"Два кольори",d:"Стань чемпіоном у режимі «Один клуб» (режим сховано в 0.64)",cat:"modes",rep:1,gone:1,t:c=>c.format==='oneclub'&&c.r.place===1},
   {id:"antilast",i:"⬇️",n:"Нижче плінтуса",d:"Антисезон: фініш останнім",cat:"modes",rep:1,t:c=>c.format==='anti'&&c.r.place===16},
   {id:"anti0",i:"🪦",n:"Нуль без палички",d:"Антисезон: програй усі 30 матчів",cat:"modes",t:c=>c.format==='anti'&&c.r.L===30},
   {id:"antidry",i:"🥖",n:"Сухий пайок",d:"Антисезон: забий 5 голів або менше",cat:"modes",t:c=>c.format==='anti'&&c.r.gf<=5},
@@ -62,6 +62,13 @@ const TROPHIES=[
   {id:"s30",i:"🏛️",n:"Трудоголік",d:"30 днів поспіль",cat:"daily",st:s=>s.streak>=30,prog:s=>[s.streak,30]},
   {id:"d10",i:"☕",n:"Завсідник",d:"Зіграй 10 драфтів дня",cat:"daily",st:s=>s.dailies>=10,prog:s=>[s.dailies,10]},
   {id:"d50",i:"🎖️",n:"Старожил",d:"Зіграй 50 драфтів дня",cat:"daily",st:s=>s.dailies>=50,prog:s=>[s.dailies,50]},
+  // ліги 5×5 з друзями (0.64): видаються, коли гравець бачить зіграний турнір своєї ліги (fl5Award у leagues.js), раз на лігу
+  {id:"f5play",i:"🤝",n:"Двір на двір",d:"Зіграй турнір ліги 5×5 з друзями",cat:"friends",rep:1,f5:1},
+  {id:"f5champ",i:"👑",n:"Король двору",d:"Виграй лігу 5×5 з друзями",cat:"friends",rep:1,f5:1},
+  {id:"f5unbeaten",i:"🧱",n:"Непробивні",d:"Ліга 5×5 без жодної поразки (серії пенальті рахуються)",cat:"friends",rep:1,f5:1},
+  {id:"f5shootout",i:"🥅",n:"Нерви зі сталі",d:"Виграй серію пенальті в лізі 5×5",cat:"friends",rep:1,f5:1},
+  {id:"f5hat",i:"🎩",n:"Хет-трик у дворі",d:"Гравець твоєї п'ятірки забив 3+ голи в одному матчі",cat:"friends",rep:1,f5:1},
+  {id:"f5rout",i:"🧹",n:"Під нуль",d:"Перемога в лізі 5×5 з різницею 5+ м'ячів",cat:"friends",rep:1,f5:1},
   // секретні
   {id:"golden",i:"🥇",n:"Як у 2006-му",d:"Стань чемпіоном через золотий матч",cat:"secret",sec:1,t:c=>notAnti(c)&&c.r.place===1&&!!c.r.golden},
   {id:"rebsh",i:"🤝",n:"Дует Лобановського",d:"Ребров і Шевченко в одному складі",cat:"secret",sec:1,t:c=>c.xi.some(x=>x.name==='Сергій Ребров')&&c.xi.some(x=>x.name==='Андрій Шевченко')},
@@ -170,6 +177,19 @@ function trAward(c,{daily}={}){
   lsSet("upl30_tr",s);if(fresh.length)trSync(fresh);
   return {got,fresh};
 }
+// 0.64: трофеї ліги 5×5 — з результату турніру (res із fl_get); team — індекс команди гравця. Повертає ids (без запису)
+function trEvalF5(res,team){const got=['f5play'];const ms=res.matches.filter(m=>m.i===team||m.j===team);
+  const mine=m=>m.i===team?[m.ga,m.gb,m.pens&&m.pens[0],m.pens&&m.pens[1],0]:[m.gb,m.ga,m.pens&&m.pens[1],m.pens&&m.pens[0],1];
+  if(res.champ===team)got.push('f5champ');
+  if(ms.length&&ms.every(m=>{const [a,b,pa,pb]=mine(m);return a>b||(a===b&&(!m.pens||pa>pb));}))got.push('f5unbeaten');
+  if(ms.some(m=>{const [a,b,pa,pb]=mine(m);return a===b&&m.pens&&pa>pb;}))got.push('f5shootout');
+  if(ms.some(m=>{const side=mine(m)[4],c={};for(const e of m.ev||[])if(e.side===side&&e.sc){const k=e.sc.id;c[k]=(c[k]||0)+1;}return Math.max(0,...Object.values(c))>=3;}))got.push('f5hat');
+  if(ms.some(m=>{const [a,b]=mine(m);return a-b>=5;}))got.push('f5rout');
+  return got;}
+function trAwardF5(lid,res,team){const s=trStore();s.f5=s.f5||[];if(s.f5.includes(lid))return {got:[],fresh:[]};
+  const got=trEvalF5(res,team),fresh=[],today=kyivDate();s.f5.push(lid);if(s.f5.length>200)s.f5=s.f5.slice(-200);
+  for(const id of got){const e=s.t[id]||(s.t[id]={n:0,at:today});if(!e.n)fresh.push(id);e.n++;}
+  lsSet("upl30_tr",s);if(fresh.length)trSync(fresh);renderTrBtn();if(typeof SESSION!=='undefined'&&SESSION)acctPush();return {got,fresh};}
 const trDef=id=>{if(id.startsWith('ms')){const m=MILESTONES.find(x=>'ms'+x[0]===id);return m&&{id,i:m[1],n:m[2],d:`Зіграй ${m[0]} ${m[0]===1?'сезон':'сезонів'}`,cat:"milestone"};}return TROPHIES.find(t=>t.id===id);};
 // онлайн: перше відкриття → таблиця trophies (для «у X% гравців»)
 // 0.53: пише сервер (/api/save, секрет пристрою); запасний шлях — прямий запис, як 0.52

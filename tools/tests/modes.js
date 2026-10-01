@@ -1,12 +1,16 @@
 // Режими гри в одному браузері: живий показ сезону (тур за туром, «Одразу до фіналу»), дербі (лише «Динамо» і «Шахтар»),
 // один клуб (вибір клубу, усі гравці з нього), антисезон (гравці з 10+ матчами), виклик дня (після офіційної спроби кнопка вимкнена).
 // Тексти й картки цих сезонів перевіряє scenarios.js. Запуск з кореня: node tools/tests/modes.js
-const {openPage}=require('./_page.js');const {checker}=require('./_site.js');
+const {openPage,pickFmt}=require('./_page.js');const {checker}=require('./_site.js');
 async function draft(pg){for(let i=0;i<11;i++){await pg.click('#spinBtn');await pg.waitForSelector('#squad .pl:not([disabled])',{timeout:8000});const btn=await pg.$('.pl:not([disabled])');await btn.click();await pg.waitForTimeout(80);const pk=await pg.$('#pitch .slot.target');if(pk){await pk.click();await pg.waitForTimeout(60);}}
   await pg.waitForSelector('#simBtn:not([hidden])');}
-async function free(pg,fi,before){await pg.evaluate(()=>document.getElementById('homeBtn').click());await pg.click('#freeOpen');await pg.click(`#formats .opt[data-fmt="${['','classic','derby','oneclub','anti','legends'][fi]}"]`);if(before)await before();await pg.click('#startBtn');}
+async function free(pg,fi,before){await pg.evaluate(()=>document.getElementById('homeBtn').click());await pg.click('#freeOpen');await pickFmt(pg,['','classic','derby','oneclub','anti','legends'][fi]);if(before)await before();await pg.click('#startBtn');}
 const clubsOf=pg=>pg.evaluate(()=>[...new Set(window.__dbg.S.slots.map(s=>s.player.cc))]);
 (async()=>{const T=checker('modes');const {b,pg,errs}=await openPage();
+ // 0.64: режими — лише класика, «Вибір сезону» й антисезон; суперники класики й драфту дня — «Ліга легенд», антисезону — культові клуби
+ await pg.click('#freeOpen');
+ T.check(await pg.evaluate(()=>[...document.querySelectorAll('#formats .opt')].map(o=>o.dataset.fmt).join()==='classic,pick,anti'),'режими: класика, вибір сезону, антисезон');
+ T.check(await pg.evaluate(()=>{const D=window.__dbg,o=[];for(const f of ['classic','anti']){D.setFmt(f);o.push(D.oppYear());}D.setFmt('classic');return o.join()===D.LEAGUE_LEGENDS+','+D.LEAGUE_CULT&&D.DAILY.year===D.LEAGUE_LEGENDS&&D.chalNewGame(5).year===D.LEAGUE_LEGENDS;}),'суперники: класика/день/виклик — легенди, антисезон — культові');
  // класика: живий показ
  await free(pg,1);await draft(pg);await pg.click('#simBtn');await pg.waitForSelector('#live:not([hidden])',{timeout:15000});await pg.waitForTimeout(2000);
  const live=await pg.evaluate(()=>({round:document.getElementById('lvRound').textContent,rec:document.getElementById('lvRec').textContent,fin:document.getElementById('final').hidden,cells:document.querySelectorAll('#lvGrid i[class]').length}));

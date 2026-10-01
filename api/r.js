@@ -33,7 +33,7 @@ function page(site, id, s) {
 <meta property="og:image" content="${esc(site)}og.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
 <meta property="og:url" content="${esc(site)}r/${id}"><meta name="twitter:card" content="summary_large_image">
 <meta http-equiv="refresh" content="0;url=${esc(go)}"></head>
-<body style="background:#121212;color:#f4f1ea;font-family:system-ui,sans-serif;padding:24px"><p><a style="color:#ff9a3d" href="${esc(go)}">Відкрити результат у 30-0 УПЛ</a></p>
+<body style="background:#0b1430;color:#ffffff;font-family:system-ui,sans-serif;padding:24px"><p><a style="color:#ff5aa0" href="${esc(go)}">Відкрити результат у 30-0 УПЛ</a></p>
 <script>location.replace(${JSON.stringify(go)})</script></body></html>`;
 }
 

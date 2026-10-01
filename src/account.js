@@ -33,7 +33,7 @@ function acctMerge(a,b){   // a — локальний, b — із сервер�
   const o={...b,...a};
   const ta=a.upl30_tr,tb=b.upl30_tr;
   if(ta||tb){const t={...(tb&&tb.t||{})};for(const [id,e] of Object.entries(ta&&ta.t||{})){const f=t[id];t[id]=f?{n:Math.max(f.n,e.n),at:f.at<e.at?f.at:e.at}:e;}
-    o.upl30_tr={t,seasons:Math.max(ta&&ta.seasons||0,tb&&tb.seasons||0),dailies:Math.max(ta&&ta.dailies||0,tb&&tb.dailies||0)};}
+    o.upl30_tr={t,seasons:Math.max(ta&&ta.seasons||0,tb&&tb.seasons||0),dailies:Math.max(ta&&ta.dailies||0,tb&&tb.dailies||0),f5:[...new Set([...(tb&&tb.f5||[]),...(ta&&ta.f5||[])])].slice(-200)};}   // f5 — ліги 5×5, за які трофеї вже видано (0.64)
   const sa=a.upl30_streak,sb=b.upl30_streak;if(sa&&sb)o.upl30_streak=(sa.last>sb.last||(sa.last===sb.last&&sa.count>=sb.count))?sa:sb;
   const ba=a.upl30_best_v2||{},bb=b.upl30_best_v2||{};const best={...bb};
   for(const [k,v] of Object.entries(ba)){const w=best[k];const sc=x=>k==='anti'?-(x.pts*100-x.place):x.pts*100+(30-x.place);if(!w||sc(v)>sc(w))best[k]=v;}

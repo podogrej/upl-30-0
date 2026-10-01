@@ -54,11 +54,23 @@ function mkDB(){
  T.check(/Зібрали 2 з 2/.test(await pg.textContent('#fl'))&&!!await pg.$('#fl5Start'),'лобі: «Зібрали 2 з 2», у творця — «Почати зараз»; склади відкриті');
  T.check((await pg.$$('#fl .fl5t')).length===2&&/vitia/.test(await pg.textContent('#fl .fl5teams')),'склади суперників відкриті');
  await pg.screenshot({path:path.join(OUT,'fl63_lobby.png'),fullPage:true});
+ T.check(/До кінця збору — (\d+ год|\d+ хв)/.test(await pg.textContent('#fl')),'0.64: лобі — скільки лишилось до кінця збору');
  await pg.click('#fl5Start');await pg.waitForTimeout(1200);
  const txt=(await pg.textContent('#fl')).replace(/\s+/g,' ');
  T.check(played===1&&/Турнір зіграно/.test(txt)&&/Серія \d:\d/.test(txt),'«Почати зараз» → сервер зіграв турнір: серія до двох перемог ('+txt.slice(0,120)+')');
  const res=M.leagues[0].result;T.check(res&&res.n===2&&res.matches.length>=2&&Math.max(...res.wins)>=1&&res.teams.length===2&&!res.bad.length,'результат: '+JSON.stringify({n:res&&res.n,m:res&&res.matches.length,wins:res&&res.wins,bad:res&&res.bad}));
  await pg.screenshot({path:path.join(OUT,'fl63_result.png'),fullPage:true});
+ // 0.64: трофеї за турнір (раз на лігу) і «Реванш»
+ const tr=await pg.evaluate(id=>{const s=JSON.parse(localStorage.getItem('upl30_tr')||'{}');return {play:s.t&&s.t.f5play&&s.t.f5play.n,f5:s.f5||[],box:!document.getElementById('fl5Tro').hidden&&document.getElementById('fl5Tro').textContent};},L.id);
+ T.check(tr.play===1&&tr.f5.includes(L.id)&&/Двір на двір/.test(tr.box||''),'трофеї 5×5: «Двір на двір» видано й показано '+JSON.stringify(tr));
+ await pg.click('#flBack');await pg.waitForTimeout(400);await pg.click(`[data-l="${L.id}"]`);await pg.waitForTimeout(600);
+ T.check(await pg.evaluate(()=>JSON.parse(localStorage.getItem('upl30_tr')).t.f5play.n===1&&document.getElementById('fl5Tro').hidden),'повторний перегляд ліги — трофеї вдруге не видаються');
+ await pg.click('#fl5Rev');await pg.waitForTimeout(300);
+ const rv=await pg.evaluate(()=>({on:(document.querySelector('#fl .fl-names .onc')||{}).textContent,fmt:(document.querySelector('#fl [data-k="fmt"].on')||{}).dataset}));
+ T.check(/^Реванш: /.test(rv.on||''),'«Реванш» → форма нової ліги з назвою «'+rv.on+'»');
+ await pg.click('#flCreate');await pg.waitForTimeout(500);const c5=M.calls.filter(c=>c[0]==='fl_create5').pop();
+ T.check(c5&&/^Реванш: /.test(c5[1].p_name)&&c5[1].p_rerolls===L.rerolls,'реванш створено: fl_create5 '+JSON.stringify(c5&&c5[1]));
+ await pg.click('#fl5Back').catch(()=>{});await pg.waitForTimeout(300);await pg.evaluate(()=>{const b=document.getElementById('flBack');if(b)b.click();});await pg.waitForTimeout(400);await pg.click(`[data-l="${L.id}"]`);await pg.waitForTimeout(600);
  await pg.click('[data-m5="0"]');await pg.waitForTimeout(300);
  const mt=(await pg.textContent('#fl')).replace(/\s+/g,' ');
  T.check(/Матч серії/.test(mt)&&/\d+:\d+/.test(mt)&&/гравець матчу/.test(mt),'матч: рахунок, гравець матчу ('+mt.slice(0,90)+')');

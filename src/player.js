@@ -120,27 +120,27 @@ function ppRenderCab(){
 }
 // «Поділитися шафою» (0.60): картинка 1080×1350 — ім'я, «відкрито N з M», до 12 трофеїв (рідкісні першими). Поза Telegram — системне меню з файлом,
 // у Telegram — бот надсилає картинку в особисті (api/card), інакше — довге натискання на картинку
-const CAB_COL={season:'#c9a227',squad:'#30D158',players:'#ff9a3d',modes:'#FF453A',daily:'#0A84FF',secret:'#BF5AF2'};
+const CAB_COL={season:'#c9a227',squad:'#30D158',players:'#ff9a3d',modes:'#FF453A',daily:'#0A84FF',friends:'#e0287a',secret:'#BF5AF2'};
 let CAB_CANVAS=null;
 async function ppShareCab(got,n,total){try{await document.fonts.ready;}catch(e){}
   const W=1080,H=1350,c=document.createElement('canvas');c.width=W;c.height=H;CAB_CANVAS=c;const g=c.getContext('2d');
   const DISP='"Unbounded", "Manrope", sans-serif',BODY='"Manrope", sans-serif',MONO='"JetBrains Mono", monospace';
-  const grd=g.createLinearGradient(0,0,0,H);grd.addColorStop(0,'#121212');grd.addColorStop(1,'#241c16');g.fillStyle=grd;g.fillRect(0,0,W,H);
+  const grd=g.createLinearGradient(0,0,0,H);grd.addColorStop(0,'#0b1430');grd.addColorStop(1,'#24124a');g.fillStyle=grd;g.fillRect(0,0,W,H);
   g.strokeStyle='rgba(255,255,255,.12)';g.lineWidth=4;g.strokeRect(40,40,W-80,H-80);
-  g.fillStyle='#f4f1ea';g.font=`900 40px ${DISP}`;g.fillText('30-0',80,122);const lw=g.measureText('30-0 ').width;g.fillStyle='#ff9a3d';g.fillText('УПЛ',80+lw,122);
+  g.fillStyle='#ffffff';g.font=`900 40px ${DISP}`;g.fillText('30-0',80,122);const lw=g.measureText('30-0 ').width;g.fillStyle='#ff5aa0';g.fillText('УПЛ',80+lw,122);
   g.fillStyle='#b3aea4';g.font=`600 28px ${MONO}`;g.fillText('ШАФА ТРОФЕЇВ',80,178);
-  g.fillStyle='#f4f1ea';let fs=64;const nm=myName();g.font=`800 ${fs}px ${DISP}`;while(g.measureText(nm).width>W-160&&fs>34){fs-=2;g.font=`800 ${fs}px ${DISP}`;}g.fillText(nm,80,262);
-  g.fillStyle='#ff9a3d';g.font=`700 34px ${BODY}`;g.fillText(`Відкрито ${n} з ${total}`,80,318);
-  g.fillStyle='rgba(255,255,255,.08)';g.fillRect(80,340,W-160,14);g.fillStyle='#ff9a3d';g.fillRect(80,340,(W-160)*(total?n/total:0),14);
+  g.fillStyle='#ffffff';let fs=64;const nm=myName();g.font=`800 ${fs}px ${DISP}`;while(g.measureText(nm).width>W-160&&fs>34){fs-=2;g.font=`800 ${fs}px ${DISP}`;}g.fillText(nm,80,262);
+  g.fillStyle='#ff5aa0';g.font=`700 34px ${BODY}`;g.fillText(`Відкрито ${n} з ${total}`,80,318);
+  g.fillStyle='rgba(255,255,255,.08)';g.fillRect(80,340,W-160,14);g.fillStyle='#ff5aa0';g.fillRect(80,340,(W-160)*(total?n/total:0),14);
   const list=got.slice(0,12),cols=3,cw=(W-160)/cols,ch=222,y0=400;
   list.forEach((t,i)=>{const cx=80+(i%cols)*cw+cw/2,cy=y0+Math.floor(i/cols)*ch+70,R=58;
     g.beginPath();for(let k=0;k<6;k++){const a=Math.PI/3*k-Math.PI/2;g[k?'lineTo':'moveTo'](cx+R*Math.cos(a),cy+R*Math.sin(a));}g.closePath();
-    g.fillStyle=CAB_COL[t.cat]||'#ff9a3d';g.globalAlpha=.22;g.fill();g.globalAlpha=1;g.lineWidth=5;g.strokeStyle=CAB_COL[t.cat]||'#ff9a3d';g.stroke();
+    g.fillStyle=CAB_COL[t.cat]||'#ff5aa0';g.globalAlpha=.22;g.fill();g.globalAlpha=1;g.lineWidth=5;g.strokeStyle=CAB_COL[t.cat]||'#ff5aa0';g.stroke();
     g.font=`52px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif`;g.textAlign='center';g.textBaseline='middle';g.fillText(t.i||'🏆',cx,cy+2);
-    g.textBaseline='alphabetic';g.fillStyle='#f4f1ea';let f2=28;g.font=`700 ${f2}px ${BODY}`;let tn=t.n;while(g.measureText(tn).width>cw-20&&f2>20){f2-=1;g.font=`700 ${f2}px ${BODY}`;}
+    g.textBaseline='alphabetic';g.fillStyle='#ffffff';let f2=28;g.font=`700 ${f2}px ${BODY}`;let tn=t.n;while(g.measureText(tn).width>cw-20&&f2>20){f2-=1;g.font=`700 ${f2}px ${BODY}`;}
     while(g.measureText(tn).width>cw-20&&tn.length>4)tn=tn.slice(0,-2)+'…';g.fillText(tn,cx,cy+R+46);g.textAlign='left';});
   if(got.length>12){g.fillStyle='#b3aea4';g.font=`600 28px ${BODY}`;g.fillText(`і ще ${got.length-12}`,80,y0+4*ch-10);}
-  g.fillStyle='#7c776f';g.font=`500 24px ${BODY}`;g.fillText('Збери свою 11-ку · upl-30-0.vercel.app',80,H-62);
+  g.fillStyle='#8f9bc4';g.font=`500 24px ${BODY}`;g.fillText('Збери свою 11-ку · upl-30-0.vercel.app',80,H-62);
   const out=document.getElementById('ppCabOut'),img=document.getElementById('ppCabImg'),send=document.getElementById('ppCabSend'),msg=document.getElementById('ppCabMsg');if(!out)return;
   img.src=c.toDataURL('image/png');out.hidden=false;msg.textContent='';
   const inTg=!!(ONLINE&&TG&&TG.initData);let canFile=false;
