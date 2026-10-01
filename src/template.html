@@ -8,7 +8,7 @@
 }
 /* 0.64: кольори УПЛ (рішення власника 01.10) — темна = макет A (темно-синій), світла = макет B; рожеві акценти й градієнт UPL.TV (--grad). Макети: docs/mockups/design_upl/v63 */
 /* тема: data-theme ставить скрипт вище завжди (light/dark, за замовчуванням темна), тож окремий @media (prefers-color-scheme) не потрібен */
-:root[data-theme="dark"]{--bg:#0b1430; --bg2:#0f1b3d; --surface:#132346; --line:#26396b; --ink:#ffffff; --ink2:#b9c2de; --muted:#7f8aad; --pitch:#2a4fa8; --pitch2:#1d3a80; --chalk:#f0f3fb; --amber:#e0287a; --amber2:#ff831e; --win:#2fd07a; --draw:#f5b83d; --loss:#ff4d5e; --gk:#FFD60A; --df:#0A84FF; --mf:#30D158; --fw:#FF453A; color-scheme:dark;}
+:root[data-theme="dark"]{--bg:#0b1430; --bg2:#0f1b3d; --surface:#132346; --line:#26396b; --ink:#ffffff; --ink2:#b9c2de; --muted:#7f8aad; --pitch:#2a4fa8; --pitch2:#1d3a80; --chalk:#f0f3fb; --amber:#e0287a; --amber2:#ff5aa0; --win:#2fd07a; --draw:#f5b83d; --loss:#ff4d5e; --gk:#FFD60A; --df:#0A84FF; --mf:#30D158; --fw:#FF453A; color-scheme:dark;}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.5;padding-inline:16px;padding-block:0 32px;margin:0}
@@ -168,8 +168,6 @@ select.need{border-color:var(--loss);box-shadow:0 0 0 2px color-mix(in srgb,var(
 .lb input{font:inherit;padding:9px 12px;border:1px solid var(--line);border-radius:var(--radius);background:var(--bg);color:var(--ink);min-width:0;flex:1 1 160px}
 .lb .msg{font-size:13px;color:var(--ink2)}
 /* expected */
-.xrow{display:flex;flex-wrap:wrap;gap:8px}
-.xrow .chip b{color:var(--ink);font-weight:700}
 .tiles{display:grid;gap:8px}.tiles.t2{grid-template-columns:repeat(2,minmax(0,1fr))}
 .tile{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--bg);display:grid;gap:2px;min-width:0}
 .tile b{font-family:var(--font-display);font-weight:700;font-size:clamp(24px,6vw,34px);line-height:1.05;font-variant-numeric:tabular-nums;white-space:nowrap}
@@ -415,11 +413,9 @@ button.stick0{position:sticky;bottom:12px;z-index:5;max-width:none;margin-top:20
 /* підсумки */
 .hero{gap:10px}
 .hero .tier{font-size:28px}
-#seasonLine{font-size:14px}
 .score0{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:6px;text-align:center;margin:4px 0}
 .score0 b{display:block;font:800 28px/1.05 var(--font-display);font-variant-numeric:tabular-nums;white-space:nowrap}.score0 b.hot{color:var(--amber)}
 .score0 i{font-style:normal}.score0 span{font-size:12px;color:var(--muted)}
-.hero .xrow{margin-top:8px}
 #newTro .tro{padding:8px 10px}#newTro .trt span:not(.trq){font-size:13px}
 #againBtn{flex:1}
 .strip0{display:grid;grid-template-columns:repeat(15,1fr);gap:3px;margin:4px 0}.strip0 i{height:14px;border-radius:3px;background:var(--line)}
@@ -476,7 +472,7 @@ table.lbt th.n,table.lbt td.n{width:28px;padding-left:2px;padding-right:2px;text
 #chalOpen{display:block;margin:6px auto 0}
 #skipBtn{width:100%;max-width:none}
 @media (min-width:700px){
-  .score0 b{font-size:44px}.score0 span{font-size:14px}.hero .tier{font-size:40px}#seasonLine{font-size:16px}
+  .score0 b{font-size:44px}.score0 span{font-size:14px}.hero .tier{font-size:40px}
   .lvRound{font-size:30px}.lvRec{font-size:40px}.lvMatch .sc{font-size:32px}.lvTop .muted,.lvMatch .who{font-size:16px}.lvTable td{font-size:15px;padding:6px 10px}
 }
 /* «Огляд» на великому екрані: поле ліворуч, решта праворуч */
@@ -526,8 +522,22 @@ button.primary,.big0.primary{background:var(--grad);color:#fff;border:0}
 :root[data-theme="light"] .pitch .slot .nm{color:#132346;text-shadow:none}
 :root[data-theme="light"] .pitch .slot .club{color:#4a5578;text-shadow:none}
 :root[data-theme="light"] .pitch .slot.empty .disc{background:rgba(19,35,70,.05);border-color:rgba(19,35,70,.4)}:root[data-theme="light"] .pitch .slot.empty .pos{color:rgba(19,35,70,.65)}
+/* ===== 0.64 — правки власника до дизайну (01.10): без оранжевого в акцентах (--amber2 у темній — рожевий), трофеї в градієнті UPL.TV,
+   xG/xGA/везіння плитками, градієнт кнопок — «шматок» градієнта на ширину екрана (вузька кнопка показує свою частину; gradFit у JS) */
+button.primary,.big0.primary{background:var(--grad);background-size:var(--gw,100%) 100%;background-position:var(--gx,0) 0;background-repeat:no-repeat;background-color:#d41e6f}
+.hx .o,.hx .g{fill:url(#trg)}.hx.off .o{fill:var(--line);opacity:1}.hx.off .g{fill:var(--muted)}
+.tro{border:0;border-radius:16px;padding:12px 14px;background:var(--surface)}
+.tro.on,.tro.on.sec{border:0;background:linear-gradient(135deg,color-mix(in srgb,var(--amber) 11%,var(--surface)),var(--surface) 62%);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--amber) 32%,transparent)}
+.tro .trn{color:var(--amber)}
+.x0{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:6px}
+.x0>div{border-radius:14px;padding:10px 6px;background:color-mix(in srgb,var(--bg) 70%,transparent);display:grid;justify-items:center;gap:2px;text-align:center}
+.x0 .ico{width:20px;height:20px;fill:var(--amber)}.x0 b{font:700 18px var(--font-display);color:var(--ink);font-variant-numeric:tabular-nums}.x0 span{font-size:11px;color:var(--muted)}
+.x0>div.hot b{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+details.x0q{margin-top:2px}details.x0q summary{font-size:13px;color:var(--muted)}
 </style>
 
+<!-- 0.64: градієнт UPL.TV для значків трофеїв (.hx — fill:url(#trg)) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><linearGradient id="trg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9a2bb5"/><stop offset=".55" stop-color="#e0287a"/><stop offset="1" stop-color="#ff831e"/></linearGradient></defs></svg>
 <div class="wrap">
   <header class="top">
     <button class="nav" id="homeBtn" title="На головну"><!--i:home-->Головна</button>
@@ -649,9 +659,8 @@ button.primary,.big0.primary{background:var(--grad);color:#fff;border:0}
     <div id="final">
     <div class="hero" style="margin-top:14px">
       <div class="tier" id="tier"></div>
-      <div class="muted" id="seasonLine"></div>
       <div class="score0" id="recTiles"></div>
-      <details class="tip"><summary>xG, xGA і везіння</summary><div class="xrow" id="xRow"></div><p class="muted cap" id="xCap"></p></details>
+      <div class="x0" id="xRow"></div><details class="tip x0q"><summary>Що таке xG і везіння?</summary><p class="muted cap" id="xCap"></p></details>
       <div id="newTro" hidden></div>
       <div class="nudge" id="acctNudge" hidden></div>
       <p class="note" id="leagueMsg" hidden style="margin:0"></p>
@@ -1340,12 +1349,11 @@ async function playSeason(year){
   if(S.pre&&year===S.year){r.xp=S.pre.xp;r.egf=S.pre.egf;r.ega=S.pre.ega;}
   else{let sp=0,sg=0,sa=0;const N=300;for(let k=0;k<N;k++){const q=simulate(xi,mode,year,true);sp+=q.pts;sg+=q.gf;sa+=q.ga;}r.xp=sp/N;r.egf=sg/N;r.ega=sa/N;}
   const [tier,gold]=tierOf(r);const te=document.getElementById('tier');te.textContent=tier;te.classList.toggle('gold',gold);
-  const sl=document.getElementById('seasonLine');sl.textContent=`${LEAGUE_NAME[r.year]||'Чемпіонат '+seasonLabel(r.year)} · ${S.formation} · ${modeName()} · голи ${r.gf}:${r.ga}`;
-  sl.title=LEAGUE_NAME[r.year]?'Твоя 11-ка проти 15 культових клубів УПЛ':`Твоя 11-ка грала замість «${r.replaced}» (останнє місце того сезону)`;
   // 0.62: три великі цифри замість шести плиток
   document.getElementById('recTiles').innerHTML=`<div><b><i class="W">${r.W}</i>-<i class="D">${r.D}</i>-<i class="L">${r.L}</i></b><span>в · н · п</span></div><div><b class="hot">${r.pts}</b><span>${ptsWord(r.pts)}</span></div><div><b>${r.place}</b><span>місце</span></div>`;
   const luck=r.pts-r.xp;
-  document.getElementById('xRow').innerHTML=`<span class="chip">xG <b>${r.xgf.toFixed(1)}</b> · забили ${r.gf}</span><span class="chip">xGA <b>${r.xga.toFixed(1)}</b> · пропустили ${r.ga}</span><span class="chip ${Math.abs(luck)>=4?'hot':''}">${luck>=0?'Везіння':'Невезіння'}: ${luck>=0?'+':''}${luck.toFixed(1)} очк.</span>`;
+  // 0.64 (власник 01.10): xG, xGA і везіння — одразу, трьома плитками з іконками; рядок «суперники · схема · режим · голи» прибрано (це є в «Статистиці сезону»)
+  document.getElementById('xRow').innerHTML=`<div>${icon('target')}<b>${r.xgf.toFixed(1)}</b><span>xG · забили ${r.gf}</span></div><div>${icon('shield-half-full')}<b>${r.xga.toFixed(1)}</b><span>xGA · пропустили ${r.ga}</span></div><div${Math.abs(luck)>=4?' class="hot"':''}>${icon('clover')}<b>${luck>=0?'+':'−'}${Math.abs(luck).toFixed(1)}</b><span>${luck>=0?'везіння':'невезіння'}, очк.</span></div>`;
   document.getElementById('xCap').textContent=`xG — очікувані голи: скільки команда мала б забити за силою атаки й суперників. xGA — очікувані пропущені. Везіння — різниця між набраними очками й прогнозом перед сезоном (xP ${r.xp.toFixed(1)}).`;
   renderPitch(document.getElementById('pitch2'),S.slots,true);
   document.getElementById('scorers').innerHTML=r.scorers.slice(0,6).map(s=>`<span class="mono">${s.g}</span> ${esc(s.name)}`).join(' · ')||'—';
@@ -1524,6 +1532,14 @@ function confetti(cv,n){const dpr=Math.min(2,window.devicePixelRatio||1),W=inner
   const C=['#ff2d87','#ff9a3d','#3d7bff','#ffffff','#ffd23d'];const ps=Array.from({length:n},(_,i)=>({x:W/2+(Math.random()-.5)*W*.3,y:H*.35,vx:(Math.random()-.5)*12,vy:-6-Math.random()*10,w:6+Math.random()*6,h:3+Math.random()*5,a:Math.random()*6,va:(Math.random()-.5)*.4,c:C[i%C.length]}));
   let raf=0;const t0=performance.now();const tick=t=>{const k=(t-t0)/1000;g.clearRect(0,0,W,H);for(const p of ps){p.vy+=.32;p.vx*=.99;p.x+=p.vx;p.y+=p.vy;p.a+=p.va;g.save();g.globalAlpha=Math.max(0,1-Math.max(0,k-2.2)/0.8);g.translate(p.x,p.y);g.rotate(p.a);g.fillStyle=p.c;g.fillRect(-p.w/2,-p.h/2,p.w,p.h);g.restore();}
     if(k<3)raf=requestAnimationFrame(tick);else g.clearRect(0,0,W,H);};raf=requestAnimationFrame(tick);return ()=>cancelAnimationFrame(raf);}
+// градієнт кнопок (0.64, власник 01.10): на широкій кнопці — весь градієнт, вузька показує свою частину градієнта шириною з колонку сторінки (вікна).
+// background-attachment:fixed на iPad/iPhone не працює, тому розмір і зсув рахуємо самі (--gw, --gx); перераховуємо, коли щось з'являється чи змінюється розмір
+function gradFit(){for(const b of document.querySelectorAll('button.primary')){const q=b.getBoundingClientRect();if(!q.width)continue;
+  const c=b.closest('.cbox,.box,section,.wrap')||document.body,r=c.getBoundingClientRect(),cs=getComputedStyle(c),l=r.left+parseFloat(cs.paddingLeft||0),w=r.width-parseFloat(cs.paddingLeft||0)-parseFloat(cs.paddingRight||0);
+  if(q.width>=w-2){b.style.removeProperty('--gw');b.style.removeProperty('--gx');continue;}
+  b.style.setProperty('--gw',Math.round(w)+'px');b.style.setProperty('--gx',Math.round(l-q.left)+'px');}}
+{let pend=0;const run=()=>{if(pend)return;pend=requestAnimationFrame(()=>{pend=0;gradFit();});};
+  new MutationObserver(run).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['hidden','class']});addEventListener('resize',run);run();}
 // легкий відгук у Telegram на натискання головних кнопок
 document.addEventListener('pointerdown',e=>{if(!TG||!TG.HapticFeedback||!e.target.closest('.primary,.row0,.tile0,.opt,.plpos button'))return;try{TG.HapticFeedback.impactOccurred('light');}catch(x){}},{passive:true});
 function slide(el,open){if(LESS_MOTION()){el.hidden=!open;return;}el.style.overflow='hidden';
@@ -1696,32 +1712,41 @@ document.getElementById('cardTgBtn').onclick=async()=>{const msg=document.getEle
 document.getElementById('cardShareBtn').onclick=()=>{const msg=document.getElementById('cardMsg');if(!CARD_CANVAS)return;
   CARD_CANVAS.toBlob(bl=>{const f=new File([bl],'30-0-upl.png',{type:'image/png'});navigator.share({files:[f],text:S.result?shareTextOf(S.result,false,true):''}).catch(e=>{if(e&&e.name!=='AbortError')msg.textContent='Не вдалося відкрити меню «Поділитися».';});},'image/png');};
 let CARD_CANVAS=null;
-function drawCard(r){
+function drawCard(r){   // 0.64: картка в стилі сайту — темно-синій фон УПЛ, градієнт UPL.TV (смуга, лого, очки), одна велика плитка з результатом
   const W=1080,H=1350,c=document.createElement('canvas');CARD_CANVAS=c;c.width=W;c.height=H;const g=c.getContext('2d');
   const DISP='"Unbounded", "Manrope", sans-serif', BODY='"Manrope", sans-serif', MONO='"JetBrains Mono", monospace';
-  const grd=g.createLinearGradient(0,0,0,H);grd.addColorStop(0,'#0b1430');grd.addColorStop(1,'#24124a');g.fillStyle=grd;g.fillRect(0,0,W,H);
-  g.strokeStyle='rgba(255,255,255,.12)';g.lineWidth=4;g.strokeRect(40,40,W-80,H-80);
-  // з 0.50: «30-0 УПЛ» — невеликий логотип у першому рядку, під ним режим (раніше заголовок займав пів картки)
-  g.fillStyle='#ffffff';g.font=`900 40px ${DISP}`;g.fillText('30-0',80,122);const lw=g.measureText('30-0 ').width;g.fillStyle='#ff5aa0';g.fillText('УПЛ',80+lw,122);
+  const INK='#ffffff',INK2='#b9c2de',MUTED='#8f9bc4',GR=['#9a2bb5','#e0287a','#ff831e'];
+  const grad=(x0,x1)=>{const q=g.createLinearGradient(x0,0,x1,0);GR.forEach((c,k)=>q.addColorStop(k/(GR.length-1),c));return q;};
+  const rr=(x,y,w,h,rad)=>{g.beginPath();g.roundRect?g.roundRect(x,y,w,h,rad):g.rect(x,y,w,h);};
+  const fit=(t,font,max,fs,min)=>{g.font=font(fs);while(g.measureText(t).width>max&&fs>min){fs-=2;g.font=font(fs);}return fs;};
+  const bg=g.createRadialGradient(W*.15,0,0,W*.15,0,H*1.1);bg.addColorStop(0,'#1d2d63');bg.addColorStop(.55,'#0b1430');bg.addColorStop(1,'#0a1129');g.fillStyle=bg;g.fillRect(0,0,W,H);
+  g.fillStyle=grad(0,W);g.fillRect(0,0,W,12);g.fillRect(0,H-12,W,12);
+  g.font=`900 44px ${DISP}`;g.fillStyle=INK;g.fillText('30-0',80,128);const lw=g.measureText('30-0 ').width,uw=g.measureText('УПЛ').width;g.fillStyle=grad(80+lw,80+lw+uw);g.fillText('УПЛ',80+lw,128);
   const head=S.daily?`ДРАФТ ДНЯ · ${DAY.slice(8,10)}.${DAY.slice(5,7)}.${DAY.slice(0,4)}`:`${fmtLabel().toUpperCase()}${S.formation} · ${modeName().toUpperCase()}`;
-  g.fillStyle='#b3aea4';let hs=28;g.font=`600 ${hs}px ${MONO}`;while(g.measureText(head).width>W-160&&hs>18){hs-=1;g.font=`600 ${hs}px ${MONO}`;}g.fillText(head,80,178);
-  const [tier,gold]=tierOf(r);const T0=gold?300:225;   // рівень («Чемпіони», «30-0-0»…) лише для особливих сезонів; місце й так є в плитці
-  if(gold){g.fillStyle='#ff831e';let fs=54;g.font=`700 ${fs}px ${DISP}`;while(g.measureText(tier).width>W-160&&fs>30){fs-=2;g.font=`700 ${fs}px ${DISP}`;}g.fillText(tier,80,262);}
-  // два ряди плиток: П / Н / П, потім очки / місце / голи — великі цифри й читабельні підписи
-  const tile=(x,y,w,h,val,lab,accent,valCol)=>{g.fillStyle='rgba(255,255,255,.05)';g.beginPath();g.roundRect?g.roundRect(x,y,w,h,18):g.rect(x,y,w,h);g.fill();
-    if(accent){g.fillStyle=accent;g.beginPath();g.roundRect?g.roundRect(x,y,w,8,[18,18,0,0]):g.rect(x,y,w,8);g.fill();}
-    g.fillStyle=valCol||'#ffffff';let fs=76;g.font=`700 ${fs}px ${DISP}`;while(g.measureText(val).width>w-48&&fs>40){fs-=4;g.font=`700 ${fs}px ${DISP}`;}g.fillText(val,x+26,y+94);
-    g.fillStyle='#b3aea4';g.font=`600 28px ${BODY}`;g.fillText(lab,x+26,y+136);};
-  const tw=(W-160-2*24)/3,th=160;
-  [[String(r.W),plUk(r.W,'перемога','перемоги','перемог'),'#30D158'],[String(r.D),plUk(r.D,'нічия','нічиї','нічиїх'),'#FFD60A'],[String(r.L),plUk(r.L,'поразка','поразки','поразок'),'#FF453A']].forEach(([v,l,a],k)=>tile(80+k*(tw+24),T0,tw,th,v,l,a));
-  [[String(r.pts),ptsWord(r.pts),null,'#ff5aa0'],[String(r.place),'місце'],[`${r.gf}:${r.ga}`,'голи']].forEach(([v,l,a,c],k)=>tile(80+k*(tw+24),T0+th+20,tw,th,v,l,a,c));
-  const col={W:'#30D158',D:'#FFD60A',L:'#FF453A'};const gap=12,sw=(W-160-9*gap)/10,sh=48,gy=T0+2*th+50;r.log.forEach((m,i)=>{const cx=80+(i%10)*(sw+gap),cy=gy+Math.floor(i/10)*(sh+gap);g.fillStyle=col[m.res];g.beginPath();g.roundRect?g.roundRect(cx,cy,sw,sh,10):g.rect(cx,cy,sw,sh);g.fill();});
-  const sy=gy+3*(sh+gap)+44;g.fillStyle='#b3aea4';g.font=`600 24px ${MONO}`;g.fillText((S.teamName||'Твоя 11-ка').toUpperCase(),80,sy);
-  const LN={FW:0,MF:1,DF:2,GK:3};const xi=S.slots.map(s=>s.player).map((p,i)=>[p,i]).sort((a,b)=>(LN[a[0].pos]-LN[b[0].pos])||(a[1]-b[1])).map(x=>x[0]);const colsX=[80,560];xi.forEach((p,i)=>{const cx=colsX[i<6?0:1],cy=sy+46+(i<6?i:i-6)*46;
-    const pc={GK:'#FFD60A',DF:'#0A84FF',MF:'#30D158',FW:'#FF453A'}[p.pos];g.fillStyle=pc;g.fillRect(cx,cy-26,8,32);
-    g.fillStyle='#ffffff';g.font=`700 28px ${BODY}`;let nm=p.name;while(g.measureText(nm).width>340&&nm.length>4)nm=nm.slice(0,-2)+'…';g.fillText(nm,cx+22,cy);
+  g.fillStyle=INK2;fit(head,f=>`600 ${f}px ${MONO}`,W-160,26,18);g.fillText(head,80,182);
+  const [tier,gold]=tierOf(r);let y=230;   // рівень («Чемпіони», «30-0-0»…) — лише для особливих сезонів
+  if(gold){const fs=fit(tier,f=>`800 ${f}px ${DISP}`,W-160,64,34);const tw=g.measureText(tier).width;g.fillStyle=grad(80,80+tw);g.fillText(tier,80,y+fs);y+=fs+40;}
+  // головна плитка: В-Н-П · очки · місце (як на сайті), під ними голи й xG
+  const hh=300;rr(80,y,W-160,hh,32);g.fillStyle='rgba(255,255,255,.06)';g.fill();g.strokeStyle='rgba(224,40,122,.35)';g.lineWidth=2;g.stroke();
+  const cw=(W-160)/3,col={W:'#2fd07a',D:'#f5b83d',L:'#ff4d5e'};
+  {const parts=[[String(r.W),col.W],['-',INK],[String(r.D),col.D],['-',INK],[String(r.L),col.L]];g.font=`800 84px ${DISP}`;let tw=parts.reduce((a,[t])=>a+g.measureText(t).width,0),fs=84;
+    while(tw>cw-30&&fs>48){fs-=4;g.font=`800 ${fs}px ${DISP}`;tw=parts.reduce((a,[t])=>a+g.measureText(t).width,0);}let x=80+cw/2-tw/2;for(const [t,cl] of parts){g.fillStyle=cl;g.fillText(t,x,y+150);x+=g.measureText(t).width;}}
+  const big=(t,k,fill)=>{g.font=`800 96px ${DISP}`;const tw=g.measureText(t).width,x=80+cw*k+cw/2-tw/2;g.fillStyle=fill?fill(x,x+tw):INK;g.fillText(t,x,y+152);};
+  big(String(r.pts),1,grad);big(String(r.place),2);
+  g.font=`600 28px ${BODY}`;g.fillStyle=MUTED;[['в · н · п',0],[ptsWord(r.pts),1],['місце',2]].forEach(([t,k])=>{const tw=g.measureText(t).width;g.fillText(t,80+cw*k+cw/2-tw/2,y+200);});
+  g.fillStyle='rgba(255,255,255,.08)';g.fillRect(120,y+228,W-240,2);
+  {const t=`Голи ${r.gf}:${r.ga}`+(r.xgf!=null?` · xG ${r.xgf.toFixed(1)} : ${r.xga.toFixed(1)}`:'');g.font=`600 30px ${BODY}`;g.fillStyle=INK2;const tw=g.measureText(t).width;g.fillText(t,W/2-tw/2,y+276);}
+  y+=hh+44;
+  // форма: 30 турів, 3 ряди по 10
+  const gap=12,sw=(W-160-9*gap)/10,sh=44;r.log.forEach((m,i)=>{rr(80+(i%10)*(sw+gap),y+Math.floor(i/10)*(sh+gap),sw,sh,12);g.fillStyle=col[m.res];g.fill();});
+  y+=3*(sh+gap)+50;
+  g.fillStyle=MUTED;g.font=`600 24px ${MONO}`;g.fillText((S.teamName||'Твоя 11-ка').toUpperCase(),80,y);
+  const LN={FW:0,MF:1,DF:2,GK:3},PC={GK:'#f5b83d',DF:'#4d8dff',MF:'#2fd07a',FW:'#ff4d5e'};
+  const xi=S.slots.map(s=>s.player).map((p,i)=>[p,i]).sort((a,b)=>(LN[a[0].pos]-LN[b[0].pos])||(a[1]-b[1])).map(x=>x[0]);const colsX=[80,560];
+  xi.forEach((p,i)=>{const cx=colsX[i<6?0:1],cy=y+48+(i<6?i:i-6)*46;g.fillStyle=PC[p.pos];g.beginPath();g.arc(cx+8,cy-10,8,0,7);g.fill();
+    g.fillStyle=INK;g.font=`700 28px ${BODY}`;let nm=p.name;while(g.measureText(nm).width>330&&nm.length>4)nm=nm.slice(0,-2)+'…';g.fillText(nm,cx+28,cy);
     if(ratingsOpen()){g.fillStyle='#ff5aa0';g.font=`700 28px ${DISP}`;g.fillText(String(baseR(p)),cx+380,cy);}});
-  g.fillStyle='#8f9bc4';g.font=`500 24px ${BODY}`;const luck=r.xp!=null?r.pts-r.xp:null;g.fillText((luck!=null&&ratingsOpen()?`${luck>=0?'Везіння':'Невезіння'} ${luck>=0?'+':'−'}${Math.abs(luck).toFixed(1)} очк. · `:'')+'upl-30-0.vercel.app',80,H-62);
+  g.fillStyle=MUTED;g.font=`500 24px ${BODY}`;const luck=r.xp!=null?r.pts-r.xp:null;g.fillText((luck!=null&&ratingsOpen()?`${luck>=0?'Везіння':'Невезіння'} ${luck>=0?'+':'−'}${Math.abs(luck).toFixed(1)} очк. · `:'')+'upl-30-0.vercel.app',80,H-56);
   return c.toDataURL('image/png');
 }
 document.getElementById('replayBtn').onclick=()=>playSeason(null);
@@ -1729,7 +1754,8 @@ document.getElementById('chalOpen').onclick=()=>{const b=document.getElementById
 // ---------- «Що нового»: коротко й по-людськи про останню версію (технічний журнал — CHANGELOG.md у репозиторії)
 const WHATSNEW={v:'0.64',date:'01.10.2026',items:[
   ['crown','Суперники — Ліга легенд','Класика, «Вибір сезону» й драфт дня тепер проти 15 культових клубів у їхніх найсильніших сезонах: Шахтар 12/13, Динамо 97/98, Металіст 10/11… Очок стане менше, а 30-0 — рідше. Антисезон — як і раніше.'],
-  ['palette','Кольори УПЛ','Темна тема — темно-синя, світла — біла, з рожевим акцентом і градієнтом на головних кнопках. Газон — синій.'],
+  ['palette','Кольори УПЛ','Темна тема — темно-синя, світла — біла, рожевий акцент і градієнт UPL.TV на кнопках. Газон — синій. Трофеї — у тому ж градієнті, у «Кукуріку» — голова півня. Нова картка «Поділитися».'],
+  ['chart-bar','Підсумки','xG, xGA й везіння — одразу, трьома плитками; зайвий рядок під заголовком прибрали.'],
   ['trophy','Чемпіонство й 30-0','Вікно з кубком і конфеті. Гравець «прилітає» на поле, гол у симуляції спалахує, очки набігають, кнопки відгукуються на натискання.'],
   ['account-group','Сам і з друзями','Головна поділена: драфт дня й «Вибір сезону» — окремо, ліги з друзями — окремо. Режимів менше: «Класичне дербі» й «Один клуб» сховали — старі результати лишились.'],
   ['medal','Ліги 5×5','Шість трофеїв за турнір з друзями, кнопка «Реванш» і відлік до кінця збору складів.']]};
@@ -1745,6 +1771,6 @@ themeLabel();
 document.getElementById('newsDot').hidden=lsGet('upl30_news_seen')===WHATSNEW.v;
 /*__FIVE__*/
 document.getElementById('f5Open').onclick=f5Start;
-window.__dbg={setFmt,oppYear,champModal,chalNewGame,DAILY,LEAGUE_CULT,LEAGUE_LEGENDS,openTrophies,renderNewTro,bestPerPlayer,renderWheel,posOpts,eraOf,ERAS,plUk,ptsWord,viewHtml,renderPitch,pitchHtml,f5Pitch,F5_FORMS,F5_L,POSNAME,cardName,clubShort,simulate,shareTextOf,trCtxNow,trAward,trStore,seasonForm,FORMATIONS,GROUP_OF,MODES,P,DATA,TROPHIES,trEval,PERSON,effRating,get S(){return S;},rerun(seed,year,xi){rnd=mulberry32(seed);const r=simulate(xi||S.slots.map(s=>s.player),MODES[S.mode],year);rnd=Math.random;return {W:r.W,D:r.D,L:r.L,gf:r.gf,ga:r.ga,place:r.place};}};
+window.__dbg={setFmt,oppYear,champModal,drawCard,gradFit,chalNewGame,DAILY,LEAGUE_CULT,LEAGUE_LEGENDS,openTrophies,renderNewTro,bestPerPlayer,renderWheel,posOpts,eraOf,ERAS,plUk,ptsWord,viewHtml,renderPitch,pitchHtml,f5Pitch,F5_FORMS,F5_L,POSNAME,cardName,clubShort,simulate,shareTextOf,trCtxNow,trAward,trStore,seasonForm,FORMATIONS,GROUP_OF,MODES,P,DATA,TROPHIES,trEval,PERSON,effRating,get S(){return S;},rerun(seed,year,xi){rnd=mulberry32(seed);const r=simulate(xi||S.slots.map(s=>s.player),MODES[S.mode],year);rnd=Math.random;return {W:r.W,D:r.D,L:r.L,gf:r.gf,ga:r.ga,place:r.place};}};
 })();
 </script>
