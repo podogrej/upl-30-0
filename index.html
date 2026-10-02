@@ -819,7 +819,7 @@ section>h3:first-child,.box h3:first-of-type,#viewBody>h3:first-child,#viewBody>
 
 <div class="overlay" id="viewBox" hidden><div class="box"><div class="vhead"><h3 id="viewTitle">Склад</h3><button class="ghost" id="viewClose">Закрити</button></div><div id="viewBody"></div></div></div>
 <nav class="foot0" aria-label="Розділи"><a href="#" data-go="dailyBtn">Драфт дня</a><a href="#" data-go="pickOpen">Вибір сезону</a><a href="#" data-go="flOpen">Ліга з друзями</a><a href="#" data-go="boardOpen">Таблиця</a><a href="#" data-go="trBtn">Трофеї</a><a href="#" data-go="howQ">Питання</a><a href="#" data-go="aboutBox">Про гру</a></nav>
-<div class="foot">30-0 УПЛ · <a href="#" id="newsBtn">Що нового у версії 0.68<b id="newsDot" hidden></b></a> · <a href="#" id="themeBtn" class="thm" role="switch" aria-checked="false" aria-label="Світла тема"></a> · неофіційний фан-проєкт</div>
+<div class="foot">30-0 УПЛ · <a href="#" id="newsBtn">Що нового у версії 0.69<b id="newsDot" hidden></b></a> · <a href="#" id="themeBtn" class="thm" role="switch" aria-checked="false" aria-label="Світла тема"></a> · неофіційний фан-проєкт</div>
 <script src="pool.d63f138d2.js"></script>
 <script>
 (function(){
@@ -2018,14 +2018,17 @@ const CLUBN={};for(const c of DATA.clubs)CLUBN[c.c]=c.n;
 const pname=r=>String((r&&r.players&&(r.players.name||r.players.anon_name))||(r&&r.nickname)||'анонім').toLowerCase();
 const PL_SEL=['players(name,anon_name,public_id)','players(name,anon_name)'];   // public_id — з SQL 0.59; без нього — як раніше
 async function sbGetFallback(qs){let err;for(const q of qs){try{return await sbGet(q);}catch(e){err=e;}}throw err;}
+// 0.69 (власник 01.10, варіант A, docs/plan_069_reset.md): загальна таблиця — лише сезони з виходу 0.69; старі лишаються в базі й на сторінках гравців.
+// null — «за весь час» (повернути — один рядок). Таблиця дня, ліги й сторінка гравця — без змін
+const BOARD_FROM='2026-10-02T09:00:00Z',BOARD_FROM_TXT='2 жовтня 2026';
 function boardQ(b,v39,pl,v60,v61){const B=BOARDS[b];
   const sel='id,device_id,nickname,w,d,l,pts,place,gf,ga,formation,mode,club,created_at'+(v60?',show_r':'')+(v39?',player_id,'+(pl||PL_SEL[1]):'');
   const ord=v39?(B.asc?'pts.asc,place.desc,gd.asc,gf.asc,created_at.asc':'pts.desc,place.asc,gd.desc,gf.desc,created_at.asc'):(B.asc?'pts.asc,place.desc':'pts.desc,place.asc,ga.asc,gf.desc');
-  return `seasons?select=${sel}&${B.q}&practice=is.false&verified=is.true${v39?'&competition=eq.upl':''}${v61?'&fl_id=is.null':''}&order=${ord}&limit=50`;}
+  return `seasons?select=${sel}&${B.q}&practice=is.false&verified=is.true${BOARD_FROM?'&created_at=gte.'+BOARD_FROM:''}${v39?'&competition=eq.upl':''}${v61?'&fl_id=is.null':''}&order=${ord}&limit=50`;}
 function boardHtml(rows,b){
-  if(!rows.length)return '<p class="muted">Поки що порожньо. Зіграй сезон — він з\'явиться тут після перевірки сервером.</p>';
+  if(!rows.length)return '<p class="muted">Поки що порожньо: з запуску 0.69 таблиця почалась заново. Зіграй сезон — він з\'явиться тут після перевірки сервером.</p>';
   const me=deviceId(),pid=PLAYER&&PLAYER.id;
-  return `<div class="tbl clickable"><table><tr><th>#</th><th>Гравець</th><th class="num">В-Н-П</th><th class="num">Г</th><th class="num">О</th></tr>`+rows.map((r,i)=>`<tr data-q="id=eq.${numOr0(r.id)}"${(pid&&r.player_id===pid)||r.device_id===me?' class="me"':''}><td class="num">${i+1}</td><td class="nm"><span class="nmt">${plink(r)}${r.w===30?' <span class="lv lv-p">30-0</span>':''}</span><div class="sub"><span>${esc(r.formation)}</span>${lvChip(r.mode)}${r.show_r?'<span class="lv lv-r" title="У драфті були відкриті рейтинги гравців">рейтинги відкриті</span>':''}${b==='oneclub'&&r.club?`<span>${esc(CLUBN[r.club]||r.club)}</span>`:''}</div></td><td class="num">${numOr0(r.w)}-${numOr0(r.d)}-${numOr0(r.l)}</td><td class="num">${numOr0(r.gf)}:${numOr0(r.ga)}</td><td class="num"><b>${numOr0(r.pts)}</b></td></tr>`).join('')+`</table></div><p class="muted" style="font-size:12px;margin-top:6px">Лише сезони, перевірені сервером. Рівні очки: місце в сезоні → різниця м'ячів → забиті → хто раніше. Тап по рядку — склад, по імені — сторінка гравця.</p>`;}
+  return `<div class="tbl clickable"><table><tr><th>#</th><th>Гравець</th><th class="num">В-Н-П</th><th class="num">Г</th><th class="num">О</th></tr>`+rows.map((r,i)=>`<tr data-q="id=eq.${numOr0(r.id)}"${(pid&&r.player_id===pid)||r.device_id===me?' class="me"':''}><td class="num">${i+1}</td><td class="nm"><span class="nmt">${plink(r)}${r.w===30?' <span class="lv lv-p">30-0</span>':''}</span><div class="sub"><span>${esc(r.formation)}</span>${lvChip(r.mode)}${r.show_r?'<span class="lv lv-r" title="У драфті були відкриті рейтинги гравців">рейтинги відкриті</span>':''}${b==='oneclub'&&r.club?`<span>${esc(CLUBN[r.club]||r.club)}</span>`:''}</div></td><td class="num">${numOr0(r.w)}-${numOr0(r.d)}-${numOr0(r.l)}</td><td class="num">${numOr0(r.gf)}:${numOr0(r.ga)}</td><td class="num"><b>${numOr0(r.pts)}</b></td></tr>`).join('')+`</table></div><p class="muted" style="font-size:12px;margin-top:6px">${BOARD_FROM?`Сезони з ${BOARD_FROM_TXT} (запуск 0.69); старі — на сторінках гравців. `:''}Лише сезони, перевірені сервером. Рівні очки: місце в сезоні → різниця м'ячів → забиті → хто раніше. Тап по рядку — склад, по імені — сторінка гравця.</p>`;}
 let BOARD='main';
 function openBoard(b){BOARD=b||BOARD;screenTag('table');const box=document.getElementById('viewBox'),body=document.getElementById('viewBody');document.getElementById('viewTitle').textContent='Таблиця · 11×11';box.hidden=false;
   const bt=Object.entries(BOARDS).filter(([k,v])=>!v.hidden||k===BOARD);   // 0.65: одна вкладка — без ряду вкладок

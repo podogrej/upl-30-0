@@ -14,7 +14,8 @@ function makeDB(cfg={},rpc={}){
   const val=v=>v==='null'?null:v==='true'?true:v==='false'?false:v;
   const test=(r,k,v)=>{const i=v.indexOf('.'),op=v.slice(0,i),x=v.slice(i+1),a=r[k];
     if(op==='eq')return String(a)===x;if(op==='neq')return String(a)!==x;if(op==='is')return a==null?x==='null':a===val(x);
-    if(op==='in')return x.replace(/^\(|\)$/g,'').split(',').includes(String(a));if(op==='gt')return a>+x;if(op==='gte')return a>=+x;if(op==='lt')return a<+x;if(op==='lte')return a<=+x;return true;};
+    if(op==='in')return x.replace(/^\(|\)$/g,'').split(',').includes(String(a));const c=isNaN(+x)?String(a==null?'':a).localeCompare(x):a-(+x);   // 0.69: дати (created_at=gte.2026-…) — як рядки ISO
+    if(op==='gt')return c>0;if(op==='gte')return c>=0;if(op==='lt')return c<0;if(op==='lte')return c<=0;return true;};
   const SKIP=new Set(['select','order','limit','offset','apikey','on_conflict']);
   const where=u=>[...u.searchParams].filter(([k])=>!SKIP.has(k));
   const out=(status,j)=>({status,body:j==null?'':JSON.stringify(j)});
