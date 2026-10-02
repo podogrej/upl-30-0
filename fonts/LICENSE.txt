@@ -1,0 +1,6 @@
+KyivType Sans — Copyright © 2019 Dmitry Rastvortsev (http://rastvor.com.ua).
+Ordered by Projector, Dmytro Bulanov Creative Büro and Banda Agency for Kyiv city identification.
+Licence (from the font files): "Freeware. Font free for commercial and non-commercial use. Must not be decompiled. NoDerivates."
+Files are used unmodified (OTF, as distributed). Official source: https://www.behance.net/gallery/90690285/KyivType-variable-superfamily , MyFonts ($0).
+Note (0.69.1): these copies came from a mirror because the official page is not reachable from the build environment;
+replace them with files from the official download when possible (same file names, nothing else to change).
