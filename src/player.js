@@ -140,7 +140,7 @@ async function ppShareCab(got,n,total){try{await document.fonts.ready;}catch(e){
     g.textBaseline='alphabetic';g.fillStyle='#ffffff';let f2=28;g.font=`700 ${f2}px ${BODY}`;let tn=t.n;while(g.measureText(tn).width>cw-20&&f2>20){f2-=1;g.font=`700 ${f2}px ${BODY}`;}
     while(g.measureText(tn).width>cw-20&&tn.length>4)tn=tn.slice(0,-2)+'…';g.fillText(tn,cx,cy+R+46);g.textAlign='left';});
   if(got.length>12){g.fillStyle='#b3aea4';g.font=`600 28px ${BODY}`;g.fillText(`і ще ${got.length-12}`,80,y0+4*ch-10);}
-  g.fillStyle='#8f9bc4';g.font=`500 24px ${BODY}`;g.fillText('Збери свою 11-ку · upl-30-0.vercel.app',80,H-62);
+  g.fillStyle='#8f9bc4';g.font=`500 24px ${BODY}`;g.fillText('Збери свою 11-ку · '+SITE_HOST,80,H-62);
   const out=document.getElementById('ppCabOut'),img=document.getElementById('ppCabImg'),send=document.getElementById('ppCabSend'),msg=document.getElementById('ppCabMsg');if(!out)return;
   img.src=c.toDataURL('image/png');out.hidden=false;msg.textContent='';
   const inTg=!!(ONLINE&&TG&&TG.initData);let canFile=false;

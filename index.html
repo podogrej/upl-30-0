@@ -10,7 +10,7 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' x2='1'%3E%3Cstop offset='0' stop-color='%239a2bb5'/%3E%3Cstop offset='.5' stop-color='%23e0287a'/%3E%3Cstop offset='1' stop-color='%23ff831e'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='14' fill='%230b1430'/%3E%3Ctext x='32' y='38' font-size='23' font-family='Arial Black,Arial,sans-serif' font-weight='900' fill='white' text-anchor='middle' letter-spacing='-1'%3E30-0%3C/text%3E%3Crect x='12' y='46' width='40' height='6' rx='3' fill='url(%23g)'/%3E%3C/svg%3E">
 <link rel="apple-touch-icon" href="icon-180.png">   <!-- 0.67: іконка в новому дизайні (темно-синя + градієнт УПЛ) -->
 <script>/* Microsoft Clarity (анонімна аналітика кліків, рішення власника 30.09.2026) — лише на боєвому адресі, не на тестовому й не в автотестах */
-if(location.hostname==='upl-30-0.vercel.app'){(function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);})(window,document,"clarity","script","yq84mk48cm");}</script>
+if(/^(upl30\.com\.ua|upl-30-0\.vercel\.app)$/.test(location.hostname)){(function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);})(window,document,"clarity","script","yq84mk48cm");}</script>
 <style>html{-webkit-text-size-adjust:100%}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}[hidden]{display:none!important}img{max-width:100%}</style>
 </head>
 <body>
@@ -1811,6 +1811,8 @@ document.getElementById('againBtn').onclick=()=>{S.result=null;if(S.league){open
 // ---------- online leaderboard (only on the real site)
 const ONLINE=true;
 // дві бази: основна (гравці) і тестова (лише розробка). Тестова — тільки на адресі тестової гілки Vercel (…-git-test-…vercel.app)
+// 0.68: свій домен (власник купив 02.10). Старий upl-30-0.vercel.app теж відкривається — посилання, що вже в чатах, працюють
+const SITE_HOST='upl30.com.ua',SITE='https://'+SITE_HOST+'/';
 const SB_ENVS={prod:{url:"https://qruhcbwycrnfgzzdbljr.supabase.co",key:"sb_publishable_pEszTOPsCHLgpiPpwB4JKg_SS-X07hY"},
                test:{url:"https://joahjmpupilukdbmbdfl.supabase.co",key:"sb_publishable_OqaI_M6vP6S6D9fxzfwFcQ_TcQx8Rkz"}};
 const SB_ENV=(ONLINE&&SB_ENVS.test.url&&(/-git-test-/.test(location.hostname)||/[?&]db=test\b/.test(location.search)))?'test':'prod';
@@ -1825,7 +1827,7 @@ const VERSION=(document.querySelector('.foot').textContent.match(/версі[я�
 // ---------- Telegram Mini App: якщо сторінку відкрито всередині Telegram, беремо ім'я з профілю, тему і кнопку «Надіслати в чат»
 const TG_BOT='upl30_bot';   // username бота без @
 let TG=null,TGU=null;
-function tgLink(){return TG_BOT?`https://t.me/${TG_BOT}?startapp`:'https://upl-30-0.vercel.app/';}
+function tgLink(){return TG_BOT?`https://t.me/${TG_BOT}?startapp`:SITE;}
 function tgInit(){
   try{TG=window.Telegram&&window.Telegram.WebApp;if(!TG||!TG.initData)return;TG.ready();TG.expand();try{TG.BackButton&&TG.BackButton.onClick(navBack);navUi();}catch(e){}
     TGU=TG.initDataUnsafe&&TG.initDataUnsafe.user||null;
@@ -1987,7 +1989,7 @@ function openBoard(b){BOARD=b||BOARD;screenTag('table');const box=document.getEl
   body.querySelectorAll('[data-board]').forEach(t=>t.onclick=()=>openBoard(t.dataset.board));
   loadBoard(BOARD);}
 async function loadBoard(b){const el=document.getElementById('boardBody');try{const rows=await sbGetFallback([boardQ(b,true,PL_SEL[0],true,true),boardQ(b,true,PL_SEL[0],true),boardQ(b,true,PL_SEL[0]),boardQ(b,true,PL_SEL[1]),boardQ(b,false)]);if(BOARD===b&&el.isConnected)el.innerHTML=boardHtml(rows,b);}catch(e){if(el.isConnected)el.innerHTML='<p class="muted">Таблиця зараз недоступна.</p>';}}
-document.getElementById('boardOpen').onclick=()=>{if(!ONLINE){screenTag('table');document.getElementById('viewTitle').textContent='Таблиця · 11×11';document.getElementById('viewBody').innerHTML='<p class="muted">Таблиця працює на сайті upl-30-0.vercel.app і в Telegram-боті @upl30_bot.</p>';document.getElementById('viewBox').hidden=false;return;}openBoard('main');};
+document.getElementById('boardOpen').onclick=()=>{if(!ONLINE){screenTag('table');document.getElementById('viewTitle').textContent='Таблиця · 11×11';document.getElementById('viewBody').innerHTML='<p class="muted">Таблиця працює на сайті '+SITE_HOST+' і в Telegram-боті @upl30_bot.</p>';document.getElementById('viewBox').hidden=false;return;}openBoard('main');};
 function pitchHtml(formation,xi){const G=pitchGeo(formation);const F=FORMATIONS[formation]||FORMATIONS['4-4-2'];let h=PITCH_MK;F.slots.forEach((sl,i)=>{const p=xi[i];if(!p)return;const pt=G.pts[i];h+=`<div class="slot filled ${GROUP_OF[p.slot]||''}" style="left:${pt.x}%;top:${pt.y}%">${slotInner(p.slot,p,{pill:rPill(numOr0(baseR(p)))})}</div>`;});return `<div class="pitch">${h}</div>`;}
 // дані сезону з бази (xi, tbl — jsonb, їх пише браузер): числа — лише через Number, текст — лише через esc
 const numOr0=x=>Number(x)||0;
@@ -2164,7 +2166,7 @@ async function ppShareCab(got,n,total){try{await document.fonts.ready;}catch(e){
     g.textBaseline='alphabetic';g.fillStyle='#ffffff';let f2=28;g.font=`700 ${f2}px ${BODY}`;let tn=t.n;while(g.measureText(tn).width>cw-20&&f2>20){f2-=1;g.font=`700 ${f2}px ${BODY}`;}
     while(g.measureText(tn).width>cw-20&&tn.length>4)tn=tn.slice(0,-2)+'…';g.fillText(tn,cx,cy+R+46);g.textAlign='left';});
   if(got.length>12){g.fillStyle='#b3aea4';g.font=`600 28px ${BODY}`;g.fillText(`і ще ${got.length-12}`,80,y0+4*ch-10);}
-  g.fillStyle='#8f9bc4';g.font=`500 24px ${BODY}`;g.fillText('Збери свою 11-ку · upl-30-0.vercel.app',80,H-62);
+  g.fillStyle='#8f9bc4';g.font=`500 24px ${BODY}`;g.fillText('Збери свою 11-ку · '+SITE_HOST,80,H-62);
   const out=document.getElementById('ppCabOut'),img=document.getElementById('ppCabImg'),send=document.getElementById('ppCabSend'),msg=document.getElementById('ppCabMsg');if(!out)return;
   img.src=c.toDataURL('image/png');out.hidden=false;msg.textContent='';
   const inTg=!!(ONLINE&&TG&&TG.initData);let canFile=false;
@@ -2262,7 +2264,7 @@ const FL_OPT={days:[[1,'1 день'],[3,'3 дні'],[7,'7 днів']],
 const FL5_ON=/[?&]f5=1(&|$)/.test(location.search);
 let FL=null;   // {view:'list'|'create'|'league', id, data, mine, form, tab, formation}
 const flUrl=id=>{try{const q=new URLSearchParams(location.search);if(id)q.set('l',id);else q.delete('l');const s=q.toString();history.replaceState(history.state,'',location.pathname+(s?'?'+s:'')+location.hash);}catch(e){}};
-const flLink=id=>`${location.origin&&location.origin!=='null'?location.origin:'https://upl-30-0.vercel.app'}${location.pathname||'/'}?l=${id}`;
+const flLink=id=>`${location.origin&&location.origin!=='null'?location.origin:SITE.slice(0,-1)}${location.pathname||'/'}?l=${id}`;
 async function flRpc(fn,args){const r=await fetch(`${SB_URL}/rest/v1/rpc/${fn}?apikey=${SB_KEY}`,{method:'POST',headers:{apikey:SB_KEY,'Content-Type':'application/json'},body:JSON.stringify(args)});
   const t=await r.text();if(!r.ok)throw new Error(`${fn} ${r.status}: ${t.slice(0,160)}`);return t?JSON.parse(t):null;}
 const flErr=e=>{const m=String(e&&e.message||e);return /login\?|28000/.test(m)?'Спершу увійди через Google чи Telegram.':/fl_over/.test(m)?'Ця ліга вже завершилась.':/fl_full/.test(m)?'У лізі 5×5 уже 10 гравців.':/fl_few/.test(m)?'Потрібно щонайменше 2 зібрані склади.':/fl_member/.test(m)?'Спершу приєднайся до ліги.':/fl_none/.test(m)?'Такої ліги немає. Перевір посилання.':/fl_many/.test(m)?'Забагато ліг за день. Спробуй завтра.':/404|PGRST202/.test(m)?'Ліги ще не ввімкнено. Спробуй трохи пізніше.':'Не вдалося. Спробуй ще раз.';};
@@ -2740,7 +2742,7 @@ let CHAL=null;   // виклик, який зараз відкрито за по
 const chalWho=x=>x&&x.players&&(x.players.name||x.players.anon_name)?pname(x):String((x&&x.name)||'друг').toLowerCase();
 const chalLink=x=>x&&x.players&&x.players.public_id?plink(x):esc(chalWho(x));
 const chalName=()=>{const el=document.getElementById('chalName');const v=el&&el.value.trim();if(v&&v.length>=2){if(!TGU)nickSet(v);return v;}return (TGU?[TGU.first_name,TGU.last_name].filter(Boolean).join(' '):'')||myName()||'Друг';};
-function chalLinkWeb(id){return `https://upl-30-0.vercel.app/?c=${id}`;}
+function chalLinkWeb(id){return `${SITE}?c=${id}`;}
 function chalLinkTg(id){return `https://t.me/${TG_BOT}?startapp=c${id}`;}
 async function chalCreate(r){
   const id=chalId();const row={id,device_id:deviceId(),name:chalName().slice(0,40),seed:S.chal.seed,formation:S.formation,year:r.year,mode:S.mode,w:r.W,d:r.D,l:r.L,pts:r.pts,place:r.place,gf:r.gf,ga:r.ga};
@@ -2845,7 +2847,7 @@ function modeName(){return S.format==='anti'?'Лише пам\'ять':MODES[S.m
 function fmtLabel(){const e=eraOf(),era=e==='all'?'':ERAS[e].name+' · ';   // «З 2010-х · »
   if(S.format==='classic')return era;if(S.format==='oneclub')return `${FORMATS.oneclub.name}: ${(DATA.clubs.find(c=>c.c===S.club)||{}).n||''} · `;return FORMATS[S.format].name+' · '+era;}
 // посилання на результат (0.63): /r/<id> — сторінка з превʼю для месенджерів (api/r.js), веде на сайт і відкриває цей склад
-const shareUrl=r=>location.origin.startsWith('http')?location.origin+(r&&r.rowId?'/r/'+r.rowId:'/'):'https://upl-30-0.vercel.app/';
+const shareUrl=r=>location.origin.startsWith('http')?location.origin+(r&&r.rowId?'/r/'+r.rowId:'/'):SITE;
 function shareTextOf(r,noLink,noGrid){   // noGrid: підпис до картки — квадратики вже намальовані на ній
   const [tier,gold]=tierOf(r);const fmt=fmtLabel();
   const head=S.daily?`⚽ 30-0 УПЛ · Драфт дня`:`⚽ 30-0 УПЛ · ${fmt}${S.formation} · ${modeName()}`;
@@ -2924,7 +2926,7 @@ function drawCard(r){   // 0.64: картка в стилі сайту — те�
     g.fillStyle=INK;g.font=`700 28px ${BODY}`;let nm=p.name;while(g.measureText(nm).width>330&&nm.length>4)nm=nm.slice(0,-2)+'…';g.fillText(nm,cx+28,cy);
     if(ratingsOpen()){g.fillStyle='#ff5aa0';g.font=`700 28px ${DISP}`;g.fillText(String(baseR(p)),cx+380,cy);}});
   g.fillStyle=INK;g.font=`700 34px ${DISP}`;g.fillText('Зможеш краще?',80,H-104);   // як «Think you can beat this?» у 38-0
-  g.fillStyle=MUTED;g.font=`500 26px ${BODY}`;g.fillText('upl-30-0.vercel.app',80,H-56);
+  g.fillStyle=MUTED;g.font=`500 26px ${BODY}`;g.fillText(SITE_HOST,80,H-56);
   return c.toDataURL('image/png');
 }
 document.getElementById('chalOpen').onclick=()=>{const b=document.getElementById('chalBox'),t=document.getElementById('chalOpen');b.hidden=!b.hidden;t.classList.toggle('on',!b.hidden);if(!b.hidden){b.scrollIntoView({behavior:'smooth',block:'center'});const n=document.getElementById('chalName');if(n&&!n.hidden&&!n.value)n.focus();}};
@@ -2934,6 +2936,7 @@ const WHATSNEW={v:'0.68',date:'02.10.2026',items:[
   ['restart','Кнопка «Назад»','Угорі — «‹ Назад» і домик. Свайп назад і кнопка «назад» у Telegram ведуть на попередній екран. Якщо склад уже почато, гра перепитає, чи справді вийти.'],
   ['account-group','Ліга чату','На головній — трійка лідерів дня і твій рядок. «Уся таблиця» відкриває всіх учасників: «Сьогодні» і «Залік».'],
   ['soccer-field','iPad','На iPad і вертикально драфт у дві колонки: поле ліворуч, колесо й гравці праворуч.'],
+  ['share-variant','Свій адрес','Гра тепер живе на upl30.com.ua — у картці, викликах і посиланнях на ліги. Старий адрес теж працює.'],
   ['handshake','Назви ліг','Нові назви для ліг з друзями: «Не робіть мені нерви», «Мама кличе додому», «Ворота з портфелів» та інші.']]};
 function openNews(){screenTag('news');const box=document.getElementById('viewBox');document.getElementById('viewTitle').textContent=`Що нового · версія ${WHATSNEW.v}`;
   document.getElementById('viewBody').innerHTML=`<div class="news">${WHATSNEW.items.map(([e,h,d])=>`<div class="ni">${ic(e,'lg')}<div><b>${esc(h)}</b><p>${esc(d)}</p></div></div>`).join('')}</div>`;
@@ -3181,14 +3184,14 @@ function f5Render(){
         <h3>Матчі групи</h3><div class="matches">${r.matches.map(m=>`<div class="m"><span class="op">${esc(f5Label(m.A))} — ${esc(f5Label(m.B))}</span><span></span><span class="sc">${m.ga}:${m.gb}</span></div>`).join('')}</div>`:''}
       <h3>Склади фіналістів</h3><div class="f5grid">${[m0.A,m0.B].map((t,k)=>{const rs=k?m0.rb:m0.ra;return `<div>${f5Head(t)}${f5Pitch(t,{rt:p=>rs.find(x=>x.id===p.id).rt})}</div>`;}).join('')}</div>`;
     document.getElementById('f5Again').onclick=()=>{F5.replay=(F5.replay||0)+1;f5Play();};document.getElementById('f5New').onclick=f5Start;
-    document.getElementById('f5Copy').onclick=()=>{const t=`⚽ 30-0 УПЛ · 5×5\n${r.table?'Фінал: ':''}${f5Label(m0.A)} ${m0.ga}:${m0.gb}${m0.pens?` (пен. ${m0.pens[0]}:${m0.pens[1]})`:''} ${f5Label(m0.B)}\n🏆 ${f5Label(champ)}\n⭐ ${mvp.name} ${mvp.rt.toFixed(1)}`+(ONLINE?`\n\nЗбери свою п'ятірку: https://upl-30-0.vercel.app`:'');
+    document.getElementById('f5Copy').onclick=()=>{const t=`⚽ 30-0 УПЛ · 5×5\n${r.table?'Фінал: ':''}${f5Label(m0.A)} ${m0.ga}:${m0.gb}${m0.pens?` (пен. ${m0.pens[0]}:${m0.pens[1]})`:''} ${f5Label(m0.B)}\n🏆 ${f5Label(champ)}\n⭐ ${mvp.name} ${mvp.rt.toFixed(1)}`+(ONLINE?`\n\nЗбери свою п'ятірку: ${SITE_HOST}`:'');
       const msg=document.getElementById('f5Msg');try{navigator.clipboard.writeText(t).then(()=>{msg.textContent='Скопійовано';},()=>{msg.textContent=t;});}catch(e){msg.textContent=t;}};}
 }
 
 // ---------- 5×5 онлайн: кімната в Supabase, усі пристрої опитують її раз на 2 с і будують однаковий стан із seed + піків
 const F5_SB=(q,opt={})=>fetch(`${SB_URL}/rest/v1/${q}${q.includes('?')?'&':'?'}apikey=${SB_KEY}`,{method:opt.method||'GET',headers:{apikey:SB_KEY,'Content-Type':'application/json',Prefer:opt.prefer||'return=representation'},body:opt.body?JSON.stringify(opt.body):undefined})
   .then(async r=>{const tx=await r.text();let j=null;try{j=tx?JSON.parse(tx):null;}catch(e){}if(!r.ok){const e=new Error((j&&(j.message||j.details))||tx||r.status);e.status=r.status;e.code=j&&j.code;throw e;}return j;});
-function f5Link(id){return `https://upl-30-0.vercel.app/?r=${id}`;}
+function f5Link(id){return `${SITE}?r=${id}`;}
 function f5TgLink(id){return `https://t.me/${TG_BOT}?startapp=r${id}`;}
 function f5StopPoll(){if(F5&&F5.online&&F5.online.timer){clearInterval(F5.online.timer);F5.online.timer=null;}}
 function f5Poll(){if(!F5||!F5.online)return;f5StopPoll();const tick=()=>f5Sync().catch(()=>{});tick();F5.online.timer=setInterval(tick,2000);}

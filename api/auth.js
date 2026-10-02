@@ -40,7 +40,7 @@ module.exports = async (req, res) => {
     u = { id: r0.tg_id, first_name: r0.first_name, last_name: r0.last_name, username: r0.username };
   } else u = b.initData ? checkMiniApp(b.initData, token) : null;   // віджет входу Telegram прибрано (0.67, аудит P2-3)
   if (!u || !u.id) return res.status(401).json({ error: 'bad telegram signature' });
-  const email = `tg-${u.id}@users.upl-30-0.vercel.app`;   // службова адреса, листи туди не надсилаються
+  const email = `tg-${u.id}@users.upl-30-0.vercel.app`;   // службова адреса, листи туди не надсилаються; НЕ міняти на новий домен (0.68) — за нею знаходимо акаунт Telegram
   const name = [u.first_name, u.last_name].filter(Boolean).join(' ') || u.username || 'Гравець';
   const meta = { tg_id: u.id, tg_name: name, tg_username: u.username || null, full_name: name };
   stage = 'create user';

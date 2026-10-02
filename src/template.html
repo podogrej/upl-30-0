@@ -1531,6 +1531,8 @@ document.getElementById('againBtn').onclick=()=>{S.result=null;if(S.league){open
 // ---------- online leaderboard (only on the real site)
 const ONLINE=__ONLINE__;
 // дві бази: основна (гравці) і тестова (лише розробка). Тестова — тільки на адресі тестової гілки Vercel (…-git-test-…vercel.app)
+// 0.68: свій домен (власник купив 02.10). Старий upl-30-0.vercel.app теж відкривається — посилання, що вже в чатах, працюють
+const SITE_HOST='upl30.com.ua',SITE='https://'+SITE_HOST+'/';
 const SB_ENVS={prod:{url:"https://qruhcbwycrnfgzzdbljr.supabase.co",key:"sb_publishable_pEszTOPsCHLgpiPpwB4JKg_SS-X07hY"},
                test:{url:"https://joahjmpupilukdbmbdfl.supabase.co",key:"sb_publishable_OqaI_M6vP6S6D9fxzfwFcQ_TcQx8Rkz"}};
 const SB_ENV=(ONLINE&&SB_ENVS.test.url&&(/-git-test-/.test(location.hostname)||/[?&]db=test\b/.test(location.search)))?'test':'prod';
@@ -1545,7 +1547,7 @@ const VERSION=(document.querySelector('.foot').textContent.match(/версі[я�
 // ---------- Telegram Mini App: якщо сторінку відкрито всередині Telegram, беремо ім'я з профілю, тему і кнопку «Надіслати в чат»
 const TG_BOT='upl30_bot';   // username бота без @
 let TG=null,TGU=null;
-function tgLink(){return TG_BOT?`https://t.me/${TG_BOT}?startapp`:'https://upl-30-0.vercel.app/';}
+function tgLink(){return TG_BOT?`https://t.me/${TG_BOT}?startapp`:SITE;}
 function tgInit(){
   try{TG=window.Telegram&&window.Telegram.WebApp;if(!TG||!TG.initData)return;TG.ready();TG.expand();try{TG.BackButton&&TG.BackButton.onClick(navBack);navUi();}catch(e){}
     TGU=TG.initDataUnsafe&&TG.initDataUnsafe.user||null;
@@ -1707,7 +1709,7 @@ function openBoard(b){BOARD=b||BOARD;screenTag('table');const box=document.getEl
   body.querySelectorAll('[data-board]').forEach(t=>t.onclick=()=>openBoard(t.dataset.board));
   loadBoard(BOARD);}
 async function loadBoard(b){const el=document.getElementById('boardBody');try{const rows=await sbGetFallback([boardQ(b,true,PL_SEL[0],true,true),boardQ(b,true,PL_SEL[0],true),boardQ(b,true,PL_SEL[0]),boardQ(b,true,PL_SEL[1]),boardQ(b,false)]);if(BOARD===b&&el.isConnected)el.innerHTML=boardHtml(rows,b);}catch(e){if(el.isConnected)el.innerHTML='<p class="muted">Таблиця зараз недоступна.</p>';}}
-document.getElementById('boardOpen').onclick=()=>{if(!ONLINE){screenTag('table');document.getElementById('viewTitle').textContent='Таблиця · 11×11';document.getElementById('viewBody').innerHTML='<p class="muted">Таблиця працює на сайті upl-30-0.vercel.app і в Telegram-боті @upl30_bot.</p>';document.getElementById('viewBox').hidden=false;return;}openBoard('main');};
+document.getElementById('boardOpen').onclick=()=>{if(!ONLINE){screenTag('table');document.getElementById('viewTitle').textContent='Таблиця · 11×11';document.getElementById('viewBody').innerHTML='<p class="muted">Таблиця працює на сайті '+SITE_HOST+' і в Telegram-боті @upl30_bot.</p>';document.getElementById('viewBox').hidden=false;return;}openBoard('main');};
 function pitchHtml(formation,xi){const G=pitchGeo(formation);const F=FORMATIONS[formation]||FORMATIONS['4-4-2'];let h=PITCH_MK;F.slots.forEach((sl,i)=>{const p=xi[i];if(!p)return;const pt=G.pts[i];h+=`<div class="slot filled ${GROUP_OF[p.slot]||''}" style="left:${pt.x}%;top:${pt.y}%">${slotInner(p.slot,p,{pill:rPill(numOr0(baseR(p)))})}</div>`;});return `<div class="pitch">${h}</div>`;}
 // дані сезону з бази (xi, tbl — jsonb, їх пише браузер): числа — лише через Number, текст — лише через esc
 const numOr0=x=>Number(x)||0;
@@ -1790,7 +1792,7 @@ function modeName(){return S.format==='anti'?'Лише пам\'ять':MODES[S.m
 function fmtLabel(){const e=eraOf(),era=e==='all'?'':ERAS[e].name+' · ';   // «З 2010-х · »
   if(S.format==='classic')return era;if(S.format==='oneclub')return `${FORMATS.oneclub.name}: ${(DATA.clubs.find(c=>c.c===S.club)||{}).n||''} · `;return FORMATS[S.format].name+' · '+era;}
 // посилання на результат (0.63): /r/<id> — сторінка з превʼю для месенджерів (api/r.js), веде на сайт і відкриває цей склад
-const shareUrl=r=>location.origin.startsWith('http')?location.origin+(r&&r.rowId?'/r/'+r.rowId:'/'):'https://upl-30-0.vercel.app/';
+const shareUrl=r=>location.origin.startsWith('http')?location.origin+(r&&r.rowId?'/r/'+r.rowId:'/'):SITE;
 function shareTextOf(r,noLink,noGrid){   // noGrid: підпис до картки — квадратики вже намальовані на ній
   const [tier,gold]=tierOf(r);const fmt=fmtLabel();
   const head=S.daily?`⚽ 30-0 УПЛ · Драфт дня`:`⚽ 30-0 УПЛ · ${fmt}${S.formation} · ${modeName()}`;
@@ -1869,7 +1871,7 @@ function drawCard(r){   // 0.64: картка в стилі сайту — те�
     g.fillStyle=INK;g.font=`700 28px ${BODY}`;let nm=p.name;while(g.measureText(nm).width>330&&nm.length>4)nm=nm.slice(0,-2)+'…';g.fillText(nm,cx+28,cy);
     if(ratingsOpen()){g.fillStyle='#ff5aa0';g.font=`700 28px ${DISP}`;g.fillText(String(baseR(p)),cx+380,cy);}});
   g.fillStyle=INK;g.font=`700 34px ${DISP}`;g.fillText('Зможеш краще?',80,H-104);   // як «Think you can beat this?» у 38-0
-  g.fillStyle=MUTED;g.font=`500 26px ${BODY}`;g.fillText('upl-30-0.vercel.app',80,H-56);
+  g.fillStyle=MUTED;g.font=`500 26px ${BODY}`;g.fillText(SITE_HOST,80,H-56);
   return c.toDataURL('image/png');
 }
 document.getElementById('chalOpen').onclick=()=>{const b=document.getElementById('chalBox'),t=document.getElementById('chalOpen');b.hidden=!b.hidden;t.classList.toggle('on',!b.hidden);if(!b.hidden){b.scrollIntoView({behavior:'smooth',block:'center'});const n=document.getElementById('chalName');if(n&&!n.hidden&&!n.value)n.focus();}};
@@ -1879,6 +1881,7 @@ const WHATSNEW={v:'0.68',date:'02.10.2026',items:[
   ['restart','Кнопка «Назад»','Угорі — «‹ Назад» і домик. Свайп назад і кнопка «назад» у Telegram ведуть на попередній екран. Якщо склад уже почато, гра перепитає, чи справді вийти.'],
   ['account-group','Ліга чату','На головній — трійка лідерів дня і твій рядок. «Уся таблиця» відкриває всіх учасників: «Сьогодні» і «Залік».'],
   ['soccer-field','iPad','На iPad і вертикально драфт у дві колонки: поле ліворуч, колесо й гравці праворуч.'],
+  ['share-variant','Свій адрес','Гра тепер живе на upl30.com.ua — у картці, викликах і посиланнях на ліги. Старий адрес теж працює.'],
   ['handshake','Назви ліг','Нові назви для ліг з друзями: «Не робіть мені нерви», «Мама кличе додому», «Ворота з портфелів» та інші.']]};
 function openNews(){screenTag('news');const box=document.getElementById('viewBox');document.getElementById('viewTitle').textContent=`Що нового · версія ${WHATSNEW.v}`;
   document.getElementById('viewBody').innerHTML=`<div class="news">${WHATSNEW.items.map(([e,h,d])=>`<div class="ni">${ic(e,'lg')}<div><b>${esc(h)}</b><p>${esc(d)}</p></div></div>`).join('')}</div>`;
