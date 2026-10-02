@@ -370,6 +370,8 @@ a.plink{color:inherit;text-decoration:underline;text-decoration-color:color-mix(
    відступи 8·12·16·24; картки без рамок на напівпрозорому тлі; одна головна кнопка на екран; пояснення — згорнуто */
 :root{--card:color-mix(in srgb,var(--surface) 72%,transparent);--line2:color-mix(in srgb,var(--line) 55%,transparent)}
 button.link0{border:0;background:none;padding:4px;color:var(--ink2);font:500 14px var(--font-body);text-decoration:underline;text-underline-offset:3px}
+/* 0.68: ліга чату на головній — топ-3, «…», свій рядок; «Уся таблиця» — посиланням */
+tr.gap td{padding:0 8px;line-height:1.2;color:var(--muted);text-align:center;border:0}#leagueCard .lgall{align-self:flex-start;padding-left:0}#viewBody tr.th td{font-size:12px;color:var(--muted);font-weight:600}
 .opt,.row0,.daily,.wheel,.hero,.pre,.live,.lb{border-color:transparent;background:var(--card)}
 .opt.on{border-color:transparent;box-shadow:inset 0 0 0 1.5px var(--amber)}
 /* шапка: аватарка + ім'я */
@@ -1897,6 +1899,6 @@ document.getElementById('newsDot').hidden=lsGet('upl30_news_seen')===WHATSNEW.v;
 /*__FIVE__*/
 document.getElementById('f5Open').onclick=f5Start;
 // 0.67 (аудит P2-5): лише те, що беруть тести; drawCard — для перевірки картки, simulate/rerun — для швидкого детермінізму
-window.__dbg={setFmt,oppYear,champModal,drawCard,chalNewGame,DAILY,LEAGUE_CULT,LEAGUE_LEGENDS,openTrophies,renderNewTro,bestPerPlayer,renderWheel,posOpts,eraOf,ptsWord,viewHtml,renderPitch,pitchHtml,f5Pitch,F5_FORMS,cardName,clubShort,simulate,shareTextOf,trCtxNow,trAward,trStore,FORMATIONS,GROUP_OF,DATA,TROPHIES,trEval,PERSON,effRating,get S(){return S;},rerun(seed,year,xi){rnd=mulberry32(seed);const r=simulate(xi||S.slots.map(s=>s.player),MODES[S.mode],year);rnd=Math.random;return {W:r.W,D:r.D,L:r.L,gf:r.gf,ga:r.ga,place:r.place};}};
+window.__dbg={setFmt,leagueLoad,oppYear,champModal,drawCard,chalNewGame,DAILY,LEAGUE_CULT,LEAGUE_LEGENDS,openTrophies,renderNewTro,bestPerPlayer,renderWheel,posOpts,eraOf,ptsWord,viewHtml,renderPitch,pitchHtml,f5Pitch,F5_FORMS,cardName,clubShort,simulate,shareTextOf,trCtxNow,trAward,trStore,FORMATIONS,GROUP_OF,DATA,TROPHIES,trEval,PERSON,effRating,get S(){return S;},rerun(seed,year,xi){rnd=mulberry32(seed);const r=simulate(xi||S.slots.map(s=>s.player),MODES[S.mode],year);rnd=Math.random;return {W:r.W,D:r.D,L:r.L,gf:r.gf,ga:r.ga,place:r.place};}};
 })();
 </script>
