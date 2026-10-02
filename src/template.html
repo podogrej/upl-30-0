@@ -1753,7 +1753,7 @@ const PL_SEL=['players(name,anon_name,public_id)','players(name,anon_name)'];   
 async function sbGetFallback(qs){let err;for(const q of qs){try{return await sbGet(q);}catch(e){err=e;}}throw err;}
 // 0.69 (власник 01.10, варіант A, docs/plan_069_reset.md): загальна таблиця — лише сезони з виходу 0.69; старі лишаються в базі й на сторінках гравців.
 // null — «за весь час» (повернути — один рядок). Таблиця дня, ліги й сторінка гравця — без змін
-const BOARD_FROM='2026-10-02T09:00:00Z',BOARD_FROM_TXT='2 жовтня 2026';
+const BOARD_FROM='2026-10-01T21:00:00Z',BOARD_FROM_TXT='2 жовтня 2026';   // 0.69: 00:00 за Києвом 2 жовтня (баланс 0.68 = 0.69, тож сезони цього дня рахуються)
 function boardQ(b,v39,pl,v60,v61){const B=BOARDS[b];
   const sel='id,device_id,nickname,w,d,l,pts,place,gf,ga,formation,mode,club,created_at'+(v60?',show_r':'')+(v39?',player_id,'+(pl||PL_SEL[1]):'');
   const ord=v39?(B.asc?'pts.asc,place.desc,gd.asc,gf.asc,created_at.asc':'pts.desc,place.asc,gd.desc,gf.desc,created_at.asc'):(B.asc?'pts.asc,place.desc':'pts.desc,place.asc,ga.asc,gf.desc');
@@ -1936,15 +1936,13 @@ function drawCard(r){   // 0.64: картка в стилі сайту — те�
 }
 document.getElementById('chalOpen').onclick=()=>{const b=document.getElementById('chalBox'),t=document.getElementById('chalOpen');b.hidden=!b.hidden;t.classList.toggle('on',!b.hidden);if(!b.hidden){b.scrollIntoView({behavior:'smooth',block:'center'});const n=document.getElementById('chalName');if(n&&!n.hidden&&!n.value)n.focus();}};
 // ---------- «Що нового»: коротко й по-людськи про останню версію (технічний журнал — CHANGELOG.md у репозиторії)
-const WHATSNEW={v:'0.68',date:'02.10.2026',items:[
-  ['trophy','Більше шансів на титул','Сильний склад частіше стає чемпіоном: склад 85 — приблизно кожен сьомий сезон, 88 — майже кожен другий.'],
-  ['star','30-0 — реально','Іноді трапляється «золотий сезон», коли команда в ударі весь рік. Сильний склад може пройти 30-0 — приблизно раз на 700 сезонів, а може й з першої спроби.'],
-  ['restart','Кнопка «Назад»','Угорі — «‹ Назад» і домик. Свайп назад і кнопка «назад» у Telegram ведуть на попередній екран. Якщо склад уже почато, гра перепитає, чи справді вийти.'],
-  ['account-group','Ліга чату','На головній — трійка лідерів дня і твій рядок. «Уся таблиця» відкриває всіх учасників: «Сьогодні» і «Залік».'],
-  ['soccer-field','iPad','На iPad і вертикально драфт у дві колонки: поле ліворуч, колесо й гравці праворуч.'],
-  ['share-variant','Свій адрес','Гра тепер живе на upl30.com.ua — у картці, викликах і посиланнях на ліги. Старий адрес теж працює.'],
-  ['account-circle','Налаштування й вхід','Своя сторінка: налаштування одразу відкриті — ім\'я, назва команди, пошта рядками, як у 38-0. Нове вікно входу: Google або Telegram в один дотик.'],
-  ['handshake','Назви ліг','Нові назви для ліг з друзями: «Не робіть мені нерви», «Мама кличе додому», «Ворота з портфелів» та інші.']]};
+const WHATSNEW={v:'0.69',date:'02.10.2026',items:[
+  ['format-list-numbered','Таблиця з нуля','Загальна таблиця почалась заново з 2 жовтня: новий баланс — нова гонка. Старі сезони лишились на сторінках гравців.'],
+  ['account-group','5×5 повернувся','У «Лізі з друзями» знову можна створити турнір 5×5: кожен збирає п\'ятірку, а коли збір закінчиться, п\'ятірки грають одна з одною. Схеми — плитками, на iPad поле й колесо поруч.'],
+  ['soccer-field','Ліга на iPad','Сторінка ліги 11×11: кнопка й схеми по центру, правила — плашками, кнопка «Поділитися» з підписом.'],
+  ['restart','Є нова версія','Якщо гра відкрита давно, а ми вже випустили нову версію, унизу з\'явиться «Оновити».'],
+  ['share-variant','Telegram на iPhone','Свайп униз по сторінці більше не згортає гру.'],
+  ['handshake','Питання й відповіді','Оновили відповіді: «Один клуб», 5×5, «золотий сезон», вердикт сезону.']]};
 function openNews(){screenTag('news');const box=document.getElementById('viewBox');document.getElementById('viewTitle').textContent=`Що нового · версія ${WHATSNEW.v}`;
   document.getElementById('viewBody').innerHTML=`<div class="news">${WHATSNEW.items.map(([e,h,d])=>`<div class="ni">${ic(e,'lg')}<div><b>${esc(h)}</b><p>${esc(d)}</p></div></div>`).join('')}</div>`;
   box.hidden=false;lsSet('upl30_news_seen',WHATSNEW.v);document.getElementById('newsDot').hidden=true;}
