@@ -3010,7 +3010,7 @@ const WHATSNEW={v:'0.68',date:'02.10.2026',items:[
   ['account-group','Ліга чату','На головній — трійка лідерів дня і твій рядок. «Уся таблиця» відкриває всіх учасників: «Сьогодні» і «Залік».'],
   ['soccer-field','iPad','На iPad і вертикально драфт у дві колонки: поле ліворуч, колесо й гравці праворуч.'],
   ['share-variant','Свій адрес','Гра тепер живе на upl30.com.ua — у картці, викликах і посиланнях на ліги. Старий адрес теж працює.'],
-  ['account-circle','Налаштування й вхід','Своя сторінка: налаштування одразу відкриті — ім'я, назва команди, пошта рядками, як у 38-0. Нове вікно входу: Google або Telegram в один дотик.'],
+  ['account-circle','Налаштування й вхід','Своя сторінка: налаштування одразу відкриті — ім\'я, назва команди, пошта рядками, як у 38-0. Нове вікно входу: Google або Telegram в один дотик.'],
   ['handshake','Назви ліг','Нові назви для ліг з друзями: «Не робіть мені нерви», «Мама кличе додому», «Ворота з портфелів» та інші.']]};
 function openNews(){screenTag('news');const box=document.getElementById('viewBox');document.getElementById('viewTitle').textContent=`Що нового · версія ${WHATSNEW.v}`;
   document.getElementById('viewBody').innerHTML=`<div class="news">${WHATSNEW.items.map(([e,h,d])=>`<div class="ni">${ic(e,'lg')}<div><b>${esc(h)}</b><p>${esc(d)}</p></div></div>`).join('')}</div>`;
