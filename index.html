@@ -442,6 +442,12 @@ header.top{border-bottom-color:var(--line2)}
 .navl{display:flex;align-items:center;gap:8px;min-width:0}#backBtn{padding:7px 14px 7px 6px;font-weight:600}#backBtn .ic{transform:scaleX(-1)}
 header.top.in #homeBtn .hl{display:none}header.top.in #homeBtn{padding-right:8px}
 #acctBtn.avbtn{display:inline-flex;align-items:center;gap:8px;max-width:46vw;padding:3px 12px 3px 3px;border:1px solid var(--line2);border-radius:999px;background:var(--card);box-shadow:none;color:var(--ink);font:600 14px/1 var(--font-body)}
+/* 0.69.5 (власник 02.10, варіант B): «💬 Відгук» поруч з аватаркою; підпис — лише на широкому екрані, на вузькому всередині гри ховається ім'я (лишається аватарка) */
+.hdr-r{display:flex;align-items:center;gap:8px;min-width:0}
+.fbk{display:inline-flex;align-items:center;gap:6px;height:40px;padding:0 12px;border-radius:999px;border:1px solid var(--line2);background:var(--card);color:var(--ink);font:600 14px var(--font-body);white-space:nowrap;flex:none}
+#acctBtn.avbtn{max-width:calc(46vw - 96px)}
+@media (max-width:420px){.fbk .t{display:none}.fbk{padding:0;width:40px;justify-content:center}#acctBtn.avbtn{max-width:calc(46vw - 48px)}}
+@media (max-width:360px){header.top.in #acctBtn .me-n{display:none}header.top.in #acctBtn.avbtn{padding:3px}}
 #acctBtn.avbtn.noname{padding:3px}#acctBtn.avbtn .av{border-radius:999px;flex:none}#acctBtn .me-n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* головна */
 .hero0{padding-block:28px 4px;gap:14px}
@@ -648,7 +654,7 @@ section>h3:first-child,.box h3:first-of-type,#viewBody>h3:first-child,#viewBody>
 <div class="wrap">
   <header class="top">
     <div class="navl"><button class="nav" id="backBtn" hidden><!--i:chevron-right-->Назад</button><button class="nav" id="homeBtn" title="На головну"><!--i:home-outline--><span class="hl">Головна</span></button></div>
-    <button class="nav" id="acctBtn" hidden>Увійти</button>
+    <div class="hdr-r"><button class="fbk" id="fbBtn" title="Відгук розробнику" aria-label="Відгук">💬<span class="t"> Відгук</span></button><button class="nav" id="acctBtn" hidden>Увійти</button></div>
   </header>
 
   <!-- ГОЛОВНА -->
@@ -829,7 +835,7 @@ section>h3:first-child,.box h3:first-of-type,#viewBody>h3:first-child,#viewBody>
 
 <div class="overlay" id="viewBox" hidden><div class="box"><div class="vhead"><h3 id="viewTitle">Склад</h3><button class="ghost" id="viewClose">Закрити</button></div><div id="viewBody"></div></div></div>
 <nav class="foot0" aria-label="Розділи"><a href="#" data-go="dailyBtn">Драфт дня</a><a href="#" data-go="pickOpen">Вибір сезону</a><a href="#" data-go="flOpen">Ліга з друзями</a><a href="#" data-go="boardOpen">Таблиця</a><a href="#" data-go="trBtn">Трофеї</a><a href="#" data-go="howQ">Питання</a><a href="#" data-go="aboutBox">Про гру</a></nav>
-<div class="foot">30-0 УПЛ · <a href="#" id="newsBtn">Що нового у версії 0.69.4<b id="newsDot" hidden></b></a> · <a href="#" id="themeBtn" class="thm" role="switch" aria-checked="false" aria-label="Світла тема"></a> · неофіційний фан-проєкт</div>
+<div class="foot">30-0 УПЛ · <a href="#" id="newsBtn">Що нового у версії 0.69.5<b id="newsDot" hidden></b></a> · <a href="#" id="themeBtn" class="thm" role="switch" aria-checked="false" aria-label="Світла тема"></a> · неофіційний фан-проєкт</div>
 <script src="pool.d63f138d2.js"></script>
 <script>
 (function(){
@@ -1881,6 +1887,9 @@ window.__errCtx=()=>({version:VERSION,screen:SEC_NAME[CUR_SEC],tg:TG&&TG.initDat
 // ---------- Telegram Mini App: якщо сторінку відкрито всередині Telegram, беремо ім'я з профілю, тему і кнопку «Надіслати в чат»
 const TG_BOT='upl30_bot';   // username бота без @
 let TG=null,TGU=null;
+// 0.69.5: «💬 Відгук» — особисті з ботом (api/bot.js приймає будь-яке повідомлення як відгук)
+function openFeedback(){const u=`https://t.me/${TG_BOT}?start=feedback`;screenTag('feedback');try{if(TG&&TG.openTelegramLink){TG.openTelegramLink(u);return;}}catch(e){}window.open(u,'_blank','noopener');}
+document.getElementById('fbBtn').onclick=openFeedback;
 function tgLink(){return TG_BOT?`https://t.me/${TG_BOT}?startapp`:SITE;}
 function tgInit(){
   try{TG=window.Telegram&&window.Telegram.WebApp;if(!TG||!TG.initData)return;TG.ready();TG.expand();try{TG.disableVerticalSwipes&&TG.disableVerticalSwipes();}catch(e){}   // 0.69: свайп униз по сторінці не згортає Mini App (iOS)
@@ -3028,7 +3037,8 @@ function drawCard(r){   // 0.64: картка в стилі сайту — те�
 }
 document.getElementById('chalOpen').onclick=()=>{const b=document.getElementById('chalBox'),t=document.getElementById('chalOpen');b.hidden=!b.hidden;t.classList.toggle('on',!b.hidden);if(!b.hidden){b.scrollIntoView({behavior:'smooth',block:'center'});const n=document.getElementById('chalName');if(n&&!n.hidden&&!n.value)n.focus();}};
 // ---------- «Що нового»: коротко й по-людськи про останню версію (технічний журнал — CHANGELOG.md у репозиторії)
-const WHATSNEW={v:'0.69.4',date:'02.10.2026',items:[
+const WHATSNEW={v:'0.69.5',date:'02.10.2026',items:[
+  ['account-group','💬 Відгук','Угорі з\'явилась кнопка «Відгук»: напиши боту, що подобається, що зламалось або чого бракує. Можна зі скріншотом — усе прочитаємо.'],
   ['account-group','Нова група — без втрат','Додав бота в нову групу вже після драфту дня? Твій сьогоднішній результат одразу з\'явиться і в її табло.'],
   ['trophy','«Два кольори»','Трофей за чемпіонство в режимі «Один клуб» знову можна отримати.'],
   ['format-list-numbered','«Про гру та дані»','Цифри про гру знову охайними плитками.'],

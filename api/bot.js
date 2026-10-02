@@ -31,6 +31,29 @@ const GROUP_HELLO = 'Привіт! Я — 30-0 УПЛ ⚽️\n\nНапишіть
   'таблиця дня оновлюється сама, а ввечері підсумок: хто виграв день і хто відкрив трофеї.\n\n' +
   'Порада: зробіть мене адміністратором (лише «Закріплення повідомлень»), щоб я закріплював табло.';
 
+// 0.69.5 (власник 02.10: «хочу отримувати зворотний зв'язок — кнопка в шапці веде в бота»): кнопка «💬 Відгук» відкриває
+// t.me/upl30_bot?start=feedback; усе, що гравець пише боту в особисті (не команди: текст, скріни, голос), — відгук:
+// пересилаємо власнику (TG_FEEDBACK_CHAT, інакше канал карток TG_CARDS_CHAT) і пишемо в таблицю feedback (sql/v0695_feedback.sql).
+const FEEDBACK_ASK = '💬 Напиши, що подобається, що зламалось або чого не вистачає. Можна кількома повідомленнями й зі скріншотами — я все передам розробнику.';
+async function feedback(m) {
+  const f = m.from || {}, to = L.env('TG_FEEDBACK_CHAT') || L.env('TG_CARDS_CHAT');
+  const name = [f.first_name, f.last_name].filter(Boolean).join(' ').slice(0, 80);
+  const kind = m.photo ? 'photo' : m.voice ? 'voice' : m.video ? 'video' : m.document ? 'document' : m.sticker ? 'sticker' : m.text ? 'text' : 'other';
+  const file = m.photo ? m.photo[m.photo.length - 1].file_id : (m.voice || m.video || m.document || m.sticker || {}).file_id || null;
+  let fwd = false, recent = false;
+  if (to) {
+    try {
+      if (!m.media_group_id || m.caption) await L.tg('sendMessage', { chat_id: to, text: `💬 Відгук: ${name || 'гравець'}${f.username ? ' (@' + f.username + ')' : ''} · id ${f.id}` });
+      const r = await L.tg('forwardMessage', { chat_id: to, from_chat_id: m.chat.id, message_id: m.message_id }); fwd = !!(r && r.ok);
+    } catch (e) { console.error('feedback fwd', e.message); }
+  }
+  try {   // «Дякую» — раз на хвилину (альбом скрінів чи кілька повідомлень поспіль — одна відповідь)
+    recent = ((await L.sb(`feedback?tg_user_id=eq.${f.id}&at=gte.${new Date(Date.now() - 60e3).toISOString()}&select=id&limit=1`)) || []).length > 0;
+    await L.sb('feedback', { method: 'POST', prefer: 'return=minimal', body: { tg_user_id: f.id, name: name || null, username: f.username || null, kind, text: String(m.text || m.caption || '').slice(0, 4000) || null, file_id: file, forwarded: fwd } });
+  } catch (e) { if (e.status !== 404) console.error('feedback db', e.message); }
+  if (!recent) await L.tg('sendMessage', { chat_id: m.chat.id, text: 'Дякую! Передав розробнику 🙌' });
+}
+
 async function league(chat, from) {
   const chat_id = chat.id;
   const exists = (await L.sb(`leagues?chat_id=eq.${chat_id}&select=chat_id`) || []).length > 0;
@@ -89,6 +112,8 @@ module.exports = async (req, res) => {
         // прив'язуємо лише після кнопки «Підтвердити вхід» (callback нижче) від цього ж користувача
         await L.tg('sendMessage', { chat_id: chat.id, text: '🔐 Вхід у 30-0 УПЛ на сайті upl30.com.ua.\n\nНатисни «Підтвердити вхід», лише якщо це ти щойно натиснув «Увійти через Telegram» у своєму браузері. Якщо ні — просто проігноруй це повідомлення.',
           reply_markup: { inline_keyboard: [[{ text: '✅ Підтвердити вхід', callback_data: arg }]] } });
+      } else if (cmd === '/start' && isPrivate && arg === 'feedback') {
+        await L.tg('sendMessage', { chat_id: chat.id, text: FEEDBACK_ASK });
       } else if (cmd === '/start' || cmd === '/help') {
         await L.tg('sendMessage', { chat_id: chat.id, text: isPrivate ? HELLO : GROUP_HELLO, reply_markup: { inline_keyboard: [[playButton(isPrivate)]] } });
       } else if (cmd === '/play') {
@@ -103,6 +128,8 @@ module.exports = async (req, res) => {
         else await L.tg('sendMessage', { chat_id: chat.id, text: await topToday(), parse_mode: 'HTML', reply_markup: { inline_keyboard: [[playButton(isPrivate)]] } });
       }
     }
+    // 0.69.5: будь-яке повідомлення в особистих, що не команда, — відгук
+    if (m && m.chat && m.chat.type === 'private' && !(typeof m.text === 'string' && m.text.trim().startsWith('/')) && !m.migrate_from_chat_id) await feedback(m);
   } catch (e) { console.error(e); }
   res.status(200).send('ok'); // завжди 200, інакше Telegram повторює запит
 };
