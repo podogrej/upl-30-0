@@ -1,6 +1,18 @@
 <title>30-0 УПЛ</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;900&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" media="print" onload="this.media='all'">   <!-- 0.67: шрифти не блокують показ сторінки -->
+<script>/* 0.68 (власник: перед розсилкою — бачити помилки гравців): помилки JavaScript → /api/err (api/err.js, таблиця client_errors).
+   Лише на сайті (не з файлу), лише наші скрипти, до 5 різних помилок за відкриття, однакові — лічильником; відправка пачкою через 3 с або при закритті */
+(function(){if(!/^https?:$/.test(location.protocol))return;var seen={},q=[],t=0,cnt=0;
+  function g(f){try{return f();}catch(e){return null;}}
+  function flush(){t=0;if(!q.length)return;var c=g(function(){return window.__errCtx();})||{};   // версія, екран, Telegram, гравець — дає основний скрипт (він у власній області видимості)
+    var p=JSON.stringify({version:c.version,screen:c.screen,url:(location.pathname+location.search).slice(0,120),tg:c.tg,player:c.player,errors:q.splice(0)});
+    try{if(!(navigator.sendBeacon&&navigator.sendBeacon('/api/err',new Blob([p],{type:'application/json'}))))fetch('/api/err',{method:'POST',headers:{'Content-Type':'application/json'},body:p,keepalive:true}).catch(function(){});}catch(e){}}
+  function add(msg,src,line,col,stack){msg=String(msg||'').slice(0,300);if(!msg||(src&&src.indexOf(location.origin)!==0))return;var k=msg+'|'+line;if(seen[k]){seen[k].n++;return;}
+    if(cnt>=5)return;cnt++;var e={msg:msg,src:String(src||'').slice(0,200),line:line||0,col:col||0,stack:String(stack||'').slice(0,1500),n:1};seen[k]=e;q.push(e);if(!t)t=setTimeout(flush,3000);}
+  addEventListener('error',function(e){if(e&&e.message)add(e.message,e.filename,e.lineno,e.colno,e.error&&e.error.stack);});
+  addEventListener('unhandledrejection',function(e){var r=e&&e.reason;add('promise: '+(r&&r.message||r),'',0,0,r&&r.stack);});
+  addEventListener('pagehide',flush);})();</script>
 <script>(function(){try{localStorage.removeItem('upl30_skin');localStorage.removeItem('upl30_pitch');localStorage.removeItem('upl30_league_title');}catch(e){}/* скіни й варіанти газону прибрано в 0.52 — старі вибори стираємо */try{var t=/[?&]theme=(light|dark)/.exec(location.search);var th=t?t[1]:(localStorage.getItem('upl30_theme')||'dark');if(t)localStorage.setItem('upl30_theme',th);document.documentElement.setAttribute('data-theme',th);}catch(e){document.documentElement.setAttribute('data-theme','dark');}})();</script>
 <style>
 :root{
@@ -1547,6 +1559,7 @@ async function sbTop(day){const q=sel=>`${SB_URL}/rest/v1/daily_results?apikey=$
   let r=await fetch(q('*,'+PL_SEL[0]));if(!r.ok)r=await fetch(q('*,'+PL_SEL[1]));if(!r.ok)r=await fetch(q('*'));if(!r.ok){throw new Error('GET '+r.status+' '+(await r.text()).slice(0,200));}return r.json();}
 async function sbInsert(row){const r=await fetch(`${SB_URL}/rest/v1/daily_results?apikey=${SB_KEY}`,{method:"POST",headers:{apikey:SB_KEY,"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify(row)});if(!r.ok){const t=await r.text();const e=new Error(r.status+" "+t);e.status=r.status;e.body=t;throw e;}}
 const VERSION=(document.querySelector('.foot').textContent.match(/версі[яї] ([\d.]+)/)||[])[1]||'?';
+window.__errCtx=()=>({version:VERSION,screen:SEC_NAME[CUR_SEC],tg:TG&&TG.initData?`${TG.platform||'?'} ${TG.version||''}`:null,player:PLAYER&&PLAYER.public_id||null});   // для звітів про помилки (перший <script>)
 // ---------- Telegram Mini App: якщо сторінку відкрито всередині Telegram, беремо ім'я з профілю, тему і кнопку «Надіслати в чат»
 const TG_BOT='upl30_bot';   // username бота без @
 let TG=null,TGU=null;
