@@ -72,7 +72,7 @@ async function openSite(opts={}){
       return r.abort();
     }catch(e){console.log('route error',u.href,e.message);return r.abort();}});
   if(opts.init)await ctx.addInitScript(opts.init);   // напр. localStorage до завантаження гри
-  const pg=await ctx.newPage();const errs=[];pg.on('pageerror',e=>errs.push(e.message));
+  const pg=await ctx.newPage();const errs=[];pg.on('pageerror',e=>errs.push(e.message));pg.on('dialog',d=>/Склад не збережеться/.test(d.message())?d.accept():d.dismiss());   // 0.68: вихід із початого драфту — тести погоджуються
   await pg.goto(SITE+(opts.query||'')+(opts.hash||''));await pg.waitForTimeout(opts.wait||1000);
   return {b,ctx,pg,errs,log};}
 // драфт 11 гравців (перший доступний гравець, перше підсвічене місце) і сезон без анімації; onSpin — після кожного кручення
