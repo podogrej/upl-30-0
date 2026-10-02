@@ -2,7 +2,8 @@
 // Пише в групу один раз на день і лише якщо хтось грав. Повторний виклик нічого не надсилає.
 // Змінна оточення у Vercel: CRON_SECRET (обов'язкова, інакше 401).
 const L = require('./_league.js');
-const { plUk } = require('./_lib.js');   // спільні функції ліг груп (0.60: одна копія замість трьох)
+const { plUk } = require('./_lib.js');
+const { errDigest } = require('./_errdigest.js');   // спільні функції ліг груп (0.60: одна копія замість трьох)
 const safeEq = (a, b) => { const x = Buffer.from(String(a)), y = Buffer.from(String(b)); return x.length === y.length && require('crypto').timingSafeEqual(x, y); };
 
 module.exports = async (req, res) => {
@@ -61,7 +62,10 @@ module.exports = async (req, res) => {
         weekly.push(chat_id);
       }
     }
-    res.status(200).json({ ok: true, day, summaries: done.length, weekly: weekly.length });
+    // 0.69: зведення помилок гравців власнику (api/_errdigest.js); збій зведення не ламає підсумки ліг
+    let errs = null;
+    try { errs = await errDigest({ sb: L.sb, tg: L.tg, env: L.env, day }); } catch (e) { errs = { error: String(e && e.message || e).slice(0, 120) }; }
+    res.status(200).json({ ok: true, day, summaries: done.length, weekly: weekly.length, errs });
   } catch (e) {
     res.status(500).json({ error: String(e && e.message || e).slice(0, 200) });
   }
