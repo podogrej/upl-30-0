@@ -60,6 +60,7 @@ async function openSite(opts={}){
       if(opts.route&&await opts.route(r,u))return;
       if(u.host==='upl.test'){
         if(u.pathname==='/'||u.pathname==='/index.html')return r.fulfill({status:200,contentType:'text/html; charset=utf-8',body:html});
+        if(/^\/fonts\/[\w-]+\.otf$/.test(u.pathname))return r.fulfill({status:200,contentType:'font/otf',body:fs.readFileSync(path.join(ROOT,u.pathname.slice(1)))});   // 0.69.1: KyivType Sans
         if(/^\/pool\.\w+\.js$/.test(u.pathname))return r.fulfill({status:200,contentType:'text/javascript; charset=utf-8',body:fs.readFileSync(path.join(ROOT,u.pathname.slice(1)))});   // 0.67: база гравців окремим файлом
         const h=opts.api&&opts.api[u.pathname];log.push(m+' '+u.pathname);
         if(h){const x=await h({method:m,url:u,body:req.postData()?JSON.parse(req.postData()):null});return r.fulfill({status:x.status||200,contentType:'application/json',body:JSON.stringify(x.json==null?{}:x.json)});}

@@ -124,7 +124,7 @@ const CAB_COL={season:'#c9a227',squad:'#30D158',players:'#ff9a3d',modes:'#FF453A
 let CAB_CANVAS=null;
 async function ppShareCab(got,n,total){try{await document.fonts.ready;}catch(e){}
   const W=1080,H=1350,c=document.createElement('canvas');c.width=W;c.height=H;CAB_CANVAS=c;const g=c.getContext('2d');
-  const DISP='"Unbounded", "Manrope", sans-serif',BODY='"Manrope", sans-serif',MONO='"JetBrains Mono", monospace';
+  const DISP='"KyivType Sans", sans-serif',BODY=DISP,MONO=DISP;   // 0.69.1: KyivType Sans
   const grd=g.createLinearGradient(0,0,0,H);grd.addColorStop(0,'#0b1430');grd.addColorStop(1,'#24124a');g.fillStyle=grd;g.fillRect(0,0,W,H);
   g.strokeStyle='rgba(255,255,255,.12)';g.lineWidth=4;g.strokeRect(40,40,W-80,H-80);
   g.fillStyle='#ffffff';g.font=`900 40px ${DISP}`;g.fillText('30-0',80,122);const lw=g.measureText('30-0 ').width;g.fillStyle='#ff5aa0';g.fillText('УПЛ',80+lw,122);

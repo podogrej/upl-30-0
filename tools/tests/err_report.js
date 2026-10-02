@@ -9,7 +9,7 @@ const {openSite,makeDB,checker,callApi}=require('./_site.js');
   T.check(got.length===1&&!!e,'звіт надіслано одним запитом ('+got.length+')');
   T.check(e&&e.n===3&&e.line>0,'однакові помилки — один запис, n=3, є рядок');
   T.check((r.errors||[]).some(x=>/^promise: тест-проміс/.test(x.msg)),'необроблений проміс теж у звіті');
-  T.check(/^\d+\.\d+$/.test(r.version||'')&&r.screen==='home','версія й екран: '+r.version+' · '+r.screen);
+  T.check(/^\d+\.\d+(\.\d+)?$/.test(r.version||'')&&r.screen==='home','версія й екран: '+r.version+' · '+r.screen);
   await b.close();
   // сервер: обрізання й поля (без бази — sb кидає помилку, відповідь усе одно 204)
   const h=require('../../api/err.js');const res=await callApi(h,{version:'0.68',errors:[{msg:'x'.repeat(999),line:'12',n:500}]});

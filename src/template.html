@@ -1,6 +1,11 @@
 <title>30-0 УПЛ</title>
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;900&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" media="print" onload="this.media='all'">   <!-- 0.67: шрифти не блокують показ сторінки -->
+<!-- 0.69.1 (власник 02.10, вибір з docs/mockups/design_070/fonts.html): шрифт KyivType Sans (Дмитро Растворцев, айдентика Києва) замість Unbounded/Manrope/JetBrains Mono.
+     Файли OTF без змін (ліцензія забороняє змінювати: fonts/LICENSE.txt), лежать у fonts/ поруч зі сторінкою; display:swap — текст видно одразу -->
+<link rel="preload" href="fonts/KyivTypeSans-Regular.otf" as="font" type="font/otf" crossorigin><link rel="preload" href="fonts/KyivTypeSans-Black.otf" as="font" type="font/otf" crossorigin>
+<style>@font-face{font-family:"KyivType Sans";src:url(fonts/KyivTypeSans-Regular.otf) format("opentype");font-weight:400;font-display:swap}
+@font-face{font-family:"KyivType Sans";src:url(fonts/KyivTypeSans-Medium.otf) format("opentype");font-weight:500;font-display:swap}
+@font-face{font-family:"KyivType Sans";src:url(fonts/KyivTypeSans-Bold.otf) format("opentype");font-weight:600 700;font-display:swap}
+@font-face{font-family:"KyivType Sans";src:url(fonts/KyivTypeSans-Black.otf) format("opentype");font-weight:800 900;font-display:swap}</style>
 <script>/* 0.68 (власник: перед розсилкою — бачити помилки гравців): помилки JavaScript → /api/err (api/err.js, таблиця client_errors).
    Лише на сайті (не з файлу), лише наші скрипти, до 5 різних помилок за відкриття, однакові — лічильником; відправка пачкою через 3 с або при закритті */
 (function(){if(!/^https?:$/.test(location.protocol))return;var seen={},q=[],t=0,cnt=0;
@@ -17,7 +22,7 @@
 <style>
 :root{
   --bg:#f4f5fa; --bg2:#eceef6; --surface:#ffffff; --line:#dfe3ef; --ink:#132346; --ink2:#4a5578; --muted:#8a93b0; --pitch:#2a4fa8; --pitch2:#1d3a80; --chalk:#ffffff; --amber:#6d2abb; --amber2:#d8177b; --win:#12a150; --draw:#c98a00; --loss:#e0263b; --grad:linear-gradient(90deg,#7e24b0,#d41e6f,#ff831e); --gk:#FFCC00; --df:#007AFF; --mf:#34C759; --fw:#FF3B30;
-  --radius:10px; --font-display:"Unbounded","Manrope",system-ui,sans-serif; --font-body:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif; --font-mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  --radius:10px; --font-display:"KyivType Sans",system-ui,sans-serif; --font-body:"KyivType Sans",system-ui,-apple-system,"Segoe UI",sans-serif; --font-mono:"KyivType Sans",system-ui,sans-serif;
 }
 /* 0.64: кольори УПЛ (рішення власника 01.10) — темна = макет A (темно-синій), світла = макет B; рожеві акценти й градієнт UPL.TV (--grad). Макети: docs/mockups/design_upl/v63 */
 /* тема: data-theme ставить скрипт вище завжди (light/dark, за замовчуванням темна), тож окремий @media (prefers-color-scheme) не потрібен */
@@ -445,7 +450,7 @@ ol.how0{margin:8px 0 0;padding-left:20px;color:var(--ink2);display:grid;gap:4px}
 .modes{gap:6px}
 button.stick0{position:sticky;bottom:12px;z-index:5;max-width:none;margin-top:20px;box-shadow:0 8px 24px rgba(0,0,0,.35)}
 /* драфт */
-.dtop{display:grid;gap:6px;margin:14px 0 10px}
+.dtop{display:grid;grid-template-columns:minmax(0,1fr);gap:6px;margin:14px 0 10px}   /* 0.69.1: рядок «схема · режим» стискається (…), а не розпирає екран 320 px */
 .dtop .l1{display:flex;align-items:center;gap:10px}
 .dtop .l1 .ml{flex:1;min-width:0;font:700 15px/1.25 var(--font-body);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}   /* 0.67: широкий Unbounded переносився на 2 рядки на телефоні */
 .dtop .l1 .rd{display:inline-flex;gap:4px}.dtop .l1 .rd i{width:8px;height:8px;border-radius:50%;background:var(--line)}.dtop .l1 .rd i.on{background:var(--amber)}
@@ -515,6 +520,7 @@ table.lbt th.n,table.lbt td.n{width:28px;padding-left:2px;padding-right:2px;text
 .rr .rrn b{display:inline-grid;place-items:center;min-width:28px;height:28px;padding:0 8px;border-radius:99px;background:var(--grad);color:#fff;font:800 16px var(--font-display);box-shadow:0 2px 10px color-mix(in srgb,var(--amber) 45%,transparent)}
 .rr .seg{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;border:0;background:none;padding:0;overflow:visible}
 .rr .seg button,.rr .seg button+button{border:0;border-radius:10px;background:var(--bg);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--amber) 45%,var(--line));color:var(--ink);font-size:14px;font-weight:600;padding:10px 6px;white-space:nowrap}
+@media (max-width:370px){.rr .seg button,.rr .seg button+button{white-space:normal;font-size:13px;padding:9px 3px;line-height:1.15}.rr .lbl{font-size:13px}}   /* 0.69.1: KyivType ширший — на 320 px три кнопки не влазили в рядок (font_tour) */
 .rr .seg button:hover{background:color-mix(in srgb,var(--amber) 14%,var(--bg))}
 /* гравці: позиція · ім'я · (рейтинг); кілька позицій — кнопками праворуч у рядку */
 
@@ -685,7 +691,7 @@ section>h3:first-child,.box h3:first-of-type,#viewBody>h3:first-child,#viewBody>
       <p>Рейтинг кожного гравця рахується за його сезон: голи й асисти за матч, частка зіграних матчів, місце команди, пропущені та сухі матчі для воротарів. Порівняння йде всередині сезону та позиції, тож зірки 90-х і 2020-х стоять поруч.</p>
       <p>Симуляція: кожен матч розігрується як два пуассонівські потоки голів. Атака твоєї команди складається з нападу й півзахисту, оборона з воротаря, захисту й півзахисту. Суперники — «Ліга легенд»: 15 клубів, що зробили історію УПЛ, кожен у сезоні з найсильнішим складом (середній рейтинг 11 найкращих гравців; лише сезони ліги на 16 команд). Домашнє поле дає невелику перевагу; форма гравців коливається від сезону до сезону й від матчу до матчу; гравці одного клубу дають «хімію».</p>
       <p class="muted">Прототип, неофіційний фан-проєкт. Рейтинги розрахункові й ще будуть донастроюватися.</p>
-      <p class="muted" style="font-size:12px">Кілька іконок: Material Design Icons (Pictogrammers, Apache 2.0) і логотип Telegram з Font Awesome Free (CC BY 4.0); решта — емодзі.</p>
+      <p class="muted" style="font-size:12px">Шрифт: KyivType Sans, © Дмитро Растворцев (айдентика Києва). Кілька іконок: Material Design Icons (Pictogrammers, Apache 2.0) і логотип Telegram з Font Awesome Free (CC BY 4.0); решта — емодзі.</p>
     </details>
   </section>
 
@@ -806,7 +812,7 @@ section>h3:first-child,.box h3:first-of-type,#viewBody>h3:first-child,#viewBody>
 
 <div class="overlay" id="viewBox" hidden><div class="box"><div class="vhead"><h3 id="viewTitle">Склад</h3><button class="ghost" id="viewClose">Закрити</button></div><div id="viewBody"></div></div></div>
 <nav class="foot0" aria-label="Розділи"><a href="#" data-go="dailyBtn">Драфт дня</a><a href="#" data-go="pickOpen">Вибір сезону</a><a href="#" data-go="flOpen">Ліга з друзями</a><a href="#" data-go="boardOpen">Таблиця</a><a href="#" data-go="trBtn">Трофеї</a><a href="#" data-go="howQ">Питання</a><a href="#" data-go="aboutBox">Про гру</a></nav>
-<div class="foot">30-0 УПЛ · <a href="#" id="newsBtn">Що нового у версії 0.69<b id="newsDot" hidden></b></a> · <a href="#" id="themeBtn" class="thm" role="switch" aria-checked="false" aria-label="Світла тема"></a> · неофіційний фан-проєкт</div>
+<div class="foot">30-0 УПЛ · <a href="#" id="newsBtn">Що нового у версії 0.69.1<b id="newsDot" hidden></b></a> · <a href="#" id="themeBtn" class="thm" role="switch" aria-checked="false" aria-label="Світла тема"></a> · неофіційний фан-проєкт</div>
 <script id="pool" type="application/json">__POOL__</script>
 <script>
 (function(){
@@ -1882,10 +1888,10 @@ document.getElementById('cardShareBtn').onclick=()=>{const msg=document.getEleme
   CARD_CANVAS.toBlob(bl=>{const f=new File([bl],'30-0-upl.png',{type:'image/png'});navigator.share({files:[f],text:S.result?shareTextOf(S.result,false,true):''}).catch(e=>{if(e&&e.name!=='AbortError')msg.textContent='Не вдалося відкрити меню «Поділитися».';});},'image/png');};
 let CARD_CANVAS=null;
 // 0.67 (власник: «щось не так зі шрифтами»): шрифти картки вантажимо явно — fonts.ready чекає лише ті, що вже є на сторінці
-async function cardFonts(){try{if(document.fonts&&document.fonts.load)await Promise.race([Promise.all(['900 44px Unbounded','700 84px Unbounded','700 28px Manrope','600 28px Manrope','600 24px "JetBrains Mono"'].map(f=>document.fonts.load(f,'30-0 УПЛ Голи'))),new Promise(r=>setTimeout(r,2500))]);}catch(e){}}
+async function cardFonts(){try{if(document.fonts&&document.fonts.load)await Promise.race([Promise.all(['900 44px "KyivType Sans"','700 84px "KyivType Sans"','400 28px "KyivType Sans"','500 28px "KyivType Sans"'].map(f=>document.fonts.load(f,'30-0 УПЛ Голи'))),new Promise(r=>setTimeout(r,2500))]);}catch(e){}}
 function drawCard(r){   // 0.64: картка в стилі сайту — темно-синій фон УПЛ, градієнт UPL.TV (смуга, лого, очки), одна велика плитка з результатом
   const W=1080,H=1350,c=document.createElement('canvas');CARD_CANVAS=c;c.width=W;c.height=H;const g=c.getContext('2d');
-  const DISP='"Unbounded", "Manrope", sans-serif', BODY='"Manrope", sans-serif', MONO='"JetBrains Mono", monospace';
+  const DISP='"KyivType Sans", sans-serif', BODY=DISP, MONO=DISP;   // 0.69.1: один шрифт на все
   const INK='#ffffff',INK2='#b9c2de',MUTED='#8f9bc4',GR=['#9a2bb5','#e0287a','#ff831e'];
   const grad=(x0,x1)=>{const q=g.createLinearGradient(x0,0,x1,0);GR.forEach((c,k)=>q.addColorStop(k/(GR.length-1),c));return q;};
   const rr=(x,y,w,h,rad)=>{g.beginPath();g.roundRect?g.roundRect(x,y,w,h,rad):g.rect(x,y,w,h);};
@@ -1927,7 +1933,8 @@ function drawCard(r){   // 0.64: картка в стилі сайту — те�
 }
 document.getElementById('chalOpen').onclick=()=>{const b=document.getElementById('chalBox'),t=document.getElementById('chalOpen');b.hidden=!b.hidden;t.classList.toggle('on',!b.hidden);if(!b.hidden){b.scrollIntoView({behavior:'smooth',block:'center'});const n=document.getElementById('chalName');if(n&&!n.hidden&&!n.value)n.focus();}};
 // ---------- «Що нового»: коротко й по-людськи про останню версію (технічний журнал — CHANGELOG.md у репозиторії)
-const WHATSNEW={v:'0.69',date:'02.10.2026',items:[
+const WHATSNEW={v:'0.69.1',date:'02.10.2026',items:[
+  ['star','Новий шрифт','Уся гра тепер набрана KyivType Sans — шрифтом Дмитра Растворцева, створеним для айдентики Києва.'],
   ['account-group','5×5 повернувся','У «Лізі з друзями» знову можна створити турнір 5×5: кожен збирає п\'ятірку, а коли збір закінчиться, п\'ятірки грають одна з одною. Схеми — плитками, на iPad поле й колесо поруч.'],
   ['soccer-field','Ліга на iPad','Сторінка ліги 11×11: кнопка й схеми по центру, правила — плашками, кнопка «Поділитися» з підписом.'],
   ['star','Перекрутки видно','Скільки разів ще можна перекрутити колесо — яскравим кружком над кнопками.'],
