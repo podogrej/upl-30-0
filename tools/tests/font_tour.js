@@ -26,6 +26,8 @@ const CHECK=()=>{const W=innerWidth,bad=[];const vis=el=>!el.closest('[hidden]')
   const safe=async(fn)=>{try{await fn();}catch(e){T.check(false,`${w}px: крок не вдався — ${String(e.message).split('\n')[0]}`);}};
   await chk('головна');
   await pg.evaluate(()=>document.querySelectorAll('#s1 details').forEach(d=>d.open=true));await chk('головна: усі «Питання та відповіді» й «Про гру» розгорнуто');
+  // 0.69.2 (власник: «блок про гру зламався»): цифри «Про гру та дані» — плитками 2×2, не злиплим текстом
+  T.check(await pg.evaluate(()=>{const f=document.querySelector('#aboutBox .facts'),k=[...f.children].map(c=>c.getBoundingClientRect());return getComputedStyle(f).display==='grid'&&k.length===4&&Math.abs(k[0].top-k[1].top)<2&&k[2].top>k[0].bottom-1&&getComputedStyle(f.querySelector('.fact')).display==='grid';}),`${w}px · «Про гру та дані»: цифри плитками 2×2`);
   await safe(async()=>{await pg.click('#newsBtn');await chk('«Що нового»');await pg.click('#viewClose');});
   await safe(async()=>{await pg.click('#boardOpen');await chk('загальна таблиця');await pg.click('#viewClose');});
   await safe(async()=>{await pg.click('#trBtn');await chk('трофеї');await pg.click('#homeBtn');});
