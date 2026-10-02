@@ -159,6 +159,8 @@ tr.z-cl td:first-child{box-shadow:inset 3px 0 var(--z-cl)}tr.z-el td:first-child
 .zlg{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:8px;font-size:12px;color:var(--ink2)}.zlg span{display:inline-flex;align-items:center;gap:6px}.zlg span::before{content:"";width:12px;height:12px;border-radius:3px}
 .zlg .z-cl::before{background:var(--z-cl)}.zlg .z-el::before{background:var(--z-el)}.zlg .z-co::before{background:var(--z-co)}.zlg .z-rl::before{background:var(--z-rl)}
 .tbl{overflow-x:auto;overflow-y:hidden}
+/* 0.68 (власник: довгі імена не ламають верстку): ім'я займає решту ширини й обрізається «…», цифри — завжди в один рядок і видні */
+.tbl td.nm{width:100%;max-width:0}.tbl .nmt{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.tbl td.num,.tbl th.num{white-space:nowrap}
 .matches{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:6px}
 .m{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center;padding:6px 8px;border:1px solid var(--line);border-radius:8px;font-size:13px;background:var(--surface)}
 .m .res{width:16px;height:16px;border-radius:5px}   /* 0.66: результат лише кольором */
@@ -2023,7 +2025,7 @@ function boardQ(b,v39,pl,v60,v61){const B=BOARDS[b];
 function boardHtml(rows,b){
   if(!rows.length)return '<p class="muted">Поки що порожньо. Зіграй сезон — він з\'явиться тут після перевірки сервером.</p>';
   const me=deviceId(),pid=PLAYER&&PLAYER.id;
-  return `<div class="tbl clickable"><table><tr><th>#</th><th>Гравець</th><th class="num">В-Н-П</th><th class="num">Г</th><th class="num">О</th></tr>`+rows.map((r,i)=>`<tr data-q="id=eq.${numOr0(r.id)}"${(pid&&r.player_id===pid)||r.device_id===me?' class="me"':''}><td class="num">${i+1}</td><td>${plink(r)}${r.w===30?' <span class="lv lv-p">30-0</span>':''}<div class="sub"><span>${esc(r.formation)}</span>${lvChip(r.mode)}${r.show_r?'<span class="lv lv-r" title="У драфті були відкриті рейтинги гравців">рейтинги відкриті</span>':''}${b==='oneclub'&&r.club?`<span>${esc(CLUBN[r.club]||r.club)}</span>`:''}</div></td><td class="num">${numOr0(r.w)}-${numOr0(r.d)}-${numOr0(r.l)}</td><td class="num">${numOr0(r.gf)}:${numOr0(r.ga)}</td><td class="num"><b>${numOr0(r.pts)}</b></td></tr>`).join('')+`</table></div><p class="muted" style="font-size:12px;margin-top:6px">Лише сезони, перевірені сервером. Рівні очки: місце в сезоні → різниця м'ячів → забиті → хто раніше. Тап по рядку — склад, по імені — сторінка гравця.</p>`;}
+  return `<div class="tbl clickable"><table><tr><th>#</th><th>Гравець</th><th class="num">В-Н-П</th><th class="num">Г</th><th class="num">О</th></tr>`+rows.map((r,i)=>`<tr data-q="id=eq.${numOr0(r.id)}"${(pid&&r.player_id===pid)||r.device_id===me?' class="me"':''}><td class="num">${i+1}</td><td class="nm"><span class="nmt">${plink(r)}${r.w===30?' <span class="lv lv-p">30-0</span>':''}</span><div class="sub"><span>${esc(r.formation)}</span>${lvChip(r.mode)}${r.show_r?'<span class="lv lv-r" title="У драфті були відкриті рейтинги гравців">рейтинги відкриті</span>':''}${b==='oneclub'&&r.club?`<span>${esc(CLUBN[r.club]||r.club)}</span>`:''}</div></td><td class="num">${numOr0(r.w)}-${numOr0(r.d)}-${numOr0(r.l)}</td><td class="num">${numOr0(r.gf)}:${numOr0(r.ga)}</td><td class="num"><b>${numOr0(r.pts)}</b></td></tr>`).join('')+`</table></div><p class="muted" style="font-size:12px;margin-top:6px">Лише сезони, перевірені сервером. Рівні очки: місце в сезоні → різниця м'ячів → забиті → хто раніше. Тап по рядку — склад, по імені — сторінка гравця.</p>`;}
 let BOARD='main';
 function openBoard(b){BOARD=b||BOARD;screenTag('table');const box=document.getElementById('viewBox'),body=document.getElementById('viewBody');document.getElementById('viewTitle').textContent='Таблиця · 11×11';box.hidden=false;
   const bt=Object.entries(BOARDS).filter(([k,v])=>!v.hidden||k===BOARD);   // 0.65: одна вкладка — без ряду вкладок
@@ -2768,7 +2770,7 @@ async function leagueLoad(chat,fresh){try{const r=await _fetch('/api/league?chat
 // 0.68 (власник 02.10, чат на 40 людей): на головній — топ-3 сьогодні (+ свій рядок, якщо нижче) і «Уся таблиця (N)» → екран зі вкладками «Сьогодні» / «Залік»
 const lgMe=r=>(r.u&&PLAYER&&r.u===PLAYER.public_id)||(!r.u&&TGU&&r.name===[TGU.first_name,TGU.last_name].filter(Boolean).join(' '));
 const lgPlace=i=>i<3?`<span class="plc p${i+1}">${i+1}</span>`:i+1;
-const lgToday=(r,i)=>`<tr${lgMe(r)?' class="me"':''}><td>${lgPlace(i)}</td><td>${plink({players:{name:r.name,public_id:r.u}})}</td><td class="num">${r.w}-${r.d}-${r.l}</td><td class="num"><b>${r.pts}</b></td></tr>`;
+const lgToday=(r,i)=>`<tr${lgMe(r)?' class="me"':''}><td>${lgPlace(i)}</td><td class="nm"><span class="nmt">${plink({players:{name:r.name,public_id:r.u}})}</span></td><td class="num">${r.w}-${r.d}-${r.l}</td><td class="num"><b>${r.pts}</b></td></tr>`;
 function renderLeague(){
   const el=document.getElementById('leagueCard');if(!el)return;if(!LEAGUE){el.hidden=true;return;}
   const L=LEAGUE,played=lsGet("upl30_daily_"+DAY),me=L.today.findIndex(lgMe);
@@ -2786,7 +2788,7 @@ function openLeagueAll(tab){if(!LEAGUE)return;const L=LEAGUE,box=document.getEle
   document.getElementById('viewTitle').textContent=`«${L.title}»`;
   const st=L.standings||[];
   const body=tab==='today'?(L.today.length?`<div class="tbl"><table>${L.today.map(lgToday).join('')}</table></div>`:'<p class="muted">Сьогодні ще ніхто не зіграв.</p>')
-    :(st.length?`<div class="tbl"><table><tr class="th"><td></td><td></td><td class="num">днів</td><td class="num">перемог</td></tr>${st.map((s,i)=>`<tr${lgMe(s)?' class="me"':''}><td>${lgPlace(i)}</td><td>${plink({players:{name:s.name,public_id:s.u}})}</td><td class="num">${s.days}</td><td class="num"><b>${s.wins}</b></td></tr>`).join('')}</table></div><p class="muted" style="font-size:13px">Перемога в дні — найбільше очок у драфті дня серед чату. При рівності — більше очок у середньому.</p>`:'<p class="muted">Залік зʼявиться після першого дня.</p>');
+    :(st.length?`<div class="tbl"><table><tr class="th"><td></td><td></td><td class="num">днів</td><td class="num">перемог</td></tr>${st.map((s,i)=>`<tr${lgMe(s)?' class="me"':''}><td>${lgPlace(i)}</td><td class="nm"><span class="nmt">${plink({players:{name:s.name,public_id:s.u}})}</span></td><td class="num">${s.days}</td><td class="num"><b>${s.wins}</b></td></tr>`).join('')}</table></div><p class="muted" style="font-size:13px">Перемога в дні — найбільше очок у драфті дня серед чату. При рівності — більше очок у середньому.</p>`:'<p class="muted">Залік зʼявиться після першого дня.</p>');
   document.getElementById('viewBody').innerHTML=`<div class="seg fl-tabs" id="lgTabs"><button data-t="today"${tab==='today'?' class="on"':''}>Сьогодні</button><button data-t="st"${tab!=='today'?' class="on"':''}>Залік</button></div>${body}`;
   document.querySelectorAll('#lgTabs button').forEach(b=>b.onclick=()=>openLeagueAll(b.dataset.t));
   box.hidden=false;}
@@ -3008,6 +3010,7 @@ const WHATSNEW={v:'0.68',date:'02.10.2026',items:[
   ['account-group','Ліга чату','На головній — трійка лідерів дня і твій рядок. «Уся таблиця» відкриває всіх учасників: «Сьогодні» і «Залік».'],
   ['soccer-field','iPad','На iPad і вертикально драфт у дві колонки: поле ліворуч, колесо й гравці праворуч.'],
   ['share-variant','Свій адрес','Гра тепер живе на upl30.com.ua — у картці, викликах і посиланнях на ліги. Старий адрес теж працює.'],
+  ['account-circle','Налаштування й вхід','Своя сторінка: налаштування одразу відкриті — ім'я, назва команди, пошта рядками, як у 38-0. Нове вікно входу: Google або Telegram в один дотик.'],
   ['handshake','Назви ліг','Нові назви для ліг з друзями: «Не робіть мені нерви», «Мама кличе додому», «Ворота з портфелів» та інші.']]};
 function openNews(){screenTag('news');const box=document.getElementById('viewBox');document.getElementById('viewTitle').textContent=`Що нового · версія ${WHATSNEW.v}`;
   document.getElementById('viewBody').innerHTML=`<div class="news">${WHATSNEW.items.map(([e,h,d])=>`<div class="ni">${ic(e,'lg')}<div><b>${esc(h)}</b><p>${esc(d)}</p></div></div>`).join('')}</div>`;
@@ -3357,7 +3360,7 @@ function f5RenderOnline(el){const f=F5,o=f.online;
 
 document.getElementById('f5Open').onclick=f5Start;
 // 0.67 (аудит P2-5): лише те, що беруть тести; drawCard — для перевірки картки, simulate/rerun — для швидкого детермінізму
-window.__dbg={setFmt,leagueLoad,oppYear,champModal,drawCard,chalNewGame,DAILY,LEAGUE_CULT,LEAGUE_LEGENDS,openTrophies,renderNewTro,bestPerPlayer,renderWheel,posOpts,eraOf,ptsWord,viewHtml,renderPitch,pitchHtml,f5Pitch,F5_FORMS,cardName,clubShort,simulate,shareTextOf,trCtxNow,trAward,trStore,FORMATIONS,GROUP_OF,DATA,TROPHIES,trEval,PERSON,effRating,get S(){return S;},rerun(seed,year,xi){rnd=mulberry32(seed);const r=simulate(xi||S.slots.map(s=>s.player),MODES[S.mode],year);rnd=Math.random;return {W:r.W,D:r.D,L:r.L,gf:r.gf,ga:r.ga,place:r.place};}};
+window.__dbg={setFmt,leagueLoad,boardHtml,oppYear,champModal,drawCard,chalNewGame,DAILY,LEAGUE_CULT,LEAGUE_LEGENDS,openTrophies,renderNewTro,bestPerPlayer,renderWheel,posOpts,eraOf,ptsWord,viewHtml,renderPitch,pitchHtml,f5Pitch,F5_FORMS,cardName,clubShort,simulate,shareTextOf,trCtxNow,trAward,trStore,FORMATIONS,GROUP_OF,DATA,TROPHIES,trEval,PERSON,effRating,get S(){return S;},rerun(seed,year,xi){rnd=mulberry32(seed);const r=simulate(xi||S.slots.map(s=>s.player),MODES[S.mode],year);rnd=Math.random;return {W:r.W,D:r.D,L:r.L,gf:r.gf,ga:r.ga,place:r.place};}};
 })();
 </script>
 
