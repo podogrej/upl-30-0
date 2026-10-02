@@ -510,9 +510,11 @@ table.lbt th.n,table.lbt td.n{width:28px;padding-left:2px;padding-right:2px;text
 .cdot{display:inline-block;width:14px;height:14px;border-radius:50%;margin-right:10px;vertical-align:-1px;background:var(--c1,var(--line));box-shadow:inset 0 0 0 3px var(--c2,transparent),0 0 0 1px rgba(255,255,255,.18)}
 .reel .strip>div.club{display:flex;align-items:center}@media (max-width:600px){.reel .cdot{display:none}}   /* 0.66: на телефоні кружок клубу видно лише в коротких назвах — прибрано */
 .rr{display:grid;gap:6px}
-.rr .lbl{font-size:13px;color:var(--ink2)}.rr .lbl b{color:var(--ink)}
+.rr .lbl{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:14px;font-weight:700;color:var(--ink)}   /* 0.69 (власник: «не дуже видно»): скільки перекрутів лишилось — яскравим кружком */
+.rr .rrn{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:500;color:var(--ink2)}
+.rr .rrn b{display:inline-grid;place-items:center;min-width:28px;height:28px;padding:0 8px;border-radius:99px;background:var(--grad);color:#fff;font:800 16px var(--font-display);box-shadow:0 2px 10px color-mix(in srgb,var(--amber) 45%,transparent)}
 .rr .seg{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;border:0;background:none;padding:0;overflow:visible}
-.rr .seg button,.rr .seg button+button{border:0;border-radius:10px;background:var(--bg);color:var(--ink);font-size:14px;font-weight:600;padding:10px 6px;white-space:nowrap}
+.rr .seg button,.rr .seg button+button{border:0;border-radius:10px;background:var(--bg);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--amber) 45%,var(--line));color:var(--ink);font-size:14px;font-weight:600;padding:10px 6px;white-space:nowrap}
 .rr .seg button:hover{background:color-mix(in srgb,var(--amber) 14%,var(--bg))}
 /* гравці: позиція · ім'я · (рейтинг); кілька позицій — кнопками праворуч у рядку */
 
@@ -720,7 +722,7 @@ section>h3:first-child,.box h3:first-of-type,#viewBody>h3:first-child,#viewBody>
       <div class="wheel" id="wheel" hidden>
         <div class="reels"><div class="reel" id="reelClub"><div class="strip"><div class="club" id="wClub"></div></div></div><div class="reel" id="reelYear"><div class="strip"><div class="season" id="wSeason"></div></div></div></div>
         <p class="why0" id="wHint"></p>
-        <div class="rr" id="rerollRow"><span class="lbl">Перекрутити колесо · залишилось <b id="rerollCnt"></b></span><span class="seg"><button id="rerollClub" title="Інший клуб, той самий сезон">Інший клуб</button><button id="rerollYear" title="Той самий клуб, інший сезон">Інший сезон</button><button id="rerollBtn" title="Інший клуб і сезон">Усе нове</button></span></div>
+        <div class="rr" id="rerollRow"><span class="lbl"><span>Перекрутити колесо</span><span class="rrn">залишилось <b id="rerollCnt"></b></span></span><span class="seg"><button id="rerollClub" title="Інший клуб, той самий сезон">Інший клуб</button><button id="rerollYear" title="Той самий клуб, інший сезон">Інший сезон</button><button id="rerollBtn" title="Інший клуб і сезон">Усе нове</button></span></div>
         <div class="seapick" id="seaPick" hidden role="group" aria-label="Обери сезон"></div>
         <p class="muted" id="antiHint" hidden style="font-size:12px;margin:6px 0 4px">Рейтинги приховані: антисезон грається на пам'ять.</p><div class="lh0" id="sqTop"><span id="sqCnt"></span><label class="rtog" id="showRRow" hidden>Рейтинги <input type="checkbox" id="showR" role="switch"></label></div><div class="squad" id="squad"></div>
       </div>
@@ -1940,6 +1942,7 @@ const WHATSNEW={v:'0.69',date:'02.10.2026',items:[
   ['format-list-numbered','Таблиця з нуля','Загальна таблиця почалась заново з 2 жовтня: новий баланс — нова гонка. Старі сезони лишились на сторінках гравців.'],
   ['account-group','5×5 повернувся','У «Лізі з друзями» знову можна створити турнір 5×5: кожен збирає п\'ятірку, а коли збір закінчиться, п\'ятірки грають одна з одною. Схеми — плитками, на iPad поле й колесо поруч.'],
   ['soccer-field','Ліга на iPad','Сторінка ліги 11×11: кнопка й схеми по центру, правила — плашками, кнопка «Поділитися» з підписом.'],
+  ['star','Перекрутки видно','Скільки разів ще можна перекрутити колесо — яскравим кружком над кнопками.'],
   ['restart','Є нова версія','Якщо гра відкрита давно, а ми вже випустили нову версію, унизу з\'явиться «Оновити».'],
   ['share-variant','Telegram на iPhone','Свайп униз по сторінці більше не згортає гру.'],
   ['handshake','Питання й відповіді','Оновили відповіді: «Один клуб», 5×5, «золотий сезон», вердикт сезону.']]};
