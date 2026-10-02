@@ -163,7 +163,7 @@ async function f5Create(){
   const id=Math.random().toString(36).slice(2,8).toUpperCase(),seed=Math.floor(Math.random()*2147483647),dev=deviceId();
   try{await F5_SB('f5_rooms',{method:'POST',body:{id,seed,mode:F5.mode,max_players:F5.n,host_device:dev}});
     await F5_SB('f5_players',{method:'POST',body:{room_id:id,seat:0,device_id:dev,name:nm.slice(0,24),team:(F5.teams_[0]||'').trim().slice(0,22)||null,form:F5.forms[0]}});
-    F5.online={id,dev,seat:0,host:true};F5.phase='lobby';history.replaceState(null,'',`?r=${id}`);f5Render();f5Poll();}
+    F5.online={id,dev,seat:0,host:true};F5.phase='lobby';history.replaceState(history.state,'',`?r=${id}`);f5Render();f5Poll();}
   catch(e){b.disabled=false;alertF5('Не вдалося створити кімнату: '+String(e.message||e).slice(0,120));}}
 function alertF5(t){const el=document.getElementById('f5');if(el)el.insertAdjacentHTML('afterbegin',`<p class="note" style="margin-top:12px">${esc(t)}</p>`);}
 function f5RoomParam(){const m=/[?&]r=([A-Za-z0-9]{5,12})/.exec(location.search);if(m)return m[1].toUpperCase();const sp=TG&&TG.initDataUnsafe&&TG.initDataUnsafe.start_param||'';const x=/^r([A-Za-z0-9]{5,12})$/.exec(sp);return x?x[1].toUpperCase():null;}

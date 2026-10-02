@@ -16,7 +16,7 @@ const FL_OPT={days:[[1,'1 день'],[3,'3 дні'],[7,'7 днів']],
   ratings:[['show','Видно',''],['memory','На пам\'ять','рейтинги приховані']],
   hours:[[1,'1 година','швидкий турнір'],[3,'3 години',''],[24,'Добу','щоб усі встигли']]};
 let FL=null;   // {view:'list'|'create'|'league', id, data, mine, form, tab, formation}
-const flUrl=id=>{try{const q=new URLSearchParams(location.search);if(id)q.set('l',id);else q.delete('l');const s=q.toString();history.replaceState(null,'',location.pathname+(s?'?'+s:'')+location.hash);}catch(e){}};
+const flUrl=id=>{try{const q=new URLSearchParams(location.search);if(id)q.set('l',id);else q.delete('l');const s=q.toString();history.replaceState(history.state,'',location.pathname+(s?'?'+s:'')+location.hash);}catch(e){}};
 const flLink=id=>`${location.origin&&location.origin!=='null'?location.origin:'https://upl-30-0.vercel.app'}${location.pathname||'/'}?l=${id}`;
 async function flRpc(fn,args){const r=await fetch(`${SB_URL}/rest/v1/rpc/${fn}?apikey=${SB_KEY}`,{method:'POST',headers:{apikey:SB_KEY,'Content-Type':'application/json'},body:JSON.stringify(args)});
   const t=await r.text();if(!r.ok)throw new Error(`${fn} ${r.status}: ${t.slice(0,160)}`);return t?JSON.parse(t):null;}

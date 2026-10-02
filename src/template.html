@@ -375,6 +375,9 @@ button.link0{border:0;background:none;padding:4px;color:var(--ink2);font:500 14p
 /* шапка: аватарка + ім'я */
 header.top{border-bottom-color:var(--line2)}
 #homeBtn{background:none;border-color:transparent;padding-left:2px}
+/* 0.68 (власник 02.10, варіант C): поза головною — «‹ Назад» у рамці + лише домик */
+.navl{display:flex;align-items:center;gap:8px;min-width:0}#backBtn{padding:7px 14px 7px 6px;font-weight:600}#backBtn .ic{transform:scaleX(-1)}
+header.top.in #homeBtn .hl{display:none}header.top.in #homeBtn{padding-right:8px}
 #acctBtn.avbtn{display:inline-flex;align-items:center;gap:8px;max-width:46vw;padding:3px 12px 3px 3px;border:1px solid var(--line2);border-radius:999px;background:var(--card);box-shadow:none;color:var(--ink);font:600 14px/1 var(--font-body)}
 #acctBtn.avbtn.noname{padding:3px}#acctBtn.avbtn .av{border-radius:999px;flex:none}#acctBtn .me-n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* головна */
@@ -577,7 +580,7 @@ section>h3:first-child,.box h3:first-of-type,#viewBody>h3:first-child,#viewBody>
 
 <div class="wrap">
   <header class="top">
-    <button class="nav" id="homeBtn" title="На головну"><!--i:home-outline-->Головна</button>
+    <div class="navl"><button class="nav" id="backBtn" hidden><!--i:chevron-right-->Назад</button><button class="nav" id="homeBtn" title="На головну"><!--i:home-outline--><span class="hl">Головна</span></button></div>
     <button class="nav" id="acctBtn" hidden>Увійти</button>
   </header>
 
@@ -976,14 +979,29 @@ let CUR_SEC=1;
 // Clarity (лише на боєвому адресі, build.py): мітка поточного екрана — щоб записи й теплові карти фільтрувались за екраном (Filters → Custom tags → screen)
 const SEC_NAME={1:'home',2:'draft',3:'result',4:'setup',5:'five',6:'player',7:'friends'};
 function screenTag(name){try{if(window.clarity)window.clarity('set','screen',name);}catch(e){}}
-function go(n){const back=n===1&&CUR_SEC!==1;screenTag(SEC_NAME[n]);if(n!==6&&CUR_SEC===6)ppUrl(null);if(n!==7&&CUR_SEC===7)flUrl(null);[1,2,3,4,5,6,7].forEach(i=>{const el=document.getElementById('s'+i);const was=el.hidden;el.hidden=(i!==n);if(i===n&&(was||CUR_SEC!==n)){el.classList.remove('enter','back');void el.offsetWidth;el.classList.add(back?'back':'enter');}});CUR_SEC=n;window.scrollTo({top:0});}
+function go(n,pop){if(!pop&&n!==CUR_SEC)navPush(n);const back=n===1&&CUR_SEC!==1;screenTag(SEC_NAME[n]);if(n!==6&&CUR_SEC===6)ppUrl(null);if(n!==7&&CUR_SEC===7)flUrl(null);[1,2,3,4,5,6,7].forEach(i=>{const el=document.getElementById('s'+i);const was=el.hidden;el.hidden=(i!==n);if(i===n&&(was||CUR_SEC!==n)){el.classList.remove('enter','back');void el.offsetWidth;el.classList.add(back?'back':'enter');}});CUR_SEC=n;navUi();window.scrollTo({top:0});}
+// 0.68 (власник 02.10, варіант C): «‹ Назад» + домик. Кожен перехід між екранами — запис в історії браузера,
+// тож свайп, кнопка «назад» браузера й Telegram BackButton ведуть на попередній екран. Підсумки сезону заміняють драфт (назад — до налаштувань).
+let NAV_I=0,NAV_FREE=false;   // NAV_I — номер запису історії цієї вкладки (0 — перший екран); NAV_FREE — вихід із драфту вже підтверджено
+function navPush(n){const rep=n===3&&CUR_SEC===2;if(!rep)NAV_I++;try{history[rep?'replaceState':'pushState']({sec:n,i:NAV_I},'',location.href);}catch(e){}}
+function navUi(){const inner=CUR_SEC!==1;document.querySelector('header.top').classList.toggle('in',inner);document.getElementById('backBtn').hidden=!inner;
+  try{if(TG&&TG.BackButton){if(inner)TG.BackButton.show();else TG.BackButton.hide();}}catch(e){}}
+// почато драфт (є гравці, сезону ще немає) — перед виходом питаємо
+const draftBusy=()=>CUR_SEC===2&&!S.result&&!!S.slots&&S.slots.some(x=>x.player);
+function askLeave(ok){if(NAV_FREE||!draftBusy())return ok();const q='Вийти? Склад не збережеться.';
+  try{if(TG&&TG.showConfirm){TG.showConfirm(q,y=>{if(y)ok();});return;}}catch(e){}if(confirm(q))ok();}
+function navBack(){askLeave(()=>{if(NAV_I>0){NAV_FREE=true;history.back();}else go(1);});}
+addEventListener('popstate',e=>{const st=e.state&&e.state.sec?e.state:{sec:1,i:0};
+  if(!NAV_FREE&&st.sec!==2&&draftBusy()){try{history.pushState({sec:2,i:NAV_I},'',location.href);}catch(_){}askLeave(()=>{NAV_FREE=true;history.back();});return;}
+  NAV_FREE=false;NAV_I=st.i||0;go(st.sec,true);});
+try{history.replaceState({sec:1,i:0},'',location.href);}catch(e){}
 screenTag('home');   // стартовий екран (інші — через go())
 document.getElementById('dailyBtn').onclick=()=>{S.league=null;S.daily={practice:!!lsGet("upl30_daily_"+DAY)};S.chal=null;S.challenge=null;setFmt('classic');DAILY.ptr=0;S.formation=DAILY.formation;S.mode="daily";S.result=null;
   S.slots=newSlots(S.formation);S.taken=new Set();S.wheel=null;S.rerolls=MODES.daily.rerolls;S.showR=false;S.moveMode=false;document.getElementById('modeLabel').textContent=`Драфт дня · ${S.formation}`;renderDraft();go(2);};
 renderDailyCard();
 document.getElementById('startBtn').onclick=()=>{if(S.format==='oneclub'&&!S.club){const sel=document.getElementById('clubPick');sel.classList.add('need');sel.focus();return;}S.league=null;S.daily=null;S.result=null;S.challenge=null;S.chal=S.format==='classic'&&S.era==='all'&&!S.pickMode?chalNewGame():null;S.mode=S.pickMode?'pick':S.freeMode||'normal';if(S.format==='anti')S.mode='hardcore';S.slots=newSlots(S.formation);S.taken=new Set();S.wheel=null;S.rerolls=MODES[S.mode].rerolls;S.showR=false;S.moveMode=false;document.getElementById('modeLabel').textContent=fmtLabel()+S.formation+" · "+modeName();renderDraft();go(2);};
 document.getElementById('restartBtn').onclick=()=>{if(S.league){openLeague(S.league.id);return;}go(S.daily||S.challenge?1:4);};
-document.getElementById('homeBtn').onclick=()=>go(1);
+document.getElementById('homeBtn').onclick=()=>askLeave(()=>go(1));document.getElementById('backBtn').onclick=navBack;
 document.getElementById('freeOpen').onclick=()=>go(4);
 document.getElementById('flOpen').onclick=()=>openFriends();
 document.getElementById('pickOpen').onclick=()=>{setFmt('pick');document.getElementById('startBtn').click();};document.getElementById('clubOpen').onclick=()=>{setFmt('oneclub');go(4);document.getElementById('clubPick').focus({preventScroll:true});};   /* 0.67: клуб обирається на екрані налаштувань *//* 0.65: одразу в гру, без екрана режимів */document.getElementById('moveBtn').onclick=()=>{S.moveMode=!S.moveMode;S.move=null;const h=document.getElementById('moveHint');h.hidden=!S.moveMode;h.textContent='Тапни гравця, потім місце, куди його поставити. Підсвічуються лише позиції, де він реально грав.';renderDraft();};
@@ -1527,7 +1545,7 @@ const TG_BOT='upl30_bot';   // username бота без @
 let TG=null,TGU=null;
 function tgLink(){return TG_BOT?`https://t.me/${TG_BOT}?startapp`:'https://upl-30-0.vercel.app/';}
 function tgInit(){
-  try{TG=window.Telegram&&window.Telegram.WebApp;if(!TG||!TG.initData)return;TG.ready();TG.expand();
+  try{TG=window.Telegram&&window.Telegram.WebApp;if(!TG||!TG.initData)return;TG.ready();TG.expand();try{TG.BackButton&&TG.BackButton.onClick(navBack);navUi();}catch(e){}
     TGU=TG.initDataUnsafe&&TG.initDataUnsafe.user||null;
     try{const bg=getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();if(bg){TG.setHeaderColor&&TG.setHeaderColor(bg);TG.setBackgroundColor&&TG.setBackgroundColor(bg);}}catch(e){}
     // iPad: Telegram відкриває Mini App маленьким вікном — просимо повний екран (Bot API 8.0); відступи під кнопки Telegram — з CSS-змінних --tg-*-safe-area-inset-top
