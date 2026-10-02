@@ -518,6 +518,7 @@ button.stick0{position:sticky;bottom:12px;z-index:5;max-width:none;margin-top:20
 .tile0{display:grid;justify-items:start;gap:10px;padding:16px 14px;border:0;border-radius:14px;background:var(--card);color:var(--ink);text-align:left;font-weight:600}
 .tile0 .ic{width:30px;height:30px;background:none;margin:0}.tile0 .ic .ico{width:22px;height:22px}.tile0 b{font-size:15px;line-height:1.25}.tile0 em{font-style:normal;color:var(--amber)}
 .about0{margin-top:0;border:0;background:none;padding:14px 2px;border-radius:0}.about0>summary{font-weight:700}
+.facts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0 14px}.fact{display:grid;gap:2px;justify-items:center;text-align:center;padding:12px 8px;border-radius:12px;background:var(--card)}.fact b{font:900 24px/1.1 var(--font-display);font-variant-numeric:tabular-nums}.fact span{font-size:12.5px;color:var(--ink2)}   /* 0.69.2: стиль цифр «Про гру та дані» випав у чистці 0.67 — плитки 2×2 */
 .foot0{display:flex;flex-wrap:wrap;justify-content:center;gap:6px 16px;margin-top:36px;padding-top:20px;border-top:1px solid var(--line2);font-size:13px}.foot0 a{color:var(--ink2);text-decoration:none}.foot0 a:hover{color:var(--amber)}
 table.lbt th.n,table.lbt td.n{width:28px;padding-left:2px;padding-right:2px;text-align:center}
 .lbfoot{margin-top:6px;font-size:13px}
@@ -828,7 +829,7 @@ section>h3:first-child,.box h3:first-of-type,#viewBody>h3:first-child,#viewBody>
 
 <div class="overlay" id="viewBox" hidden><div class="box"><div class="vhead"><h3 id="viewTitle">Склад</h3><button class="ghost" id="viewClose">Закрити</button></div><div id="viewBody"></div></div></div>
 <nav class="foot0" aria-label="Розділи"><a href="#" data-go="dailyBtn">Драфт дня</a><a href="#" data-go="pickOpen">Вибір сезону</a><a href="#" data-go="flOpen">Ліга з друзями</a><a href="#" data-go="boardOpen">Таблиця</a><a href="#" data-go="trBtn">Трофеї</a><a href="#" data-go="howQ">Питання</a><a href="#" data-go="aboutBox">Про гру</a></nav>
-<div class="foot">30-0 УПЛ · <a href="#" id="newsBtn">Що нового у версії 0.69.1<b id="newsDot" hidden></b></a> · <a href="#" id="themeBtn" class="thm" role="switch" aria-checked="false" aria-label="Світла тема"></a> · неофіційний фан-проєкт</div>
+<div class="foot">30-0 УПЛ · <a href="#" id="newsBtn">Що нового у версії 0.69.2<b id="newsDot" hidden></b></a> · <a href="#" id="themeBtn" class="thm" role="switch" aria-checked="false" aria-label="Світла тема"></a> · неофіційний фан-проєкт</div>
 <script src="pool.d63f138d2.js"></script>
 <script>
 (function(){
@@ -3023,7 +3024,8 @@ function drawCard(r){   // 0.64: картка в стилі сайту — те�
 }
 document.getElementById('chalOpen').onclick=()=>{const b=document.getElementById('chalBox'),t=document.getElementById('chalOpen');b.hidden=!b.hidden;t.classList.toggle('on',!b.hidden);if(!b.hidden){b.scrollIntoView({behavior:'smooth',block:'center'});const n=document.getElementById('chalName');if(n&&!n.hidden&&!n.value)n.focus();}};
 // ---------- «Що нового»: коротко й по-людськи про останню версію (технічний журнал — CHANGELOG.md у репозиторії)
-const WHATSNEW={v:'0.69.1',date:'02.10.2026',items:[
+const WHATSNEW={v:'0.69.2',date:'02.10.2026',items:[
+  ['format-list-numbered','«Про гру та дані»','Цифри про гру знову охайними плитками.'],
   ['star','Новий шрифт','Уся гра тепер набрана KyivType Sans — шрифтом Дмитра Растворцева, створеним для айдентики Києва.'],
   ['account-group','5×5 повернувся','У «Лізі з друзями» знову можна створити турнір 5×5: кожен збирає п\'ятірку, а коли збір закінчиться, п\'ятірки грають одна з одною. Схеми — плитками, на iPad поле й колесо поруч.'],
   ['soccer-field','Ліга на iPad','Сторінка ліги 11×11: кнопка й схеми по центру, правила — плашками, кнопка «Поділитися» з підписом.'],
