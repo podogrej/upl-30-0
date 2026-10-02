@@ -618,6 +618,9 @@ section>h3:first-child,.box h3:first-of-type,#viewBody>h3:first-child,#viewBody>
 .tro:not(.on) .trt b{color:var(--muted)}.tro:not(.on) .trt>span{color:var(--muted)}
 .tro .trt>span{font-size:13px;line-height:1.4}
 #newTro .tro{padding:14px 16px}
+/* 0.69: «Є нова версія» — плашка внизу для вкладки, відкритої до випуску */
+.newver{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:60;display:flex;align-items:center;gap:10px;max-width:calc(100vw - 32px);padding:8px 8px 8px 14px;border-radius:14px;background:var(--surface);color:var(--ink);border:1px solid var(--line);box-shadow:0 6px 24px rgba(0,0,0,.25);font-size:14px;white-space:nowrap}
+.newver button{background:var(--grad);color:#fff;border:0;border-radius:10px;padding:7px 12px;font-weight:700;font-size:14px}
 </style>
 
 <div class="wrap">
@@ -804,6 +807,7 @@ section>h3:first-child,.box h3:first-of-type,#viewBody>h3:first-child,#viewBody>
 </div>
 
 <div class="overlay" id="viewBox" hidden><div class="box"><div class="vhead"><h3 id="viewTitle">Склад</h3><button class="ghost" id="viewClose">Закрити</button></div><div id="viewBody"></div></div></div>
+<div class="newver" id="newVer" hidden><span>Є нова версія</span><button id="newVerGo">Оновити</button></div>
 <nav class="foot0" aria-label="Розділи"><a href="#" data-go="dailyBtn">Драфт дня</a><a href="#" data-go="pickOpen">Вибір сезону</a><a href="#" data-go="flOpen">Ліга з друзями</a><a href="#" data-go="boardOpen">Таблиця</a><a href="#" data-go="trBtn">Трофеї</a><a href="#" data-go="howQ">Питання</a><a href="#" data-go="aboutBox">Про гру</a></nav>
 <div class="foot">30-0 УПЛ · <a href="#" id="newsBtn">Що нового у версії 0.69<b id="newsDot" hidden></b></a> · <a href="#" id="themeBtn" class="thm" role="switch" aria-checked="false" aria-label="Світла тема"></a> · неофіційний фан-проєкт</div>
 <script id="pool" type="application/json">__POOL__</script>
@@ -1589,13 +1593,20 @@ async function sbTop(day){const q=sel=>`${SB_URL}/rest/v1/daily_results?apikey=$
   let r=await fetch(q('*,'+PL_SEL[0]));if(!r.ok)r=await fetch(q('*,'+PL_SEL[1]));if(!r.ok)r=await fetch(q('*'));if(!r.ok){throw new Error('GET '+r.status+' '+(await r.text()).slice(0,200));}return r.json();}
 async function sbInsert(row){const r=await fetch(`${SB_URL}/rest/v1/daily_results?apikey=${SB_KEY}`,{method:"POST",headers:{apikey:SB_KEY,"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify(row)});if(!r.ok){const t=await r.text();const e=new Error(r.status+" "+t);e.status=r.status;e.body=t;throw e;}}
 const VERSION=(document.querySelector('.foot').textContent.match(/версі[яї] ([\d.]+)/)||[])[1]||'?';
+// 0.69: вкладка, відкрита до випуску (Telegram тримає Mini App годинами), — звіряємо номер із version.json не частіше разу на 10 хв, коли гра на екрані
+let VER_AT=0;
+async function verCheck(){if(!ONLINE||document.hidden||Date.now()-VER_AT<6e5)return;VER_AT=Date.now();
+  try{const j=await (await fetch('version.json',{cache:'no-store'})).json();if(j&&j.v&&j.v!==VERSION)document.getElementById('newVer').hidden=false;}catch(e){}}
+document.getElementById('newVerGo').onclick=()=>askLeave(()=>location.reload());
+document.addEventListener('visibilitychange',verCheck);setInterval(verCheck,6e5);
 window.__errCtx=()=>({version:VERSION,screen:SEC_NAME[CUR_SEC],tg:TG&&TG.initData?`${TG.platform||'?'} ${TG.version||''}`:null,player:PLAYER&&PLAYER.public_id||null});   // для звітів про помилки (перший <script>)
 // ---------- Telegram Mini App: якщо сторінку відкрито всередині Telegram, беремо ім'я з профілю, тему і кнопку «Надіслати в чат»
 const TG_BOT='upl30_bot';   // username бота без @
 let TG=null,TGU=null;
 function tgLink(){return TG_BOT?`https://t.me/${TG_BOT}?startapp`:SITE;}
 function tgInit(){
-  try{TG=window.Telegram&&window.Telegram.WebApp;if(!TG||!TG.initData)return;TG.ready();TG.expand();try{TG.BackButton&&TG.BackButton.onClick(navBack);navUi();}catch(e){}
+  try{TG=window.Telegram&&window.Telegram.WebApp;if(!TG||!TG.initData)return;TG.ready();TG.expand();try{TG.disableVerticalSwipes&&TG.disableVerticalSwipes();}catch(e){}   // 0.69: свайп униз по сторінці не згортає Mini App (iOS)
+    try{TG.BackButton&&TG.BackButton.onClick(navBack);navUi();}catch(e){}
     TGU=TG.initDataUnsafe&&TG.initDataUnsafe.user||null;
     try{const bg=getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();if(bg){TG.setHeaderColor&&TG.setHeaderColor(bg);TG.setBackgroundColor&&TG.setBackgroundColor(bg);}}catch(e){}
     // iPad: Telegram відкриває Mini App маленьким вікном — просимо повний екран (Bot API 8.0); відступи під кнопки Telegram — з CSS-змінних --tg-*-safe-area-inset-top

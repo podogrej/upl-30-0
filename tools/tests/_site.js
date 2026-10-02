@@ -68,7 +68,7 @@ async function openSite(opts={}){
         if(!opts.db)return r.abort();log.push(m+' '+u.pathname);const x=opts.db.handle(m,u.href,req.postData(),req.headers());
         return r.fulfill({status:x.status,headers:{...CORS,'content-type':'application/json'},body:x.body});}
       if(u.host==='cdn.jsdelivr.net'&&/supabase/.test(u.pathname))return r.fulfill({contentType:'application/javascript',body:SB_STUB(opts.user,opts.signed)});   // signed: уже ввійшов (0.61)
-      if(u.host==='telegram.org'&&opts.tg)return r.fulfill({contentType:'application/javascript',body:`window.Telegram={WebApp:Object.assign({ready(){},expand(){},openTelegramLink(u){(window.__tgLinks=window.__tgLinks||[]).push(u);},onEvent(){},isVersionAtLeast(){return false;}},${JSON.stringify(opts.tg)})};`});
+      if(u.host==='telegram.org'&&opts.tg)return r.fulfill({contentType:'application/javascript',body:`window.Telegram={WebApp:Object.assign({ready(){},expand(){},openTelegramLink(u){(window.__tgLinks=window.__tgLinks||[]).push(u);},onEvent(){},isVersionAtLeast(){return false;},disableVerticalSwipes(){window.__noSwipe=1;}},${JSON.stringify(opts.tg)})};`});
       if(/fonts\.(googleapis|gstatic)\.com/.test(u.host))return r.continue();
       return r.abort();
     }catch(e){console.log('route error',u.href,e.message);return r.abort();}});

@@ -29,7 +29,10 @@ function flLeft(){try{const p=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/
 // ---------- вхід на екран
 function openFriends(){FL={view:'list',mine:null};screenTag('friends');flUrl(null);go(7);flRender();flLoadMine();}
 function openLeague(id){FL={view:'league',id,data:null,tab:'all',formation:lsGet('upl30_fl_form')||'4-4-2'};screenTag('league');go(7);flUrl(id);flRender();flLoad();}
-async function flLoadMine(){if(!ONLINE||!FL)return;const st=FL;try{st.mine=await playerRpc('fl_mine');}catch(e){st.mine=[];}if(FL===st&&st.view==='list')flRender();}
+// 0.69: збій fl_mine — «Не вдалося завантажити ліги» з повтором, а не «ліг немає» (без входу — просто порожньо)
+const flMineFail=e=>!/login\?|28000/.test(String(e&&e.message||e));
+async function flLoadMine(){if(!ONLINE||!FL)return;const st=FL;st.mineErr=false;try{st.mine=await playerRpc('fl_mine');}catch(e){st.mine=[];st.mineErr=flMineFail(e);}if(FL===st&&st.view==='list')flRender();}
+const flMineErrHtml=id=>`<p class="pp-empty">Не вдалося завантажити ліги. <button class="link0" id="${id}">Спробувати ще</button></p>`;
 async function flLoad(){const st=FL;try{st.data=await flRpc('fl_get',{p_id:st.id});st.err=st.data?'':'Такої ліги немає. Перевір посилання.';}catch(e){st.err=flErr(e);}if(FL===st)flRender();
   if(FL===st&&fl5Due(st.data))fl5Play();}
 // 5×5: збір закінчився, турніру ще немає → сервер розігрує (api/fl5.js) і повертає лігу з результатом
@@ -47,7 +50,7 @@ function flListHtml(){const mine=FL.mine||[];const on=mine.filter(x=>!x.over),of
   return `<div class="fl-hero"><h1>Грати з друзями</h1><p>Кожен збирає свою команду за однаковими правилами. Чия виявиться кращою?</p>
     ${SESSION?`<button class="primary big0" id="flNew">Створити лігу</button>`:`<button class="primary big0" id="flLogin">Увійти, щоб створити лігу</button><p class="muted" style="font-size:13px">Ліги — лише з акаунтом (Google чи Telegram): так результати не загубляться.</p>`}
     <p class="muted" style="font-size:13px;margin-top:8px">Отримав посилання від друга? Просто відкрий його.</p></div>
-    ${FL.mine==null?'<p class="muted">Завантаження…</p>':''}
+    ${FL.mine==null?'<p class="muted">Завантаження…</p>':FL.mineErr?flMineErrHtml('flRetry'):''}
     ${on.length?`<div class="sec0">Грають зараз <span>${on.length}</span></div>${on.map(row).join('')}`:''}
     ${off.length?`<div class="sec0">Завершені <span>${off.length}</span></div>${off.map(row).join('')}`:''}
     <div class="sec0">Як це працює</div>
@@ -94,6 +97,7 @@ function flLeagueHtml(){const d=FL.data;
 // ---------- дії
 function flWire(){const $=id=>document.getElementById(id),el=$('fl');
   if($('flLogin'))$('flLogin').onclick=()=>{ACCT_MSG='';openAcct();};
+  if($('flRetry'))$('flRetry').onclick=()=>{FL.mine=null;flRender();flLoadMine();};
   if($('flNew'))$('flNew').onclick=()=>{const names=flShuffle();FL={view:'create',form:{names,name:names[0],fmt:'11',hours:3,days:3,scoring:'place',tries:3,take:'best',rerolls:1,ratings:'show',era:'all'}};screenTag('league_new');flRender();window.scrollTo({top:0});};
   if($('flBack'))$('flBack').onclick=openFriends;
   el.querySelectorAll('[data-l]').forEach(b=>b.onclick=()=>openLeague(b.dataset.l));
@@ -227,9 +231,10 @@ function fl5Wire($,el){
     st.liveT=setInterval(()=>{if(FL!==st||st.view!=='match5'){clearInterval(st.liveT);return;}st.live++;if(st.live>=n){clearInterval(st.liveT);st.live=null;}flRender();},1400);};
 }
 // «Мої ліги» на своїй сторінці гравця
-async function ppLeagues(){if(!document.getElementById('ppLeagues'))return;let mine=[];try{mine=await playerRpc('fl_mine');}catch(e){}
+async function ppLeagues(){if(!document.getElementById('ppLeagues'))return;let mine=[],err=false;try{mine=await playerRpc('fl_mine');}catch(e){err=flMineFail(e);}
   const el=document.getElementById('ppLeagues');if(!el)return;   // сторінку могли перемалювати, поки чекали відповіді — беремо свіжий блок
-  el.innerHTML=`<div class="pp-sec"><h3>Мої ліги</h3><button class="ghost" id="ppFl">${mine.length?'Усі':'Створити'}</button></div>`+(mine.length?mine.slice(0,5).map(x=>`<button class="fl-row" data-l="${esc(x.id)}">${ic(x.over?'trophy':'account-group')}<span class="t"><b>${esc(x.name)} ${flBadge(x.fmt)}</b><small>${x.fmt==='5'?fl5Sub(x):`${x.over?'завершена':`день ${numOr0(x.day_n)} з ${numOr0(x.days)}`} · ${numOr0(x.members)} ${plUk(x.members,'гравець','гравці','гравців')}`}</small></span>${x.place?`<span class="fl-place"><b>${numOr0(x.place)}</b><small>місце</small></span>`:''}</button>`).join(''):`<p class="pp-empty">Ти ще не граєш у лігах з друзями.</p>`);
-  el.querySelectorAll('[data-l]').forEach(b=>b.onclick=()=>openLeague(b.dataset.l));el.querySelector('#ppFl').onclick=openFriends;}
+  el.innerHTML=`<div class="pp-sec"><h3>Мої ліги</h3><button class="ghost" id="ppFl">${mine.length?'Усі':'Створити'}</button></div>`+(mine.length?mine.slice(0,5).map(x=>`<button class="fl-row" data-l="${esc(x.id)}">${ic(x.over?'trophy':'account-group')}<span class="t"><b>${esc(x.name)} ${flBadge(x.fmt)}</b><small>${x.fmt==='5'?fl5Sub(x):`${x.over?'завершена':`день ${numOr0(x.day_n)} з ${numOr0(x.days)}`} · ${numOr0(x.members)} ${plUk(x.members,'гравець','гравці','гравців')}`}</small></span>${x.place?`<span class="fl-place"><b>${numOr0(x.place)}</b><small>місце</small></span>`:''}</button>`).join(''):(err?flMineErrHtml('ppFlRetry'):`<p class="pp-empty">Ти ще не граєш у лігах з друзями.</p>`));
+  el.querySelectorAll('[data-l]').forEach(b=>b.onclick=()=>openLeague(b.dataset.l));el.querySelector('#ppFl').onclick=openFriends;
+  const r=el.querySelector('#ppFlRetry');if(r)r.onclick=()=>{r.disabled=true;ppLeagues();};}
 // відкрито посилання ?l=… — сторінка ліги
 if(ONLINE){const m=/[?&]l=([a-z2-9]{6})(?:&|$)/.exec(location.search);if(m)setTimeout(()=>openLeague(m[1]),0);}

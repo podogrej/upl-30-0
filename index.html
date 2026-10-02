@@ -634,6 +634,9 @@ section>h3:first-child,.box h3:first-of-type,#viewBody>h3:first-child,#viewBody>
 .tro:not(.on) .trt b{color:var(--muted)}.tro:not(.on) .trt>span{color:var(--muted)}
 .tro .trt>span{font-size:13px;line-height:1.4}
 #newTro .tro{padding:14px 16px}
+/* 0.69: «Є нова версія» — плашка внизу для вкладки, відкритої до випуску */
+.newver{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:60;display:flex;align-items:center;gap:10px;max-width:calc(100vw - 32px);padding:8px 8px 8px 14px;border-radius:14px;background:var(--surface);color:var(--ink);border:1px solid var(--line);box-shadow:0 6px 24px rgba(0,0,0,.25);font-size:14px;white-space:nowrap}
+.newver button{background:var(--grad);color:#fff;border:0;border-radius:10px;padding:7px 12px;font-weight:700;font-size:14px}
 </style>
 
 <div class="wrap">
@@ -665,28 +668,30 @@ section>h3:first-child,.box h3:first-of-type,#viewBody>h3:first-child,#viewBody>
     <button class="row0" id="pickOpen"><!--i:calendar-check--><span><b>Вибір сезону</b><small>Колесо дає клуб, сезон обираєш сам</small></span></button>
     <button class="row0" id="clubOpen"><!--i:shield-star--><span><b>Один клуб</b><small>Найкращий XI одного клубу за всю історію</small></span></button>   <!-- 0.67 (Ігор, Вітя): режим повернуто -->
     <div class="sec0" id="secFriends">З друзями</div>
-    <button class="row0" id="flOpen"><!--i:account-group--><span><b>Ліга з друзями</b><small>Ліга на кілька днів · посилання в чат</small></span></button>
+    <button class="row0" id="flOpen"><!--i:account-group--><span><b>Ліга з друзями</b><small>11×11 чи 5×5 · посилання в чат</small></span></button>
     <!-- 5×5 на одному телефоні сховано з 0.60 (рішення власника 30.09): повернеться разом із 5×5 онлайн; код лишається -->
     <button class="row0" id="f5Open" hidden><!--i:account-group--><span><b>5×5 на одному телефоні</b></span></button>
-    <div class="duo0"><button class="tile0" id="boardOpen"><!--i:format-list-numbered--><b>Таблиця за весь час</b></button><button class="tile0" id="trBtn"><!--i:trophy--><b>Трофеї<em id="trCount"></em></b></button></div>
+    <div class="duo0"><button class="tile0" id="boardOpen"><!--i:format-list-numbered--><b>Загальна таблиця</b></button><button class="tile0" id="trBtn"><!--i:trophy--><b>Трофеї<em id="trCount"></em></b></button></div>
     <div class="stat0" id="stat0"><div class="n" id="stat0n">4 546</div><div class="l" id="stat0l">футболістів у грі</div><div class="s" id="stat0s"></div></div>
     <h2>Питання та відповіді</h2>
     <div class="faq0">
-      <!-- FAQ оновлено в 0.66; звіряти з грою перед кожною версією x.x9 (CLAUDE.md) -->
-      <details id="howQ"><summary>Як грати?</summary><ol class="how0"><li>Тисни «Грати» або «Драфт дня».</li><li>Крути колесо: воно дає клуб і сезон. Тапни гравця й обери позицію — так у складі з'являється один гравець.</li><li>Зібрав 11 — дивись прогноз (рейтинги, xP, шанси) і грай 30 турів.</li></ol></details>
+      <!-- FAQ оновлено в 0.69; звіряти з грою перед кожною версією x.x9 (CLAUDE.md) -->
+      <details id="howQ"><summary>Як грати?</summary><ol class="how0"><li>Тисни «Грати» або «Драфт дня».</li><li>Крути колесо: воно дає клуб і сезон. Тапни гравця — під ним з'являться кнопки позицій, тапни потрібну. Помилився — «Переставити гравців» під полем.</li><li>Зібрав 11 — дивись прогноз (рейтинги, xP, шанси) і грай 30 турів.</li></ol></details>
       <details><summary>Звідки рейтинги гравців?</summary><p>Рейтинг рахується окремо за кожен сезон: голи, асисти, частка зіграних матчів, успіх команди, для оборонців — пропущені й сухі матчі. Гравця порівнюють лише з гравцями його лінії в тому самому сезоні, тому 90-ті й 2020-ті стоять поруч. Зверху — клас гравця: збірна, єврокубки, трансфери й нагороди, тож 90+ мають лише справжні зірки.</p></details>
       <details><summary>Чому рейтинги приховані під час драфту?</summary><p>Щоб грала пам'ять і футбольне чуття, а не таблиця. Рейтинги відкриваються, щойно ти зібрав 11 гравців, — перед сезоном. Хочеш бачити одразу — увімкни в драфті «Рейтинги», але тоді в таблиці поруч з результатом буде позначка «рейтинги відкриті».</p></details>
       <details><summary>Хто суперники?</summary><p>«Ліга легенд»: 15 клубів, що зробили історію УПЛ, — кожен у сезоні з найсильнішим складом. Твоя 11-ка займає 16-те місце в цій лізі й грає з кожним двічі.</p></details>
       <details><summary>Гравець не на своїй позиції</summary><p>Гравця можна поставити на його позиції й на суміжні: атакувального півзахисника — у центр поля, опорного — у центр поля чи в захист, вінгера — крайнім півзахисником свого флангу. Що далі від рідної позиції — то трохи слабше він грає. Рейтинг у картці не змінюється, різниця працює лише в симуляції.</p></details>
       <details><summary>Що таке «хімія»?</summary><p>Троє й більше гравців одного клубу грають разом краще, а якщо вони ще й з одного сезону — ще трохи краще. Бонус видно перед сезоном у рядку «Хімія».</p></details>
-      <details><summary>Що таке xP, шанси й «везіння»?</summary><p>xP — скільки очок твій склад у середньому набирає проти цих суперників за 300 симуляцій сезону. Шанси (чемпіон, Ліга чемпіонів, єврокубки, виліт) — як часто він так фінішує в цих симуляціях. Навіть у скромного складу є крихітний шанс на «сезон-диво». xG — очікувані голи. Везіння — різниця між набраними очками й xP.</p></details>
+      <details><summary>Що таке xP, шанси й «везіння»?</summary><p>xP — скільки очок твій склад у середньому набирає проти цих суперників за 300 симуляцій сезону. Шанси (чемпіон, Ліга чемпіонів, єврокубки, виліт) — як часто він так фінішує в цих симуляціях. Навіть у скромного складу є крихітний шанс на «сезон-диво», а в сильного — рідкісний «золотий сезон», коли все йде в ворота й 30 перемог із 30 стають реальними. xG — очікувані голи. Везіння — різниця між набраними очками й xP. Після сезону поруч із результатом — прогноз місця й вердикт: «Усе за сценарієм», «Краще за прогноз» чи «Провал сезону».</p></details>
       <details><summary>Як визначаються місця при рівності очок?</summary><p>За регламентом УПЛ: очки в особистих зустрічах → різниця м'ячів в особистих → забиті в особистих → загальна різниця м'ячів → загальна кількість забитих. За 1-ше місце — «золотий матч», за інші — жереб.</p></details>
       <details><summary>Що таке «Драфт дня»?</summary><p>Одна схема, одні суперники й одне колесо на день для всіх. Офіційна спроба — одна, результат іде в таблицю дня. Грай щодня, щоб тримати серію: один пропущений день на тиждень прощається (❄️ заморозка).</p></details>
       <details><summary>Що таке «Вибір сезону»?</summary><p>Колесо дає лише клуб, а сезон обираєш сам — з трьох випадкових сезонів цього клубу. Перекручувань немає, назад не повернешся. Результат іде в загальну таблицю з позначкою режиму.</p></details>
-      <details><summary>Як грати з друзями?</summary><p>«Ліга з друзями» на головній: створи лігу, задай правила й надішли посилання в чат. У Telegram-чаті бот @upl30_bot з командою /league веде табло драфту дня для всього чату. А ще — однаковий «Драфт дня» для всіх і кнопка «Кинути виклик другу» після сезону.</p></details>
-      <details><summary>Чи треба реєструватися?</summary><p>Ні. Вхід через Google або Telegram потрібен, щоб трофеї, серія й рекорди не загубилися й були на всіх пристроях. Ім'я одне на всі таблиці — змінити його можна на своїй сторінці (тап по аватарці вгорі). Увійшов і через Google, і через Telegram — гра запитає «Це ти?» і об'єднає історію.</p></details>
+      <details><summary>Що таке «Один клуб»?</summary><p>Обираєш клуб — і збираєш найкращу 11-ку з усіх його сезонів в УПЛ. Колесо дає лише сезони цього клубу. Складність дуже залежить від клубу, тому таблиця окрема.</p></details>
+      <details><summary>Як грати з друзями?</summary><p>«Ліга з друзями» на головній: створи лігу й надішли посилання в чат. 11×11 — ліга на кілька днів: щодня спроба, очки сумуються. 5×5 — турнір: кожен збирає п'ятірку, а коли збір закінчиться, п'ятірки грають одна з одною. У Telegram-чаті бот @upl30_bot з командою /league веде табло драфту дня для всього чату. А ще — однаковий «Драфт дня» для всіх і кнопка «Кинути виклик другу» після сезону. «Поділитися» надсилає картку з результатом прямо в чат.</p></details>
+      <details><summary>Чи треба реєструватися?</summary><p>Ні. Вхід через Google або Telegram потрібен, щоб трофеї, серія й рекорди не загубилися й були на всіх пристроях. Ім'я одне на всі таблиці — змінити його можна в «Налаштуваннях» на своїй сторінці (тап по аватарці вгорі). Увійшов і через Google, і через Telegram — гра запитає «Це ти?» і об'єднає історію.</p></details>
       <details><summary>Що ви збираєте?</summary><p>Анонімно дивимося, куди натискають, щоб покращувати гру (Microsoft Clarity). Якщо увійдеш — ім'я та ідентифікатор входу. Пошту — лише якщо сам впишеш її на своїй сторінці для новин. Паролів не бачимо. Усе своє можна стерти кнопкою «Видалити акаунт» на своїй сторінці. <a href="privacy.html">Докладніше</a>.</p></details>
       <details><summary>Звідки дані?</summary><p>Склади, матчі, голи та підсумкові таблиці всіх сезонів Вищої ліги й Прем'єр-ліги 1992–2026 з відкритих джерел. Асисти — з 2012/13 і за 2021/22, сухі матчі до 2012 — оцінка за командною статистикою (≈).</p></details>
+      <details><summary>Чому таблиця почалась заново?</summary><p>З версії 0.69 змінився баланс симуляції, тож загальна таблиця рахує сезони з дня її запуску. Старі сезони нікуди не зникли — вони на сторінках гравців, разом із трофеями й рекордами.</p></details>
     </div>
     <details class="about0" id="aboutBox"><summary>Про гру та дані</summary>
       <div class="facts">
@@ -698,7 +703,7 @@ section>h3:first-child,.box h3:first-of-type,#viewBody>h3:first-child,#viewBody>
       <p>Рейтинг кожного гравця рахується за його сезон: голи й асисти за матч, частка зіграних матчів, місце команди, пропущені та сухі матчі для воротарів. Порівняння йде всередині сезону та позиції, тож зірки 90-х і 2020-х стоять поруч.</p>
       <p>Симуляція: кожен матч розігрується як два пуассонівські потоки голів. Атака твоєї команди складається з нападу й півзахисту, оборона з воротаря, захисту й півзахисту. Суперники — «Ліга легенд»: 15 клубів, що зробили історію УПЛ, кожен у сезоні з найсильнішим складом (середній рейтинг 11 найкращих гравців; лише сезони ліги на 16 команд). Домашнє поле дає невелику перевагу; форма гравців коливається від сезону до сезону й від матчу до матчу; гравці одного клубу дають «хімію».</p>
       <p class="muted">Прототип, неофіційний фан-проєкт. Рейтинги розрахункові й ще будуть донастроюватися.</p>
-      <p class="muted" style="font-size:12px">Іконки: Material Design Icons (Pictogrammers, Apache 2.0) і Font Awesome Free (CC BY 4.0).</p>
+      <p class="muted" style="font-size:12px">Кілька іконок: Material Design Icons (Pictogrammers, Apache 2.0) і логотип Telegram з Font Awesome Free (CC BY 4.0); решта — емодзі.</p>
     </details>
   </section>
 
@@ -793,7 +798,7 @@ section>h3:first-child,.box h3:first-of-type,#viewBody>h3:first-child,#viewBody>
     <div class="tabs" role="tablist" id="tabs"><button class="tab on" data-tab="t1" role="tab">Огляд</button><button class="tab" data-tab="t2" role="tab">Статистика сезону</button></div>
     <div id="t1" class="tabpane">
       <h3 id="myXiTitle">Твоя 11-ка</h3>
-      <details class="tip pop0"><summary>Що означають цифри</summary><p class="muted cap">Помаранчева цифра — середня оцінка гравця за матчі сезону, під нею — загальний рейтинг.</p></details>
+      <details class="tip pop0"><summary>Що означають цифри</summary><p class="muted cap">Цифра в рамці біля гравця — середня оцінка за матчі сезону, під іменем — загальний рейтинг.</p></details>
       <div class="pitch" id="pitch2"></div>
       <h3>Бомбардири</h3>
       <div id="scorers" class="muted"></div>
@@ -818,6 +823,7 @@ section>h3:first-child,.box h3:first-of-type,#viewBody>h3:first-child,#viewBody>
 </div>
 
 <div class="overlay" id="viewBox" hidden><div class="box"><div class="vhead"><h3 id="viewTitle">Склад</h3><button class="ghost" id="viewClose">Закрити</button></div><div id="viewBody"></div></div></div>
+<div class="newver" id="newVer" hidden><span>Є нова версія</span><button id="newVerGo">Оновити</button></div>
 <nav class="foot0" aria-label="Розділи"><a href="#" data-go="dailyBtn">Драфт дня</a><a href="#" data-go="pickOpen">Вибір сезону</a><a href="#" data-go="flOpen">Ліга з друзями</a><a href="#" data-go="boardOpen">Таблиця</a><a href="#" data-go="trBtn">Трофеї</a><a href="#" data-go="howQ">Питання</a><a href="#" data-go="aboutBox">Про гру</a></nav>
 <div class="foot">30-0 УПЛ · <a href="#" id="newsBtn">Що нового у версії 0.69<b id="newsDot" hidden></b></a> · <a href="#" id="themeBtn" class="thm" role="switch" aria-checked="false" aria-label="Світла тема"></a> · неофіційний фан-проєкт</div>
 <script src="pool.d63f138d2.js"></script>
@@ -1867,13 +1873,20 @@ async function sbTop(day){const q=sel=>`${SB_URL}/rest/v1/daily_results?apikey=$
   let r=await fetch(q('*,'+PL_SEL[0]));if(!r.ok)r=await fetch(q('*,'+PL_SEL[1]));if(!r.ok)r=await fetch(q('*'));if(!r.ok){throw new Error('GET '+r.status+' '+(await r.text()).slice(0,200));}return r.json();}
 async function sbInsert(row){const r=await fetch(`${SB_URL}/rest/v1/daily_results?apikey=${SB_KEY}`,{method:"POST",headers:{apikey:SB_KEY,"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify(row)});if(!r.ok){const t=await r.text();const e=new Error(r.status+" "+t);e.status=r.status;e.body=t;throw e;}}
 const VERSION=(document.querySelector('.foot').textContent.match(/версі[яї] ([\d.]+)/)||[])[1]||'?';
+// 0.69: вкладка, відкрита до випуску (Telegram тримає Mini App годинами), — звіряємо номер із version.json не частіше разу на 10 хв, коли гра на екрані
+let VER_AT=0;
+async function verCheck(){if(!ONLINE||document.hidden||Date.now()-VER_AT<6e5)return;VER_AT=Date.now();
+  try{const j=await (await fetch('version.json',{cache:'no-store'})).json();if(j&&j.v&&j.v!==VERSION)document.getElementById('newVer').hidden=false;}catch(e){}}
+document.getElementById('newVerGo').onclick=()=>askLeave(()=>location.reload());
+document.addEventListener('visibilitychange',verCheck);setInterval(verCheck,6e5);
 window.__errCtx=()=>({version:VERSION,screen:SEC_NAME[CUR_SEC],tg:TG&&TG.initData?`${TG.platform||'?'} ${TG.version||''}`:null,player:PLAYER&&PLAYER.public_id||null});   // для звітів про помилки (перший <script>)
 // ---------- Telegram Mini App: якщо сторінку відкрито всередині Telegram, беремо ім'я з профілю, тему і кнопку «Надіслати в чат»
 const TG_BOT='upl30_bot';   // username бота без @
 let TG=null,TGU=null;
 function tgLink(){return TG_BOT?`https://t.me/${TG_BOT}?startapp`:SITE;}
 function tgInit(){
-  try{TG=window.Telegram&&window.Telegram.WebApp;if(!TG||!TG.initData)return;TG.ready();TG.expand();try{TG.BackButton&&TG.BackButton.onClick(navBack);navUi();}catch(e){}
+  try{TG=window.Telegram&&window.Telegram.WebApp;if(!TG||!TG.initData)return;TG.ready();TG.expand();try{TG.disableVerticalSwipes&&TG.disableVerticalSwipes();}catch(e){}   // 0.69: свайп униз по сторінці не згортає Mini App (iOS)
+    try{TG.BackButton&&TG.BackButton.onClick(navBack);navUi();}catch(e){}
     TGU=TG.initDataUnsafe&&TG.initDataUnsafe.user||null;
     try{const bg=getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();if(bg){TG.setHeaderColor&&TG.setHeaderColor(bg);TG.setBackgroundColor&&TG.setBackgroundColor(bg);}}catch(e){}
     // iPad: Telegram відкриває Mini App маленьким вікном — просимо повний екран (Bot API 8.0); відступи під кнопки Telegram — з CSS-змінних --tg-*-safe-area-inset-top
@@ -2343,7 +2356,10 @@ function flLeft(){try{const p=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/
 // ---------- вхід на екран
 function openFriends(){FL={view:'list',mine:null};screenTag('friends');flUrl(null);go(7);flRender();flLoadMine();}
 function openLeague(id){FL={view:'league',id,data:null,tab:'all',formation:lsGet('upl30_fl_form')||'4-4-2'};screenTag('league');go(7);flUrl(id);flRender();flLoad();}
-async function flLoadMine(){if(!ONLINE||!FL)return;const st=FL;try{st.mine=await playerRpc('fl_mine');}catch(e){st.mine=[];}if(FL===st&&st.view==='list')flRender();}
+// 0.69: збій fl_mine — «Не вдалося завантажити ліги» з повтором, а не «ліг немає» (без входу — просто порожньо)
+const flMineFail=e=>!/login\?|28000/.test(String(e&&e.message||e));
+async function flLoadMine(){if(!ONLINE||!FL)return;const st=FL;st.mineErr=false;try{st.mine=await playerRpc('fl_mine');}catch(e){st.mine=[];st.mineErr=flMineFail(e);}if(FL===st&&st.view==='list')flRender();}
+const flMineErrHtml=id=>`<p class="pp-empty">Не вдалося завантажити ліги. <button class="link0" id="${id}">Спробувати ще</button></p>`;
 async function flLoad(){const st=FL;try{st.data=await flRpc('fl_get',{p_id:st.id});st.err=st.data?'':'Такої ліги немає. Перевір посилання.';}catch(e){st.err=flErr(e);}if(FL===st)flRender();
   if(FL===st&&fl5Due(st.data))fl5Play();}
 // 5×5: збір закінчився, турніру ще немає → сервер розігрує (api/fl5.js) і повертає лігу з результатом
@@ -2361,7 +2377,7 @@ function flListHtml(){const mine=FL.mine||[];const on=mine.filter(x=>!x.over),of
   return `<div class="fl-hero"><h1>Грати з друзями</h1><p>Кожен збирає свою команду за однаковими правилами. Чия виявиться кращою?</p>
     ${SESSION?`<button class="primary big0" id="flNew">Створити лігу</button>`:`<button class="primary big0" id="flLogin">Увійти, щоб створити лігу</button><p class="muted" style="font-size:13px">Ліги — лише з акаунтом (Google чи Telegram): так результати не загубляться.</p>`}
     <p class="muted" style="font-size:13px;margin-top:8px">Отримав посилання від друга? Просто відкрий його.</p></div>
-    ${FL.mine==null?'<p class="muted">Завантаження…</p>':''}
+    ${FL.mine==null?'<p class="muted">Завантаження…</p>':FL.mineErr?flMineErrHtml('flRetry'):''}
     ${on.length?`<div class="sec0">Грають зараз <span>${on.length}</span></div>${on.map(row).join('')}`:''}
     ${off.length?`<div class="sec0">Завершені <span>${off.length}</span></div>${off.map(row).join('')}`:''}
     <div class="sec0">Як це працює</div>
@@ -2408,6 +2424,7 @@ function flLeagueHtml(){const d=FL.data;
 // ---------- дії
 function flWire(){const $=id=>document.getElementById(id),el=$('fl');
   if($('flLogin'))$('flLogin').onclick=()=>{ACCT_MSG='';openAcct();};
+  if($('flRetry'))$('flRetry').onclick=()=>{FL.mine=null;flRender();flLoadMine();};
   if($('flNew'))$('flNew').onclick=()=>{const names=flShuffle();FL={view:'create',form:{names,name:names[0],fmt:'11',hours:3,days:3,scoring:'place',tries:3,take:'best',rerolls:1,ratings:'show',era:'all'}};screenTag('league_new');flRender();window.scrollTo({top:0});};
   if($('flBack'))$('flBack').onclick=openFriends;
   el.querySelectorAll('[data-l]').forEach(b=>b.onclick=()=>openLeague(b.dataset.l));
@@ -2541,10 +2558,11 @@ function fl5Wire($,el){
     st.liveT=setInterval(()=>{if(FL!==st||st.view!=='match5'){clearInterval(st.liveT);return;}st.live++;if(st.live>=n){clearInterval(st.liveT);st.live=null;}flRender();},1400);};
 }
 // «Мої ліги» на своїй сторінці гравця
-async function ppLeagues(){if(!document.getElementById('ppLeagues'))return;let mine=[];try{mine=await playerRpc('fl_mine');}catch(e){}
+async function ppLeagues(){if(!document.getElementById('ppLeagues'))return;let mine=[],err=false;try{mine=await playerRpc('fl_mine');}catch(e){err=flMineFail(e);}
   const el=document.getElementById('ppLeagues');if(!el)return;   // сторінку могли перемалювати, поки чекали відповіді — беремо свіжий блок
-  el.innerHTML=`<div class="pp-sec"><h3>Мої ліги</h3><button class="ghost" id="ppFl">${mine.length?'Усі':'Створити'}</button></div>`+(mine.length?mine.slice(0,5).map(x=>`<button class="fl-row" data-l="${esc(x.id)}">${ic(x.over?'trophy':'account-group')}<span class="t"><b>${esc(x.name)} ${flBadge(x.fmt)}</b><small>${x.fmt==='5'?fl5Sub(x):`${x.over?'завершена':`день ${numOr0(x.day_n)} з ${numOr0(x.days)}`} · ${numOr0(x.members)} ${plUk(x.members,'гравець','гравці','гравців')}`}</small></span>${x.place?`<span class="fl-place"><b>${numOr0(x.place)}</b><small>місце</small></span>`:''}</button>`).join(''):`<p class="pp-empty">Ти ще не граєш у лігах з друзями.</p>`);
-  el.querySelectorAll('[data-l]').forEach(b=>b.onclick=()=>openLeague(b.dataset.l));el.querySelector('#ppFl').onclick=openFriends;}
+  el.innerHTML=`<div class="pp-sec"><h3>Мої ліги</h3><button class="ghost" id="ppFl">${mine.length?'Усі':'Створити'}</button></div>`+(mine.length?mine.slice(0,5).map(x=>`<button class="fl-row" data-l="${esc(x.id)}">${ic(x.over?'trophy':'account-group')}<span class="t"><b>${esc(x.name)} ${flBadge(x.fmt)}</b><small>${x.fmt==='5'?fl5Sub(x):`${x.over?'завершена':`день ${numOr0(x.day_n)} з ${numOr0(x.days)}`} · ${numOr0(x.members)} ${plUk(x.members,'гравець','гравці','гравців')}`}</small></span>${x.place?`<span class="fl-place"><b>${numOr0(x.place)}</b><small>місце</small></span>`:''}</button>`).join(''):(err?flMineErrHtml('ppFlRetry'):`<p class="pp-empty">Ти ще не граєш у лігах з друзями.</p>`));
+  el.querySelectorAll('[data-l]').forEach(b=>b.onclick=()=>openLeague(b.dataset.l));el.querySelector('#ppFl').onclick=openFriends;
+  const r=el.querySelector('#ppFlRetry');if(r)r.onclick=()=>{r.disabled=true;ppLeagues();};}
 // відкрито посилання ?l=… — сторінка ліги
 if(ONLINE){const m=/[?&]l=([a-z2-9]{6})(?:&|$)/.exec(location.search);if(m)setTimeout(()=>openLeague(m[1]),0);}
 
