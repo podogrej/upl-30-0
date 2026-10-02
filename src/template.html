@@ -862,7 +862,7 @@ const REF_A=5.6, REF_D=7.3, FE=0.5;
 // з 0.57 ще на 2.3 нижче (78.26/77.18 → 75.96/74.88): рейтинги v2 (стиснення понад 82 + клас) — середній рейтинг складу бота −2.5, очки ті самі (замір 0.57)
 // 0.65 (власник 01.10, орієнтир — 38-0): склад 85 без хімії — чемпіон ≈10–15% сезонів; refA/refD +2.89 (було 75.96/74.88), антисезон — на старих ref (antiRefA/D)
 // 0.68 (власник 02.10, скрин: склад 84.5 → титул 3%): refA/refD −1 (71.6/70.6 → 70.6/69.6) — склад 85 ≈15% титулів
-const P={betaA:0.048,betaD:0.062,refA:70.6,refD:69.6,antiRefA:73.66,antiRefD:72.58,classFloorA:0.85,classCapD:1.35,capA:4.0,floorD:0.25,floorA:0.33,capD:3.0,home:0.12,formSd:0.15,balPen:0.01,seasonTeamSd:2.5,seasonPlayerSd:2.5,seasonFormCap:10,miracleP:0.08,miracleTo:91};
+const P={betaA:0.048,betaD:0.062,refA:70.6,refD:69.6,goldP:0.006,goldA:3,antiRefA:73.66,antiRefD:72.58,classFloorA:0.85,classCapD:1.35,capA:4.0,floorD:0.25,floorA:0.33,capD:3.0,home:0.12,formSd:0.15,balPen:0.01,seasonTeamSd:2.5,seasonPlayerSd:2.5,seasonFormCap:10,miracleP:0.08,miracleTo:91};
 // форма сезону: у кожного гравця свій рік (σ seasonPlayerSd), плюс спільна форма команди (σ seasonTeamSd; це не «хімія» клубу — chemOf); навіть зірка може провалити сезон, а середній склад — вистрілити
 // 0.66 (власник: «у будь-якого складу має бути хоч якийсь шанс»): «сезон-диво» — з імовірністю miracleP уся команда грає ближче до рівня miracleTo
 // (слабкий склад — на +15…+19, сильний — щонайменше +4×0.6); в антисезоні дива немає. Межа форми гравця вгору розширюється на величину дива.
@@ -1348,6 +1348,9 @@ function simulate(xi0,mode,seasonYear,light){
   const form=seasonForm(xi0);const xi=xi0.map(x=>({...x,r0:x.r,r:Math.max(40,Math.min(99,x.r+(form[x.id]||0)))}));   // з 0.66 форма (і «сезон-диво») входить і в xP та шанси перед сезоном — інакше слабкий склад бачив би 0%
   const y=seasonYear||oppYear();const sea=seasonOf(y);
   const t=teamIndices(xi), u=userMult(t,S.format==='anti'?{...mode,star:0}:mode);
+  // 0.68 (власник: 30-0 має бути «1 з 500–700», не 1 з 2000): рідкісний «золотий сезон» (goldP) — команда грає без стелі сили (×goldA атака, ÷goldA пропущені).
+  // Склад 85: 30-0 ≈1 з 700, сильніший — частіше, слабкий — рідко; на шанс титулу майже не впливає (+0,6%). Не в антисезоні
+  if(S.format!=='anti'&&rnd()<P.goldP){u.att*=P.goldA;u.def/=P.goldA;}
   const last=sea.teams[sea.teams.length-1];
   const teams=[{id:"USER",n:S.teamName||"Твоя 11-ка",att:u.att,def:u.def}];
   for(const tm of sea.teams){if(tm===last)continue;teams.push({id:tm[0],n:tm[1],att:Math.exp(mode.damp*Math.log(tm[3])),def:Math.exp(mode.damp*Math.log(tm[4]))});}
