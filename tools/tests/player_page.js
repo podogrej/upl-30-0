@@ -1,11 +1,12 @@
 // Сторінка гравця (0.59): своя без входу (попередження), своя з входом (Telegram), чужа (?u=… і тап по імені в таблиці),
 // правила імені (лише латиниця) й повідомлення (довжина, символи, краї, мат, зайняте, «раз на 30 днів»), поле вводу (малі літери, «_»), шафа трофеїв (рідкість, фільтр, «нещодавні»),
 // видалення акаунта, ім'я в табло ліги з профілю гравця (api/league.js), список мату однаковий у трьох місцях.
-// База — у пам'яті (_site.js), SQL-частину перевіряє bash tools/tests/setup.sh. Знімки 390 px: docs/mockups/player_page_059_*.png
+// База — у пам'яті (_site.js), SQL-частину перевіряє bash tools/tests/setup.sh. Знімки 390 px: tools/tests/out/player_page_059_*.png
 // Запуск з кореня: node tools/tests/player_page.js
 const path=require('path'),fs=require('fs');const {ROOT,launch,makeDB,callApi,openSite,checker}=require('./_site.js');
 const openSet=p=>p.evaluate(()=>{const d=document.getElementById('ppSet');if(d)d.open=true;});   // 0.62: «Налаштування» згорнуто
-const OUT=path.join(ROOT,'tools','tests','out'),MOCK=path.join(ROOT,'docs','mockups');fs.mkdirSync(OUT,{recursive:true});
+const OUT=path.join(ROOT,'tools','tests','out'),MOCK=OUT;   // 0.67.1: знімки — у tools/tests/out (раніше перезаписували docs/mockups при кожному прогоні)
+fs.mkdirSync(OUT,{recursive:true});
 process.env.SUPABASE_SERVICE_KEY='svc';
 const T=checker('сторінка гравця');
 // ---------- список мату: data/names/blocklist.txt = sql/v059_player_page.sql = sql/v059_name_conflicts.sql = src/account.js
