@@ -813,7 +813,7 @@ section>h3:first-child,.box h3:first-of-type,#viewBody>h3:first-child,#viewBody>
 
 <div class="overlay" id="viewBox" hidden><div class="box"><div class="vhead"><h3 id="viewTitle">Склад</h3><button class="ghost" id="viewClose">Закрити</button></div><div id="viewBody"></div></div></div>
 <nav class="foot0" aria-label="Розділи"><a href="#" data-go="dailyBtn">Драфт дня</a><a href="#" data-go="pickOpen">Вибір сезону</a><a href="#" data-go="flOpen">Ліга з друзями</a><a href="#" data-go="boardOpen">Таблиця</a><a href="#" data-go="trBtn">Трофеї</a><a href="#" data-go="howQ">Питання</a><a href="#" data-go="aboutBox">Про гру</a></nav>
-<div class="foot">30-0 УПЛ · <a href="#" id="newsBtn">Що нового у версії 0.69.2<b id="newsDot" hidden></b></a> · <a href="#" id="themeBtn" class="thm" role="switch" aria-checked="false" aria-label="Світла тема"></a> · неофіційний фан-проєкт</div>
+<div class="foot">30-0 УПЛ · <a href="#" id="newsBtn">Що нового у версії 0.69.3<b id="newsDot" hidden></b></a> · <a href="#" id="themeBtn" class="thm" role="switch" aria-checked="false" aria-label="Світла тема"></a> · неофіційний фан-проєкт</div>
 <script id="pool" type="application/json">__POOL__</script>
 <script>
 (function(){
@@ -1739,7 +1739,7 @@ async function loadHomeStats(){
 const LEVEL={normal:['Звичайний','lv-n'],hard:['Складний','lv-h'],hardcore:['Хардкор','lv-x'],daily:['Драфт дня','lv-d'],pick:['Вибір сезону','lv-s'],practice:['Тренування','lv-n']};
 const lvChip=m=>{const l=LEVEL[m];return l?`<span class="lv ${l[1]}">${l[0]}</span>`:'';};
 const BOARDS={
-  main:{name:'Загальна',q:'format=eq.classic&mode=in.(normal,hard,hardcore,daily,pick)',note:'Класика, драфт дня й «Вибір сезону». Поруч з іменем — позначка режиму. З версії 0.64 суперники — «Ліга легенд», тож 30-0 стало рідшим.'},
+  main:{name:'Загальна',q:'format=eq.classic&mode=in.(normal,hard,hardcore,daily,pick)',note:'Класика, драфт дня й «Вибір сезону». Поруч з іменем — позначка режиму.'},
   derby:{hidden:true,name:'Дербі',q:'format=eq.derby',note:'Лише «Динамо» і «Шахтар». Тут 30-0 приблизно вдесятеро легше, ніж у класиці, тому таблиця окрема.'},
   oneclub:{name:'Один клуб',q:'format=eq.oneclub',note:'Найкращий XI одного клубу. Складність дуже залежить від клубу.'},
   anti:{hidden:true,name:'Антисезон',q:'format=eq.anti',asc:true,note:'Навпаки: чим менше очок, тим вище. Мета — 0-30.'},
@@ -1759,7 +1759,7 @@ function boardQ(b,v39,pl,v60,v61){const B=BOARDS[b];
 function boardHtml(rows,b){
   if(!rows.length)return `<p class="muted">Поки що порожньо${BOARD_FROM?`: з ${BOARD_FROM_TXT} таблиця почалась заново`:''}. Зіграй сезон — він з\'явиться тут після перевірки сервером.</p>`;
   const me=deviceId(),pid=PLAYER&&PLAYER.id;
-  return `<div class="tbl clickable"><table><tr><th>#</th><th>Гравець</th><th class="num">В-Н-П</th><th class="num">Г</th><th class="num">О</th></tr>`+rows.map((r,i)=>`<tr data-q="id=eq.${numOr0(r.id)}"${(pid&&r.player_id===pid)||r.device_id===me?' class="me"':''}><td class="num">${i+1}</td><td class="nm"><span class="nmt">${plink(r)}${r.w===30?' <span class="lv lv-p">30-0</span>':''}</span><div class="sub"><span>${esc(r.formation)}</span>${lvChip(r.mode)}${r.show_r?'<span class="lv lv-r" title="У драфті були відкриті рейтинги гравців">рейтинги відкриті</span>':''}${b==='oneclub'&&r.club?`<span>${esc(CLUBN[r.club]||r.club)}</span>`:''}</div></td><td class="num">${numOr0(r.w)}-${numOr0(r.d)}-${numOr0(r.l)}</td><td class="num">${numOr0(r.gf)}:${numOr0(r.ga)}</td><td class="num"><b>${numOr0(r.pts)}</b></td></tr>`).join('')+`</table></div><p class="muted" style="font-size:12px;margin-top:6px">${BOARD_FROM?`Сезони з ${BOARD_FROM_TXT} (запуск 0.69); старі — на сторінках гравців. `:''}Лише сезони, перевірені сервером. Рівні очки: місце в сезоні → різниця м'ячів → забиті → хто раніше. Тап по рядку — склад, по імені — сторінка гравця.</p>`;}
+  return `<div class="tbl clickable"><table><tr><th>#</th><th>Гравець</th><th class="num">В-Н-П</th><th class="num">Г</th><th class="num">О</th></tr>`+rows.map((r,i)=>`<tr data-q="id=eq.${numOr0(r.id)}"${(pid&&r.player_id===pid)||r.device_id===me?' class="me"':''}><td class="num">${i+1}</td><td class="nm"><span class="nmt">${plink(r)}${r.w===30?' <span class="lv lv-p">30-0</span>':''}</span><div class="sub"><span>${esc(r.formation)}</span>${lvChip(r.mode)}${r.show_r?'<span class="lv lv-r" title="У драфті були відкриті рейтинги гравців">рейтинги відкриті</span>':''}${b==='oneclub'&&r.club?`<span>${esc(CLUBN[r.club]||r.club)}</span>`:''}</div></td><td class="num">${numOr0(r.w)}-${numOr0(r.d)}-${numOr0(r.l)}</td><td class="num">${numOr0(r.gf)}:${numOr0(r.ga)}</td><td class="num"><b>${numOr0(r.pts)}</b></td></tr>`).join('')+`</table></div><p class="muted" style="font-size:12px;margin-top:6px">${BOARD_FROM?`Сезони з ${BOARD_FROM_TXT}; старі — на сторінках гравців. `:''}Лише сезони, перевірені сервером. Рівні очки: місце в сезоні → різниця м'ячів → забиті → хто раніше. Тап по рядку — склад, по імені — сторінка гравця.</p>`;}
 let BOARD='main';
 function openBoard(b){BOARD=b||BOARD;screenTag('table');const box=document.getElementById('viewBox'),body=document.getElementById('viewBody');document.getElementById('viewTitle').textContent='Таблиця · 11×11';box.hidden=false;
   const bt=Object.entries(BOARDS).filter(([k,v])=>!v.hidden||k===BOARD);   // 0.65: одна вкладка — без ряду вкладок
@@ -1934,7 +1934,8 @@ function drawCard(r){   // 0.64: картка в стилі сайту — те�
 }
 document.getElementById('chalOpen').onclick=()=>{const b=document.getElementById('chalBox'),t=document.getElementById('chalOpen');b.hidden=!b.hidden;t.classList.toggle('on',!b.hidden);if(!b.hidden){b.scrollIntoView({behavior:'smooth',block:'center'});const n=document.getElementById('chalName');if(n&&!n.hidden&&!n.value)n.focus();}};
 // ---------- «Що нового»: коротко й по-людськи про останню версію (технічний журнал — CHANGELOG.md у репозиторії)
-const WHATSNEW={v:'0.69.2',date:'02.10.2026',items:[
+const WHATSNEW={v:'0.69.3',date:'02.10.2026',items:[
+  ['trophy','«Два кольори»','Трофей за чемпіонство в режимі «Один клуб» знову можна отримати.'],
   ['format-list-numbered','«Про гру та дані»','Цифри про гру знову охайними плитками.'],
   ['star','Новий шрифт','Уся гра тепер набрана KyivType Sans — шрифтом Дмитра Растворцева, створеним для айдентики Києва.'],
   ['account-group','5×5 повернувся','У «Лізі з друзями» знову можна створити турнір 5×5: кожен збирає п\'ятірку, а коли збір закінчиться, п\'ятірки грають одна з одною. Схеми — плитками, на iPad поле й колесо поруч.'],
