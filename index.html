@@ -670,7 +670,7 @@ section>h3:first-child,.box h3:first-of-type,#viewBody>h3:first-child,#viewBody>
     <button class="row0" id="flOpen"><!--i:account-group--><span><b>Ліга з друзями</b><small>11×11 чи 5×5 · посилання в чат</small></span></button>
     <!-- 5×5 на одному телефоні сховано з 0.60 (рішення власника 30.09): повернеться разом із 5×5 онлайн; код лишається -->
     <button class="row0" id="f5Open" hidden><!--i:account-group--><span><b>5×5 на одному телефоні</b></span></button>
-    <div class="duo0"><button class="tile0" id="boardOpen"><!--i:format-list-numbered--><b>Загальна таблиця</b></button><button class="tile0" id="trBtn"><!--i:trophy--><b>Трофеї<em id="trCount"></em></b></button></div>
+    <div class="duo0"><button class="tile0" id="boardOpen"><!--i:format-list-numbered--><b>Таблиця за весь час</b></button><button class="tile0" id="trBtn"><!--i:trophy--><b>Трофеї<em id="trCount"></em></b></button></div>
     <div class="stat0" id="stat0"><div class="n" id="stat0n">4 546</div><div class="l" id="stat0l">футболістів у грі</div><div class="s" id="stat0s"></div></div>
     <h2>Питання та відповіді</h2>
     <div class="faq0">
@@ -690,7 +690,6 @@ section>h3:first-child,.box h3:first-of-type,#viewBody>h3:first-child,#viewBody>
       <details><summary>Чи треба реєструватися?</summary><p>Ні. Вхід через Google або Telegram потрібен, щоб трофеї, серія й рекорди не загубилися й були на всіх пристроях. Ім'я одне на всі таблиці — змінити його можна в «Налаштуваннях» на своїй сторінці (тап по аватарці вгорі). Увійшов і через Google, і через Telegram — гра запитає «Це ти?» і об'єднає історію.</p></details>
       <details><summary>Що ви збираєте?</summary><p>Анонімно дивимося, куди натискають, щоб покращувати гру (Microsoft Clarity). Якщо увійдеш — ім'я та ідентифікатор входу. Пошту — лише якщо сам впишеш її на своїй сторінці для новин. Паролів не бачимо. Усе своє можна стерти кнопкою «Видалити акаунт» на своїй сторінці. <a href="privacy.html">Докладніше</a>.</p></details>
       <details><summary>Звідки дані?</summary><p>Склади, матчі, голи та підсумкові таблиці всіх сезонів Вищої ліги й Прем'єр-ліги 1992–2026 з відкритих джерел. Асисти — з 2012/13 і за 2021/22, сухі матчі до 2012 — оцінка за командною статистикою (≈).</p></details>
-      <details><summary>Чому таблиця почалась заново?</summary><p>З версії 0.69 змінився баланс симуляції, тож загальна таблиця рахує сезони з дня її запуску. Старі сезони нікуди не зникли — вони на сторінках гравців, разом із трофеями й рекордами.</p></details>
     </div>
     <details class="about0" id="aboutBox"><summary>Про гру та дані</summary>
       <div class="facts">
@@ -2025,13 +2024,13 @@ const PL_SEL=['players(name,anon_name,public_id)','players(name,anon_name)'];   
 async function sbGetFallback(qs){let err;for(const q of qs){try{return await sbGet(q);}catch(e){err=e;}}throw err;}
 // 0.69 (власник 01.10, варіант A, docs/plan_069_reset.md): загальна таблиця — лише сезони з виходу 0.69; старі лишаються в базі й на сторінках гравців.
 // null — «за весь час» (повернути — один рядок). Таблиця дня, ліги й сторінка гравця — без змін
-const BOARD_FROM='2026-10-01T21:00:00Z',BOARD_FROM_TXT='2 жовтня 2026';   // 0.69: 00:00 за Києвом 2 жовтня (баланс 0.68 = 0.69, тож сезони цього дня рахуються)
+const BOARD_FROM=null,BOARD_FROM_TXT='';   // 0.69 (власник 02.10: «поки рано, з більшим релізом») — вимкнено; увімкнути: дата ISO + текст, напр. '2026-10-01T21:00:00Z','2 жовтня 2026'
 function boardQ(b,v39,pl,v60,v61){const B=BOARDS[b];
   const sel='id,device_id,nickname,w,d,l,pts,place,gf,ga,formation,mode,club,created_at'+(v60?',show_r':'')+(v39?',player_id,'+(pl||PL_SEL[1]):'');
   const ord=v39?(B.asc?'pts.asc,place.desc,gd.asc,gf.asc,created_at.asc':'pts.desc,place.asc,gd.desc,gf.desc,created_at.asc'):(B.asc?'pts.asc,place.desc':'pts.desc,place.asc,ga.asc,gf.desc');
   return `seasons?select=${sel}&${B.q}&practice=is.false&verified=is.true${BOARD_FROM?'&created_at=gte.'+BOARD_FROM:''}${v39?'&competition=eq.upl':''}${v61?'&fl_id=is.null':''}&order=${ord}&limit=50`;}
 function boardHtml(rows,b){
-  if(!rows.length)return '<p class="muted">Поки що порожньо: з запуску 0.69 таблиця почалась заново. Зіграй сезон — він з\'явиться тут після перевірки сервером.</p>';
+  if(!rows.length)return `<p class="muted">Поки що порожньо${BOARD_FROM?`: з ${BOARD_FROM_TXT} таблиця почалась заново`:''}. Зіграй сезон — він з\'явиться тут після перевірки сервером.</p>`;
   const me=deviceId(),pid=PLAYER&&PLAYER.id;
   return `<div class="tbl clickable"><table><tr><th>#</th><th>Гравець</th><th class="num">В-Н-П</th><th class="num">Г</th><th class="num">О</th></tr>`+rows.map((r,i)=>`<tr data-q="id=eq.${numOr0(r.id)}"${(pid&&r.player_id===pid)||r.device_id===me?' class="me"':''}><td class="num">${i+1}</td><td class="nm"><span class="nmt">${plink(r)}${r.w===30?' <span class="lv lv-p">30-0</span>':''}</span><div class="sub"><span>${esc(r.formation)}</span>${lvChip(r.mode)}${r.show_r?'<span class="lv lv-r" title="У драфті були відкриті рейтинги гравців">рейтинги відкриті</span>':''}${b==='oneclub'&&r.club?`<span>${esc(CLUBN[r.club]||r.club)}</span>`:''}</div></td><td class="num">${numOr0(r.w)}-${numOr0(r.d)}-${numOr0(r.l)}</td><td class="num">${numOr0(r.gf)}:${numOr0(r.ga)}</td><td class="num"><b>${numOr0(r.pts)}</b></td></tr>`).join('')+`</table></div><p class="muted" style="font-size:12px;margin-top:6px">${BOARD_FROM?`Сезони з ${BOARD_FROM_TXT} (запуск 0.69); старі — на сторінках гравців. `:''}Лише сезони, перевірені сервером. Рівні очки: місце в сезоні → різниця м'ячів → забиті → хто раніше. Тап по рядку — склад, по імені — сторінка гравця.</p>`;}
 let BOARD='main';
@@ -3019,7 +3018,6 @@ function drawCard(r){   // 0.64: картка в стилі сайту — те�
 document.getElementById('chalOpen').onclick=()=>{const b=document.getElementById('chalBox'),t=document.getElementById('chalOpen');b.hidden=!b.hidden;t.classList.toggle('on',!b.hidden);if(!b.hidden){b.scrollIntoView({behavior:'smooth',block:'center'});const n=document.getElementById('chalName');if(n&&!n.hidden&&!n.value)n.focus();}};
 // ---------- «Що нового»: коротко й по-людськи про останню версію (технічний журнал — CHANGELOG.md у репозиторії)
 const WHATSNEW={v:'0.69',date:'02.10.2026',items:[
-  ['format-list-numbered','Таблиця з нуля','Загальна таблиця почалась заново з 2 жовтня: новий баланс — нова гонка. Старі сезони лишились на сторінках гравців.'],
   ['account-group','5×5 повернувся','У «Лізі з друзями» знову можна створити турнір 5×5: кожен збирає п\'ятірку, а коли збір закінчиться, п\'ятірки грають одна з одною. Схеми — плитками, на iPad поле й колесо поруч.'],
   ['soccer-field','Ліга на iPad','Сторінка ліги 11×11: кнопка й схеми по центру, правила — плашками, кнопка «Поділитися» з підписом.'],
   ['star','Перекрутки видно','Скільки разів ще можна перекрутити колесо — яскравим кружком над кнопками.'],
@@ -3373,7 +3371,7 @@ function f5RenderOnline(el){const f=F5,o=f.online;
 
 document.getElementById('f5Open').onclick=f5Start;
 // 0.67 (аудит P2-5): лише те, що беруть тести; drawCard — для перевірки картки, simulate/rerun — для швидкого детермінізму
-window.__dbg={setFmt,leagueLoad,boardHtml,oppYear,champModal,drawCard,chalNewGame,DAILY,LEAGUE_CULT,LEAGUE_LEGENDS,openTrophies,renderNewTro,bestPerPlayer,renderWheel,posOpts,eraOf,ptsWord,viewHtml,renderPitch,pitchHtml,f5Pitch,F5_FORMS,cardName,clubShort,simulate,shareTextOf,trCtxNow,trAward,trStore,FORMATIONS,GROUP_OF,DATA,TROPHIES,trEval,PERSON,effRating,get S(){return S;},rerun(seed,year,xi){rnd=mulberry32(seed);const r=simulate(xi||S.slots.map(s=>s.player),MODES[S.mode],year);rnd=Math.random;return {W:r.W,D:r.D,L:r.L,gf:r.gf,ga:r.ga,place:r.place};}};
+window.__dbg={BOARD_FROM,setFmt,leagueLoad,boardHtml,oppYear,champModal,drawCard,chalNewGame,DAILY,LEAGUE_CULT,LEAGUE_LEGENDS,openTrophies,renderNewTro,bestPerPlayer,renderWheel,posOpts,eraOf,ptsWord,viewHtml,renderPitch,pitchHtml,f5Pitch,F5_FORMS,cardName,clubShort,simulate,shareTextOf,trCtxNow,trAward,trStore,FORMATIONS,GROUP_OF,DATA,TROPHIES,trEval,PERSON,effRating,get S(){return S;},rerun(seed,year,xi){rnd=mulberry32(seed);const r=simulate(xi||S.slots.map(s=>s.player),MODES[S.mode],year);rnd=Math.random;return {W:r.W,D:r.D,L:r.L,gf:r.gf,ga:r.ga,place:r.place};}};
 })();
 </script>
 

@@ -54,10 +54,11 @@ async function run(MODE,b){const T=checker('v39 '+MODE);const v39=MODE==='new';c
  // таблиця 11×11
  let rows=await board();T.check(rows.length===1&&rows[0].startsWith('* ')&&(!v39||rows[0].includes('andrii')),'таблиця: мій рядок '+JSON.stringify(rows));
  await pg.screenshot({path:path.join(OUT,`v39_board_${MODE}.png`)});
- // 0.69: загальна таблиця — лише сезони з виходу 0.69 (BOARD_FROM); старий сезон лишається в базі, але в таблиці його немає
+ // 0.69: BOARD_FROM (скидання загальної таблиці) — увімкнено: старого сезону немає; вимкнено (зараз, власник 02.10): усі сезони
  {await pg.click('#viewClose');const old={...DB.seasons[DB.seasons.length-1],id:9999,nickname:'old_one',created_at:'2026-09-01T10:00:00Z',pts:90};DB.seasons.push(old);
-  const r2=await board();T.check(r2.length===1&&!r2.some(x=>/old_one/.test(x))&&/Сезони з 2 жовтня 2026/.test(await pg.textContent('#boardBody')),'0.69: сезон до запуску 0.69 у таблиці не показано, є підпис «Сезони з …»');
-  DB.seasons.pop();}
+  const r2=await board(),bf=await pg.evaluate(()=>window.__dbg.BOARD_FROM),bt=await pg.textContent('#boardBody');
+  T.check(bf?r2.length===1&&/Сезони з /.test(bt):r2.length===2&&!/Сезони з /.test(bt),'0.69: BOARD_FROM '+(bf?'увімкнено — старого сезону немає, є «Сезони з …»':'вимкнено — у таблиці всі сезони, без підпису'));
+  DB.seasons.pop();await pg.click('#viewClose');await board();}
  T.check(await pg.evaluate(()=>{const t=document.querySelector('#viewBody .tabs');return !document.querySelector('[data-board="anti"]')&&!!document.querySelector('[data-board="oneclub"]')&&t&&!t.hidden;}),'0.67: вкладки «Антисезон» немає, є «Один клуб» (режим повернуто)');
  await pg.click('#boardBody tr.me');await pg.waitForTimeout(500);
  T.check(!!(await pg.$('#viewBack'))&&!!(await pg.$('#viewBody .slot')),'рядок відкриває сезон із кнопкою «До таблиці»');
