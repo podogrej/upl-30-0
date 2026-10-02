@@ -43,6 +43,14 @@ function mkDB(){
  await pg.click('[data-k="days"][data-v="7"]');await pg.click('[data-k="scoring"][data-v="sum"]');await pg.click('[data-k="ratings"][data-v="memory"]');await pg.click('[data-k="era"][data-v="y2010"]');await pg.click('[data-k="rerolls"][data-v="0"]');
  T.check(await pg.$$eval('#fl .opt.on',es=>es.length)>=7,'правила: вибрано по одному в кожному блоці');
  await pg.screenshot({path:path.join(OUT,'fl61_create.png'),fullPage:true});
+ // 0.68 (скрин власника з iPad): кнопка «Створити» й написи в плитках правил — по центру
+ await pg.setViewportSize({width:1000,height:1400});await pg.waitForTimeout(200);
+ const offC=await pg.evaluate(()=>{const mid=e=>{const r=e.getBoundingClientRect();return (r.left+r.right)/2;};const bad=[];
+   for(const b of [document.getElementById('flCreate'),document.getElementById('flMsg')])if(Math.abs(mid(b)-mid(b.parentElement))>2)bad.push(b.id+' зсув '+Math.round(mid(b)-mid(b.parentElement))+'px');
+   for(const o of document.querySelectorAll('#fl .opt'))for(const t of o.querySelectorAll('b,small'))if(Math.abs(mid(t)-mid(o))>2){bad.push('«'+t.textContent.slice(0,16)+'» не по центру плитки');break;}
+   return bad;});
+ T.check(!offC.length,'iPad: правила ліги й кнопка по центру'+(offC.length?' — '+offC.slice(0,3).join('; '):''));
+ await pg.screenshot({path:path.join(OUT,'fl61_create_ipad.png'),fullPage:true});await pg.setViewportSize({width:390,height:844});
  await pg.click('#flCreate');await pg.waitForTimeout(500);
  const cr=M.calls.find(c=>c[0]==='fl_create');
  T.check(cr&&cr[1].p_days===7&&cr[1].p_scoring==='sum'&&cr[1].p_ratings==='memory'&&cr[1].p_era==='y2010'&&cr[1].p_rerolls===0&&cr[1].p_tries===3&&cr[1].p_take==='best','fl_create: правила передано ('+JSON.stringify(cr&&cr[1])+')');
