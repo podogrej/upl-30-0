@@ -40,6 +40,8 @@ const fl5Due=d=>d&&d.fmt==='5'&&!d.result&&d.deadline&&new Date(d.deadline)<=new
 async function fl5Play(){const st=FL;try{const r=await _fetch('/api/fl5',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:st.id,device_id:deviceId()})});
   if(r.ok){const d=await r.json();if(FL===st&&d&&d.id){st.data=d;flRender();}}}catch(e){}}
 const flMe=d=>PLAYER&&PLAYER.public_id&&d&&d.board.some(r=>r.u===PLAYER.public_id);
+// 0.69 (власник, iPad): правила ліги — чипами, а не довгим рядком через «·»
+const flRules=r=>`<div class="fl-rules">${r.split(' · ').map(x=>`<span class="chip">${esc(x)}</span>`).join('')}</div>`;
 const flBadge=f=>`<i class="fl-badge">${f==='5'?'5×5':'11×11'}</i>`;
 const flTime=t=>{try{return new Intl.DateTimeFormat('uk-UA',{timeZone:'Europe/Kyiv',hour:'2-digit',minute:'2-digit',day:'numeric',month:'short'}).format(new Date(t));}catch(e){return '';}};
 // ---------- розмітка
@@ -88,11 +90,11 @@ function flLeagueHtml(){const d=FL.data;
   const rows=all?d.board.map((r,i)=>`<tr${r.u===me?' class="me"':''}><td class="num">${i+1}</td><td>${plink({players:{name:r.name,public_id:r.u}})}</td><td class="num muted">${r.wins?`${numOr0(r.wins)} ${plUk(r.wins,'тур','тури','турів')}`:''}</td><td class="num"><b>${numOr0(r.total)}</b></td></tr>`).join('')
     :d.tour.map(r=>`<tr${r.u===me?' class="me"':''}><td class="num">${numOr0(r.rk)}</td><td>${plink({players:{name:r.name,public_id:r.u}})}</td><td class="num muted">${numOr0(r.w)}-${numOr0(r.d)}-${numOr0(r.l)} · ${numOr0(r.pts)} оч</td><td class="num"><b>${numOr0(r.score)}</b></td></tr>`).join('');
   const link=flLink(d.id);
-  return `<div class="fl-head"><h1>${esc(d.name)} <i class="fl-badge">11×11</i></h1><p class="muted">${esc(rules)}</p></div>${card}
+  return `<div class="fl-head"><h1>${esc(d.name)} <i class="fl-badge">11×11</i></h1>${flRules(rules)}</div>${card}
     <div class="sec0">Таблиця</div><div class="seg fl-tabs"><button data-tab="all" class="${all?'on':''}">Загальна</button><button data-tab="tour" class="${all?'':'on'}">${d.over?'Останній тур':`Тур ${numOr0(d.day_n)} · сьогодні`}</button></div>
     ${rows?`<div class="tbl"><table><tr><th>#</th><th>Гравець</th><th class="num">${all?'Виграв':'Сезон'}</th><th class="num">Оч</th></tr>${rows}</table></div>`:`<p class="pp-empty">${all?'Поки нікого.':'Сьогодні ще ніхто не зіграв.'}</p>`}
     <p class="muted" style="font-size:12.5px">${d.scoring==='place'?'За місце в турі: 1-й отримує стільки очок, скільки гравців зіграло того дня, останній — 1. Не зіграв — 0.':'Сума: у залік туру йдуть очки сезону. Не зіграв — 0.'}</p>
-    ${d.over?'':`<div class="sec0">Запросити</div><div class="fl-inv"><input readonly value="${esc(link)}" id="flLinkIn" aria-label="Посилання на лігу"><button class="primary" id="flShare" aria-label="Поділитися посиланням">${icon('share-variant')}</button></div><p class="muted" id="flShareMsg" style="font-size:13px"></p>`}
+    ${d.over?'':`<div class="sec0">Запросити</div><div class="fl-inv"><input readonly value="${esc(link)}" id="flLinkIn" aria-label="Посилання на лігу"><button class="primary" id="flShare">${icon('share-variant')}<span>Поділитися</span></button></div><p class="muted" id="flShareMsg" style="font-size:13px"></p>`}
     <button class="ghost" id="flBack" style="margin-top:14px">Усі мої ліги</button>`;}
 // ---------- дії
 function flWire(){const $=id=>document.getElementById(id),el=$('fl');
@@ -188,8 +190,8 @@ function fl5LeagueHtml(){const d=FL.data,me=PLAYER&&PLAYER.public_id,member=flMe
   out+=`<div class="sec0">Склади <span>${d.fives.length}</span></div><div class="fl5teams">${d.fives.map(f=>`<div class="fl5t${f.u===me?' me':''}"><b>${esc(f.name)}</b> <span class="muted mono">${esc(f.form)}</span><div class="fl5xi">${(f.xi||[]).map(x=>`<span><i class="pos ${esc(x.slot)}">${F5_L[x.slot]||''}</i>${esc(x.name||'')}</span>`).join('')}</div></div>`).join('')}
     ${!res?waiting.map(b=>`<div class="fl5t off"><b>${esc(b.name)}</b> <span class="muted">збирає склад…</span></div>`).join(''):''}</div>`;
   const link=flLink(d.id);
-  return `<div class="fl-head"><h1>${esc(d.name)} ${flBadge('5')}</h1><p class="muted">${esc(rules)}</p></div>${card}<div id="fl5Tro" hidden></div>${out}
-    ${!res&&!fl5Due(d)?`<div class="sec0">Запросити</div><div class="fl-inv"><input readonly value="${esc(link)}" id="flLinkIn" aria-label="Посилання на лігу"><button class="primary" id="flShare" aria-label="Поділитися посиланням">${icon('share-variant')}</button></div><p class="muted" id="flShareMsg" style="font-size:13px"></p>`:''}
+  return `<div class="fl-head"><h1>${esc(d.name)} ${flBadge('5')}</h1>${flRules(rules)}</div>${card}<div id="fl5Tro" hidden></div>${out}
+    ${!res&&!fl5Due(d)?`<div class="sec0">Запросити</div><div class="fl-inv"><input readonly value="${esc(link)}" id="flLinkIn" aria-label="Посилання на лігу"><button class="primary" id="flShare">${icon('share-variant')}<span>Поділитися</span></button></div><p class="muted" id="flShareMsg" style="font-size:13px"></p>`:''}
     <button class="ghost" id="flBack" style="margin-top:14px">Усі мої ліги</button>`;}
 // матч: рахунок, епізоди по хвилинах (голи, пенальті, VAR), серія пенальті; «Дивитися наживо» — епізоди по одному
 function fl5Feed(m,nm){const it=[];

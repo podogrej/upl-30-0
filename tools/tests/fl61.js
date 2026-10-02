@@ -72,6 +72,14 @@ function mkDB(){
  const page=(await pg.textContent('#fl')).replace(/\s+/g,' ');
  T.check(/Тур 1 з 7/.test(page)&&/Зіграти спробу 2 з 3/.test(page)&&/Загальна/.test(page)&&/andre/.test(page),'сторінка ліги: тур, наступна спроба, таблиця ('+page.slice(0,90)+')');
  T.check(await pg.evaluate(()=>/[?&]l=abc/.test(location.search)),'адреса сторінки ліги — ?l=…');
+ // 0.69 (власник, iPad): схеми й «Зіграти спробу» — по центру картки туру; правила — чипами; «Поділитися» з підписом
+ await pg.setViewportSize({width:1000,height:1400});await pg.waitForTimeout(200);
+ const offL=await pg.evaluate(()=>{const mid=e=>{const r=e.getBoundingClientRect();return (r.left+r.right)/2;};const bad=[],card=document.querySelector('#fl .fl-tour');
+   for(const e of [document.getElementById('flPlay'),document.querySelector('#fl .fl-forms .chip:nth-child(3)')?document.querySelector('#fl .fl-forms'):null])if(e){const r=[...(e.children.length?e.children:[e])].map(x=>x.getBoundingClientRect());const c=(Math.min(...r.map(x=>x.left))+Math.max(...r.map(x=>x.right)))/2;if(Math.abs(c-mid(card))>3)bad.push((e.id||e.className)+' зсув '+Math.round(c-mid(card))+'px');}
+   if(document.querySelectorAll('#fl .fl-rules .chip').length<4)bad.push('правила не чипами');
+   if(!/Поділитися/.test(document.getElementById('flShare').textContent))bad.push('кнопка без підпису');return bad;});
+ T.check(!offL.length,'iPad: сторінка ліги — схеми й кнопка по центру, правила чипами, «Поділитися»'+(offL.length?' — '+offL.join('; '):''));
+ await pg.screenshot({path:path.join(OUT,'fl61_league_ipad.png'),fullPage:true});await pg.setViewportSize({width:390,height:844});
  await pg.click('[data-tab="tour"]');T.check(/сьогодні/.test(await pg.textContent('#fl')),'вкладка «Тур · сьогодні»');await pg.click('[data-tab="all"]');
  await pg.screenshot({path:path.join(OUT,'fl61_league.png'),fullPage:true});
  // своя сторінка: «Мої ліги»
