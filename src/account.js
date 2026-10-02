@@ -211,13 +211,14 @@ let LEAGUE=null;   // {chat, title, today:[], members, standings:[]}
 function leagueChat(){const sp=TG&&TG.initDataUnsafe&&TG.initDataUnsafe.start_param||'';const m=/^g(-?\d+)$/.exec(sp);if(m){lsSet("upl30_league",m[1]);return m[1];}return lsGet("upl30_league");}
 async function leagueInit(){
   if(!IN_TG())return;const chat=leagueChat();
-  try{if(/^g-?\d+$/.test(TG.initDataUnsafe.start_param||''))await _fetch('/api/league',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({initData:TG.initData})});}catch(e){}
+  let joined=false;   // 0.69.4: вступ щойно відбувся — табло беремо повз кеш (там може вже бути перенесений сьогоднішній результат)
+  try{if(/^g-?\d+$/.test(TG.initDataUnsafe.start_param||'')){const r=await _fetch('/api/league',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({initData:TG.initData})});joined=r.ok;}}catch(e){}
   if(chat){   // 0.65: місце під лігу одразу (з назвою з минулого разу), щоб головна не «стрибала», коли табло догрузиться
     // 0.66: табло з минулого разу — одразу (upl30_league_snap), свіже з сервера — тихо поверх
     const el=document.getElementById('leagueCard'),snap=lsGet('upl30_league_snap');
     if(snap&&snap.chat===chat&&!LEAGUE){LEAGUE=snap.day===DAY?snap:{...snap,today:[]};renderLeague();}   // табло вчорашнього дня — без «сьогодні»
     else if(el&&!LEAGUE){el.hidden=false;el.innerHTML=`<div class="kicker">Ліга Telegram-чату</div><div class="ttl">&nbsp;</div><div class="meta muted">Завантажуємо табло…</div>`;}
-    leagueLoad(chat);}
+    leagueLoad(chat,joined);}
 }
 async function leagueLoad(chat,fresh){try{const r=await _fetch('/api/league?chat='+encodeURIComponent(chat)+(fresh?'&t='+Date.now():''));if(!r.ok){if(!LEAGUE)document.getElementById('leagueCard').hidden=true;return;}LEAGUE={chat,...await r.json()};lsSet('upl30_league_snap',LEAGUE);renderLeague();}catch(e){if(!LEAGUE)document.getElementById('leagueCard').hidden=true;}}
 // 0.68 (власник 02.10, чат на 40 людей): на головній — топ-3 сьогодні (+ свій рядок, якщо нижче) і «Уся таблиця (N)» → екран зі вкладками «Сьогодні» / «Залік»
@@ -231,9 +232,9 @@ function renderLeague(){
   const all=L.today.length>3||(L.standings&&L.standings.length>1);
   el.hidden=false;el.innerHTML=`<div class="kicker">Ліга Telegram-чату</div><div class="ttl">«${esc(L.title)}»</div>
     <div class="meta">Сьогодні зіграли ${L.today.length} з ${Math.max(L.members,L.today.length)}</div>
-    ${L.today.length?`<div class="tbl"><table>${top}</table></div>`:'<p class="muted" style="margin:0">Ще ніхто не зіграв — будь першим!</p>'}
+    ${L.today.length?`<div class="tbl"><table>${top}</table></div>`:`<p class="muted" style="margin:0">${played?'Сьогодні з групи ще ніхто не зіграв.':'Ще ніхто не зіграв — будь першим!'}</p>`}
     ${all?`<button class="link0 lgall" id="leagueAll">Уся таблиця (${Math.max(L.members,L.today.length)})</button>`:''}
-    ${played?'':'<div class="row"><button class="primary" id="leagueGo">Зіграти драфт дня</button></div>'}`;
+    ${played?`<p class="muted" style="margin:0;font-size:13px">${me>=0?'Твій результат уже в табло.':'Драфт дня ти вже зіграв.'} Наступний — завтра о 00:00 за Києвом.</p>`:'<div class="row"><button class="primary" id="leagueGo">Зіграти драфт дня</button></div>'}`;
   const g=document.getElementById('leagueGo');if(g)g.onclick=()=>document.getElementById('dailyBtn').click();
   const a=document.getElementById('leagueAll');if(a)a.onclick=()=>openLeagueAll('today');
 }
