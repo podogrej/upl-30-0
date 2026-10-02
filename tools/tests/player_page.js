@@ -52,7 +52,7 @@ function mkDB(){
       fav_club:s.length?{c:'Чорноморець (Одеса)',k:30,pct:27}:null,fav_player:s.length?{id:'x',n:'Іван Гецко',k:11}:null,
       trophies:p.id==='p-v'?[{id:'money',at:'2026-09-25'},{id:'champ',at:'2026-09-20'},{id:'top3',at:'2026-09-19'}]:[],streak_best:p.id==='p-v'?9:0,streak_now:0};}
   const season=(id,pid,pts,w,d,l,place,extra)=>({id,player_id:pid,device_id:'00000000-0000-4000-a000-00000000000'+(id%10),nickname:'Вітя-копія',format:'classic',mode:'normal',formation:'4-4-2',w,d,l,pts,place,gf:60,ga:30,gd:30,
-    verified:true,practice:false,competition:'upl',created_at:'2026-09-2'+(id%10)+'T10:00:00Z',xi:[],tbl:[],...extra});
+    verified:true,practice:false,competition:'upl',created_at:'2026-10-02T0'+(id%10)+':00:00Z',xi:[],tbl:[],...extra});   // 0.69: після BOARD_FROM (загальна таблиця — з 2 жовтня)
   db.DB.seasons.push(season(901,'p-v',77,24,5,1,1),season(902,'p-v',61,18,7,5,4));
   global.fetch=db.fetch;
   return {db,players,links,calls};}
@@ -100,7 +100,7 @@ const order=pg=>pg.$$eval('#ppCab .tro.on[data-tr]',es=>es.map(e=>e.dataset.tr))
  await openSet(pg);T.check(await pg.$eval('#ppNameIn',e=>e.disabled)&&/знову можна з \d+ \S+ 20\d\d/.test(await pg.textContent('#ppNameMsg')),'друга зміна: поле закрите, «Змінити знову можна з …» (0.68: одразу в листі, без спроби)');await pg.click('#ppSheetX');
  // історія
  const me=M.players.find(p=>p.public_id&&p.public_id.startsWith('mepl'));
- db.DB.seasons.push({id:950,player_id:me.id,device_id:'x',format:'classic',mode:'normal',formation:'4-3-3',w:20,d:5,l:5,pts:65,place:2,gf:50,ga:30,verified:true,practice:false,competition:'upl',created_at:'2026-09-29T10:00:00Z',xi:[],tbl:[]});
+ db.DB.seasons.push({id:950,player_id:me.id,device_id:'x',format:'classic',mode:'normal',formation:'4-3-3',w:20,d:5,l:5,pts:65,place:2,gf:50,ga:30,verified:true,practice:false,competition:'upl',created_at:'2026-10-02T11:00:00Z',xi:[],tbl:[]});
  await pg.evaluate(()=>document.getElementById('homeBtn').click());await pg.click('#acctBtn');await pg.waitForTimeout(600);
  await pg.click('#ppHist summary');await pg.waitForTimeout(400);
  T.check(/Останні сезони \(1 з 1\)/.test(await pg.textContent('#ppHist summary'))&&(await pg.$$('#ppHistList .pp-row')).length===1,'«Останні сезони (1 з 1)» розгортаються за тапом');
