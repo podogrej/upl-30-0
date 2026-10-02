@@ -29,7 +29,8 @@ function mkDB(){
 (async()=>{const b=await launch();const M=mkDB();const {db}=M;let played=0;
  const api={'/api/fl5':async req=>{const L=M.get(req.body.id);if(L&&!L.result&&new Date(L.deadline)<=new Date()){const lg=M.leagues.find(x=>x.id===L.id);lg.result=await play(L);played++;}return {json:M.get(req.body.id)};},
    '/api/seed':async()=>({json:{seed:1,seed_id:'s1'}})};
- const A=await openSite({b,db,api,signed:true,query:'?f5=1',viewport:{width:390,height:844},wait:1500});const pg=A.pg;   // 0.68: створення 5×5 сховано, вмикається ?f5=1
+ const A=await openSite({b,db,api,signed:true,viewport:{width:390,height:844},wait:1500});const pg=A.pg;
+ const ipad=async(name,fn)=>{await pg.setViewportSize({width:1000,height:1400});await pg.waitForTimeout(200);const r=fn?await pg.evaluate(fn):null;await pg.screenshot({path:path.join(OUT,name),fullPage:true});await pg.setViewportSize({width:390,height:844});await pg.waitForTimeout(150);return r;};
  await pg.click('#flOpen');await pg.waitForTimeout(400);await pg.click('#flNew');await pg.waitForTimeout(200);
  await pg.click('[data-k="fmt"][data-v="f5"]');
  T.check(/Збір складів/.test(await pg.textContent('#fl'))&&!/Спроби на день/.test(await pg.textContent('#fl')),'створення: формат 5×5 — «Збір складів», без спроб і турів');
@@ -38,6 +39,12 @@ function mkDB(){
  await pg.click('#flCreate');await pg.waitForTimeout(500);
  const cr=M.calls.find(c=>c[0]==='fl_create5');T.check(cr&&cr[1].p_hours===1&&cr[1].p_rerolls===3,'fl_create5: правила ('+JSON.stringify(cr&&cr[1])+')');
  T.check(/Твоя п'ятірка/.test(await pg.textContent('#fl'))&&!!await pg.$('[data-f5form]'),'одразу — драфт п\'ятірки, вибір схеми');
+ // 0.69 (власник: «вибір схеми недороблений, поле величезне»): схеми — 4 плитки в ряд, поле не вище за 420px; на iPad — по центру
+ const f5f=await pg.evaluate(()=>{const t=[...document.querySelectorAll('#fl [data-f5form]')].map(e=>e.getBoundingClientRect());const p=document.querySelector('#fl .pitch.p5').getBoundingClientRect();return {n:t.length,row:t.every(r=>Math.abs(r.top-t[0].top)<2),ph:Math.round(p.height),sub:t.every((r,i)=>!!document.querySelectorAll('#fl [data-f5form] small')[i])};});
+ T.check(f5f.n===4&&f5f.row&&f5f.sub&&f5f.ph<=420,'схеми: 4 плитки в ряд з назвою, поле '+f5f.ph+'px');
+ await pg.screenshot({path:path.join(OUT,'fl63_draft_start.png'),fullPage:true});
+ const midD=await ipad('fl63_draft_ipad.png',()=>{const mid=e=>{const r=e.getBoundingClientRect();return (r.left+r.right)/2;};const p=document.querySelector('#fl .pitch.p5').getBoundingClientRect(),w=document.querySelector('#fl .fl5d>.wheel').getBoundingClientRect();return w.left>=p.right&&Math.abs(w.top-p.top)<4?0:99;});
+ T.check(midD===0,'iPad: поле зліва, колесо й список справа');
  await pg.click('[data-f5form="2-2"]');
  const before=await pg.evaluate(()=>document.querySelector('#fl .reel .club').textContent);await pg.click('#fl5Rr');
  T.check(/залишилось <b>2|залишилось 2/.test(await pg.innerHTML('#fl .rr'))||/залишилось 2/.test(await pg.textContent('#fl')),'перекрут: залишилось 2 (було «'+before+'»)');
@@ -48,12 +55,17 @@ function mkDB(){
  const sub=M.calls.find(c=>c[0]==='fl5_submit');const xi=sub&&sub[1].p_xi;
  T.check(sub&&sub[1].p_form==='2-2'&&xi.length===5&&xi.every(x=>x.id&&x.c&&x.y&&x.slot),'fl5_submit: схема 2-2, 5 гравців з клубом і сезоном');
  T.check(/Твій склад відправлено/.test(await pg.textContent('#fl')),'лобі: «Твій склад відправлено»');
+ T.check(await pg.$eval('#fl5Start',e=>e.disabled)&&/запрацює, коли складів буде хоча б 2/.test(await pg.textContent('#fl')),'0.69: один склад — «Почати зараз» видно, але неактивна, з поясненням');
  // другий учасник (vitia) надсилає склад — ті самі гравці (колесо в кожного своє)
  const L=M.leagues[0];M.members.push({l:L.id,p:'p-v'});M.fives.push({l:L.id,p:'p-v',form:'2-2',xi:xi.map(x=>({...x}))});
  await pg.click('#flBack');await pg.waitForTimeout(400);await pg.click(`[data-l="${L.id}"]`);await pg.waitForTimeout(600);
  T.check(/Зібрали 2 з 2/.test(await pg.textContent('#fl'))&&!!await pg.$('#fl5Start'),'лобі: «Зібрали 2 з 2», у творця — «Почати зараз»; склади відкриті');
  T.check((await pg.$$('#fl .fl5t')).length===2&&/vitia/.test(await pg.textContent('#fl .fl5teams')),'склади суперників відкриті');
+ const xiL=await pg.$$eval('#fl .fl5t.me .fl5xi>div',es=>es.map(e=>e.textContent));
+ T.check(xiL.length===3&&/^ВР/.test(xiL[0])&&/^ЗХ.+ · /.test(xiL[1])&&/^НП.+ · /.test(xiL[2]),'0.69: склад — по лініях від воротаря: '+xiL.join(' | '));
  await pg.screenshot({path:path.join(OUT,'fl63_lobby.png'),fullPage:true});
+ const midL=await ipad('fl63_lobby_ipad.png',()=>{const mid=e=>{const r=e.getBoundingClientRect();return (r.left+r.right)/2;};const b=document.getElementById('fl5Start'),c=document.querySelector('#fl .fl-tour');return Math.round(Math.abs(mid(b)-mid(c)));});
+ T.check(midL<=3,'iPad: «Почати зараз» по центру картки (зсув '+midL+'px)');
  T.check(/До кінця збору — (\d+ год|\d+ хв)/.test(await pg.textContent('#fl')),'0.64: лобі — скільки лишилось до кінця збору');
  await pg.click('#fl5Start');await pg.waitForTimeout(1200);
  const txt=(await pg.textContent('#fl')).replace(/\s+/g,' ');

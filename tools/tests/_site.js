@@ -14,7 +14,8 @@ function makeDB(cfg={},rpc={}){
   const val=v=>v==='null'?null:v==='true'?true:v==='false'?false:v;
   const test=(r,k,v)=>{const i=v.indexOf('.'),op=v.slice(0,i),x=v.slice(i+1),a=r[k];
     if(op==='eq')return String(a)===x;if(op==='neq')return String(a)!==x;if(op==='is')return a==null?x==='null':a===val(x);
-    if(op==='in')return x.replace(/^\(|\)$/g,'').split(',').includes(String(a));if(op==='gt')return a>+x;if(op==='gte')return a>=+x;if(op==='lt')return a<+x;if(op==='lte')return a<=+x;return true;};
+    if(op==='in')return x.replace(/^\(|\)$/g,'').split(',').includes(String(a));const c=isNaN(+x)?String(a==null?'':a).localeCompare(x):a-(+x);   // 0.69: дати (created_at=gte.2026-…) — як рядки ISO
+    if(op==='gt')return c>0;if(op==='gte')return c>=0;if(op==='lt')return c<0;if(op==='lte')return c<=0;return true;};
   const SKIP=new Set(['select','order','limit','offset','apikey','on_conflict']);
   const where=u=>[...u.searchParams].filter(([k])=>!SKIP.has(k));
   const out=(status,j)=>({status,body:j==null?'':JSON.stringify(j)});
@@ -67,7 +68,7 @@ async function openSite(opts={}){
         if(!opts.db)return r.abort();log.push(m+' '+u.pathname);const x=opts.db.handle(m,u.href,req.postData(),req.headers());
         return r.fulfill({status:x.status,headers:{...CORS,'content-type':'application/json'},body:x.body});}
       if(u.host==='cdn.jsdelivr.net'&&/supabase/.test(u.pathname))return r.fulfill({contentType:'application/javascript',body:SB_STUB(opts.user,opts.signed)});   // signed: уже ввійшов (0.61)
-      if(u.host==='telegram.org'&&opts.tg)return r.fulfill({contentType:'application/javascript',body:`window.Telegram={WebApp:Object.assign({ready(){},expand(){},openTelegramLink(u){(window.__tgLinks=window.__tgLinks||[]).push(u);},onEvent(){},isVersionAtLeast(){return false;}},${JSON.stringify(opts.tg)})};`});
+      if(u.host==='telegram.org'&&opts.tg)return r.fulfill({contentType:'application/javascript',body:`window.Telegram={WebApp:Object.assign({ready(){},expand(){},openTelegramLink(u){(window.__tgLinks=window.__tgLinks||[]).push(u);},onEvent(){},isVersionAtLeast(){return false;},disableVerticalSwipes(){window.__noSwipe=1;}},${JSON.stringify(opts.tg)})};`});
       if(/fonts\.(googleapis|gstatic)\.com/.test(u.host))return r.continue();
       return r.abort();
     }catch(e){console.log('route error',u.href,e.message);return r.abort();}});

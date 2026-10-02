@@ -20,7 +20,7 @@ function mkDB(){
   const rpc={
     player_hello:()=>js(me()),link_account:()=>({...js(me()),merge_offer:null}),trophy_stats:()=>({players:2,t:{}}),
     player_profile:()=>({public_id:'andr2345',name:'andre',anon:false,since:'2026-09-02T10:00:00Z',seasons:3,champions:1,perfect:0,best_classic:70,win_pct:60,best:{},worst:{},trophies:[],streak_best:0,streak_now:0}),
-    fl_mine:()=>leagues.filter(L=>members.some(m=>m.l===L.id&&m.p==='p-me')).map(L=>({id:L.id,name:L.name,fmt:'11',days:L.days,tries:L.tries,day_n:1,over:false,members:members.filter(m=>m.l===L.id).length,tries_today:entries.filter(e=>e.l===L.id&&e.p==='p-me').length,place:1})),
+    fl_mine:()=>global.MINE_FAIL?{status:500,body:'{"message":"boom"}'}:leagues.filter(L=>members.some(m=>m.l===L.id&&m.p==='p-me')).map(L=>({id:L.id,name:L.name,fmt:'11',days:L.days,tries:L.tries,day_n:1,over:false,members:members.filter(m=>m.l===L.id).length,tries_today:entries.filter(e=>e.l===L.id&&e.p==='p-me').length,place:1})),
     fl_create:a=>{calls.push(['fl_create',a]);const id='abc'+String(leagues.length+2).repeat(3);leagues.push({id,name:a.p_name,fmt:'11',start_day:TODAY,days:a.p_days,tries:a.p_tries,take:a.p_take,scoring:a.p_scoring,rerolls:a.p_rerolls,ratings:a.p_ratings,era:a.p_era});members.push({l:id,p:'p-me'});return get(id);},
     fl_join:a=>{calls.push(['fl_join',a.p_id]);members.push({l:a.p_id,p:'p-me'});return get(a.p_id);},
     fl_get:a=>get(a.p_id)};
@@ -38,7 +38,7 @@ function mkDB(){
  T.check(await pg.$eval('#s7',e=>!e.hidden)&&!!await pg.$('#flNew'),'екран ліг: «Створити лігу» (з входом)');
  await pg.screenshot({path:path.join(OUT,'fl61_list_empty.png'),fullPage:true});
  await pg.click('#flNew');await pg.waitForTimeout(200);
- T.check(!await pg.$('[data-k="fmt"]'),'0.68: формату 5×5 при створенні немає (сховано до доробки)');
+ T.check(!!await pg.$('[data-k="fmt"][data-v="f5"]'),'0.69: формат 5×5 при створенні знову є');
  const names0=await pg.$$eval('[data-name]',es=>es.map(e=>e.dataset.name));await pg.click('#flShuf');const names1=await pg.$$eval('[data-name]',es=>es.map(e=>e.dataset.name));
  T.check(names0.length===3&&names1.length===3&&(names0.join()!==names1.join()),'назви: 3 варіанти, «Перемішати» міняє ('+names1.join(', ')+')');
  await pg.click('[data-k="days"][data-v="7"]');await pg.click('[data-k="scoring"][data-v="sum"]');await pg.click('[data-k="ratings"][data-v="memory"]');await pg.click('[data-k="era"][data-v="y2010"]');await pg.click('[data-k="rerolls"][data-v="0"]');
@@ -72,6 +72,14 @@ function mkDB(){
  const page=(await pg.textContent('#fl')).replace(/\s+/g,' ');
  T.check(/Тур 1 з 7/.test(page)&&/Зіграти спробу 2 з 3/.test(page)&&/Загальна/.test(page)&&/andre/.test(page),'сторінка ліги: тур, наступна спроба, таблиця ('+page.slice(0,90)+')');
  T.check(await pg.evaluate(()=>/[?&]l=abc/.test(location.search)),'адреса сторінки ліги — ?l=…');
+ // 0.69 (власник, iPad): схеми й «Зіграти спробу» — по центру картки туру; правила — чипами; «Поділитися» з підписом
+ await pg.setViewportSize({width:1000,height:1400});await pg.waitForTimeout(200);
+ const offL=await pg.evaluate(()=>{const mid=e=>{const r=e.getBoundingClientRect();return (r.left+r.right)/2;};const bad=[],card=document.querySelector('#fl .fl-tour');
+   for(const e of [document.getElementById('flPlay'),document.querySelector('#fl .fl-forms .chip:nth-child(3)')?document.querySelector('#fl .fl-forms'):null])if(e){const r=[...(e.children.length?e.children:[e])].map(x=>x.getBoundingClientRect());const c=(Math.min(...r.map(x=>x.left))+Math.max(...r.map(x=>x.right)))/2;if(Math.abs(c-mid(card))>3)bad.push((e.id||e.className)+' зсув '+Math.round(c-mid(card))+'px');}
+   if(document.querySelectorAll('#fl .fl-rules .chip').length<4)bad.push('правила не чипами');
+   if(!/Поділитися/.test(document.getElementById('flShare').textContent))bad.push('кнопка без підпису');return bad;});
+ T.check(!offL.length,'iPad: сторінка ліги — схеми й кнопка по центру, правила чипами, «Поділитися»'+(offL.length?' — '+offL.join('; '):''));
+ await pg.screenshot({path:path.join(OUT,'fl61_league_ipad.png'),fullPage:true});await pg.setViewportSize({width:390,height:844});
  await pg.click('[data-tab="tour"]');T.check(/сьогодні/.test(await pg.textContent('#fl')),'вкладка «Тур · сьогодні»');await pg.click('[data-tab="all"]');
  await pg.screenshot({path:path.join(OUT,'fl61_league.png'),fullPage:true});
  // своя сторінка: «Мої ліги»
@@ -88,4 +96,11 @@ function mkDB(){
  const gp=(await G.pg.textContent('#fl')).replace(/\s+/g,' ');
  T.check(await G.pg.$eval('#s7',e=>!e.hidden)&&/Увійти, щоб приєднатися/.test(gp)&&gp.includes(M.leagues[0].name),'гість за посиланням: ліга й «Увійти, щоб приєднатися»');
  T.check(!G.errs.length,'гість: помилок немає '+G.errs.join(' | '));
+ // ---- 0.69: fl_mine не відповів — «Не вдалося завантажити ліги» з повтором, а не «ти ще не граєш»
+ global.MINE_FAIL=true;const E=await openSite({b,db,api,signed:true,wait:1500});
+ await E.pg.click('#flOpen');await E.pg.waitForTimeout(600);
+ T.check(/Не вдалося завантажити ліги/.test(await E.pg.textContent('#fl'))&&!!await E.pg.$('#flRetry'),'збій fl_mine: «Не вдалося завантажити ліги» + «Спробувати ще»');
+ global.MINE_FAIL=false;await E.pg.click('#flRetry');await E.pg.waitForTimeout(600);
+ T.check(!/Не вдалося/.test(await E.pg.textContent('#fl'))&&await E.pg.$$eval('#fl .fl-row',es=>es.length)>0,'«Спробувати ще» — ліги завантажились');
+ T.check(!E.errs.length,'збій fl_mine: помилок немає '+E.errs.join(' | '));
  await b.close();process.exit(T.done());})();

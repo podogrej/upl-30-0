@@ -70,7 +70,7 @@ function f5Begin(){
   F5.seqAll={ptr:0};F5.seqs=[];F5.takenAll=new Set();F5.pick=0;F5.solo=0;F5.replay=0;F5.phase='draft';F5.handoff=true;F5.cs=null;f5Render();}
 function f5Card(slot,p,body){return chipInner(F5_L[slot],p,body);}
 function f5Pitch(team,opts={}){
-  const F=F5_FORMS[team.form],n=F.rows.length,Y=n===4?[14,38.5,63,87]:[18,52,86];const X=k=>k===1?[50]:[30,70];let h=PITCH_MK,i=0;
+  const F=F5_FORMS[team.form],n=F.rows.length,Y=n===4?[12,35,58,81]:[16,48,80];const X=k=>k===1?[50]:[30,70];let h=PITCH_MK,i=0;
   F.rows.forEach((row,ri)=>{const xs=X(row.length);row.forEach((slot,j)=>{const s=team.slots[i++];const p=s.player;
     const body=p?(opts.rt?{pill:avgPill(opts.rt(p).toFixed(1)),r0:p.r}:opts.reveal?{pill:rPill(p.r,true)}:{}):{};
     h+=`<div class="slot ${slot}${p?' filled':' empty'}" style="left:${xs[j]}%;top:${Y[ri]}%">${f5Card(slot,p,body)}</div>`;});});
