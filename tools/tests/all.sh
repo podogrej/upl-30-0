@@ -8,7 +8,7 @@ step(){ local name="$1"; shift; local t=$SECONDS
   if "$@" >"$LOG/$PASS.log" 2>&1; then echo "✓ $name ($((SECONDS-t)) с)"; else echo "✗ $name ($((SECONDS-t)) с)"; tail -25 "$LOG/$PASS.log" | sed 's/^/    /'; FAIL+=("$name"); fi
   PASS=$((PASS+1)); }
 # 1. index.html, lib/engine.js, lib/five_core.js — згенеровані: перезбираємо й дивимося, що в репозиторії вони свіжі
-GEN="index.html lib/engine.js lib/five_core.js pool.*.js version.json"; BEFORE=$(md5sum $GEN)
+GEN="index.html lib/engine.js lib/five_core.js pool.*.js"; BEFORE=$(md5sum $GEN)
 step "збірка" bash -c 'python3 src/build.py && node tools/make_engine.js'
 gen_same(){ [ "$(md5sum $GEN)" = "$BEFORE" ] || { echo 'index.html / lib/* застаріли: python3 src/build.py && node tools/make_engine.js — і закомітити'; return 1; }; }
 step "згенеровані файли свіжі (збірка нічого не змінила)" gen_same
@@ -17,7 +17,7 @@ step "сервер завантажується (як на Vercel)" node tools/t
 # швидкі тести без браузера — завжди
 for t in cheat card_api err_digest; do step "тест $t" node "tools/tests/$t.js"; done
 # тести в браузері (0.67): незалежні, тож ідуть по JOBS одночасно (типово 3) — найдовші першими; QUICK=1 — лише короткий набір
-UI="determinism scenarios fl63 f5online modes chal tro v064 fl61 leagueui v060 player_page v39 news draft58 pitch_layout f5test2 emoji_layout nav_back err_report long_names new_version"
+UI="determinism scenarios fl63 f5online modes chal tro v064 fl61 leagueui v060 player_page v39 news draft58 pitch_layout f5test2 emoji_layout nav_back err_report long_names tg_swipes"
 [ -n "$QUICK" ] && UI="draft58 v064 emoji_layout nav_back"
 JOBS=${JOBS:-3}; declare -A T0
 for t in $UI; do [ -f "tools/tests/$t.js" ] || continue

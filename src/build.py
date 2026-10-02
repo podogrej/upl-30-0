@@ -36,7 +36,4 @@ open(f'../pool.{datav}.js','w').write('window.__POOL='+open('pool.json').read()+
 assert '<script id="pool" type="application/json">__POOL__</script>' in tpl
 site=head+tpl.replace('<script id="pool" type="application/json">__POOL__</script>',f'<script src="pool.{datav}.js"></script>').replace('__ONLINE__','true')+'\n</body>\n</html>\n'
 open('../index.html','w').write(site)
-# 0.69: номер версії окремим файлом — відкрита давно вкладка бачить, що вийшла нова, і пропонує «Оновити» (vercel.json: без кешу)
-import re; ver=re.search(r'Що нового у версії ([\d.]+)',tpl).group(1)
-open('../version.json','w').write(json.dumps({'v':ver})+'\n')
 print(len(art), len(site))
