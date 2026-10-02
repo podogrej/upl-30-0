@@ -29,7 +29,7 @@ function mkDB(){
 (async()=>{const b=await launch();const M=mkDB();const {db}=M;let played=0;
  const api={'/api/fl5':async req=>{const L=M.get(req.body.id);if(L&&!L.result&&new Date(L.deadline)<=new Date()){const lg=M.leagues.find(x=>x.id===L.id);lg.result=await play(L);played++;}return {json:M.get(req.body.id)};},
    '/api/seed':async()=>({json:{seed:1,seed_id:'s1'}})};
- const A=await openSite({b,db,api,signed:true,viewport:{width:390,height:844},wait:1500});const pg=A.pg;
+ const A=await openSite({b,db,api,signed:true,query:'?f5=1',viewport:{width:390,height:844},wait:1500});const pg=A.pg;   // 0.68: створення 5×5 сховано, вмикається ?f5=1
  await pg.click('#flOpen');await pg.waitForTimeout(400);await pg.click('#flNew');await pg.waitForTimeout(200);
  await pg.click('[data-k="fmt"][data-v="f5"]');
  T.check(/Збір складів/.test(await pg.textContent('#fl'))&&!/Спроби на день/.test(await pg.textContent('#fl')),'створення: формат 5×5 — «Збір складів», без спроб і турів');

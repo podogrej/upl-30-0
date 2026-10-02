@@ -1,7 +1,7 @@
 // 30-0 УПЛ — Telegram-бот (Vercel serverless function, адреса: /api/bot)
 // Змінні оточення у Vercel: TG_TOKEN, TG_SECRET (обов'язкова, інакше 401), TG_BOT, SUPABASE_SERVICE_KEY
 const L = require('./_league.js');   // спільні функції ліг груп (0.60: одна копія замість трьох)
-const SITE = 'https://upl-30-0.vercel.app/';   // 0.62.1: з 0.60 рядок випадково опинився в коментарі — /start, /play, /top в особистому чаті падали
+const SITE = 'https://upl30.com.ua/';   // 0.68: свій домен   // 0.62.1: з 0.60 рядок випадково опинився в коментарі — /start, /play, /top в особистому чаті падали
 const SB_KEY = (process.env.SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_pEszTOPsCHLgpiPpwB4JKg_SS-X07hY').trim(); // публічний ключ, як і на сайті
 
 function playButton(isPrivate) {
@@ -85,7 +85,7 @@ module.exports = async (req, res) => {
       if (cmd === '/start' && isPrivate && /^login_[a-f0-9]{32}$/.test(arg)) {
         // вхід на сайт через бота: браузер відкрив t.me/upl30_bot?start=login_<токен>. Одразу не прив'язуємо — посилання могли підсунути;
         // прив'язуємо лише після кнопки «Підтвердити вхід» (callback нижче) від цього ж користувача
-        await L.tg('sendMessage', { chat_id: chat.id, text: '🔐 Вхід у 30-0 УПЛ на сайті upl-30-0.vercel.app.\n\nНатисни «Підтвердити вхід», лише якщо це ти щойно натиснув «Увійти через Telegram» у своєму браузері. Якщо ні — просто проігноруй це повідомлення.',
+        await L.tg('sendMessage', { chat_id: chat.id, text: '🔐 Вхід у 30-0 УПЛ на сайті upl30.com.ua.\n\nНатисни «Підтвердити вхід», лише якщо це ти щойно натиснув «Увійти через Telegram» у своєму браузері. Якщо ні — просто проігноруй це повідомлення.',
           reply_markup: { inline_keyboard: [[{ text: '✅ Підтвердити вхід', callback_data: arg }]] } });
       } else if (cmd === '/start' || cmd === '/help') {
         await L.tg('sendMessage', { chat_id: chat.id, text: isPrivate ? HELLO : GROUP_HELLO, reply_markup: { inline_keyboard: [[playButton(isPrivate)]] } });

@@ -136,6 +136,7 @@ module.exports = async (req, res) => {
     if (del.length) await storage(`object/${BUCKET}`, { method: 'DELETE', body: JSON.stringify({ prefixes: del }), headers: { 'Content-Type': 'application/json' } });
     stage = 'cards';
     let cardsDeleted = 0;
+    try { await sb(`client_errors?at=lt.${new Date(Date.now() - 30 * 864e5).toISOString()}`, { method: 'DELETE' }); } catch (e) { if (e.status !== 404) console.warn('backup: client_errors cleanup', e.message.slice(0, 120)); }   // 0.68: звіти про помилки — 30 днів
     try { cardsDeleted = await cleanCards(day); } catch (e) { console.warn('backup: cards cleanup', e.message.slice(0, 120)); }   // копія вже збережена — чистка карток не валить бекап
     const out = { ok: true, file: `${BUCKET}/${name}`, bytes: buf.length, counts, deleted: del, cardsDeleted, ms: Date.now() - t0 };
     console.log('backup', JSON.stringify(out));

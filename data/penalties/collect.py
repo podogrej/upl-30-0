@@ -102,6 +102,9 @@ def group(pid):
 CAND = [p for p, e in P.items() if len(e['years']) >= MIN_SEASONS or e['max'] >= MIN_CARD
         or (e['mainline'] == 'GK' and e['apps'] >= GK_MIN_APPS)]
 CAND.sort(key=lambda p: (group(p), -P[p]['max'], p))
+# ONLY=<id>,<id>… — оновити лише ці рядки в наявному penalties.csv (решта рядків лишається як є);
+# ONLY=manual — усі з MANUAL. Потрібно, коли повного кешу вже немає, а виправити треба кілька людей.
+ONLY = os.environ.get('ONLY', '')
 log('кандидатів', len(CAND), collections.Counter(group(p) for p in CAND))
 
 
@@ -126,15 +129,33 @@ def sim(a, b):
     return difflib.SequenceMatcher(None, latin(a), latin(b)).ratio()
 
 
-def name_sim(pid, *labels):
-    ours = {translit(t) for t in re.split(r'[\s-]+', P[pid]['name']) if t}
+def surname_sim(pid, *labels):
+    """схожість ПРІЗВИЩА (не будь-якого слова імені): до 01.10.2026 тут був name_sim — він приймав збіг імені
+    («Олег», «Сергій»), і з Wikidata (та сама дата народження) приїхали чужі люди (Єсін → Usoltsev, Сизон → Sionko).
+    Наше прізвище = усі слова імені, крім першого (або єдине слово; плюс slug з id, якщо він не є ім'ям).
+    Пара «наше прізвище — слово TM» зараховується, якщо збігається перша літера, довжини близькі (≥ 0.65)
+    і схожість ≥ 0.75; г→h/g, k/c, є/е — нечутливо."""
+    def norm(s):
+        return latin(s).replace('g', 'h').replace('k', 'c').replace('ie', 'e')
+    words = [w for w in re.split(r'[\s-]+', P[pid]['name']) if w]
+    ours = set()
+    for w in (words[1:] if len(words) > 1 else words):
+        ours |= {norm(translit(w)), norm(translit(w.replace('г', 'ґ').replace('Г', 'Ґ')))}
     if pid.startswith('w:'):
-        ours.add(pid.split(':', 2)[2])
+        slug = pid.split(':', 2)[2]
+        if len(words) < 2 or sim(slug, translit(words[0])) < 0.7:
+            ours.add(norm(slug))
     best = 0
     for label in labels:
-        theirs = [translit(t) for t in re.split(r'[\s-]+', label or '') if len(latin(translit(t))) >= 3]
-        best = max([best] + [sim(a, b) for a in ours for b in theirs if len(latin(a)) >= 3])
+        for t in re.split(r'[\s-]+', label or ''):
+            b = norm(translit(t))
+            for a in ours:
+                if len(a) >= 2 and len(b) >= 2 and a[0] == b[0] and min(len(a), len(b)) / max(len(a), len(b)) >= 0.65:
+                    best = max(best, difflib.SequenceMatcher(None, a, b).ratio())
     return best
+
+
+SURNAME_MIN = 0.75
 
 
 # ---------- мережа ----------
@@ -196,8 +217,62 @@ for k, v in seed('tm_search.json', 'class').items():
 WD = jload('wd_dates.json', {})
 for k, v in seed('wd_foot.json', 'foot').items():
     WD.setdefault(k, v)
+# Ручні прив'язки person_id → TM id (мають перевагу над кешем і автоматичним пошуком; ok_identity для них не перевіряється).
+# 1) 01–02.10.2026: виправлено хибні прив'язки (стара перевірка приймала збіг імені, не прізвища) — кожен id звірено
+#    з клубами й сезонами УПЛ у пулі; у Мендоси й Пищура дата народження на TM відрізняється на 2 дні.
+# 2) правильні, але нова перевірка прізвища їх не пропустила б (Hakobyan, Tănasă, Tchoutang, Jakobia, Ţîgîrlaş, Ebanda; Jugeli — інше ім'я).
+MANUAL = {
+    'w:1969-01-23:nikiforov': '970292',  # Андрій Никифоров (було 3742)
+    'w:1969-02-13:korponai': '883303',  # Іван Корпонай (було 21097)
+    'w:1970-02-01:irichuk': '970590',  # Павло Ірічук (було 288479)
+    'w:1970-02-14:shkolnikov': '883444',  # Ян Школьніков (було 951000)
+    'w:1970-06-29:rudniak': '883453',  # Дмитро Рудняк (було 21927)
+    'w:1970-07-05:rati': '169277',  # Олег Ратій (було 751152)
+    'w:1970-10-07:korenev': '251323',  # Дмитро Корєнєв (було 372232)
+    'w:1971-02-07:sich': '966827',  # Микола Сич (було 400938)
+    'w:1971-10-21:prohorenkov': '529460',  # Олексій Прохоренков (було 181973)
+    'w:1974-01-08:leliuk': '494564',  # Дмитро Лелюк (було 173664)
+    'w:1974-01-23:semchuk': '871044',  # Дмитро Семчук (було 117937)
+    'w:1975-02-17:seleznov': '97868',  # Сергій Селезньов (було 885346)
+    'w:1975-03-31:balanchuk': '251263',  # Сергій Баланчук (було 25870)
+    'w:1975-04-02:esin': '57873',  # Сергій Єсін (було 80090)
+    'w:1975-11-21:lutsishin': '883532',  # Михайло Луцишин (було 95210)
+    'w:1976-10-08:derenov': '664478',  # Сергій Деренов (було 532358)
+    'w:1976-11-24:flavius': '22127',  # Флавіус Стойкан (було 6446)
+    'w:1977-02-01:sizon': '883860',  # Олег Сизон (було 9770)
+    'w:1978-02-04:aliutse': '28532',  # Маріан Аліуце (було 280347)
+    'w:1978-04-26:andres': '9650',  # Андрес Мендоса (було 74433)
+    'w:1978-06-20:apian': '987608',  # Артур Апіян (було 6766)
+    'w:1978-07-24:malimon': '882566',  # Іван Малімон (було 301626)
+    'w:1978-11-17:chomahidze': '175925',  # Шота Чомахідзе (було 254587)
+    'w:1978-12-29:antonenko': '91467',  # Олександр Антоненко (було 110232)
+    'w:1979-08-01:djurichich': '28392',  # Саша Джурічич (було 1802)
+    'w:1979-09-12:vasin': '416208',  # Денис Васін (було 261224)
+    'w:1979-09-14:kozoriz': '57885',  # Іван Козоріз (було 84958)
+    'w:1981-01-29:pischur': '58245',  # Олександр Пищур (було 91349)
+    'w:1982-01-15:chernikov': '27192',  # Володимир Черніков (було 73974)
+    'w:1982-05-04:suhina': '855965',  # Євген Сухина (було 76312)
+    'w:1983-05-07:lujankov': '161557',  # Олександр Лужанков (було 178115)
+    'w:1985-06-07:shmakov': '58251',  # Євгеній Шмаков (було 19115)
+    'w:1986-07-22:baranets': '82592',  # Борис Баранець (було 261100)
+    'w:1972-04-03:shutkov': '14941',  # Дмитро Шутков (було 619988, виправлено 01.10.2026)
+    'w:1985-03-12:tovt': '27216',  # Андрій Товт (було 89540, виправлено 01.10.2026)
+    'w:1969-04-14:djuheli': '831725',  # Іван Джугелі
+    'w:1976-09-02:bernar': '32170',  # Бернар Чутанг
+    'w:1978-09-05:hiom': '58236',  # Патрік Ібанда
+    'w:1980-08-20:djakobia': '42636',  # Лаша Джакобія
+    'w:1980-11-04:akobian': '23986',  # Ара Акобян
+    'w:1981-02-02:chiprian': '46661',  # Чіпріан Тенасе
+    'w:1984-02-24:tsihirlash': '44387',  # Ігор Цигирлаш
+}
 CLASS_ID = seed('idmap.json', 'class')
 IDMAP = jload('idmap.json', {})
+
+
+if ONLY:
+    _only = set(MANUAL) if ONLY == 'manual' else set(ONLY.split(','))
+    CAND = [p for p in CAND if p in _only]
+    log('ONLY: оновлюємо рядків', len(CAND))
 
 
 def tm_players(ids):
@@ -268,15 +343,18 @@ def ok_identity(pid, e):
         return False
     if pid.startswith('tm:'):
         return True
-    return e.get('dob') == pid.split(':')[1] and name_sim(pid, e['name'], e.get('short', ''), e.get('passport', '')) >= 0.7
+    return e.get('dob') == pid.split(':')[1] and surname_sim(pid, e['name'], e.get('short', ''), e.get('passport', '')) >= SURNAME_MIN
 
 
 def resolve_ids():
     """без пошуку на www: tm:, кеш data/class, посилання репозиторію, Wikidata"""
     links = known_links()
-    wd_dates({p.split(':')[1] for p in CAND if p.startswith('w:') and '-00' not in p and not (IDMAP.get(p) or {}).get('tm')})
+    wd_dates({p.split(':')[1] for p in CAND if p.startswith('w:') and '-00' not in p and p not in MANUAL and not (IDMAP.get(p) or {}).get('tm')})
     cands = {}
     for pid in CAND:
+        if pid in MANUAL:
+            IDMAP[pid] = {'tm': MANUAL[pid], 'how': 'вручну (MANUAL у collect.py, звірено з клубами УПЛ)', 'searched': 1}
+            continue
         if (IDMAP.get(pid) or {}).get('tm'):
             continue
         if pid.startswith('tm:'):
@@ -290,7 +368,7 @@ def resolve_ids():
             c.append((ci['tm'], 'data/class: ' + ci.get('how', '')))
         d = pid.split(':')[1]
         c += [(t, 'repo link (data/foot, data/positions)') for t in links.get(pid, [])]
-        c += [(t, 'wikidata P2446 + dob') for lab, t in WD.get(d, []) if lab and name_sim(pid, lab) >= 0.7]
+        c += [(t, 'wikidata P2446 + dob') for lab, t in WD.get(d, []) if lab and surname_sim(pid, lab) >= SURNAME_MIN]
         cands[pid] = list(dict.fromkeys(c))
     tm_players([t for v in cands.values() for t, _ in v])
     for pid, c in cands.items():
@@ -315,7 +393,7 @@ def search_ids():
         g = t.replace('kh', 'h').replace('h', 'g')
         found = ''
         for q in dict.fromkeys(q for q in (t, slug, g, g.replace('y', 'i')) if len(q) >= 3):
-            ids = [x for sl, x in tm_search(q) if name_sim(pid, sl.replace('-', ' ')) >= 0.7]
+            ids = [x for sl, x in tm_search(q) if surname_sim(pid, sl.replace('-', ' ')) >= SURNAME_MIN]
             tm_players(ids)
             found = next((x for x in ids if ok_identity(pid, TMPL.get(x))), '')
             if found:
@@ -432,6 +510,10 @@ def write():
             note.append('дані TM ще не зібрано (бюджет/помилка)')
         r['note'] = '; '.join(note)
         rows.append(r)
+    if ONLY and os.path.exists(OUT):
+        new = {r['person_id']: r for r in rows}
+        old = list(csv.DictReader(open(OUT, newline='')))
+        rows = [new.pop(r['person_id'], r) for r in old] + list(new.values())
     with open(OUT, 'w', newline='') as f:
         w = csv.DictWriter(f, fieldnames=list(rows[0].keys()))
         w.writeheader()

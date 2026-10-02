@@ -11,7 +11,7 @@ async function openPage(opts={}){
   const b=await launch();
   const ctx=await b.newContext({viewport:{width:390,height:844},...opts});
   await ctx.route(u=>!(u.href.startsWith('file:')||/fonts\.(googleapis|gstatic)\.com/.test(u.host)),r=>r.abort());
-  const pg=await ctx.newPage();const errs=[];pg.on('pageerror',e=>errs.push(e.message));
+  const pg=await ctx.newPage();const errs=[];pg.on('pageerror',e=>errs.push(e.message));pg.on('dialog',d=>/Склад не збережеться/.test(d.message())?d.accept():d.dismiss());   // 0.68: вихід із початого драфту — тести погоджуються
   await pg.goto('file://'+path.join(ROOT,'index.html'));await pg.waitForTimeout(800);
   return {b,pg,errs};}
 // формат на екрані налаштувань: плитка, а сховані з 0.64 («Класичне дербі», «Ліга легенд» — у рушії лишились для старих сезонів) — напряму через setFmt

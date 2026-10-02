@@ -146,14 +146,14 @@ function f5Render(){
         <h3>Матчі групи</h3><div class="matches">${r.matches.map(m=>`<div class="m"><span class="op">${esc(f5Label(m.A))} — ${esc(f5Label(m.B))}</span><span></span><span class="sc">${m.ga}:${m.gb}</span></div>`).join('')}</div>`:''}
       <h3>Склади фіналістів</h3><div class="f5grid">${[m0.A,m0.B].map((t,k)=>{const rs=k?m0.rb:m0.ra;return `<div>${f5Head(t)}${f5Pitch(t,{rt:p=>rs.find(x=>x.id===p.id).rt})}</div>`;}).join('')}</div>`;
     document.getElementById('f5Again').onclick=()=>{F5.replay=(F5.replay||0)+1;f5Play();};document.getElementById('f5New').onclick=f5Start;
-    document.getElementById('f5Copy').onclick=()=>{const t=`⚽ 30-0 УПЛ · 5×5\n${r.table?'Фінал: ':''}${f5Label(m0.A)} ${m0.ga}:${m0.gb}${m0.pens?` (пен. ${m0.pens[0]}:${m0.pens[1]})`:''} ${f5Label(m0.B)}\n🏆 ${f5Label(champ)}\n⭐ ${mvp.name} ${mvp.rt.toFixed(1)}`+(ONLINE?`\n\nЗбери свою п'ятірку: https://upl-30-0.vercel.app`:'');
+    document.getElementById('f5Copy').onclick=()=>{const t=`⚽ 30-0 УПЛ · 5×5\n${r.table?'Фінал: ':''}${f5Label(m0.A)} ${m0.ga}:${m0.gb}${m0.pens?` (пен. ${m0.pens[0]}:${m0.pens[1]})`:''} ${f5Label(m0.B)}\n🏆 ${f5Label(champ)}\n⭐ ${mvp.name} ${mvp.rt.toFixed(1)}`+(ONLINE?`\n\nЗбери свою п'ятірку: ${SITE_HOST}`:'');
       const msg=document.getElementById('f5Msg');try{navigator.clipboard.writeText(t).then(()=>{msg.textContent='Скопійовано';},()=>{msg.textContent=t;});}catch(e){msg.textContent=t;}};}
 }
 
 // ---------- 5×5 онлайн: кімната в Supabase, усі пристрої опитують її раз на 2 с і будують однаковий стан із seed + піків
 const F5_SB=(q,opt={})=>fetch(`${SB_URL}/rest/v1/${q}${q.includes('?')?'&':'?'}apikey=${SB_KEY}`,{method:opt.method||'GET',headers:{apikey:SB_KEY,'Content-Type':'application/json',Prefer:opt.prefer||'return=representation'},body:opt.body?JSON.stringify(opt.body):undefined})
   .then(async r=>{const tx=await r.text();let j=null;try{j=tx?JSON.parse(tx):null;}catch(e){}if(!r.ok){const e=new Error((j&&(j.message||j.details))||tx||r.status);e.status=r.status;e.code=j&&j.code;throw e;}return j;});
-function f5Link(id){return `https://upl-30-0.vercel.app/?r=${id}`;}
+function f5Link(id){return `${SITE}?r=${id}`;}
 function f5TgLink(id){return `https://t.me/${TG_BOT}?startapp=r${id}`;}
 function f5StopPoll(){if(F5&&F5.online&&F5.online.timer){clearInterval(F5.online.timer);F5.online.timer=null;}}
 function f5Poll(){if(!F5||!F5.online)return;f5StopPoll();const tick=()=>f5Sync().catch(()=>{});tick();F5.online.timer=setInterval(tick,2000);}
@@ -163,7 +163,7 @@ async function f5Create(){
   const id=Math.random().toString(36).slice(2,8).toUpperCase(),seed=Math.floor(Math.random()*2147483647),dev=deviceId();
   try{await F5_SB('f5_rooms',{method:'POST',body:{id,seed,mode:F5.mode,max_players:F5.n,host_device:dev}});
     await F5_SB('f5_players',{method:'POST',body:{room_id:id,seat:0,device_id:dev,name:nm.slice(0,24),team:(F5.teams_[0]||'').trim().slice(0,22)||null,form:F5.forms[0]}});
-    F5.online={id,dev,seat:0,host:true};F5.phase='lobby';history.replaceState(null,'',`?r=${id}`);f5Render();f5Poll();}
+    F5.online={id,dev,seat:0,host:true};F5.phase='lobby';history.replaceState(history.state,'',`?r=${id}`);f5Render();f5Poll();}
   catch(e){b.disabled=false;alertF5('Не вдалося створити кімнату: '+String(e.message||e).slice(0,120));}}
 function alertF5(t){const el=document.getElementById('f5');if(el)el.insertAdjacentHTML('afterbegin',`<p class="note" style="margin-top:12px">${esc(t)}</p>`);}
 function f5RoomParam(){const m=/[?&]r=([A-Za-z0-9]{5,12})/.exec(location.search);if(m)return m[1].toUpperCase();const sp=TG&&TG.initDataUnsafe&&TG.initDataUnsafe.start_param||'';const x=/^r([A-Za-z0-9]{5,12})$/.exec(sp);return x?x[1].toUpperCase():null;}

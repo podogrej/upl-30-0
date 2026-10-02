@@ -10,7 +10,7 @@ let CHAL=null;   // виклик, який зараз відкрито за по
 const chalWho=x=>x&&x.players&&(x.players.name||x.players.anon_name)?pname(x):String((x&&x.name)||'друг').toLowerCase();
 const chalLink=x=>x&&x.players&&x.players.public_id?plink(x):esc(chalWho(x));
 const chalName=()=>{const el=document.getElementById('chalName');const v=el&&el.value.trim();if(v&&v.length>=2){if(!TGU)nickSet(v);return v;}return (TGU?[TGU.first_name,TGU.last_name].filter(Boolean).join(' '):'')||myName()||'Друг';};
-function chalLinkWeb(id){return `https://upl-30-0.vercel.app/?c=${id}`;}
+function chalLinkWeb(id){return `${SITE}?c=${id}`;}
 function chalLinkTg(id){return `https://t.me/${TG_BOT}?startapp=c${id}`;}
 async function chalCreate(r){
   const id=chalId();const row={id,device_id:deviceId(),name:chalName().slice(0,40),seed:S.chal.seed,formation:S.formation,year:r.year,mode:S.mode,w:r.W,d:r.D,l:r.L,pts:r.pts,place:r.place,gf:r.gf,ga:r.ga};

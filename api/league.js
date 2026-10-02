@@ -30,7 +30,7 @@ module.exports = async (req, res) => {
       if (!lg) return res.status(404).json({ error: 'no league' });
       const today = todayRows.sort(L.sortRes).map(({ name, u, w, d, l, pts, gf, ga, created_at }) => ({ name, u, w, d, l, pts, gf, ga, created_at }));
       res.setHeader('Cache-Control', 'public, s-maxage=15, stale-while-revalidate=60');
-      return res.status(200).json({ title: lg.title, day, today, members: memberRows.length, standings: st.slice(0, 10) });
+      return res.status(200).json({ title: lg.title, day, today, members: memberRows.length, standings: st.slice(0, 100) });   // 0.68: повний залік — на екрані «Уся таблиця» (головна показує топ-3)
     }
     if (req.method !== 'POST') return res.status(405).json({ error: 'GET or POST' });
     let b = req.body || {}; if (typeof b === 'string') b = JSON.parse(b);

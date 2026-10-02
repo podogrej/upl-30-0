@@ -148,7 +148,7 @@ revoke execute on function public.fl_get(text) from public;
 grant execute on function public.fl_get(text) to anon, authenticated;
 
 -- мої ліги (за секретом пристрою): назва, тур, учасники, моє місце в загальній таблиці, мої зараховані спроби сьогодні
-create or replace function public.fl_mine(p_device uuid, p_secret text) returns json language plpgsql stable security definer set search_path = public as $$
+create or replace function public.fl_mine(p_device uuid, p_secret text) returns json language plpgsql volatile security definer set search_path = public as $$
 declare pid uuid; res json;
 begin
   pid := public.device_check(p_device, p_secret);

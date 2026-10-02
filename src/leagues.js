@@ -2,10 +2,12 @@
 // Ліга — правила для всіх (тривалість, спроби, у залік, очки за тур, перекрути, рейтинги, епоха); кожен день — тур; колесо в кожного своє.
 // Спроба — звичайний сезон класики «Звичайний» з кодом ліги (seasons.fl_id): зараховує сервер після перевірки (api/verify.js → fl_record).
 // Створити й вступити — лише з входом (RPC fl_create / fl_join, sql/v061_leagues.sql). Посилання — ?l=<код> (DECISIONS п. 10, 11).
-const FL_NAMES=['Паляниця Ліга','Ліга диванних тренерів','Банка на воротах','Сухарі з родзинками','Кефаль і Ко','Автобус на воротах','Штанга-Перекладина','Мазила ФК',
-  'Пиво і пенальті','Гра в одні ворота','Кум у запасі','Дворовий Кубок','Тренер, випусти мене','Жовта картка за сміх','Суддю на мило','Мʼяч круглий','Поле 3×3',
-  'Серце легше','Все буде добре','Біля кутового','Золотий дубль','Офсайд по-київськи','Вареники в додатковий час','Ні кроку назад','Шаланди, повні голів',
-  'Лобан би схвалив','Пенальті на 90+5','Легенди двору','Кубок кума','Сало і стандарти'];
+const FL_NAMES=['Паляниця Ліга','Ліга диванних тренерів','Банка на воротах','Сухарі з родзинками','Кефаль і Ко','Автобус на воротах','Штанга-Перекладина','Мазила ФК','Гра в одні ворота',
+  'Кум у запасі','Дворовий Кубок','Тренер, випусти мене','Жовта картка за сміх','Суддю на мило','Мʼяч круглий','Все буде добре','Біля кутового','Золотий дубль',
+  'Офсайд по-київськи','Вареники в додатковий час','Ні кроку назад','Шаланди, повні голів','Лобан би схвалив','Пенальті на 90+5','Легенди двору','Кубок кума',
+  'Сало і стандарти','Не робіть мені нерви','Дві великі різниці','Щоб я так жив','Не смішіть мої капці','Щоб ви були здорові','Чемпіони дивана','Друзі по лаві',
+  'Ліга запасних','Мундіаль на кухні','Каштани і кутові','Бутси на цвях','Ліга вихідного дня','Футбол до темряви','Мама кличе додому','Хто останній — на воротах',
+  'Ворота з портфелів','Мʼяч через паркан','Ліга за гаражами','Коробка біля школи','Хто програв — біжить по мʼяч'];   // 0.68: назви за вибором власника (одеські, дворові); без дужок
 const FL_OPT={days:[[1,'1 день'],[3,'3 дні'],[7,'7 днів']],
   scoring:[['place','За місце','1-й отримує стільки, скільки зіграло; останній — 1'],['sum','Сума','очки сезону додаються']],
   tries:[[1,'1 спроба','без права на помилку'],[3,'3 спроби','']],
@@ -13,9 +15,11 @@ const FL_OPT={days:[[1,'1 день'],[3,'3 дні'],[7,'7 днів']],
   rerolls:[[3,'3','легко'],[1,'1','нормально'],[0,'0','хардкор']],
   ratings:[['show','Видно',''],['memory','На пам\'ять','рейтинги приховані']],
   hours:[[1,'1 година','швидкий турнір'],[3,'3 години',''],[24,'Добу','щоб усі встигли']]};
+// 0.68 (власник 02.10: «5×5 поки недороблено — сховати»): нові ліги — лише 11×11; 5×5 — за ?f5=1 (тести, власник). Старі ліги 5×5 за посиланням працюють
+const FL5_ON=/[?&]f5=1(&|$)/.test(location.search);
 let FL=null;   // {view:'list'|'create'|'league', id, data, mine, form, tab, formation}
-const flUrl=id=>{try{const q=new URLSearchParams(location.search);if(id)q.set('l',id);else q.delete('l');const s=q.toString();history.replaceState(null,'',location.pathname+(s?'?'+s:'')+location.hash);}catch(e){}};
-const flLink=id=>`${location.origin&&location.origin!=='null'?location.origin:'https://upl-30-0.vercel.app'}${location.pathname||'/'}?l=${id}`;
+const flUrl=id=>{try{const q=new URLSearchParams(location.search);if(id)q.set('l',id);else q.delete('l');const s=q.toString();history.replaceState(history.state,'',location.pathname+(s?'?'+s:'')+location.hash);}catch(e){}};
+const flLink=id=>`${location.origin&&location.origin!=='null'?location.origin:SITE.slice(0,-1)}${location.pathname||'/'}?l=${id}`;
 async function flRpc(fn,args){const r=await fetch(`${SB_URL}/rest/v1/rpc/${fn}?apikey=${SB_KEY}`,{method:'POST',headers:{apikey:SB_KEY,'Content-Type':'application/json'},body:JSON.stringify(args)});
   const t=await r.text();if(!r.ok)throw new Error(`${fn} ${r.status}: ${t.slice(0,160)}`);return t?JSON.parse(t):null;}
 const flErr=e=>{const m=String(e&&e.message||e);return /login\?|28000/.test(m)?'Спершу увійди через Google чи Telegram.':/fl_over/.test(m)?'Ця ліга вже завершилась.':/fl_full/.test(m)?'У лізі 5×5 уже 10 гравців.':/fl_few/.test(m)?'Потрібно щонайменше 2 зібрані склади.':/fl_member/.test(m)?'Спершу приєднайся до ліги.':/fl_none/.test(m)?'Такої ліги немає. Перевір посилання.':/fl_many/.test(m)?'Забагато ліг за день. Спробуй завтра.':/404|PGRST202/.test(m)?'Ліги ще не ввімкнено. Спробуй трохи пізніше.':'Не вдалося. Спробуй ще раз.';};
@@ -54,7 +58,7 @@ const fl5Sub=x=>x.over?`турнір зіграно · ${numOr0(x.members)} ${pl
 function flTiles(key,cols){const f=FL.form;return `<div class="fl-opts c${cols}">${FL_OPT[key].map(([v,t,s])=>`<button class="opt${f[key]===v?' on':''}" data-k="${key}" data-v="${v}"><b>${t}</b>${s?`<small>${s}</small>`:''}</button>`).join('')}</div>`;}
 function flCreateHtml(){const f=FL.form;
   return `<div class="fl-hero"><h1>Правила ліги</h1><p>Однакові для всіх. Відрізняється лише команда.</p></div>
-    <div class="sec0">Формат</div><div class="fl-opts c2"><button class="opt${f.fmt!=='5'?' on':''}" data-k="fmt" data-v="f11"><b>11×11</b><small>Ліга на кілька днів: щодня тур, очки сумуються</small></button><button class="opt${f.fmt==='5'?' on':''}" data-k="fmt" data-v="f5"><b>5×5</b><small>Турнір: ваші п'ятірки грають одна з одною</small></button></div>
+    ${FL5_ON?`<div class="sec0">Формат</div><div class="fl-opts c2"><button class="opt${f.fmt!=='5'?' on':''}" data-k="fmt" data-v="f11"><b>11×11</b><small>Ліга на кілька днів: щодня тур, очки сумуються</small></button><button class="opt${f.fmt==='5'?' on':''}" data-k="fmt" data-v="f5"><b>5×5</b><small>Турнір: ваші п'ятірки грають одна з одною</small></button></div>`:''}
     <div class="sec0">Назва</div><div class="fl-names">${f.names.map(n=>`<button class="chip${f.name===n?' onc':''}" data-name="${esc(n)}">${esc(n)}</button>`).join('')}</div><button class="ghost fl-shuf" id="flShuf">${ic('swap-horizontal','sm')}Перемішати</button>
     ${f.fmt==='5'?`<div class="sec0">Збір складів</div>${flTiles('hours',3)}`:`<div class="sec0">Тривалість</div>${flTiles('days',3)}`}
     ${f.fmt==='5'?'':`<div class="sec0">Очки за тур</div>${flTiles('scoring',2)}

@@ -38,7 +38,7 @@ function page(site, id, s) {
 
 module.exports = async (req, res) => {
   const id = String((req.query && req.query.id) || '').replace(/\D/g, '').slice(0, 12);
-  const host = String(req.headers['x-forwarded-host'] || req.headers.host || 'upl-30-0.vercel.app').replace(/[^a-z0-9.:-]/gi, '');
+  const host = String(req.headers['x-forwarded-host'] || req.headers.host || 'upl30.com.ua').replace(/[^a-z0-9.:-]/gi, '');
   const site = `https://${host}/`;
   const s = id ? await season(id) : null;
   res.setHeader('Content-Type', 'text/html; charset=utf-8');

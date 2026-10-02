@@ -24,7 +24,7 @@ function trPct(id){return TR_PCT&&TR_PCT.players>=RARITY_MIN_PLAYERS?100*((TR_PC
 function trTier(t){if(t.sec)return null;const p=trPct(t.id);return p==null?null:RARITY.find(([m])=>p>=m);}
 // ---------- стан сторінки
 let PP=null;   // {u, own, prof, have:{id:{n,at}}, f, s, all, hist:{rows,more}}
-function ppUrl(u){try{const q=new URLSearchParams(location.search);if(u)q.set('u',u);else q.delete('u');const s=q.toString();history.replaceState(null,'',location.pathname+(s?'?'+s:'')+location.hash);}catch(e){}}
+function ppUrl(u){try{const q=new URLSearchParams(location.search);if(u)q.set('u',u);else q.delete('u');const s=q.toString();history.replaceState(history.state,'',location.pathname+(s?'?'+s:'')+location.hash);}catch(e){}}
 function openPlayer(u){
   u=u&&/^[a-z2-9]{8}$/.test(u)?u:null;
   const own=!u||!!(PLAYER&&PLAYER.public_id===u);
@@ -140,7 +140,7 @@ async function ppShareCab(got,n,total){try{await document.fonts.ready;}catch(e){
     g.textBaseline='alphabetic';g.fillStyle='#ffffff';let f2=28;g.font=`700 ${f2}px ${BODY}`;let tn=t.n;while(g.measureText(tn).width>cw-20&&f2>20){f2-=1;g.font=`700 ${f2}px ${BODY}`;}
     while(g.measureText(tn).width>cw-20&&tn.length>4)tn=tn.slice(0,-2)+'…';g.fillText(tn,cx,cy+R+46);g.textAlign='left';});
   if(got.length>12){g.fillStyle='#b3aea4';g.font=`600 28px ${BODY}`;g.fillText(`і ще ${got.length-12}`,80,y0+4*ch-10);}
-  g.fillStyle='#8f9bc4';g.font=`500 24px ${BODY}`;g.fillText('Збери свою 11-ку · upl-30-0.vercel.app',80,H-62);
+  g.fillStyle='#8f9bc4';g.font=`500 24px ${BODY}`;g.fillText('Збери свою 11-ку · '+SITE_HOST,80,H-62);
   const out=document.getElementById('ppCabOut'),img=document.getElementById('ppCabImg'),send=document.getElementById('ppCabSend'),msg=document.getElementById('ppCabMsg');if(!out)return;
   img.src=c.toDataURL('image/png');out.hidden=false;msg.textContent='';
   const inTg=!!(ONLINE&&TG&&TG.initData);let canFile=false;
@@ -164,41 +164,63 @@ async function ppHistLoad(more){
   el.innerHTML=st.hist.rows.length?`<div class="pp-list">${st.hist.rows.map(r=>`<div class="pp-row h" data-sid="${numOr0(r.id)}" role="button" tabindex="0"><span class="d">${fmtShort(r.day||r.created_at)}</span><div class="t"><b><i class="mdot" style="background:${PP_MODE_DOT[r.day?'daily':r.mode==='pick'?'pick':r.format]||'var(--muted)'}"></i>${esc(lab(r))}</b><span>${numOr0(r.place)} місце · ${numOr0(r.w)}-${numOr0(r.d)}-${numOr0(r.l)}</span></div><span class="n">${numOr0(r.pts)}<small>оч</small></span>${icon('chevron-right')}</div>`).join('')}</div>${st.hist.more?'<button class="ghost wbtn" id="ppMore" style="margin-top:8px">Ще 10 сезонів</button>':''}`:'<p class="muted">Ще немає зіграних сезонів.</p>';
   const m=document.getElementById('ppMore');if(m)m.onclick=()=>{m.disabled=true;ppHistLoad(true);};
 }
-// налаштування (лише своя сторінка): ім'я, вхід/вихід, видалення акаунта
+// налаштування (лише своя сторінка). 0.68 (власник обрав варіант A, як у 38-0): відкриті одразу, список рядків «Ім'я › andré»;
+// тап — лист знизу з полем і «Зберегти» (ppSheet). Окремо «Акаунт»: чим увійшов, «Вийти»; унизу — «Видалити акаунт…»
+const ppRow=(id,k,sub,v,muted)=>`<button class="set-r" id="${id}"><span class="k">${k}<small>${sub}</small></span><span class="v${muted?' mu':''}">${esc(v)}</span>${icon('chevron-right')}</button>`;
 function ppSettingsHtml(){
-  const nx=PLAYER&&PLAYER.name_next&&PLAYER.name_next>new Date().toISOString()?PLAYER.name_next:null;
   const via=SESSION?((SESSION.user.app_metadata&&SESSION.user.app_metadata.provider)==='google'?'Google':'Telegram'):'';
-  return `<details class="pp-hist" id="ppSet"><summary>Налаштування</summary><div class="pp-acct">
-    ${PLAYER?`<label for="ppNameIn"><b>Ім'я</b> <span class="muted" style="font-size:12px">— одне на всі таблиці, ліги й результати</span></label>
-    <div class="row"><input id="ppNameIn" maxlength="20" autocomplete="nickname" autocapitalize="none" autocorrect="off" spellcheck="false" value="${esc(PLAYER.name||'')}" placeholder="${esc(PLAYER.anon_name||'')}"><button class="ghost" id="ppNameSave">Зберегти</button></div>
-    <p class="muted pp-hint" id="ppNameMsg">${nx?`Змінити знову можна з ${fmtLong(nx)}.`:`3–20 символів: латинські літери a–z, цифри, «_» і «.». Змінювати можна раз на 30 днів.`}${PLAYER.name?'':` Поки ти в таблицях як <b>${esc(PLAYER.anon_name||'')}</b>.`}</p>`:''}
-    <label for="ppTeam"><b>Назва команди</b> <span class="muted" style="font-size:12px">— на полі й у картці результату</span></label>
-    <div class="row"><input id="ppTeam" maxlength="22" placeholder="Твоя 11-ка" value="${esc(lsGet('upl30_team')||'')}"></div>
-    ${PLAYER&&'contact_email' in PLAYER?`<label for="ppMail"><b>Пошта для новин</b> <span class="muted" style="font-size:12px">— необов'язково, видно лише тобі</span></label>
-    <div class="row"><input id="ppMail" type="email" maxlength="254" autocomplete="email" autocapitalize="none" spellcheck="false" value="${esc(PLAYER.contact_email||'')}" placeholder="name@gmail.com"><button class="ghost" id="ppMailSave">Зберегти</button></div>
-    <label class="rtog" style="margin:0;font-weight:400"><input type="checkbox" id="ppNews"${PLAYER.news_optin?' checked':''}> Іноді надсилати новини 30-0 (великі оновлення, не частіше разу на місяць)</label>
-    <p class="muted pp-hint" id="ppMailMsg">Порожнє поле — пошту буде стерто.</p>`:''}
-    ${SESSION?`<div class="who">${icon(via==='Google'?'google':'telegram')}Увійшов через ${via}</div><div class="row"><button class="ghost" id="ppOut">${ic('logout','sm')}Вийти</button></div>`
-      :`<span class="muted" style="font-size:13px">Увійди, щоб трофеї, рекорди й серія зберігались на всіх пристроях.</span><div class="row"><button class="primary" id="ppLogin2">Увійти</button></div>`}
-    ${PLAYER?`<button class="pp-del" id="ppDel">${SESSION?'Видалити акаунт…':'Видалити мої дані…'}</button><div id="ppDelBox" hidden class="pp-delbox"><p>Ім'я, вхід і прив'язку цього пристрою буде стерто назавжди. Результати лишаться в таблицях під анонімним іменем, але вже не будуть пов’язані з тобою. Трофеї й серія на цьому пристрої теж зникнуть.</p><div class="row"><button class="danger" id="ppDelYes">Так, видалити</button><button class="ghost" id="ppDelNo">Скасувати</button></div><p class="muted" id="ppDelMsg" style="margin:0"></p></div>`:''}
-  </div></details>`;}
+  const team=lsGet('upl30_team')||'',mail=PLAYER&&PLAYER.contact_email||'';
+  let h=`<div id="ppSet"><div class="pp-sec"><h3>Налаштування</h3></div><div class="set-card">`;
+  if(PLAYER)h+=ppRow('ppRowName',"Ім'я",'одне на всі таблиці й ліги',PLAYER.name||PLAYER.anon_name||'',!PLAYER.name);
+  h+=ppRow('ppRowTeam','Назва команди','на полі й у картці',team||'Твоя 11-ка',!team);
+  if(PLAYER&&'contact_email' in PLAYER){h+=ppRow('ppRowMail','Пошта для новин','видно лише тобі',mail||'не вказано',!mail);
+    h+=`<label class="set-r tg"><span class="k">Новини 30-0<small>великі оновлення, не частіше разу на місяць</small></span><input type="checkbox" role="switch" class="sw" id="ppNews"${PLAYER.news_optin?' checked':''}></label>`;}
+  h+=`</div><p class="pp-hint" id="ppSetMsg" hidden></p><div class="pp-sec"><h3>Акаунт</h3></div><div class="set-card">`;
+  if(SESSION){const em=via==='Google'?(SESSION.user.email||''):acctName();
+    h+=`<div class="set-r who"><i class="set-ic ${via==='Google'?'g':'t'}">${icon(via==='Google'?'google':'telegram')}</i><span class="k">Увійшов через ${via}<small>${esc(em)}</small></span></div>`+
+       `<button class="set-r" id="ppOut">${ic('logout')}<span class="k">Вийти</span>${icon('chevron-right')}</button>`;}
+  else h+=`<button class="set-r" id="ppLogin2"><span class="k">Увійти<small>щоб трофеї, рекорди й серія були на всіх пристроях</small></span>${icon('chevron-right')}</button>`;
+  h+=`</div>`;
+  if(PLAYER)h+=`<button class="pp-del" id="ppDel">${SESSION?'Видалити акаунт…':'Видалити мої дані…'}</button><div id="ppDelBox" hidden class="pp-delbox"><p>Ім'я, вхід і прив'язку цього пристрою буде стерто назавжди. Результати лишаться в таблицях під анонімним іменем, але вже не будуть пов’язані з тобою. Трофеї й серія на цьому пристрої теж зникнуть.</p><div class="row"><button class="danger" id="ppDelYes">Так, видалити</button><button class="ghost" id="ppDelNo">Скасувати</button></div><p class="muted" id="ppDelMsg" style="margin:0"></p></div>`;
+  return h+`</div>`;}
+// лист знизу (iPad — по центру): заголовок, поле, підказка, «Зберегти»; save(value) → '' (готово, закрити) або текст помилки
+function ppSheet({title,id,value,placeholder,hint,type,max,disabled,save,input,msgId,saveId}){msgId=msgId||id+'Msg';saveId=saveId||id+'Save';
+  const old=document.getElementById('ppSheet');if(old)old.remove();
+  const o=document.createElement('div');o.className='sheet0';o.id='ppSheet';
+  o.innerHTML=`<div class="sheet0-box" role="dialog" aria-modal="true" aria-label="${esc(title)}"><div class="sheet0-bar"><h3>${esc(title)}</h3><button class="link0" id="ppSheetX">Скасувати</button></div>
+    <input id="${id}" type="${type||'text'}" maxlength="${max||40}" value="${esc(value||'')}" placeholder="${esc(placeholder||'')}" autocapitalize="none" autocorrect="off" spellcheck="false"${disabled?' disabled':''}>
+    <p class="pp-hint" id="${msgId}">${hint||''}</p><button class="primary big0" id="${saveId}"${disabled?' disabled':''}>Зберегти</button></div>`;
+  document.body.appendChild(o);const f=o.querySelector('#'+id),b=o.querySelector('#'+saveId),m=o.querySelector('#'+msgId);
+  const close=()=>{o.remove();document.removeEventListener('keydown',key);};const key=e=>{if(e.key==='Escape')close();};document.addEventListener('keydown',key);
+  o.onclick=e=>{if(e.target===o)close();};o.querySelector('#ppSheetX').onclick=close;if(input)f.oninput=()=>input(f);
+  b.onclick=async()=>{b.disabled=true;const err=await save(f.value);b.disabled=false;if(err){m.innerHTML=err;m.classList.add('bad');return;}close();ppRender();};
+  f.onkeydown=e=>{if(e.key==='Enter')b.click();};if(!disabled)setTimeout(()=>f.focus(),60);}
+function ppNameSheet(){if(!PLAYER)return;const nx=PLAYER.name_next&&PLAYER.name_next>new Date().toISOString()?PLAYER.name_next:null;
+  ppSheet({title:"Ім'я",id:'ppNameIn',msgId:'ppNameMsg',saveId:'ppNameSave',value:PLAYER.name||'',placeholder:PLAYER.anon_name||'',max:20,disabled:!!nx,
+    hint:nx?`Змінити знову можна з ${fmtLong(nx)}.`:`3–20 символів: латинські літери a–z, цифри, «_» і «.». Змінювати можна раз на 30 днів. Це ім'я бачать усі в таблицях і лігах.${PLAYER.name?'':` Поки ти в таблицях як <b>${esc(PLAYER.anon_name||'')}</b>.`}`,
+    input:f=>{const v=f.value,w=v.toLowerCase().replace(/\s/g,'_');if(w!==v){const c=f.selectionStart;f.value=w;try{f.setSelectionRange(c,c);}catch(x){}}},   // одразу малі літери й «_» замість пробілу
+    save:async v=>{const err=await playerRename(v);if(err)return esc(err);const h=document.getElementById('ppName');if(h)h.textContent=myName();
+      ppFlash(PLAYER.name?`Збережено: <b>${esc(PLAYER.name)}</b>.`:`Готово: ти знову <b>${esc(PLAYER.anon_name)}</b>.`);return '';}});}
+function ppFlash(html){setTimeout(()=>{const m=document.getElementById('ppSetMsg');if(m){m.hidden=false;m.innerHTML=html;}},0);}   // після ppRender
+// пошта для новин (0.60): окремо від профілю, публічна сторінка її не показує
+async function ppMailSave(v,optin){v=(v||'').trim();
+  if(v&&!/^[^@\s]{1,64}@[^@\s]+\.[^@\s.]{2,}$/.test(v))return 'Схоже, в адресі помилка.';
+  try{const p=await playerRpc('set_player_contact',{p_email:v,p_optin:!!(v&&optin)});playerSet(p);
+    ppFlash(p.contact_email?(p.news_optin?'Збережено. Новини — лише про великі оновлення.':'Пошту збережено. Новин не надсилатимемо, доки не ввімкнеш.'):'Пошту стерто.');return '';}
+  catch(e){return /email_bad/.test(String(e.message))?'Схоже, в адресі помилка.':'Не вдалося зберегти. Спробуй ще раз.';}}
 function ppWire(){
   const $=id=>document.getElementById(id);
   for(const id of ['ppLogin','ppLogin2'])if($(id))$(id).onclick=()=>{ACCT_MSG='';openAcct();};
-  if($('ppEdit'))$('ppEdit').onclick=()=>{const f=$('ppNameIn');if(f){$('ppSet').open=true;f.scrollIntoView({behavior:'smooth',block:'center'});f.focus();}};
   const hd=$('ppHist');if(hd)hd.ontoggle=()=>{if(hd.open&&!(PP&&PP.hist))ppHistLoad(false);};
-  // поле імені: одразу малі літери й «_» замість пробілу (курсор лишається на місці)
-  if($('ppNameIn'))$('ppNameIn').oninput=e=>{const f=e.target,v=f.value,w=v.toLowerCase().replace(/\s/g,'_');if(w!==v){const c=f.selectionStart;f.value=w;try{f.setSelectionRange(c,c);}catch(x){}}};
-  if($('ppNameSave'))$('ppNameSave').onclick=async()=>{const b=$('ppNameSave'),m=$('ppNameMsg');b.disabled=true;const err=await playerRename($('ppNameIn').value);b.disabled=false;
-    const m2=$('ppNameMsg')||m;if(err){m2.textContent=err;m2.classList.add('bad');return;}m2.classList.remove('bad');m2.innerHTML=PLAYER.name?`Збережено: <b>${esc(PLAYER.name)}</b>.`:`Готово: ти знову <b>${esc(PLAYER.anon_name)}</b>.`;const h=$('ppName');if(h)h.textContent=myName();};
-  // пошта для новин (0.60): зберігається окремо від профілю, публічна сторінка її не показує
-  const mailSave=async()=>{const m=$('ppMailMsg'),v=($('ppMail').value||'').trim();
-    if(v&&!/^[^@\s]{1,64}@[^@\s]+\.[^@\s.]{2,}$/.test(v)){m.textContent='Схоже, в адресі помилка.';m.classList.add('bad');return;}
-    try{const p=await playerRpc('set_player_contact',{p_email:v,p_optin:!!$('ppNews').checked});playerSet(p);const m2=$('ppMailMsg');if(m2){m2.classList.remove('bad');m2.textContent=p.contact_email?(p.news_optin?'Збережено. Новини — лише про великі оновлення.':'Збережено. Новин не надсилатимемо.'):'Пошту стерто.';}}
-    catch(e){m.classList.add('bad');m.textContent=/email_bad/.test(String(e.message))?'Схоже, в адресі помилка.':'Не вдалося зберегти. Спробуй ще раз.';}};
-  if($('ppMailSave'))$('ppMailSave').onclick=mailSave;
-  if($('ppTeam'))$('ppTeam').oninput=e=>lsSet('upl30_team',e.target.value.trim().slice(0,22));   // 0.63: назва команди — тут, а не у вільній грі
-  if($('ppNews'))$('ppNews').onchange=()=>{if(($('ppMail').value||'').trim())mailSave();else{$('ppNews').checked=false;const m=$('ppMailMsg');m.textContent='Спершу впиши пошту.';}};
+  if($('ppEdit'))$('ppEdit').onclick=ppNameSheet;   // олівець біля імені в шапці
+  if($('ppRowName'))$('ppRowName').onclick=ppNameSheet;
+  if($('ppRowTeam'))$('ppRowTeam').onclick=()=>ppSheet({title:'Назва команди',id:'ppTeam',value:lsGet('upl30_team')||'',placeholder:'Твоя 11-ка',max:22,
+    hint:'Видно на полі й у картці результату. Порожнє поле — «Твоя 11-ка».',save:async v=>{lsSet('upl30_team',v.trim().slice(0,22)||null);return '';}});   // 0.63: назва команди — тут, а не у вільній грі
+  if($('ppRowMail'))$('ppRowMail').onclick=()=>ppSheet({title:'Пошта для новин',id:'ppMail',type:'email',max:254,value:PLAYER.contact_email||'',placeholder:'name@gmail.com',
+    hint:'Видно лише тобі. Порожнє поле — пошту буде стерто.',save:v=>ppMailSave(v,PLAYER.contact_email?PLAYER.news_optin:true)});   // нова пошта — новини ввімкнено (поле так і зветься); далі — перемикачем
+  if($('ppNews'))$('ppNews').onchange=async e=>{const on=e.target.checked;
+    if(!(PLAYER&&PLAYER.contact_email)){e.target.checked=false;$('ppRowMail').click();const m=$('ppMailMsg');if(m)m.textContent='Спершу впиши пошту — туди й надсилатимемо новини.';return;}
+    const err=await ppMailSave(PLAYER.contact_email,on);if(err){e.target.checked=!on;ppFlash(esc(err));}else ppRender();};
   if($('ppOut'))$('ppOut').onclick=acctLogout;
   if($('ppDel'))$('ppDel').onclick=()=>{$('ppDelBox').hidden=false;$('ppDel').hidden=true;};
   if($('ppDelNo'))$('ppDelNo').onclick=()=>{$('ppDelBox').hidden=true;$('ppDel').hidden=false;};
