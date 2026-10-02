@@ -38,7 +38,7 @@ function mkDB(){
  T.check(await pg.$eval('#s7',e=>!e.hidden)&&!!await pg.$('#flNew'),'екран ліг: «Створити лігу» (з входом)');
  await pg.screenshot({path:path.join(OUT,'fl61_list_empty.png'),fullPage:true});
  await pg.click('#flNew');await pg.waitForTimeout(200);
- T.check(!await pg.$('[data-k="fmt"]'),'0.68: формату 5×5 при створенні немає (сховано до доробки)');
+ T.check(!!await pg.$('[data-k="fmt"][data-v="f5"]'),'0.69: формат 5×5 при створенні знову є');
  const names0=await pg.$$eval('[data-name]',es=>es.map(e=>e.dataset.name));await pg.click('#flShuf');const names1=await pg.$$eval('[data-name]',es=>es.map(e=>e.dataset.name));
  T.check(names0.length===3&&names1.length===3&&(names0.join()!==names1.join()),'назви: 3 варіанти, «Перемішати» міняє ('+names1.join(', ')+')');
  await pg.click('[data-k="days"][data-v="7"]');await pg.click('[data-k="scoring"][data-v="sum"]');await pg.click('[data-k="ratings"][data-v="memory"]');await pg.click('[data-k="era"][data-v="y2010"]');await pg.click('[data-k="rerolls"][data-v="0"]');

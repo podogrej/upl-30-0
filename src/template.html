@@ -218,7 +218,7 @@ button:has(.ic) .ic{margin-left:-4px}
 .kicker .ic{margin-right:6px}
 .trsec .ico{display:inline-block;width:15px;height:15px;vertical-align:-3px;fill:currentColor}
 .plc{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:6px;font-family:var(--font-mono);font-weight:700;font-size:12px;color:#161514}.plc.p1{background:#f2c14e}.plc.p2{background:#c9c6bf}.plc.p3{background:#d08a4e}
-.pitch.p5{aspect-ratio:68/94;max-width:420px}
+.pitch.p5{aspect-ratio:68/80;max-width:340px}   /* 0.69 (власник: «поле величезне») — п'ятеро гравців, поле нижче й вужче */
 .f5grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;margin-top:8px}.f5grid>div{display:grid;gap:6px}
 .f5score{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center;font-weight:700}.f5score span:first-child{text-align:right}.f5score b{font-family:var(--font-display);font-size:clamp(30px,8vw,46px);white-space:nowrap}
 .f5evs{display:grid;gap:4px}.f5ev{display:flex;gap:8px;align-items:baseline;font-size:14px}.f5ev.s1{flex-direction:row-reverse;text-align:right}
@@ -357,7 +357,7 @@ td .sub{font-size:11px;color:var(--muted);margin-top:2px;display:flex;gap:6px;al
 .sec0 span{float:right;color:var(--ink2)}
 #fl .sec0{margin:20px 0 8px}
 .fl-how{display:grid;gap:8px}.fl-how>div{display:flex;gap:12px;align-items:center;border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px;background:var(--surface)}.fl-how span{display:grid;gap:2px}.fl-how small{color:var(--ink2)}
-.fl-opts{display:grid;gap:8px}.fl-opts.c2{grid-template-columns:1fr 1fr}.fl-opts.c3{grid-template-columns:1fr 1fr 1fr}.fl-opts .opt{text-align:center;justify-items:center;align-content:center;font:inherit;color:var(--ink)}#fl>button.big0,#fl>#flMsg,#fl>#flBack{display:block;margin-inline:auto}   /* 0.68 (скрин власника з iPad): плитки правил і кнопка «Створити» — по центру */.fl-opts .opt:disabled{opacity:.5;cursor:default}
+.fl-opts{display:grid;gap:8px}.fl-opts.c2{grid-template-columns:1fr 1fr}.fl-opts.c3{grid-template-columns:1fr 1fr 1fr}.fl-opts .opt{text-align:center;justify-items:center;align-content:center;font:inherit;color:var(--ink)}#fl>button.big0,#fl>#flMsg,#fl>#flBack,#fl>#fl5Back{display:block;margin-inline:auto}   /* 0.68 (скрин власника з iPad): плитки правил і кнопка «Створити» — по центру */.fl-opts .opt:disabled{opacity:.5;cursor:default}
 .fl-names{display:flex;flex-wrap:wrap;gap:8px}.fl-names .chip{font-size:15px;padding:9px 14px}.fl-shuf{margin-top:8px}
 .fl-tour{display:grid;gap:12px;border:1px solid var(--line);border-radius:16px;background:var(--surface);padding:16px}.fl-th{display:flex;justify-content:space-between;align-items:baseline;gap:8px}.fl-th b{font-family:var(--font-display);font-size:24px}
 .fl-bars{display:flex;gap:6px}.fl-bars i{flex:1;height:7px;border-radius:4px;background:var(--line)}.fl-bars i.done{background:var(--win)}.fl-bars i.now{background:var(--amber)}
@@ -548,7 +548,7 @@ table.lbt th.n,table.lbt td.n{width:28px;padding-left:2px;padding-right:2px;text
 .fl5m{display:grid;grid-template-columns:auto 1fr auto 1fr;gap:8px;align-items:center;width:100%;padding:10px 12px;border:0;border-radius:10px;background:var(--card);color:var(--ink);font-weight:500;text-align:left}
 .fl5m .st{font:600 11px var(--font-mono);color:var(--muted);text-transform:uppercase}.fl5m .a{text-align:right}.fl5m b{font-family:var(--font-display);white-space:nowrap}
 .fl5teams{display:grid;gap:6px}.fl5t{padding:10px 12px;border-radius:10px;background:var(--card)}.fl5t.me{box-shadow:inset 0 0 0 1.5px var(--amber)}.fl5t.off{opacity:.6}
-.fl5xi{display:flex;flex-wrap:wrap;gap:4px 10px;margin-top:6px;font-size:13px}.fl5xi span{display:inline-flex;align-items:center;gap:5px}.fl5xi .pos{font:600 10px var(--font-mono);font-style:normal;padding:1px 4px;border-radius:4px;color:#fff}
+.fl5xi{display:grid;gap:3px;margin-top:6px;font-size:13.5px}.fl5xi>div{display:flex;align-items:center;gap:6px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.fl5f{margin-bottom:12px}.fl5send{display:grid;justify-items:center;gap:4px;margin-top:14px;align-self:center}@media (min-width:760px){.fl5d{display:grid;grid-template-columns:minmax(0,340px) minmax(0,1fr);gap:18px;align-items:start}.fl5d>.pitch{position:sticky;top:70px}.fl5d>.wheel{margin-top:0!important}}   /* 0.69: iPad — поле зліва, колесо й список справа, як у драфті 11×11 */.fl5st{margin:0 0 8px;text-align:center;color:var(--ink2)}.fl5st b{color:var(--ink)}.fl5xi .pos{font:600 10px var(--font-mono);font-style:normal;padding:1px 4px;border-radius:4px;color:#fff}
 .f5ev .fl5who{margin-left:auto;font-size:12px}
 .fl5so{display:flex;flex-wrap:wrap;gap:6px}.fl5so span{padding:4px 10px;border-radius:99px;background:var(--card);font-size:13px;color:var(--loss)}.fl5so span.ok{color:var(--win)}
 /* ===== 0.64 — анімації (власник 01.10): відгук кнопок, гравець летить на поле, спалах голу, цифри підсумку, вікно чемпіона з кубком і конфеті */
