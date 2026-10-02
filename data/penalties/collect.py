@@ -126,15 +126,33 @@ def sim(a, b):
     return difflib.SequenceMatcher(None, latin(a), latin(b)).ratio()
 
 
-def name_sim(pid, *labels):
-    ours = {translit(t) for t in re.split(r'[\s-]+', P[pid]['name']) if t}
+def surname_sim(pid, *labels):
+    """схожість ПРІЗВИЩА (не будь-якого слова імені): до 01.10.2026 тут був name_sim — він приймав збіг імені
+    («Олег», «Сергій»), і з Wikidata (та сама дата народження) приїхали чужі люди (Єсін → Usoltsev, Сизон → Sionko).
+    Наше прізвище = усі слова імені, крім першого (або єдине слово; плюс slug з id, якщо він не є ім'ям).
+    Пара «наше прізвище — слово TM» зараховується, якщо збігається перша літера, довжини близькі (≥ 0.65)
+    і схожість ≥ 0.75; г→h/g, k/c, є/е — нечутливо."""
+    def norm(s):
+        return latin(s).replace('g', 'h').replace('k', 'c').replace('ie', 'e')
+    words = [w for w in re.split(r'[\s-]+', P[pid]['name']) if w]
+    ours = set()
+    for w in (words[1:] if len(words) > 1 else words):
+        ours |= {norm(translit(w)), norm(translit(w.replace('г', 'ґ').replace('Г', 'Ґ')))}
     if pid.startswith('w:'):
-        ours.add(pid.split(':', 2)[2])
+        slug = pid.split(':', 2)[2]
+        if len(words) < 2 or sim(slug, translit(words[0])) < 0.7:
+            ours.add(norm(slug))
     best = 0
     for label in labels:
-        theirs = [translit(t) for t in re.split(r'[\s-]+', label or '') if len(latin(translit(t))) >= 3]
-        best = max([best] + [sim(a, b) for a in ours for b in theirs if len(latin(a)) >= 3])
+        for t in re.split(r'[\s-]+', label or ''):
+            b = norm(translit(t))
+            for a in ours:
+                if len(a) >= 2 and len(b) >= 2 and a[0] == b[0] and min(len(a), len(b)) / max(len(a), len(b)) >= 0.65:
+                    best = max(best, difflib.SequenceMatcher(None, a, b).ratio())
     return best
+
+
+SURNAME_MIN = 0.75
 
 
 # ---------- мережа ----------
@@ -268,7 +286,7 @@ def ok_identity(pid, e):
         return False
     if pid.startswith('tm:'):
         return True
-    return e.get('dob') == pid.split(':')[1] and name_sim(pid, e['name'], e.get('short', ''), e.get('passport', '')) >= 0.7
+    return e.get('dob') == pid.split(':')[1] and surname_sim(pid, e['name'], e.get('short', ''), e.get('passport', '')) >= SURNAME_MIN
 
 
 def resolve_ids():
@@ -290,7 +308,7 @@ def resolve_ids():
             c.append((ci['tm'], 'data/class: ' + ci.get('how', '')))
         d = pid.split(':')[1]
         c += [(t, 'repo link (data/foot, data/positions)') for t in links.get(pid, [])]
-        c += [(t, 'wikidata P2446 + dob') for lab, t in WD.get(d, []) if lab and name_sim(pid, lab) >= 0.7]
+        c += [(t, 'wikidata P2446 + dob') for lab, t in WD.get(d, []) if lab and surname_sim(pid, lab) >= SURNAME_MIN]
         cands[pid] = list(dict.fromkeys(c))
     tm_players([t for v in cands.values() for t, _ in v])
     for pid, c in cands.items():
@@ -315,7 +333,7 @@ def search_ids():
         g = t.replace('kh', 'h').replace('h', 'g')
         found = ''
         for q in dict.fromkeys(q for q in (t, slug, g, g.replace('y', 'i')) if len(q) >= 3):
-            ids = [x for sl, x in tm_search(q) if name_sim(pid, sl.replace('-', ' ')) >= 0.7]
+            ids = [x for sl, x in tm_search(q) if surname_sim(pid, sl.replace('-', ' ')) >= SURNAME_MIN]
             tm_players(ids)
             found = next((x for x in ids if ok_identity(pid, TMPL.get(x))), '')
             if found:
