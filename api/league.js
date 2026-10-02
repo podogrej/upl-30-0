@@ -9,9 +9,29 @@ const MEMBER = new Set(['member', 'administrator', 'creator']);
 async function isMember(chat_id, user_id) {
   try {
     const r = await L.tg('getChatMember', { chat_id, user_id });
+    // 0.69.4: група стала супергрупою — стара кнопка табло веде на старий номер; Telegram підказує новий
+    const to = r && !r.ok && r.parameters && r.parameters.migrate_to_chat_id;
+    if (to) { await L.migrateLeague(chat_id, to); return { moved: String(to), ok: await isMember(to, user_id) }; }
     const st = r && r.ok && r.result ? r.result.status : null;
     return MEMBER.has(st) || (st === 'restricted' && r.result.is_member !== false);
   } catch (e) { return false; }
+}
+
+// сьогоднішній результат драфту дня гравця Telegram → у лігу chat_id (лише перша офіційна спроба, лише перевірений сервером сезон)
+async function backfill(chat_id, u, name) {
+  const day = L.kyivDate();
+  const have = await L.sb(`league_results?chat_id=eq.${chat_id}&day=eq.${day}&tg_user_id=eq.${u.id}&select=chat_id`) || [];
+  if (have.length) return false;
+  const [lr] = await L.onlyVerified(await L.sb(`league_results?tg_user_id=eq.${u.id}&day=eq.${day}&select=*&order=created_at.asc&limit=1`) || []);
+  let row = lr ? { w: lr.w, d: lr.d, l: lr.l, pts: lr.pts, place: lr.place, gf: lr.gf, ga: lr.ga, xp: lr.xp, formation: lr.formation, trophies: lr.trophies || [], season_id: lr.season_id } : null;
+  if (!row) {   // інших ліг немає — перша офіційна спроба дня з таблиці seasons (лише перевірена)
+    const [s] = await L.sb(`seasons?tg_user_id=eq.${u.id}&day=eq.${day}&practice=is.false&select=id,w,d,l,pts,place,gf,ga,formation,verified&order=created_at.asc&limit=1`) || [];
+    if (!s || s.verified !== true) return false;
+    row = { w: s.w, d: s.d, l: s.l, pts: s.pts, place: s.place, gf: s.gf, ga: s.ga, xp: null, formation: s.formation, trophies: [], season_id: s.id };
+  }
+  await L.sb('league_results?on_conflict=chat_id,day,tg_user_id', { method: 'POST', prefer: 'resolution=ignore-duplicates,return=minimal', body: { chat_id, day, tg_user_id: u.id, name, ...row } });
+  try { await L.upsertBoard(chat_id, day); } catch (e) { console.error('board', chat_id, e.message); }
+  return true;
 }
 
 module.exports = async (req, res) => {
@@ -47,13 +67,19 @@ module.exports = async (req, res) => {
       const [lg] = await L.sb(`leagues?chat_id=eq.${chat_id}&select=chat_id,title`) || [];
       // В1 (0.55): вступити можна лише в лігу групи, де бот бачить гравця учасником (getChatMember). Інакше — 403
       // (з результатом у запиті — вступ пропускаємо, результат іде лише в ліги, де гравець уже є).
-      if (lg && !(await isMember(chat_id, u.id))) {
+      const mem = lg ? await isMember(chat_id, u.id) : false;
+      let chat_to = chat_id;
+      if (mem && mem.moved) { chat_to = mem.moved; }   // 0.69.4: ліга переїхала на номер супергрупи
+      if (lg && !(mem && (mem.moved ? mem.ok : mem))) {
         if (!b.result) return res.status(403).json({ error: 'not a member of this chat' });
         lg.denied = true;
       }
       if (lg && !lg.denied) {
-        await L.sb('league_members?on_conflict=chat_id,tg_user_id', { method: 'POST', prefer: 'resolution=merge-duplicates,return=minimal', body: { chat_id, tg_user_id: u.id, name } });
-        joined.push({ chat_id, title: lg.title });
+        await L.sb('league_members?on_conflict=chat_id,tg_user_id', { method: 'POST', prefer: 'resolution=merge-duplicates,return=minimal', body: { chat_id: chat_to, tg_user_id: u.id, name } });
+        joined.push({ chat_id: chat_to, title: lg.title });
+        // 0.69.4 (власник 02.10: вступив у лігу нової групи після драфту дня — «0 з 1», а зіграти вже не можна):
+        // сьогоднішній перевірений результат драфту дня гравця переносимо і в цю лігу (з іншої його ліги або з його сезону)
+        if (!b.result) { stage = 'backfill'; try { await backfill(chat_to, u, name); } catch (e) { console.error('backfill', chat_to, e.message); } }
       }
     }
     const r = b.result;
