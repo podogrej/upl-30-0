@@ -157,17 +157,23 @@ async function playerRename(v){if(PLAYER&&PLAYER.name&&nameKey(v)===PLAYER.name)
 // ---------- інтерфейс
 // шапка (0.59): аватарка замість «Увійти» — тап відкриває свою сторінку
 function renderAcct(){const b=document.getElementById('acctBtn');if(!b)return;b.hidden=!ONLINE;b.className='avbtn';b.title='Моя сторінка';b.setAttribute('aria-label','Моя сторінка');const nm=myName();b.innerHTML=avatarSvg(mySeed(),28)+(nm?`<span class="me-n">${esc(nm)}</span>`:'');b.classList.toggle('noname',!nm);}   // 0.62: поруч з аватаркою — ім'я (кнопка на свою сторінку)
+// вікно viewBox у режимі «лист входу» (0.68): клас .login, хрестик замість «Закрити»; коли вікно ховається — звичайний режим
+function viewMode(m){const box=document.getElementById('viewBox'),c=document.getElementById('viewClose');box.classList.toggle('login',m==='login');c.textContent=m==='login'?'✕':'Закрити';c.setAttribute('aria-label','Закрити');}
+new MutationObserver(()=>{if(document.getElementById('viewBox').hidden)viewMode('');}).observe(document.getElementById('viewBox'),{attributes:true,attributeFilter:['hidden']});
 function openAcct(){screenTag('account');
   const box=document.getElementById('viewBox'),body=document.getElementById('viewBody');document.getElementById('viewTitle').textContent='Акаунт';box.hidden=false;
   const msg=ACCT_MSG?`<p class="note">${esc(ACCT_MSG)}</p>`:'';
-  if(SESSION){const u=SESSION.user;const via=(u.app_metadata&&u.app_metadata.provider)==='google'?'Google':(u.email||'').endsWith('@users.upl-30-0.vercel.app')?'Telegram':'пошту';
+  if(SESSION){viewMode('');const u=SESSION.user;const via=(u.app_metadata&&u.app_metadata.provider)==='google'?'Google':(u.email||'').endsWith('@users.upl-30-0.vercel.app')?'Telegram':'пошту';
     body.innerHTML=`${msg}<p style="margin:0">Ти увійшов як <b>${esc(acctName())}</b> через ${via}.</p><p class="muted" style="margin:0">Трофеї, серія, рекорди й нік зберігаються в акаунті й доступні на будь-якому пристрої та в Telegram.</p><div class="row"><button class="ghost" id="acctOut">Вийти</button></div>`;
     document.getElementById('acctOut').onclick=acctLogout;return;}
-  body.innerHTML=`${msg}<p style="margin:0"><b>Грати можна без акаунта.</b> Вхід потрібен, щоб не загубити прогрес:</p>
-    <ul class="muted" style="margin:0;padding-left:18px"><li>трофеї, серія драфту дня й рекорди — на всіх пристроях і в Telegram</li><li>ім'я та всі результати — одні на всіх пристроях</li><li>ліги з друзями в Telegram-групах</li></ul>
-    <div class="grid" style="gap:8px">${IN_TG()?`<button class="primary" id="acctT">${ic('telegram')}Увійти через Telegram</button>`:''}${AUTH_GOOGLE&&!IN_TG()?`<button class="primary" id="acctG">${ic('google')}Увійти через Google</button>`:''}${AUTH_TG()&&!IN_TG()?`<a class="btnlink" id="acctBot" href="https://t.me/${TG_BOT}?start=login_${acctBotPending()||acctBotToken()}" target="_blank" rel="noopener">${ic('telegram')}Увійти через Telegram</a><span class="muted" style="font-size:12px" id="acctBotHint">${acctBotPending()&&BOT_POLL?'Чекаємо підтвердження: у чаті з ботом натисни «Start», потім «Підтвердити вхід» і повернись сюди.':'Відкриється чат з @'+TG_BOT+' — натисни там «Start», потім «Підтвердити вхід» і повернись сюди.'}</span>`:''}</div>
+  // 0.68 (власник обрав варіант 1, як у 38-0): коротко — заголовок, навіщо, дві великі кнопки, «Грати без входу»; телефон — лист знизу, iPad — по центру
+  viewMode('login');
+  body.innerHTML=`${msg}<h2 class="lg-h">Увійди в 30-0</h2><p class="lg-sub">Щоб трофеї, серія й рекорди не загубились і були на всіх пристроях.</p>
+    <div class="lg-btns">${AUTH_GOOGLE&&!IN_TG()?`<button class="lgb g" id="acctG">${icon('google')}Продовжити з Google</button>`:''}${IN_TG()?`<button class="lgb t" id="acctT">${icon('telegram')}Продовжити з Telegram</button>`:''}${AUTH_TG()&&!IN_TG()?`<a class="lgb t" id="acctBot" href="https://t.me/${TG_BOT}?start=login_${acctBotPending()||acctBotToken()}" target="_blank" rel="noopener">${icon('telegram')}Продовжити з Telegram</a><span class="muted" style="font-size:12px" id="acctBotHint">${acctBotPending()&&BOT_POLL?'Чекаємо підтвердження: у чаті з ботом натисни «Start», потім «Підтвердити вхід» і повернись сюди.':'Відкриється чат з @'+TG_BOT+' — натисни там «Start», потім «Підтвердити вхід» і повернись сюди.'}</span>`:''}</div>
+    <button class="link0 lg-skip" id="acctSkip">Грати без входу</button>
     ${ACCT_ERR||!SB?`<p class="muted mono" style="font-size:11px;margin:0">Діагностика: ${!SB?'бібліотека входу не завантажилась':esc(ACCT_ERR)}</p>`:''}
-    <p class="muted" style="font-size:12px;margin:0">Зберігаємо лише ім'я та ідентифікатор входу. Усе, що вже зіграно на цьому пристрої, перейде в акаунт.</p>`;
+    <p class="lg-fine">Зберігаємо лише ім'я та ідентифікатор входу. Зігране на цьому пристрої перейде в акаунт.</p>`;
+  document.getElementById('acctSkip').onclick=()=>{document.getElementById('viewBox').hidden=true;};
   const g=document.getElementById('acctG');if(g)g.onclick=acctGoogle;
   const tb=document.getElementById('acctT');if(tb)tb.onclick=()=>{ACCT_MSG='Входимо…';openAcct();acctTelegram({initData:TG.initData},false);};
   const ab=document.getElementById('acctBot');if(ab)ab.onclick=()=>{ACCT_ERR='';setTimeout(()=>{acctBotPoll();const h=document.getElementById('acctBotHint');if(h)h.textContent='Чекаємо підтвердження: у чаті з ботом натисни «Start», потім «Підтвердити вхід» і повернись сюди.';},300);};

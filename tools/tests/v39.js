@@ -5,7 +5,8 @@
 // SQL-частину (секрет пристрою, тригери, RLS, повторний запуск) перевіряє справжній Postgres: bash tools/tests/setup.sh
 // Запуск з кореня: node tools/tests/v39.js [new|old|both] (за замовчуванням both)
 const path=require('path'),fs=require('fs');const {ROOT,launch,makeDB,callApi,openSite,draftSeason,checker}=require('./_site.js');
-const openSet=p=>p.evaluate(()=>{const d=document.getElementById('ppSet');if(d)d.open=true;});   // 0.62: «Налаштування» згорнуто
+const openSet=async p=>{if(!(await p.$('#ppSheet'))){await p.click('#ppRowName');await p.waitForTimeout(150);}};   // 0.68: «Налаштування» — рядки; ім'я міняється в листі знизу
+const setMsg=p=>p.evaluate(()=>(document.getElementById('ppNameMsg')||document.getElementById('ppSetMsg')||{}).textContent||'');   // помилка — у листі, «Збережено» — під налаштуваннями
 const OUT=path.join(ROOT,'tools','tests','out');fs.mkdirSync(OUT,{recursive:true});
 process.env.SUPABASE_SERVICE_KEY='svc';
 const seedH=require(path.join(ROOT,'api','seed.js')),verH=require(path.join(ROOT,'api','verify.js')),saveH=require(path.join(ROOT,'api','save.js'));
@@ -32,10 +33,10 @@ async function run(MODE,b){const T=checker('v39 '+MODE);const v39=MODE==='new';c
  if(v39){
   T.check(player&&player.id===P.players[0].id&&player.anon_name,'гравець після завантаження: '+JSON.stringify(player));
   await pg.click('#acctBtn');await pg.waitForTimeout(400);   // 0.59: аватарка → своя сторінка з налаштуваннями імені
-  T.check(await pg.$eval('#ppNameIn',e=>e.placeholder)===player.anon_name&&/Поки ти в таблицях як/.test(await pg.textContent('#ppNameMsg')),'своя сторінка: поле імені з анонімним «'+player.anon_name+'»');
+  await openSet(pg);T.check(await pg.$eval('#ppNameIn',e=>e.placeholder)===player.anon_name&&/Поки ти в таблицях як/.test(await pg.textContent('#ppNameMsg')),'своя сторінка: поле імені з анонімним «'+player.anon_name+'»');
   await pg.screenshot({path:path.join(OUT,'v39_acct.png')});
   await openSet(pg);await pg.fill('#ppNameIn','Andrii');await pg.click('#ppNameSave');await pg.waitForTimeout(500);
-  T.check(/Збережено: andrii/.test(await pg.textContent('#ppNameMsg'))&&P.players[0].name==='andrii','ім\'я збережено в профілі гравця (нижній регістр)');await pg.click('#homeBtn');
+  T.check(/Збережено: andrii/.test(await setMsg(pg))&&P.players[0].name==='andrii','ім\'я збережено в профілі гравця (нижній регістр)');await pg.click('#homeBtn');
  }else{
   T.check(!player,'без players.sql гравця немає, сайт працює');
   await pg.click('#acctBtn');await pg.waitForTimeout(400);T.check(!(await pg.$('#ppNameIn')),'своя сторінка без поля імені');await pg.click('#homeBtn');
@@ -62,7 +63,7 @@ async function run(MODE,b){const T=checker('v39 '+MODE);const v39=MODE==='new';c
   await openSet(pg);await pg.fill('#ppNameIn','Andriy 2');await pg.click('#ppNameSave');await pg.waitForTimeout(500);
   rows=await board();T.check(rows[0]==='* andriy_2','перейменування на своїй сторінці → у таблиці «andriy_2»: '+rows[0]+' · '+await pg.evaluate(()=>(document.getElementById('ppNameMsg')||{}).textContent));await pg.click('#viewClose');
   await pg.click('#acctBtn');await pg.waitForTimeout(300);await openSet(pg);await pg.fill('#ppNameIn','');await pg.click('#ppNameSave');await pg.waitForTimeout(500);
-  T.check(/ти знову/.test(await pg.textContent('#ppNameMsg')),'порожнє ім\'я — знову анонімний');await pg.click('#homeBtn');
+  T.check(/ти знову/.test(await setMsg(pg)),'порожнє ім\'я — знову анонімний');await pg.click('#homeBtn');
   rows=await board();T.check(rows[0]==='* '+player.anon_name.toLowerCase(),'у таблиці анонімне ім\'я: '+rows[0]);await pg.click('#viewClose');
   // «Andriy 2» — поле саме робить «andriy_2»
   // чужий пристрій (той самий device_id, інший секрет) не перейменує — перевірка секрету на боці бази, тут лише як імітація; справжня — setup.sh

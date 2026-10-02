@@ -282,6 +282,18 @@ td .sub{font-size:11px;color:var(--muted);margin-top:2px;display:flex;gap:6px;al
 .overlay{position:fixed;inset:0;background:rgba(10,14,12,.6);z-index:50;overflow:auto;padding:16px;padding-top:calc(16px + env(safe-area-inset-top,0px))}
 .overlay .box{background:var(--bg);max-width:640px;margin:0 auto;border-radius:14px;padding:16px;border:1px solid var(--line);display:grid;gap:12px}
 .overlay .box>*{min-width:0} #viewBody .tabs .tab{white-space:nowrap;padding:10px 6px;font-size:14px;flex:0 0 auto}
+/* 0.68 (власник обрав варіант 1): вікно входу — лист знизу на телефоні, по центру на iPad */
+.overlay.login{display:flex;align-items:flex-end;padding:0}
+.overlay.login .box{width:100%;max-width:440px;margin:0 auto;background:var(--surface);border:0;border-radius:22px 22px 0 0;padding:10px 20px calc(24px + env(safe-area-inset-bottom,0px));gap:0}
+@media (min-width:600px){.overlay.login{align-items:center;padding:16px}.overlay.login .box{border-radius:22px;padding:18px 24px 24px}}
+.overlay.login .vhead{justify-content:flex-end}.overlay.login #viewTitle{display:none}
+.overlay.login #viewClose{border:0;background:none;color:var(--muted);font-size:22px;line-height:1;padding:4px 6px}
+.lg-h{font:800 22px/1.15 var(--font-display);margin:0 0 6px}.lg-sub{color:var(--ink2);margin:0 0 18px;font-size:14.5px}
+.lg-btns{display:grid;gap:10px}
+.lgb{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;border:1px solid transparent;border-radius:12px;padding:14px 16px;font:700 16px var(--font-body);text-decoration:none;cursor:pointer}
+.lgb .ico{width:20px;height:20px}.lgb.g{background:#fff;color:#1f1f1f;border-color:var(--line)}.lgb.g .ico{color:#4285f4}.lgb.t{background:#2aabee;color:#fff}.lgb.t .ico{color:#fff}
+.lg-skip{display:block;margin:14px auto 0}.lg-fine{font-size:12px;color:var(--muted);text-align:center;margin:12px 0 0}
+#acctBotHint{display:block;text-align:center;font-size:13px}
 .overlay .box h3{margin:0}.vhead{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
 .clickable tr[data-q]{cursor:pointer}.clickable tr[data-q]:hover td{background:var(--bg2)}
 .trg{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:8px}
@@ -364,11 +376,25 @@ td .sub{font-size:11px;color:var(--muted);margin-top:2px;display:flex;gap:6px;al
 details.pp-hist{margin-top:26px}details.pp-hist>summary{font-family:var(--font-display);font-weight:700;font-size:14px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink2);cursor:pointer}
 details.pp-hist[open]>summary{margin-bottom:10px}
 .wbtn{width:100%;justify-content:center;margin-top:10px}
-.pp-acct{display:grid;gap:10px;border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:12px}
-.pp-acct input{font:inherit;padding:9px 12px;border:1px solid var(--line);border-radius:var(--radius);background:var(--bg);color:var(--ink);flex:1 1 180px;min-width:0}
-.pp-acct input[type=checkbox]{flex:none;padding:0;width:18px;height:18px}
-.pp-hint{font-size:12px;margin:0}.pp-hint.bad{color:var(--loss)}
-.pp-acct .who{display:flex;align-items:center;gap:8px;font-size:14px}.pp-acct .who .ico{width:18px;height:18px;fill:#2aabee}
+/* 0.68 (власник обрав варіант A): «Налаштування» й «Акаунт» — список рядків як у 38-0; правка — лист знизу (.sheet0) */
+.set-card{background:var(--card);border-radius:14px;overflow:hidden}
+.set-r{display:flex;align-items:center;gap:12px;width:100%;min-height:56px;padding:12px 16px;border:0;border-radius:0;background:none;color:var(--ink);font:inherit;text-align:left;cursor:pointer}
+.set-r+.set-r{border-top:1px solid var(--line2)}.set-r:hover{background:color-mix(in srgb,var(--ink) 4%,transparent)}
+.set-r .k{flex:1;min-width:0;font-weight:600}.set-r .k small{display:block;font-weight:500;color:var(--muted);font-size:12.5px;margin-top:1px}
+.set-r .v{color:var(--ink2);max-width:46%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.set-r .v.mu{color:var(--muted)}
+.set-r>.ico{width:20px;height:20px;color:var(--muted);flex:none}.set-r.who{cursor:default}.set-r.who:hover{background:none}
+.set-ic{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;flex:none;background:#fff}.set-ic .ico{width:18px;height:18px}.set-ic.g .ico{color:#4285f4}.set-ic.t{background:#2aabee}.set-ic.t .ico{color:#fff}
+input.sw{appearance:none;-webkit-appearance:none;flex:none;width:46px;height:28px;border-radius:14px;background:var(--line);position:relative;cursor:pointer;margin:0;transition:background .2s}
+input.sw::after{content:"";position:absolute;left:3px;top:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:transform .2s}
+input.sw:checked{background:var(--win)}input.sw:checked::after{transform:translateX(18px)}
+#ppSet .pp-sec{margin-top:26px}#ppSetMsg{margin:8px 2px 0}#ppSet .pp-del{display:block;margin:16px auto 0}
+.sheet0{position:fixed;inset:0;z-index:60;background:rgba(5,10,25,.6);display:flex;align-items:flex-end;justify-content:center}
+.sheet0-box{width:100%;max-width:560px;background:var(--surface);border-radius:20px 20px 0 0;padding:16px 18px calc(22px + env(safe-area-inset-bottom,0px));display:grid;gap:10px}
+@media (min-width:600px){.sheet0{align-items:center;padding:16px}.sheet0-box{border-radius:20px;max-width:460px}}
+.sheet0-bar{display:flex;justify-content:space-between;align-items:center}.sheet0-bar h3{margin:0;font:800 20px var(--font-display)}
+.sheet0-box input{font:16px var(--font-body);padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);width:100%}
+.sheet0-box .big0{max-width:none}
+@media (prefers-reduced-motion:reduce){input.sw,input.sw::after{transition:none}}
 .pp-del{border:0;background:none;color:var(--loss);font-weight:600;font-size:13px;padding:6px 0;justify-self:start}
 .pp-delbox{display:grid;gap:8px;border:1px solid color-mix(in srgb,var(--loss) 50%,var(--line));border-radius:10px;padding:10px 12px}.pp-delbox p{margin:0;font-size:13px}
 button.danger{background:var(--loss);border-color:var(--loss);color:#fff}
