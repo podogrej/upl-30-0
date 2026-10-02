@@ -92,7 +92,21 @@ async function upsertBoard(chat_id, day, { forceNew = false } = {}) {
   return mid;
 }
 
-return { SB_URL, env, esc, tg, sb, kyivDate, dayNo, dayShort, checkMiniApp, nameOf, playUrl, playKb, sortRes, onlyVerified, standings, boardText, upsertBoard };
+// 0.69.4 (власник 02.10, група «трицать восем нуль»): Telegram перетворив групу на супергрупу (новий chat_id «-100…»),
+// а ліга, учасники й результати лишились на старому номері — кнопка табло вела в «мертву» групу, вступ відмовляв.
+// Копіюємо лігу на новий номер (старі рядки не видаляємо — DECISIONS п. 13); повторний виклик нічого не дублює.
+async function migrateLeague(from, to) {
+  if (!from || !to || String(from) === String(to)) return false;
+  const [lg] = await sb(`leagues?chat_id=eq.${from}&select=*`) || [];
+  if (!lg) return false;
+  const put = (t, conflict, rows) => rows.length ? sb(`${t}?on_conflict=${conflict}`, { method: 'POST', prefer: 'resolution=ignore-duplicates,return=minimal', body: rows }) : null;
+  await put('leagues', 'chat_id', [{ ...lg, chat_id: to }]);
+  await put('league_members', 'chat_id,tg_user_id', (await sb(`league_members?chat_id=eq.${from}&select=*`) || []).map(r => ({ ...r, chat_id: to })));
+  await put('league_results', 'chat_id,day,tg_user_id', (await sb(`league_results?chat_id=eq.${from}&select=*`) || []).map(r => ({ ...r, chat_id: to })));
+  return true;
+}
+
+return { SB_URL, env, esc, tg, sb, kyivDate, migrateLeague, dayNo, dayShort, checkMiniApp, nameOf, playUrl, playKb, sortRes, onlyVerified, standings, boardText, upsertBoard };
 })();
 
 module.exports = L;

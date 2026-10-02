@@ -8,7 +8,7 @@ const ROOT = path.join(__dirname, '..', '..');
 process.env.SUPABASE_SERVICE_KEY = 'svc'; process.env.TG_TOKEN = '123:TEST'; process.env.CRON_SECRET = 'cron-secret-0123456789';
 const DB = { season_seeds: [], seasons: [], daily_results: [], challenges: [], challenge_results: [], trophies: [], league_results: [], leagues: [], league_members: [], league_boards: [] }; let sid = 0;
 // 0.55: сховище Supabase (backups), Telegram (getChatMember), лічильник rate_hit
-const STORE = {}, MEMBERS = {}, RATE = {}; let RATE_ON = false;
+const STORE = {}, MEMBERS = {}, RATE = {}, MIGRATED = {}; let RATE_ON = false;
 const jres = j => ({ ok: true, status: 200, json: async () => j, text: async () => JSON.stringify(j) });
 // база 0.53: секрети пристроїв (device_ok), перемикач кроку 2, унікальна офіційна спроба дня (В2)
 const SECRETS = {}; let LEGACY_OPEN = true, SQL053 = true, ERA_COL = true;
@@ -17,6 +17,7 @@ global.fetch = async (url, o = {}) => {
   const u = new URL(url); const t = u.pathname.split('/').pop(); const m = o.method || 'GET';
   if (u.hostname === 'api.telegram.org') {
     const a = JSON.parse(o.body || '{}');
+    if (t === 'getChatMember' && MIGRATED[a.chat_id]) return jres({ ok: false, description: 'Bad Request: group chat was upgraded to a supergroup chat', parameters: { migrate_to_chat_id: MIGRATED[a.chat_id] } });   // 0.69.4
     if (t === 'getChatMember') { const st = (MEMBERS[a.chat_id] || {})[a.user_id]; return jres(st ? { ok: true, result: { status: st, is_member: st !== 'left' } } : { ok: false, description: 'Bad Request: user not found' }); }
     return jres({ ok: true, result: { message_id: 1 } });
   }
@@ -56,9 +57,11 @@ global.fetch = async (url, o = {}) => {
   const ok = j => ({ ok: true, status: 200, text: async () => j == null ? '' : JSON.stringify(j) });
   const rep = /return=representation/.test((o.headers || {}).Prefer || '');
   if (m === 'GET') return ok((DB[t] || []).filter(match));
-  if (m === 'POST') { const b = JSON.parse(o.body); if (t === 'season_seeds') b.id = crypto.randomUUID();
-    const oc = u.searchParams.get('on_conflict'); const old = oc && DB[t].find(r => oc.split(',').every(k => String(r[k]) === String(b[k])));
-    if (old) Object.assign(old, b); else DB[t].push(b); return ok([old || b]); }
+  if (m === 'POST') { const out = [], ign = /ignore-duplicates/.test((o.headers && o.headers.Prefer) || '');   // 0.69.4: масив рядків і ignore-duplicates
+    for (const b of [].concat(JSON.parse(o.body))) { if (t === 'season_seeds') b.id = crypto.randomUUID();
+      const oc = u.searchParams.get('on_conflict'); const old = oc && DB[t].find(r => oc.split(',').every(k => String(r[k]) === String(b[k])));
+      if (old) { if (!ign) Object.assign(old, b); } else DB[t].push(b); out.push(old || b); }
+    return ok(out); }
   if (m === 'PATCH') { const b = JSON.parse(o.body); const rows = (DB[t] || []).filter(match); rows.forEach(r => Object.assign(r, b)); return ok(rep ? rows : null); }
   return ok(null);
 };
@@ -319,6 +322,14 @@ function honestXi(formation) {
   ok('ліга: інших ліг немає — результат узято з перевіреного сезону дня', in2(502) && in2(502).season_id === 9002 && in2(502).pts === 71);
   await call(leagueH, { initData: initData({ id: 505, first_name: 'U505' }, 'g' + CHAT2) });
   ok('ліга: неперевірений сезон — не переноситься', !in2(505));
+  // 0.69.4: група стала супергрупою — стара кнопка (старий chat_id) переносить лігу на новий номер і записує гравця туди
+  const OLD = -5000001, NEW = -1005000001; DB.leagues.push({ chat_id: OLD, title: 'Стара група' });
+  DB.league_members.push({ chat_id: OLD, tg_user_id: 501, name: 'U501' }); MIGRATED[OLD] = NEW; MEMBERS[NEW] = { 506: 'member', 501: 'member' };
+  const jm = await call(leagueH, { initData: initData({ id: 506, first_name: 'U506' }, 'g' + OLD) });
+  const inNew = uid => DB.league_members.some(x => String(x.chat_id) === String(NEW) && String(x.tg_user_id) === String(uid));
+  ok('ліга: супергрупа — ліга переїхала на новий номер, новий гравець вступив туди', jm.c === 200 && DB.leagues.some(l => String(l.chat_id) === String(NEW)) && inNew(506) && inNew(501) && String(jm.j.joined[0].chat_id) === String(NEW), `${jm.c} ${JSON.stringify(jm.j)}`);
+  await call(leagueH, { initData: initData({ id: 506, first_name: 'U506' }, 'g' + OLD) });
+  ok('ліга: повторний перехід за старою кнопкою — без дублів', DB.leagues.filter(l => String(l.chat_id) === String(NEW)).length === 1 && DB.league_members.filter(x => String(x.chat_id) === String(NEW) && String(x.tg_user_id) === '506').length === 1);
   ok('ліга: підробний підпис — 401', (await call(leagueH, { initData: initData({ id: 501 }, 'g' + CHAT).replace(/hash=[0-9a-f]+/, 'hash=00') })).c === 401);
 
   // ===== 0.55: обмеження частоти → 429 =====

@@ -78,6 +78,8 @@ module.exports = async (req, res) => {
       }
     }
     const m = u.message;
+    // 0.69.4: група стала супергрупою — Telegram шле в нову службове повідомлення з migrate_from_chat_id: переносимо лігу
+    if (m && m.migrate_from_chat_id && m.chat) { try { await L.migrateLeague(m.migrate_from_chat_id, m.chat.id); } catch (e) { console.error('migrate', e.message); } }
     if (m && typeof m.text === 'string') {
       const chat = m.chat, isPrivate = chat.type === 'private';
       const cmd = m.text.trim().split(/[\s@]/)[0].toLowerCase();

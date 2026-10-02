@@ -2775,12 +2775,14 @@ function acctNudge(r){
   document.getElementById('nudgeLater').onclick=()=>{lsSet("upl30_nudge_until",Date.now()+3*864e5);el.hidden=true;};
 }
 // ---------- ЛІГИ ГРУП TELEGRAM: гру відкрито з кнопки групи → вступ у лігу; офіційний результат дня → у табло всіх ліг гравця
-let LEAGUE=null;   // {chat, title, today:[], members, standings:[]}
+let LEAGUE=null,LEAGUE_DENIED=false;   // LEAGUE_DENIED — сервер не пустив у лігу (Telegram не підтвердив участь у групі)   // {chat, title, today:[], members, standings:[]}
 function leagueChat(){const sp=TG&&TG.initDataUnsafe&&TG.initDataUnsafe.start_param||'';const m=/^g(-?\d+)$/.exec(sp);if(m){lsSet("upl30_league",m[1]);return m[1];}return lsGet("upl30_league");}
 async function leagueInit(){
-  if(!IN_TG())return;const chat=leagueChat();
+  if(!IN_TG())return;let chat=leagueChat();
   let joined=false;   // 0.69.4: вступ щойно відбувся — табло беремо повз кеш (там може вже бути перенесений сьогоднішній результат)
-  try{if(/^g-?\d+$/.test(TG.initDataUnsafe.start_param||'')){const r=await _fetch('/api/league',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({initData:TG.initData})});joined=r.ok;}}catch(e){}
+  try{if(/^g-?\d+$/.test(TG.initDataUnsafe.start_param||'')){const r=await _fetch('/api/league',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({initData:TG.initData})});joined=r.ok;LEAGUE_DENIED=r.status===403;
+    // 0.69.4: група стала супергрупою — сервер переніс лігу на новий номер, далі показуємо її
+    const j=await r.json().catch(()=>({}));const c=j.joined&&j.joined[0]&&String(j.joined[0].chat_id);if(c&&c!==chat){chat=c;lsSet('upl30_league',c);}}}catch(e){}
   if(chat){   // 0.65: місце під лігу одразу (з назвою з минулого разу), щоб головна не «стрибала», коли табло догрузиться
     // 0.66: табло з минулого разу — одразу (upl30_league_snap), свіже з сервера — тихо поверх
     const el=document.getElementById('leagueCard'),snap=lsGet('upl30_league_snap');
@@ -2802,6 +2804,7 @@ function renderLeague(){
     <div class="meta">Сьогодні зіграли ${L.today.length} з ${Math.max(L.members,L.today.length)}</div>
     ${L.today.length?`<div class="tbl"><table>${top}</table></div>`:`<p class="muted" style="margin:0">${played?'Сьогодні з групи ще ніхто не зіграв.':'Ще ніхто не зіграв — будь першим!'}</p>`}
     ${all?`<button class="link0 lgall" id="leagueAll">Уся таблиця (${Math.max(L.members,L.today.length)})</button>`:''}
+    ${LEAGUE_DENIED&&me<0?'<p class="muted" style="margin:0;font-size:13px">Тебе ще немає в цій лізі: Telegram не підтвердив, що ти в групі. Відкрий гру кнопкою з останнього повідомлення бота в групі.</p>':''}
     ${played?`<p class="muted" style="margin:0;font-size:13px">${me>=0?'Твій результат уже в табло.':'Драфт дня ти вже зіграв.'} Наступний — завтра о 00:00 за Києвом.</p>`:'<div class="row"><button class="primary" id="leagueGo">Зіграти драфт дня</button></div>'}`;
   const g=document.getElementById('leagueGo');if(g)g.onclick=()=>document.getElementById('dailyBtn').click();
   const a=document.getElementById('leagueAll');if(a)a.onclick=()=>openLeagueAll('today');
