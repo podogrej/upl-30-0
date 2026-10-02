@@ -535,6 +535,15 @@ if { $P -d t4 -f "$ROOT/tools/tests/stub.sql" && $P -d t4 -f "$ROOT/sql/new_db_p
 then ok "база зі старою v059: нова версія переписує імена латиницею (вітя → vitia, андрій ш → andrii_sh), анонімні — silent_owl, двічі без помилок"
 else bad "база зі старою v059 — $(grep -v NOTICE "$D/err" | head -2) $($P -d t4 -tAc "select string_agg(name, ',') from players where name is not null")"; fi
 fi
+# ===== 0.68: fl_mine volatile; client_errors — лише сервер =====
+for pass in 1 2; do for f in v068_fl_mine_volatile v068_client_errors; do
+  if $P -d t1 -f "$ROOT/sql/$f.sql" >/dev/null 2>"$D/err"; then ok "запуск $pass: $f.sql"; else bad "запуск $pass: $f.sql — $(grep -v NOTICE "$D/err" | head -3)"; fi
+done; done
+chk "v068: fl_mine — volatile (PostgREST не кличе її в транзакції лише для читання); client_errors закрита для anon/authenticated" postgres "
+  assert (select provolatile from pg_proc where proname = 'fl_mine') = 'v', 'fl_mine не volatile';
+  assert not has_table_privilege('anon', 'client_errors', 'insert') and not has_table_privilege('anon', 'client_errors', 'select')
+     and not has_table_privilege('authenticated', 'client_errors', 'insert'), 'права client_errors';
+  insert into client_errors(version, msg) values ('0.68', 'x'); assert (select count(*) from client_errors) >= 1, 'сервер пише';"
 echo "база: $D (порт $PORT)"
 [ $FAIL = 0 ] && echo "SQL: УСЕ ГАРАЗД ($N перевірок)" || echo "SQL: ПРОБЛЕМИ $FAIL/$N"
 exit $((FAIL>0))
