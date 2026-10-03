@@ -60,7 +60,7 @@ async function league(chat, from) {
   await L.sb('leagues?on_conflict=chat_id', { method: 'POST', prefer: 'resolution=merge-duplicates,return=minimal', body: { chat_id, title: String(chat.title || 'Група').slice(0, 60), created_by: from && from.id } });
   if (from && !from.is_bot) await L.sb('league_members?on_conflict=chat_id,tg_user_id', { method: 'POST', prefer: 'resolution=merge-duplicates,return=minimal', body: { chat_id, tg_user_id: from.id, name: L.nameOf(from) } });
   if (!exists) await L.tg('sendMessage', { chat_id, text: '🏟 Лігу групи створено! Грайте драфт дня з кнопки під табло — результати потраплять сюди автоматично. Підсумок дня — щовечора близько 21:00 за Києвом.' });
-  await L.upsertBoard(chat_id, L.kyivDate(), { forceNew: true });
+  await L.upsertBoard(chat_id, L.kyivDate(), { copy: exists });   // 0.69.6: нова ліга — табло створюється й закріплюється; наявна — оновлення + копія без закріплення
 }
 
 module.exports = async (req, res) => {
@@ -124,7 +124,7 @@ module.exports = async (req, res) => {
         else await league(chat, m.from);
       } else if (cmd === '/top' || cmd === '/table') {
         const hasLeague = !isPrivate && (await L.sb(`leagues?chat_id=eq.${chat.id}&select=chat_id`) || []).length > 0;
-        if (hasLeague) await L.upsertBoard(chat.id, L.kyivDate(), { forceNew: true });
+        if (hasLeague) await L.upsertBoard(chat.id, L.kyivDate(), { copy: true });   // 0.69.6: закріплене табло оновлюється, у чат — копія без закріплення
         else await L.tg('sendMessage', { chat_id: chat.id, text: await topToday(), parse_mode: 'HTML', reply_markup: { inline_keyboard: [[playButton(isPrivate)]] } });
       }
     }

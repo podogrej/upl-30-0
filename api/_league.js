@@ -77,18 +77,29 @@ async function boardText(chat_id, day) {
 }
 
 // одне повідомлення-табло на день: редагуємо, а не шлемо нові
-async function upsertBoard(chat_id, day, { forceNew = false } = {}) {
+// 0.69.6 (власник 03.10: «у групі має бути одне закріплене повідомлення»): табло — ОДНЕ повідомлення на групу.
+// Бот створює й закріплює його один раз; кожного нового дня редагує те саме повідомлення (рядок league_boards на день
+// отримує той самий message_id). Нове повідомлення + закріплення — лише якщо старого немає або його не вдалося відредагувати
+// (видалили). copy: true (/top, /league в уже наявній лізі) — після оновлення ще й копія табло звичайним повідомленням, без закріплення.
+async function upsertBoard(chat_id, day, { copy = false } = {}) {
   const text = await boardText(chat_id, day);
-  const [b] = await sb(`league_boards?chat_id=eq.${chat_id}&day=eq.${day}&select=message_id`) || [];
-  if (b && b.message_id && !forceNew) {
-    const r = await tg('editMessageText', { chat_id, message_id: b.message_id, text, parse_mode: 'HTML', reply_markup: playKb(chat_id), disable_web_page_preview: true });
-    if (r.ok || /not modified/.test(r.description || '')) return b.message_id;
+  const opts = { parse_mode: 'HTML', reply_markup: playKb(chat_id), disable_web_page_preview: true };
+  const [b] = await sb(`league_boards?chat_id=eq.${chat_id}&message_id=not.is.null&select=day,message_id&order=day.desc&limit=1`) || [];
+  let mid = null;
+  if (b && b.message_id) {
+    const r = await tg('editMessageText', { chat_id, message_id: b.message_id, text, ...opts });
+    if (r.ok || /not modified/.test(r.description || '')) mid = b.message_id;
   }
-  const m = await tg('sendMessage', { chat_id, text, parse_mode: 'HTML', reply_markup: playKb(chat_id), disable_web_page_preview: true });
-  if (!m.ok) throw new Error('send: ' + m.description);
-  const mid = m.result.message_id;
-  await tg('pinChatMessage', { chat_id, message_id: mid, disable_notification: true });   // вийде, лише якщо бот — адмін
-  await sb('league_boards?on_conflict=chat_id,day', { method: 'POST', prefer: 'resolution=merge-duplicates,return=minimal', body: { chat_id, day, message_id: mid } });
+  const fresh = !mid;
+  if (fresh) {
+    const m = await tg('sendMessage', { chat_id, text, ...opts });
+    if (!m.ok) throw new Error('send: ' + m.description);
+    mid = m.result.message_id;
+    await tg('pinChatMessage', { chat_id, message_id: mid, disable_notification: true });   // вийде, лише якщо бот — адмін
+  }
+  if (fresh || !b || String(b.day).slice(0, 10) !== day)
+    await sb('league_boards?on_conflict=chat_id,day', { method: 'POST', prefer: 'resolution=merge-duplicates,return=minimal', body: { chat_id, day, message_id: mid } });
+  if (copy && !fresh) await tg('sendMessage', { chat_id, text, ...opts });
   return mid;
 }
 

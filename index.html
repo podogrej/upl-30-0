@@ -835,7 +835,7 @@ section>h3:first-child,.box h3:first-of-type,#viewBody>h3:first-child,#viewBody>
 
 <div class="overlay" id="viewBox" hidden><div class="box"><div class="vhead"><h3 id="viewTitle">Склад</h3><button class="ghost" id="viewClose">Закрити</button></div><div id="viewBody"></div></div></div>
 <nav class="foot0" aria-label="Розділи"><a href="#" data-go="dailyBtn">Драфт дня</a><a href="#" data-go="pickOpen">Вибір сезону</a><a href="#" data-go="flOpen">Ліга з друзями</a><a href="#" data-go="boardOpen">Таблиця</a><a href="#" data-go="trBtn">Трофеї</a><a href="#" data-go="howQ">Питання</a><a href="#" data-go="aboutBox">Про гру</a></nav>
-<div class="foot">30-0 УПЛ · <a href="#" id="newsBtn">Що нового у версії 0.69.5<b id="newsDot" hidden></b></a> · <a href="#" id="themeBtn" class="thm" role="switch" aria-checked="false" aria-label="Світла тема"></a> · неофіційний фан-проєкт</div>
+<div class="foot">30-0 УПЛ · <a href="#" id="newsBtn">Що нового у версії 0.69.6<b id="newsDot" hidden></b></a> · <a href="#" id="themeBtn" class="thm" role="switch" aria-checked="false" aria-label="Світла тема"></a> · неофіційний фан-проєкт</div>
 <script src="pool.d63f138d2.js"></script>
 <script>
 (function(){
@@ -3037,7 +3037,8 @@ function drawCard(r){   // 0.64: картка в стилі сайту — те�
 }
 document.getElementById('chalOpen').onclick=()=>{const b=document.getElementById('chalBox'),t=document.getElementById('chalOpen');b.hidden=!b.hidden;t.classList.toggle('on',!b.hidden);if(!b.hidden){b.scrollIntoView({behavior:'smooth',block:'center'});const n=document.getElementById('chalName');if(n&&!n.hidden&&!n.value)n.focus();}};
 // ---------- «Що нового»: коротко й по-людськи про останню версію (технічний журнал — CHANGELOG.md у репозиторії)
-const WHATSNEW={v:'0.69.5',date:'02.10.2026',items:[
+const WHATSNEW={v:'0.69.6',date:'03.10.2026',items:[
+  ['format-list-numbered','Одне табло в групі','Бот більше не надсилає й не закріплює нове табло щодня: одне закріплене повідомлення оновлюється саме.'],
   ['account-group','💬 Відгук','Угорі з\'явилась кнопка «Відгук»: напиши боту, що подобається, що зламалось або чого бракує. Можна зі скріншотом — усе прочитаємо.'],
   ['account-group','Нова група — без втрат','Додав бота в нову групу вже після драфту дня? Твій сьогоднішній результат одразу з\'явиться і в її табло.'],
   ['trophy','«Два кольори»','Трофей за чемпіонство в режимі «Один клуб» знову можна отримати.'],
