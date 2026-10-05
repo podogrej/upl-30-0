@@ -458,10 +458,7 @@ header.top{border-bottom-color:var(--line2)}
 .navl{display:flex;align-items:center;gap:8px;min-width:0}#backBtn{padding:7px 14px 7px 6px;font-weight:600}#backBtn .ic{transform:scaleX(-1)}
 header.top.in #homeBtn .hl{display:none}header.top.in #homeBtn{padding-right:8px}
 #acctBtn.avbtn{display:inline-flex;align-items:center;gap:8px;max-width:46vw;padding:3px 12px 3px 3px;border:1px solid var(--line2);border-radius:999px;background:var(--card);box-shadow:none;color:var(--ink);font:600 14px/1 var(--font-body)}
-/* 0.69.5 (власник 02.10, варіант B): «💬 Відгук» поруч з аватаркою; підпис — лише на широкому екрані, на вузькому всередині гри ховається ім'я (лишається аватарка) */
 .hdr-r{display:flex;align-items:center;gap:8px;min-width:0}
-#acctBtn.avbtn{max-width:calc(46vw - 96px)}
-@media (max-width:420px){#acctBtn.avbtn{max-width:calc(46vw - 48px)}}
 @media (max-width:360px){header.top.in #acctBtn .me-n{display:none}header.top.in #acctBtn.avbtn{padding:3px}}
 #acctBtn.avbtn.noname{padding:3px}#acctBtn.avbtn .av{border-radius:999px;flex:none}#acctBtn .me-n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* головна */
@@ -862,7 +859,7 @@ section>h3:first-child,.box h3:first-of-type,#viewBody>h3:first-child,#viewBody>
   <div class="acts"><button class="ft-send" id="fbSend" type="submit">Надіслати</button><button class="ft-cancel" id="fbCancel" type="button">Скасувати</button></div></form>
 <div class="ft-done" id="fbDone" hidden><b>✓</b><span>Дякуємо! Прочитаємо найближчим часом</span></div>
 <div class="ft-pills"><button class="ft-pill" id="fbBtn" type="button">✉️ Відгук і баги</button><a class="ft-pill" id="ftBot" href="https://t.me/upl30_bot" target="_blank" rel="noopener"><!--i:telegram-->Telegram-бот</a></div>
-<div class="foot ft-small"><a href="#" id="newsBtn">Що нового у версії 0.69.6<b id="newsDot" hidden></b></a><span>·</span><a href="privacy.html">Конфіденційність</a></div>
+<div class="foot ft-small"><a href="#" id="newsBtn">Що нового у версії 0.69.69<b id="newsDot" hidden></b></a><span>·</span><a href="privacy.html">Конфіденційність</a></div>
 <div class="foot ft-copy">© 2026 30-0 УПЛ · неофіційний фан-проєкт <a href="#" id="themeBtn" class="thm" role="switch" aria-checked="false" aria-label="Світла тема"></a></div>
 <div class="ft-cred">Шрифт KyivType Sans © Дмитро Растворцев (айдентика Києва)<br>Іконки: Material Design Icons (Apache 2.0), логотип Telegram — Font Awesome Free (CC BY 4.0)</div>
 </footer>
@@ -3101,18 +3098,18 @@ function drawCard(r){   // 0.64: картка в стилі сайту — те�
 }
 document.getElementById('chalOpen').onclick=()=>{const b=document.getElementById('chalBox'),t=document.getElementById('chalOpen');b.hidden=!b.hidden;t.classList.toggle('on',!b.hidden);if(!b.hidden){b.scrollIntoView({behavior:'smooth',block:'center'});const n=document.getElementById('chalName');if(n&&!n.hidden&&!n.value)n.focus();}};
 // ---------- «Що нового»: коротко й по-людськи про останню версію (технічний журнал — CHANGELOG.md у репозиторії)
-const WHATSNEW={v:'0.69.6',date:'03.10.2026',items:[
-  ['format-list-numbered','Одне табло в групі','Бот більше не надсилає й не закріплює нове табло щодня: одне закріплене повідомлення оновлюється саме.'],
-  ['account-group','💬 Відгук','Угорі з\'явилась кнопка «Відгук»: напиши боту, що подобається, що зламалось або чого бракує. Можна зі скріншотом — усе прочитаємо.'],
-  ['account-group','Нова група — без втрат','Додав бота в нову групу вже після драфту дня? Твій сьогоднішній результат одразу з\'явиться і в її табло.'],
-  ['trophy','«Два кольори»','Трофей за чемпіонство в режимі «Один клуб» знову можна отримати.'],
-  ['format-list-numbered','«Про гру та дані»','Цифри про гру знову охайними плитками.'],
-  ['star','Новий шрифт','Уся гра тепер набрана KyivType Sans — шрифтом Дмитра Растворцева, створеним для айдентики Києва.'],
-  ['account-group','5×5 повернувся','У «Лізі з друзями» знову можна створити турнір 5×5: кожен збирає п\'ятірку, а коли збір закінчиться, п\'ятірки грають одна з одною. Схеми — плитками, на iPad поле й колесо поруч.'],
-  ['soccer-field','Ліга на iPad','Сторінка ліги 11×11: кнопка й схеми по центру, правила — плашками, кнопка «Поділитися» з підписом.'],
-  ['star','Перекрутки видно','Скільки разів ще можна перекрутити колесо — яскравим кружком над кнопками.'],
-  ['share-variant','Telegram на iPhone','Свайп униз по сторінці більше не згортає гру.'],
-  ['handshake','Питання й відповіді','Оновили відповіді: «Один клуб», 5×5, «золотий сезон», вердикт сезону.']]};
+const WHATSNEW={v:'0.69.69',date:'05.10.2026',items:[
+  ['handshake','Відгук — у підвалі','Унизу сторінки — «Відгук і баги»: напиши, що зламалось або чого бракує, прямо на сайті. Скріншот можна надіслати боту.'],
+  ['trophy','Кольори трофеїв','Картка трофея тепер має колір класу: основні, з друзями, секретні. Рідкість — значком праворуч.'],
+  ['trophy','Лічильник трофеїв','На головній тепер стільки ж трофеїв, скільки на твоїй сторінці. Два трофеї «Самба» більше не плутаються: один тепер «Карнавал».'],
+  ['star','«Один клуб»','Колесо крутить лише сезони обраного клубу. Зона «торкнись будь-де» стала більшою.'],
+  ['format-list-numbered','Таблиця без очікування','Загальна таблиця вантажиться заздалегідь, вкладки перемикаються одразу.'],
+  ['soccer-field','Рівніше','Картка матчу під час сезону більше не стрибає, значки стоять на одній лінії з текстом.'],
+  ['account-group','Бот у групі','Бот одразу пояснює: спершу зробіть його адміністратором, потім напишіть /league.'],
+  ['format-list-numbered','«Про гру та дані»','Блок завжди відкритий, без зайвих плиток.'],
+  ['format-list-numbered','Одне табло в групі','Одне закріплене повідомлення з табло оновлюється саме, без нових щодня.'],
+  ['star','Новий шрифт','Уся гра набрана KyivType Sans — шрифтом Дмитра Растворцева для айдентики Києва.'],
+  ['account-group','5×5 повернувся','У «Лізі з друзями» знову можна створити турнір 5×5.']]};
 function openNews(){screenTag('news');const box=document.getElementById('viewBox');document.getElementById('viewTitle').textContent=`Що нового · версія ${WHATSNEW.v}`;
   document.getElementById('viewBody').innerHTML=`<div class="news">${WHATSNEW.items.map(([e,h,d])=>`<div class="ni">${ic(e,'lg')}<div><b>${esc(h)}</b><p>${esc(d)}</p></div></div>`).join('')}</div>`;
   box.hidden=false;lsSet('upl30_news_seen',WHATSNEW.v);document.getElementById('newsDot').hidden=true;}
