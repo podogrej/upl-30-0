@@ -1,0 +1,35 @@
+# 0.69.97: черга Telegram-каналу — кожні 10 хвилин викликає /api/cron?task=channel (api/_channel.js): нові чернетки власнику, публікація за розкладом.
+# Vercel Hobby дозволяє Cron лише раз на день, тому частий запуск — тут. GitHub запускає розклад лише з гілки main і може запізнюватися на 5–15 хв.
+# Секрети репозиторію (Settings → Secrets and variables → Actions), значення вписує власник:
+#   CHANNEL_SECRET — те саме значення, що й змінна CHANNEL_SECRET у Vercel (Production і Preview);
+#   VERCEL_BYPASS — необов'язково: ключ «Protection Bypass for Automation» з Vercel, щоб достукатися до тестового сайту (він закритий входом Vercel).
+name: Канал
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+concurrency:
+  group: channel
+  cancel-in-progress: false
+jobs:
+  run:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Прод (upl30.com.ua)
+        env:
+          SECRET: ${{ secrets.CHANNEL_SECRET }}
+        run: |
+          if [ -z "$SECRET" ]; then echo "CHANNEL_SECRET не задано — пропускаю"; exit 0; fi
+          code=$(curl -sS -o out.json -w '%{http_code}' -H "Authorization: Bearer $SECRET" "https://upl30.com.ua/api/cron?task=channel" || echo 000)
+          echo "HTTP $code"; cat out.json; echo
+          case "$code" in 2*) ;; 401) echo "::warning::401 — CHANNEL_SECRET у GitHub і у Vercel не збігаються або прод ще без цієї версії";; *) exit 1;; esac
+      - name: Тест (гілка test)
+        env:
+          SECRET: ${{ secrets.CHANNEL_SECRET }}
+          BYPASS: ${{ secrets.VERCEL_BYPASS }}
+        run: |
+          if [ -z "$SECRET" ] || [ -z "$BYPASS" ]; then echo "CHANNEL_SECRET або VERCEL_BYPASS не задано — тестовий сайт пропускаю"; exit 0; fi
+          code=$(curl -sS -o out.json -w '%{http_code}' -H "Authorization: Bearer $SECRET" -H "x-vercel-protection-bypass: $BYPASS" "https://upl-30-0-git-test-30-01.vercel.app/api/cron?task=channel" || echo 000)
+          echo "HTTP $code"; cat out.json; echo
+          case "$code" in 2*) ;; *) echo "::warning::тестовий сайт відповів $code";; esac

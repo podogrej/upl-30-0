@@ -1,6 +1,7 @@
 // 30-0 УПЛ — Telegram-бот (Vercel serverless function, адреса: /api/bot)
 // Змінні оточення у Vercel: TG_TOKEN, TG_SECRET (обов'язкова, інакше 401), TG_BOT, SUPABASE_SERVICE_KEY
 const L = require('./_league.js');   // спільні функції ліг груп (0.60: одна копія замість трьох)
+const C = require('./_channel.js');   // 0.69.97: Telegram-канал — команди власника, кнопки схвалення, /whoami
 const SITE = 'https://upl30.com.ua/';   // 0.68: свій домен   // 0.62.1: з 0.60 рядок випадково опинився в коментарі — /start, /play, /top в особистому чаті падали
 const SB_KEY = (process.env.SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_pEszTOPsCHLgpiPpwB4JKg_SS-X07hY').trim(); // публічний ключ, як і на сайті
 
@@ -73,6 +74,7 @@ module.exports = async (req, res) => {
     return res.status(401).send('bad secret');
   try {
     const u = req.body || {};
+    if (await C.handleUpdate(u)) return res.status(200).send('ok');   // 0.69.97: канал (/post, /queue, /auto, /whoami, кнопки cp:…) — до відгуків і команд гри
     // бота додали в групу
     const mc = u.my_chat_member;
     const joined = mc && mc.chat && ['member', 'administrator'].includes(mc.new_chat_member.status) && !['member', 'administrator'].includes(mc.old_chat_member.status);

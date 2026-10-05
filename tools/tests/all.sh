@@ -15,7 +15,7 @@ step "згенеровані файли свіжі (збірка нічого н
 step "пул гравців (check_pool)" python3 data/check_pool.py
 step "сервер завантажується (як на Vercel)" node tools/tests/server_load.js
 # швидкі тести без браузера — завжди
-for t in cheat card_api err_digest player_texts feedback board_pin cron_summary; do step "тест $t" node "tools/tests/$t.js"; done
+for t in cheat card_api err_digest player_texts feedback board_pin cron_summary channel; do step "тест $t" node "tools/tests/$t.js"; done
 # тести в браузері (0.67): незалежні, тож ідуть по JOBS одночасно (типово 3) — найдовші першими; QUICK=1 — лише короткий набір
 UI="determinism scenarios fl63 f5online modes chal tro v064 fl61 leagueui v060 player_page v39 news draft58 pitch_layout f5test2 emoji_layout nav_back err_report long_names tg_swipes font_tour icon_align live_height"
 [ -n "$QUICK" ] && UI="draft58 v064 emoji_layout nav_back"

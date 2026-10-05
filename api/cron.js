@@ -2,6 +2,7 @@
 // Пише в групу один раз на день і лише якщо хтось грав. Повторний виклик нічого не надсилає.
 // Змінна оточення у Vercel: CRON_SECRET (обов'язкова, інакше 401).
 const L = require('./_league.js');
+const C = require('./_channel.js');   // 0.69.97: черга постів каналу
 const { plUk } = require('./_lib.js');
 const { errDigest } = require('./_errdigest.js');   // спільні функції ліг груп (0.60: одна копія замість трьох)
 const safeEq = (a, b) => { const x = Buffer.from(String(a)), y = Buffer.from(String(b)); return x.length === y.length && require('crypto').timingSafeEqual(x, y); };
@@ -11,7 +12,13 @@ module.exports = async (req, res) => {
   // Без змінної або з чужим ключем — 401 (раніше без змінної cron був відкритий усім). Ручний запуск — лише з тим самим заголовком.
   const cronSecret = L.env('CRON_SECRET');
   const auth = String((req.headers && req.headers.authorization) || '');
-  if (!cronSecret || !safeEq(auth, `Bearer ${cronSecret}`)) return res.status(401).json({ error: 'unauthorized' });
+  const okBy = sec => !!sec && safeEq(auth, `Bearer ${sec}`);
+  // 0.69.97: ?task=channel — лише черга каналу (кожні ~10 хв з GitHub Actions, .github/workflows/channel.yml); ключ — CHANNEL_SECRET або CRON_SECRET
+  if (req.query && req.query.task === 'channel') {
+    if (!okBy(cronSecret) && !okBy(L.env('CHANNEL_SECRET'))) return res.status(401).json({ error: 'unauthorized' });
+    try { return res.status(200).json({ ok: true, channel: await C.runChannel() }); } catch (e) { return res.status(500).json({ error: String(e && e.message || e).slice(0, 200) }); }
+  }
+  if (!okBy(cronSecret)) return res.status(401).json({ error: 'unauthorized' });
   try {
     const day = (req.query && /^\d{4}-\d{2}-\d{2}$/.test(req.query.day || '')) ? req.query.day : L.kyivDate();
     const rows = await L.sb(`league_results?day=eq.${day}&select=chat_id`) || [];
@@ -62,10 +69,13 @@ module.exports = async (req, res) => {
         weekly.push(chat_id);
       }
     }
+    // 0.69.97: черга каналу — запасний запуск раз на день (основний — GitHub Actions); збій не ламає підсумки ліг
+    let channel = null;
+    try { channel = await C.runChannel(); } catch (e) { channel = { error: String(e && e.message || e).slice(0, 120) }; }
     // 0.69: зведення помилок гравців власнику (api/_errdigest.js); збій зведення не ламає підсумки ліг
     let errs = null;
     try { errs = await errDigest({ sb: L.sb, tg: L.tg, env: L.env, day }); } catch (e) { errs = { error: String(e && e.message || e).slice(0, 120) }; }
-    res.status(200).json({ ok: true, day, summaries: done.length, weekly: weekly.length, errs });
+    res.status(200).json({ ok: true, day, summaries: done.length, weekly: weekly.length, errs, channel });
   } catch (e) {
     res.status(500).json({ error: String(e && e.message || e).slice(0, 200) });
   }

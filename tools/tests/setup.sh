@@ -544,6 +544,23 @@ chk "v068: fl_mine — volatile (PostgREST не кличе її в транза�
   assert not has_table_privilege('anon', 'client_errors', 'insert') and not has_table_privilege('anon', 'client_errors', 'select')
      and not has_table_privilege('authenticated', 'client_errors', 'insert'), 'права client_errors';
   insert into client_errors(version, msg) values ('0.68', 'x'); assert (select count(*) from client_errors) >= 1, 'сервер пише';"
+# ===== 0.69.5 / 0.69.69: feedback (відгуки) — лише сервер; 0.69.97: channel_posts (черга каналу) — лише сервер =====
+for pass in 1 2; do for f in v0695_feedback v06969_feedback_site v06997_channel_posts; do
+  if $P -d t1 -f "$ROOT/sql/$f.sql" >/dev/null 2>"$D/err"; then ok "запуск $pass: $f.sql"; else bad "запуск $pass: $f.sql — $(grep -v NOTICE "$D/err" | head -3)"; fi
+done; done
+chk "v0695/v06969: feedback закрита для anon/authenticated, нові колонки є" postgres "
+  assert not has_table_privilege('anon', 'feedback', 'select') and not has_table_privilege('anon', 'feedback', 'insert') and not has_table_privilege('authenticated', 'feedback', 'insert'), 'права feedback';
+  insert into feedback(kind, text, source, contact, version) values ('text', 'x', 'site', 'a@b.c', '0.69.97');"
+chk "v06997: channel_posts закрита для anon/authenticated; статуси, джерела й довжина перевіряються" postgres "
+  assert not has_table_privilege('anon', 'channel_posts', 'select') and not has_table_privilege('anon', 'channel_posts', 'insert')
+     and not has_table_privilege('authenticated', 'channel_posts', 'select') and not has_table_privilege('authenticated', 'channel_posts', 'update'), 'права channel_posts';
+  insert into channel_posts(text, publish_at) values ('<b>Привіт</b>', now());
+  assert (select status from channel_posts order by id desc limit 1) = 'draft' and (select source from channel_posts order by id desc limit 1) = 'chat', 'типові значення';
+  insert into channel_posts(text, image_url, publish_at) values ('<b>' || repeat('x', 1024) || '</b>', 'file', now());
+  begin insert into channel_posts(text, image_url, publish_at) values (repeat('x', 1025), 'file', now()); assert false, 'довгий підпис прийнято'; exception when check_violation then null; end;
+  begin insert into channel_posts(text, publish_at) values (repeat('x', 4097), now()); assert false, 'довгий текст прийнято'; exception when check_violation then null; end;
+  begin insert into channel_posts(text, publish_at, status) values ('x', now(), 'weird'); assert false, 'чужий статус прийнято'; exception when check_violation then null; end;
+  begin insert into channel_posts(text, publish_at, source) values ('x', now(), 'bot'); assert false, 'чуже джерело прийнято'; exception when check_violation then null; end;"
 echo "база: $D (порт $PORT)"
 [ $FAIL = 0 ] && echo "SQL: УСЕ ГАРАЗД ($N перевірок)" || echo "SQL: ПРОБЛЕМИ $FAIL/$N"
 exit $((FAIL>0))
