@@ -93,6 +93,7 @@ function mkDB(){
  T.check(!A.errs.length,'помилок на сторінці немає '+A.errs.join(' | '));
  // ---- гість за посиланням: бачить лігу, «Увійти, щоб приєднатися»
  const G=await openSite({b,db,api,query:'?l='+M.leagues[0].id,wait:1800});
+ await G.pg.waitForFunction(()=>/Увійти, щоб приєднатися/.test((document.getElementById('fl')||{}).textContent||''),null,{timeout:8000}).catch(()=>{});   // 0.69.69: під навантаженням 1,8 с не вистачало — чекаємо текст, а не час
  const gp=(await G.pg.textContent('#fl')).replace(/\s+/g,' ');
  T.check(await G.pg.$eval('#s7',e=>!e.hidden)&&/Увійти, щоб приєднатися/.test(gp)&&gp.includes(M.leagues[0].name),'гість за посиланням: ліга й «Увійти, щоб приєднатися»');
  T.check(!G.errs.length,'гість: помилок немає '+G.errs.join(' | '));
