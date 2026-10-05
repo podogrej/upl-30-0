@@ -276,7 +276,7 @@ function honestXi(formation) {
   const dAgo = n => new Date(Date.UTC(+today.slice(0, 4), +today.slice(5, 7) - 1, +today.slice(8, 10)) - n * 864e5).toISOString().slice(0, 10);
   const mondayAgo = min => { for (let n = min; ; n++) if (new Date(dAgo(n)).getUTCDay() === 1) return n; };
   const nonMondayAgo = min => { for (let n = min; ; n++) if (new Date(dAgo(n)).getUTCDay() !== 1) return n; };
-  const keep = [dAgo(1), dAgo(13), dAgo(mondayAgo(20)), dAgo(mondayAgo(43))]   // 0.69.69: було mondayAgo(50) — у понеділок це рівно 56 днів, та сама дата, що й у drop.map(d => d + '.json.gz').concat(['notes.txt']);
+  const keep = [dAgo(1), dAgo(13), dAgo(mondayAgo(20)), dAgo(mondayAgo(43))].map(d => d + '.json.gz').concat(['notes.txt']);   // 0.69.69: було mondayAgo(50) — у понеділок це рівно 56 днів, та сама дата, що й у drop
   const drop = [dAgo(nonMondayAgo(14)), dAgo(nonMondayAgo(30)), dAgo(mondayAgo(56)), dAgo(mondayAgo(90))].map(d => d + '.json.gz');
   for (const n of keep.concat(drop)) STORE[n] = Buffer.from('old');
   const bk = await callReq(backupH, { headers: { authorization: 'Bearer ' + process.env.CRON_SECRET } });

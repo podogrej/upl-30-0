@@ -82,10 +82,12 @@ const order=pg=>pg.$$eval('#ppCab .tro.on[data-tr]',es=>es.map(e=>e.dataset.tr))
  await pg.click('#ppCabAll');await pg.waitForTimeout(100);   // 0.62: фільтри й сортування — за «Усі трофеї»
  await pg.click('#ppCab [data-s="recent"]');await pg.waitForTimeout(100);
  T.check(JSON.stringify(await order(pg))===JSON.stringify(['top3','unbeaten','champ']),'«Нещодавні»: '+(await order(pg)).join(','));
- const catOf=await pg.evaluate(()=>Object.fromEntries(window.__dbg.TROPHIES.map(t=>[t.id,t.cat])));
- await pg.click('#ppCab [data-f="season"]');await pg.waitForTimeout(100);
- const shown=await pg.$$eval('#ppCab .tro[data-tr]',es=>es.map(e=>e.dataset.tr));const chip=await pg.textContent('#ppCab [data-f="season"]');
- T.check(shown.length>0&&shown.every(id=>catOf[id]==='season')&&/Сезон \d+\/\d+/.test(chip),`фільтр «Сезон»: ${shown.length} карток, «${chip}»`);
+ // 0.69.69 (власник 05.10): фільтри — лише «Усі» і три класи
+ {const fs=await pg.$$eval('#ppCab [data-f]',es=>es.map(e=>e.dataset.f+':'+e.textContent.trim()));
+  T.check(fs.length===4&&/^all:Усі/.test(fs[0])&&/^base:Основні/.test(fs[1])&&/^friends:З друзями/.test(fs[2])&&/^secret:Секретні/.test(fs[3]),'фільтри: Усі + Основні / З друзями / Секретні — '+fs.join(' | '));}
+ await pg.click('#ppCab [data-f="base"]');await pg.waitForTimeout(100);
+ const shown=await pg.$$eval('#ppCab .tro',es=>es.map(e=>e.className));const chip=await pg.textContent('#ppCab [data-f="base"]');
+ T.check(shown.length>0&&shown.every(c=>/\bk-base\b/.test(c))&&/Основні \d+\/\d+/.test(chip),`фільтр «Основні»: ${shown.length} карток, «${chip}»`);
  await pg.click('#ppCab [data-f="all"]');await pg.click('#ppCab [data-s="rare"]');
  // ім'я: правила й повідомлення
  const rename=async v=>{await openSet(pg);await pg.fill('#ppNameIn',v);await pg.click('#ppNameSave');await pg.waitForTimeout(300);return setMsg(pg);};

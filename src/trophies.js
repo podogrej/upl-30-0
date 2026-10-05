@@ -3,7 +3,7 @@ const PERSON={};   // person_id → {main, nat, by, clubs:Set}; clubs — спі
 {const CL={};for(const c of DATA.clubs)for(const p of c.pl){const k=canon(p[5]);const cl=CL[k]||(CL[k]=new Set());const q=PERSON[p[5]]||(PERSON[p[5]]={main:p[6],nat:p[10],by:p[11],clubs:cl});cl.add(c.c);}}
 const CLUBS_NOW=new Set(DATA.clubs.filter(c=>c.y===Math.max(...DATA.clubs.map(x=>x.y))).map(c=>c.c));
 const UA=0;   // DATA.nats[0] = «Україна»
-const TR_CATS=[["season","Сезон"],["squad","Склад"],["players","Гравці"],["modes","Режими та складність"],["daily","Драфт дня"],["friends","З друзями"],["secret","Секретні"]];
+const TR_KINDS=[["base","Основні"],["friends","З друзями"],["secret","Секретні"]];   // 0.69.69 (власник 05.10): і кольори, і фільтри — лише три класи (trKind)
 const surname=n=>{const t=String(n).split(' ');return t[t.length-1];};
 const firstName=n=>String(n).split(' ')[0];
 const byClub=xi=>{const m={};for(const x of xi)m[x.cc]=(m[x.cc]||0)+1;return Math.max(0,...Object.values(m));};
@@ -228,8 +228,8 @@ async function openTrophies(){screenTag('trophies');
     const pctOf=id=>TR_PCT&&TR_PCT.players>=10?100*((TR_PCT.t||{})[id]||0)/TR_PCT.players:null;
     const got=t=>s.t[t.id]&&s.t[t.id].n;const LIVE=TROPHIES.filter(t=>!t.gone||got(t));const total=LIVE.length,have=LIVE.filter(got).length;
     let h=`<p class="muted" style="margin:0">Відкрито ${have} з ${total} · зіграно сезонів: ${s.seasons}</p>`;
-    for(const [cat,title] of TR_CATS){const list=LIVE.filter(t=>t.cat===cat&&(!t.sec||(s.t[t.id]&&s.t[t.id].n)));
-      const hiddenN=TROPHIES.filter(t=>t.cat===cat&&t.sec&&!(s.t[t.id]&&s.t[t.id].n)).length;
+    for(const [kind,title] of TR_KINDS){const list=LIVE.filter(t=>trKind(t)===kind&&(!t.sec||(s.t[t.id]&&s.t[t.id].n)));
+      const hiddenN=TROPHIES.filter(t=>trKind(t)===kind&&t.sec&&!(s.t[t.id]&&s.t[t.id].n)).length;
       if(!list.length&&!hiddenN)continue;
       list.sort((a,b)=>((s.t[b.id]||{}).n?1:0)-((s.t[a.id]||{}).n?1:0));
       h+=`<h3>${title}</h3><div class="trg">${list.map(t=>trCard(t,s.t[t.id],pctOf(t.id),t.prog&&t.prog(st))).join('')}</div>`;

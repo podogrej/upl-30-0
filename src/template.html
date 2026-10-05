@@ -336,7 +336,7 @@ td .sub{font-size:11px;color:var(--muted);margin-top:2px;display:flex;gap:6px;al
 .pp-sec{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin:26px 0 10px}
 .pp-sec h3{margin:0}.pp-sec .best{font-size:12px}
 .pp-bar{height:4px;border-radius:2px;background:var(--line);overflow:hidden;margin:-4px 0 10px}.pp-bar i{display:block;height:100%;background:var(--amber)}
-.pp-filt{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:8px}
+.pp-filt{display:grid;grid-template-columns:repeat(auto-fit,minmax(0,1fr));gap:6px;margin-bottom:8px}.pp-filt .chip.chip{display:grid;justify-items:center;gap:1px;min-width:0;padding:6px 4px;white-space:nowrap;line-height:1.2;text-align:center}.pp-filt .chip i{font-size:11.5px}   /* 0.69.69: чотири фільтри — рівними кнопками в один ряд, рахунок під назвою */
 .pp-filt .chip{flex:none;cursor:pointer;font-weight:600}.pp-filt .chip i{font-style:normal;color:var(--muted)}
 .pp-filt .chip.onc{border-color:var(--ink);color:var(--ink);background:var(--surface)}
 .seg.pp-sort,.seg.fl-tabs{display:grid;grid-template-columns:1fr 1fr;padding:3px;border-radius:12px;background:var(--bg2);border:1px solid var(--line);margin-bottom:10px}
@@ -1810,7 +1810,7 @@ function boardHtml(rows,b){
 let BOARD='main';
 function openBoard(b){BOARD=b||BOARD;screenTag('table');const box=document.getElementById('viewBox'),body=document.getElementById('viewBody');document.getElementById('viewTitle').textContent='Таблиця · 11×11';box.hidden=false;
   const bt=Object.entries(BOARDS).filter(([k,v])=>!v.hidden||k===BOARD);   // 0.65: одна вкладка — без ряду вкладок
-  body.innerHTML=`<div class="tabs" style="margin-top:0" role="tablist"${bt.length<2?' hidden':''}>${bt.map(([k,v])=>`<button class="tab${k===BOARD?' on':''}" data-board="${k}" role="tab">${v.name}</button>`).join('')}</div><p class="muted" style="font-size:12.5px;margin:10px 0 8px">${BOARDS[BOARD].note}</p><div id="boardBody">${BOARD_CACHE[BOARD]?boardHtml(BOARD_CACHE[BOARD].rows,BOARD):'<p class="muted">Завантаження…</p>'}</div>`;
+  body.innerHTML=`<div class="tabs" style="margin-top:0" role="tablist"${bt.length<2?' hidden':''}>${bt.map(([k,v])=>`<button class="tab${k===BOARD?' on':''}" data-board="${k}" role="tab">${v.name}</button>`).join('')}</div><p class="muted" style="font-size:12.5px;margin:10px 0 8px">${BOARDS[BOARD].note}</p><div id="boardBody">${BOARD_CACHE[BOARD]&&BOARD_CACHE[BOARD].rows?boardHtml(BOARD_CACHE[BOARD].rows,BOARD):'<p class="muted">Завантаження…</p>'}</div>`;
   body.querySelectorAll('[data-board]').forEach(t=>t.onclick=()=>openBoard(t.dataset.board));
   loadBoard(BOARD);}
 // 0.69.69 (власник 03.10: «таблиця щоразу вантажиться, і при перемиканні вкладок — „Завантаження…“»): вкладки таблиці
@@ -1993,7 +1993,7 @@ document.getElementById('chalOpen').onclick=()=>{const b=document.getElementById
 // ---------- «Що нового»: коротко й по-людськи про останню версію (технічний журнал — CHANGELOG.md у репозиторії)
 const WHATSNEW={v:'0.69.69',date:'05.10.2026',items:[
   ['handshake','Відгук — у підвалі','Унизу сторінки — «Відгук і баги»: напиши, що зламалось або чого бракує, прямо на сайті. Скріншот можна надіслати боту.'],
-  ['trophy','Кольори трофеїв','Картка трофея тепер має колір класу: основні, з друзями, секретні. Рідкість — значком праворуч.'],
+  ['trophy','Кольори трофеїв','Трофеї тепер трьох класів — основні, з друзями, секретні: за ними колір картки й фільтри. Рідкість — значком праворуч.'],
   ['trophy','Лічильник трофеїв','На головній тепер стільки ж трофеїв, скільки на твоїй сторінці. Два трофеї «Самба» більше не плутаються: один тепер «Карнавал».'],
   ['star','«Один клуб»','Колесо крутить лише сезони обраного клубу. Зона «торкнись будь-де» стала більшою.'],
   ['format-list-numbered','Таблиця без очікування','Загальна таблиця вантажиться заздалегідь, вкладки перемикаються одразу.'],
@@ -2016,6 +2016,6 @@ document.getElementById('newsDot').hidden=lsGet('upl30_news_seen')===WHATSNEW.v;
 /*__FIVE__*/
 document.getElementById('f5Open').onclick=f5Start;
 // 0.67 (аудит P2-5): лише те, що беруть тести; drawCard — для перевірки картки, simulate/rerun — для швидкого детермінізму
-window.__dbg={ic,seasonLabel,BOARD_FROM,setFmt,leagueLoad,boardHtml,oppYear,champModal,drawCard,chalNewGame,DAILY,LEAGUE_CULT,LEAGUE_LEGENDS,openTrophies,renderNewTro,bestPerPlayer,renderWheel,posOpts,eraOf,ptsWord,viewHtml,renderPitch,pitchHtml,f5Pitch,F5_FORMS,cardName,clubShort,simulate,shareTextOf,trCtxNow,trAward,trStore,FORMATIONS,GROUP_OF,DATA,TROPHIES,trEval,PERSON,effRating,get S(){return S;},rerun(seed,year,xi){rnd=mulberry32(seed);const r=simulate(xi||S.slots.map(s=>s.player),MODES[S.mode],year);rnd=Math.random;return {W:r.W,D:r.D,L:r.L,gf:r.gf,ga:r.ga,place:r.place};}};
+window.__dbg={ic,seasonLabel,boardPrefetch,boardStale,BOARD_FROM,setFmt,leagueLoad,boardHtml,oppYear,champModal,drawCard,chalNewGame,DAILY,LEAGUE_CULT,LEAGUE_LEGENDS,openTrophies,renderNewTro,bestPerPlayer,renderWheel,posOpts,eraOf,ptsWord,viewHtml,renderPitch,pitchHtml,f5Pitch,F5_FORMS,cardName,clubShort,simulate,shareTextOf,trCtxNow,trAward,trStore,FORMATIONS,GROUP_OF,DATA,TROPHIES,trEval,PERSON,effRating,get S(){return S;},rerun(seed,year,xi){rnd=mulberry32(seed);const r=simulate(xi||S.slots.map(s=>s.player),MODES[S.mode],year);rnd=Math.random;return {W:r.W,D:r.D,L:r.L,gf:r.gf,ga:r.ga,place:r.place};}};
 })();
 </script>

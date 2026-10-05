@@ -352,7 +352,7 @@ td .sub{font-size:11px;color:var(--muted);margin-top:2px;display:flex;gap:6px;al
 .pp-sec{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin:26px 0 10px}
 .pp-sec h3{margin:0}.pp-sec .best{font-size:12px}
 .pp-bar{height:4px;border-radius:2px;background:var(--line);overflow:hidden;margin:-4px 0 10px}.pp-bar i{display:block;height:100%;background:var(--amber)}
-.pp-filt{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:8px}
+.pp-filt{display:grid;grid-template-columns:repeat(auto-fit,minmax(0,1fr));gap:6px;margin-bottom:8px}.pp-filt .chip.chip{display:grid;justify-items:center;gap:1px;min-width:0;padding:6px 4px;white-space:nowrap;line-height:1.2;text-align:center}.pp-filt .chip i{font-size:11.5px}   /* 0.69.69: чотири фільтри — рівними кнопками в один ряд, рахунок під назвою */
 .pp-filt .chip{flex:none;cursor:pointer;font-weight:600}.pp-filt .chip i{font-style:normal;color:var(--muted)}
 .pp-filt .chip.onc{border-color:var(--ink);color:var(--ink);background:var(--surface)}
 .seg.pp-sort,.seg.fl-tabs{display:grid;grid-template-columns:1fr 1fr;padding:3px;border-radius:12px;background:var(--bg2);border:1px solid var(--line);margin-bottom:10px}
@@ -1545,7 +1545,7 @@ const PERSON={};   // person_id → {main, nat, by, clubs:Set}; clubs — спі
 {const CL={};for(const c of DATA.clubs)for(const p of c.pl){const k=canon(p[5]);const cl=CL[k]||(CL[k]=new Set());const q=PERSON[p[5]]||(PERSON[p[5]]={main:p[6],nat:p[10],by:p[11],clubs:cl});cl.add(c.c);}}
 const CLUBS_NOW=new Set(DATA.clubs.filter(c=>c.y===Math.max(...DATA.clubs.map(x=>x.y))).map(c=>c.c));
 const UA=0;   // DATA.nats[0] = «Україна»
-const TR_CATS=[["season","Сезон"],["squad","Склад"],["players","Гравці"],["modes","Режими та складність"],["daily","Драфт дня"],["friends","З друзями"],["secret","Секретні"]];
+const TR_KINDS=[["base","Основні"],["friends","З друзями"],["secret","Секретні"]];   // 0.69.69 (власник 05.10): і кольори, і фільтри — лише три класи (trKind)
 const surname=n=>{const t=String(n).split(' ');return t[t.length-1];};
 const firstName=n=>String(n).split(' ')[0];
 const byClub=xi=>{const m={};for(const x of xi)m[x.cc]=(m[x.cc]||0)+1;return Math.max(0,...Object.values(m));};
@@ -1770,8 +1770,8 @@ async function openTrophies(){screenTag('trophies');
     const pctOf=id=>TR_PCT&&TR_PCT.players>=10?100*((TR_PCT.t||{})[id]||0)/TR_PCT.players:null;
     const got=t=>s.t[t.id]&&s.t[t.id].n;const LIVE=TROPHIES.filter(t=>!t.gone||got(t));const total=LIVE.length,have=LIVE.filter(got).length;
     let h=`<p class="muted" style="margin:0">Відкрито ${have} з ${total} · зіграно сезонів: ${s.seasons}</p>`;
-    for(const [cat,title] of TR_CATS){const list=LIVE.filter(t=>t.cat===cat&&(!t.sec||(s.t[t.id]&&s.t[t.id].n)));
-      const hiddenN=TROPHIES.filter(t=>t.cat===cat&&t.sec&&!(s.t[t.id]&&s.t[t.id].n)).length;
+    for(const [kind,title] of TR_KINDS){const list=LIVE.filter(t=>trKind(t)===kind&&(!t.sec||(s.t[t.id]&&s.t[t.id].n)));
+      const hiddenN=TROPHIES.filter(t=>trKind(t)===kind&&t.sec&&!(s.t[t.id]&&s.t[t.id].n)).length;
       if(!list.length&&!hiddenN)continue;
       list.sort((a,b)=>((s.t[b.id]||{}).n?1:0)-((s.t[a.id]||{}).n?1:0));
       h+=`<h3>${title}</h3><div class="trg">${list.map(t=>trCard(t,s.t[t.id],pctOf(t.id),t.prog&&t.prog(st))).join('')}</div>`;
@@ -2095,7 +2095,7 @@ function boardHtml(rows,b){
 let BOARD='main';
 function openBoard(b){BOARD=b||BOARD;screenTag('table');const box=document.getElementById('viewBox'),body=document.getElementById('viewBody');document.getElementById('viewTitle').textContent='Таблиця · 11×11';box.hidden=false;
   const bt=Object.entries(BOARDS).filter(([k,v])=>!v.hidden||k===BOARD);   // 0.65: одна вкладка — без ряду вкладок
-  body.innerHTML=`<div class="tabs" style="margin-top:0" role="tablist"${bt.length<2?' hidden':''}>${bt.map(([k,v])=>`<button class="tab${k===BOARD?' on':''}" data-board="${k}" role="tab">${v.name}</button>`).join('')}</div><p class="muted" style="font-size:12.5px;margin:10px 0 8px">${BOARDS[BOARD].note}</p><div id="boardBody">${BOARD_CACHE[BOARD]?boardHtml(BOARD_CACHE[BOARD].rows,BOARD):'<p class="muted">Завантаження…</p>'}</div>`;
+  body.innerHTML=`<div class="tabs" style="margin-top:0" role="tablist"${bt.length<2?' hidden':''}>${bt.map(([k,v])=>`<button class="tab${k===BOARD?' on':''}" data-board="${k}" role="tab">${v.name}</button>`).join('')}</div><p class="muted" style="font-size:12.5px;margin:10px 0 8px">${BOARDS[BOARD].note}</p><div id="boardBody">${BOARD_CACHE[BOARD]&&BOARD_CACHE[BOARD].rows?boardHtml(BOARD_CACHE[BOARD].rows,BOARD):'<p class="muted">Завантаження…</p>'}</div>`;
   body.querySelectorAll('[data-board]').forEach(t=>t.onclick=()=>openBoard(t.dataset.board));
   loadBoard(BOARD);}
 // 0.69.69 (власник 03.10: «таблиця щоразу вантажиться, і при перемиканні вкладок — „Завантаження…“»): вкладки таблиці
@@ -2241,8 +2241,8 @@ function ppRenderCab(){
   const el=document.getElementById('ppCab');if(!el||!PP)return;const st=PP,own=st.own,have=ppHave();
   const mine=trStore().t;const got=t=>!!have[t.id];
   const LIVE=TROPHIES.filter(t=>!t.gone||got(t));const total=LIVE.length,n=LIVE.filter(got).length;
-  const cats=[['all','Усі'],...TR_CATS];
-  const inCat=(t,c)=>c==='all'||t.cat===c;
+  const cats=[['all','Усі'],...TR_KINDS];
+  const inCat=(t,c)=>c==='all'||trKind(t)===c;   // 0.69.69: фільтри — три класи, як і кольори
   let list=LIVE.filter(t=>inCat(t,st.f));
   const on=list.filter(got),off=own?list.filter(t=>!got(t)&&!t.sec):[];const secOff=list.filter(t=>!got(t)&&t.sec).length;
   const rk=t=>{if(t.sec)return -1;const p=trPct(t.id);return p==null?1e3:p;};
@@ -2260,7 +2260,7 @@ function ppRenderCab(){
   // 0.69.69 (власник 03.10): порядок — картки → «+N секретних» → віхи → «Згорнути»; рядок секретних по центру, значок на одній лінії з текстом
   el.innerHTML=`<div class="pp-sec"><h3>Трофеї</h3><span class="best">Відкрито ${n} з ${total}</span></div><div class="pp-bar"><i style="width:${total?Math.round(100*n/total):0}%"></i></div>
     ${own&&n?`<button class="ghost wbtn" id="ppCabShare">${ic('bookshelf','sm')}Поділитися шафою</button><div id="ppCabOut" hidden class="pp-cabout"><img id="ppCabImg" alt="Шафа трофеїв"><div class="row"><button class="primary" id="ppCabSend" hidden>${ic('share-variant','sm')}Поділитися</button><span class="muted" id="ppCabMsg" style="font-size:13px"></span></div></div>`:''}
-    ${st.all?`<div class="pp-filt" role="tablist">${cats.filter(([c])=>c==='all'||LIVE.some(t=>t.cat===c)).map(([c,l])=>`<button class="chip${st.f===c?' onc':''}" data-f="${c}" role="tab" aria-selected="${st.f===c}">${l} <i>${cnt(c)}</i></button>`).join('')}</div>
+    ${st.all?`<div class="pp-filt" role="tablist">${cats.filter(([c])=>c==='all'||LIVE.some(t=>inCat(t,c))).map(([c,l])=>`<button class="chip${st.f===c?' onc':''}" data-f="${c}" role="tab" aria-selected="${st.f===c}">${l} <i>${cnt(c)}</i></button>`).join('')}</div>
     <div class="seg pp-sort"><button data-s="rare" class="${st.s==='rare'?'on':''}">За рідкістю</button><button data-s="recent" class="${st.s==='recent'?'on':''}">Нещодавні</button></div>`:''}
     ${st.all&&shown.length?`<div class="trleg"><div class="h">Колір картки — клас трофея</div><div class="row">${[['base','Основний'],['friends','З друзями'],['secret','Секретний']].map(([k,l])=>`<span class="it k-${k}"><i class="sw"></i>${l}</span>`).join('')}</div><div class="h">Значок праворуч — рідкість</div><div class="row">${RARITY.slice(1).map(([,k,l])=>`<em class="gem rt-${k}">${l}</em>`).join('')}</div></div>`:''}
     ${shown.length?`<div class="trg">${shown.map(card).join('')}</div>`:`<p class="pp-empty">${own?'Тут поки порожньо — зіграй сезон.':'Поки жодного трофея.'}</p>`}
@@ -2274,7 +2274,7 @@ function ppRenderCab(){
 }
 // «Поділитися шафою» (0.60): картинка 1080×1350 — ім'я, «відкрито N з M», до 12 трофеїв (рідкісні першими). Поза Telegram — системне меню з файлом,
 // у Telegram — бот надсилає картинку в особисті (api/card), інакше — довге натискання на картинку
-const CAB_COL={season:'#c9a227',squad:'#30D158',players:'#ff9a3d',modes:'#FF453A',daily:'#0A84FF',friends:'#e0287a',secret:'#BF5AF2'};
+const CAB_COL={base:'#8fa0d8',friends:'#33c9e6',secret:'#a970ff'};   // 0.69.69: картинка шафи — ті самі три класи, що й на сторінці
 let CAB_CANVAS=null;
 async function ppShareCab(got,n,total){try{await document.fonts.ready;}catch(e){}
   const W=1080,H=1350,c=document.createElement('canvas');c.width=W;c.height=H;CAB_CANVAS=c;const g=c.getContext('2d');
@@ -2289,7 +2289,7 @@ async function ppShareCab(got,n,total){try{await document.fonts.ready;}catch(e){
   const list=got.slice(0,12),cols=3,cw=(W-160)/cols,ch=222,y0=400;
   list.forEach((t,i)=>{const cx=80+(i%cols)*cw+cw/2,cy=y0+Math.floor(i/cols)*ch+70,R=58;
     g.beginPath();for(let k=0;k<6;k++){const a=Math.PI/3*k-Math.PI/2;g[k?'lineTo':'moveTo'](cx+R*Math.cos(a),cy+R*Math.sin(a));}g.closePath();
-    g.fillStyle=CAB_COL[t.cat]||'#ff5aa0';g.globalAlpha=.22;g.fill();g.globalAlpha=1;g.lineWidth=5;g.strokeStyle=CAB_COL[t.cat]||'#ff5aa0';g.stroke();
+    g.fillStyle=CAB_COL[trKind(t)];g.globalAlpha=.22;g.fill();g.globalAlpha=1;g.lineWidth=5;g.strokeStyle=CAB_COL[trKind(t)];g.stroke();
     g.font=`52px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif`;g.textAlign='center';g.textBaseline='middle';g.fillText(t.i||'🏆',cx,cy+2);
     g.textBaseline='alphabetic';g.fillStyle='#ffffff';let f2=28;g.font=`700 ${f2}px ${BODY}`;let tn=t.n;while(g.measureText(tn).width>cw-20&&f2>20){f2-=1;g.font=`700 ${f2}px ${BODY}`;}
     while(g.measureText(tn).width>cw-20&&tn.length>4)tn=tn.slice(0,-2)+'…';g.fillText(tn,cx,cy+R+46);g.textAlign='left';});
@@ -3100,7 +3100,7 @@ document.getElementById('chalOpen').onclick=()=>{const b=document.getElementById
 // ---------- «Що нового»: коротко й по-людськи про останню версію (технічний журнал — CHANGELOG.md у репозиторії)
 const WHATSNEW={v:'0.69.69',date:'05.10.2026',items:[
   ['handshake','Відгук — у підвалі','Унизу сторінки — «Відгук і баги»: напиши, що зламалось або чого бракує, прямо на сайті. Скріншот можна надіслати боту.'],
-  ['trophy','Кольори трофеїв','Картка трофея тепер має колір класу: основні, з друзями, секретні. Рідкість — значком праворуч.'],
+  ['trophy','Кольори трофеїв','Трофеї тепер трьох класів — основні, з друзями, секретні: за ними колір картки й фільтри. Рідкість — значком праворуч.'],
   ['trophy','Лічильник трофеїв','На головній тепер стільки ж трофеїв, скільки на твоїй сторінці. Два трофеї «Самба» більше не плутаються: один тепер «Карнавал».'],
   ['star','«Один клуб»','Колесо крутить лише сезони обраного клубу. Зона «торкнись будь-де» стала більшою.'],
   ['format-list-numbered','Таблиця без очікування','Загальна таблиця вантажиться заздалегідь, вкладки перемикаються одразу.'],
@@ -3458,7 +3458,7 @@ function f5RenderOnline(el){const f=F5,o=f.online;
 
 document.getElementById('f5Open').onclick=f5Start;
 // 0.67 (аудит P2-5): лише те, що беруть тести; drawCard — для перевірки картки, simulate/rerun — для швидкого детермінізму
-window.__dbg={ic,seasonLabel,BOARD_FROM,setFmt,leagueLoad,boardHtml,oppYear,champModal,drawCard,chalNewGame,DAILY,LEAGUE_CULT,LEAGUE_LEGENDS,openTrophies,renderNewTro,bestPerPlayer,renderWheel,posOpts,eraOf,ptsWord,viewHtml,renderPitch,pitchHtml,f5Pitch,F5_FORMS,cardName,clubShort,simulate,shareTextOf,trCtxNow,trAward,trStore,FORMATIONS,GROUP_OF,DATA,TROPHIES,trEval,PERSON,effRating,get S(){return S;},rerun(seed,year,xi){rnd=mulberry32(seed);const r=simulate(xi||S.slots.map(s=>s.player),MODES[S.mode],year);rnd=Math.random;return {W:r.W,D:r.D,L:r.L,gf:r.gf,ga:r.ga,place:r.place};}};
+window.__dbg={ic,seasonLabel,boardPrefetch,boardStale,BOARD_FROM,setFmt,leagueLoad,boardHtml,oppYear,champModal,drawCard,chalNewGame,DAILY,LEAGUE_CULT,LEAGUE_LEGENDS,openTrophies,renderNewTro,bestPerPlayer,renderWheel,posOpts,eraOf,ptsWord,viewHtml,renderPitch,pitchHtml,f5Pitch,F5_FORMS,cardName,clubShort,simulate,shareTextOf,trCtxNow,trAward,trStore,FORMATIONS,GROUP_OF,DATA,TROPHIES,trEval,PERSON,effRating,get S(){return S;},rerun(seed,year,xi){rnd=mulberry32(seed);const r=simulate(xi||S.slots.map(s=>s.player),MODES[S.mode],year);rnd=Math.random;return {W:r.W,D:r.D,L:r.L,gf:r.gf,ga:r.ga,place:r.place};}};
 })();
 </script>
 

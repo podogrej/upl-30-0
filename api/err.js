@@ -8,9 +8,9 @@ const int = v => (Number.isFinite(+v) ? Math.max(0, Math.min(1e7, Math.round(+v)
 module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
   try {
-    if (await rateLimit(req, res, 'err')) return;
     const b = body(req);
-    if (b.feedback) return await feedback(req, res, b);
+    if (b.feedback) return await feedback(req, res, b);   // відгук — лише свій ліміт fb: помилки сторінки його не блокують
+    if (await rateLimit(req, res, 'err')) return;
     const rows = (Array.isArray(b.errors) ? b.errors.slice(0, 5) : []).filter(e => e && e.msg).map(e => ({
       version: cut(b.version, 12), msg: cut(e.msg, 300), src: cut(e.src, 200), line: int(e.line), col: int(e.col), stack: cut(e.stack, 1500),
       screen: cut(b.screen, 20), url: cut(b.url, 200), ua: cut(req.headers['user-agent'], 200), tg: cut(b.tg, 40), player: cut(b.player, 12),

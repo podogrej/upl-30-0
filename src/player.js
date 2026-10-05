@@ -95,8 +95,8 @@ function ppRenderCab(){
   const el=document.getElementById('ppCab');if(!el||!PP)return;const st=PP,own=st.own,have=ppHave();
   const mine=trStore().t;const got=t=>!!have[t.id];
   const LIVE=TROPHIES.filter(t=>!t.gone||got(t));const total=LIVE.length,n=LIVE.filter(got).length;
-  const cats=[['all','Усі'],...TR_CATS];
-  const inCat=(t,c)=>c==='all'||t.cat===c;
+  const cats=[['all','Усі'],...TR_KINDS];
+  const inCat=(t,c)=>c==='all'||trKind(t)===c;   // 0.69.69: фільтри — три класи, як і кольори
   let list=LIVE.filter(t=>inCat(t,st.f));
   const on=list.filter(got),off=own?list.filter(t=>!got(t)&&!t.sec):[];const secOff=list.filter(t=>!got(t)&&t.sec).length;
   const rk=t=>{if(t.sec)return -1;const p=trPct(t.id);return p==null?1e3:p;};
@@ -114,7 +114,7 @@ function ppRenderCab(){
   // 0.69.69 (власник 03.10): порядок — картки → «+N секретних» → віхи → «Згорнути»; рядок секретних по центру, значок на одній лінії з текстом
   el.innerHTML=`<div class="pp-sec"><h3>Трофеї</h3><span class="best">Відкрито ${n} з ${total}</span></div><div class="pp-bar"><i style="width:${total?Math.round(100*n/total):0}%"></i></div>
     ${own&&n?`<button class="ghost wbtn" id="ppCabShare">${ic('bookshelf','sm')}Поділитися шафою</button><div id="ppCabOut" hidden class="pp-cabout"><img id="ppCabImg" alt="Шафа трофеїв"><div class="row"><button class="primary" id="ppCabSend" hidden>${ic('share-variant','sm')}Поділитися</button><span class="muted" id="ppCabMsg" style="font-size:13px"></span></div></div>`:''}
-    ${st.all?`<div class="pp-filt" role="tablist">${cats.filter(([c])=>c==='all'||LIVE.some(t=>t.cat===c)).map(([c,l])=>`<button class="chip${st.f===c?' onc':''}" data-f="${c}" role="tab" aria-selected="${st.f===c}">${l} <i>${cnt(c)}</i></button>`).join('')}</div>
+    ${st.all?`<div class="pp-filt" role="tablist">${cats.filter(([c])=>c==='all'||LIVE.some(t=>inCat(t,c))).map(([c,l])=>`<button class="chip${st.f===c?' onc':''}" data-f="${c}" role="tab" aria-selected="${st.f===c}">${l} <i>${cnt(c)}</i></button>`).join('')}</div>
     <div class="seg pp-sort"><button data-s="rare" class="${st.s==='rare'?'on':''}">За рідкістю</button><button data-s="recent" class="${st.s==='recent'?'on':''}">Нещодавні</button></div>`:''}
     ${st.all&&shown.length?`<div class="trleg"><div class="h">Колір картки — клас трофея</div><div class="row">${[['base','Основний'],['friends','З друзями'],['secret','Секретний']].map(([k,l])=>`<span class="it k-${k}"><i class="sw"></i>${l}</span>`).join('')}</div><div class="h">Значок праворуч — рідкість</div><div class="row">${RARITY.slice(1).map(([,k,l])=>`<em class="gem rt-${k}">${l}</em>`).join('')}</div></div>`:''}
     ${shown.length?`<div class="trg">${shown.map(card).join('')}</div>`:`<p class="pp-empty">${own?'Тут поки порожньо — зіграй сезон.':'Поки жодного трофея.'}</p>`}
@@ -128,7 +128,7 @@ function ppRenderCab(){
 }
 // «Поділитися шафою» (0.60): картинка 1080×1350 — ім'я, «відкрито N з M», до 12 трофеїв (рідкісні першими). Поза Telegram — системне меню з файлом,
 // у Telegram — бот надсилає картинку в особисті (api/card), інакше — довге натискання на картинку
-const CAB_COL={season:'#c9a227',squad:'#30D158',players:'#ff9a3d',modes:'#FF453A',daily:'#0A84FF',friends:'#e0287a',secret:'#BF5AF2'};
+const CAB_COL={base:'#8fa0d8',friends:'#33c9e6',secret:'#a970ff'};   // 0.69.69: картинка шафи — ті самі три класи, що й на сторінці
 let CAB_CANVAS=null;
 async function ppShareCab(got,n,total){try{await document.fonts.ready;}catch(e){}
   const W=1080,H=1350,c=document.createElement('canvas');c.width=W;c.height=H;CAB_CANVAS=c;const g=c.getContext('2d');
@@ -143,7 +143,7 @@ async function ppShareCab(got,n,total){try{await document.fonts.ready;}catch(e){
   const list=got.slice(0,12),cols=3,cw=(W-160)/cols,ch=222,y0=400;
   list.forEach((t,i)=>{const cx=80+(i%cols)*cw+cw/2,cy=y0+Math.floor(i/cols)*ch+70,R=58;
     g.beginPath();for(let k=0;k<6;k++){const a=Math.PI/3*k-Math.PI/2;g[k?'lineTo':'moveTo'](cx+R*Math.cos(a),cy+R*Math.sin(a));}g.closePath();
-    g.fillStyle=CAB_COL[t.cat]||'#ff5aa0';g.globalAlpha=.22;g.fill();g.globalAlpha=1;g.lineWidth=5;g.strokeStyle=CAB_COL[t.cat]||'#ff5aa0';g.stroke();
+    g.fillStyle=CAB_COL[trKind(t)];g.globalAlpha=.22;g.fill();g.globalAlpha=1;g.lineWidth=5;g.strokeStyle=CAB_COL[trKind(t)];g.stroke();
     g.font=`52px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif`;g.textAlign='center';g.textBaseline='middle';g.fillText(t.i||'🏆',cx,cy+2);
     g.textBaseline='alphabetic';g.fillStyle='#ffffff';let f2=28;g.font=`700 ${f2}px ${BODY}`;let tn=t.n;while(g.measureText(tn).width>cw-20&&f2>20){f2-=1;g.font=`700 ${f2}px ${BODY}`;}
     while(g.measureText(tn).width>cw-20&&tn.length>4)tn=tn.slice(0,-2)+'…';g.fillText(tn,cx,cy+R+46);g.textAlign='left';});
