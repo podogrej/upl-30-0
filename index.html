@@ -198,6 +198,7 @@ summary{cursor:pointer;font-weight:600}
 .lvMatch{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;min-height:64px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
 .lvMatch .sc{font-family:var(--font-display);font-weight:700;font-size:24px;font-variant-numeric:tabular-nums}
 .lvMatch .who{font-size:13px;color:var(--ink2)}
+.lvMatch{height:72px;min-height:0;box-sizing:border-box}.lvMatch>div{min-width:0}.lvMatch .who,.lvMatch b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}   /* 0.69.69 (фідбек 03.10: «екран скаче»): картка матчу однакової висоти — бомбардири в один рядок з «…» */
 .lvGrid{display:grid;grid-template-columns:repeat(15,1fr);gap:4px;width:100%;max-width:520px;justify-self:center}
 .lvGrid i{aspect-ratio:1;border-radius:4px;background:var(--bg2);border:1px solid var(--line)}
 .lvGrid i.W{background:var(--win);border-color:var(--win)} .lvGrid i.D{background:var(--draw);border-color:var(--draw)} .lvGrid i.L{background:var(--loss);border-color:var(--loss)}
@@ -422,7 +423,8 @@ input.sw:checked{background:var(--win)}input.sw:checked::after{transform:transla
 .pp-delbox{display:grid;gap:8px;border:1px solid color-mix(in srgb,var(--loss) 50%,var(--line));border-radius:10px;padding:10px 12px}.pp-delbox p{margin:0;font-size:13px}
 button.danger{background:var(--loss);border-color:var(--loss);color:#fff}
 .pp-warn{display:grid;gap:8px;margin-top:14px;padding:12px;border:1px solid color-mix(in srgb,var(--amber) 55%,var(--line));border-radius:10px;background:color-mix(in srgb,var(--amber) 9%,var(--surface))}
-.pp-warn .h{display:flex;align-items:center;gap:8px;font-weight:700;font-size:14px}.pp-warn .h .ico{width:18px;height:18px;fill:var(--amber)}
+.pp-warn .h{display:flex;align-items:flex-start;gap:8px;line-height:1.3;font-weight:700;font-size:14px}.pp-warn .h .ico{width:18px;height:18px;fill:var(--amber);flex:none;margin-top:0}   /* 0.69.69: значок — на рівні першого рядка заголовка */
+#verLine{display:flex;align-items:center}#verLine .ic{flex:none}   /* 0.69.69 (власник: емодзі нижче тексту на iPhone) */
 .pp-warn p{margin:0;font-size:13px;color:var(--ink2);line-height:1.45}
 .pp-lock{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);padding:12px;border:1px dashed var(--line);border-radius:10px}
 .pp-lock .ico{width:16px;height:16px;fill:currentColor}
@@ -564,7 +566,7 @@ table.lbt th.n,table.lbt td.n{width:28px;padding-left:2px;padding-right:2px;text
 #skipBtn{justify-self:center}
 @media (min-width:700px){
   .score0 b{font-size:44px}.score0 span{font-size:14px}.hero .tier{font-size:40px}
-  .lvRound{font-size:30px}.lvRec{font-size:40px}.lvMatch .sc{font-size:32px}.lvTop .muted,.lvMatch .who{font-size:16px}.lvTable td{font-size:15px;padding:6px 10px}
+  .lvRound{font-size:30px}.lvRec{font-size:40px}.lvMatch .sc{font-size:32px}.lvMatch{height:88px}.lvTop .muted,.lvMatch .who{font-size:16px}.lvTable td{font-size:15px;padding:6px 10px}
 }
 /* «Огляд» на великому екрані: поле ліворуч, решта праворуч */
 @media (min-width:1000px){
@@ -1618,7 +1620,7 @@ const TROPHIES=[
   {id:"kukuriku",i:"🐓",n:"Кукуріку",d:"Анатолій Тимощук у складі",cat:"secret",sec:1,t:c=>c.xi.some(x=>x.id==='w:1979-03-30:timoschuk')},
   {id:"lobanovsky",i:"📋",n:"Лобан би схвалив",d:"Чемпіон, у складі 6+ гравців «Динамо» 1997–2001",cat:"secret",sec:1,t:c=>notAnti(c)&&c.r.place===1&&c.xi.filter(x=>x.cc==='dynamo-kyiv'&&x.y>=1997&&x.y<=2000).length>=6},
   {id:"panenka",i:"🪶",n:"Паненка",d:"Артем Мілевський у складі, команда в трійці",cat:"secret",sec:1,t:c=>notAnti(c)&&c.r.place<=3&&c.xi.some(x=>x.id==='tm:9800')},
-  {id:"samba8",i:"💃",n:"Самба",d:"8+ бразильців в одному складі",cat:"secret",sec:1,t:c=>c.xi.filter(x=>DATA.nats[x.nat]==='Бразилія').length>=8},
+  {id:"samba8",i:"💃",n:"Карнавал",d:"8+ бразильців в одному складі",cat:"secret",sec:1,t:c=>c.xi.filter(x=>DATA.nats[x.nat]==='Бразилія').length>=8},
   // 0.58, ідея Віті: 106 грузинів у пулі, розкидані по клубах; бот, що полює на грузинів, збирає 6+ приблизно в 1 драфті з 8, випадково — майже ніколи
   {id:"gamarjoba",i:"🇬🇪",n:"Гамарджоба",d:"6+ грузинів в одному складі",cat:"secret",sec:1,t:c=>c.xi.filter(x=>DATA.nats[x.nat]==='Грузія').length>=6},
   // Кварцяний, Блохін, Лобановський
@@ -3407,7 +3409,7 @@ function f5RenderOnline(el){const f=F5,o=f.online;
 
 document.getElementById('f5Open').onclick=f5Start;
 // 0.67 (аудит P2-5): лише те, що беруть тести; drawCard — для перевірки картки, simulate/rerun — для швидкого детермінізму
-window.__dbg={BOARD_FROM,setFmt,leagueLoad,boardHtml,oppYear,champModal,drawCard,chalNewGame,DAILY,LEAGUE_CULT,LEAGUE_LEGENDS,openTrophies,renderNewTro,bestPerPlayer,renderWheel,posOpts,eraOf,ptsWord,viewHtml,renderPitch,pitchHtml,f5Pitch,F5_FORMS,cardName,clubShort,simulate,shareTextOf,trCtxNow,trAward,trStore,FORMATIONS,GROUP_OF,DATA,TROPHIES,trEval,PERSON,effRating,get S(){return S;},rerun(seed,year,xi){rnd=mulberry32(seed);const r=simulate(xi||S.slots.map(s=>s.player),MODES[S.mode],year);rnd=Math.random;return {W:r.W,D:r.D,L:r.L,gf:r.gf,ga:r.ga,place:r.place};}};
+window.__dbg={ic,BOARD_FROM,setFmt,leagueLoad,boardHtml,oppYear,champModal,drawCard,chalNewGame,DAILY,LEAGUE_CULT,LEAGUE_LEGENDS,openTrophies,renderNewTro,bestPerPlayer,renderWheel,posOpts,eraOf,ptsWord,viewHtml,renderPitch,pitchHtml,f5Pitch,F5_FORMS,cardName,clubShort,simulate,shareTextOf,trCtxNow,trAward,trStore,FORMATIONS,GROUP_OF,DATA,TROPHIES,trEval,PERSON,effRating,get S(){return S;},rerun(seed,year,xi){rnd=mulberry32(seed);const r=simulate(xi||S.slots.map(s=>s.player),MODES[S.mode],year);rnd=Math.random;return {W:r.W,D:r.D,L:r.L,gf:r.gf,ga:r.ga,place:r.place};}};
 })();
 </script>
 
