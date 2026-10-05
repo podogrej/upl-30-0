@@ -969,6 +969,7 @@ const DAILY=dailySetup();
 // чистка (0.58): результат і позначка «надіслано» драфту дня (upl30_daily_<день>, upl30_sent_<день>) потрібні лише сьогодні — старші за 14 днів стираємо
 try{const old=dayAdd(DAY,-14);for(let i=localStorage.length-1;i>=0;i--){const k=localStorage.key(i),m=/^upl30_(?:daily|sent)_(\d{4}-\d{2}-\d{2})$/.exec(k||'');if(m&&m[1]<old)localStorage.removeItem(k);}}catch(e){}
 setTimeout(()=>{try{loadHomeStats();}catch(e){}try{renderTrBtn();trRetro();}catch(e){}try{chalLoad();}catch(e){}try{f5Boot();}catch(e){}},0);
+setTimeout(()=>{try{boardPrefetch();}catch(e){}},2500);   // 0.69.69: таблиця — заздалегідь, у фоні
 MODES.daily={name:"Драфт дня",desc:"",damp:1,star:0,rerolls:1,showRatings:false,reveal:true};
 function dayAdd(day,n){return new Date(Date.UTC(+day.slice(0,4),+day.slice(5,7)-1,+day.slice(8,10))+n*864e5).toISOString().slice(0,10);}
 function weekKey(day){const wd=(new Date(Date.UTC(+day.slice(0,4),+day.slice(5,7)-1,+day.slice(8,10))).getUTCDay()+6)%7;return dayAdd(day,-wd);}
@@ -1681,7 +1682,7 @@ async function verifySeason(r){
   try{const res=await _fetch('/api/verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({season_id:r.rowId})});const j=await res.json();if(res.status===429)r.slow=j.error;verifiedUi(r,j);}catch(e){}
 }
 function verifiedUi(r,j){r.verified=j.verified;
-    const el=document.getElementById('verLine');if(el&&S.result===r){el.hidden=j.verified!==true&&!r.slow;if(j.verified===true)el.innerHTML=ic('check-decagram','sm')+'Результат перевірено сервером';else if(r.slow)el.textContent=r.slow;}
+    const el=document.getElementById('verLine');if(el&&S.result===r){el.hidden=j.verified!==true&&!r.slow;if(j.verified===true){el.innerHTML=ic('check-decagram','sm')+'Результат перевірено сервером';boardStale();setTimeout(boardPrefetch,1500);}else if(r.slow)el.textContent=r.slow;}
     // з 0.52 результат дня в таблицю пише сервер (з перевіреного сезону) — надсилати вручну вже не треба
     if(j.verified===true&&S.result===r&&S.daily&&!S.daily.practice){lsSet("upl30_sent_"+DAY,true);const f=document.getElementById('lbForm'),m=document.getElementById('lbMsg');if(f&&!f.hidden){f.hidden=true;m.textContent='Твій результат уже в таблиці дня.';document.getElementById('lbAcct').hidden=true;loadLb(document.getElementById('lbTable'));}}
 }
@@ -1775,10 +1776,20 @@ function boardHtml(rows,b){
 let BOARD='main';
 function openBoard(b){BOARD=b||BOARD;screenTag('table');const box=document.getElementById('viewBox'),body=document.getElementById('viewBody');document.getElementById('viewTitle').textContent='Таблиця · 11×11';box.hidden=false;
   const bt=Object.entries(BOARDS).filter(([k,v])=>!v.hidden||k===BOARD);   // 0.65: одна вкладка — без ряду вкладок
-  body.innerHTML=`<div class="tabs" style="margin-top:0" role="tablist"${bt.length<2?' hidden':''}>${bt.map(([k,v])=>`<button class="tab${k===BOARD?' on':''}" data-board="${k}" role="tab">${v.name}</button>`).join('')}</div><p class="muted" style="font-size:12.5px;margin:10px 0 8px">${BOARDS[BOARD].note}</p><div id="boardBody"><p class="muted">Завантаження…</p></div>`;
+  body.innerHTML=`<div class="tabs" style="margin-top:0" role="tablist"${bt.length<2?' hidden':''}>${bt.map(([k,v])=>`<button class="tab${k===BOARD?' on':''}" data-board="${k}" role="tab">${v.name}</button>`).join('')}</div><p class="muted" style="font-size:12.5px;margin:10px 0 8px">${BOARDS[BOARD].note}</p><div id="boardBody">${BOARD_CACHE[BOARD]?boardHtml(BOARD_CACHE[BOARD].rows,BOARD):'<p class="muted">Завантаження…</p>'}</div>`;
   body.querySelectorAll('[data-board]').forEach(t=>t.onclick=()=>openBoard(t.dataset.board));
   loadBoard(BOARD);}
-async function loadBoard(b){const el=document.getElementById('boardBody');try{const rows=await sbGetFallback([boardQ(b,true,PL_SEL[0],true,true),boardQ(b,true,PL_SEL[0],true),boardQ(b,true,PL_SEL[0]),boardQ(b,true,PL_SEL[1]),boardQ(b,false)]);if(BOARD===b&&el.isConnected)el.innerHTML=boardHtml(rows,b);}catch(e){if(el.isConnected)el.innerHTML='<p class="muted">Таблиця зараз недоступна.</p>';}}
+// 0.69.69 (власник 03.10: «таблиця щоразу вантажиться, і при перемиканні вкладок — „Завантаження…“»): вкладки таблиці
+// вантажимо заздалегідь у фоні (boardPrefetch після старту) і тримаємо в пам'яті; відкриття — одразу з пам'яті, свіже — тихо поверх
+const BOARD_CACHE={};   // 0.69.69: таблиця з пам'яті показується одразу, свіжа догружається у фоні й тихо підміняє
+function boardFetch(b){const c=BOARD_CACHE[b];if(c&&c.p)return c.p;
+  const p=sbGetFallback([boardQ(b,true,PL_SEL[0],true,true),boardQ(b,true,PL_SEL[0],true),boardQ(b,true,PL_SEL[0]),boardQ(b,true,PL_SEL[1]),boardQ(b,false)])
+    .then(rows=>{BOARD_CACHE[b]={rows,at:Date.now()};return rows;}).catch(e=>{if(BOARD_CACHE[b])delete BOARD_CACHE[b].p;throw e;});
+  BOARD_CACHE[b]={...(c||{}),p};return p;}
+function boardPrefetch(){if(!ONLINE)return;for(const [k,v] of Object.entries(BOARDS))if(!v.hidden)boardFetch(k).catch(()=>{});}
+function boardStale(){for(const k in BOARD_CACHE)delete BOARD_CACHE[k];}   // свій новий сезон — наступне відкриття бере свіже
+async function loadBoard(b){const el=document.getElementById('boardBody'),c=BOARD_CACHE[b];
+  try{const rows=await boardFetch(b);if(BOARD===b&&el.isConnected)el.innerHTML=boardHtml(rows,b);}catch(e){if(el.isConnected&&!(c&&c.rows))el.innerHTML='<p class="muted">Таблиця зараз недоступна.</p>';}}
 document.getElementById('boardOpen').onclick=()=>{if(!ONLINE){screenTag('table');document.getElementById('viewTitle').textContent='Таблиця · 11×11';document.getElementById('viewBody').innerHTML='<p class="muted">Таблиця працює на сайті '+SITE_HOST+' і в Telegram-боті @upl30_bot.</p>';document.getElementById('viewBox').hidden=false;return;}openBoard('main');};
 function pitchHtml(formation,xi){const G=pitchGeo(formation);const F=FORMATIONS[formation]||FORMATIONS['4-4-2'];let h=PITCH_MK;F.slots.forEach((sl,i)=>{const p=xi[i];if(!p)return;const pt=G.pts[i];h+=`<div class="slot filled ${GROUP_OF[p.slot]||''}" style="left:${pt.x}%;top:${pt.y}%">${slotInner(p.slot,p,{pill:rPill(numOr0(baseR(p)))})}</div>`;});return `<div class="pitch">${h}</div>`;}
 // дані сезону з бази (xi, tbl — jsonb, їх пише браузер): числа — лише через Number, текст — лише через esc
