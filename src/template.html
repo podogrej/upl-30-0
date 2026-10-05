@@ -356,6 +356,20 @@ td .sub{font-size:11px;color:var(--muted);margin-top:2px;display:flex;gap:6px;al
 @media (prefers-reduced-motion:reduce){.tro.rarein,.tro.rarein .tri,.tro.rarein::after{animation:none}.tro.rarein{box-shadow:0 0 0 1px var(--rc)}}
 .tro.rt-legend{border-color:#FFD60A;box-shadow:0 0 0 1px #FFD60A inset,0 0 14px color-mix(in srgb,#FFD60A 25%,transparent)}
 .tro.rt-rare .trp,.tro.rt-epic .trp,.tro.rt-legend .trp{color:var(--ink2)}
+/* 0.69.69 (власник 05.10, макет B): тонована картка за класом — основні, з друзями, секретні; рідкість — значком праворуч */
+:root{--k-base:#5a6aa8;--k-friends:#0e98b8;--k-secret:#7c3aed;--r-rare:#1f6fe5;--r-epic:#d61f7d}
+:root[data-theme="dark"]{--k-base:#8fa0d8;--k-friends:#33c9e6;--k-secret:#a970ff;--r-rare:#3d8bff;--r-epic:#ff4fa3}
+.k-base{--kc:var(--k-base)}.k-friends{--kc:var(--k-friends)}.k-secret{--kc:var(--k-secret)}
+.tro.on.k-base,.tro.on.k-friends,.tro.on.k-secret{background:linear-gradient(120deg,color-mix(in srgb,var(--kc) 22%,var(--surface)),var(--surface) 70%);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--kc) 45%,transparent)}
+.tro.k-base:not(.on),.tro.k-friends:not(.on),.tro.k-secret:not(.on){background:color-mix(in srgb,var(--kc) 5%,var(--surface));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--kc) 18%,var(--line))}
+.tro.on[class*="k-"] .tre{background:color-mix(in srgb,var(--kc) 22%,var(--bg2))}
+.tro.on[class*="k-"] .trt b{background:none;color:var(--ink)}
+.gem{font:800 10px/1 var(--font-body);letter-spacing:.06em;text-transform:uppercase;padding:4px 7px;border-radius:999px;color:#fff;font-style:normal;white-space:nowrap}
+.gem.rt-rare{background:var(--r-rare)}.gem.rt-epic{background:var(--r-epic)}.gem.rt-legend{background:var(--grad)}
+.tro>.gem{grid-column:3;grid-row:1;align-self:start;justify-self:end}.tro>.gem~.trn{grid-column:3;grid-row:1;align-self:end}
+.trleg{display:grid;gap:8px;margin:2px 0 12px;padding:12px 14px;border-radius:14px;background:var(--card);font-size:12.5px;color:var(--ink2)}
+.trleg .h{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}.trleg .row{display:flex;flex-wrap:wrap;gap:6px 14px;margin:0;align-items:center}
+.trleg .it{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}.trleg .sw{width:22px;height:14px;border-radius:4px;flex:none;background:linear-gradient(120deg,color-mix(in srgb,var(--kc) 45%,var(--surface)),var(--surface));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--kc) 55%,transparent)}
 .pp-list{border:1px solid var(--line);border-radius:10px;background:var(--surface);overflow:hidden}
 .fl-hero{text-align:center;display:grid;justify-items:center;gap:8px;margin:18px 0 6px}.fl-hero h1,.fl-head h1{font-family:var(--font-display);margin:0;font-size:30px;line-height:1.1}.fl-hero p{margin:0;color:var(--ink2)}   /* 0.68: на iPad кнопка й текст — по центру (були ліворуч під заголовком) */
 .fl-head{display:grid;gap:4px;margin:16px 0 10px}.fl-head p{margin:0;font-size:13.5px}.fl-badge{font-style:normal;font-family:var(--font-mono,monospace);font-size:13px;vertical-align:middle;border:1px solid var(--df);color:var(--df);border-radius:7px;padding:1px 6px}

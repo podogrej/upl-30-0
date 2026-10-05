@@ -215,10 +215,12 @@ async function trRetro(){
 // трофеї цього пристрою + трофеї акаунта з сервера (upl30_tr_srv: id з player_profile, оновлює trSrvRefresh у player.js), лише ті, що є в TROPHIES
 function trCountAll(){const s=trStore();const ids=new Set(Object.entries(s.t).filter(([,e])=>e&&e.n).map(([id])=>id));for(const id of (lsGet('upl30_tr_srv')||[]))ids.add(id);return TROPHIES.filter(t=>ids.has(t.id)).length;}
 function renderTrBtn(){const n=trCountAll();const b=document.getElementById('trCount');if(b)b.textContent=n?` · ${n}`:'';}
+// 0.69.69 (власник 05.10, макет B): колір картки — лише три класи: основні, з друзями, секретні
+function trKind(t){return t.sec||t.cat==='secret'?'secret':t.cat==='friends'?'friends':'base';}
 function trCard(t,e,pct,prog){
   const got=e&&e.n;const p=pct!=null?`<span class="trp">${pct===0?'ще ніхто не відкрив':`є в ${pct<1?'<1':Math.round(pct)}% гравців`}</span>`:'';
   const pr=!got&&prog?`<span class="trp">${Math.min(prog[0],prog[1])}/${prog[1]}</span>`:'';
-  return `<div class="tro${got?' on':''}${t.sec?' sec':''}"><span class="tri">${trBadge(t,got)}</span><div class="trt"><b>${esc(t.n)}</b>${trQ(t)}<span>${esc(t.d)}</span>${p}${pr}</div>${got&&e.n>1?`<span class="trn">×${e.n}</span>`:''}</div>`;
+  return `<div class="tro k-${trKind(t)}${got?' on':''}${t.sec?' sec':''}"><span class="tri">${trBadge(t,got)}</span><div class="trt"><b>${esc(t.n)}</b>${trQ(t)}<span>${esc(t.d)}</span>${p}${pr}</div>${got&&e.n>1?`<span class="trn">×${e.n}</span>`:''}</div>`;
 }
 async function openTrophies(){screenTag('trophies');
   const box=document.getElementById('viewBox'),body=document.getElementById('viewBody');document.getElementById('viewTitle').textContent='Трофеї';box.hidden=false;
@@ -249,6 +251,6 @@ function renderNewTro(r){
   // 0.63 (власник): перші 6 — великими картками (нові першими, потім повторні), 7-й і далі — дрібніше, рядком; 0.67 (як у 38-0): повторні без «ще раз · ×N»
   const list=[...nw,...rep],big=list.slice(0,6),small=list.slice(6),isNew=t=>fresh.has(t.id);
   el.hidden=false;el.innerHTML=`<div class="kicker" style="margin-bottom:6px">${nw.length&&!rep.length?(nw.length>1?'Нові трофеї':'Новий трофей'):'Трофеї сезону'}</div><div class="trg">`
-    +big.map((t,k)=>`<div class="tro on pop${isNew(t)?' new':''}${t.sec?' sec':''}${isNew(t)?rareCls(t):''}" style="animation-delay:${k*120+(isNew(t)&&rareCls(t)?250:0)}ms"><span class="tri">${trBadge(t,true)}</span><div class="trt"><b>${esc(t.n)}</b>${trQ(t)}<span>${esc(t.d)}</span>${isNew(t)?(t.sec?'<em class="trsx">секретний!</em>':'')+rareTag(t):''}</div></div>`).join('')+`</div>`
+    +big.map((t,k)=>`<div class="tro k-${trKind(t)} on pop${isNew(t)?' new':''}${t.sec?' sec':''}${isNew(t)?rareCls(t):''}" style="animation-delay:${k*120+(isNew(t)&&rareCls(t)?250:0)}ms"><span class="tri">${trBadge(t,true)}</span><div class="trt"><b>${esc(t.n)}</b>${trQ(t)}<span>${esc(t.d)}</span>${isNew(t)?(t.sec?'<em class="trsx">секретний!</em>':'')+rareTag(t):''}</div></div>`).join('')+`</div>`
     +(small.length?`<div class="trrep" style="margin-top:8px">`+small.map(t=>`<span class="trchip${t.sec?' sec':''}" title="${esc(t.d)}">${trBadge(t,true)}<b>${esc(t.n)}</b></span>`).join('')+`</div>`:'');
 }

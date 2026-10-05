@@ -372,6 +372,20 @@ td .sub{font-size:11px;color:var(--muted);margin-top:2px;display:flex;gap:6px;al
 @media (prefers-reduced-motion:reduce){.tro.rarein,.tro.rarein .tri,.tro.rarein::after{animation:none}.tro.rarein{box-shadow:0 0 0 1px var(--rc)}}
 .tro.rt-legend{border-color:#FFD60A;box-shadow:0 0 0 1px #FFD60A inset,0 0 14px color-mix(in srgb,#FFD60A 25%,transparent)}
 .tro.rt-rare .trp,.tro.rt-epic .trp,.tro.rt-legend .trp{color:var(--ink2)}
+/* 0.69.69 (власник 05.10, макет B): тонована картка за класом — основні, з друзями, секретні; рідкість — значком праворуч */
+:root{--k-base:#5a6aa8;--k-friends:#0e98b8;--k-secret:#7c3aed;--r-rare:#1f6fe5;--r-epic:#d61f7d}
+:root[data-theme="dark"]{--k-base:#8fa0d8;--k-friends:#33c9e6;--k-secret:#a970ff;--r-rare:#3d8bff;--r-epic:#ff4fa3}
+.k-base{--kc:var(--k-base)}.k-friends{--kc:var(--k-friends)}.k-secret{--kc:var(--k-secret)}
+.tro.on.k-base,.tro.on.k-friends,.tro.on.k-secret{background:linear-gradient(120deg,color-mix(in srgb,var(--kc) 22%,var(--surface)),var(--surface) 70%);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--kc) 45%,transparent)}
+.tro.k-base:not(.on),.tro.k-friends:not(.on),.tro.k-secret:not(.on){background:color-mix(in srgb,var(--kc) 5%,var(--surface));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--kc) 18%,var(--line))}
+.tro.on[class*="k-"] .tre{background:color-mix(in srgb,var(--kc) 22%,var(--bg2))}
+.tro.on[class*="k-"] .trt b{background:none;color:var(--ink)}
+.gem{font:800 10px/1 var(--font-body);letter-spacing:.06em;text-transform:uppercase;padding:4px 7px;border-radius:999px;color:#fff;font-style:normal;white-space:nowrap}
+.gem.rt-rare{background:var(--r-rare)}.gem.rt-epic{background:var(--r-epic)}.gem.rt-legend{background:var(--grad)}
+.tro>.gem{grid-column:3;grid-row:1;align-self:start;justify-self:end}.tro>.gem~.trn{grid-column:3;grid-row:1;align-self:end}
+.trleg{display:grid;gap:8px;margin:2px 0 12px;padding:12px 14px;border-radius:14px;background:var(--card);font-size:12.5px;color:var(--ink2)}
+.trleg .h{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}.trleg .row{display:flex;flex-wrap:wrap;gap:6px 14px;margin:0;align-items:center}
+.trleg .it{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}.trleg .sw{width:22px;height:14px;border-radius:4px;flex:none;background:linear-gradient(120deg,color-mix(in srgb,var(--kc) 45%,var(--surface)),var(--surface));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--kc) 55%,transparent)}
 .pp-list{border:1px solid var(--line);border-radius:10px;background:var(--surface);overflow:hidden}
 .fl-hero{text-align:center;display:grid;justify-items:center;gap:8px;margin:18px 0 6px}.fl-hero h1,.fl-head h1{font-family:var(--font-display);margin:0;font-size:30px;line-height:1.1}.fl-hero p{margin:0;color:var(--ink2)}   /* 0.68: на iPad кнопка й текст — по центру (були ліворуч під заголовком) */
 .fl-head{display:grid;gap:4px;margin:16px 0 10px}.fl-head p{margin:0;font-size:13.5px}.fl-badge{font-style:normal;font-family:var(--font-mono,monospace);font-size:13px;vertical-align:middle;border:1px solid var(--df);color:var(--df);border-radius:7px;padding:1px 6px}
@@ -1746,10 +1760,12 @@ async function trRetro(){
 // трофеї цього пристрою + трофеї акаунта з сервера (upl30_tr_srv: id з player_profile, оновлює trSrvRefresh у player.js), лише ті, що є в TROPHIES
 function trCountAll(){const s=trStore();const ids=new Set(Object.entries(s.t).filter(([,e])=>e&&e.n).map(([id])=>id));for(const id of (lsGet('upl30_tr_srv')||[]))ids.add(id);return TROPHIES.filter(t=>ids.has(t.id)).length;}
 function renderTrBtn(){const n=trCountAll();const b=document.getElementById('trCount');if(b)b.textContent=n?` · ${n}`:'';}
+// 0.69.69 (власник 05.10, макет B): колір картки — лише три класи: основні, з друзями, секретні
+function trKind(t){return t.sec||t.cat==='secret'?'secret':t.cat==='friends'?'friends':'base';}
 function trCard(t,e,pct,prog){
   const got=e&&e.n;const p=pct!=null?`<span class="trp">${pct===0?'ще ніхто не відкрив':`є в ${pct<1?'<1':Math.round(pct)}% гравців`}</span>`:'';
   const pr=!got&&prog?`<span class="trp">${Math.min(prog[0],prog[1])}/${prog[1]}</span>`:'';
-  return `<div class="tro${got?' on':''}${t.sec?' sec':''}"><span class="tri">${trBadge(t,got)}</span><div class="trt"><b>${esc(t.n)}</b>${trQ(t)}<span>${esc(t.d)}</span>${p}${pr}</div>${got&&e.n>1?`<span class="trn">×${e.n}</span>`:''}</div>`;
+  return `<div class="tro k-${trKind(t)}${got?' on':''}${t.sec?' sec':''}"><span class="tri">${trBadge(t,got)}</span><div class="trt"><b>${esc(t.n)}</b>${trQ(t)}<span>${esc(t.d)}</span>${p}${pr}</div>${got&&e.n>1?`<span class="trn">×${e.n}</span>`:''}</div>`;
 }
 async function openTrophies(){screenTag('trophies');
   const box=document.getElementById('viewBox'),body=document.getElementById('viewBody');document.getElementById('viewTitle').textContent='Трофеї';box.hidden=false;
@@ -1780,7 +1796,7 @@ function renderNewTro(r){
   // 0.63 (власник): перші 6 — великими картками (нові першими, потім повторні), 7-й і далі — дрібніше, рядком; 0.67 (як у 38-0): повторні без «ще раз · ×N»
   const list=[...nw,...rep],big=list.slice(0,6),small=list.slice(6),isNew=t=>fresh.has(t.id);
   el.hidden=false;el.innerHTML=`<div class="kicker" style="margin-bottom:6px">${nw.length&&!rep.length?(nw.length>1?'Нові трофеї':'Новий трофей'):'Трофеї сезону'}</div><div class="trg">`
-    +big.map((t,k)=>`<div class="tro on pop${isNew(t)?' new':''}${t.sec?' sec':''}${isNew(t)?rareCls(t):''}" style="animation-delay:${k*120+(isNew(t)&&rareCls(t)?250:0)}ms"><span class="tri">${trBadge(t,true)}</span><div class="trt"><b>${esc(t.n)}</b>${trQ(t)}<span>${esc(t.d)}</span>${isNew(t)?(t.sec?'<em class="trsx">секретний!</em>':'')+rareTag(t):''}</div></div>`).join('')+`</div>`
+    +big.map((t,k)=>`<div class="tro k-${trKind(t)} on pop${isNew(t)?' new':''}${t.sec?' sec':''}${isNew(t)?rareCls(t):''}" style="animation-delay:${k*120+(isNew(t)&&rareCls(t)?250:0)}ms"><span class="tri">${trBadge(t,true)}</span><div class="trt"><b>${esc(t.n)}</b>${trQ(t)}<span>${esc(t.d)}</span>${isNew(t)?(t.sec?'<em class="trsx">секретний!</em>':'')+rareTag(t):''}</div></div>`).join('')+`</div>`
     +(small.length?`<div class="trrep" style="margin-top:8px">`+small.map(t=>`<span class="trchip${t.sec?' sec':''}" title="${esc(t.d)}">${trBadge(t,true)}<b>${esc(t.n)}</b></span>`).join('')+`</div>`:'');
 }
 
@@ -2238,16 +2254,18 @@ function ppRenderCab(){
   off.sort((a,b)=>rk(a)-rk(b));
   const cards=[...on,...off];const shown=st.all?cards:on;   // 0.62: згорнуто — лише відкриті
   const card=t=>{const e=have[t.id];
-    if(!own&&t.sec&&e&&!(mine[t.id]&&mine[t.id].n))return `<div class="tro on sec"><span class="tri">${trBadge({id:'secret',cat:'secret'},true)}</span><div class="trt"><b>Секретний трофей</b><span>Відкрий його сам, щоб дізнатися, за що він</span><span class="trp">секретний${e.at?' · '+fmtShort(e.at):''}</span></div></div>`;
+    if(!own&&t.sec&&e&&!(mine[t.id]&&mine[t.id].n))return `<div class="tro k-secret on sec"><span class="tri">${trBadge({id:'secret',cat:'secret'},true)}</span><div class="trt"><b>Секретний трофей</b><span>Відкрий його сам, щоб дізнатися, за що він</span><span class="trp">секретний${e.at?' · '+fmtShort(e.at):''}</span></div></div>`;
     const tier=trTier(t),p=trPct(t.id);
-    const meta=[t.sec?'секретний':tier?tier[2]:'',p!=null&&!t.sec?(p===0?'ще ніхто не відкрив':`є в ${p<1?'<1':Math.round(p)}% гравців`):'',e&&e.at?fmtShort(e.at):''].filter(Boolean).join(' · ');
-    return `<div class="tro${e?' on':''}${t.sec?' sec':''}${tier&&e?' rt-'+tier[1]:''}" data-tr="${esc(t.id)}"><span class="tri">${trBadge(t,!!e)}</span><div class="trt"><b>${esc(t.n)}</b>${trQ(t)}<span>${esc(t.d)}</span>${meta?`<span class="trp">${meta}</span>`:''}</div>${e&&e.n>1?`<span class="trn">×${e.n}</span>`:''}</div>`;};
+    const gem=e&&tier&&tier[1]!=='common';   // 0.69.69 (макет B): рідкість від «рідкісного» — значком праворуч, не в рядку
+    const meta=[t.sec?'секретний':tier&&!gem?tier[2]:'',p!=null&&!t.sec?(p===0?'ще ніхто не відкрив':`є в ${p<1?'<1':Math.round(p)}% гравців`):'',e&&e.at?fmtShort(e.at):''].filter(Boolean).join(' · ');
+    return `<div class="tro k-${trKind(t)}${e?' on':''}${t.sec?' sec':''}${tier&&e?' rt-'+tier[1]:''}" data-tr="${esc(t.id)}"><span class="tri">${trBadge(t,!!e)}</span><div class="trt"><b>${esc(t.n)}</b>${trQ(t)}<span>${esc(t.d)}</span>${meta?`<span class="trp">${meta}</span>`:''}</div>${gem?`<em class="gem rt-${tier[1]}">${tier[2]}</em>`:''}${e&&e.n>1?`<span class="trn">×${e.n}</span>`:''}</div>`;};
   const cnt=c=>{const l=LIVE.filter(t=>inCat(t,c));return `${l.filter(got).length}/${l.length}`;};
   // 0.69.69 (власник 03.10): порядок — картки → «+N секретних» → віхи → «Згорнути»; рядок секретних по центру, значок на одній лінії з текстом
   el.innerHTML=`<div class="pp-sec"><h3>Трофеї</h3><span class="best">Відкрито ${n} з ${total}</span></div><div class="pp-bar"><i style="width:${total?Math.round(100*n/total):0}%"></i></div>
     ${own&&n?`<button class="ghost wbtn" id="ppCabShare">${ic('bookshelf','sm')}Поділитися шафою</button><div id="ppCabOut" hidden class="pp-cabout"><img id="ppCabImg" alt="Шафа трофеїв"><div class="row"><button class="primary" id="ppCabSend" hidden>${ic('share-variant','sm')}Поділитися</button><span class="muted" id="ppCabMsg" style="font-size:13px"></span></div></div>`:''}
     ${st.all?`<div class="pp-filt" role="tablist">${cats.filter(([c])=>c==='all'||LIVE.some(t=>t.cat===c)).map(([c,l])=>`<button class="chip${st.f===c?' onc':''}" data-f="${c}" role="tab" aria-selected="${st.f===c}">${l} <i>${cnt(c)}</i></button>`).join('')}</div>
     <div class="seg pp-sort"><button data-s="rare" class="${st.s==='rare'?'on':''}">За рідкістю</button><button data-s="recent" class="${st.s==='recent'?'on':''}">Нещодавні</button></div>`:''}
+    ${st.all&&shown.length?`<div class="trleg"><div class="h">Колір картки — клас трофея</div><div class="row">${[['base','Основний'],['friends','З друзями'],['secret','Секретний']].map(([k,l])=>`<span class="it k-${k}"><i class="sw"></i>${l}</span>`).join('')}</div><div class="h">Значок праворуч — рідкість</div><div class="row">${RARITY.slice(1).map(([,k,l])=>`<em class="gem rt-${k}">${l}</em>`).join('')}</div></div>`:''}
     ${shown.length?`<div class="trg">${shown.map(card).join('')}</div>`:`<p class="pp-empty">${own?'Тут поки порожньо — зіграй сезон.':'Поки жодного трофея.'}</p>`}
     ${secOff&&own&&st.all?`<p class="trsec"><span>+${secOff} ${plUk(secOff,'секретний трофей чекає','секретні трофеї чекають','секретних трофеїв чекають')}</span>${icon('eye')}</p>`:''}
     ${own&&st.all?`<div class="row pp-ms">${MILESTONES.map(([k,,nm])=>{const e=have['ms'+k];return `<span class="chip ms${e?' onc':''}">${trBadge({id:'ms'+k,cat:'milestone'},!!e)}${nm}${!e&&trStore().seasons<k?` · ${trStore().seasons}/${k}`:''}</span>`;}).join('')}</div>`:''}
