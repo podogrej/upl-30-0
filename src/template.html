@@ -336,7 +336,7 @@ td .sub{font-size:11px;color:var(--muted);margin-top:2px;display:flex;gap:6px;al
 .pp-sec{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin:26px 0 10px}
 .pp-sec h3{margin:0}.pp-sec .best{font-size:12px}
 .pp-bar{height:4px;border-radius:2px;background:var(--line);overflow:hidden;margin:-4px 0 10px}.pp-bar i{display:block;height:100%;background:var(--amber)}
-.pp-filt{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:8px}
+.pp-filt{display:grid;grid-template-columns:repeat(auto-fit,minmax(0,1fr));gap:6px;margin-bottom:8px}.pp-filt .chip.chip{display:grid;justify-items:center;gap:1px;min-width:0;padding:6px 4px;white-space:nowrap;line-height:1.2;text-align:center}.pp-filt .chip i{font-size:11.5px}   /* 0.69.69: чотири фільтри — рівними кнопками в один ряд, рахунок під назвою */
 .pp-filt .chip{flex:none;cursor:pointer;font-weight:600}.pp-filt .chip i{font-style:normal;color:var(--muted)}
 .pp-filt .chip.onc{border-color:var(--ink);color:var(--ink);background:var(--surface)}
 .seg.pp-sort,.seg.fl-tabs{display:grid;grid-template-columns:1fr 1fr;padding:3px;border-radius:12px;background:var(--bg2);border:1px solid var(--line);margin-bottom:10px}
@@ -1993,7 +1993,7 @@ document.getElementById('chalOpen').onclick=()=>{const b=document.getElementById
 // ---------- «Що нового»: коротко й по-людськи про останню версію (технічний журнал — CHANGELOG.md у репозиторії)
 const WHATSNEW={v:'0.69.69',date:'05.10.2026',items:[
   ['handshake','Відгук — у підвалі','Унизу сторінки — «Відгук і баги»: напиши, що зламалось або чого бракує, прямо на сайті. Скріншот можна надіслати боту.'],
-  ['trophy','Кольори трофеїв','Картка трофея тепер має колір класу: основні, з друзями, секретні. Рідкість — значком праворуч.'],
+  ['trophy','Кольори трофеїв','Трофеї тепер трьох класів — основні, з друзями, секретні: за ними колір картки й фільтри. Рідкість — значком праворуч.'],
   ['trophy','Лічильник трофеїв','На головній тепер стільки ж трофеїв, скільки на твоїй сторінці. Два трофеї «Самба» більше не плутаються: один тепер «Карнавал».'],
   ['star','«Один клуб»','Колесо крутить лише сезони обраного клубу. Зона «торкнись будь-де» стала більшою.'],
   ['format-list-numbered','Таблиця без очікування','Загальна таблиця вантажиться заздалегідь, вкладки перемикаються одразу.'],
