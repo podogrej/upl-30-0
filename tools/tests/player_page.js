@@ -74,8 +74,10 @@ const order=pg=>pg.$$eval('#ppCab .tro.on[data-tr]',es=>es.map(e=>e.dataset.tr))
  // шафа: рідкість
  await pg.waitForTimeout(300);
  T.check(JSON.stringify(await order(pg))===JSON.stringify(['unbeaten','top3','champ']),'сортування «за рідкістю»: '+(await order(pg)).join(','));
- T.check(await pg.$eval('#ppCab .tro[data-tr="unbeaten"]',e=>e.classList.contains('rt-epic')&&/Епічний · є в 2% гравців/.test(e.textContent))
-   &&await pg.$eval('#ppCab .tro[data-tr="top3"]',e=>e.classList.contains('rt-rare'))&&await pg.$eval('#ppCab .tro[data-tr="champ"]',e=>/Звичайний/.test(e.textContent)),'рівні рідкості: епічний 2%, рідкісний 10%, звичайний 60%');
+ T.check(await pg.$eval('#ppCab .tro[data-tr="unbeaten"]',e=>e.classList.contains('rt-epic')&&e.querySelector('.gem.rt-epic').textContent==='Епічний'&&/є в 2% гравців/.test(e.querySelector('.trp').textContent)&&!/Епічний/.test(e.querySelector('.trp').textContent))   // 0.69.69 (макет B): рідкість — значком праворуч
+   &&await pg.$eval('#ppCab .tro[data-tr="top3"]',e=>e.classList.contains('rt-rare')&&!!e.querySelector('.gem.rt-rare'))&&await pg.$eval('#ppCab .tro[data-tr="champ"]',e=>/Звичайний/.test(e.textContent)),'рівні рідкості: епічний 2%, рідкісний 10% — значком; звичайний 60% — текстом');
+ // 0.69.69 (власник 05.10): колір картки — лише три класи
+ T.check(await pg.$$eval('#ppCab .tro',l=>l.length>0&&l.every(e=>['k-base','k-friends','k-secret'].filter(k=>e.classList.contains(k)).length===1)),'трофеї: кожна картка — рівно один із трьох класів (основний, з друзями, секретний)');
  T.check(await pg.$$eval('#ppCab .tro.sec.rt-legend, #ppCab .tro.sec.rt-epic, #ppCab .tro.sec.rt-rare',e=>e.length)===0,'секретні трофеї без рівня рідкості');
  await pg.click('#ppCabAll');await pg.waitForTimeout(100);   // 0.62: фільтри й сортування — за «Усі трофеї»
  await pg.click('#ppCab [data-s="recent"]');await pg.waitForTimeout(100);

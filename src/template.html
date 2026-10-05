@@ -42,7 +42,7 @@ p{margin:0 0 10px;max-width:62ch}
 button{font:inherit;cursor:pointer;border:1px solid var(--ink);background:var(--surface);color:var(--ink);border-radius:var(--radius);padding:10px 16px;font-weight:600}
 button:focus-visible,.pl:focus-visible{outline:3px solid var(--amber2);outline-offset:2px}
 button.primary{background:var(--ink);color:var(--bg)}
-.spin0{display:grid;gap:8px;justify-items:center;padding:22px 16px;cursor:pointer}   /* 0.67 (як у 38-0): зона дотику без рамки й заливки */.spin0>span{font-size:12px;color:var(--muted)}.spin0:has(#spinBtn[hidden]){display:none}
+.spin0{display:grid;gap:8px;justify-items:center;align-content:center;min-height:180px;padding:36px 16px;cursor:pointer;-webkit-tap-highlight-color:transparent;outline:none;user-select:none}   /* 0.67 (як у 38-0): зона дотику без рамки й заливки; 0.69.69: більша, без сірого спалаху й обводки при торканні */.spin0>span{font-size:12px;color:var(--muted)}.spin0:has(#spinBtn[hidden]){display:none}
 button.spin{background:var(--pitch);border-color:var(--pitch);color:#fff;font-family:var(--font-display);font-weight:700;font-size:16px;padding:14px 22px;width:100%}
 button.spin:disabled,button:disabled{opacity:.45;cursor:not-allowed}
 button.ghost{border-color:var(--line);background:transparent;color:var(--ink2);padding:8px 12px;font-weight:500}
@@ -182,6 +182,7 @@ summary{cursor:pointer;font-weight:600}
 .lvMatch{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;min-height:64px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
 .lvMatch .sc{font-family:var(--font-display);font-weight:700;font-size:24px;font-variant-numeric:tabular-nums}
 .lvMatch .who{font-size:13px;color:var(--ink2)}
+.lvMatch{height:72px;min-height:0;box-sizing:border-box}.lvMatch>div{min-width:0}.lvMatch .who,.lvMatch b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}   /* 0.69.69 (фідбек 03.10: «екран скаче»): картка матчу однакової висоти — бомбардири в один рядок з «…» */
 .lvGrid{display:grid;grid-template-columns:repeat(15,1fr);gap:4px;width:100%;max-width:520px;justify-self:center}
 .lvGrid i{aspect-ratio:1;border-radius:4px;background:var(--bg2);border:1px solid var(--line)}
 .lvGrid i.W{background:var(--win);border-color:var(--win)} .lvGrid i.D{background:var(--draw);border-color:var(--draw)} .lvGrid i.L{background:var(--loss);border-color:var(--loss)}
@@ -355,6 +356,20 @@ td .sub{font-size:11px;color:var(--muted);margin-top:2px;display:flex;gap:6px;al
 @media (prefers-reduced-motion:reduce){.tro.rarein,.tro.rarein .tri,.tro.rarein::after{animation:none}.tro.rarein{box-shadow:0 0 0 1px var(--rc)}}
 .tro.rt-legend{border-color:#FFD60A;box-shadow:0 0 0 1px #FFD60A inset,0 0 14px color-mix(in srgb,#FFD60A 25%,transparent)}
 .tro.rt-rare .trp,.tro.rt-epic .trp,.tro.rt-legend .trp{color:var(--ink2)}
+/* 0.69.69 (власник 05.10, макет B): тонована картка за класом — основні, з друзями, секретні; рідкість — значком праворуч */
+:root{--k-base:#5a6aa8;--k-friends:#0e98b8;--k-secret:#7c3aed;--r-rare:#1f6fe5;--r-epic:#d61f7d}
+:root[data-theme="dark"]{--k-base:#8fa0d8;--k-friends:#33c9e6;--k-secret:#a970ff;--r-rare:#3d8bff;--r-epic:#ff4fa3}
+.k-base{--kc:var(--k-base)}.k-friends{--kc:var(--k-friends)}.k-secret{--kc:var(--k-secret)}
+.tro.on.k-base,.tro.on.k-friends,.tro.on.k-secret{background:linear-gradient(120deg,color-mix(in srgb,var(--kc) 22%,var(--surface)),var(--surface) 70%);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--kc) 45%,transparent)}
+.tro.k-base:not(.on),.tro.k-friends:not(.on),.tro.k-secret:not(.on){background:color-mix(in srgb,var(--kc) 5%,var(--surface));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--kc) 18%,var(--line))}
+.tro.on[class*="k-"] .tre{background:color-mix(in srgb,var(--kc) 22%,var(--bg2))}
+.tro.on[class*="k-"] .trt b{background:none;color:var(--ink)}
+.gem{font:800 10px/1 var(--font-body);letter-spacing:.06em;text-transform:uppercase;padding:4px 7px;border-radius:999px;color:#fff;font-style:normal;white-space:nowrap}
+.gem.rt-rare{background:var(--r-rare)}.gem.rt-epic{background:var(--r-epic)}.gem.rt-legend{background:var(--grad)}
+.tro>.gem{grid-column:3;grid-row:1;align-self:start;justify-self:end}.tro>.gem~.trn{grid-column:3;grid-row:1;align-self:end}
+.trleg{display:grid;gap:8px;margin:2px 0 12px;padding:12px 14px;border-radius:14px;background:var(--card);font-size:12.5px;color:var(--ink2)}
+.trleg .h{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}.trleg .row{display:flex;flex-wrap:wrap;gap:6px 14px;margin:0;align-items:center}
+.trleg .it{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}.trleg .sw{width:22px;height:14px;border-radius:4px;flex:none;background:linear-gradient(120deg,color-mix(in srgb,var(--kc) 45%,var(--surface)),var(--surface));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--kc) 55%,transparent)}
 .pp-list{border:1px solid var(--line);border-radius:10px;background:var(--surface);overflow:hidden}
 .fl-hero{text-align:center;display:grid;justify-items:center;gap:8px;margin:18px 0 6px}.fl-hero h1,.fl-head h1{font-family:var(--font-display);margin:0;font-size:30px;line-height:1.1}.fl-hero p{margin:0;color:var(--ink2)}   /* 0.68: на iPad кнопка й текст — по центру (були ліворуч під заголовком) */
 .fl-head{display:grid;gap:4px;margin:16px 0 10px}.fl-head p{margin:0;font-size:13.5px}.fl-badge{font-style:normal;font-family:var(--font-mono,monospace);font-size:13px;vertical-align:middle;border:1px solid var(--df);color:var(--df);border-radius:7px;padding:1px 6px}
@@ -406,7 +421,8 @@ input.sw:checked{background:var(--win)}input.sw:checked::after{transform:transla
 .pp-delbox{display:grid;gap:8px;border:1px solid color-mix(in srgb,var(--loss) 50%,var(--line));border-radius:10px;padding:10px 12px}.pp-delbox p{margin:0;font-size:13px}
 button.danger{background:var(--loss);border-color:var(--loss);color:#fff}
 .pp-warn{display:grid;gap:8px;margin-top:14px;padding:12px;border:1px solid color-mix(in srgb,var(--amber) 55%,var(--line));border-radius:10px;background:color-mix(in srgb,var(--amber) 9%,var(--surface))}
-.pp-warn .h{display:flex;align-items:center;gap:8px;font-weight:700;font-size:14px}.pp-warn .h .ico{width:18px;height:18px;fill:var(--amber)}
+.pp-warn .h{display:flex;align-items:flex-start;gap:8px;line-height:1.3;font-weight:700;font-size:14px}.pp-warn .h .ico{width:18px;height:18px;fill:var(--amber);flex:none;margin-top:0}   /* 0.69.69: значок — на рівні першого рядка заголовка */
+#verLine{display:flex;align-items:center}#verLine .ic{flex:none}   /* 0.69.69 (власник: емодзі нижче тексту на iPhone) */
 .pp-warn p{margin:0;font-size:13px;color:var(--ink2);line-height:1.45}
 .pp-lock{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);padding:12px;border:1px dashed var(--line);border-radius:10px}
 .pp-lock .ico{width:16px;height:16px;fill:currentColor}
@@ -426,11 +442,7 @@ header.top{border-bottom-color:var(--line2)}
 .navl{display:flex;align-items:center;gap:8px;min-width:0}#backBtn{padding:7px 14px 7px 6px;font-weight:600}#backBtn .ic{transform:scaleX(-1)}
 header.top.in #homeBtn .hl{display:none}header.top.in #homeBtn{padding-right:8px}
 #acctBtn.avbtn{display:inline-flex;align-items:center;gap:8px;max-width:46vw;padding:3px 12px 3px 3px;border:1px solid var(--line2);border-radius:999px;background:var(--card);box-shadow:none;color:var(--ink);font:600 14px/1 var(--font-body)}
-/* 0.69.5 (власник 02.10, варіант B): «💬 Відгук» поруч з аватаркою; підпис — лише на широкому екрані, на вузькому всередині гри ховається ім'я (лишається аватарка) */
 .hdr-r{display:flex;align-items:center;gap:8px;min-width:0}
-.fbk{display:inline-flex;align-items:center;gap:6px;height:40px;padding:0 12px;border-radius:999px;border:1px solid var(--line2);background:var(--card);color:var(--ink);font:600 14px var(--font-body);white-space:nowrap;flex:none}
-#acctBtn.avbtn{max-width:calc(46vw - 96px)}
-@media (max-width:420px){.fbk .t{display:none}.fbk{padding:0;width:40px;justify-content:center}#acctBtn.avbtn{max-width:calc(46vw - 48px)}}
 @media (max-width:360px){header.top.in #acctBtn .me-n{display:none}header.top.in #acctBtn.avbtn{padding:3px}}
 #acctBtn.avbtn.noname{padding:3px}#acctBtn.avbtn .av{border-radius:999px;flex:none}#acctBtn .me-n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* головна */
@@ -507,9 +519,18 @@ button.stick0{position:sticky;bottom:12px;z-index:5;max-width:none;margin-top:20
 .duo0{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:20px}
 .tile0{display:grid;justify-items:start;gap:10px;padding:16px 14px;border:0;border-radius:14px;background:var(--card);color:var(--ink);text-align:left;font-weight:600}
 .tile0 .ic{width:30px;height:30px;background:none;margin:0}.tile0 .ic .ico{width:22px;height:22px}.tile0 b{font-size:15px;line-height:1.25}.tile0 em{font-style:normal;color:var(--amber)}
-.about0{margin-top:0;border:0;background:none;padding:14px 2px;border-radius:0}.about0>summary{font-weight:700}
-.facts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0 14px}.fact{display:grid;gap:2px;justify-items:center;text-align:center;padding:12px 8px;border-radius:12px;background:var(--card)}.fact b{font:900 24px/1.1 var(--font-display);font-variant-numeric:tabular-nums}.fact span{font-size:12.5px;color:var(--ink2)}   /* 0.69.2: стиль цифр «Про гру та дані» випав у чистці 0.67 — плитки 2×2 */
-.foot0{display:flex;flex-wrap:wrap;justify-content:center;gap:6px 16px;margin-top:36px;padding-top:20px;border-top:1px solid var(--line2);font-size:13px}.foot0 a{color:var(--ink2);text-decoration:none}.foot0 a:hover{color:var(--amber)}
+.about0{margin-top:0;border:0;background:none;padding:14px 2px;border-radius:0}.about0>h3{margin:0 0 6px}
+.ft{display:grid;gap:14px;justify-items:center;margin:40px auto 28px;padding:20px 16px 0;border-top:1px solid var(--line2);max-width:760px;text-align:center;font-family:var(--font-body)}   /* 0.69.69: підвал A (власник 04.10) */
+.foot0{display:flex;flex-wrap:wrap;justify-content:center;gap:8px 18px;font-size:13px;font-weight:600}.foot0 a{color:var(--ink2);text-decoration:none}.foot0 a:hover{color:var(--amber)}
+.ft .foot{margin:0;font-family:var(--font-body);font-size:12px}.ft-small{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:6px 10px}.ft .ft-small a{color:var(--muted);font-weight:500}.ft .ft-small #newsBtn{color:var(--ink2)}
+.ft-pills{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}.ft-pill{display:inline-flex;align-items:center;gap:7px;height:34px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:none;color:var(--ink2);font:500 13px var(--font-body);cursor:pointer;white-space:nowrap;text-decoration:none}.ft-pill[hidden]{display:none}.ft-pill .ico{width:15px;height:15px}
+.ft-cred{font-size:11px;line-height:1.5;color:var(--muted);opacity:.8;max-width:64ch;text-wrap:balance}
+.ft-form{width:min(100%,380px);text-align:left;display:grid;gap:8px}.ft-form[hidden]{display:none}.ft-form .ttl{font-size:14px;font-weight:700;color:var(--ink2)}
+.ft-form textarea,.ft-form input{width:100%;box-sizing:border-box;font:400 14px var(--font-body);color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 12px}.ft-form textarea{min-height:84px;resize:vertical}.ft-form textarea::placeholder{color:var(--muted)}
+.ft-form label{font-size:13px;color:var(--muted);margin-top:4px}.ft-form small{font-size:12px;color:var(--muted);line-height:1.4;margin-top:-2px}.ft-form small[hidden],.ft-form .err[hidden]{display:none}
+.ft-form .hint{margin:2px 0 0;font-size:12.5px;color:var(--muted)}.ft-form .hint a{color:var(--ink2);font-weight:700;text-decoration:underline;text-underline-offset:2px}.ft-form .err{margin:0;font-size:13px;color:var(--loss)}
+.ft-form .acts{display:flex;align-items:center;gap:12px;margin-top:4px}.ft-send{border:0;border-radius:7px;padding:7px 14px;font:700 13px var(--font-body);background:var(--ink);color:var(--bg);cursor:pointer}.ft-send:disabled{opacity:.5}.ft-cancel{border:0;background:none;padding:6px 2px;font:500 13px var(--font-body);color:var(--muted);cursor:pointer}
+.ft-done{width:min(100%,380px);display:flex;gap:10px;align-items:center;justify-content:center;text-align:left;padding:12px 14px;border-radius:10px;font-size:14px;color:var(--ink);background:color-mix(in srgb,var(--win) 12%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--win) 45%,transparent)}.ft-done[hidden]{display:none}.ft-done b{color:var(--win);font-size:16px}
 table.lbt th.n,table.lbt td.n{width:28px;padding-left:2px;padding-right:2px;text-align:center}
 .lbfoot{margin-top:6px;font-size:13px}
 /* вільна гра: картки режимів — іконка, назва, опис (видно всім — нічого не скаче) */
@@ -548,7 +569,7 @@ table.lbt th.n,table.lbt td.n{width:28px;padding-left:2px;padding-right:2px;text
 #skipBtn{justify-self:center}
 @media (min-width:700px){
   .score0 b{font-size:44px}.score0 span{font-size:14px}.hero .tier{font-size:40px}
-  .lvRound{font-size:30px}.lvRec{font-size:40px}.lvMatch .sc{font-size:32px}.lvTop .muted,.lvMatch .who{font-size:16px}.lvTable td{font-size:15px;padding:6px 10px}
+  .lvRound{font-size:30px}.lvRec{font-size:40px}.lvMatch .sc{font-size:32px}.lvMatch{height:88px}.lvTop .muted,.lvMatch .who{font-size:16px}.lvTable td{font-size:15px;padding:6px 10px}
 }
 /* «Огляд» на великому екрані: поле ліворуч, решта праворуч */
 @media (min-width:1000px){
@@ -619,7 +640,8 @@ section>h3:first-child,.box h3:first-of-type,#viewBody>h3:first-child,#viewBody>
 .sec0+.row0,.sec0+.daily,h3+.daily{margin-top:0}
 .trg,.fl5ms,.fl5teams{gap:12px}
 .tro0{display:flex;flex-wrap:wrap;gap:8px}.tro0>span{display:inline-flex;align-items:center;gap:8px;padding:6px 14px 6px 6px;border-radius:99px;background:var(--surface);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--amber) 32%,transparent);font-size:14px;font-weight:600}
-#viewBody .trsec,.trsec{margin:16px 0 0;font-size:14px;color:var(--muted)}
+#viewBody .trsec,.trsec{display:flex;justify-content:center;align-items:center;gap:6px;margin:18px 0 0;font-size:14px;color:var(--muted);text-align:center}.trsec .ico{vertical-align:0}   /* 0.69.69: значок на одній лінії з текстом */
+.pp-ms{gap:6px;margin-top:12px;justify-content:center}#ppCabAll{display:block;margin:14px auto 0}
 .row:has(.chip.ms){gap:10px!important;margin-bottom:8px}
 /* трофеї «плитками» (референс власника): по одному в рядку, маленький значок біля назви, назва — градієнтом, опис під нею; закриті — приглушені */
 .tro{grid-template-columns:40px 1fr auto;column-gap:10px;row-gap:3px;align-items:start;padding:14px 16px}
@@ -638,7 +660,7 @@ section>h3:first-child,.box h3:first-of-type,#viewBody>h3:first-child,#viewBody>
 <div class="wrap">
   <header class="top">
     <div class="navl"><button class="nav" id="backBtn" hidden><!--i:chevron-right-->Назад</button><button class="nav" id="homeBtn" title="На головну"><!--i:home-outline--><span class="hl">Головна</span></button></div>
-    <div class="hdr-r"><button class="fbk" id="fbBtn" title="Відгук розробнику" aria-label="Відгук">💬<span class="t"> Відгук</span></button><button class="nav" id="acctBtn" hidden>Увійти</button></div>
+    <div class="hdr-r"><button class="nav" id="acctBtn" hidden>Увійти</button></div>
   </header>
 
   <!-- ГОЛОВНА -->
@@ -688,18 +710,11 @@ section>h3:first-child,.box h3:first-of-type,#viewBody>h3:first-child,#viewBody>
       <details><summary>Що ви збираєте?</summary><p>Анонімно дивимося, куди натискають, щоб покращувати гру (Microsoft Clarity). Якщо увійдеш — ім'я та ідентифікатор входу. Пошту — лише якщо сам впишеш її на своїй сторінці для новин. Паролів не бачимо. Усе своє можна стерти кнопкою «Видалити акаунт» на своїй сторінці. <a href="privacy.html">Докладніше</a>.</p></details>
       <details><summary>Звідки дані?</summary><p>Склади, матчі, голи та підсумкові таблиці всіх сезонів Вищої ліги й Прем'єр-ліги 1992–2026 з відкритих джерел. Асисти — з 2012/13 і за 2021/22, сухі матчі до 2012 — оцінка за командною статистикою (≈).</p></details>
     </div>
-    <details class="about0" id="aboutBox"><summary>Про гру та дані</summary>
-      <div class="facts">
-        <div class="fact" id="fcSeasons"><b>34</b><span>сезони, 1992/93 – 2025/26</span></div>
-        <div class="fact" id="fcClubs"><b>51</b><span>клуб за всю історію</span></div>
-        <div class="fact" id="fcCards"><b>16 256</b><span>гравець-сезонів</span></div>
-        <div class="fact" id="fcPersons"><b>4 546</b><span>футболістів</span></div>
-      </div>
+    <div class="about0" id="aboutBox"><h3>Про гру та дані</h3>   <!-- 0.69.69 (власник): завжди відкрито; плитки з цифрами прибрано — вони дублювали блок цифр вище -->
       <p>Рейтинг кожного гравця рахується за його сезон: голи й асисти за матч, частка зіграних матчів, місце команди, пропущені та сухі матчі для воротарів. Порівняння йде всередині сезону та позиції, тож зірки 90-х і 2020-х стоять поруч.</p>
       <p>Симуляція: кожен матч розігрується як два пуассонівські потоки голів. Атака твоєї команди складається з нападу й півзахисту, оборона з воротаря, захисту й півзахисту. Суперники — «Ліга легенд»: 15 клубів, що зробили історію УПЛ, кожен у сезоні з найсильнішим складом (середній рейтинг 11 найкращих гравців; лише сезони ліги на 16 команд). Домашнє поле дає невелику перевагу; форма гравців коливається від сезону до сезону й від матчу до матчу; гравці одного клубу дають «хімію».</p>
       <p class="muted">Прототип, неофіційний фан-проєкт. Рейтинги розрахункові й ще будуть донастроюватися.</p>
-      <p class="muted" style="font-size:12px">Шрифт: KyivType Sans, © Дмитро Растворцев (айдентика Києва). Кілька іконок: Material Design Icons (Pictogrammers, Apache 2.0) і логотип Telegram з Font Awesome Free (CC BY 4.0); решта — емодзі.</p>
-    </details>
+    </div>
   </section>
 
   <!-- ВІЛЬНА ГРА: налаштування -->
@@ -818,8 +833,20 @@ section>h3:first-child,.box h3:first-of-type,#viewBody>h3:first-child,#viewBody>
 </div>
 
 <div class="overlay" id="viewBox" hidden><div class="box"><div class="vhead"><h3 id="viewTitle">Склад</h3><button class="ghost" id="viewClose">Закрити</button></div><div id="viewBody"></div></div></div>
-<nav class="foot0" aria-label="Розділи"><a href="#" data-go="dailyBtn">Драфт дня</a><a href="#" data-go="pickOpen">Вибір сезону</a><a href="#" data-go="flOpen">Ліга з друзями</a><a href="#" data-go="boardOpen">Таблиця</a><a href="#" data-go="trBtn">Трофеї</a><a href="#" data-go="howQ">Питання</a><a href="#" data-go="aboutBox">Про гру</a></nav>
-<div class="foot">30-0 УПЛ · <a href="#" id="newsBtn">Що нового у версії 0.69.6<b id="newsDot" hidden></b></a> · <a href="#" id="themeBtn" class="thm" role="switch" aria-checked="false" aria-label="Світла тема"></a> · неофіційний фан-проєкт</div>
+<footer class="ft" id="ft">   <!-- 0.69.69 (власник 04.10, макет A): підвал як у 38-0 — розділи, відгук формою, бот, версія, подяки -->
+<nav class="foot0" aria-label="Розділи"><a href="#" data-go="dailyBtn">Драфт дня</a><a href="#" data-go="pickOpen">Вибір сезону</a><a href="#" data-go="clubOpen">Один клуб</a><a href="#" data-go="flOpen">Ліга з друзями</a><a href="#" data-go="boardOpen">Таблиця</a><a href="#" data-go="trBtn">Трофеї</a><a href="#" data-go="howQ">Питання</a></nav>
+<form class="ft-form" id="fbForm" hidden novalidate><div class="ttl">Повідомити про проблему</div>
+  <textarea id="fbTxt" maxlength="2000" placeholder="Що сталося? Баг, ідея, будь-що" aria-label="Що сталося?"></textarea>
+  <label for="fbContact">Пошта або @нік у Telegram, щоб ми відповіли</label><input id="fbContact" maxlength="100" autocomplete="email">
+  <small id="fbFilled" hidden>Заповнено з Telegram — можна змінити або стерти</small>
+  <p class="hint">Скріншот? Надішли його боту <a href="#" id="fbBot">@upl30_bot</a></p><p class="err" id="fbErr" hidden></p>
+  <div class="acts"><button class="ft-send" id="fbSend" type="submit">Надіслати</button><button class="ft-cancel" id="fbCancel" type="button">Скасувати</button></div></form>
+<div class="ft-done" id="fbDone" hidden><b>✓</b><span>Дякуємо! Прочитаємо найближчим часом</span></div>
+<div class="ft-pills"><button class="ft-pill" id="fbBtn" type="button">✉️ Відгук і баги</button><a class="ft-pill" id="ftBot" href="https://t.me/upl30_bot" target="_blank" rel="noopener"><!--i:telegram-->Telegram-бот</a></div>
+<div class="foot ft-small"><a href="#" id="newsBtn">Що нового у версії 0.69.69<b id="newsDot" hidden></b></a><span>·</span><a href="privacy.html">Конфіденційність</a></div>
+<div class="foot ft-copy">© 2026 30-0 УПЛ · неофіційний фан-проєкт <a href="#" id="themeBtn" class="thm" role="switch" aria-checked="false" aria-label="Світла тема"></a></div>
+<div class="ft-cred">Шрифт KyivType Sans © Дмитро Растворцев (айдентика Києва)<br>Іконки: Material Design Icons (Apache 2.0), логотип Telegram — Font Awesome Free (CC BY 4.0)</div>
+</footer>
 <script id="pool" type="application/json">__POOL__</script>
 <script>
 (function(){
@@ -966,6 +993,7 @@ const DAILY=dailySetup();
 // чистка (0.58): результат і позначка «надіслано» драфту дня (upl30_daily_<день>, upl30_sent_<день>) потрібні лише сьогодні — старші за 14 днів стираємо
 try{const old=dayAdd(DAY,-14);for(let i=localStorage.length-1;i>=0;i--){const k=localStorage.key(i),m=/^upl30_(?:daily|sent)_(\d{4}-\d{2}-\d{2})$/.exec(k||'');if(m&&m[1]<old)localStorage.removeItem(k);}}catch(e){}
 setTimeout(()=>{try{loadHomeStats();}catch(e){}try{renderTrBtn();trRetro();}catch(e){}try{chalLoad();}catch(e){}try{f5Boot();}catch(e){}},0);
+setTimeout(()=>{try{boardPrefetch();}catch(e){}},2500);   // 0.69.69: таблиця — заздалегідь, у фоні
 MODES.daily={name:"Драфт дня",desc:"",damp:1,star:0,rerolls:1,showRatings:false,reveal:true};
 function dayAdd(day,n){return new Date(Date.UTC(+day.slice(0,4),+day.slice(5,7)-1,+day.slice(8,10))+n*864e5).toISOString().slice(0,10);}
 function weekKey(day){const wd=(new Date(Date.UTC(+day.slice(0,4),+day.slice(5,7)-1,+day.slice(8,10))).getUTCDay()+6)%7;return dayAdd(day,-wd);}
@@ -1004,10 +1032,6 @@ const DSTAT=(()=>{const ids=new Set(),cl=new Set(),ys=new Set(),dy=new Set();let
 {const n=x=>x.toLocaleString('uk-UA'),set=(id,h)=>{const e=document.getElementById(id);if(e)e.innerHTML=h;};
   set('stat0n',n(DSTAT.persons));set('stat0l',plUk(DSTAT.persons,'футболіст','футболісти','футболістів')+' у грі');   // 0.62: блок «про гру» з великим числом (як у 38-0)
   set('stat0s',`<span><b>${DSTAT.seasons}</b>${plUk(DSTAT.seasons,'сезон','сезони','сезонів')}</span><span><b>${n(DSTAT.cs)}</b>${plUk(DSTAT.cs,'клуб-сезон','клуб-сезони','клуб-сезонів')}</span><span><b>з ${DSTAT.y0}</b>року</span>`);
-  set('fcSeasons',`<b>${DSTAT.seasons}</b><span>${plUk(DSTAT.seasons,'сезон','сезони','сезонів')}, ${seasonLabel(DSTAT.y0)} – ${seasonLabel(DSTAT.y1)}</span>`);
-  set('fcClubs',`<b>${DSTAT.clubs}</b><span>${plUk(DSTAT.clubs,'клуб','клуби','клубів')} за всю історію</span>`);
-  set('fcCards',`<b>${n(DSTAT.cards)}</b><span>${plUk(DSTAT.cards,'гравець-сезон','гравець-сезони','гравець-сезонів')}</span>`);
-  set('fcPersons',`<b>${n(DSTAT.persons)}</b><span>${plUk(DSTAT.persons,'футболіст','футболісти','футболістів')}</span>`);
   FORMATS.classic.desc=`Усі ${DSTAT.cs} ${plUk(DSTAT.cs,'клуб-сезон','клуб-сезони','клуб-сезонів')}.`;
   FORMATS.derby.desc=`Лише «Динамо» і «Шахтар» за ${DSTAT.derbyS} ${plUk(DSTAT.derbyS,'сезон','сезони','сезонів')}.`;}
 // ---------- step 1
@@ -1235,8 +1259,8 @@ function spin(mode){
   S.wheel=cs;S.move=null;S.pending=null;
   const w=document.getElementById('wheel');w.hidden=false;document.getElementById('spinBtn').hidden=true;
   document.getElementById('squad').innerHTML='';document.getElementById('rerollRow').style.visibility='hidden';
-  const spinClub=mode!=='year',spinYear=mode!=='club';
-  const y0=ERAS[eraOf()].y0,WP=DATA.clubs.filter(c=>c.y>=y0),names=[...new Set(WP.map(c=>shortTeam(c.n)))],years=[...new Set(WP.map(c=>c.y))].sort();   // на барабанах — клуби й сезони лише своєї епохи
+  const one=S.format==='oneclub'&&!S.daily&&!S.league,spinClub=mode!=='year'&&!one,spinYear=mode!=='club';   // 0.69.69: в «Одному клубі» клуб не крутиться, сезони — лише цього клубу
+  const y0=ERAS[eraOf()].y0,WP=DATA.clubs.filter(c=>c.y>=y0&&(!one||c.c===S.club)),names=[...new Set(WP.map(c=>shortTeam(c.n)))],years=[...new Set(WP.map(c=>c.y))].sort();   // на барабанах — клуби й сезони лише своєї епохи
   Promise.all([reelRoll('reelClub','club',names,shortTeam(cs.n),spinClub?14:0),reelRoll('reelYear','season',years.map(seasonLabel),seasonLabel(cs.y),spinYear?16:0)]).then(()=>{if(S.wheel===cs){S.wheelFresh=true;renderWheel();}});
 }
 function alertNoCands(){document.getElementById('wheel').hidden=false;document.querySelector('#reelClub .strip').innerHTML='<div class="club">Гравців більше немає</div>';document.querySelector('#reelYear .strip').innerHTML='<div class="season"></div>';document.getElementById('squad').innerHTML='<p class="muted">У цьому клубі закінчились гравці на вільні позиції. Спробуй іншу схему.</p>';}
@@ -1301,7 +1325,7 @@ function place(p,s){
 }
 document.getElementById('spinBtn').onclick=e=>{e.stopPropagation();spin();};
 document.querySelectorAll('.foot0 a').forEach(a=>a.onclick=e=>{e.preventDefault();const id=a.dataset.go,el=document.getElementById(id);if(!el)return;   // 0.65: підвал як у 38-0 — посилання на розділи
-  if(el.tagName==='DETAILS'){if(CUR_SEC!==1)go(1);el.open=true;el.scrollIntoView({behavior:'smooth',block:'start'});}else{if(CUR_SEC!==1)go(1);el.click();}});
+  if(el.tagName==='DETAILS'||el.tagName==='DIV'){if(CUR_SEC!==1)go(1);el.open=true;el.scrollIntoView({behavior:'smooth',block:'start'});}else{if(CUR_SEC!==1)go(1);el.click();}});
 document.getElementById('spinZone').onclick=()=>{const b=document.getElementById('spinBtn');if(!b.hidden&&!b.disabled)spin();};   // 0.65 (як у 38-0): уся підсвічена зона крутить колесо
 document.getElementById('rerollBtn').onclick=()=>{if(S.rerolls>0){S.rerolls--;spin('both');}};
 document.getElementById('rerollClub').onclick=()=>{if(S.rerolls>0){S.rerolls--;spin('club');}};
@@ -1602,14 +1626,28 @@ function deviceId(){let id=lsGet("upl30_device");if(!id){try{id=crypto.randomUUI
 async function sbTop(day){const q=sel=>`${SB_URL}/rest/v1/daily_results?apikey=${SB_KEY}&day=eq.${day}&verified=is.true&select=${sel}&order=pts.desc,ga.asc,gf.desc&limit=500`;   // лише результати, які сервер записав з перевіреного сезону
   let r=await fetch(q('*,'+PL_SEL[0]));if(!r.ok)r=await fetch(q('*,'+PL_SEL[1]));if(!r.ok)r=await fetch(q('*'));if(!r.ok){throw new Error('GET '+r.status+' '+(await r.text()).slice(0,200));}return r.json();}
 async function sbInsert(row){const r=await fetch(`${SB_URL}/rest/v1/daily_results?apikey=${SB_KEY}`,{method:"POST",headers:{apikey:SB_KEY,"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify(row)});if(!r.ok){const t=await r.text();const e=new Error(r.status+" "+t);e.status=r.status;e.body=t;throw e;}}
-const VERSION=(document.querySelector('.foot').textContent.match(/версі[яї] ([\d.]+)/)||[])[1]||'?';
+const VERSION=(document.getElementById('newsBtn').textContent.match(/версі[яї] ([\d.]+)/)||[])[1]||'?';
 window.__errCtx=()=>({version:VERSION,screen:SEC_NAME[CUR_SEC],tg:TG&&TG.initData?`${TG.platform||'?'} ${TG.version||''}`:null,player:PLAYER&&PLAYER.public_id||null});   // для звітів про помилки (перший <script>)
 // ---------- Telegram Mini App: якщо сторінку відкрито всередині Telegram, беремо ім'я з профілю, тему і кнопку «Надіслати в чат»
 const TG_BOT='upl30_bot';   // username бота без @
 let TG=null,TGU=null;
-// 0.69.5: «💬 Відгук» — особисті з ботом (api/bot.js приймає будь-яке повідомлення як відгук)
-function openFeedback(){const u=`https://t.me/${TG_BOT}?start=feedback`;screenTag('feedback');try{if(TG&&TG.openTelegramLink){TG.openTelegramLink(u);return;}}catch(e){}window.open(u,'_blank','noopener');}
-document.getElementById('fbBtn').onclick=openFeedback;
+// 0.69.69 (власник 04.10, підвал A): відгук — формою в підвалі → /api/err ({feedback}) → Telegram власника й таблиця feedback.
+// Скріни — як і раніше, боту в особисті (api/bot.js приймає будь-яке повідомлення як відгук)
+function tgOpen(u){try{if(TG&&TG.openTelegramLink){TG.openTelegramLink(u);return;}}catch(e){}window.open(u,'_blank','noopener');}
+{const $=id=>document.getElementById(id),form=$('fbForm'),btn=$('fbBtn'),done=$('fbDone'),err=$('fbErr'),send=$('fbSend');
+  const show=on=>{form.hidden=!on;btn.hidden=on;if(on){done.hidden=true;err.hidden=true;}};
+  btn.onclick=()=>{screenTag('feedback');show(true);const c=$('fbContact');if(!c.value&&TGU&&TGU.username){c.value='@'+TGU.username;$('fbFilled').hidden=false;}$('fbTxt').focus();};
+  $('fbCancel').onclick=()=>show(false);
+  $('fbBot').onclick=e=>{e.preventDefault();tgOpen(`https://t.me/${TG_BOT}?start=feedback`);};
+  $('ftBot').onclick=e=>{e.preventDefault();tgOpen(`https://t.me/${TG_BOT}`);};
+  form.onsubmit=async e=>{e.preventDefault();const text=$('fbTxt').value.trim();if(!text){$('fbTxt').focus();return;}
+    if(!ONLINE){err.textContent='Відгук працює на сайті й у Telegram-боті @'+TG_BOT+'.';err.hidden=false;return;}
+    send.disabled=true;err.hidden=true;
+    try{const c=window.__errCtx(),r=await fetch('/api/err',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({version:c.version,screen:c.screen,player:c.player,initData:TG&&TG.initData||null,feedback:{text,contact:$('fbContact').value.trim()}})});
+      const j=await r.json().catch(()=>({}));if(!r.ok||!j.ok)throw new Error(j.error||('HTTP '+r.status));
+      $('fbTxt').value='';show(false);done.hidden=false;}
+    catch(x){err.textContent=/^HTTP|fetch/i.test(x.message)?'Не вдалося надіслати. Спробуй ще раз або напиши боту @'+TG_BOT+'.':x.message;err.hidden=false;}
+    finally{send.disabled=false;}};}
 function tgLink(){return TG_BOT?`https://t.me/${TG_BOT}?startapp`:SITE;}
 function tgInit(){
   try{TG=window.Telegram&&window.Telegram.WebApp;if(!TG||!TG.initData)return;TG.ready();TG.expand();try{TG.disableVerticalSwipes&&TG.disableVerticalSwipes();}catch(e){}   // 0.69: свайп униз по сторінці не згортає Mini App (iOS)
@@ -1678,7 +1716,7 @@ async function verifySeason(r){
   try{const res=await _fetch('/api/verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({season_id:r.rowId})});const j=await res.json();if(res.status===429)r.slow=j.error;verifiedUi(r,j);}catch(e){}
 }
 function verifiedUi(r,j){r.verified=j.verified;
-    const el=document.getElementById('verLine');if(el&&S.result===r){el.hidden=j.verified!==true&&!r.slow;if(j.verified===true)el.innerHTML=ic('check-decagram','sm')+'Результат перевірено сервером';else if(r.slow)el.textContent=r.slow;}
+    const el=document.getElementById('verLine');if(el&&S.result===r){el.hidden=j.verified!==true&&!r.slow;if(j.verified===true){el.innerHTML=ic('check-decagram','sm')+'Результат перевірено сервером';boardStale();setTimeout(boardPrefetch,1500);}else if(r.slow)el.textContent=r.slow;}
     // з 0.52 результат дня в таблицю пише сервер (з перевіреного сезону) — надсилати вручну вже не треба
     if(j.verified===true&&S.result===r&&S.daily&&!S.daily.practice){lsSet("upl30_sent_"+DAY,true);const f=document.getElementById('lbForm'),m=document.getElementById('lbMsg');if(f&&!f.hidden){f.hidden=true;m.textContent='Твій результат уже в таблиці дня.';document.getElementById('lbAcct').hidden=true;loadLb(document.getElementById('lbTable'));}}
 }
@@ -1772,10 +1810,20 @@ function boardHtml(rows,b){
 let BOARD='main';
 function openBoard(b){BOARD=b||BOARD;screenTag('table');const box=document.getElementById('viewBox'),body=document.getElementById('viewBody');document.getElementById('viewTitle').textContent='Таблиця · 11×11';box.hidden=false;
   const bt=Object.entries(BOARDS).filter(([k,v])=>!v.hidden||k===BOARD);   // 0.65: одна вкладка — без ряду вкладок
-  body.innerHTML=`<div class="tabs" style="margin-top:0" role="tablist"${bt.length<2?' hidden':''}>${bt.map(([k,v])=>`<button class="tab${k===BOARD?' on':''}" data-board="${k}" role="tab">${v.name}</button>`).join('')}</div><p class="muted" style="font-size:12.5px;margin:10px 0 8px">${BOARDS[BOARD].note}</p><div id="boardBody"><p class="muted">Завантаження…</p></div>`;
+  body.innerHTML=`<div class="tabs" style="margin-top:0" role="tablist"${bt.length<2?' hidden':''}>${bt.map(([k,v])=>`<button class="tab${k===BOARD?' on':''}" data-board="${k}" role="tab">${v.name}</button>`).join('')}</div><p class="muted" style="font-size:12.5px;margin:10px 0 8px">${BOARDS[BOARD].note}</p><div id="boardBody">${BOARD_CACHE[BOARD]?boardHtml(BOARD_CACHE[BOARD].rows,BOARD):'<p class="muted">Завантаження…</p>'}</div>`;
   body.querySelectorAll('[data-board]').forEach(t=>t.onclick=()=>openBoard(t.dataset.board));
   loadBoard(BOARD);}
-async function loadBoard(b){const el=document.getElementById('boardBody');try{const rows=await sbGetFallback([boardQ(b,true,PL_SEL[0],true,true),boardQ(b,true,PL_SEL[0],true),boardQ(b,true,PL_SEL[0]),boardQ(b,true,PL_SEL[1]),boardQ(b,false)]);if(BOARD===b&&el.isConnected)el.innerHTML=boardHtml(rows,b);}catch(e){if(el.isConnected)el.innerHTML='<p class="muted">Таблиця зараз недоступна.</p>';}}
+// 0.69.69 (власник 03.10: «таблиця щоразу вантажиться, і при перемиканні вкладок — „Завантаження…“»): вкладки таблиці
+// вантажимо заздалегідь у фоні (boardPrefetch після старту) і тримаємо в пам'яті; відкриття — одразу з пам'яті, свіже — тихо поверх
+const BOARD_CACHE={};   // 0.69.69: таблиця з пам'яті показується одразу, свіжа догружається у фоні й тихо підміняє
+function boardFetch(b){const c=BOARD_CACHE[b];if(c&&c.p)return c.p;
+  const p=sbGetFallback([boardQ(b,true,PL_SEL[0],true,true),boardQ(b,true,PL_SEL[0],true),boardQ(b,true,PL_SEL[0]),boardQ(b,true,PL_SEL[1]),boardQ(b,false)])
+    .then(rows=>{BOARD_CACHE[b]={rows,at:Date.now()};return rows;}).catch(e=>{if(BOARD_CACHE[b])delete BOARD_CACHE[b].p;throw e;});
+  BOARD_CACHE[b]={...(c||{}),p};return p;}
+function boardPrefetch(){if(!ONLINE)return;for(const [k,v] of Object.entries(BOARDS))if(!v.hidden)boardFetch(k).catch(()=>{});}
+function boardStale(){for(const k in BOARD_CACHE)delete BOARD_CACHE[k];}   // свій новий сезон — наступне відкриття бере свіже
+async function loadBoard(b){const el=document.getElementById('boardBody'),c=BOARD_CACHE[b];
+  try{const rows=await boardFetch(b);if(BOARD===b&&el.isConnected)el.innerHTML=boardHtml(rows,b);}catch(e){if(el.isConnected&&!(c&&c.rows))el.innerHTML='<p class="muted">Таблиця зараз недоступна.</p>';}}
 document.getElementById('boardOpen').onclick=()=>{if(!ONLINE){screenTag('table');document.getElementById('viewTitle').textContent='Таблиця · 11×11';document.getElementById('viewBody').innerHTML='<p class="muted">Таблиця працює на сайті '+SITE_HOST+' і в Telegram-боті @upl30_bot.</p>';document.getElementById('viewBox').hidden=false;return;}openBoard('main');};
 function pitchHtml(formation,xi){const G=pitchGeo(formation);const F=FORMATIONS[formation]||FORMATIONS['4-4-2'];let h=PITCH_MK;F.slots.forEach((sl,i)=>{const p=xi[i];if(!p)return;const pt=G.pts[i];h+=`<div class="slot filled ${GROUP_OF[p.slot]||''}" style="left:${pt.x}%;top:${pt.y}%">${slotInner(p.slot,p,{pill:rPill(numOr0(baseR(p)))})}</div>`;});return `<div class="pitch">${h}</div>`;}
 // дані сезону з бази (xi, tbl — jsonb, їх пише браузер): числа — лише через Number, текст — лише через esc
@@ -1943,18 +1991,18 @@ function drawCard(r){   // 0.64: картка в стилі сайту — те�
 }
 document.getElementById('chalOpen').onclick=()=>{const b=document.getElementById('chalBox'),t=document.getElementById('chalOpen');b.hidden=!b.hidden;t.classList.toggle('on',!b.hidden);if(!b.hidden){b.scrollIntoView({behavior:'smooth',block:'center'});const n=document.getElementById('chalName');if(n&&!n.hidden&&!n.value)n.focus();}};
 // ---------- «Що нового»: коротко й по-людськи про останню версію (технічний журнал — CHANGELOG.md у репозиторії)
-const WHATSNEW={v:'0.69.6',date:'03.10.2026',items:[
-  ['format-list-numbered','Одне табло в групі','Бот більше не надсилає й не закріплює нове табло щодня: одне закріплене повідомлення оновлюється саме.'],
-  ['account-group','💬 Відгук','Угорі з\'явилась кнопка «Відгук»: напиши боту, що подобається, що зламалось або чого бракує. Можна зі скріншотом — усе прочитаємо.'],
-  ['account-group','Нова група — без втрат','Додав бота в нову групу вже після драфту дня? Твій сьогоднішній результат одразу з\'явиться і в її табло.'],
-  ['trophy','«Два кольори»','Трофей за чемпіонство в режимі «Один клуб» знову можна отримати.'],
-  ['format-list-numbered','«Про гру та дані»','Цифри про гру знову охайними плитками.'],
-  ['star','Новий шрифт','Уся гра тепер набрана KyivType Sans — шрифтом Дмитра Растворцева, створеним для айдентики Києва.'],
-  ['account-group','5×5 повернувся','У «Лізі з друзями» знову можна створити турнір 5×5: кожен збирає п\'ятірку, а коли збір закінчиться, п\'ятірки грають одна з одною. Схеми — плитками, на iPad поле й колесо поруч.'],
-  ['soccer-field','Ліга на iPad','Сторінка ліги 11×11: кнопка й схеми по центру, правила — плашками, кнопка «Поділитися» з підписом.'],
-  ['star','Перекрутки видно','Скільки разів ще можна перекрутити колесо — яскравим кружком над кнопками.'],
-  ['share-variant','Telegram на iPhone','Свайп униз по сторінці більше не згортає гру.'],
-  ['handshake','Питання й відповіді','Оновили відповіді: «Один клуб», 5×5, «золотий сезон», вердикт сезону.']]};
+const WHATSNEW={v:'0.69.69',date:'05.10.2026',items:[
+  ['handshake','Відгук — у підвалі','Унизу сторінки — «Відгук і баги»: напиши, що зламалось або чого бракує, прямо на сайті. Скріншот можна надіслати боту.'],
+  ['trophy','Кольори трофеїв','Картка трофея тепер має колір класу: основні, з друзями, секретні. Рідкість — значком праворуч.'],
+  ['trophy','Лічильник трофеїв','На головній тепер стільки ж трофеїв, скільки на твоїй сторінці. Два трофеї «Самба» більше не плутаються: один тепер «Карнавал».'],
+  ['star','«Один клуб»','Колесо крутить лише сезони обраного клубу. Зона «торкнись будь-де» стала більшою.'],
+  ['format-list-numbered','Таблиця без очікування','Загальна таблиця вантажиться заздалегідь, вкладки перемикаються одразу.'],
+  ['soccer-field','Рівніше','Картка матчу під час сезону більше не стрибає, значки стоять на одній лінії з текстом.'],
+  ['account-group','Бот у групі','Бот одразу пояснює: спершу зробіть його адміністратором, потім напишіть /league.'],
+  ['format-list-numbered','«Про гру та дані»','Блок завжди відкритий, без зайвих плиток.'],
+  ['format-list-numbered','Одне табло в групі','Одне закріплене повідомлення з табло оновлюється саме, без нових щодня.'],
+  ['star','Новий шрифт','Уся гра набрана KyivType Sans — шрифтом Дмитра Растворцева для айдентики Києва.'],
+  ['account-group','5×5 повернувся','У «Лізі з друзями» знову можна створити турнір 5×5.']]};
 function openNews(){screenTag('news');const box=document.getElementById('viewBox');document.getElementById('viewTitle').textContent=`Що нового · версія ${WHATSNEW.v}`;
   document.getElementById('viewBody').innerHTML=`<div class="news">${WHATSNEW.items.map(([e,h,d])=>`<div class="ni">${ic(e,'lg')}<div><b>${esc(h)}</b><p>${esc(d)}</p></div></div>`).join('')}</div>`;
   box.hidden=false;lsSet('upl30_news_seen',WHATSNEW.v);document.getElementById('newsDot').hidden=true;}
@@ -1968,6 +2016,6 @@ document.getElementById('newsDot').hidden=lsGet('upl30_news_seen')===WHATSNEW.v;
 /*__FIVE__*/
 document.getElementById('f5Open').onclick=f5Start;
 // 0.67 (аудит P2-5): лише те, що беруть тести; drawCard — для перевірки картки, simulate/rerun — для швидкого детермінізму
-window.__dbg={BOARD_FROM,setFmt,leagueLoad,boardHtml,oppYear,champModal,drawCard,chalNewGame,DAILY,LEAGUE_CULT,LEAGUE_LEGENDS,openTrophies,renderNewTro,bestPerPlayer,renderWheel,posOpts,eraOf,ptsWord,viewHtml,renderPitch,pitchHtml,f5Pitch,F5_FORMS,cardName,clubShort,simulate,shareTextOf,trCtxNow,trAward,trStore,FORMATIONS,GROUP_OF,DATA,TROPHIES,trEval,PERSON,effRating,get S(){return S;},rerun(seed,year,xi){rnd=mulberry32(seed);const r=simulate(xi||S.slots.map(s=>s.player),MODES[S.mode],year);rnd=Math.random;return {W:r.W,D:r.D,L:r.L,gf:r.gf,ga:r.ga,place:r.place};}};
+window.__dbg={ic,seasonLabel,BOARD_FROM,setFmt,leagueLoad,boardHtml,oppYear,champModal,drawCard,chalNewGame,DAILY,LEAGUE_CULT,LEAGUE_LEGENDS,openTrophies,renderNewTro,bestPerPlayer,renderWheel,posOpts,eraOf,ptsWord,viewHtml,renderPitch,pitchHtml,f5Pitch,F5_FORMS,cardName,clubShort,simulate,shareTextOf,trCtxNow,trAward,trStore,FORMATIONS,GROUP_OF,DATA,TROPHIES,trEval,PERSON,effRating,get S(){return S;},rerun(seed,year,xi){rnd=mulberry32(seed);const r=simulate(xi||S.slots.map(s=>s.player),MODES[S.mode],year);rnd=Math.random;return {W:r.W,D:r.D,L:r.L,gf:r.gf,ga:r.ga,place:r.place};}};
 })();
 </script>

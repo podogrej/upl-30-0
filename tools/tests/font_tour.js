@@ -25,10 +25,11 @@ const CHECK=()=>{const W=innerWidth,bad=[];const vis=el=>!el.closest('[hidden]')
     T.check(o.loaded&&o.sw<=o.W+1&&!o.bad.length&&!other.length,`${w}px · ${name}`+(o.loaded?'':' — шрифт НЕ завантажено')+(o.sw>o.W+1?` — сторінка ширша за екран ${o.sw}>${o.W}`:'')+(o.bad.length?' — '+o.bad.join('; '):'')+(other.length?' — інші шрифти: '+other.join(', '):''));};
   const safe=async(fn)=>{try{await fn();}catch(e){T.check(false,`${w}px: крок не вдався — ${String(e.message).split('\n')[0]}`);}};
   await chk('головна');
-  T.check(await pg.evaluate(()=>{const b=document.getElementById('fbBtn'),r=b.getBoundingClientRect();return !b.hidden&&r.width>=36&&r.right<=innerWidth;}),`${w}px · шапка: кнопка «Відгук» на місці`);   // 0.69.5
+  T.check(await pg.evaluate(()=>{const b=document.querySelector('#ft #fbBtn'),r=b&&b.getBoundingClientRect();return !!b&&!document.querySelector('header #fbBtn')&&r.width>=36&&r.right<=innerWidth;}),`${w}px · «Відгук і баги» у підвалі, шапка без 💬`);   // 0.69.69
+  await safe(async()=>{await pg.click('#fbBtn');await chk('підвал: форма відгуку');await pg.click('#fbCancel');});
   await pg.evaluate(()=>document.querySelectorAll('#s1 details').forEach(d=>d.open=true));await chk('головна: усі «Питання та відповіді» й «Про гру» розгорнуто');
-  // 0.69.2 (власник: «блок про гру зламався»): цифри «Про гру та дані» — плитками 2×2, не злиплим текстом
-  T.check(await pg.evaluate(()=>{const f=document.querySelector('#aboutBox .facts'),k=[...f.children].map(c=>c.getBoundingClientRect());return getComputedStyle(f).display==='grid'&&k.length===4&&Math.abs(k[0].top-k[1].top)<2&&k[2].top>k[0].bottom-1&&getComputedStyle(f.querySelector('.fact')).display==='grid';}),`${w}px · «Про гру та дані»: цифри плитками 2×2`);
+  // 0.69.69 (власник): «Про гру та дані» завжди відкрито, без плиток-дублів; шрифт і іконки — у підвалі
+  T.check(await pg.evaluate(()=>{const a=document.getElementById('aboutBox'),c=document.querySelector('.ft-cred');return a.tagName!=='DETAILS'&&!a.querySelector('.facts')&&a.offsetHeight>100&&!!c&&/KyivType/.test(c.textContent)&&c.getBoundingClientRect().right<=innerWidth+1;}),`${w}px · «Про гру та дані» відкрито, без плиток; подяки — у підвалі`);
   await safe(async()=>{await pg.click('#newsBtn');await chk('«Що нового»');await pg.click('#viewClose');});
   await safe(async()=>{await pg.click('#boardOpen');await chk('загальна таблиця');await pg.click('#viewClose');});
   await safe(async()=>{await pg.click('#trBtn');await chk('трофеї');await pg.click('#homeBtn');});
