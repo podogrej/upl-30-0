@@ -1,40 +1,40 @@
-"""Пенальті: хто і як бив (і відбивав) у кар'єрі → data/penalties/penalties.csv.
+"""Penalties: career penalty taking (and saving) per player -> data/penalties/penalties.csv.
 
-Навіщо: для режиму 5×5 / серій пенальті (docs/leagues_online.md, розділ «Пенальти») потрібен навик пенальтиста
-і воротаря. Цей скрипт лише збирає факти з джерелами — у грі нічого не змінює. Модель навику — data/penalties/skill.md
-(рахує data/penalties/skill.py з цього CSV).
+Purpose: taker and keeper penalty skill for 5x5 / shootouts (docs/leagues_online.md, penalties section).
+Collects sourced facts only; does not change the game. Skill model: data/penalties/skill.md
+(computed by data/penalties/skill.py from this CSV).
 
-Кандидати (людина = p[5] у src/pool.json):
-  - ≥ 3 різних сезонів у пулі або хоч одна картка ≥ 80;
-  - усі воротарі (основна лінія GK) з ≥ 30 матчами УПЛ сумарно за всі картки.
-Порядок обробки (щоб при зупинці за бюджетом найважливіші були готові):
-  1) нападники і атакувальні півзахисники (ST, LW, RW, CAM, LM, RM) — за максимальною карткою, спадання;
-  2) воротарі; 3) решта — за максимальною карткою.
+Candidates (person = p[5] in src/pool.json):
+  - >= 3 distinct seasons in the pool or any card >= 80;
+  - all keepers (main line GK) with >= 30 UPL apps summed over all cards.
+Processing order (so the most important are done if the time budget runs out):
+  1) forwards and attacking mids (ST, LW, RW, CAM, LM, RM) by max card, descending;
+  2) keepers; 3) everyone else by max card.
 
-Ідентифікація (як у data/class/collect.py, функції звідти скопійовано, щоб не запускати той скрипт при імпорті):
-  - id tm:<N> → N;
-  - id w:<дата>:<прізвище> → вже підтверджений TM id з кешу data/class (idmap.json, якщо лежить у ../class поруч з нашим кешем);
-    посилання на TM у data/foot/foot.csv, data/positions/*.csv; Wikidata P2446 серед футболістів з тією ж датою народження;
-    запасний шлях — пошук на transfermarkt.com за прізвищем (≥ 6 с між запитами, при «Human Verification» — 90 с).
-    Кожен кандидат для w:-id перевіряється: дата народження на TM = наша, прізвище латиницею схоже ≥ 0.7.
-  - id з «-00» у даті (невідомий день/місяць) не шукаємо.
+Identification (same as data/class/collect.py; functions copied to avoid importing that script):
+  - id tm:<N> -> N;
+  - id w:<date>:<surname> -> confirmed TM id from the data/class cache (idmap.json in ../class next to our cache);
+    TM links in data/foot/foot.csv, data/positions/*.csv; Wikidata P2446 among footballers with the same birth date;
+    fallback: transfermarkt.com search by surname (>= 6 s between requests, 90 s on "Human Verification").
+    Each w:-id candidate is verified: TM birth date equals ours, Latin surname similarity >= 0.7.
+  - ids with "-00" in the date (unknown day/month) are skipped.
 
-Дані: tmapi.transfermarkt.technology/player/<id>/performance-game (внутрішній API сайту Transfermarkt, без «Human Verification»,
-пауза ≥ 1.5 с). У кожному матчі є goalStatistics.penaltyShooter{Attempts,GoalsScored,Saves,Misses} і
-penaltyGoalkeeper{Attempts,GoalsConceded,Saves,Misses}. Це пенальті в грі (не серії післяматчевих пенальті).
-Misses у TM = усі незабиті (відбиті + повз/у каркас). Для матчів без детального звіту TM поля = null — рахуємо,
-скільки матчів «з протоколом» (tracked), щоб бачити, наскільки повні дані (1990-ті — часто неповні).
-UPL = competitionId 'UKR1' (Вища ліга / Прем'єр-ліга України).
+Data: tmapi.transfermarkt.technology/player/<id>/performance-game (Transfermarkt internal API, no "Human Verification",
+pause >= 1.5 s). Each match has goalStatistics.penaltyShooter{Attempts,GoalsScored,Saves,Misses} and
+penaltyGoalkeeper{Attempts,GoalsConceded,Saves,Misses}. In-game penalties only (not post-match shootouts).
+TM Misses = all non-goals (saved + wide/woodwork). Matches without a detailed TM report have null fields; we count
+matches with a report (tracked) to gauge completeness (1990s are often incomplete).
+UPL = competitionId 'UKR1' (Ukrainian top flight).
 
-FIFA / EA FC (sofifa.com): 30.09.2026 сайт віддає Cloudflare «Attention Required» (403) навіть на один запит — пропущено,
-колонка fifa_pen порожня. Скрипт робить одну пробу (SOFIFA=1) і нічого не качає, якщо заблоковано.
+FIFA / EA FC (sofifa.com): blocked by Cloudflare (403) even for a single request, so skipped and
+fifa_pen is empty. The script makes one probe (SOFIFA=1) and downloads nothing if blocked.
 
-Запуск з кореня репозиторію:
-    python3 data/penalties/collect.py <тека кешу> [хвилин_бюджету=230]
-    CACHE_ONLY=1 python3 data/penalties/collect.py <тека кешу>   # без мережі: перебудувати CSV з кешу
-Кеш (pen_perf.json — стислі підсумки по турнірах, tm_players.json, idmap.json, tm_search.json, wd_dates.json) дозволяє
-зупиняти й продовжувати; повторний запуск ідемпотентний (уже зібране не качається вдруге).
-Сирі відповіді (2–3 МБ на гравця) не зберігаються.
+Run from repo root:
+    python3 data/penalties/collect.py <cache dir> [budget_minutes=230]
+    CACHE_ONLY=1 python3 data/penalties/collect.py <cache dir>   # offline: rebuild CSV from cache
+The cache (pen_perf.json: compact per-competition totals, tm_players.json, idmap.json, tm_search.json, wd_dates.json)
+allows stop/resume; re-runs are idempotent (already collected data is not re-downloaded).
+Raw responses (2-3 MB per player) are not stored.
 """
 import json, csv, os, sys, re, time, subprocess, io, difflib, unicodedata, collections, datetime, urllib.parse
 
@@ -52,7 +52,7 @@ TMAPI = 'https://tmapi.transfermarkt.technology'
 UPL = 'UKR1'
 ATTACK = {'ST', 'LW', 'RW', 'CAM', 'LM', 'RM'}
 MIN_SEASONS, MIN_CARD, GK_MIN_APPS = 3, 80, 30
-# порядок полів у стислому підсумку турніру (pen_perf.json → comps[compId])
+# field order in the compact per-competition totals (pen_perf.json -> comps[compId])
 F = ['type', 'nat', 'played', 'tracked', 'sh_att', 'sh_goal', 'sh_saved', 'sh_miss', 'gk_att', 'gk_conc', 'gk_saved', 'gk_miss']
 SH = {'sh_att': 'penaltyShooterAttempts', 'sh_goal': 'penaltyShooterGoalsScored', 'sh_saved': 'penaltyShooterSaves', 'sh_miss': 'penaltyShooterMisses',
       'gk_att': 'penaltyGoalkeeperAttempts', 'gk_conc': 'penaltyGoalkeeperGoalsConceded', 'gk_saved': 'penaltyGoalkeeperSaves', 'gk_miss': 'penaltyGoalkeeperMisses'}
@@ -77,7 +77,7 @@ def over_budget():
     return (time.time() - T0) / 60 > BUDGET_MIN
 
 
-# ---------- кандидати ----------
+# ---------- candidates ----------
 pool = json.load(open('src/pool.json'))
 P = {}
 for c in pool['clubs']:
@@ -102,13 +102,13 @@ def group(pid):
 CAND = [p for p, e in P.items() if len(e['years']) >= MIN_SEASONS or e['max'] >= MIN_CARD
         or (e['mainline'] == 'GK' and e['apps'] >= GK_MIN_APPS)]
 CAND.sort(key=lambda p: (group(p), -P[p]['max'], p))
-# ONLY=<id>,<id>… — оновити лише ці рядки в наявному penalties.csv (решта рядків лишається як є);
-# ONLY=manual — усі з MANUAL. Потрібно, коли повного кешу вже немає, а виправити треба кілька людей.
+# ONLY=<id>,<id>... updates only these rows in the existing penalties.csv (other rows are kept);
+# ONLY=manual updates all MANUAL ids. For fixing a few rows when the full cache is gone.
 ONLY = os.environ.get('ONLY', '')
 log('кандидатів', len(CAND), collections.Counter(group(p) for p in CAND))
 
 
-# ---------- імена (з data/class/collect.py) ----------
+# ---------- names (from data/class/collect.py) ----------
 def latin(s):
     s = unicodedata.normalize('NFKD', s.replace('ł', 'l').replace('Ł', 'L'))
     s = ''.join(ch for ch in s if not unicodedata.combining(ch)).lower()
@@ -130,11 +130,11 @@ def sim(a, b):
 
 
 def surname_sim(pid, *labels):
-    """схожість ПРІЗВИЩА (не будь-якого слова імені): до 01.10.2026 тут був name_sim — він приймав збіг імені
-    («Олег», «Сергій»), і з Wikidata (та сама дата народження) приїхали чужі люди (Єсін → Usoltsev, Сизон → Sionko).
-    Наше прізвище = усі слова імені, крім першого (або єдине слово; плюс slug з id, якщо він не є ім'ям).
-    Пара «наше прізвище — слово TM» зараховується, якщо збігається перша літера, довжини близькі (≥ 0.65)
-    і схожість ≥ 0.75; г→h/g, k/c, є/е — нечутливо."""
+    """SURNAME similarity (not any name word): matching on first names let wrong people with the same
+    birth date through from Wikidata.
+    Our surname = all name words except the first (or the single word; plus the id slug if it is not a first name).
+    A pair (our surname, TM word) matches if the first letter is equal, lengths are close (>= 0.65 ratio)
+    and similarity >= 0.75; insensitive to h/g, k/c, ie/e."""
     def norm(s):
         return latin(s).replace('g', 'h').replace('k', 'c').replace('ie', 'e')
     words = [w for w in re.split(r'[\s-]+', P[pid]['name']) if w]
@@ -158,12 +158,12 @@ def surname_sim(pid, *labels):
 SURNAME_MIN = 0.75
 
 
-# ---------- мережа ----------
+# ---------- network ----------
 _last = collections.defaultdict(float)
 
 
 def fetch(url, host, gap, tries=3):
-    """GET з паузою між запитами до одного хоста; повертає текст або None"""
+    """GET with a per-host pause between requests; returns text or None"""
     if CACHE_ONLY:
         return None
     for a in range(tries):
@@ -203,7 +203,7 @@ def sparql(q, head):
 
 # ---------- 1. Transfermarkt ID ----------
 def seed(name, sub):
-    """кеш сусідніх зборів (data/class, data/foot) у тій самій теці scratchpad — лише читаємо"""
+    """read-only cache of sibling collectors (data/class, data/foot) in the same cache dir"""
     f = os.path.join(CACHE, '..', sub, name)
     return json.load(open(f)) if os.path.exists(f) else {}
 
@@ -217,53 +217,53 @@ for k, v in seed('tm_search.json', 'class').items():
 WD = jload('wd_dates.json', {})
 for k, v in seed('wd_foot.json', 'foot').items():
     WD.setdefault(k, v)
-# Ручні прив'язки person_id → TM id (мають перевагу над кешем і автоматичним пошуком; ok_identity для них не перевіряється).
-# 1) 01–02.10.2026: виправлено хибні прив'язки (стара перевірка приймала збіг імені, не прізвища) — кожен id звірено
-#    з клубами й сезонами УПЛ у пулі; у Мендоси й Пищура дата народження на TM відрізняється на 2 дні.
-# 2) правильні, але нова перевірка прізвища їх не пропустила б (Hakobyan, Tănasă, Tchoutang, Jakobia, Ţîgîrlaş, Ebanda; Jugeli — інше ім'я).
+# Manual person_id -> TM id overrides (take priority over cache and search; ok_identity is not checked for them).
+# 1) fixes for wrong matches from the old first-name check; each id verified against UPL clubs and seasons in the pool;
+#    Mendoza and Pyshchur have a TM birth date 2 days off.
+# 2) correct ids the surname check would reject (Hakobyan, Tănasă, Tchoutang, Jakobia, Ţîgîrlaş, Ebanda; Jugeli has another first name).
 MANUAL = {
-    'w:1969-01-23:nikiforov': '970292',  # Андрій Никифоров (було 3742)
-    'w:1969-02-13:korponai': '883303',  # Іван Корпонай (було 21097)
-    'w:1970-02-01:irichuk': '970590',  # Павло Ірічук (було 288479)
-    'w:1970-02-14:shkolnikov': '883444',  # Ян Школьніков (було 951000)
-    'w:1970-06-29:rudniak': '883453',  # Дмитро Рудняк (було 21927)
-    'w:1970-07-05:rati': '169277',  # Олег Ратій (було 751152)
-    'w:1970-10-07:korenev': '251323',  # Дмитро Корєнєв (було 372232)
-    'w:1971-02-07:sich': '966827',  # Микола Сич (було 400938)
-    'w:1971-10-21:prohorenkov': '529460',  # Олексій Прохоренков (було 181973)
-    'w:1974-01-08:leliuk': '494564',  # Дмитро Лелюк (було 173664)
-    'w:1974-01-23:semchuk': '871044',  # Дмитро Семчук (було 117937)
-    'w:1975-02-17:seleznov': '97868',  # Сергій Селезньов (було 885346)
-    'w:1975-03-31:balanchuk': '251263',  # Сергій Баланчук (було 25870)
-    'w:1975-04-02:esin': '57873',  # Сергій Єсін (було 80090)
-    'w:1975-11-21:lutsishin': '883532',  # Михайло Луцишин (було 95210)
-    'w:1976-10-08:derenov': '664478',  # Сергій Деренов (було 532358)
-    'w:1976-11-24:flavius': '22127',  # Флавіус Стойкан (було 6446)
-    'w:1977-02-01:sizon': '883860',  # Олег Сизон (було 9770)
-    'w:1978-02-04:aliutse': '28532',  # Маріан Аліуце (було 280347)
-    'w:1978-04-26:andres': '9650',  # Андрес Мендоса (було 74433)
-    'w:1978-06-20:apian': '987608',  # Артур Апіян (було 6766)
-    'w:1978-07-24:malimon': '882566',  # Іван Малімон (було 301626)
-    'w:1978-11-17:chomahidze': '175925',  # Шота Чомахідзе (було 254587)
-    'w:1978-12-29:antonenko': '91467',  # Олександр Антоненко (було 110232)
-    'w:1979-08-01:djurichich': '28392',  # Саша Джурічич (було 1802)
-    'w:1979-09-12:vasin': '416208',  # Денис Васін (було 261224)
-    'w:1979-09-14:kozoriz': '57885',  # Іван Козоріз (було 84958)
-    'w:1981-01-29:pischur': '58245',  # Олександр Пищур (було 91349)
-    'w:1982-01-15:chernikov': '27192',  # Володимир Черніков (було 73974)
-    'w:1982-05-04:suhina': '855965',  # Євген Сухина (було 76312)
-    'w:1983-05-07:lujankov': '161557',  # Олександр Лужанков (було 178115)
-    'w:1985-06-07:shmakov': '58251',  # Євгеній Шмаков (було 19115)
-    'w:1986-07-22:baranets': '82592',  # Борис Баранець (було 261100)
-    'w:1972-04-03:shutkov': '14941',  # Дмитро Шутков (було 619988, виправлено 01.10.2026)
-    'w:1985-03-12:tovt': '27216',  # Андрій Товт (було 89540, виправлено 01.10.2026)
-    'w:1969-04-14:djuheli': '831725',  # Іван Джугелі
-    'w:1976-09-02:bernar': '32170',  # Бернар Чутанг
-    'w:1978-09-05:hiom': '58236',  # Патрік Ібанда
-    'w:1980-08-20:djakobia': '42636',  # Лаша Джакобія
-    'w:1980-11-04:akobian': '23986',  # Ара Акобян
-    'w:1981-02-02:chiprian': '46661',  # Чіпріан Тенасе
-    'w:1984-02-24:tsihirlash': '44387',  # Ігор Цигирлаш
+    'w:1969-01-23:nikiforov': '970292',  # Andrii Nykyforov (was 3742)
+    'w:1969-02-13:korponai': '883303',  # Ivan Korponai (was 21097)
+    'w:1970-02-01:irichuk': '970590',  # Pavlo Irichuk (was 288479)
+    'w:1970-02-14:shkolnikov': '883444',  # Yan Shkolnikov (was 951000)
+    'w:1970-06-29:rudniak': '883453',  # Dmytro Rudniak (was 21927)
+    'w:1970-07-05:rati': '169277',  # Oleh Ratii (was 751152)
+    'w:1970-10-07:korenev': '251323',  # Dmytro Korieniev (was 372232)
+    'w:1971-02-07:sich': '966827',  # Mykola Sych (was 400938)
+    'w:1971-10-21:prohorenkov': '529460',  # Oleksii Prokhorenkov (was 181973)
+    'w:1974-01-08:leliuk': '494564',  # Dmytro Leliuk (was 173664)
+    'w:1974-01-23:semchuk': '871044',  # Dmytro Semchuk (was 117937)
+    'w:1975-02-17:seleznov': '97868',  # Serhii Seleznov (was 885346)
+    'w:1975-03-31:balanchuk': '251263',  # Serhii Balanchuk (was 25870)
+    'w:1975-04-02:esin': '57873',  # Serhii Yesin (was 80090)
+    'w:1975-11-21:lutsishin': '883532',  # Mykhailo Lutsyshyn (was 95210)
+    'w:1976-10-08:derenov': '664478',  # Serhii Derenov (was 532358)
+    'w:1976-11-24:flavius': '22127',  # Flavius Stoican (was 6446)
+    'w:1977-02-01:sizon': '883860',  # Oleh Syzon (was 9770)
+    'w:1978-02-04:aliutse': '28532',  # Marian Aliuță (was 280347)
+    'w:1978-04-26:andres': '9650',  # Andrés Mendoza (was 74433)
+    'w:1978-06-20:apian': '987608',  # Artur Apiian (was 6766)
+    'w:1978-07-24:malimon': '882566',  # Ivan Malimon (was 301626)
+    'w:1978-11-17:chomahidze': '175925',  # Shota Chomakhidze (was 254587)
+    'w:1978-12-29:antonenko': '91467',  # Oleksandr Antonenko (was 110232)
+    'w:1979-08-01:djurichich': '28392',  # Saša Đuričić (was 1802)
+    'w:1979-09-12:vasin': '416208',  # Denys Vasin (was 261224)
+    'w:1979-09-14:kozoriz': '57885',  # Ivan Kozoriz (was 84958)
+    'w:1981-01-29:pischur': '58245',  # Oleksandr Pyshchur (was 91349)
+    'w:1982-01-15:chernikov': '27192',  # Volodymyr Chernikov (was 73974)
+    'w:1982-05-04:suhina': '855965',  # Yevhen Sukhyna (was 76312)
+    'w:1983-05-07:lujankov': '161557',  # Oleksandr Luzhankov (was 178115)
+    'w:1985-06-07:shmakov': '58251',  # Yevhenii Shmakov (was 19115)
+    'w:1986-07-22:baranets': '82592',  # Borys Barannets (was 261100)
+    'w:1972-04-03:shutkov': '14941',  # Dmytro Shutkov (was 619988)
+    'w:1985-03-12:tovt': '27216',  # Andrii Tovt (was 89540)
+    'w:1969-04-14:djuheli': '831725',  # Ivan Jugeli
+    'w:1976-09-02:bernar': '32170',  # Bernard Tchoutang
+    'w:1978-09-05:hiom': '58236',  # Patrick Ebanda
+    'w:1980-08-20:djakobia': '42636',  # Lasha Jakobia
+    'w:1980-11-04:akobian': '23986',  # Ara Hakobyan
+    'w:1981-02-02:chiprian': '46661',  # Ciprian Tănasă
+    'w:1984-02-24:tsihirlash': '44387',  # Igor Ţîgîrlaş
 }
 CLASS_ID = seed('idmap.json', 'class')
 IDMAP = jload('idmap.json', {})
@@ -347,7 +347,7 @@ def ok_identity(pid, e):
 
 
 def resolve_ids():
-    """без пошуку на www: tm:, кеш data/class, посилання репозиторію, Wikidata"""
+    """resolve without web search: tm:, data/class cache, repo links, Wikidata"""
     links = known_links()
     wd_dates({p.split(':')[1] for p in CAND if p.startswith('w:') and '-00' not in p and p not in MANUAL and not (IDMAP.get(p) or {}).get('tm')})
     cands = {}
@@ -381,7 +381,7 @@ def resolve_ids():
 
 
 def search_ids():
-    """запасний шлях: пошук на transfermarkt.com для ще не знайдених (≥ 6 с/запит), у порядку пріоритету"""
+    """fallback: transfermarkt.com search for unresolved ids (>= 6 s/request), in priority order"""
     for pid in CAND:
         if CACHE_ONLY or over_budget():
             return
@@ -405,7 +405,7 @@ def search_ids():
             get_perf(found)
 
 
-# ---------- 2. пенальті з performance-game ----------
+# ---------- 2. penalties from performance-game ----------
 PERF = jload('pen_perf.json', {})   # tm id → {'comps': {compId: [F...]}, 'games': n, 'tracked_from': season, 'tracked_to': season}
 
 
@@ -450,7 +450,7 @@ def collect():
 
 
 def sofifa_probe():
-    """одна ввічлива проба; якщо Cloudflare — повертаємо False і більше не звертаємось"""
+    """single polite probe; returns False on Cloudflare and stops further requests"""
     if CACHE_ONLY or os.environ.get('SOFIFA') != '1':
         return False
     h = fetch('https://sofifa.com/players?keyword=yarmolenko', 'sofifa', 10, tries=1)
@@ -488,10 +488,10 @@ def write():
                         upl[i] += v[i]
             ix = F.index
 
-            def taken(v):   # у TM Attempts іноді менше за «забив + відбили» — беремо більше (див. README)
+            def taken(v):   # TM Attempts is sometimes below scored + saved; take the max (see README)
                 return max(v[ix('sh_att')], v[ix('sh_goal')] + v[ix('sh_saved')])
 
-            def faced(v):   # те саме для воротаря: пропустив + відбив
+            def faced(v):   # same for keepers: conceded + saved
                 return max(v[ix('gk_att')], v[ix('gk_conc')] + v[ix('gk_saved')])
             if faced(tot) > tot[ix('gk_att')] or taken(tot) > tot[ix('sh_att')]:
                 note.append('у TM кількість пенальті менша за суму результатів — взято суму')

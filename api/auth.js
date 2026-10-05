@@ -1,7 +1,7 @@
-// 30-0 УПЛ — вхід через Telegram (Vercel function, адреса /api/auth)
-// Перевіряє підпис Telegram (Mini App initData, віджет входу або вхід через бота login_token) і видає одноразовий токен входу Supabase.
-// Змінні оточення у Vercel: TG_TOKEN (токен бота), SUPABASE_SERVICE_KEY (Supabase → Settings → API Keys → secret key).
-const { rateLimit } = require('./_device.js');   // обмеження частоти (0.55)
+// 30-0 UPL: Telegram login (Vercel function, /api/auth)
+// Verifies the Telegram signature (Mini App initData or bot login via login_token) and issues a one-time Supabase login token.
+// Vercel env: TG_TOKEN (bot token), SUPABASE_SERVICE_KEY (Supabase -> Settings -> API Keys -> secret key).
+const { rateLimit } = require('./_device.js');   // rate limiting
 const { SB_URL, env, sb: sbRest, miniApp } = require('./_lib.js');
 const checkMiniApp = (initData, token) => { const m = miniApp(initData, token); return m && m.user; };
 
@@ -24,27 +24,27 @@ module.exports = async (req, res) => {
   let b = req.body || {};
   if (typeof b === 'string') b = JSON.parse(b);
   stage = 'rate';
-  if (await rateLimit(req, res, 'auth')) return;   // за IP (0.55)
+  if (await rateLimit(req, res, 'auth')) return;   // per IP
   stage = 'signature';
   let u = null;
   if (b.login_token) {
-    // вхід через бота: токен, який браузер передав у t.me/upl30_bot?start=login_<токен>; живе 10 хвилин і спрацьовує один раз
+    // bot login: token the browser passed in t.me/upl30_bot?start=login_<token>; valid 10 minutes, single use
     stage = 'bot login';
     if (!/^[a-f0-9]{32}$/.test(String(b.login_token))) return res.status(400).json({ error: 'login_token?' });
     const since = new Date(Date.now() - 10 * 60e3).toISOString();
-    // забираємо токен одним запитом: PATCH лише невикористаного й свіжого рядка; порожня відповідь — токена ще немає (у боті не натиснули
-    // «Підтвердити вхід») або його вже використано (другий паралельний запит нічого не отримає)
+    // claim the token in one request: PATCH only an unused, fresh row; empty response = token not confirmed in the bot yet
+    // or already used (a concurrent request gets nothing)
     const rows = await sbRest(`tg_logins?token=eq.${b.login_token}&used=is.false&created_at=gte.${since}&select=*`, { method: 'PATCH', prefer: 'return=representation', body: { used: true } });
     if (!rows || !rows.length) return res.status(202).json({ pending: true });
     const r0 = rows[0];
     u = { id: r0.tg_id, first_name: r0.first_name, last_name: r0.last_name, username: r0.username };
-  } else u = b.initData ? checkMiniApp(b.initData, token) : null;   // віджет входу Telegram прибрано (0.67, аудит P2-3)
+  } else u = b.initData ? checkMiniApp(b.initData, token) : null;   // Telegram login widget is no longer supported
   if (!u || !u.id) return res.status(401).json({ error: 'bad telegram signature' });
-  const email = `tg-${u.id}@users.upl-30-0.vercel.app`;   // службова адреса, листи туди не надсилаються; НЕ міняти на новий домен (0.68) — за нею знаходимо акаунт Telegram
+  const email = `tg-${u.id}@users.upl-30-0.vercel.app`;   // service address, no mail is sent; do NOT switch to the new domain: Telegram accounts are looked up by it
   const name = [u.first_name, u.last_name].filter(Boolean).join(' ') || u.username || 'Гравець';
   const meta = { tg_id: u.id, tg_name: name, tg_username: u.username || null, full_name: name };
   stage = 'create user';
-  const cu = await admin('users', { email, email_confirm: true, user_metadata: meta });   // якщо вже є — Supabase поверне помилку, це нормально
+  const cu = await admin('users', { email, email_confirm: true, user_metadata: meta });   // if the user exists Supabase returns an error; that's expected
   if (cu.status === 401 || cu.status === 403) return res.status(500).json({ error: 'Supabase не прийняв SUPABASE_SERVICE_KEY (потрібен secret key sb_secret_…)', status: cu.status });
   stage = 'generate link';
   const { status, j } = await admin('generate_link', { type: 'magiclink', email });

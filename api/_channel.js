@@ -1,19 +1,19 @@
-// 30-0 УПЛ — Telegram-канал (0.69.97, власник 05.10): черга постів channel_posts (sql/v06997_channel_posts.sql),
-// схвалення кнопками в особистих з ботом, публікація за розкладом, автопости (анонс драфту дня, підсумки тижня).
-// Файл з «_» — не адреса (Vercel Hobby: функцій уже 12 з 12). Викликають api/bot.js (команди й кнопки) і api/cron.js?task=channel (запуск).
-// Змінні Vercel: OWNER_TG_ID (хто керує каналом), CHANNEL_ID (лише Production), TEST_CHANNEL_ID (Preview — тестовий сайт),
-// CHANNEL_SECRET (ключ для частого запуску з GitHub Actions, .github/workflows/channel.yml).
-// Бот один, вебхук — на проді. Пости тестової бази бот показує з міткою «ТЕСТ» і кнопками з міткою t (як вхід через бота: TEST_SUPABASE_URL/KEY);
-// публікує їх тестовий сайт — у TEST_CHANNEL_ID. У CHANNEL_ID публікує лише Production.
+// 30-0 UPL Telegram channel: post queue channel_posts (sql/v06997_channel_posts.sql),
+// approval via bot buttons in private chat, scheduled publishing, auto posts (daily draft announcement, weekly summary).
+// "_" prefix: not a route (Vercel Hobby function limit). Called from api/bot.js (commands, buttons) and api/cron.js?task=channel (run).
+// Vercel env: OWNER_TG_ID (channel admin), CHANNEL_ID (Production only), TEST_CHANNEL_ID (Preview / test site),
+// CHANNEL_SECRET (key for frequent runs from GitHub Actions, .github/workflows/channel.yml).
+// One bot, webhook on prod. Test-DB posts are shown with a TEST label and callback tag t (TEST_SUPABASE_URL/KEY, as in bot login);
+// the test site publishes them to TEST_CHANNEL_ID. Only Production publishes to CHANNEL_ID.
 const L = require('./_league.js');
 const SITE = 'https://upl30.com.ua/';
 const BOT = () => L.env('TG_BOT') || 'upl30_bot';
 const DAILY_LINK = () => `https://t.me/${BOT()}?start=ch_daily`;
-const WAIT_MIN = 30;   // скільки хвилин бот чекає текст поста або новий час після команди
-const DAILY_AT = [9, 0], WEEKLY_AT = [12, 0];   // автопости виходять: анонс драфту дня о 9:00, підсумки тижня в понеділок о 12:00 (за Києвом)
-const DAILY_PREP_H = 18, WEEKLY_PREP_H = 8;   // а готуються (чернетка власнику): анонс — напередодні після 18:00, підсумки — у понеділок після 8:00; не вночі (власник в Індії, +2:30 до Києва)
+const WAIT_MIN = 30;   // minutes the bot waits for post text / new time after a command
+const DAILY_AT = [9, 0], WEEKLY_AT = [12, 0];   // publish time (Kyiv): daily draft announcement 9:00, weekly summary Monday 12:00
+const DAILY_PREP_H = 18, WEEKLY_PREP_H = 8;   // draft prep hour (Kyiv): announcement the day before after 18:00, summary Monday after 8:00; avoids night-time notifications
 
-// ---------- бази: p — основна, t — тестова. Свою базу кожне оточення знає з VERCEL_ENV
+// ---------- DBs: p = main, t = test. Each environment knows its own DB from VERCEL_ENV
 const OWN = () => (process.env.VERCEL_ENV === 'production' ? 'p' : 't');
 async function testSb(path, { method = 'GET', body, prefer } = {}) {
   const url = String(process.env.TEST_SUPABASE_URL || '').trim(), key = L.env('TEST_SUPABASE_SERVICE_KEY');
@@ -26,20 +26,20 @@ async function testSb(path, { method = 'GET', body, prefer } = {}) {
 const db = tag => (tag === OWN() ? L.sb : tag === 't' ? testSb : null);
 const label = tag => (tag === 't' ? 'ТЕСТ · ' : '');
 
-// ---------- час за Києвом
+// ---------- Kyiv time
 function kyivParts(d) {
   const p = Object.fromEntries(new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Kyiv', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false, weekday: 'short' })
     .formatToParts(d).map(x => [x.type, x.value]));
   return { y: +p.year, m: +p.month, d: +p.day, H: +p.hour % 24, M: +p.minute, wd: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].indexOf(p.weekday) };
 }
-function kyivToUtc(y, m, d, H, M) {   // момент, коли в Києві y-m-d H:M (з урахуванням літнього часу)
+function kyivToUtc(y, m, d, H, M) {   // UTC instant for Kyiv local y-m-d H:M (DST-aware)
   let t = Date.UTC(y, m - 1, d, H, M);
   for (let i = 0; i < 2; i++) { const k = kyivParts(new Date(t)); t -= Date.UTC(k.y, k.m - 1, k.d, k.H, k.M) - Date.UTC(y, m - 1, d, H, M); }
   return new Date(t);
 }
 const pad = n => String(n).padStart(2, '0');
 function fmtKyiv(iso) { const k = kyivParts(new Date(iso)); return `${pad(k.d)}.${pad(k.m)} ${pad(k.H)}:${pad(k.M)}`; }
-// «10.10 18:00», «10.10.2026 18:00», «18:00» (сьогодні, а якщо вже минуло — завтра), «зараз» / «now»
+// accepts "10.10 18:00", "10.10.2026 18:00", "18:00" (today, or tomorrow if past), "now" (Ukrainian or English)
 function parseWhen(s, now = new Date()) {
   s = String(s || '').trim().toLowerCase();
   if (s === 'зараз' || s === 'now') return now;
@@ -50,8 +50,8 @@ function parseWhen(s, now = new Date()) {
     if (mo < 1 || mo > 12 || d < 1 || d > 31 || H > 23 || M > 59) return null;
     let y = m[3] ? (m[3].length === 2 ? 2000 + +m[3] : +m[3]) : k.y;
     let t = kyivToUtc(y, mo, d, H, M);
-    if (!m[3] && t < now - 864e5) t = kyivToUtc(y + 1, mo, d, H, M);   // «02.01» у грудні — наступного року
-    const back = kyivParts(t); if (back.d !== d || back.m !== mo) return null;   // 31.02 тощо
+    if (!m[3] && t < now - 864e5) t = kyivToUtc(y + 1, mo, d, H, M);   // "02.01" in December -> next year
+    const back = kyivParts(t); if (back.d !== d || back.m !== mo) return null;   // rejects invalid dates like 31.02
     return t;
   }
   m = /^(\d{1,2})[:.](\d{2})$/.exec(s);
@@ -59,9 +59,9 @@ function parseWhen(s, now = new Date()) {
   return null;
 }
 
-// ---------- текст поста: видима довжина, розмітка з повідомлення власника (entities → HTML)
+// ---------- post text: visible length, Telegram entities -> HTML
 const esc = s => String(s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
-// рахуємо так само, як перевірка в базі (channel_posts_len_chk): без тегів, «&amp;» — 5 знаків (Telegram рахує 1 — тут трохи суворіше, зате база не відмовить)
+// matches DB check channel_posts_len_chk: tags stripped, "&amp;" counts as 5 (stricter than Telegram, so the DB never rejects)
 const visibleLen = html => String(html).replace(/<[^>]+>/g, '').length;
 function checkPost(p) {
   const text = String(p.text || ''), img = String(p.image_url || '').trim();
@@ -69,7 +69,7 @@ function checkPost(p) {
   const n = visibleLen(text), max = img ? 1024 : 4096;
   return n > max ? `задовгий текст: ${n} символів, можна ${max}${img ? ' (підпис до картинки)' : ''}` : null;
 }
-// повідомлення Telegram з розміткою (жирний, курсив, посилання…) → HTML для parse_mode HTML. Зсуви — у UTF-16, як рядки JS
+// Telegram message entities (bold, italic, links...) -> HTML for parse_mode HTML. Offsets are UTF-16, same as JS strings
 function entitiesToHtml(text, ents) {
   text = String(text || '');
   const TAG = { bold: ['<b>', '</b>'], italic: ['<i>', '</i>'], underline: ['<u>', '</u>'], strikethrough: ['<s>', '</s>'], spoiler: ['<tg-spoiler>', '</tg-spoiler>'],
@@ -106,7 +106,7 @@ function postKb(tag, p) {
     : { text: `${p.status === 'failed' ? '🔁 Спробувати ще' : '✅ Опублікувати за розкладом'} · ${fmtKyiv(p.publish_at)}`, callback_data: cb('ok') };
   return { inline_keyboard: [[top], [{ text: '⏭ Пропустити', callback_data: cb('skip') }, { text: '🕒 Змінити час', callback_data: cb('time') }]] };
 }
-// попередній перегляд власнику: пост так, як він вийде в каналі, і кнопки під ним; якщо Telegram не приймає розмітку — пояснення й ті самі кнопки
+// admin preview: post as it will appear in the channel plus buttons; if Telegram rejects the markup, an explanation with the same buttons
 async function preview(owner, tag, p) {
   const head = `${label(tag)}Пост #${p.id} · ${STATUS[p.status] || p.status} · ${fmtKyiv(p.publish_at)} за Києвом`;
   await L.tg('sendMessage', { chat_id: owner, text: head });
@@ -115,7 +115,7 @@ async function preview(owner, tag, p) {
   if (!r || !r.ok) await L.tg('sendMessage', { chat_id: owner, text: `⚠️ Пост #${p.id} не вийде в такому вигляді: ${bad || (r && r.description) || 'Telegram не прийняв'}`, reply_markup: postKb(tag, p) });
 }
 
-// ---------- очікування відповіді власника (текст поста після /post, новий час після «Змінити час»): позначка в app_marks основної бази бота
+// ---------- pending admin reply (post text after /post, new time after "change time"): mark in app_marks of the bot's main DB
 async function setWait(kind, tag, val) { await clearWait(); await L.sb('app_marks', { method: 'POST', prefer: 'return=minimal', body: { key: `chw:${kind}:${tag}:${val}` } }); }
 async function clearWait() { await L.sb('app_marks?key=like.chw:*', { method: 'DELETE', prefer: 'return=minimal' }); }
 async function getWait() {
@@ -138,7 +138,7 @@ async function queue(chat_id, tag) {
   return say(chat_id, text, { reply_markup: { inline_keyboard: kb } });
 }
 
-// ---------- оновлення від Telegram: true — оброблено тут (api/bot.js далі не йде)
+// ---------- Telegram update: true = handled here (api/bot.js stops)
 async function handleUpdate(u) {
   const cq = u.callback_query;
   if (cq && typeof cq.data === 'string' && cq.data.startsWith('cp:')) {
@@ -185,7 +185,7 @@ async function handleUpdate(u) {
     await say(m.chat.id, `${label(tag)}Надішли текст поста (можна картинку з підписом). Вийде ${fmtKyiv(when)} за Києвом у ${tag === 't' ? 'тестовий канал' : 'канал'}. /cancel — скасувати.`);
     return true;
   }
-  // відповідь власника на /post або «Змінити час» (інакше — звичайний відгук, api/bot.js)
+  // admin reply to /post or "change time" (otherwise regular feedback, api/bot.js)
   if (isPrivate && !cmd && isOwner(m.from)) {
     const w = await getWait(); if (!w) return false;
     const q = db(w.tag); if (!q) { await clearWait(); return false; }
@@ -213,16 +213,16 @@ async function handleUpdate(u) {
   return false;
 }
 
-// ---------- автопости: чернетки на схвалення, раз на день / раз на тиждень (позначки app_marks — щоб не двічі)
+// ---------- auto posts: drafts for approval, daily / weekly (app_marks keys prevent duplicates)
 async function once(key) { return ((await L.sb('app_marks?on_conflict=key', { method: 'POST', prefer: 'resolution=ignore-duplicates,return=representation', body: { key } })) || []).length > 0; }
-const unmark = key => L.sb(`app_marks?key=eq.${encodeURIComponent(key)}`, { method: 'DELETE', prefer: 'return=minimal' }).catch(() => {});   // чернетку не вставили — наступний запуск спробує ще раз
+const unmark = key => L.sb(`app_marks?key=eq.${encodeURIComponent(key)}`, { method: 'DELETE', prefer: 'return=minimal' }).catch(() => {});   // draft insert failed -> next run retries
 async function insertAuto(key, body) { try { const [p] = await L.sb('channel_posts', { method: 'POST', prefer: 'return=representation', body }) || []; return p; } catch (e) { await unmark(key); throw e; } }
-const laterOf = (at, now) => new Date(Math.max(+at, +now + 15 * 6e4));   // уже минуло — через 15 хвилин, щоб власник встиг схвалити
+const laterOf = (at, now) => new Date(Math.max(+at, +now + 15 * 6e4));   // already past -> in 15 minutes, so the admin can approve
 async function autoPosts(now = new Date()) {
   const made = [];
   if ((await L.sb('app_marks?key=eq.ch_auto_off&select=key') || []).length) return made;
   const k = kyivParts(now), day = `${k.y}-${pad(k.m)}-${pad(k.d)}`;
-  const tk = kyivParts(new Date(+kyivToUtc(k.y, k.m, k.d, 12, 0) + 864e5)), tday = `${tk.y}-${pad(tk.m)}-${pad(tk.d)}`;   // завтра за Києвом
+  const tk = kyivParts(new Date(+kyivToUtc(k.y, k.m, k.d, 12, 0) + 864e5)), tday = `${tk.y}-${pad(tk.m)}-${pad(tk.d)}`;   // tomorrow in Kyiv
   if (k.H >= DAILY_PREP_H && await once(`ch_daily:${tday}`)) {
     const E = require('../lib/engine.js'), ds = E.dailySetupFor(tday), rr = (E.MODES.daily || {}).rerolls || 0;
     const text = `<b>🎯 Драфт дня №${L.dayNo(tday)} · ${L.dayShort(tday)}</b>\n` +
@@ -231,9 +231,9 @@ async function autoPosts(now = new Date()) {
     const p = await insertAuto(`ch_daily:${tday}`, { text, publish_at: laterOf(kyivToUtc(tk.y, tk.m, tk.d, ...DAILY_AT), now).toISOString(), status: 'draft', source: 'auto' });
     if (p) made.push(p.id);
   }
-  if (k.wd === 0 && k.H >= WEEKLY_PREP_H && await once(`ch_week:${day}`)) {   // понеділок: підсумки минулого тижня (пн–нд за Києвом)
+  if (k.wd === 0 && k.H >= WEEKLY_PREP_H && await once(`ch_week:${day}`)) {   // Monday: last week's summary (Mon-Sun, Kyiv)
     const to = kyivToUtc(k.y, k.m, k.d, 0, 0), from = new Date(+to - 7 * 864e5);
-    const rows = [];   // Supabase віддає щонайбільше 1000 рядків за раз — читаємо сторінками (як api/backup.js)
+    const rows = [];   // Supabase returns at most 1000 rows per request -> paginate (as in api/backup.js)
     for (let off = 0; ; off += 1000) {
       const pg = await L.sb(`seasons?created_at=gte.${from.toISOString()}&created_at=lt.${to.toISOString()}&verified=is.true&practice=is.false&select=id,pts,w,d,l,gf,ga,nickname,xi&order=id.asc&limit=1000&offset=${off}`) || [];
       rows.push(...pg); if (pg.length < 1000 || off > 200000) break;
@@ -255,7 +255,7 @@ async function autoPosts(now = new Date()) {
   return made;
 }
 
-// ---------- запуск (кожні ~10 хв з GitHub Actions, і раз на день з Vercel Cron): автопости → нові чернетки власнику → публікація
+// ---------- run (every ~10 min from GitHub Actions, daily from Vercel Cron): auto posts -> notify admin of new drafts -> publish
 async function runChannel(now = new Date()) {
   const tag = OWN(), owner = L.env('OWNER_TG_ID'), chan = tag === 'p' ? L.env('CHANNEL_ID') : L.env('TEST_CHANNEL_ID');
   const out = { env: tag, auto: [], notified: 0, published: 0, failed: 0 };
@@ -265,17 +265,17 @@ async function runChannel(now = new Date()) {
   const iso = now.toISOString();
   for (const d of await L.sb('channel_posts?status=eq.draft&notified_at=is.null&select=id&order=publish_at.asc&limit=10') || []) {
     const [p] = await L.sb(`channel_posts?id=eq.${d.id}&notified_at=is.null`, { method: 'PATCH', prefer: 'return=representation', body: { notified_at: iso } }) || [];
-    if (!p) continue;   // інший запуск уже надіслав
+    if (!p) continue;   // another run already sent it
     await preview(owner, tag, p); out.notified++;
   }
-  // забрали на публікацію, але не дописали tg_message_id (запуск обірвався між зміною статусу й Telegram) — раз сказати власнику, перевірити канал
+  // claimed for publishing but tg_message_id missing (run died between status change and Telegram): notify admin once to check the channel
   const stale = new Date(+now - 15 * 6e4).toISOString();
   for (const d of await L.sb(`channel_posts?status=eq.published&tg_message_id=is.null&error=is.null&published_at=lt.${encodeURIComponent(stale)}&select=id`) || []) {
     const [p] = await L.sb(`channel_posts?id=eq.${d.id}&tg_message_id=is.null&error=is.null`, { method: 'PATCH', prefer: 'return=representation', body: { error: 'не підтверджено: запуск обірвався під час публікації' } }) || [];
     if (p) await say(owner, `❓ ${label(tag)}Пост #${p.id} мав вийти ${fmtKyiv(p.publish_at)}, але публікація не підтвердилась. Перевір канал; якщо поста немає — додай його ще раз.`);
   }
   for (const d of await L.sb(`channel_posts?status=eq.approved&publish_at=lte.${encodeURIComponent(iso)}&select=id&order=publish_at.asc&limit=5`) || []) {
-    // атомарно забираємо пост: approved → published лише в одному запуску; другий отримає порожньо й пропустить
+    // atomic claim: approved -> published in only one run; a concurrent run gets nothing and skips
     const [p] = await L.sb(`channel_posts?id=eq.${d.id}&status=eq.approved`, { method: 'PATCH', prefer: 'return=representation', body: { status: 'published', published_at: iso } }) || [];
     if (!p) continue;
     let err = checkPost(p), r = null;

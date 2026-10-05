@@ -1,6 +1,6 @@
--- НЕ ЗАПУСКАТИ (архів, 0.67). Старий SQL: відкриває пряму запис для anon і зламає крок 2 (v054_close_writes). Для нової бази — README, розділ sql/.
--- 30-0 УПЛ · v0.9 (відновлено у v0.39) · таблиця виклику дня
--- В основній базі вже є — запускати лише в НОВІЙ базі (тестовій), перед рештою файлів.
+-- DO NOT RUN (archived). Legacy SQL: re-opens direct anon writes and breaks v054_close_writes. For a new DB see README, section sql/.
+-- v0.9: daily challenge table
+-- Already exists in the main DB; run only on a NEW (test) DB, before the other files.
 
 create table if not exists public.daily_results (
   id         bigint generated always as identity primary key,

@@ -1,13 +1,13 @@
-"""Пасхалки по позиціях: воротарі, що грали в полі, і захисники, яких ставили центрфорвардом.
+"""Position easter eggs: goalkeepers who played outfield and defenders who were used as centre-forward.
 
-Джерело: tmapi.transfermarkt.technology/player/<tm_id>/performance-game (як у data/penalties/collect.py).
-У кожному матчі statistics.generalStatistics.positionId (позиція в матчі за TM):
- 1 GK, 2 Sweeper, 3 CB, 4 LB, 5 RB, 6 DM, 7 CM, 8 RM, 9 LM, 10 AM, 11 LW, 12 RW, 13 SS, 14 CF; 0/None — невідомо.
-Кандидати: усі люди з пулу, чия основна позиція (за матчами в картках) GK або CB/RB/LB, з id tm:<N>;
-додатково w:-люди, для яких TM id уже підтверджено в data/penalties/penalties.csv.
-Кеш: cache/<tm_id>.json — стислий список зіграних матчів (сирі 2–3 МБ не зберігаються).
-Запуск з кореня репозиторію: python3 data/easter_positions/collect.py [хвилин_бюджету=150]
-CACHE_ONLY=1 — лише перебудувати CSV з кешу.
+Source: tmapi.transfermarkt.technology/player/<tm_id>/performance-game (as in data/penalties/collect.py).
+Each match has statistics.generalStatistics.positionId (TM in-match position):
+ 1 GK, 2 Sweeper, 3 CB, 4 LB, 5 RB, 6 DM, 7 CM, 8 RM, 9 LM, 10 AM, 11 LW, 12 RW, 13 SS, 14 CF; 0/None = unknown.
+Candidates: all pool people whose main position (by card apps) is GK or CB/RB/LB, with id tm:<N>;
+plus w: people whose TM id is already confirmed in data/penalties/penalties.csv.
+Cache: cache/<tm_id>.json, a compact list of played matches (raw 2-3 MB responses are not stored).
+Run from repo root: python3 data/easter_positions/collect.py [budget_minutes=150]
+CACHE_ONLY=1 only rebuilds the CSV from cache.
 """
 import json, csv, os, sys, time, subprocess, collections, re
 
@@ -48,7 +48,7 @@ for r in csv.DictReader(open('data/penalties/penalties.csv')):
     pid = r['person_id']
     if pid.startswith('w:') and r['tm_id'] and pid in P and P[pid]['main'] in ('GK', 'CB', 'RB', 'LB'):
         TM[pid] = r['tm_id']; extra += 1
-# порядок: воротарі, потім CB, потім крайні
+# order: goalkeepers, then CB, then full-backs
 order = sorted(TM, key=lambda p: ({'GK': 0, 'CB': 1}.get(P[p]['main'], 2), p))
 log('кандидатів', len(order), 'з них w: з penalties.csv', extra)
 
@@ -118,7 +118,7 @@ def comp_kind(c):
 
 
 def identity(e, games, gk):
-    """Чи той самий це гравець у TM: матчі УПЛ (UKR1) і основна позиція."""
+    """Is this the same player on TM: UPL (UKR1) matches and main position."""
     ukr = sum(1 for g in games if g['c'] == 'UKR1')
     known = [g['p'] for g in games if g['p']]
     gkn = sum(1 for p in known if p == 1)
@@ -176,7 +176,7 @@ with open(os.path.join(D, 'candidates.csv'), 'w', newline='') as f:
     w.writeheader()
     for r in sorted(rows, key=lambda r: (r['main_pos'] != 'GK', r['name'], r['match_date'])):
         w.writerow(r)
-# зведення по людях для README: окремо епізоди (офіційні матчі дорослих, людина підтверджена)
+# per-person summary for README: episodes counted separately (official senior matches, identity confirmed)
 agg = collections.defaultdict(lambda: collections.Counter())
 info = {}
 for r in rows:

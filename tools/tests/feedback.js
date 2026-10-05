@@ -1,6 +1,6 @@
-// 0.69.5: «💬 Відгук» — гравець пише боту в особисті (текст, скрін, альбом) → пересилка власнику (канал TG_CARDS_CHAT / TG_FEEDBACK_CHAT),
-// рядок у таблиці feedback, «Дякую» не частіше разу на хвилину; команди й повідомлення в групах — не відгук. Без браузера, Telegram і база — заглушки.
-// Запуск з кореня: node tools/tests/feedback.js
+// Feedback: a player DMs the bot (text, screenshot, album) → forwarded to the admin chat (TG_CARDS_CHAT / TG_FEEDBACK_CHAT),
+// a row in the feedback table, "thanks" reply at most once a minute; commands and group messages are not feedback. No browser; Telegram and DB are stubs.
+// Run from repo root: node tools/tests/feedback.js
 const path=require('path');const {checker}=require('./_site.js');
 process.env.SUPABASE_SERVICE_KEY='svc';process.env.TG_TOKEN='123:T';process.env.TG_SECRET='sec';process.env.TG_CARDS_CHAT='-100999';
 const TG=[],DB={feedback:[]};let NOTABLE=false,OLDCOLS=false;
@@ -31,7 +31,7 @@ const msg=(id,x)=>({update_id:id,message:{message_id:id,chat:{id:777,type:'priva
   T.check(!TG.some(x=>x.m==='forwardMessage')&&DB.feedback.length===2,'повідомлення в групі — не відгук');
   NOTABLE=true;TG.length=0;await send({update_id:6,message:{message_id:6,chat:{id:888,type:'private'},from:{id:888,first_name:'Новий'},text:'класна гра'}});
   T.check(TG.some(x=>x.m==='forwardMessage'&&x.b.message_id===6)&&TG.some(x=>x.m==='sendMessage'&&x.b.chat_id===888&&/Дякую/.test(x.b.text)),'таблиці ще немає (SQL не виконано) — пересилка й «Дякую» все одно працюють');
-  // 0.69.69: форма відгуку в підвалі сайту → /api/err ({feedback}) → власнику в Telegram і рядок feedback (source site, контакт, версія)
+  // site footer feedback form → /api/err ({feedback}) → admin Telegram chat and a feedback row (source site, contact, version)
   NOTABLE=false;DB.feedback.length=0;TG.length=0;
   const E=require(path.join(__dirname,'..','..','api','err.js'));
   const post=body=>new Promise(r=>{const res={c:200,status(c){this.c=c;return this;},json(j){r({c:this.c,j});},end(){r({c:this.c});}};E({method:'POST',headers:{'user-agent':'UA test','x-forwarded-for':'1.2.3.4'},body},res);});

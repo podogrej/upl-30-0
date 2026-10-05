@@ -1,11 +1,11 @@
-// 5×5 онлайн: господар створює кімнату, гість заходить за ?r=…, драфт по черзі з двох браузерів через базу (у пам'яті),
-// обидва бачать однакові склади й однаковий рахунок матчу. Запуск з кореня: node tools/tests/f5online.js [папка для знімків]
+// 5×5 online: host creates a room, guest joins via ?r=…, alternating draft from two browsers through the (in-memory) DB;
+// both see identical squads and the same match score. Run from repo root: node tools/tests/f5online.js [screenshot dir]
 const path=require('path'),fs=require('fs');const {ROOT,launch,makeDB,openSite,checker}=require('./_site.js');
 const OUT=process.argv[2]||path.join(ROOT,'tools','tests','out');fs.mkdirSync(OUT,{recursive:true});
 (async()=>{const T=checker('f5 онлайн');const b=await launch();
  const db=makeDB({f5_rooms:{pk:['id'],def:{status:'lobby',players_n:null}},f5_players:{pk:['room_id','seat'],uq:[['room_id','device_id']]},f5_picks:{pk:['room_id','seat','k'],uq:[['room_id','n']]}});const DB=db.DB;
  const H=await openSite({b,db,viewport:{width:430,height:900}});
- await H.pg.evaluate(()=>document.getElementById('f5Open').click());   /* 0.60: кнопку сховано на головній, режим лишився */await H.pg.fill('[data-nm="0"]','Андрій');await H.pg.click('#f5Go');await H.pg.waitForTimeout(800);
+ await H.pg.evaluate(()=>document.getElementById('f5Open').click());   /* entry button is hidden on home; the mode still exists */await H.pg.fill('[data-nm="0"]','Андрій');await H.pg.click('#f5Go');await H.pg.waitForTimeout(800);
  const room=DB.f5_rooms[0];T.check(room&&DB.f5_players.length===1&&DB.f5_players[0].seat===0,'господар створив кімнату '+(room&&room.id));
  T.check(/\?r=/.test(H.pg.url()),'у адресі господаря посилання на кімнату');
  const G=await openSite({b,db,query:'?r='+room.id,viewport:{width:430,height:900},wait:1500});
@@ -14,7 +14,7 @@ const OUT=process.argv[2]||path.join(ROOT,'tools','tests','out');fs.mkdirSync(OU
  T.check(DB.f5_players.map(p=>p.seat+':'+p.name).join(',')==='0:Андрій,1:Сергій','у кімнаті двоє: '+DB.f5_players.map(p=>p.seat+':'+p.name).join(', '));
  await H.pg.waitForSelector('#f5StartR:not([disabled])',{timeout:6000});await H.pg.screenshot({path:path.join(OUT,'f5on_lobby.png'),fullPage:true});
  await H.pg.click('#f5StartR');await H.pg.waitForTimeout(500);
- // хто ходить — той клікає
+ // whoever's turn it is clicks
  for(let step=0;step<60&&DB.f5_picks.length<10;step++){
    for(const P of [H.pg,G.pg]){const btn=await P.$('#f5Sq .pl:not([disabled])');if(btn){await btn.click().catch(()=>{});await P.waitForTimeout(300);}}
    await H.pg.waitForTimeout(700);}

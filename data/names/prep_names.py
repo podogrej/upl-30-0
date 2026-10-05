@@ -4,7 +4,7 @@ ps = pd.read_csv('data/ratings_player_seasons.csv')
 PATR = re.compile(r"(ович|евич|йович|ьович|іч|ич|івна|ївна|овна|евна|ична|инична)$", re.I)
 UA = {"Україна","Ukraine","Украина"}
 def clean(s):
-    s = re.sub(r"\([^)]*\)", " ", str(s))          # (пришёл), (аренда) и т.п.
+    s = re.sub(r"\([^)]*\)", " ", str(s))          # parenthesized notes such as joined/loan
     s = re.sub(r"[\*†‡↑↓→←]+", " ", s)
     s = re.sub(r"\s+", " ", s).strip(" ,;")
     return s
@@ -14,7 +14,7 @@ for pid, g in ps.groupby("person_id"):
     names = {}
     for lang in ("uk","ru","en"):
         v = g.loc[g.name_lang==lang, "player_name"]
-        if len(v): names[lang] = clean(v.iloc[-1])   # самое позднее написание
+        if len(v): names[lang] = clean(v.iloc[-1])   # latest spelling
     nat = g.nationality.dropna()
     nat_uk = [n for n in nat if re.search("[А-Яа-яІіЇїЄє]", str(n))]
     nat_v = nat_uk[0] if nat_uk else (nat.iloc[0] if len(nat) else "")
@@ -28,7 +28,7 @@ def auto(r):
     if not uk: return "", "llm"
     t = uk.split()
     if len(t)==3 and PATR.search(t[2]) and r.nat in UA: return f"{t[1]} {t[0]}", "auto"
-    if len(t)==3 and PATR.search(t[2]): return f"{t[1]} {t[0]}", "llm"      # иностранец с отчеством — проверить
+    if len(t)==3 and PATR.search(t[2]): return f"{t[1]} {t[0]}", "llm"      # foreigner with patronymic: needs review
     if len(t)==2: return f"{t[1]} {t[0]}", "llm"
     if len(t)==1: return t[0], "llm"
     return "", "llm"

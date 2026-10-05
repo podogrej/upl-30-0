@@ -1,10 +1,9 @@
-// 30-0 УПЛ — найпростіше спільне для всіх функцій сервера (файл з «_» — не адреса, Vercel його не публікує).
-// 0.67 (аудит P2-13): раніше ці кілька рядків були скопійовані в 4–6 файлах.
+// 30-0 UPL: minimal helpers shared by all server functions ("_" prefix: not a route, Vercel does not expose it).
 const crypto = require('crypto');
-const SB_URL = (process.env.SUPABASE_URL || 'https://qruhcbwycrnfgzzdbljr.supabase.co').trim();   // у тестовому оточенні Vercel — адреса тестової бази
-const env = k => String(process.env[k] || '').replace(/\s+/g, '');   // прибираємо випадкові пробіли й переноси з ключів
+const SB_URL = (process.env.SUPABASE_URL || 'https://qruhcbwycrnfgzzdbljr.supabase.co').trim();   // in the Vercel test environment this points to the test DB
+const env = k => String(process.env[k] || '').replace(/\s+/g, '');   // strip stray whitespace/newlines from keys
 
-// запит до бази ключем сервера; помилка — з кодом HTTP (e.status) і текстом бази (e.body)
+// DB request with the service key; errors carry HTTP status (e.status) and DB text (e.body)
 async function sb(path, { method = 'GET', body, prefer } = {}) {
   const key = env('SUPABASE_SERVICE_KEY');
   const r = await fetch(`${SB_URL}/rest/v1/${path}`, { method, headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json', ...(prefer ? { Prefer: prefer } : {}) }, body: body ? JSON.stringify(body) : undefined });
@@ -14,7 +13,7 @@ async function sb(path, { method = 'GET', body, prefer } = {}) {
 }
 const kyivDate = (d = new Date()) => new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Kyiv', year: 'numeric', month: '2-digit', day: '2-digit' }).format(d);
 
-// підпис Telegram Mini App (initData) → {user, start_param} або null; не старший за добу
+// Telegram Mini App signature (initData) -> {user, start_param} or null; max age one day
 function miniApp(initData, token = env('TG_TOKEN')) {
   if (!token || !initData || typeof initData !== 'string' || initData.length > 4096) return null;
   const p = new URLSearchParams(initData); const hash = p.get('hash'); if (!hash) return null;
@@ -26,6 +25,6 @@ function miniApp(initData, token = env('TG_TOKEN')) {
   let user = null; try { user = JSON.parse(p.get('user')); } catch (e) {}
   return user ? { user, start_param: p.get('start_param') || '' } : null;
 }
-// відмінювання: 1 день, 2 дні, 5 днів (як plUk на сайті)
+// Ukrainian plural form by count (one / few / many), same as plUk on the site
 const plUk = (n, a, b, c) => { const m = n % 10, h = n % 100; return m === 1 && h !== 11 ? a : m >= 2 && m <= 4 && (h < 12 || h > 14) ? b : c; };
 module.exports = { SB_URL, env, sb, kyivDate, miniApp, plUk };

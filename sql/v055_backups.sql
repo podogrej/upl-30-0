@@ -1,30 +1,30 @@
--- 30-0 УПЛ · v0.55 · резервні копії бази й обмеження частоти запитів
--- Запускати: спершу тестова база (upl-30-0-test), потім основна. Supabase → SQL Editor → вставити цілком → Run.
--- Повторний запуск нічого не ламає. Сайт 0.54, ще відкритий у гравців, працює як раніше (тут лише нове).
+-- v0.55: database backups and request rate limiting
+-- Run on the test DB first (upl-30-0-test), then on the main DB.
+-- Idempotent. Additive only, so the previous client (0.54) keeps working.
 --
--- Що тут:
---  1. Приватне сховище «backups» — сюди щоночі кладе файл YYYY-MM-DD.json.gz сервер (api/backup.js, Vercel Cron).
---     Жодних політик для anon/authenticated: прочитати чи побачити список файлів може лише сервер (service_role)
---     і власник у панелі Supabase (Storage → backups → файл → Download).
---  2. rate_hits + rate_hit(p_key, p_limit) — лічильник запитів за хвилину для /api/seed, /api/save, /api/verify, /api/card, /api/auth.
---     Викликати може лише сервер (service_role). Старі хвилини прибирає сама функція (рядки старші за 10 хвилин).
+-- Contents:
+--  1. Private storage bucket "backups": the server (api/backup.js, Vercel Cron) uploads YYYY-MM-DD.json.gz nightly.
+--     No anon/authenticated policies: only the server (service_role) and the Supabase dashboard
+--     (Storage -> backups -> file -> Download) can list or read files.
+--  2. rate_hits + rate_hit(p_key, p_limit): per-minute request counter for /api/seed, /api/save, /api/verify, /api/card, /api/auth.
+--     service_role only. The function itself prunes rows older than 10 minutes.
 
--- 1. приватне сховище для резервних копій (ліміт файлу 50 МБ — максимум безкоштовного тарифу Supabase)
+-- 1. private bucket for backups (50 MB file limit, the Supabase free-tier maximum)
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values ('backups', 'backups', false, 52428800, array['application/gzip'])
 on conflict (id) do update set public = false;
 
--- 2. обмеження частоти: один рядок на (ключ, хвилину). Ключ — «seed:d:<device_id>», «verify:ip:<адреса>» тощо
+-- 2. rate limiting: one row per (key, minute). Key looks like "seed:d:<device_id>", "verify:ip:<address>", etc.
 create table if not exists public.rate_hits (
   key text not null,
   minute timestamptz not null,
   n int not null default 0,
   primary key (key, minute)
 );
-alter table public.rate_hits enable row level security;   -- політик немає: anon/authenticated не читають і не пишуть
+alter table public.rate_hits enable row level security;   -- no policies: anon/authenticated can neither read nor write
 revoke all on public.rate_hits from anon, authenticated;
 
--- +1 до лічильника цієї хвилини; true — ще в межах ліміту, false — забагато (сервер відповідає 429)
+-- increments this minute's counter; true = within limit, false = too many (server responds 429)
 create or replace function public.rate_hit(p_key text, p_limit int) returns boolean language plpgsql security definer set search_path = public as $$
 declare c int;
 begin

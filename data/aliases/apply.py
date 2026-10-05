@@ -1,11 +1,11 @@
-"""Псевдоніми гравців: одна людина під двома id (дубль із різних джерел). Id не змінюються ніколи (DECISIONS п. 7),
-тому дубль лишається в картках, а в src/pool.json з'являється словник pool['alias'] = {dup_id: canonical_id}.
-Гра порівнює людей за canonical id: «гравець двічі» (S.taken у браузері, api/verify.js на сервері), трофеї, лічильник футболістів.
+"""Player aliases: one person under two ids (duplicate from different sources). Ids never change (DECISIONS #7),
+so the duplicate stays on its cards and src/pool.json gets pool['alias'] = {dup_id: canonical_id}.
+The game compares people by canonical id: duplicate-player check (S.taken in browser, api/verify.js on server), trophies, player count.
 
-Джерело — data/aliases/aliases.csv (dup_id, canonical_id, name, evidence): кожен рядок з доказом.
-Запуск з кореня репозиторію: python3 data/aliases/apply.py   (потім python3 data/update_meta.py, python3 src/build.py && node tools/make_engine.js)
-Повторний запуск нічого не змінює. Перевіряє: обидва id є в пулі, ланцюжків немає (canonical сам не дубль), дубль і canonical
-не стоять в одному клуб-сезоні.
+Source: data/aliases/aliases.csv (dup_id, canonical_id, name, evidence); every row needs evidence.
+Run from repo root: python3 data/aliases/apply.py   (then python3 data/update_meta.py, python3 src/build.py && node tools/make_engine.js)
+Idempotent. Checks: both ids exist in the pool, no chains (canonical is not itself a duplicate), duplicate and canonical
+are never in the same club-season.
 """
 import csv, json, os, sys
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..')

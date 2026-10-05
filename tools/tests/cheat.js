@@ -1,16 +1,16 @@
-// Античит без браузера: справжні api/seed.js і api/verify.js, база — у пам'яті.
-// З 0.55 ще: /api/backup (секрет Cron, gzip у сховищі, скільки файлів лишати), вступ у лігу групи лише учасником (getChatMember — заглушка),
-// обмеження частоти (rate_hit — лічильник у пам'яті) → 429.
-// Чесний сезон (склад з рейтингами effRating, seed від сервера, перерахунок тим самим рушієм) має пройти,
-// кожна підробка — ні. Запуск: node tools/tests/cheat.js
+// Anti-cheat without a browser: real api/seed.js and api/verify.js, in-memory DB.
+// Also: /api/backup (Cron secret, gzip in storage, retention), joining a group league only as a group member (getChatMember stubbed),
+// rate limiting (rate_hit as an in-memory counter) -> 429.
+// An honest season (squad with effRating, server seed, recomputed by the same engine) must pass,
+// every forgery must fail. Run: node tools/tests/cheat.js
 const path = require('path'), crypto = require('crypto');
 const ROOT = path.join(__dirname, '..', '..');
 process.env.SUPABASE_SERVICE_KEY = 'svc'; process.env.TG_TOKEN = '123:TEST'; process.env.CRON_SECRET = 'cron-secret-0123456789';
 const DB = { season_seeds: [], seasons: [], daily_results: [], challenges: [], challenge_results: [], trophies: [], league_results: [], leagues: [], league_members: [], league_boards: [] }; let sid = 0;
-// 0.55: сховище Supabase (backups), Telegram (getChatMember), лічильник rate_hit
+// Supabase storage (backups), Telegram (getChatMember), rate_hit counter
 const STORE = {}, MEMBERS = {}, RATE = {}, MIGRATED = {}; let RATE_ON = false;
 const jres = j => ({ ok: true, status: 200, json: async () => j, text: async () => JSON.stringify(j) });
-// база 0.53: секрети пристроїв (device_ok), перемикач кроку 2, унікальна офіційна спроба дня (В2)
+// DB: device secrets (device_ok), step-2 switch, unique official daily attempt
 const SECRETS = {}; let LEGACY_OPEN = true, SQL053 = true, ERA_COL = true;
 const err = (status, j) => ({ ok: false, status, text: async () => JSON.stringify(j) });
 global.fetch = async (url, o = {}) => {
@@ -42,9 +42,9 @@ global.fetch = async (url, o = {}) => {
     return err(404, { code: 'PGRST202' });
   }
   if (m === 'POST' && t === 'season_seeds') { const b = JSON.parse(o.body); if (b.official && DB.season_seeds.some(x => x.official && x.daily && x.device_id === b.device_id && x.day === b.day)) return err(409, { code: '23505', message: 'duplicate key value violates unique constraint "season_seeds_official_uq"' }); }
-  if (m === 'POST' && t !== 'season_seeds' && t !== 'daily_results' && !u.searchParams.get('on_conflict')) {   // рядки, які пише /api/save
+  if (m === 'POST' && t !== 'season_seeds' && t !== 'daily_results' && !u.searchParams.get('on_conflict')) {   // rows written by /api/save
     const list = [].concat(JSON.parse(o.body));
-    if (t === 'seasons' && !ERA_COL && list.some(b => 'era' in b)) return err(400, { code: 'PGRST204', message: "Could not find the 'era' column of 'seasons' in the schema cache" });   // 0.58: колонки era ще немає
+    if (t === 'seasons' && !ERA_COL && list.some(b => 'era' in b)) return err(400, { code: 'PGRST204', message: "Could not find the 'era' column of 'seasons' in the schema cache" });   // simulate DB without the era column
     for (const b of list) { if (t === 'seasons') b.id = 1000 + DB.seasons.length; if (t === 'challenges' && DB.challenges.some(x => x.id === b.id)) return err(409, { code: '23505' }); DB[t].push(b); }
     return { ok: true, status: 201, text: async () => JSON.stringify(list) };
   }
@@ -52,12 +52,12 @@ global.fetch = async (url, o = {}) => {
     for (const b of [].concat(JSON.parse(o.body))) { const ks = u.searchParams.get('on_conflict').split(','); if (!DB[t].some(x => ks.every(k => String(x[k]) === String(b[k])))) DB[t].push(b); }
     return { ok: true, status: 201, text: async () => '' };
   }
-  const f = [...u.searchParams].filter(([k, v]) => /^(eq|is|lt)\./.test(v));   // 0.67: lt. — для «викликів до 0.64» (created_at)
+  const f = [...u.searchParams].filter(([k, v]) => /^(eq|is|lt)\./.test(v));   // lt. used for legacy challenges (created_at)
   const match = r => f.every(([k, v]) => { const x = v.slice(v.indexOf('.') + 1); if (v.startsWith('lt.')) return r[k] != null && String(r[k]) < x; return v.startsWith('is.') && x === 'null' ? r[k] == null : String(r[k]) === x; });
   const ok = j => ({ ok: true, status: 200, text: async () => j == null ? '' : JSON.stringify(j) });
   const rep = /return=representation/.test((o.headers || {}).Prefer || '');
   if (m === 'GET') return ok((DB[t] || []).filter(match));
-  if (m === 'POST') { const out = [], ign = /ignore-duplicates/.test((o.headers && o.headers.Prefer) || '');   // 0.69.4: масив рядків і ignore-duplicates
+  if (m === 'POST') { const out = [], ign = /ignore-duplicates/.test((o.headers && o.headers.Prefer) || '');   // row arrays and ignore-duplicates
     for (const b of [].concat(JSON.parse(o.body))) { if (t === 'season_seeds') b.id = crypto.randomUUID();
       const oc = u.searchParams.get('on_conflict'); const old = oc && DB[t].find(r => oc.split(',').every(k => String(r[k]) === String(b[k])));
       if (old) { if (!ign) Object.assign(old, b); } else DB[t].push(b); out.push(old || b); }
@@ -66,12 +66,12 @@ global.fetch = async (url, o = {}) => {
   return ok(null);
 };
 const E = require(path.join(ROOT, 'lib', 'engine.js'));
-// склад для E.run так само, як у api/verify.js: з 0.65 — ще код клубу й сезон («хімія»)
+// squad for E.run built the same way as api/verify.js, incl. club code and season (chemistry)
 const SX = xi => xi.map(x => ({ id: x.id, name: x.n, slot: x.slot, pos: E.GROUP_OF[x.slot], r: x.r, cc: (E.DATA.clubs.find(c => c.n === x.c && c.y === +x.y) || {}).c, y: +x.y }));
 const seedH = require(path.join(ROOT, 'api', 'seed.js')), verH = require(path.join(ROOT, 'api', 'verify.js'));
 const call = (h, body) => new Promise(res => { h({ method: 'POST', body }, { status(c) { this.c = c; return this; }, json(j) { res({ c: this.c, j }); } }); });
 
-// чесний склад: 4-3-3, для кожного слоту — перший гравець пулу, що може там грати (з ногою, якщо є — щоб перевірити й її)
+// honest squad: 4-3-3, each slot gets the first pool player eligible there (with foot if present, to cover it too)
 function honestXi(formation) {
   E.setFormat('classic');
   const used = new Set(), xi = [];
@@ -85,7 +85,7 @@ function honestXi(formation) {
   return xi;
 }
 (async () => {
-  const device = crypto.randomUUID(), formation = '4-3-3', year = E.LEAGUE_LEGENDS;   // з 0.64 суперники класики — «Ліга легенд» (0.50–0.63 — «Ліга культових клубів»)
+  const device = crypto.randomUUID(), formation = '4-3-3', year = E.LEAGUE_LEGENDS;   // classic opponents are the Legends League
   const xi = honestXi(formation);
   const s = await call(seedH, { device_id: device, xi, formation, mode: 'normal', format: 'classic', year });
   const sim = E.run({ xi: SX(xi), mode: 'normal', format: 'classic', year, seed: s.j.seed });
@@ -108,37 +108,36 @@ function honestXi(formation) {
   await tamper('seed не від сервера', r => { r.seed_id = null; }, false);
   await tamper('гравець не з того клубу', r => { r.xi[1].c = 'Динамо (Київ)'; r.xi[1].y = 1992; }, false);
   await tamper('слоти переставлено', r => { const t = r.xi[0].slot; r.xi[0].slot = r.xi[10].slot; r.xi[10].slot = t; }, false);
-  // з 0.57 PREV_VERSIONS порожній: рейтинги v2 і refA/refD змінилися — сезон зі старого сайту «не перевірити», але не «підробка»
+  // PREV_VERSIONS is empty: a season from an older site is 'unverifiable', not 'forged'
   await tamper('сезон з сайту 0.56 (до рейтингів v2) — не перевірити (null), не підробка', r => { r.version = '0.56'; }, null);
   await tamper('підробка з сайту 0.56 — не перевірено (null)', r => { r.version = '0.56'; r.xi[0].r = 99; }, null);
   await tamper('старша версія 0.49 — не перевірити (null)', r => { r.version = '0.49'; }, null);
-  // 0.60: нога LM/RM змінила симуляцію лише для таких гравців — сезон сайту 0.59, що сходиться, приймаємо; підробку — «не перевірити»; 0.58 — вже «не перевірити»
-  // 0.67: PREV_VERSIONS порожній — сезони будь-якої старої версії «не перевірити» (null); підробити version, щоб пройти, вже не можна (аудит P1-2)
+  // any old version -> unverifiable (null); faking version to pass is impossible (audit P1-2)
   await tamper('сезон з сайту 0.66 — не перевірити (null)', r => { r.version = '0.66'; }, null);
   await tamper('сезон з сайту 0.65 — не перевірити (null)', r => { r.version = '0.65'; }, null);
   await tamper('підробка з сайту 0.62 — не перевірено (null)', r => { r.version = '0.62'; r.xi[0].r = 99; }, null);
   await tamper('сезон з сайту 0.61 — не перевірити (null)', r => { r.version = '0.61'; }, null);
-  // 0.64: класика сайту 0.63 — проти культових клубів (seed видано під LEAGUE_CULT): приймаємо
+  // classic seeded under LEAGUE_CULT (former cult-clubs opponents)
   { const sc = await call(seedH, { device_id: device, xi, formation, mode: 'normal', format: 'classic', year: E.LEAGUE_CULT });
     const q = E.run({ xi: SX(xi), mode: 'normal', format: 'classic', year: E.LEAGUE_CULT, seed: sc.j.seed });
     const cult = r => Object.assign(r, { year: E.LEAGUE_CULT, seed: sc.j.seed, seed_id: sc.j.seed_id, w: q.W, d: q.D, l: q.L, pts: q.pts, place: q.place, gf: q.gf, ga: q.ga });
     await tamper('класика з підробленою старою версією проти культових клубів — не перевірено (аудит P1-2)', r => { cult(r); r.version = '0.64'; }, null);
     await tamper('класика 0.64 проти культових клубів без виклику другу — ні', r => { cult(r); }, false);
     await tamper('антисезон проти «Ліги легенд» — ні', r => { cult(r); r.format = 'anti'; r.year = E.LEAGUE_LEGENDS; }, false); }
-  // 0.58: епоха (seasons.era, коли з'явиться колонка) — склад лише з клуб-сезонів епохи
+  // era (seasons.era, once the column exists): squad only from that era's club-seasons
   { const early = Math.min(...legit.xi.map(x => x.y));
     await tamper(`епоха «Сучасність», а в складі сезон ${early}`, r => { r.era = 'y2015'; }, early >= 2015);
     await tamper('епоха «Усі роки» — як без епохи', r => { r.era = 'all'; }, true);
     await tamper('невідома епоха', r => { r.era = 'y1900'; }, false); }
   await tamper('r0 підроблено (показ у таблицях і на картці)', r => { r.xi[0].r0 = 99; }, false);
   await tamper('r0 немає (старий клієнт) — пропускаємо', r => { r.xi.forEach(x => { delete x.r0; }); }, true);
-  // seed видано під одні умови, а сезон записано з іншими
+  // seed issued for one set of conditions, season saved with another
   await tamper('seed для іншої схеми', r => { r.formation = '4-4-2'; }, false);
   await tamper('seed для іншого формату', r => { r.format = 'derby'; }, false);
   await tamper('seed для іншого режиму', r => { r.mode = 'hard'; }, false);
   await tamper('seed для іншого року суперників', r => { r.year = E.LEAGUE_CULT; }, false);
   await tamper('позначка 30-0 без 30 перемог', r => { r.perfect = true; }, false);
-  // 0.54: одна людина під двома id (DATA.alias) — «гравець двічі», навіть якщо seed видано й перерахунок сходиться
+  // one person under two ids (DATA.alias) counts as a duplicate player even if the seed is valid and the recompute matches
   { const place = (id, used) => { for (const c of E.DATA.clubs) for (const p of c.pl) if (p[5] === id) for (let i = 0; i < xi.length; i++) {
       if (used.has(i)) continue; const r = E.effRating(p, xi[i].slot); if (r != null) return { i, x: { n: p[0], id, slot: xi[i].slot, r, r0: p[2], c: c.n, y: c.y } }; } };
     let pair = null;
@@ -150,19 +149,19 @@ function honestXi(formation) {
       const q = E.run({ xi: SX(x2), mode: 'normal', format: 'classic', year, seed: s2.j.seed });
       await tamper(`одна людина двічі: ${pair[0].x.id} = ${pair[1].x.id}`, r => { Object.assign(r, { xi: x2, seed: s2.j.seed, seed_id: s2.j.seed_id, w: q.W, d: q.D, l: q.L, pts: q.pts, place: q.place, gf: q.gf, ga: q.ga }); }, false);
     } }
-  // рік суперників поза форматом: seed видано на слабкий справжній сезон, виклику з таким роком немає
+  // opponent year outside the format: seed issued for a weak real season with no matching challenge
   const weak = E.YEARS16[0];
   const sw = await call(seedH, { device_id: device, xi, formation, mode: 'normal', format: 'classic', year: weak });
   await tamper('класика проти справжнього сезону без виклику', r => { r.year = weak; r.seed = sw.j.seed; r.seed_id = sw.j.seed_id; const q = E.run({ xi: SX(xi), mode: 'normal', format: 'classic', year: weak, seed: sw.j.seed });
     Object.assign(r, { w: q.W, d: q.D, l: q.L, pts: q.pts, place: q.place, gf: q.gf, ga: q.ga }); }, false);
-  DB.challenges.push({ id: 'newchal1', year: weak, formation, created_at: '2026-10-02T10:00:00Z' });   // 0.67 (аудит P1-1): новий виклик не відкриває слабкий сезон
+  DB.challenges.push({ id: 'newchal1', year: weak, formation, created_at: '2026-10-02T10:00:00Z' });   // audit P1-1: a new challenge does not unlock a weak season
   await tamper('той самий сезон, є лише НОВИЙ виклик з цим роком — ні', r => { r.year = weak; r.seed = sw.j.seed; r.seed_id = sw.j.seed_id; const q = E.run({ xi: SX(xi), mode: 'normal', format: 'classic', year: weak, seed: sw.j.seed });
     Object.assign(r, { w: q.W, d: q.D, l: q.L, pts: q.pts, place: q.place, gf: q.gf, ga: q.ga }); }, false);
   DB.challenges.push({ id: 'abcdefgh', year: weak, formation, created_at: '2026-09-25T10:00:00Z' });
   await tamper('той самий сезон, але є старий «Виклик другу» з цим роком', r => { r.year = weak; r.seed = sw.j.seed; r.seed_id = sw.j.seed_id; const q = E.run({ xi: SX(xi), mode: 'normal', format: 'classic', year: weak, seed: sw.j.seed });
     Object.assign(r, { w: q.W, d: q.D, l: q.L, pts: q.pts, place: q.place, gf: q.gf, ga: q.ga }); }, true);
 
-  // виклик дня: браузер вставив у daily_results завищені очки → сервер переписує їх перевіреним сезоном; підробка без сезону verified не отримує
+  // daily challenge: browser inserted inflated points into daily_results -> server overwrites with the verified season; a forgery without a season gets no verified flag
   const day = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Kyiv', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
   const D = E.dailySetupFor(day);
   E.setFormat('classic');
@@ -183,13 +182,13 @@ function honestXi(formation) {
   const dv = await call(verH, { season_id: drow.id });
   const t1 = dv.j.verified === true && fakeDaily.verified === true && fakeDaily.pts === dq.pts && fakeDaily.w === dq.W && fakeDaily.gf === dq.gf;
   if (!t1) bad++; console.log(`${t1 ? '✓' : '✗'} виклик дня: підроблені очки в daily_results переписано перевіреним сезоном (${fakeDaily.w}-${fakeDaily.d}-${fakeDaily.l}, ${fakeDaily.pts} оч., verified=${fakeDaily.verified})`);
-  fakeDaily.pts = 90; fakeDaily.w = 30;   // браузер «підправив» знову → повторний виклик verify (кешований) знову пише цифри сезону
+  fakeDaily.pts = 90; fakeDaily.w = 30;   // browser tampered again -> repeated (cached) verify rewrites season numbers again
   await call(verH, { season_id: drow.id });
   const t2 = fakeDaily.pts === dq.pts && fakeDaily.w === dq.W;
   if (!t2) bad++; console.log(`${t2 ? '✓' : '✗'} виклик дня: повторний verify не лишає підроблених очок (${fakeDaily.pts})`);
   const t3 = cheater.verified !== true;
   if (!t3) bad++; console.log(`${t3 ? '✓' : '✗'} виклик дня: рядок з очками без перевіреного сезону не стає verified`);
-  // сервер сам вставляє результат дня, якщо браузер ще нічого не надсилав
+  // server inserts the daily result itself if the browser has not sent one
   const dev3 = crypto.randomUUID();
   const ds3 = await call(seedH, { device_id: dev3, xi: dxi, formation: D.formation, mode: 'daily', format: 'classic', year: D.year, daily: true });
   const dq3 = E.run({ xi: SX(dxi), mode: 'daily', format: 'classic', year: D.year, seed: ds3.j.seed });
@@ -199,7 +198,7 @@ function honestXi(formation) {
   const ins = DB.daily_results.find(x => x.device_id === dev3);
   const t4 = !!ins && ins.verified === true && ins.pts === dq3.pts && ins.nickname.length >= 2;
   if (!t4) bad++; console.log(`${t4 ? '✓' : '✗'} виклик дня: сервер сам записав результат (${ins ? ins.pts + ' оч., нік «' + ins.nickname + '»' : 'немає'})`);
-  // друга (неофіційна) спроба дня в таблицю дня не йде
+  // second (unofficial) daily attempt does not go to the daily table
   const ds4 = await call(seedH, { device_id: dev3, xi: dxi, formation: D.formation, mode: 'daily', format: 'classic', year: D.year, daily: true });
   const dq4 = E.run({ xi: SX(dxi), mode: 'daily', format: 'classic', year: D.year, seed: ds4.j.seed });
   const drow4 = { ...drow3, id: DB.seasons.length + 1, seed: ds4.j.seed, seed_id: ds4.j.seed_id, perfect: dq4.W === 30, w: dq4.W, d: dq4.D, l: dq4.L, pts: dq4.pts, place: dq4.place, gf: dq4.gf, ga: dq4.ga, verified: null };
@@ -208,7 +207,7 @@ function honestXi(formation) {
   const t5 = !ds4.j.official && ins.pts === before && DB.daily_results.filter(x => x.device_id === dev3).length === 1;
   if (!t5) bad++; console.log(`${t5 ? '✓' : '✗'} виклик дня: друга спроба (verified=${v4.j.verified}) не змінює таблицю дня`);
 
-  // ===== 0.53: запис лише через сервер із секретом пристрою (/api/save), seed — із секретом =====
+  // ===== writes only via server with device secret (/api/save); seed requires the secret =====
   const saveH = require(path.join(ROOT, 'api', 'save.js'));
   const ok = (name, cond, extra = '') => { if (!cond) bad++; console.log(`${cond ? '✓' : '✗'} ${name}${extra ? ' (' + extra + ')' : ''}`); };
   const me = crypto.randomUUID(), mySecret = 'my-secret-0123456789abcdef', victim = crypto.randomUUID(), victimSecret = 'victim-secret-0123456789ab';
@@ -223,12 +222,12 @@ function honestXi(formation) {
   ok('save: сезон зі своїм секретом записано й перевірено', sv.c === 200 && sv.j.verified === true && saved.id === sv.j.id, `verified=${sv.j.verified} ${sv.j.note || sv.j.error || ''}`);
   ok('save: device_id — з перевіреного пристрою, player_id/verified/tg_user_id з браузера відкинуто', saved.device_id === me && !('player_id' in saved) && saved.tg_user_id == null && !('verified' in saved && saved.verified !== true));
   ok('save: без секрету — 401', (await call(saveH, { kind: 'season', device_id: me, row: season })).c === 401 && DB.seasons.length === n0 + 1);
-  await call(seedH, { device_id: victim, secret: victimSecret, xi, formation, mode: 'normal', format: 'classic', year });   // жертва вже грала з цього пристрою
+  await call(seedH, { device_id: victim, secret: victimSecret, xi, formation, mode: 'normal', format: 'classic', year });   // victim has already played from this device
   const atk = await call(saveH, { kind: 'season', device_id: victim, secret: 'attacker-secret-0123456789', row: season });
   ok('save: у чужий пристрій (чужий секрет) — 401', atk.c === 401 && DB.seasons.length === n0 + 1, atk.j.error);
   const fake = await call(saveH, { kind: 'season', device_id: me, secret: mySecret, row: { ...season, w: 30, d: 0, l: 0, pts: 90 } });
   ok('save: неможливий/підроблений рахунок не стає перевіреним', fake.c === 400 || fake.j.verified !== true, `${fake.c} ${fake.j.verified}`);
-  // 0.58: епоха — пишемо, якщо є колонка; немає колонки — сезон однаково записано (без era); сміття не пишемо
+  // era: written if the column exists; without it the season is still saved (no era); junk is not written
   await call(saveH, { kind: 'season', device_id: me, secret: mySecret, row: { ...season, era: 'y2015' } });
   ok('save: епоха записується в seasons.era', DB.seasons[DB.seasons.length - 1].era === 'y2015');
   await call(saveH, { kind: 'season', device_id: me, secret: mySecret, row: { ...season, era: '<b>' } });
@@ -246,24 +245,24 @@ function honestXi(formation) {
   const cr = await call(saveH, { kind: 'chal_result', device_id: me, secret: mySecret, row: { challenge_id: 'abcDEF23', name: 'Я', w: q1.W, d: q1.D, l: q1.L, pts: q1.pts, place: q1.place, gf: q1.gf, ga: q1.ga } });
   ok('save: результат виклику записано', cr.c === 200 && DB.challenge_results.some(x => x.challenge_id === 'abcDEF23' && x.device_id === me));
   ok('save: невідомий kind — 400', (await call(saveH, { kind: 'daily', device_id: me, secret: mySecret, row: {} })).c === 400);
-  // /api/seed: чужий пристрій
+  // /api/seed: foreign device
   const dayArgs = { xi: dxi, formation: D.formation, mode: 'daily', format: 'classic', year: D.year, daily: true };
   ok('seed: чужий пристрій з чужим секретом — 401 (офіційна спроба жертви ціла)', (await call(seedH, { device_id: victim, secret: 'attacker-secret-0123456789', ...dayArgs })).c === 401 && !DB.season_seeds.some(x => x.device_id === victim && x.daily));
   ok('seed: без секрету в перехідний період (сайт 0.52) — видається', (await call(seedH, { device_id: crypto.randomUUID(), ...dayArgs })).c === 200);
   LEGACY_OPEN = false;
   ok('seed: без секрету після кроку 2 — 401', (await call(seedH, { device_id: victim, ...dayArgs })).c === 401 && !DB.season_seeds.some(x => x.device_id === victim && x.daily));
-  // В2: два запити одночасно — лише одна офіційна спроба
+  // two concurrent requests - only one official attempt
   const racer = crypto.randomUUID(), rs = 'racer-secret-0123456789ab';
   const both = await Promise.all([call(seedH, { device_id: racer, secret: rs, ...dayArgs }), call(seedH, { device_id: racer, secret: rs, ...dayArgs })]);
   ok('seed: гонка двох запитів — одна офіційна спроба', both.every(x => x.c === 200) && both.filter(x => x.j.official).length === 1, both.map(x => x.j.official).join('/'));
-  // SQL 0.53 ще не виконано: сервер каже «пиши як раніше», seed працює
+  // device-secret SQL not applied yet: server says 'write the old way', seed still works
   SQL053 = false;
   const fb = await call(saveH, { kind: 'season', device_id: me, secret: mySecret, row: season });
   ok('save без device_ok у базі — 503 fallback (браузер пише як 0.52)', fb.c === 503 && fb.j.fallback === true);
   ok('seed без device_ok у базі — працює', (await call(seedH, { device_id: me, secret: mySecret, xi, formation, mode: 'normal', format: 'classic', year })).c === 200);
   SQL053 = true;
 
-  // ===== 0.55: резервна копія (/api/backup) =====
+  // ===== backup (/api/backup) =====
   const zlib = require('zlib');
   const backupH = require(path.join(ROOT, 'api', 'backup.js'));
   const callReq = (h, req) => new Promise(res => { h({ method: 'GET', query: {}, headers: {}, ...req }, { status(c) { this.c = c; return this; }, json(j) { res({ c: this.c, j }); } }); });
@@ -276,7 +275,7 @@ function honestXi(formation) {
   const dAgo = n => new Date(Date.UTC(+today.slice(0, 4), +today.slice(5, 7) - 1, +today.slice(8, 10)) - n * 864e5).toISOString().slice(0, 10);
   const mondayAgo = min => { for (let n = min; ; n++) if (new Date(dAgo(n)).getUTCDay() === 1) return n; };
   const nonMondayAgo = min => { for (let n = min; ; n++) if (new Date(dAgo(n)).getUTCDay() !== 1) return n; };
-  const keep = [dAgo(1), dAgo(13), dAgo(mondayAgo(20)), dAgo(mondayAgo(43))].map(d => d + '.json.gz').concat(['notes.txt']);   // 0.69.69: було mondayAgo(50) — у понеділок це рівно 56 днів, та сама дата, що й у drop
+  const keep = [dAgo(1), dAgo(13), dAgo(mondayAgo(20)), dAgo(mondayAgo(43))].map(d => d + '.json.gz').concat(['notes.txt']);   // mondayAgo(50) would equal 56 days on a Monday, the same date as in drop
   const drop = [dAgo(nonMondayAgo(14)), dAgo(nonMondayAgo(30)), dAgo(mondayAgo(56)), dAgo(mondayAgo(90))].map(d => d + '.json.gz');
   for (const n of keep.concat(drop)) STORE[n] = Buffer.from('old');
   const bk = await callReq(backupH, { headers: { authorization: 'Bearer ' + process.env.CRON_SECRET } });
@@ -289,7 +288,7 @@ function honestXi(formation) {
   const bk2 = await callReq(backupH, { headers: { authorization: 'Bearer ' + process.env.CRON_SECRET } });
   ok('backup: повторний запуск того ж дня — перезапис, без помилок', bk2.c === 200 && Object.keys(STORE).filter(n => n.startsWith(today)).length === 1);
 
-  // ===== 0.55: ліги груп Telegram — вступ лише учасником групи (аудит В1) =====
+  // ===== Telegram group leagues: join only as a group member (audit B1) =====
   const leagueH = require(path.join(ROOT, 'api', 'league.js'));
   const hm = (k, d) => crypto.createHmac('sha256', k).update(d).digest();
   const initData = (user, start_param) => { const p = new URLSearchParams({ auth_date: String(Math.floor(Date.now() / 1000)), user: JSON.stringify(user), start_param });
@@ -308,7 +307,7 @@ function honestXi(formation) {
     const x = await join(uid); ok(`ліга: ${why} — 403, у лігу не додано`, x.c === 403 && !inLeague(uid), `${x.c}`); }
   const x6 = await call(leagueH, { initData: initData({ id: 599, first_name: 'U599' }, 'g' + CHAT), result: { w: 20, d: 5, l: 5, pts: 65, place: 2, gf: 60, ga: 30, day: today } });
   ok('ліга: чужий із результатом — вступ пропущено (результат лише в його ліги)', x6.c === 200 && !(x6.j.joined || []).length && !inLeague(599) && !DB.league_results.some(r => String(r.tg_user_id) === '599'), `${x6.c} ${JSON.stringify(x6.j)}`);
-  // 0.69.4: вступ у лігу нової групи після драфту дня — сьогоднішній перевірений результат переноситься й туди
+  // joining a new group's league after the daily draft carries today's verified result over too
   const CHAT2 = -100777; DB.leagues.push({ chat_id: CHAT2, title: 'Нова група' }); MEMBERS[CHAT2] = { 501: 'member', 502: 'member', 505: 'member' };
   const base = { practice: false, verified: true, day: today, w: 20, d: 5, l: 5, pts: 65, place: 2, gf: 60, ga: 30, formation: '4-4-2', created_at: new Date().toISOString() };
   DB.seasons.push({ ...base, id: 9001, tg_user_id: 501 }, { ...base, id: 9002, tg_user_id: 502, w: 22, pts: 71 }, { ...base, id: 9003, tg_user_id: 505, verified: false });
@@ -322,7 +321,7 @@ function honestXi(formation) {
   ok('ліга: інших ліг немає — результат узято з перевіреного сезону дня', in2(502) && in2(502).season_id === 9002 && in2(502).pts === 71);
   await call(leagueH, { initData: initData({ id: 505, first_name: 'U505' }, 'g' + CHAT2) });
   ok('ліга: неперевірений сезон — не переноситься', !in2(505));
-  // 0.69.4: група стала супергрупою — стара кнопка (старий chat_id) переносить лігу на новий номер і записує гравця туди
+  // group migrated to a supergroup: old button (old chat_id) moves the league to the new id and adds the player there
   const OLD = -5000001, NEW = -1005000001; DB.leagues.push({ chat_id: OLD, title: 'Стара група' });
   DB.league_members.push({ chat_id: OLD, tg_user_id: 501, name: 'U501' }); MIGRATED[OLD] = NEW; MEMBERS[NEW] = { 506: 'member', 501: 'member' };
   const jm = await call(leagueH, { initData: initData({ id: 506, first_name: 'U506' }, 'g' + OLD) });
@@ -332,7 +331,7 @@ function honestXi(formation) {
   ok('ліга: повторний перехід за старою кнопкою — без дублів', DB.leagues.filter(l => String(l.chat_id) === String(NEW)).length === 1 && DB.league_members.filter(x => String(x.chat_id) === String(NEW) && String(x.tg_user_id) === '506').length === 1);
   ok('ліга: підробний підпис — 401', (await call(leagueH, { initData: initData({ id: 501 }, 'g' + CHAT).replace(/hash=[0-9a-f]+/, 'hash=00') })).c === 401);
 
-  // ===== 0.55: обмеження частоти → 429 =====
+  // ===== rate limiting -> 429 =====
   RATE_ON = true;
   const rdev = crypto.randomUUID(), rsec = 'rate-secret-0123456789abcd';
   const codes = [];

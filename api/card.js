@@ -1,24 +1,24 @@
-// 30-0 УПЛ — надіслати картку результату собі в Telegram (адреса /api/card)
-// У застосунку Telegram довге натискання на картинку в Mini App не дає її зберегти, тому бот надсилає картку в особистий чат:
-// звідти її можна зберегти, переслати друзям або викласти в сторіз.
-// POST {initData, image: "data:image/jpeg;base64,…", thumb?, caption, share?}. Змінні оточення у Vercel: TG_TOKEN, TG_BOT.
-// share=true: бот повертає id підготовленого повідомлення (savePreparedInlineMessage) для WebApp.shareMessage.
-//   Спершу картка кладеться у публічне сховище Supabase (bucket «cards», SQL: sql/cards_bucket.sql) і йде як photo_url —
-//   так не потрібен особистий чат із ботом. Якщо сховища немає — запасний шлях через особистий чат (потрібен Start).
-//   Змінні: SUPABASE_URL (у тесті), SUPABASE_SERVICE_KEY.
-//   З 0.67 спершу — службовий канал TG_CARDS_CHAT (див. cachePhoto); немає змінної або канал не відповів — сховище, як раніше.
+// 30-0 UPL: send the result card to the user's own Telegram chat (/api/card)
+// In the Telegram app a long press on an image inside a Mini App doesn't save it, so the bot sends the card to the private chat,
+// where it can be saved, forwarded or posted to stories.
+// POST {initData, image: "data:image/jpeg;base64,...", thumb?, caption, share?}. Vercel env: TG_TOKEN, TG_BOT.
+// share=true: the bot returns a prepared message id (savePreparedInlineMessage) for WebApp.shareMessage.
+//   The card is put into the public Supabase bucket "cards" (SQL: sql/cards_bucket.sql) and sent as photo_url,
+//   so no private chat with the bot is needed. No bucket -> fallback via private chat (requires Start).
+//   Env: SUPABASE_URL (test), SUPABASE_SERVICE_KEY.
+//   First choice is the service channel TG_CARDS_CHAT (see cachePhoto); no env var or channel failure -> bucket.
 const crypto = require('crypto');
-const { rateLimit } = require('./_device.js');   // обмеження частоти (0.55)
+const { rateLimit } = require('./_device.js');   // rate limiting
 const { SB_URL, env, miniApp } = require('./_lib.js');
-async function storeCard(buf, ext) {   // → публічна адреса картки або null
+async function storeCard(buf, ext) {   // -> public card URL or null
   const key = env('SUPABASE_SERVICE_KEY'); if (!key) return null;
   const path = `${new Date().toISOString().slice(0, 10)}/${crypto.randomBytes(9).toString('hex')}.${ext}`;
   const r = await fetch(`${SB_URL}/storage/v1/object/cards/${path}`, { method: 'POST', headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': `image/${ext === 'png' ? 'png' : 'jpeg'}`, 'x-upsert': 'false' }, body: buf });
   return r.ok ? `${SB_URL}/storage/v1/object/public/cards/${path}` : null;
 }
-// 0.67: найнадійніше — картку один раз завантажує сам бот у службовий канал (TG_CARDS_CHAT, бот — адмін каналу), далі вона йде
-// як фото, що вже лежить у Telegram (photo_file_id): Telegram нічого не качає за адресою, тож картка не може обірватися
-async function cachePhoto(token, buf, ext) {   // → file_id або null
+// Most reliable path: the bot uploads the card once to a service channel (TG_CARDS_CHAT, bot is channel admin), then it is sent
+// as a photo already stored in Telegram (photo_file_id): Telegram fetches nothing by URL, so the card can't arrive truncated
+async function cachePhoto(token, buf, ext) {   // -> file_id or null
   const chat = env('TG_CARDS_CHAT'); if (!chat) return null;
   const fd = new FormData();
   fd.append('chat_id', chat); fd.append('disable_notification', 'true');
@@ -28,7 +28,7 @@ async function cachePhoto(token, buf, ext) {   // → file_id або null
   const ph = (j.ok && j.result && j.result.photo) || [];
   return ph.length ? ph[ph.length - 1].file_id : null;
 }
-async function warm(url) {   // прочитати файл повністю (до 4 с), щоб Telegram отримав його з кешу сховища цілим
+async function warm(url) {   // read the whole file (up to 4 s) so Telegram gets it intact from the storage cache
   const ac = new AbortController(), t = setTimeout(() => ac.abort(), 4000);
   try { const r = await fetch(url, { signal: ac.signal }); await r.arrayBuffer(); } catch (e) {} finally { clearTimeout(t); }
 }
@@ -51,7 +51,7 @@ module.exports = async (req, res) => {
     stage = 'body';
     let b = req.body || {}; if (typeof b === 'string') b = JSON.parse(b);
     stage = 'rate';
-    if (await rateLimit(req, res, 'card')) return;   // за IP (0.55)
+    if (await rateLimit(req, res, 'card')) return;   // per IP
     stage = 'signature';
     const u = checkMiniApp(String(b.initData || ''), token);
     if (!u || !u.id) return res.status(401).json({ error: 'bad telegram signature' });
@@ -67,8 +67,8 @@ module.exports = async (req, res) => {
       stage = 'store';
       const url = await storeCard(buf, m[1] === 'png' ? 'png' : 'jpg').catch(() => null);
       if (url) {
-        // 0.67: картка приходила наполовину сірою — Telegram не дочекався файлу зі сховища. Окреме мале прев'ю
-        // і одне повне читання файлу перед відправкою (сховище віддає його вже з кешу)
+        // Telegram used to fetch the file from storage before it was complete (half-grey card). Hence a separate small preview
+        // and one full read of the file before sending (storage then serves it from cache)
         const tm = /^data:image\/jpeg;base64,(.+)$/.exec(String(b.thumb || ''));
         const tbuf = tm && Buffer.from(tm[1], 'base64');
         const thumb = tbuf && tbuf.length < 2e5 ? await storeCard(tbuf, 'jpg').catch(() => null) : null;
@@ -77,7 +77,7 @@ module.exports = async (req, res) => {
         stage = 'prepare';
         return res.status(200).json(await prepare(token, u, { photo_url: url, thumbnail_url: thumb || url, photo_width: 1080, photo_height: 1350 }, b.caption));
       }
-      if (b.prefetch) return res.status(200).json({ ok: false, error: 'store' });   // 0.66: заготовка заздалегідь — без запасного шляху через особистий чат
+      if (b.prefetch) return res.status(200).json({ ok: false, error: 'store' });   // prefetch: no private-chat fallback
     }
     stage = 'send';
     const fd = new FormData();
@@ -87,12 +87,12 @@ module.exports = async (req, res) => {
     const r = await fetch(`https://api.telegram.org/bot${token}/sendPhoto`, { method: 'POST', body: fd });
     const j = await r.json().catch(() => ({}));
     if (!j.ok) {
-      // користувач ще не запускав бота в особистому чаті — бот не може написати першим
+      // user hasn't started the bot in private chat; the bot can't write first
       const blocked = /chat not found|bot can't initiate|blocked/i.test(j.description || '');
       return res.status(200).json({ ok: false, need_start: blocked, error: String(j.description || r.status).slice(0, 160) });
     }
     if (!b.share) return res.status(200).json({ ok: true });
-    // запасний шлях share: картка як файл на серверах Telegram — прибираємо її з особистого чату й готуємо повідомлення
+    // share fallback: card is a file on Telegram servers; delete it from the private chat and prepare the message
     stage = 'prepare';
     const photos = (j.result && j.result.photo) || [];
     const fileId = photos.length ? photos[photos.length - 1].file_id : null;

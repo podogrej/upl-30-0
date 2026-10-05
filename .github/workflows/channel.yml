@@ -1,8 +1,8 @@
-# 0.69.97: черга Telegram-каналу — кожні 10 хвилин викликає /api/cron?task=channel (api/_channel.js): нові чернетки власнику, публікація за розкладом.
-# Vercel Hobby дозволяє Cron лише раз на день, тому частий запуск — тут. GitHub запускає розклад лише з гілки main і може запізнюватися на 5–15 хв.
-# Секрети репозиторію (Settings → Secrets and variables → Actions), значення вписує власник:
-#   CHANNEL_SECRET — те саме значення, що й змінна CHANNEL_SECRET у Vercel (Production і Preview);
-#   VERCEL_BYPASS — необов'язково: ключ «Protection Bypass for Automation» з Vercel, щоб достукатися до тестового сайту (він закритий входом Vercel).
+# Telegram channel queue: every 10 minutes calls /api/cron?task=channel (api/_channel.js): new drafts to admin, scheduled publishing.
+# Vercel Hobby allows Cron only once a day, so the frequent run lives here. GitHub runs schedules only from main and may lag 5–15 min.
+# Repository secrets (Settings → Secrets and variables → Actions):
+#   CHANNEL_SECRET: same value as the CHANNEL_SECRET env var in Vercel (Production and Preview);
+#   VERCEL_BYPASS: optional "Protection Bypass for Automation" key to reach the test deployment (behind Vercel auth).
 name: Канал
 on:
   schedule:

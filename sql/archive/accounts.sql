@@ -1,8 +1,8 @@
--- НЕ ЗАПУСКАТИ (архів, 0.67). Старий SQL: відкриває пряму запис для anon і зламає крок 2 (v054_close_writes). Для нової бази — README, розділ sql/.
--- 30-0 УПЛ · v0.20 · необов'язкові акаунти (Google / Telegram)
--- Вставити цілком у Supabase → SQL Editor → Run
+-- DO NOT RUN (archived). Legacy SQL: re-opens direct anon writes and breaks v054_close_writes. For a new DB see README, section sql/.
+-- v0.20: optional accounts (Google / Telegram)
+-- Run the whole file in Supabase SQL Editor.
 
--- стан гравця (трофеї, серія, рекорди, нік) — один рядок на акаунт
+-- player state (trophies, streak, records, nick), one row per account
 create table if not exists public.user_state (
   user_id    uuid primary key references auth.users on delete cascade,
   data       jsonb not null default '{}'::jsonb,
@@ -13,14 +13,14 @@ drop policy if exists "own state" on public.user_state;
 create policy "own state" on public.user_state for all to authenticated
   using (user_id = auth.uid()) with check (user_id = auth.uid());
 
--- прив'язка результатів до акаунта
+-- link results to an account
 alter table public.seasons       add column if not exists user_id uuid;
 alter table public.daily_results add column if not exists user_id uuid;
 alter table public.trophies      add column if not exists user_id uuid;
 create index if not exists seasons_user_idx on public.seasons (user_id, created_at desc);
 create unique index if not exists daily_one_per_user on public.daily_results (day, user_id) where user_id is not null;
 
--- user_id ставить сервер, а не браузер: підробити чужий неможливо
+-- user_id is set server-side, so the client cannot spoof another user
 create or replace function public.set_user_id() returns trigger language plpgsql security definer set search_path = public as $$
 begin new.user_id := auth.uid(); return new; end $$;
 drop trigger if exists seasons_uid on public.seasons;
@@ -30,7 +30,7 @@ create trigger daily_uid before insert on public.daily_results for each row exec
 drop trigger if exists trophies_uid on public.trophies;
 create trigger trophies_uid before insert on public.trophies for each row execute function public.set_user_id();
 
--- ті самі права для тих, хто увійшов (раніше були лише для анонімних)
+-- same grants for the authenticated role as for anon
 drop policy if exists "seasons read auth" on public.seasons;
 create policy "seasons read auth" on public.seasons for select to authenticated using (true);
 drop policy if exists "seasons insert auth" on public.seasons;
@@ -51,7 +51,7 @@ create policy "trophies read auth" on public.trophies for select to authenticate
 drop policy if exists "trophies insert auth" on public.trophies;
 create policy "trophies insert auth" on public.trophies for insert to authenticated with check (length(trophy) <= 24);
 
--- після входу: усе, що зіграно з цього пристрою до входу, переходить в акаунт
+-- on sign-in: move this device's pre-login results to the account
 create or replace function public.claim_device(p_device uuid) returns void language sql security definer set search_path = public as $$
   update seasons       set user_id = auth.uid() where device_id = p_device and user_id is null and auth.uid() is not null;
   update daily_results set user_id = auth.uid() where device_id = p_device and user_id is null and auth.uid() is not null;
@@ -60,7 +60,7 @@ $$;
 revoke execute on function public.claim_device(uuid) from anon;
 grant execute on function public.claim_device(uuid) to authenticated;
 
--- «є в X% гравців»: гравець = акаунт або пристрій без акаунта
+-- trophy share ("X% of players"): a player = an account or an account-less device
 create or replace function public.trophy_stats()
 returns json language sql stable security definer set search_path = public as $$
   select json_build_object(

@@ -1,12 +1,12 @@
-// v0.39 наскрізно: сайт у браузері, база — у пам'яті (імітує players.sql: player_hello/set_player_name, player_id від пристрою),
-// /api/seed, /api/save і /api/verify — справжні обробники з api/ на тій самій базі (0.53: new — сезон пише /api/save; old — без SQL 0.53, запасний шлях).
-//  new — база з players.sql: ім'я гравця, сезон з player_id/competition/data_version, перевірка сервером, таблиця 11×11, перейменування;
-//  old — база до players.sql (нова версія сайту до запуску SQL): гра не ламається, сезон пишеться без нових колонок, таблиця — запасним запитом.
-// SQL-частину (секрет пристрою, тригери, RLS, повторний запуск) перевіряє справжній Postgres: bash tools/tests/setup.sh
-// Запуск з кореня: node tools/tests/v39.js [new|old|both] (за замовчуванням both)
+// End-to-end: site in a browser, in-memory DB (emulates players.sql: player_hello/set_player_name, player_id per device),
+// /api/seed, /api/save and /api/verify are the real api/ handlers on the same DB (new: season written via /api/save; old: no device-secret SQL, fallback path).
+//  new - DB with players.sql: player name, season with player_id/competition/data_version, server verification, 11x11 board, rename;
+//  old - DB before players.sql (new site before SQL is applied): game still works, season saved without new columns, board via fallback query.
+// SQL part (device secret, triggers, RLS, re-run) is covered by real Postgres: bash tools/tests/setup.sh
+// Run from repo root: node tools/tests/v39.js [new|old|both] (default both)
 const path=require('path'),fs=require('fs');const {ROOT,launch,makeDB,callApi,openSite,draftSeason,checker}=require('./_site.js');
-const openSet=async p=>{if(!(await p.$('#ppSheet'))){await p.click('#ppRowName');await p.waitForTimeout(150);}};   // 0.68: «Налаштування» — рядки; ім'я міняється в листі знизу
-const setMsg=p=>p.evaluate(()=>(document.getElementById('ppNameMsg')||document.getElementById('ppSetMsg')||{}).textContent||'');   // помилка — у листі, «Збережено» — під налаштуваннями
+const openSet=async p=>{if(!(await p.$('#ppSheet'))){await p.click('#ppRowName');await p.waitForTimeout(150);}};   // Settings are rows; the name is edited in a bottom sheet
+const setMsg=p=>p.evaluate(()=>(document.getElementById('ppNameMsg')||document.getElementById('ppSetMsg')||{}).textContent||'');   // error shows in the sheet, success under the settings
 const OUT=path.join(ROOT,'tools','tests','out');fs.mkdirSync(OUT,{recursive:true});
 process.env.SUPABASE_SERVICE_KEY='svc';
 const seedH=require(path.join(ROOT,'api','seed.js')),verH=require(path.join(ROOT,'api','verify.js')),saveH=require(path.join(ROOT,'api','save.js'));
@@ -18,11 +18,11 @@ function mkDB(v39){
     const l=forDevice(a.p_device);if(l.secret==null)l.secret=a.p_secret;else if(l.secret!==a.p_secret)return {err:{status:401,body:JSON.stringify({code:'28000',message:'device secret'})}};return {p:P.players.find(p=>p.id===l.pid)};};
   const js=p=>({id:p.id,name:p.name,anon_name:p.anon_name});
   const rpc=v39?{player_hello:a=>{const c=check(a);return c.err||js(c.p);},
-    device_ok:a=>{const c=check(a);return c.err||c.p.id;},   // 0.53: /api/save і /api/seed перевіряють секрет пристрою
+    device_ok:a=>{const c=check(a);return c.err||c.p.id;},   // /api/save and /api/seed check the device secret
     set_player_name:a=>{const c=check(a);if(c.err)return c.err;const nm=String(a.p_name||'').trim()||null;if(nm&&(nm.length<2||nm.length>24))return {status:400,body:'{"code":"22023"}'};c.p.name=nm&&nm.toLowerCase().replace(/\s+/g,'_');return js(c.p);}}:{};
   const db=makeDB({seasons:{auto:'id',cols:v39?null:OLD_COLS,onInsert:r=>{if(v39){r.player_id=forDevice(r.device_id).pid;r.competition=r.competition||'upl';r.gd=r.gf-r.ga;}r.verified=null;}},season_seeds:{auto:'id'},daily_results:{auto:'id'}},rpc);
   if(v39)db.DB.players=P.players;
-  global.fetch=db.fetch;   // для api/seed і api/verify
+  global.fetch=db.fetch;   // for api/seed and api/verify
   return {db,P};}
 const api={'/api/seed':async req=>callApi(seedH,req.body),'/api/verify':async req=>callApi(verH,req.body),'/api/save':async req=>callApi(saveH,req.body)};
 async function run(MODE,b){const T=checker('v39 '+MODE);const v39=MODE==='new';const {db,P}=mkDB(v39);const DB=db.DB;
@@ -32,7 +32,7 @@ async function run(MODE,b){const T=checker('v39 '+MODE);const v39=MODE==='new';c
    return pg.$$eval('#boardBody tr[data-q]',trs=>trs.map(t=>(t.className==='me'?'* ':'  ')+t.children[1].innerText.split('\n')[0]));};
  if(v39){
   T.check(player&&player.id===P.players[0].id&&player.anon_name,'гравець після завантаження: '+JSON.stringify(player));
-  await pg.click('#acctBtn');await pg.waitForTimeout(400);   // 0.59: аватарка → своя сторінка з налаштуваннями імені
+  await pg.click('#acctBtn');await pg.waitForTimeout(400);   // avatar -> own page with name settings
   await openSet(pg);T.check(await pg.$eval('#ppNameIn',e=>e.placeholder)===player.anon_name&&/Поки ти в таблицях як/.test(await pg.textContent('#ppNameMsg')),'своя сторінка: поле імені з анонімним «'+player.anon_name+'»');
   await pg.screenshot({path:path.join(OUT,'v39_acct.png')});
   await openSet(pg);await pg.fill('#ppNameIn','Andrii');await pg.click('#ppNameSave');await pg.waitForTimeout(500);
@@ -41,7 +41,7 @@ async function run(MODE,b){const T=checker('v39 '+MODE);const v39=MODE==='new';c
   T.check(!player,'без players.sql гравця немає, сайт працює');
   await pg.click('#acctBtn');await pg.waitForTimeout(400);T.check(!(await pg.$('#ppNameIn')),'своя сторінка без поля імені');await pg.click('#homeBtn');
  }
- // вільна гра, «Складний»
+ // free play, Hard
  await pg.click('#freeOpen');const hdrName=await pg.$eval('#acctBtn',e=>e.hidden?'':(e.querySelector('.me-n')||{}).textContent||'');
  T.check(v39?hdrName==='andrii':!hdrName,'шапка (0.62, замість рядка імені в налаштуваннях): '+(v39?'«andrii» поруч з аватаркою':'без імені')+' — «'+hdrName+'»');
  await pg.click('#formats .opt[data-fmt="classic"]');await pg.click('#modes .opt:nth-child(2)');await pg.click('#startBtn');await draftSeason(pg);await pg.waitForTimeout(1500);
@@ -51,13 +51,13 @@ async function run(MODE,b){const T=checker('v39 '+MODE);const v39=MODE==='new';c
  T.check(row.mode==='hard'&&row.verified===true&&row.seed_id!=null&&row.verify_note!=null,`рядок seasons: mode ${row.mode}, verified ${row.verified}, seed_id ${row.seed_id}`);
  if(v39)T.check(row.player_id===player.id&&row.competition==='upl'&&/^d[0-9a-f]{8}$/.test(row.data_version)&&row.nickname==='andrii',`нові колонки: player_id ${row.player_id}, competition ${row.competition}, data_version ${row.data_version}`);
  else T.check(!('competition' in row)&&!('data_version' in row),'стара база: сезон записано без нових колонок');
- // таблиця 11×11
+ // 11x11 board
  let rows=await board();T.check(rows.length===1&&rows[0].startsWith('* ')&&(!v39||rows[0].includes('andrii')),'таблиця: мій рядок '+JSON.stringify(rows));
  await pg.screenshot({path:path.join(OUT,`v39_board_${MODE}.png`)});
- // 0.69.69: таблицю відкрили, поки вона ще догружається у фоні (запис кешу без rows) — без помилки, потім рядки
+ // board opened while still loading in background (cache entry without rows): no error, rows appear later
  {await pg.click('#viewClose');const e0=errs.length;await pg.evaluate(()=>{window.__dbg.boardStale();window.__dbg.boardPrefetch();document.getElementById('boardOpen').click();});
   await pg.waitForTimeout(800);const nr=await pg.$$eval('#boardBody tr[data-q]',e=>e.length);T.check(errs.length===e0&&nr>=1,'таблиця під час фонового завантаження: без помилки, рядки з\'явились ('+nr+(errs.length>e0?'; '+errs.slice(e0).join(' | '):'')+')');}
- // 0.69: BOARD_FROM (скидання загальної таблиці) — увімкнено: старого сезону немає; вимкнено (зараз, власник 02.10): усі сезони
+ // BOARD_FROM (global board reset): enabled -> old season hidden; disabled (current) -> all seasons
  {await pg.click('#viewClose');const old={...DB.seasons[DB.seasons.length-1],id:9999,nickname:'old_one',created_at:'2026-09-01T10:00:00Z',pts:90};DB.seasons.push(old);
   const r2=await board(),bf=await pg.evaluate(()=>window.__dbg.BOARD_FROM),bt=await pg.textContent('#boardBody');
   T.check(bf?r2.length===1&&/Сезони з /.test(bt):r2.length===2&&!/Сезони з /.test(bt),'0.69: BOARD_FROM '+(bf?'увімкнено — старого сезону немає, є «Сезони з …»':'вимкнено — у таблиці всі сезони, без підпису'));
@@ -73,8 +73,8 @@ async function run(MODE,b){const T=checker('v39 '+MODE);const v39=MODE==='new';c
   await pg.click('#acctBtn');await pg.waitForTimeout(300);await openSet(pg);await pg.fill('#ppNameIn','');await pg.click('#ppNameSave');await pg.waitForTimeout(500);
   T.check(/ти знову/.test(await setMsg(pg)),'порожнє ім\'я — знову анонімний');await pg.click('#homeBtn');
   rows=await board();T.check(rows[0]==='* '+player.anon_name.toLowerCase(),'у таблиці анонімне ім\'я: '+rows[0]);await pg.click('#viewClose');
-  // «Andriy 2» — поле саме робить «andriy_2»
-  // чужий пристрій (той самий device_id, інший секрет) не перейменує — перевірка секрету на боці бази, тут лише як імітація; справжня — setup.sh
+  // 'Andriy 2' -> the field turns it into 'andriy_2'
+  // foreign device (same device_id, other secret) cannot rename; the DB enforces the secret, emulated here; real check in setup.sh
  }
  T.check(!errs.length,'помилок на сторінці немає '+errs.join(' | '));
  return T.done();}

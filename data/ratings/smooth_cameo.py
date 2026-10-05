@@ -1,21 +1,20 @@
-"""Сглаживание «камео-сезонов» (0.46) и сжатие верха шкалы (0.50, TOP_PTS): мало матчей → рейтинг тянется к полным сезонам игрока рядом.
-Запуск из корня: python3 data/ratings/smooth_cameo.py  (потом python3 src/build.py && node tools/make_engine.js)
-Считает всегда от исходных рейтингов (data/ratings/pool_ratings_raw.json — создаётся при первом запуске), поэтому повторный запуск ничего не портит.
-Правило: если матчей < FULL и у того же человека есть сезоны с 10+ матчами в пределах ±2 лет (кроме этого),
-  рейтинг = w·свой + (1−w)·среднее тех сезонов, w = матчи / FULL.
-«Тот же человек» — с 0.57 тот же canonical id (псевдонимы pool['alias'], data/aliases): у дублей камео тянется и к сезонам под другим id
-(до 0.57 — только тот же person_id карточки).
-Как модуль: smoothed(pool, raw) → {ключ «год|клуб|индекс»: рейтинг после сглаживания}; final(pool, raw) — итоговый рейтинг карточки
-(с 0.57: сглаживание → рейтинги v2, data/ratings/class_v2.py). final() пишет main() и им пользуются data/fix_2021/fix_pool_2021.py,
-data/fixes/fix_pool_054.py и fix_pool_057.py, чтобы не держать копию формулы.
+"""Cameo-season smoothing and top-of-scale compression (TOP_PTS): few apps -> rating pulled toward the player's nearby full seasons.
+Run from repo root: python3 data/ratings/smooth_cameo.py  (then python3 src/build.py && node tools/make_engine.js)
+Always computes from source ratings (data/ratings/pool_ratings_raw.json, created on first run), so it is idempotent.
+Rule: if apps < FULL and the same person has other seasons with 10+ apps within +-2 years,
+  rating = w*own + (1-w)*mean of those seasons, w = apps / FULL.
+"Same person" means the same canonical id (aliases in pool['alias'], data/aliases), so duplicates also pull toward seasons under the other id.
+As a module: smoothed(pool, raw) -> {"year|club|index": smoothed rating}; final(pool, raw) -> final card rating
+(smoothing -> ratings v2, data/ratings/class_v2.py). main() writes final(); data/fix_2021/fix_pool_2021.py,
+data/fixes/fix_pool_054.py and fix_pool_057.py import it to avoid copying the formula.
 """
 import json, os
 from collections import defaultdict
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..')
 POOL = os.path.join(ROOT, 'src', 'pool.json'); RAW = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'pool_ratings_raw.json')
 FULL, MIN_REF_APPS, WINDOW = 15, 10, 2
-# 0.50 (рішення власника 29.09.2026, відгук Віті «90+ занадто часто»): стиснути верх шкали — 90+ лише ~1% карток (було 4,2%).
-# Кусково-лінійно, спільно для всіх ліній; до 80 нічого не змінюється. Останній крок, тож повторний запуск нічого не псує.
+# Compress the top of the scale so only ~1% of cards are 90+ (was 4.2%).
+# Piecewise linear, shared by all lines; nothing changes below 80. Applied last, so reruns are safe.
 TOP_PTS = [(45, 45), (80, 80), (94, 90), (96, 93), (97, 95), (98, 97), (99, 99)]
 
 
@@ -30,7 +29,7 @@ def top_map(r):
 
 
 def smoothed(pool, raw):
-    """итоговый рейтинг каждой карточки из исходных (raw) — без записи в пул"""
+    """smoothed rating of every card from raw ratings; does not write the pool"""
     alias = pool.get('alias') or {}
     canon = lambda pid: alias.get(pid, pid)
     per = defaultdict(list)
@@ -47,8 +46,8 @@ def smoothed(pool, raw):
 
 
 def final(pool, raw):
-    """итоговый рейтинг каждой карточки — то, что лежит в pool.json (без записи): сглаживание → рейтинги v2 (0.57)"""
-    import class_v2   # рядом, data/ratings/class_v2.py (импорт здесь — class_v2 сам импортирует этот модуль)
+    """final rating of every card as stored in pool.json (no write): smoothing -> ratings v2"""
+    import class_v2   # sibling data/ratings/class_v2.py; imported lazily because class_v2 imports this module
     return class_v2.apply_v2(pool, smoothed(pool, raw))
 
 

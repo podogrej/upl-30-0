@@ -1,5 +1,5 @@
-// 0.68 (власник 02.10, варіант C): «‹ Назад» + домик; свайп/кнопка браузера ведуть на попередній екран;
-// з початого драфту — підтвердження «Вийти? Склад не збережеться». Запуск з кореня: node tools/tests/nav_back.js
+// "‹ back" + home buttons; swipe / browser back go to the previous screen;
+// leaving an unfinished draft asks for confirmation. Run from repo root: node tools/tests/nav_back.js
 const {launch,ROOT}=require('./_page.js');const path=require('path');const {checker}=require('./_site.js');
 async function pickOne(pg){await pg.click('#spinBtn');await pg.waitForSelector('#squad .pl:not([disabled])',{timeout:8000});await (await pg.$('#squad .pl:not([disabled])')).click();await (await pg.waitForSelector('#squad .plpos button')).click();await pg.waitForTimeout(40);}
 (async()=>{const T=checker('nav_back');const b=await launch();

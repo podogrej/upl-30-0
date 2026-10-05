@@ -1,5 +1,5 @@
-// 5×5 на одному пристрої: без ніку не стартує; двоє «по черзі» (хід A-B-A-B, взятий гравець зникає для всіх, рейтинги сховані),
-// живий матч до результату; троє «кожен сам» — група (3 матчі, таблиця) і фінал. Запуск з кореня: node tools/tests/f5test2.js [папка для знімків]
+// 5×5 on one device: won't start without nicknames; two players alternating (A-B-A-B, taken player disappears for all, ratings hidden),
+// live match to the result; three players each drafting alone: group (3 matches, table) and final. Run: node tools/tests/f5test2.js [screenshot dir]
 const path=require('path'),fs=require('fs');const {ROOT,openPage}=require('./_page.js');const {checker}=require('./_site.js');
 const OUT=process.argv[2]||path.join(ROOT,'tools','tests','out');fs.mkdirSync(OUT,{recursive:true});
 (async()=>{const T=checker('f5 локально');const {b,pg,errs}=await openPage({viewport:{width:430,height:900},colorScheme:'dark'});
@@ -11,7 +11,7 @@ const OUT=process.argv[2]||path.join(ROOT,'tools','tests','out');fs.mkdirSync(OU
      hidden=hidden&&await pg.$$eval('#f5Sq .pl .rt',e=>e.every(x=>x.textContent===''));
      picked.push(await btn.$eval('.nm',e=>e.textContent));await btn.click();await pg.waitForTimeout(80);}
    return {turns,picked,hidden};}
- await pg.evaluate(()=>document.getElementById('f5Open').click());   /* 0.60: кнопку сховано на головній */await pg.click('[data-w="local"]');
+ await pg.evaluate(()=>document.getElementById('f5Open').click());   /* entry button is hidden on home */await pg.click('[data-w="local"]');
  await pg.click('#f5Go');T.check(!!(await pg.$('#f5Go'))&&await pg.$eval('[data-nm="0"]',e=>e.classList.contains('bad')),'без ніку драфт не починається');
  await pg.fill('[data-nm="0"]','Андрій');await pg.fill('[data-nm="1"]','Сергій');await pg.fill('[data-tm="1"]','Динамо Двір');await pg.click('[data-fi="1"][data-fm="2-2"]');
  await pg.click('#f5Go');const d2=await draft();
@@ -25,7 +25,7 @@ const OUT=process.argv[2]||path.join(ROOT,'tools','tests','out');fs.mkdirSync(OU
  const t0=Date.now();await pg.waitForSelector('#f5Again',{timeout:20000});const sc=await pg.textContent('.f5score');
  T.check(/\d+:\d+/.test(sc),`матч дограв сам за ~${Math.round((Date.now()-t0+1500)/1000)} с: ${sc.replace(/\s+/g,' ')}`);
  await pg.screenshot({path:path.join(OUT,'f5_result.png'),fullPage:true});
- // троє, кожен сам
+ // three players, each drafting alone
  await pg.click('#f5New');await pg.click('[data-w="local"]');await pg.click('#f5Plus');await pg.click('[data-m="solo"]');
  for(const [i,n] of [[0,'А'],[1,'Б'],[2,'В']])await pg.fill(`[data-nm="${i}"]`,n);
  await pg.click('#f5Go');const d3=await draft();

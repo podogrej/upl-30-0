@@ -1,31 +1,31 @@
-// Запуск з кореня репозиторію: node tools/make_engine.js → lib/engine.js
-// Генерує серверний рушій симуляції з template.html: бере з гри рівно ті функції й константи, від яких залежить simulate(),
-// щоб сервер рахував сезон ідентично браузеру. Запуск: node tools/make_engine.js  → lib/engine.js (з пулом усередині)
+// Run from repo root: node tools/make_engine.js → lib/engine.js (pool embedded).
+// Builds the server simulation engine from template.html: extracts exactly the functions/constants simulate() depends on,
+// so the server computes a season identically to the browser.
 const fs = require('fs');
-const req = m => { try { return require(m); } catch (e) { return require('/opt/node-tools/node_modules/' + m); } };   // npm i acorn acorn-walk у tools/
+const req = m => { try { return require(m); } catch (e) { return require('/opt/node-tools/node_modules/' + m); } };   // npm i acorn acorn-walk in tools/
 const acorn = req('acorn');
 const walk = req('acorn-walk');
 const ROOT = __dirname + '/..';
 const html = fs.readFileSync(ROOT + '/src/template.html', 'utf8').replace('/*__TROPHIES__*/', '');
-// головний скрипт гри — IIFE після <script id="pool">
+// main game script: the IIFE after <script id="pool">
 const start = html.indexOf('<script>\n(function(){');
 const end = html.indexOf('</script>', start);
 const code = html.slice(start + '<script>\n'.length, end);
 const ast = acorn.parse(code, { ecmaVersion: 'latest' });
-const body = ast.body[0].expression.callee.body.body;   // тіло IIFE
-const decl = {};   // ім'я → {node, idx}
+const body = ast.body[0].expression.callee.body.body;   // IIFE body
+const decl = {};   // name → {node, idx}
 body.forEach((n, idx) => {
   if (n.type === 'FunctionDeclaration') decl[n.id.name] = { n, idx };
   if (n.type === 'VariableDeclaration') for (const d of n.declarations) if (d.id.type === 'Identifier') decl[d.id.name] = { n, idx };
 });
 const ROOTS = ['simulate', 'effRating', 'slotPenalty', 'FORMATIONS', 'FORMATS', 'GROUP_OF', 'MODES', 'mulberry32', 'hashStr', 'pickWeighted', 'YEARS16', 'ANTI_MIN_APPS', 'tierOf'];
-const SKIP = new Set(['DATA', 'S', 'rnd', 'document', 'window', 'BEST']);   // підставляємо самі
-// глобальні об'єкти JS/браузера, які рушій може згадувати; будь-яке інше невідоме ім'я — помилка збірки (а не тихий ReferenceError на сервері)
+const SKIP = new Set(['DATA', 'S', 'rnd', 'document', 'window', 'BEST']);   // provided by the generated wrapper
+// JS/browser globals the engine may reference; any other unknown name fails the build (instead of a silent ReferenceError on the server)
 const KNOWN = new Set(['Math', 'Object', 'Array', 'Number', 'String', 'Boolean', 'JSON', 'Set', 'Map', 'WeakMap', 'Symbol', 'Date', 'Intl', 'Error', 'RegExp', 'Promise',
   'Infinity', 'NaN', 'undefined', 'isFinite', 'isNaN', 'parseInt', 'parseFloat', 'console', 'arguments', 'localStorage', 'crypto', 'Uint8Array', 'Uint32Array',
   'encodeURIComponent', 'decodeURIComponent', 'navigator', 'location', 'setTimeout', 'clearTimeout', 'setInterval', 'clearInterval', 'getComputedStyle', 'NodeFilter',
   'fetch', 'history', 'screen', 'performance', 'requestAnimationFrame', 'Image', 'Blob', 'File', 'URL', 'URLSearchParams', 'AbortController', 'globalThis']);
-// імена, оголошені в області видимості вузла (функція: параметри, var усередині, ім'я виразу-функції; блок: let/const/class/function; for; catch)
+// names declared in a node's scope (function: params, inner vars, function-expression name; block: let/const/class/function; for; catch)
 const patNames = (p, out = []) => {
   if (!p) return out;
   if (p.type === 'Identifier') out.push(p.name);
@@ -36,7 +36,7 @@ const patNames = (p, out = []) => {
   return out;
 };
 const isFn = n => /Function/.test(n.type);
-function varsIn(node, out) {   // var-оголошення всередині функції (без вкладених функцій)
+function varsIn(node, out) {   // var declarations inside a function (excluding nested functions)
   if (!node || typeof node.type !== 'string') return;
   if (node.type === 'VariableDeclaration' && node.kind === 'var') node.declarations.forEach(d => patNames(d.id, out));
   for (const k of Object.keys(node)) { const v = node[k];
@@ -59,7 +59,7 @@ function declaredIn(n) {
   else if (n.type === 'CatchClause' && n.param) patNames(n.param, out);
   const set = new Set(out); SCOPE.set(n, set); return set;
 }
-// вільні (не локальні) імена у вузлі верхнього рівня: ключі властивостей (a.place, {place: 1}) і локальні змінні (const place=…) — не залежності
+// free (non-local) names in a top-level node; property keys (a.place, {place: 1}) and locals (const place=…) are not dependencies
 function freeNames(top) {
   const names = new Set();
   walk.fullAncestor(top, (x, st, anc) => {
@@ -68,7 +68,7 @@ function freeNames(top) {
     if (parent && parent.type === 'MemberExpression' && parent.property === x && !parent.computed) return;
     if (parent && (parent.type === 'Property' || parent.type === 'MethodDefinition' || parent.type === 'PropertyDefinition') && parent.key === x && !parent.computed && parent.value !== x) return;
     if (parent && (parent.type === 'LabeledStatement' || parent.type === 'BreakStatement' || parent.type === 'ContinueStatement')) return;
-    for (let i = anc.length - 2; i >= 0; i--) if (declaredIn(anc[i]).has(x.name)) return;   // локальне ім'я
+    for (let i = anc.length - 2; i >= 0; i--) if (declaredIn(anc[i]).has(x.name)) return;   // local name
     names.add(x.name);
   });
   return names;
@@ -81,19 +81,19 @@ const visit = name => {
   for (const x of freeNames(decl[name].n)) visit(x);
 };
 ROOTS.forEach(visit);
-// побічні інструкції, потрібні рушію: вага клуб-сезонів для колеса та режим виклику дня
+// side-effect statements the engine needs: club-season wheel weights and the daily-challenge mode
 const extraN = body.filter(n => n.type !== 'FunctionDeclaration' && n.type !== 'VariableDeclaration')
   .filter(n => { const t = code.slice(n.start, n.end); return /^for\(const c of DATA\.clubs\)\{const r=c\.pl/.test(t) || /^MODES\.daily=/.test(t) || /^for\(const f in FORMATIONS\)FORMATIONS\[f\]\.slots=/.test(t); });
 if (extraN.length !== 3) throw new Error('extra statements not found: ' + extraN.length);
 extraN.forEach(n => { for (const x of freeNames(n)) visit(x); });
 const extra = extraN.map(n => code.slice(n.start, n.end));
-// ім'я, яке дописуємо нижче вручну (dailySetupFor, run, module.exports), має бути в рушії
+// names used by the hand-written tail below (dailySetupFor, run, module.exports) must be in the engine
 ['LEAGUE_CULT', 'LEAGUE_LEGENDS', 'LEAGUES', 'YEARS16', 'ERAS', 'hashStr', 'mulberry32', 'pickWeighted'].forEach(visit);
 const idxs = [...new Set([...need].map(k => decl[k].idx))].sort((a, b) => a - b);
 let out = idxs.map(i => code.slice(body[i].start, body[i].end)).join('\n');
 const pool = fs.readFileSync(ROOT + '/src/pool.json', 'utf8');
-const VERSION = (html.match(/версі[яї] ([\d.]+)/) || [])[1] || '?';   // підвал: «Що нового у версії X.YY»
-const mod = `// ЗГЕНЕРОВАНО tools/make_engine.js з template.html — не редагувати вручну. Рушій симуляції 30-0 УПЛ для сервера.
+const VERSION = (html.match(/версі[яї] ([\d.]+)/) || [])[1] || '?';   // from the footer "what's new in version X.YY" line
+const mod = `// GENERATED by tools/make_engine.js from template.html, do not edit by hand. 30-0 UPL simulation engine for the server.
 'use strict';
 const DATA = ${pool};
 let S = { format: 'classic' };
@@ -103,12 +103,12 @@ ${extra.join('\n')}
 function dailySetupFor(day){
   const r=mulberry32(hashStr("upl30|"+day+"|setup"));
   const fs=Object.keys(FORMATIONS);const formation=fs[Math.floor(r()*fs.length)];
-  const year=LEAGUE_LEGENDS;   // з 0.64 — «Ліга легенд» (0.50–0.63 — «Ліга культових клубів»), як dailySetup у template.html
+  const year=LEAGUE_LEGENDS;   // same as dailySetup in template.html
   const prev=S.format;S.format='classic';
   const wr=mulberry32(hashStr("upl30|"+day+"|wheel"));const seq=[];for(let i=0;i<600;i++){const c=pickWeighted(DATA.clubs,wr);seq.push(DATA.clubs.indexOf(c));}
   S.format=prev;return {formation,year,seq};
 }
-// перерахунок сезону з seed: xi — [{id, slot, r}] у порядку слотів схеми
+// replay a season from its seed: xi = [{id, slot, r}] in formation slot order
 function run({ xi, mode, format, year, seed }){
   S.format = format; rnd = mulberry32(seed);
   const r = simulate(xi, MODES[mode], year);
@@ -119,6 +119,6 @@ module.exports = { VERSION: '${VERSION}', DATA, FORMATIONS, FORMATS, GROUP_OF, M
 `;
 fs.mkdirSync(ROOT + '/lib', { recursive: true });
 fs.writeFileSync(ROOT + '/lib/engine.js', mod);
-// рушій 5×5 (0.63) — копія src/five_core.js для сервера (api/fl5.js): src/ не викладається на Vercel (.vercelignore)
-fs.writeFileSync(ROOT + '/lib/five_core.js', '// ЗГЕНЕРОВАНО з src/pen_skill.js + src/five_core.js (node tools/make_engine.js) — не правити\n' + fs.readFileSync(ROOT + '/src/pen_skill.js', 'utf8') + fs.readFileSync(ROOT + '/src/five_core.js', 'utf8'));
+// 5×5 engine: copy of src/five_core.js for the server (api/fl5.js); src/ is not deployed to Vercel (.vercelignore)
+fs.writeFileSync(ROOT + '/lib/five_core.js', '// GENERATED from src/pen_skill.js + src/five_core.js (node tools/make_engine.js), do not edit\n' + fs.readFileSync(ROOT + '/src/pen_skill.js', 'utf8') + fs.readFileSync(ROOT + '/src/five_core.js', 'utf8'));
 console.log('engine: ' + need.size + ' declarations, ' + (mod.length / 1024).toFixed(0) + ' KB');

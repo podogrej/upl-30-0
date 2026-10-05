@@ -1,9 +1,9 @@
-"""Трофей «Верховна Рада»: прізвища гравців пулу, які збігаються з прізвищами народних депутатів.
+"""Verkhovna Rada trophy: pool player surnames that match surnames of members of parliament.
 
-Джерело: відкриті дані Верховної Ради, скликання 2–9
-  https://data.rada.gov.ua/ogd/mps/skl<N>/mps0<N>-data.json  (поле last_name).
-Запуск: python3 data/trophies/rada.py <тека з mps2.json … mps9.json>
-Пише data/trophies/rada_surnames.json — список збігів (нижній регістр), його вписано в src/trophies.js (RADA).
+Source: Verkhovna Rada open data, convocations 2-9
+  https://data.rada.gov.ua/ogd/mps/skl<N>/mps0<N>-data.json  (field last_name).
+Run: python3 data/trophies/rada.py <dir with mps2.json ... mps9.json>
+Writes data/trophies/rada_surnames.json (lowercase matches); the list is embedded in src/trophies.js (RADA).
 """
 import json, glob, os, random, sys
 

@@ -1,8 +1,8 @@
-// ---------- СТОРІНКА ГРАВЦЯ (0.59, docs/player_page.md): своя — повністю; чужа — ім'я, цифри, улюблений клуб, трофеї; без входу — з попередженням.
-// Адреса чужої сторінки — ?u=<public_id> (players.public_id, 8 символів). device_id і номер гравця в посиланні не світимо.
-// Дані: чужа — player_profile_pub (sql/v059_player_page.sql); своя — player_profile + локальні трофеї, серія, історія сезонів (seasons за своїм player_id).
-// ---------- аватарка: два кольори й простий узор із хешу публічного номера гравця (макет docs/mockups/header_avatar.png)
-const AV_PAL=['#e0287a','#0f1b3d','#9a2bb5','#ffffff','#ff5aa0','#26396b'];   // 0.64: кольори УПЛ (було оранжеве)
+// ---------- PLAYER PAGE (docs/player_page.md): own page in full; others: name, stats, favourite club, trophies; signed out: with a warning.
+// Other player's URL: ?u=<public_id> (players.public_id, 8 chars). device_id and internal player id never appear in links.
+// Data: others from player_profile_pub (sql/v059_player_page.sql); own from player_profile + local trophies, streak, season history (seasons by own player_id).
+// ---------- avatar: two colors and a simple pattern from the public id hash (mockup docs/mockups/header_avatar.png)
+const AV_PAL=['#e0287a','#0f1b3d','#9a2bb5','#ffffff','#ff5aa0','#26396b'];   // UPL palette
 const AV_PAIRS=[[0,1],[1,0],[2,3],[1,4],[5,0],[3,2],[0,5],[4,1]];
 function avHash(s){let h=2166136261;for(const c of String(s))h=Math.imul(h^c.charCodeAt(0),16777619);return h>>>0;}
 function avatarSvg(seed,size){
@@ -13,16 +13,16 @@ function avatarSvg(seed,size){
   else{const q=(h>>>11)%4,pts=[[0,0],[100,0],[100,100],[0,100]];g=[0,2].map(k=>{const [cx,cy]=pts[(q+k)%4];return `<circle cx="${cx}" cy="${cy}" r="50"/>`;}).join('')+'<circle cx="50" cy="50" r="12"/>';}
   return `<svg class="av" width="${size}" height="${size}" viewBox="0 0 100 100" aria-hidden="true"><defs><clipPath id="av${h}"><rect width="100" height="100" rx="22"/></clipPath></defs><g clip-path="url(#av${h})"><rect width="100" height="100" fill="${a}"/><g fill="${b}" shape-rendering="crispEdges">${g}</g></g></svg>`;}
 const mySeed=()=>(PLAYER&&(PLAYER.public_id||PLAYER.id))||deviceId();
-// ---------- дати
+// ---------- dates
 const UK_MON=['січня','лютого','березня','квітня','травня','червня','липня','серпня','вересня','жовтня','листопада','грудня'];
 const fmtLong=d=>{const s=String(d||'').slice(0,10);return /^\d{4}-\d{2}-\d{2}$/.test(s)?`${+s.slice(8)} ${UK_MON[+s.slice(5,7)-1]} ${s.slice(0,4)}`:'';};
 const fmtShort=d=>{const s=String(d||'').slice(0,10);return s.length===10?`${s.slice(8)}.${s.slice(5,7)}`:'';};
-// ---------- рідкість трофеїв (docs/player_page.md): частка гравців, у кого трофей є. Секретні рідкості не мають — у них свій вигляд
+// ---------- trophy rarity (docs/player_page.md): share of players who own it. Secret trophies have no rarity, they have their own look
 const RARITY=[[20,'common','Звичайний'],[5,'rare','Рідкісний'],[1,'epic','Епічний'],[0,'legend','Легендарний']];
-const RARITY_MIN_PLAYERS=10;   // менше гравців — частки ще нічого не значать, рівнів не показуємо
+const RARITY_MIN_PLAYERS=10;   // below this player count the shares are meaningless; tiers are hidden
 function trPct(id){return TR_PCT&&TR_PCT.players>=RARITY_MIN_PLAYERS?100*((TR_PCT.t||{})[id]||0)/TR_PCT.players:null;}
 function trTier(t){if(t.sec)return null;const p=trPct(t.id);return p==null?null:RARITY.find(([m])=>p>=m);}
-// ---------- стан сторінки
+// ---------- page state
 let PP=null;   // {u, own, prof, have:{id:{n,at}}, f, s, all, hist:{rows,more}}
 function ppUrl(u){try{const q=new URLSearchParams(location.search);if(u)q.set('u',u);else q.delete('u');const s=q.toString();history.replaceState(history.state,'',location.pathname+(s?'?'+s:'')+location.hash);}catch(e){}}
 function openPlayer(u){
@@ -33,7 +33,7 @@ function openPlayer(u){
   go(6);ppUrl(own?null:u);ppRender();ppLoad(PP);
   if(ONLINE&&!TR_PCT)trLoadPct().then(()=>{if(PP&&CUR_SEC===6)ppRenderCab();});
 }
-// прокрутити до шафи трофеїв (кнопка «Трофеї» на головній); шафа з'являється після завантаження профілю
+// scroll to the trophy cabinet (Trophies button on home); the cabinet appears after the profile loads
 function ppScrollCab(n){const el=document.getElementById('ppCab');if(el&&el.children.length){el.scrollIntoView({behavior:'smooth',block:'start'});return;}if((n||0)<30)setTimeout(()=>ppScrollCab((n||0)+1),150);}
 async function ppRpc(fn,args){const r=await fetch(`${SB_URL}/rest/v1/rpc/${fn}?apikey=${SB_KEY}`,{method:'POST',headers:{apikey:SB_KEY,'Content-Type':'application/json'},body:JSON.stringify(args)});
   const t=await r.text();if(!r.ok)throw Object.assign(new Error(`${fn} ${r.status}: ${t.slice(0,120)}`),{status:r.status});return t?JSON.parse(t):null;}
@@ -41,10 +41,10 @@ async function ppLoad(st){
   let prof=null,err=false;
   if(ONLINE)try{prof=st.own?(PLAYER&&PLAYER.id?await ppRpc('player_profile',{p_player:PLAYER.id}):null):await ppRpc('player_profile_pub',{p_public:st.u});}catch(e){err=true;}
   if(st.own&&prof)trSrvRefresh(prof);
-  if(prof&&!prof.public_id&&!prof.name)prof=null;   // гравця немає
+  if(prof&&!prof.public_id&&!prof.name)prof=null;   // no such player
   if(PP!==st)return;st.prof=prof;st.loading=false;st.err=err;ppRender();}
-// своя сторінка: трофеї — з цього пристрою (з лічильниками), плюс відкриті на інших пристроях цього гравця (з бази)
-// 0.69.69: трофеї акаунта з сервера — у кеш для лічильника на головній (renderTrBtn); раз на завантаження сторінки
+// own page: trophies from this device (with counters) plus those unlocked on the player's other devices (from DB)
+// account trophies from server go to cache for the home counter (renderTrBtn); once per page load
 let TR_SRV_AT=0;
 async function trSrvRefresh(prof){if(!prof){if(!ONLINE||!PLAYER||!PLAYER.id||Date.now()-TR_SRV_AT<6e4)return;TR_SRV_AT=Date.now();try{prof=await ppRpc('player_profile',{p_player:PLAYER.id});}catch(e){return;}}
   if(prof&&Array.isArray(prof.trophies)){lsSet('upl30_tr_srv',prof.trophies.map(t=>t.id));renderTrBtn();}}
@@ -52,7 +52,7 @@ function ppHave(){const st=PP;const h={};
   if(st.own){const s=trStore();for(const [id,e] of Object.entries(s.t))if(e&&e.n)h[id]={n:e.n,at:e.at};}
   for(const t of (st.prof&&st.prof.trophies)||[])if(!h[t.id])h[t.id]={n:1,at:t.at};
   return h;}
-// ---------- розмітка
+// ---------- markup
 const ppTile=(n,l,hot)=>`<div class="tile${hot?' hot':''}"><b>${n==null||n===''?'—':esc(String(n))}</b><span>${l}</span></div>`;
 function ppRender(){
   const el=document.getElementById('pp');if(!el||!PP)return;const st=PP,p=st.prof||{},own=st.own;
@@ -60,7 +60,7 @@ function ppRender(){
   const name=own?(myName()||'гравець'):(p.name||'…');const seed=own?mySeed():(p.public_id||st.u);
   const guest=own&&ONLINE&&!SESSION;
   const loc=trStore(),si=streakInfo();
-  const seasons=own?Math.max(p.seasons||0,loc.seasons||0):p.seasons;   // своя: і сезони, ще не записані в базу (офлайн, до входу)
+  const seasons=own?Math.max(p.seasons||0,loc.seasons||0):p.seasons;   // own page also counts seasons not yet saved to DB (offline, before sign-in)
   const best=p.best_classic!=null?p.best_classic:(own&&BEST.classic?BEST.classic.pts:null);
   const streak=own?Math.max(si.best||0,p.streak_best||0):p.streak_best;
   let h='';
@@ -77,41 +77,41 @@ function ppRender(){
     if(own)h+=`<details class="pp-hist" id="ppHist"><summary>Останні сезони${p.seasons?` (${Math.min(10,p.seasons)} з ${p.seasons})`:''}</summary><div id="ppHistList"><p class="muted">Завантаження…</p></div></details>`;
     else h+=`<div class="pp-sec"><h3>Історія</h3></div><div class="pp-lock">${icon('eye-off')}Історію сезонів бачить лише ${esc(name)}</div>`;
   }
-  if(own&&ONLINE&&!p.deleted)h+=`<div id="ppLeagues"></div>`;   // «Мої ліги» (0.61, src/leagues.js)
+  if(own&&ONLINE&&!p.deleted)h+=`<div id="ppLeagues"></div>`;   // "My leagues" (src/leagues.js)
   if(own&&ONLINE)h+=ppSettingsHtml();
   el.innerHTML=h;
   if(!p.deleted)ppRenderCab();
   if(own&&ONLINE&&!p.deleted)ppLeagues();
   ppWire();
 }
-// найкращий і найгірший XI за режимами (лише своя сторінка)
+// best and worst XI per mode (own page only)
 const PP_BUCKETS=[['classic','Класика','trophy'],['pick','Вибір сезону','calendar-check'],['daily','Драфт дня','calendar-star'],['derby','Дербі','lightning-bolt'],['oneclub','Один клуб','heart'],['anti','Антисезон','arrow-down-bold'],['legends','Ліга легенд','crown']];
 function ppXiRow(x,kind,label,icn){if(!x)return '';const sub=[`${numOr0(x.place)} місце`,`${numOr0(x.w)}-${numOr0(x.d)}-${numOr0(x.l)}`,esc(x.formation||''),x.avg!=null?`сер. ${esc(String(x.avg))}`:'',x.club&&CLUBN[x.club]?esc(CLUBN[x.club]):''].filter(Boolean).join(' · ');
   return `<div class="pp-row" data-sid="${numOr0(x.id)}" role="button" tabindex="0">${ic(icn)}<div class="t"><b>${label} <em class="pp-k ${kind}">${kind==='best'?'найкращий':'найгірший'}</em></b><span>${sub}</span></div><span class="n${kind==='best'?' g':''}">${numOr0(x.pts)}<small>оч</small></span>${icon('chevron-right')}</div>`;}
 function ppXiHtml(p){const b=p.best||{},w=p.worst||{};const rows=PP_BUCKETS.map(([k,l,i])=>ppXiRow(b[k],'best',l,i)+ppXiRow(w[k],'worst',l,i)).join('');
   return rows?`<div class="pp-sec"><h3>Найкращий і найгірший XI</h3></div><div class="pp-list">${rows}</div>`:'';}
-// шафа трофеїв: фільтр за розділами (N/M), сортування «за рідкістю» / «нещодавні»
+// trophy cabinet: filter by section (N/M), sort by rarity / recent
 function ppRenderCab(){
   const el=document.getElementById('ppCab');if(!el||!PP)return;const st=PP,own=st.own,have=ppHave();
   const mine=trStore().t;const got=t=>!!have[t.id];
   const LIVE=TROPHIES.filter(t=>!t.gone||got(t));const total=LIVE.length,n=LIVE.filter(got).length;
   const cats=[['all','Усі'],...TR_KINDS];
-  const inCat=(t,c)=>c==='all'||trKind(t)===c;   // 0.69.69: фільтри — три класи, як і кольори
+  const inCat=(t,c)=>c==='all'||trKind(t)===c;   // filters use the same three classes as colors
   let list=LIVE.filter(t=>inCat(t,st.f));
   const on=list.filter(got),off=own?list.filter(t=>!got(t)&&!t.sec):[];const secOff=list.filter(t=>!got(t)&&t.sec).length;
   const rk=t=>{if(t.sec)return -1;const p=trPct(t.id);return p==null?1e3:p;};
   if(st.s==='recent')on.sort((a,b)=>String(have[b.id].at||'').localeCompare(String(have[a.id].at||''))||rk(a)-rk(b));
   else on.sort((a,b)=>rk(a)-rk(b)||String(have[b.id].at||'').localeCompare(String(have[a.id].at||'')));
   off.sort((a,b)=>rk(a)-rk(b));
-  const cards=[...on,...off];const shown=st.all?cards:on;   // 0.62: згорнуто — лише відкриті
+  const cards=[...on,...off];const shown=st.all?cards:on;   // collapsed: unlocked only
   const card=t=>{const e=have[t.id];
     if(!own&&t.sec&&e&&!(mine[t.id]&&mine[t.id].n))return `<div class="tro k-secret on sec"><span class="tri">${trBadge({id:'secret',cat:'secret'},true)}</span><div class="trt"><b>Секретний трофей</b><span>Відкрий його сам, щоб дізнатися, за що він</span><span class="trp">секретний${e.at?' · '+fmtShort(e.at):''}</span></div></div>`;
     const tier=trTier(t),p=trPct(t.id);
-    const gem=e&&tier&&tier[1]!=='common';   // 0.69.69 (макет B): рідкість від «рідкісного» — значком праворуч, не в рядку
+    const gem=e&&tier&&tier[1]!=='common';   // rarity from "rare" up: badge on the right, not inline
     const meta=[t.sec?'секретний':tier&&!gem?tier[2]:'',p!=null&&!t.sec?(p===0?'ще ніхто не відкрив':`є в ${p<1?'<1':Math.round(p)}% гравців`):'',e&&e.at?fmtShort(e.at):''].filter(Boolean).join(' · ');
     return `<div class="tro k-${trKind(t)}${e?' on':''}${t.sec?' sec':''}${tier&&e?' rt-'+tier[1]:''}" data-tr="${esc(t.id)}"><span class="tri">${trBadge(t,!!e)}</span><div class="trt"><b>${esc(t.n)}</b>${trQ(t)}<span>${esc(t.d)}</span>${meta?`<span class="trp">${meta}</span>`:''}</div>${gem?`<em class="gem rt-${tier[1]}">${tier[2]}</em>`:''}${e&&e.n>1?`<span class="trn">×${e.n}</span>`:''}</div>`;};
   const cnt=c=>{const l=LIVE.filter(t=>inCat(t,c));return `${l.filter(got).length}/${l.length}`;};
-  // 0.69.69 (власник 03.10): порядок — картки → «+N секретних» → віхи → «Згорнути»; рядок секретних по центру, значок на одній лінії з текстом
+  // order: cards -> "+N secret" -> milestones -> collapse; secret row centered, badge aligned with text
   el.innerHTML=`<div class="pp-sec"><h3>Трофеї</h3><span class="best">Відкрито ${n} з ${total}</span></div><div class="pp-bar"><i style="width:${total?Math.round(100*n/total):0}%"></i></div>
     ${own&&n?`<button class="ghost wbtn" id="ppCabShare">${ic('bookshelf','sm')}Поділитися шафою</button><div id="ppCabOut" hidden class="pp-cabout"><img id="ppCabImg" alt="Шафа трофеїв"><div class="row"><button class="primary" id="ppCabSend" hidden>${ic('share-variant','sm')}Поділитися</button><span class="muted" id="ppCabMsg" style="font-size:13px"></span></div></div>`:''}
     ${st.all?`<div class="pp-filt" role="tablist">${cats.filter(([c])=>c==='all'||LIVE.some(t=>inCat(t,c))).map(([c,l])=>`<button class="chip${st.f===c?' onc':''}" data-f="${c}" role="tab" aria-selected="${st.f===c}">${l} <i>${cnt(c)}</i></button>`).join('')}</div>
@@ -126,9 +126,9 @@ function ppRenderCab(){
   const all=document.getElementById('ppCabAll');if(all)all.onclick=()=>{st.all=!st.all;ppRenderCab();};
   const sh=document.getElementById('ppCabShare');if(sh)sh.onclick=()=>ppShareCab(on.filter(got),n,total);
 }
-// «Поділитися шафою» (0.60): картинка 1080×1350 — ім'я, «відкрито N з M», до 12 трофеїв (рідкісні першими). Поза Telegram — системне меню з файлом,
-// у Telegram — бот надсилає картинку в особисті (api/card), інакше — довге натискання на картинку
-const CAB_COL={base:'#8fa0d8',friends:'#33c9e6',secret:'#a970ff'};   // 0.69.69: картинка шафи — ті самі три класи, що й на сторінці
+// "Share cabinet": 1080x1350 image: name, "unlocked N of M", up to 12 trophies (rarest first). Outside Telegram: system share sheet with file,
+// in Telegram: bot sends the image to DM (api/card), otherwise long-press the image
+const CAB_COL={base:'#8fa0d8',friends:'#33c9e6',secret:'#a970ff'};   // cabinet image uses the same three classes as the page
 let CAB_CANVAS=null;
 async function ppShareCab(got,n,total){try{await document.fonts.ready;}catch(e){}
   const W=1080,H=1350,c=document.createElement('canvas');c.width=W;c.height=H;CAB_CANVAS=c;const g=c.getContext('2d');
@@ -161,7 +161,7 @@ async function ppShareCab(got,n,total){try{await document.fonts.ready;}catch(e){
     c.toBlob(bl=>{navigator.share({files:[new File([bl],'30-0-trophies.png',{type:'image/png'})],text}).catch(e=>{if(e&&e.name!=='AbortError')msg.textContent='Не вдалося відкрити меню «Поділитися».';});},'image/png');};
   out.scrollIntoView({behavior:'smooth',block:'center'});
 }
-// історія: 10 останніх сезонів, «Ще 10» — лише за натисканням
+// history: last 10 seasons, "10 more" on tap
 const PP_MODE_DOT={classic:'var(--amber)',pick:'var(--mf)',daily:'var(--df)',derby:'var(--fw)',oneclub:'var(--mf)',anti:'var(--muted)',legends:'var(--gk)'};
 async function ppHistLoad(more){
   const st=PP,el=document.getElementById('ppHistList');if(!el||!st)return;const off=more&&st.hist?st.hist.rows.length:0;
@@ -172,8 +172,8 @@ async function ppHistLoad(more){
   el.innerHTML=st.hist.rows.length?`<div class="pp-list">${st.hist.rows.map(r=>`<div class="pp-row h" data-sid="${numOr0(r.id)}" role="button" tabindex="0"><span class="d">${fmtShort(r.day||r.created_at)}</span><div class="t"><b><i class="mdot" style="background:${PP_MODE_DOT[r.day?'daily':r.mode==='pick'?'pick':r.format]||'var(--muted)'}"></i>${esc(lab(r))}</b><span>${numOr0(r.place)} місце · ${numOr0(r.w)}-${numOr0(r.d)}-${numOr0(r.l)}</span></div><span class="n">${numOr0(r.pts)}<small>оч</small></span>${icon('chevron-right')}</div>`).join('')}</div>${st.hist.more?'<button class="ghost wbtn" id="ppMore" style="margin-top:8px">Ще 10 сезонів</button>':''}`:'<p class="muted">Ще немає зіграних сезонів.</p>';
   const m=document.getElementById('ppMore');if(m)m.onclick=()=>{m.disabled=true;ppHistLoad(true);};
 }
-// налаштування (лише своя сторінка). 0.68 (власник обрав варіант A, як у 38-0): відкриті одразу, список рядків «Ім'я › andré»;
-// тап — лист знизу з полем і «Зберегти» (ppSheet). Окремо «Акаунт»: чим увійшов, «Вийти»; унизу — «Видалити акаунт…»
+// settings (own page only): shown expanded, list of rows like "Name > andré";
+// tap opens a bottom sheet with a field and Save (ppSheet). Separate Account block: sign-in method, sign out; at the bottom: delete account
 const ppRow=(id,k,sub,v,muted)=>`<button class="set-r" id="${id}"><span class="k">${k}<small>${sub}</small></span><span class="v${muted?' mu':''}">${esc(v)}</span>${icon('chevron-right')}</button>`;
 function ppSettingsHtml(){
   const via=SESSION?((SESSION.user.app_metadata&&SESSION.user.app_metadata.provider)==='google'?'Google':'Telegram'):'';
@@ -191,7 +191,7 @@ function ppSettingsHtml(){
   h+=`</div>`;
   if(PLAYER)h+=`<button class="pp-del" id="ppDel">${SESSION?'Видалити акаунт…':'Видалити мої дані…'}</button><div id="ppDelBox" hidden class="pp-delbox"><p>Ім'я, вхід і прив'язку цього пристрою буде стерто назавжди. Результати лишаться в таблицях під анонімним іменем, але вже не будуть пов’язані з тобою. Трофеї й серія на цьому пристрої теж зникнуть.</p><div class="row"><button class="danger" id="ppDelYes">Так, видалити</button><button class="ghost" id="ppDelNo">Скасувати</button></div><p class="muted" id="ppDelMsg" style="margin:0"></p></div>`;
   return h+`</div>`;}
-// лист знизу (iPad — по центру): заголовок, поле, підказка, «Зберегти»; save(value) → '' (готово, закрити) або текст помилки
+// bottom sheet (iPad: centered): title, field, hint, Save; save(value) -> '' (done, close) or error text
 function ppSheet({title,id,value,placeholder,hint,type,max,disabled,save,input,msgId,saveId}){msgId=msgId||id+'Msg';saveId=saveId||id+'Save';
   const old=document.getElementById('ppSheet');if(old)old.remove();
   const o=document.createElement('div');o.className='sheet0';o.id='ppSheet';
@@ -206,11 +206,11 @@ function ppSheet({title,id,value,placeholder,hint,type,max,disabled,save,input,m
 function ppNameSheet(){if(!PLAYER)return;const nx=PLAYER.name_next&&PLAYER.name_next>new Date().toISOString()?PLAYER.name_next:null;
   ppSheet({title:"Ім'я",id:'ppNameIn',msgId:'ppNameMsg',saveId:'ppNameSave',value:PLAYER.name||'',placeholder:PLAYER.anon_name||'',max:20,disabled:!!nx,
     hint:nx?`Змінити знову можна з ${fmtLong(nx)}.`:`3–20 символів: латинські літери a–z, цифри, «_» і «.». Змінювати можна раз на 30 днів. Це ім'я бачать усі в таблицях і лігах.${PLAYER.name?'':` Поки ти в таблицях як <b>${esc(PLAYER.anon_name||'')}</b>.`}`,
-    input:f=>{const v=f.value,w=v.toLowerCase().replace(/\s/g,'_');if(w!==v){const c=f.selectionStart;f.value=w;try{f.setSelectionRange(c,c);}catch(x){}}},   // одразу малі літери й «_» замість пробілу
+    input:f=>{const v=f.value,w=v.toLowerCase().replace(/\s/g,'_');if(w!==v){const c=f.selectionStart;f.value=w;try{f.setSelectionRange(c,c);}catch(x){}}},   // lowercase and "_" instead of space while typing
     save:async v=>{const err=await playerRename(v);if(err)return esc(err);const h=document.getElementById('ppName');if(h)h.textContent=myName();
       ppFlash(PLAYER.name?`Збережено: <b>${esc(PLAYER.name)}</b>.`:`Готово: ти знову <b>${esc(PLAYER.anon_name)}</b>.`);return '';}});}
-function ppFlash(html){setTimeout(()=>{const m=document.getElementById('ppSetMsg');if(m){m.hidden=false;m.innerHTML=html;}},0);}   // після ppRender
-// пошта для новин (0.60): окремо від профілю, публічна сторінка її не показує
+function ppFlash(html){setTimeout(()=>{const m=document.getElementById('ppSetMsg');if(m){m.hidden=false;m.innerHTML=html;}},0);}   // after ppRender
+// newsletter email: separate from profile, never shown on the public page
 async function ppMailSave(v,optin){v=(v||'').trim();
   if(v&&!/^[^@\s]{1,64}@[^@\s]+\.[^@\s.]{2,}$/.test(v))return 'Схоже, в адресі помилка.';
   try{const p=await playerRpc('set_player_contact',{p_email:v,p_optin:!!(v&&optin)});playerSet(p);
@@ -220,12 +220,12 @@ function ppWire(){
   const $=id=>document.getElementById(id);
   for(const id of ['ppLogin','ppLogin2'])if($(id))$(id).onclick=()=>{ACCT_MSG='';openAcct();};
   const hd=$('ppHist');if(hd)hd.ontoggle=()=>{if(hd.open&&!(PP&&PP.hist))ppHistLoad(false);};
-  if($('ppEdit'))$('ppEdit').onclick=ppNameSheet;   // олівець біля імені в шапці
+  if($('ppEdit'))$('ppEdit').onclick=ppNameSheet;   // pencil next to the name in the header
   if($('ppRowName'))$('ppRowName').onclick=ppNameSheet;
   if($('ppRowTeam'))$('ppRowTeam').onclick=()=>ppSheet({title:'Назва команди',id:'ppTeam',value:lsGet('upl30_team')||'',placeholder:'Твоя 11-ка',max:22,
-    hint:'Видно на полі й у картці результату. Порожнє поле — «Твоя 11-ка».',save:async v=>{lsSet('upl30_team',v.trim().slice(0,22)||null);return '';}});   // 0.63: назва команди — тут, а не у вільній грі
+    hint:'Видно на полі й у картці результату. Порожнє поле — «Твоя 11-ка».',save:async v=>{lsSet('upl30_team',v.trim().slice(0,22)||null);return '';}});   // team name is set here
   if($('ppRowMail'))$('ppRowMail').onclick=()=>ppSheet({title:'Пошта для новин',id:'ppMail',type:'email',max:254,value:PLAYER.contact_email||'',placeholder:'name@gmail.com',
-    hint:'Видно лише тобі. Порожнє поле — пошту буде стерто.',save:v=>ppMailSave(v,PLAYER.contact_email?PLAYER.news_optin:true)});   // нова пошта — новини ввімкнено (поле так і зветься); далі — перемикачем
+    hint:'Видно лише тобі. Порожнє поле — пошту буде стерто.',save:v=>ppMailSave(v,PLAYER.contact_email?PLAYER.news_optin:true)});   // new email: news enabled (as the field label says); later via toggle
   if($('ppNews'))$('ppNews').onchange=async e=>{const on=e.target.checked;
     if(!(PLAYER&&PLAYER.contact_email)){e.target.checked=false;$('ppRowMail').click();const m=$('ppMailMsg');if(m)m.textContent='Спершу впиши пошту — туди й надсилатимемо новини.';return;}
     const err=await ppMailSave(PLAYER.contact_email,on);if(err){e.target.checked=!on;ppFlash(esc(err));}else ppRender();};
@@ -238,11 +238,11 @@ function ppWire(){
     document.getElementById('ppBye').onclick=()=>{location.href=location.pathname;};};
   document.querySelectorAll('#pp [data-sid]').forEach(r=>{const open=()=>openView(`id=eq.${numOr0(r.dataset.sid)}`);r.onclick=open;r.onkeydown=e=>{if(e.key==='Enter')open();};});
 }
-// після видалення: вийти з акаунта й стерти все своє з цього пристрою (тема й «Що нового» лишаються)
+// after deletion: sign out and wipe own data from this device (theme and What's new state stay)
 async function acctWipe(){try{if(SB&&SESSION)await SB.auth.signOut();}catch(e){}SESSION=null;PLAYER=null;
   try{for(let i=localStorage.length-1;i>=0;i--){const k=localStorage.key(i);if(k&&k.startsWith('upl30_')&&k!=='upl30_theme'&&k!=='upl30_news_seen')localStorage.removeItem(k);}}catch(e){}
   BEST={};renderAcct();}
-// посилання на сторінку гравця в таблицях: ім'я — з профілю (players), у нижньому регістрі
+// player page link in tables: name from profile (players), lowercase
 function plink(r){const n=pname(r),u=r&&r.players&&r.players.public_id;return u&&/^[a-z2-9]{8}$/.test(u)?`<a class="plink" href="?u=${u}" data-u="${u}">${esc(n)}</a>`:esc(n);}
-// відкрито посилання ?u=… — чужа (або своя) сторінка
+// ?u=... link opened: other (or own) player page
 if(ONLINE){const m=/[?&]u=([a-z2-9]{8})(?:&|$)/.exec(location.search);if(m)setTimeout(()=>openPlayer(m[1]),0);}

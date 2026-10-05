@@ -1,14 +1,14 @@
-// 30-0 УПЛ — турнір ліги 5×5 (0.63, адреса /api/fl5). POST {id}: якщо збір складів закінчився, а турнір ще не зіграно — сервер
-// перевіряє склади за пулом гри (гравець справді є в цьому клуб-сезоні, лінія збігається зі схемою, епоха ліги, без повторів),
-// розігрує весь турнір рушієм lib/five_core.js (копія src/five_core.js) із seed ліги (однаково для всіх, перевірно) і зберігає (fl5_store — лише сервер, один раз).
-// Відповідь — ліга (fl_get). Складів менше 2 — ліга скасовується (result.cancelled). Змінні: SUPABASE_SERVICE_KEY (+ SUPABASE_URL у тесті).
+// 30-0 UPL: 5x5 league tournament (/api/fl5). POST {id}: if squad submission is over and the tournament isn't played yet, the server
+// validates squads against the game pool (player really in that club-season, line matches formation, league era, no duplicates),
+// plays the whole tournament with lib/five_core.js (copy of src/five_core.js) using the league seed (same for all, verifiable) and stores it (fl5_store, server only, once).
+// Response: the league (fl_get). Fewer than 2 squads -> league cancelled (result.cancelled). Env: SUPABASE_SERVICE_KEY (+ SUPABASE_URL in test).
 const { sb, body, rateLimit } = require('./_device.js');
 const E = require('../lib/engine.js');
-const C = require('../lib/five_core.js');   // копія src/five_core.js (tools/make_engine.js): src/ на Vercel не викладається
+const C = require('../lib/five_core.js');   // copy of src/five_core.js (tools/make_engine.js): src/ is not deployed to Vercel
 
 const canon = id => (E.DATA.alias && E.DATA.alias[id]) || id;
-const lineOf = p => E.GROUP_OF[p[6]] || p[1];   // лінія гравця для 5×5: GK / DF / MF / FW
-// склад → команда для рушія або null (не пройшов перевірку)
+const lineOf = p => E.GROUP_OF[p[6]] || p[1];   // player's line for 5x5: GK / DF / MF / FW
+// squad -> engine team, or null if validation fails
 function team(f, era) {
   const form = C.F5_FORMS[f.form]; if (!form || !Array.isArray(f.xi) || f.xi.length !== 5) return null;
   const need = form.rows.flat().sort().join(), y0 = (E.ERAS[era] || {}).y0 || 0, seen = new Set(), slots = [];
@@ -45,4 +45,4 @@ module.exports = async (req, res) => {
     return res.status(200).json(L);
   } catch (e) { console.warn('fl5', e.message); return res.status(500).json({ error: 'db' }); }
 };
-module.exports.play = play;   // для тесту
+module.exports.play = play;   // for tests

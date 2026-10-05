@@ -1,5 +1,5 @@
-// Сценарії перед виходом: головна, тема, 4 сезони (класика, виклик дня, антисезон, дербі), текст і картка результату.
-// Запуск з кореня: node tools/tests/scenarios.js [папка для знімків]. Код виходу 0 — усе гаразд.
+// Pre-release scenarios: home, theme, 4 seasons (classic, daily, anti-season, derby), result text and card.
+// Run from repo root: node tools/tests/scenarios.js [screenshot dir]. Exit code 0 = all good.
 const path=require('path'),fs=require('fs');const {ROOT,openPage,playSeason,pickFmt}=require('./_page.js');
 const OUT=process.argv[2]||path.join(ROOT,'tools','tests','out');fs.mkdirSync(OUT,{recursive:true});
 const fail=[];const check=(ok,msg)=>{if(!ok)fail.push(msg);};
@@ -14,7 +14,7 @@ const fail=[];const check=(ok,msg)=>{if(!ok)fail.push(msg);};
  await pg.click('#themeBtn');check(await pg.evaluate(()=>document.documentElement.dataset.theme)==='light','перемикач теми не працює');
  await pg.reload();await pg.waitForTimeout(500);check(await pg.evaluate(()=>document.documentElement.dataset.theme)==='light','тема не запам\'яталась');
  await pg.screenshot({path:path.join(OUT,'home_light.png')});await pg.click('#themeBtn');
- // «Показати рейтинги»: вимкнено за замовчуванням, вмикається посеред драфту, порядок не змінює, лишається на наступне кручення
+ // show-ratings toggle: off by default, can be enabled mid-draft, doesn't change order, persists to the next spin
  await pg.evaluate(()=>document.getElementById('homeBtn').click());await pg.click('#freeOpen');await pg.click('#formats .opt[data-fmt="classic"]');await pg.click('#modes .opt:nth-child(1)');await pg.click('#startBtn');
  await pg.click('#spinBtn');await pg.waitForSelector('#squad .pl:not([disabled])',{timeout:8000});
  const before=await pg.evaluate(()=>({vis:!document.getElementById('showRRow').hidden,on:document.getElementById('showR').checked,names:[...document.querySelectorAll('#squad .pl .nm')].map(e=>e.textContent),rt:[...document.querySelectorAll('#squad .pl .rt')].map(e=>e.textContent).join('')}));
@@ -27,12 +27,12 @@ const fail=[];const check=(ok,msg)=>{if(!ok)fail.push(msg);};
  await pg.click('#spinBtn');await pg.waitForSelector('#squad .pl:not([disabled])',{timeout:8000});
  check(await pg.evaluate(()=>document.getElementById('showR').checked&&[...document.querySelectorAll('#squad .pl .rt')].every(e=>/^\d+$/.test(e.textContent))),'рейтинги: не лишились на наступне кручення');
  check(await pg.evaluate(()=>/^\d+$/.test((document.querySelector('#pitch .slot.filled .r')||{}).textContent||'')),'рейтинги: немає цифри на полі');
- // «Хардкора» в выборе нет (0.46); в антисезоне галочки нет
+ // no hardcore mode in the mode list; no toggle in anti-season
  check(await pg.evaluate(()=>{document.getElementById('homeBtn').click();document.getElementById('freeOpen').click();return [...document.querySelectorAll('#modes .opt b')].map(b=>b.textContent).join(',');})==='Звичайний,Складний','режими: у виборі не лише «Звичайний» і «Складний»');
  await pickFmt(pg,'anti');await pg.click('#startBtn');await pg.click('#spinBtn');await pg.waitForSelector('#squad .pl:not([disabled])',{timeout:8000});
  check(await pg.evaluate(()=>document.getElementById('showRRow').hidden),'рейтинги: галочка є в антисезоні');
  await pg.evaluate(()=>document.getElementById('homeBtn').click());await pg.click('#freeOpen');await pg.click('#formats .opt[data-fmt="classic"]');await pg.click('#modes .opt:nth-child(1)');
- // «Переставити гравців»: без кнопки тап по гравцю нічого не робить, з кнопкою — підсвічує місця
+ // swap-players: without the button a tap on a player does nothing; with it, target slots are highlighted
  await pg.click('#startBtn');
  for(let i=0;i<3;i++){await pg.click('#spinBtn');await pg.waitForSelector('#squad .pl:not([disabled])',{timeout:8000});const btn=await pg.$('.pl:not([disabled])');await btn.click();await pg.waitForTimeout(80);const pick=await pg.$('#pitch .slot.target');if(pick){await pick.click();await pg.waitForTimeout(60);}}
  const fi=await pg.evaluate(()=>[...document.querySelectorAll('#pitch .slot')].findIndex(d=>d.classList.contains('filled')));
@@ -42,7 +42,7 @@ const fail=[];const check=(ok,msg)=>{if(!ok)fail.push(msg);};
  await pg.click('#moveBtn');await (await pg.$$('#pitch .slot'))[fi].click();await pg.waitForTimeout(100);
  check(await pg.evaluate(()=>window.__dbg.S.move!=null),'перестановка: з кнопкою тап не вибирає гравця');
  await pg.click('#moveBtn');await pg.evaluate(()=>document.getElementById('homeBtn').click());
- // пасхалка й трофей Nice
+ // easter egg and the Nice trophy
  check(await pg.evaluate(()=>{const D=window.__dbg;const cs=D.DATA.clubs.find(c=>c.pl.some(p=>p[5]==='w:1979-03-30:timoschuk'));D.S.wheel=cs;D.renderWheel();const ok=/Анатолій Тимощук \(пітух\)/.test(document.getElementById('squad').textContent);D.S.wheel=null;return ok;}),'пасхалка: у Тимощука немає «(пітух)»');
  check(await pg.evaluate(()=>{const e=window.__dbg.trEval;const X=n=>({id:'x'+n,name:'Олександр Тест'+n});const c={r:{W:1,D:1,L:28,pts:4,place:16,gf:5,ga:60,xp:10,log:[]},xi:[X(1),X(2),X(3),X(4),X(5),X(6),X(7),X(8),X(9),X(10),{id:'w:1972-02-29:palianitsia',name:'Олександр Паляниця'}],pl:[],mode:'normal',format:'classic',reveal:true};const g=e(c);const c5={...c,xi:c.xi.slice(1)};return g.includes('oleksandry')&&g.includes('palianytsia')&&!e(c5).includes('oleksandry');}),'трофеї Віті не видаються');
  check(await pg.evaluate(()=>{const e=window.__dbg.trEval;const base={r:{W:10,D:10,L:10,pts:40,place:8,gf:40,ga:40,xp:40,log:[]},pl:[],mode:'normal',format:'classic',reveal:true};
@@ -63,11 +63,11 @@ const fail=[];const check=(ok,msg)=>{if(!ok)fail.push(msg);};
  for(const [fmt,mode,form] of [['classic',1,1],['daily',0,0],['anti',3,1],['derby',2,2]]){
   await playSeason(pg,fmt,mode,form);
   await pg.screenshot({path:path.join(OUT,`result_${fmt}.png`),fullPage:true});
-  await pg.click('#tgShareBtn');await pg.waitForTimeout(900);   // поза Telegram і без системного меню — показує картку
+  await pg.click('#tgShareBtn');await pg.waitForTimeout(900);   // outside Telegram and without a native share sheet: shows the card
   check(await pg.evaluate(()=>!document.getElementById('shareImg').hidden),`${fmt}: «Поділитися карткою» не показала картку`);
   const d=await pg.evaluate(()=>{const S=window.__dbg.S;return {text:document.getElementById('shareText').value,cap:window.__dbg.shareTextOf(S.result,false,true),img:document.getElementById('shareImg').src,r:{W:S.result.W,D:S.result.D,L:S.result.L,gf:S.result.gf,ga:S.result.ga,log:S.result.log.map(m=>[m.ug,m.og,m.res])},verified:document.getElementById('verLine').textContent};});
   fs.writeFileSync(path.join(OUT,`card_${fmt}.png`),Buffer.from(d.img.split(',')[1],'base64'));
-  // 0.50: гравець бачить лише базовий рейтинг картки — на полі результату, у таблиці гравців і в перегляді сезону
+  // player sees only the base card rating: on the result pitch, in the player table and in the season view
   if(fmt!=='anti'){const rb=await pg.evaluate(()=>{const D=window.__dbg,S=D.S;const bad=[];
     const base=S.slots.map(s=>s.player.r0);
     [...document.querySelectorAll('#pitch2 .slot')].forEach((d,i)=>{const e=d.querySelector('.r0');if(e&&+e.textContent!==base[i])bad.push('поле '+e.textContent+'≠'+base[i]);});

@@ -1,6 +1,6 @@
-// 0.69: щоденне зведення помилок гравців власнику в Telegram (api/_errdigest.js, викликає api/cron.js).
-// Без браузера: база й Telegram підроблені. Помилок немає — нічого не надсилаємо; є — одне повідомлення; повтор того ж дня — без дубля.
-// Запуск з кореня: node tools/tests/err_digest.js
+// Daily client-error digest to the admin Telegram chat (api/_errdigest.js, called by api/cron.js).
+// No browser: DB and Telegram are faked. No errors → nothing sent; errors → one message; rerun the same day → no duplicate.
+// Run from repo root: node tools/tests/err_digest.js
 const {checker}=require('./_site.js');const {digestText,errDigest}=require('../../api/_errdigest.js');
 (async()=>{const T=checker('err_digest');
   T.check(digestText([],'2026-10-02')===null,'немає помилок — немає тексту');

@@ -1,19 +1,19 @@
-// 30-0 УПЛ — вечірній підсумок дня в лігах (Vercel Cron з vercel.json о 18:00 UTC: 21:00 за Києвом улітку, 20:00 — узимку)
-// Пише в групу один раз на день і лише якщо хтось грав. Повторний виклик нічого не надсилає.
-// Змінна оточення у Vercel: CRON_SECRET (обов'язкова, інакше 401).
+// 30-0 UPL: evening daily summary for leagues (Vercel Cron from vercel.json at 18:00 UTC: 21:00 Kyiv in summer, 20:00 in winter)
+// Posts to a group once per day and only if someone played. Repeated calls send nothing.
+// Vercel env: CRON_SECRET (required, else 401).
 const L = require('./_league.js');
-const C = require('./_channel.js');   // 0.69.97: черга постів каналу
+const C = require('./_channel.js');   // channel post queue
 const { plUk } = require('./_lib.js');
-const { errDigest } = require('./_errdigest.js');   // спільні функції ліг груп (0.60: одна копія замість трьох)
+const { errDigest } = require('./_errdigest.js');   // errors digest
 const safeEq = (a, b) => { const x = Buffer.from(String(a)), y = Buffer.from(String(b)); return x.length === y.length && require('crypto').timingSafeEqual(x, y); };
 
 module.exports = async (req, res) => {
-  // Vercel Cron сам надсилає заголовок «Authorization: Bearer <CRON_SECRET>», якщо змінну CRON_SECRET задано у Vercel.
-  // Без змінної або з чужим ключем — 401 (раніше без змінної cron був відкритий усім). Ручний запуск — лише з тим самим заголовком.
+  // Vercel Cron sends "Authorization: Bearer <CRON_SECRET>" itself when CRON_SECRET is set in Vercel.
+  // Missing env var or wrong key -> 401. Manual runs need the same header.
   const cronSecret = L.env('CRON_SECRET');
   const auth = String((req.headers && req.headers.authorization) || '');
   const okBy = sec => !!sec && safeEq(auth, `Bearer ${sec}`);
-  // 0.69.97: ?task=channel — лише черга каналу (кожні ~10 хв з GitHub Actions, .github/workflows/channel.yml); ключ — CHANNEL_SECRET або CRON_SECRET
+  // ?task=channel: channel queue only (every ~10 min from GitHub Actions, .github/workflows/channel.yml); key: CHANNEL_SECRET or CRON_SECRET
   if (req.query && req.query.task === 'channel') {
     if (!okBy(cronSecret) && !okBy(L.env('CHANNEL_SECRET'))) return res.status(401).json({ error: 'unauthorized' });
     try { return res.status(200).json({ ok: true, channel: await C.runChannel() }); } catch (e) { return res.status(500).json({ error: String(e && e.message || e).slice(0, 200) }); }
@@ -33,7 +33,7 @@ module.exports = async (req, res) => {
       const st = await L.standings(chat_id);
       const win = list[0], ws = st.find(s => s.name === win.name);
       const medal = ['🥇', '🥈', '🥉'];
-      // 0.69.96 (власник 05.10: «бот кидає дуже великі повідомлення»): без трофеїв і без «Завтра нове колесо»
+      // keep messages short: no trophies and no "new wheel tomorrow" line
       let t = `<b>🌙 Підсумок дня №${L.dayNo(day)} — ліга «${L.esc(lg ? lg.title : '')}»</b>\n\n`;
       t += list.map((r, i) => `${medal[i] || (i + 1) + '.'} ${L.esc(r.name)} — <b>${r.pts}</b> (${r.w}-${r.d}-${r.l}, ${r.gf}:${r.ga})`).join('\n');
       t += `\n\n👑 Переможець дня: <b>${L.esc(win.name)}</b>${ws && ws.wins > 1 ? ` (уже ${ws.wins}-й раз)` : ''}`;
@@ -42,7 +42,7 @@ module.exports = async (req, res) => {
       await L.sb('league_boards?on_conflict=chat_id,day', { method: 'POST', prefer: 'resolution=merge-duplicates,return=minimal', body: { chat_id, day, summary_sent: true } });
       done.push(chat_id);
     }
-    // недільний підсумок тижня (пн–нд за Києвом): сума очків і перемоги в днях
+    // Sunday weekly summary (Mon-Sun, Kyiv): points total and day wins
     const weekly = [];
     const wd = (new Date(Date.UTC(+day.slice(0, 4), +day.slice(5, 7) - 1, +day.slice(8, 10))).getUTCDay() + 6) % 7;
     if (wd === 6 || (req.query && req.query.week === '1')) {
@@ -59,7 +59,7 @@ module.exports = async (req, res) => {
         for (const list of Object.values(byDay)) { list.sort(L.sortRes); list.forEach((r, i) => { const s = st[r.tg_user_id] || (st[r.tg_user_id] = { name: r.name, pts: 0, days: 0, wins: 0 }); s.pts += r.pts; s.days++; s.name = r.name; if (i === 0) s.wins++; }); }
         const tab = Object.values(st).sort((a, b) => b.pts - a.pts || b.wins - a.wins);
         const medal = ['🥇', '🥈', '🥉'];
-        // 0.69.96 (власник 05.10): ліга з'явилась посеред тижня — період від її першого дня, а не з понеділка
+        // league created mid-week: period starts from its first day, not Monday
         const first = rows.reduce((m, r) => (String(r.day) < m ? String(r.day) : m), day);
         let t = `<b>📅 Підсумок тижня ${L.dayShort(first)}–${L.dayShort(day)} — ліга «${L.esc(lg ? lg.title : '')}»</b>\n(сума очків за всі виклики тижня)\n\n`;
         t += tab.map((s, i) => `${medal[i] || (i + 1) + '.'} ${L.esc(s.name)} — <b>${s.pts}</b> за ${s.days} ${plUk(s.days, 'день', 'дні', 'днів')}${s.wins ? `, перемог: ${s.wins}` : ''}`).join('\n');
@@ -69,10 +69,10 @@ module.exports = async (req, res) => {
         weekly.push(chat_id);
       }
     }
-    // 0.69.97: черга каналу — запасний запуск раз на день (основний — GitHub Actions); збій не ламає підсумки ліг
+    // channel queue: daily fallback run (primary is GitHub Actions); failure doesn't break league summaries
     let channel = null;
     try { channel = await C.runChannel(); } catch (e) { channel = { error: String(e && e.message || e).slice(0, 120) }; }
-    // 0.69: зведення помилок гравців власнику (api/_errdigest.js); збій зведення не ламає підсумки ліг
+    // player errors digest to admin (api/_errdigest.js); failure doesn't break league summaries
     let errs = null;
     try { errs = await errDigest({ sb: L.sb, tg: L.tg, env: L.env, day }); } catch (e) { errs = { error: String(e && e.message || e).slice(0, 120) }; }
     res.status(200).json({ ok: true, day, summaries: done.length, weekly: weekly.length, errs, channel });

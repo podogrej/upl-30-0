@@ -1,32 +1,32 @@
--- 30-0 УПЛ · v0.61 · «Ліги з друзями»: ліги 11×11 на сайті, без Telegram (docs/leagues_online.md, макети docs/mockups/lg_*.png; DECISIONS п. 11).
--- Запускати: спершу тестова база (upl-30-0-test), потім основна. Supabase → SQL Editor → вставити цілком → Run.
--- Повторний запуск нічого не ламає. Сайт 0.60, ще відкритий у гравців, працює як раніше (нові таблиці й функції йому не потрібні).
--- Нові таблиці — з префіксом fl_ (імена leagues* зайняті лігами Telegram-груп, DECISIONS «Словник»). RLS без політик, прав anon/authenticated немає:
--- створити лігу й вступити — RPC з перевіркою входу (лише з акаунтом) і секрету пристрою; спробу в залік пише лише сервер після перевірки сезону.
+-- v0.61: friend leagues: 11x11 leagues on the site, without Telegram (docs/leagues_online.md, mockups docs/mockups/lg_*.png; DECISIONS item 11).
+-- Run on the test DB first (upl-30-0-test), then on the main DB.
+-- Idempotent. 0.60 clients keep working (they do not use the new tables and functions).
+-- New tables use the fl_ prefix (leagues* names belong to Telegram group leagues, see DECISIONS glossary). RLS without policies, no anon/authenticated grants:
+-- creating and joining go through RPCs that check the sign-in (account required) and device secret; only the server records attempts after verifying the season.
 --
--- Що тут:
---  1. fl_leagues — ліга: правила (тривалість 1/3/7 днів, спроби 1/3 на день, у залік найкраща/остання, очки «за місце»/«сума», перекрути 3/1/0,
---     рейтинги видно / на пам'ять, епоха); fl_members — учасники; fl_entries — зараховані спроби (сезон, очки, день туру).
---  2. seasons.fl_id — сезон зіграно як спробу ліги (пише сервер, /api/save).
---  3. fl_create, fl_join — лише з входом (Google/Telegram) на своєму пристрої. fl_get — ліга за кодом (правила, учасники, таблиці) — для всіх.
---     fl_mine — мої ліги (для «Грати з друзями» і сторінки гравця). fl_record(season) — зарахувати сезон (лише сервер).
---  4. merge_answer (0.60) — ще й повертає локальний прогрес старого входу (user_state) для злиття на сайті.
+-- Contents:
+--  1. fl_leagues: league rules (duration 1/3/7 days, 1/3 attempts per day, best/last attempt counts, scoring by place/sum, rerolls 3/1/0,
+--     ratings shown / from memory, era); fl_members: members; fl_entries: counted attempts (season, points, round day).
+--  2. seasons.fl_id: the season was played as a league attempt (written by the server, /api/save).
+--  3. fl_create, fl_join: signed-in only, on the player's own device. fl_get: league by code (rules, members, tables), public.
+--     fl_mine: my leagues (play-with-friends screen and player page). fl_record(season): count a season (server only).
+--  4. merge_answer (0.60) also returns the old sign-in's local progress (user_state) for client-side merge.
 
--- 1. таблиці
+-- 1. tables
 create table if not exists public.fl_leagues (
-  id text primary key,                                   -- код у посиланні ?l=…, 6 символів
+  id text primary key,                                   -- code in the ?l=... link, 6 chars
   created_at timestamptz not null default now(),
-  owner uuid not null,                                   -- players.id творця
+  owner uuid not null,                                   -- creator's players.id
   name text not null,
-  fmt text not null default '11',                        -- '11' — 11×11 (5×5 — пізніше)
-  start_day date not null,                               -- перший тур (день за Києвом)
+  fmt text not null default '11',                        -- '11' = 11x11 (5x5 later)
+  start_day date not null,                               -- first round (Kyiv date)
   days int not null,                                     -- 1 / 3 / 7
-  tries int not null,                                    -- спроб на день: 1 / 3
-  take text not null,                                    -- у залік туру: best / last
-  scoring text not null,                                 -- place — за місце в турі; sum — очки сезону
-  rerolls int not null,                                  -- перекрути колеса: 3 / 1 / 0
-  ratings text not null,                                 -- show — видно; memory — на пам'ять
-  era text not null default 'all'                        -- all / y2000 / y2010 / y2015 (як ERAS у грі)
+  tries int not null,                                    -- attempts per day: 1 / 3
+  take text not null,                                    -- counted per round: best / last
+  scoring text not null,                                 -- place = by round position; sum = season points
+  rerolls int not null,                                  -- wheel rerolls: 3 / 1 / 0
+  ratings text not null,                                 -- show = visible; memory = from memory
+  era text not null default 'all'                        -- all / y2000 / y2010 / y2015 (same as ERAS in the game)
 );
 create table if not exists public.fl_members (
   league_id text not null,
@@ -37,7 +37,7 @@ create table if not exists public.fl_members (
 create table if not exists public.fl_entries (
   league_id text not null,
   player_id uuid not null,
-  day date not null,                                     -- день туру (Київ)
+  day date not null,                                     -- round day (Kyiv)
   try_n int not null,                                    -- 1…tries
   season_id bigint not null unique,
   pts int not null, w int not null, d int not null, l int not null, gf int not null, ga int not null, place int not null,
@@ -50,13 +50,13 @@ alter table public.fl_members enable row level security;
 alter table public.fl_entries enable row level security;
 revoke all on table public.fl_leagues, public.fl_members, public.fl_entries from anon, authenticated;
 
--- 2. сезон — спроба ліги
+-- 2. season as a league attempt
 alter table public.seasons add column if not exists fl_id text;
 
--- день за Києвом
+-- Kyiv date
 create or replace function public.fl_today() returns date language sql stable as $$ select (now() at time zone 'Europe/Kyiv')::date $$;
 
--- 3. створити лігу: лише з входом, пристрій — свого гравця. Творець одразу учасник. Помилки: login? (28000), fl_bad (22023)
+-- 3. create a league: signed-in only, device must belong to the player. The creator joins immediately. Errors: login? (28000), fl_bad (22023)
 create or replace function public.fl_create(p_device uuid, p_secret text, p_name text, p_days int, p_tries int, p_take text, p_scoring text,
                                             p_rerolls int, p_ratings text, p_era text) returns json
 language plpgsql security definer set search_path = public as $$
@@ -72,7 +72,7 @@ begin
     raise exception 'fl_bad' using errcode = '22023';
   end if;
   if (select count(*) from fl_leagues where owner = pid and created_at > now() - interval '1 day') >= 20 then
-    raise exception 'fl_many' using errcode = '22023';   -- не більше 20 ліг на день від гравця
+    raise exception 'fl_many' using errcode = '22023';   -- at most 20 leagues per player per day
   end if;
   loop
     code := (select string_agg(substr('abcdefghjkmnpqrstuvwxyz23456789', 1 + floor(random() * 31)::int, 1), '') from generate_series(1, 6));
@@ -87,7 +87,7 @@ end $$;
 revoke execute on function public.fl_create(uuid, text, text, int, int, text, text, int, text, text) from public, anon;
 grant execute on function public.fl_create(uuid, text, text, int, int, text, text, int, text, text) to authenticated;
 
--- вступити: лише з входом; ліга ще йде. Повторний вступ нічого не міняє
+-- join: signed-in only; league still running. Re-joining is a no-op
 create or replace function public.fl_join(p_device uuid, p_secret text, p_id text) returns json
 language plpgsql security definer set search_path = public as $$
 declare pid uuid; acc uuid; L fl_leagues%rowtype;
@@ -105,12 +105,12 @@ end $$;
 revoke execute on function public.fl_join(uuid, text, text) from public, anon;
 grant execute on function public.fl_join(uuid, text, text) to authenticated;
 
--- ліга за кодом — для всіх (як сторінка гравця): правила, тур, учасники, загальна таблиця й таблиця сьогоднішнього туру.
--- Залік туру: у кожного гравця одна спроба дня — найкраща (очки → різниця → забиті → раніше) або остання. «Сума» — очки сезону;
--- «за місце» — з K гравців, що зіграли того дня, 1-й отримує K, останній 1. Загальна: сума за тури → більше перемог у турах → кращий сезон.
+-- league by code, public (like the player page): rules, round, members, overall table and today's round table.
+-- Round score: each player has one counted attempt per day, best (points -> goal diff -> goals for -> earlier) or last. "sum" = season points;
+-- "place" = with K players who played that day, 1st gets K, last gets 1. Overall: sum over rounds -> more round wins -> better season.
 create or replace function public.fl_get(p_id text) returns json language sql stable security definer set search_path = public as $$
   with L as (select * from fl_leagues where id = lower(btrim(p_id))),
-  pick as (   -- спроба, що йде в залік дня
+  pick as (   -- attempt counted for the day
     select e.*, row_number() over (partition by e.player_id, e.day order by
              case when (select take from L) = 'last' then -e.try_n else 0 end,
              e.pts desc, e.gf - e.ga desc, e.gf desc, e.created_at) rn
@@ -147,7 +147,7 @@ $$;
 revoke execute on function public.fl_get(text) from public;
 grant execute on function public.fl_get(text) to anon, authenticated;
 
--- мої ліги (за секретом пристрою): назва, тур, учасники, моє місце в загальній таблиці, мої зараховані спроби сьогодні
+-- my leagues (by device secret): name, round, members, my overall place, my counted attempts today
 create or replace function public.fl_mine(p_device uuid, p_secret text) returns json language plpgsql volatile security definer set search_path = public as $$
 declare pid uuid; res json;
 begin
@@ -166,8 +166,8 @@ end $$;
 revoke execute on function public.fl_mine(uuid, text) from public;
 grant execute on function public.fl_mine(uuid, text) to anon, authenticated;
 
--- зарахувати сезон як спробу ліги (лише сервер, після перевірки сезону): сезон перевірено, гравець — учасник, ліга йде сьогодні,
--- класика «Звичайний», епоха ліги, спроби дня ще є. Повертає номер спроби або null (не зараховано) з причиною в NOTICE
+-- count a season as a league attempt (server only, after season verification): season verified, player is a member, league runs today,
+-- standard classic mode, league era, attempts left today. Returns the attempt number or null (not counted) with the reason in a NOTICE
 create or replace function public.fl_record(p_season bigint) returns int language plpgsql security definer set search_path = public as $$
 declare s seasons%rowtype; L fl_leagues%rowtype; v_day date; n int;
 begin
@@ -189,8 +189,8 @@ end $$;
 revoke execute on function public.fl_record(bigint) from public, anon, authenticated;
 grant execute on function public.fl_record(bigint) to service_role;
 
--- 4. «Це ти?» (0.60) + локальний прогрес (баг 0.60): на «так» повертаємо user_state старого входу (prev_state) — сайт зливає його
---    з поточним (трофеї, серія, рекорди) тим самим правилом, що й при вході (acctMerge), і зберігає в акаунт поточного входу
+-- 4. "Is this you?" (0.60) + local progress fix: on yes, return the old sign-in's user_state (prev_state); the client merges it
+--    with the current one (trophies, streak, records) by the same rule as on sign-in (acctMerge) and saves it to the current account
 create or replace function public.merge_answer(p_device uuid, p_secret text, p_offer uuid, p_yes boolean) returns json language plpgsql security definer set search_path = public as $$
 declare uid uuid := auth.uid(); dev uuid; acc uuid; o merge_offers%rowtype; fresh boolean; prev jsonb;
 begin
@@ -214,7 +214,7 @@ end $$;
 revoke execute on function public.merge_answer(uuid, text, uuid, boolean) from public, anon;
 grant execute on function public.merge_answer(uuid, text, uuid, boolean) to authenticated;
 
--- результат запуску
+-- run output
 select 'ліг' as "що", count(*)::text as "скільки" from public.fl_leagues
 union all select 'учасників', count(*)::text from public.fl_members
 union all select 'зарахованих спроб', count(*)::text from public.fl_entries;

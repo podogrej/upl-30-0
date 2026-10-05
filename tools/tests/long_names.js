@@ -1,11 +1,11 @@
-// 0.68 (власник: «обмеження, яке не ламає верстку»): найдовші можливі імена — нік 20 «w» (найширша латиниця), ім'я з Telegram 24 «Ш»
-// (сервер обрізає до 24), назва команди 22 «Ш» — на вузькому телефоні (320) і звичайному (390) нічого не вилазить за екран:
-// шапка, своя сторінка, ліга чату на головній і «Уся таблиця», загальна таблиця, підсумки сезону. Запуск з кореня: node tools/tests/long_names.js
+// Longest possible names: nickname of 20 "w" (widest Latin glyph), Telegram name of 24 wide Cyrillic letters (server truncates to 24),
+// team name of 22 wide letters. On narrow (320) and normal (390) phones nothing overflows: header, own page, chat league on home
+// and its full table, global table, season summary. Run from repo root: node tools/tests/long_names.js
 const {openSite,makeDB,checker,draftSeason}=require('./_site.js');
 const NICK='w'.repeat(20),TGN='Ш'.repeat(24),TEAM='Ш'.repeat(22);
 const OVER=()=>{const W=innerWidth,bad=[];const clip=el=>{for(let p=el.parentElement;p&&p!==document.body;p=p.parentElement){const o=getComputedStyle(p).overflowX;if(o!=='visible')return true;}return false;};
   for(const el of document.querySelectorAll('body *')){if(el.closest('[hidden]')||!el.getClientRects().length)continue;const r=el.getBoundingClientRect();if(r.width&&r.right>W+1&&!clip(el))bad.push((el.id||el.className||el.tagName)+' '+Math.round(r.right)+'>'+W);}
-  // таблиці: без горизонтальної прокрутки — усі колонки (очки, В-Н-П) видні
+  // tables: no horizontal scroll, all columns (points, W-D-L) visible
   for(const t of document.querySelectorAll('.tbl')){if(t.closest('[hidden]')||!t.getClientRects().length)continue;if(t.scrollWidth>t.clientWidth+1)bad.push('таблиця прокручується вбік '+t.scrollWidth+'>'+t.clientWidth);}
   for(const c of document.querySelectorAll('.tbl td.num')){if(c.closest('[hidden]')||!c.getClientRects().length)continue;if(c.getClientRects().length>1||c.scrollHeight>c.clientHeight+2||/\n/.test(c.innerText.trim()))bad.push('цифри перенеслись: '+c.innerText.trim().replace(/\n/g,'⏎'));}
   return {sw:document.documentElement.scrollWidth,W,bad:bad.slice(0,4)};};

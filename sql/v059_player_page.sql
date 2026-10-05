@@ -1,32 +1,32 @@
--- 30-0 УПЛ · v0.59 · сторінка гравця, ім'я гравця в одному місці, імена лише латиницею (DECISIONS п. 2, п. 12; аудит В5)
--- Запускати: спершу тестова база (upl-30-0-test), потім основна. Supabase → SQL Editor → вставити цілком → Run.
--- Результат запуску — таблиця «було → стало»: чиї імена переписано на латиницю (повторний запуск — порожня таблиця).
--- Повторний запуск нічого не ламає (і в базі, де попередня версія цього файлу вже виконувалась). Після 0.60: повторний запуск цього файлу
--- повертає функції 0.59 (set_player_name, player_json, delete_player, player_profile) — тоді одразу запустити й sql/v060_one_player.sql. Сайт 0.58, ще відкритий у гравців,
--- працює як раніше (player_json лише отримав нові поля; перше ім'я кирилицею з Telegram сервер сам переписує латиницею).
--- Нових політик запису для anon/authenticated немає: ім'я й видалення — лише через RPC з перевіркою секрету пристрою (як set_player_name).
+-- v0.59: player page, player name stored in one place, Latin-only names (DECISIONS items 2, 12; audit V5)
+-- Run on the test DB first (upl-30-0-test), then on the main DB.
+-- Output: an old -> new table of names rewritten to Latin (empty on re-run).
+-- Idempotent (also where an earlier revision of this file already ran). After 0.60, re-running this file
+-- restores the 0.59 functions (set_player_name, player_json, delete_player, player_profile): then run sql/v060_one_player.sql right after. 0.58 clients
+-- keep working (player_json only gained fields; the server transliterates a Cyrillic first name from Telegram).
+-- No new anon/authenticated write policies: name changes and deletion go only through RPCs that check the device secret (like set_player_name).
 --
--- Що тут:
---  1. players.name_changed_at (правило «не частіше ніж раз на 30 днів»), players.public_id — короткий публічний номер
---     для посилання на сторінку гравця (?u=…); device_id і номер гравця в посиланні не світимо.
---  2. name_key(text) — ключ унікальності (нижній регістр, пробіли стиснуто); name_translit(text) — будь-яке ім'я → латиниця
---     (офіційна українська транслітерація КМУ 2010: андрій → andrii, вітя → vitia, щербак → shcherbak, євген → yevhen; andré → andre).
---  3. name_problem / name_clean / name_blocked — правила (рішення власника 30.09.2026): 3–20 символів, лише a-z, цифри, «_» і «.»,
---     хоч одна літера, на початку й у кінці — літера або цифра, без мату (data/names/blocklist.txt; копії тут, у v059_name_conflicts.sql
---     і в src/account.js перевіряє tools/tests/player_page.js). name_free — перше вільне ім'я з основи (andrii, andrii2, andrii3…).
---  4. set_player_name (та сама сигнатура): правила вище, унікальність без урахування регістру (помилка name_taken),
---     зміна не частіше ніж раз на 30 днів (помилка name_wait:<дата>). Перше ім'я (з анонімного) — без очікування.
---     set_player_auto_name — перше ім'я з Telegram/Google: транслітерація, зайняте — з номером (andrii7), не вийшло — лишається анонімним.
---  5. Разова міграція: живі гравці, чиє ім'я не проходить правила (кирилиця, пробіли, великі літери, «andré») або збігається з чужим,
---     отримують латинську версію (з номером, якщо зайнято) і name_changed_at = null — можуть один раз змінити ім'я без очікування.
---     Анонімні імена — «silent_owl». Потім — унікальний індекс імен.
---  6. anon_name() — нові анонімні імена «silent_owl»; player_json — ще public_id і дата зміни імені.
---  7. merge_players: спершу позначаємо злитого гравця, потім переносимо ім'я (інакше унікальний індекс заважав би злиттю).
---  8. game_stats / trophy_stats — «гравців» рахуємо за гравцем (player_id), а не за пристроєм.
---  9. player_profile(uuid), player_profile_pub(public_id) — публічні цифри сторінки гравця (без пристроїв, без історії сезонів).
--- 10. delete_player(device, secret) — «Видалити акаунт» (DECISIONS п. 12): особисті дані стираються, результати лишаються під анонімним іменем.
+-- Contents:
+--  1. players.name_changed_at (at most one change per 30 days), players.public_id: short public number
+--     for the player page link (?u=...); device_id and player uuid are never exposed in links.
+--  2. name_key(text): uniqueness key (lowercase, collapsed spaces); name_translit(text): any name -> Latin
+--     (official Ukrainian KMU 2010 transliteration, e.g. shcherbak, yevhen; diacritics stripped: andre).
+--  3. name_problem / name_clean / name_blocked: rules: 3-20 chars, only a-z, digits, '_' and '.',
+--     at least one letter, alphanumeric at both ends, no profanity (data/names/blocklist.txt; copies here, in v059_name_conflicts.sql
+--     and in src/account.js are checked by tools/tests/player_page.js). name_free: first free name from a base (andrii, andrii2, andrii3...).
+--  4. set_player_name (same signature): rules above, case-insensitive uniqueness (error name_taken),
+--     at most one change per 30 days (error name_wait:<date>). The first name (from anonymous) has no wait.
+--     set_player_auto_name: first name from Telegram/Google: transliterated, numbered if taken (andrii7), stays anonymous on failure.
+--  5. One-off migration: live players whose name breaks the rules (Cyrillic, spaces, uppercase, diacritics) or duplicates another's
+--     get a Latin version (numbered if taken) and name_changed_at = null, so they can rename once without waiting.
+--     Anonymous names become "silent_owl". Then the unique name index is created.
+--  6. anon_name(): new anonymous names like "silent_owl"; player_json also returns public_id and name change date.
+--  7. merge_players: mark the merged player first, then move the name (otherwise the unique index would block the merge).
+--  8. game_stats / trophy_stats: "players" are counted by player_id, not by device.
+--  9. player_profile(uuid), player_profile_pub(public_id): public numbers for the player page (no devices, no season history).
+-- 10. delete_player(device, secret): account deletion (DECISIONS item 12): personal data is erased, results stay under an anonymous name.
 
--- 1. нові колонки гравця
+-- 1. new player columns
 alter table public.players add column if not exists name_changed_at timestamptz;
 alter table public.players add column if not exists public_id text;
 
@@ -37,17 +37,17 @@ update public.players set public_id = public.gen_public_id() where public_id is 
 alter table public.players alter column public_id set default public.gen_public_id();
 create unique index if not exists players_public_id_uq on public.players (public_id);
 
--- 2. ключ імені (на ньому — унікальний індекс; тіло не міняємо, щоб індекс лишався правильним): нижній регістр (і для кирилиці),
---    апострофи ’ʼ`‘ → ', пробіли стиснуто. Для латинських імен це просто lower().
+-- 2. name key (the unique index is built on it; do not change the body, or the index becomes stale): lowercase (Cyrillic too),
+--    apostrophe variants normalized to ', spaces collapsed. For Latin names this is just lower().
 create or replace function public.name_key(p text) returns text language sql immutable parallel safe as $$
   select btrim(regexp_replace(
     translate(lower(p), 'АБВГҐДЕЄЖЗИІЇЙКЛМНОПРСТУФХЦЧШЩЬЮЯЫЭЪЁ’ʼ`‘', 'абвгґдеєжзиіїйклмнопрстуфхцчшщьюяыэъё' || repeat(chr(39), 4)),
     '\s+', ' ', 'g'));
 $$;
 
--- транслітерація (КМУ 2010): є, ї, й, ю, я на початку слова — ye, yi, y, yu, ya, далі — ie, i, i, iu, ia; зг → zgh; ь і апостроф — пропускаємо.
--- Російські ы, э, ъ, ё — y, e, (нічого), yo/io. Латиниця з діакритикою — без неї (andré → andre). Пробіл і дефіс → «_»,
--- решта незвичного — геть, «__»/«..» стискаємо, на краях «_»/«.» прибираємо, обрізаємо до 20. Результат може не пройти правила (закороткий) — це перевіряє name_free.
+-- transliteration (KMU 2010): word-initial ye/yi/y/yu/ya vs ie/i/i/iu/ia elsewhere; zgh; soft sign and apostrophe are dropped.
+-- Russian-only letters map to y, e, (nothing), yo/io. Latin diacritics are stripped (andre). Space and hyphen -> '_',
+-- other unusual chars are removed, '__'/'..' collapsed, '_'/'.' trimmed at the ends, cut to 20. The result may still fail the rules (too short); name_free checks that.
 create or replace function public.name_translit(p text) returns text language plpgsql immutable parallel safe as $$
 declare s text := public.name_key(coalesce(p, '')); r text := ''; c text; pv text := ''; w boolean; i int;
 begin
@@ -55,7 +55,7 @@ begin
                                   'AAAAAAAAAaaaaaaaaaCCCcccDDddEEEEEEEEeeeeeeeeGgIIIIIIiiiiiiLlNNNnnnOOOOOOOoooooooRrSSSsssTtUUUUUUuuuuuuYYyyZZZzzz'), 'ß', 'ss'));
   for i in 1 .. char_length(s) loop
     c := substr(s, i, 1);
-    w := pv !~ '[a-z0-9а-яіїєґыэъё'']';   -- початок слова (апостроф слова не розриває: п'ять → piat)
+    w := pv !~ '[a-z0-9а-яіїєґыэъё'']';   -- word start (an apostrophe does not split a word)
     r := r || case c
       when 'а' then 'a' when 'б' then 'b' when 'в' then 'v' when 'г' then case when pv = 'з' then 'gh' else 'h' end when 'ґ' then 'g'
       when 'д' then 'd' when 'е' then 'e' when 'є' then case when w then 'ye' else 'ie' end when 'ж' then 'zh' when 'з' then 'z'
@@ -72,7 +72,7 @@ begin
   return regexp_replace(left(regexp_replace(r, '^[_.]+', ''), 20), '[_.]+$', '');
 end $$;
 
--- 3. мат (data/names/blocklist.txt): основа всередині імені без «_» і «.»; «^основа» — лише з початку слова (початок, «_», «.», цифра)
+-- 3. profanity (data/names/blocklist.txt): a stem anywhere in the name without '_' and '.'; '^stem' only at a word start (start, '_', '.', digit)
 create or replace function public.name_blocked(p text) returns boolean language sql immutable as $$
   select exists (select 1 from unnest(array[
     '^hui','^huy','khui','khuy','xui','xuy','pizd','pyzd','blyad','bliad','blyat','bliat','ebat','yeban','ieban','yobany',
@@ -82,7 +82,7 @@ create or replace function public.name_blocked(p text) returns boolean language 
                   else position(b in regexp_replace(coalesce(p, ''), '[_.]', '', 'g')) > 0 end);
 $$;
 
--- що не так з іменем (вже в нижньому регістрі, без пробілів): null — усе добре; інакше код помилки
+-- what is wrong with a name (already lowercase, no spaces): null = OK; otherwise an error code
 create or replace function public.name_problem(s text) returns text language sql immutable parallel safe as $$
   select case
     when s is null then null
@@ -93,7 +93,7 @@ create or replace function public.name_problem(s text) returns text language sql
   end;
 $$;
 
--- ім'я за правилами (нижній регістр, пробіли → «_»); порожнє → null (знову анонімний). Помилки: name_len, name_chars, name_edge, name_bad (код 22023)
+-- name normalized to the rules (lowercase, spaces -> '_'); empty -> null (back to anonymous). Errors: name_len, name_chars, name_edge, name_bad (code 22023)
 create or replace function public.name_clean(p_name text) returns text language plpgsql immutable set search_path = public as $$
 declare s text := nullif(regexp_replace(lower(btrim(coalesce(p_name, ''))), '\s+', '_', 'g'), ''); e text;
 begin
@@ -103,7 +103,7 @@ begin
   return s;
 end $$;
 
--- перше вільне ім'я з основи: andrii → andrii2 → andrii3… (основу за потреби вкорочуємо, щоб влізти в 20). Основа не проходить правила — null.
+-- first free name from a base: andrii -> andrii2 -> andrii3... (base shortened to fit 20 if needed). Base fails the rules -> null.
 create or replace function public.name_free(p_base text, p_self uuid) returns text language plpgsql stable set search_path = public as $$
 declare k int := 1; v text := p_base;
 begin
@@ -121,7 +121,7 @@ end $$;
 
 revoke execute on function public.name_free(text, uuid) from public, anon, authenticated;
 
--- 6. анонімні імена — «silent_owl» (латиниця, нижній регістр, «_» замість пробілу)
+-- 6. anonymous names like "silent_owl" (Latin, lowercase, '_' instead of space)
 create or replace function public.anon_name() returns text language sql volatile as $$
   select lower((array['Silent','Swift','Clever','Brave','Lucky','Sneaky','Calm','Bold','Quiet','Wild','Sharp','Happy',
                 'Mighty','Rapid','Hidden','Golden','Cosmic','Stormy','Sunny','Frosty','Nimble','Fearless','Curious','Steady'])[1 + floor(random() * 24)::int]
@@ -138,8 +138,8 @@ create or replace function public.player_json(p_id uuid) returns json language s
 $$;
 revoke execute on function public.player_json(uuid) from public, anon, authenticated;
 
--- 4. перше ім'я автоматично (з Telegram/Google, з поля «Твоє ім'я»): транслітерація, зайняте — з номером. Лише якщо імені ще немає;
---    відлік 30 днів не запускає. Нічого не вийшло (закоротке, мат) — гравець лишається анонімним.
+-- 4. automatic first name (from Telegram/Google or the name field): transliterated, numbered if taken. Only if there is no name yet;
+--    does not start the 30-day timer. On failure (too short, profanity) the player stays anonymous.
 create or replace function public.name_auto_set(p_player uuid, p_raw text) returns void language plpgsql security definer set search_path = public as $$
 declare nm text; an text;
 begin
@@ -149,7 +149,7 @@ begin
   if nm is null or nm = an then return; end if;
   begin
     update players set name = nm where id = p_player and name is null;
-  exception when unique_violation then null;   -- хтось щойно взяв те саме ім'я — лишаємось анонімним, наступного разу спробуємо ще
+  exception when unique_violation then null;   -- someone just took the same name: stay anonymous, retry next time
   end;
 end $$;
 revoke execute on function public.name_auto_set(uuid, text) from public, anon, authenticated;
@@ -164,7 +164,7 @@ end $$;
 revoke execute on function public.set_player_auto_name(uuid, text, text) from public;
 grant execute on function public.set_player_auto_name(uuid, text, text) to anon, authenticated;
 
--- ім'я гравця (вибране вручну)
+-- player name (chosen manually)
 create or replace function public.set_player_name(p_device uuid, p_secret text, p_name text) returns json language plpgsql security definer set search_path = public as $$
 declare pid uuid; nm text; cur players%rowtype;
 begin
@@ -173,11 +173,11 @@ begin
   begin
     nm := public.name_clean(p_name);
   exception when sqlstate '22023' then
-    -- сайт 0.58 (ще відкритий у гравців) підставляє перше ім'я з Telegram як є («Андрій») — переписуємо латиницею, а не падаємо
+    -- 0.58 clients send the raw Telegram first name (Cyrillic): transliterate instead of failing
     if cur.name is null then perform public.name_auto_set(pid, p_name); return public.player_json(pid); end if;
     raise;
   end;
-  -- те саме ім'я (інший регістр) — лише зберігаємо в нижньому регістрі, без відліку 30 днів
+  -- same name with different case: just store lowercase, no 30-day timer
   if nm is not distinct from public.name_key(cur.name) then
     if nm is not null and cur.name is distinct from nm then update players set name = nm where id = pid; end if;
     return public.player_json(pid);
@@ -190,7 +190,7 @@ begin
     raise exception 'name_taken' using errcode = '23505';
   end if;
   begin
-    -- перше ім'я (з анонімного, зокрема автоматичне з Telegram/Google) не запускає відлік; зміна чи скидання імені — запускає
+    -- first name (from anonymous, incl. automatic from Telegram/Google) does not start the timer; changing or clearing it does
     update players set name = nm, name_changed_at = case when cur.name is not null then now() else name_changed_at end where id = pid;
   exception when unique_violation then raise exception 'name_taken' using errcode = '23505';
   end;
@@ -198,7 +198,7 @@ begin
 end $$;
 grant execute on function public.set_player_name(uuid, text, text) to anon, authenticated;
 
--- 7. злиття: спершу позначка «злито», потім ім'я (унікальний індекс рахує лише не злитих)
+-- 7. merge: mark as merged first, then the name (the unique index covers only non-merged players)
 create or replace function public.merge_players(p_src uuid, p_dst uuid) returns void language plpgsql security definer set search_path = public as $$
 begin
   if p_src is null or p_dst is null or p_src = p_dst then return; end if;
@@ -217,10 +217,10 @@ end $$;
 revoke execute on function public.merge_players(uuid, uuid) from public, anon, authenticated;
 
 
--- 5. разова міграція імен (рішення власника 30.09.2026: лише латиниця). Повторний запуск нічого не змінює — усі імена вже за правилами.
---    Живий гравець з іменем не за правилами («Вітя», «андрій ш», «andré») або з тим самим іменем, що в старшого гравця, отримує
---    латинську версію (vitia, andrii_sh, andre; зайняте — з номером: vitia2); не вийшло (закоротке, мат) — знову анонімний.
---    name_changed_at = null — нове ім'я можна один раз змінити без очікування 30 днів. Список змін — результат запуску (у кінці файлу).
+-- 5. one-off name migration (Latin only). Idempotent: on re-run all names already follow the rules.
+--    A live player whose name breaks the rules or duplicates an older player's name gets
+--    a Latin version (numbered if taken: vitia2); on failure (too short, profanity) becomes anonymous again.
+--    name_changed_at = null: the new name can be changed once without the 30-day wait. The change list is the run output (end of file).
 create temp table if not exists v059_renames (player_id uuid, was text, became text);
 delete from v059_renames;
 do $$
@@ -228,7 +228,7 @@ declare r record; nm text; kept boolean;
 begin
   for r in select id, name, created_at from public.players
             where name is not null and merged_into is null and deleted_at is null order by created_at, id loop
-    -- з 0.60: зарезервоване ім'я гравця (name_reserved, «andré» власника) повторний запуск не переписує
+    -- since 0.60: a reserved name (name_reserved) is not rewritten on re-run
     if to_regclass('public.name_reserved') is not null then
       execute 'select exists (select 1 from public.name_reserved where name = $1 and player_id = $2)' into kept using r.name, r.id;
       if kept then continue; end if;
@@ -243,14 +243,14 @@ begin
     insert into v059_renames values (r.id, r.name, nm);
   end loop;
 end $$;
--- анонімні імена: «Silent Owl» → «silent_owl»
+-- anonymous names: "Silent Owl" -> "silent_owl"
 update public.players set anon_name = regexp_replace(lower(btrim(anon_name)), '\s+', '_', 'g')
  where anon_name is distinct from regexp_replace(lower(btrim(anon_name)), '\s+', '_', 'g');
 
--- унікальність імені без урахування регістру (лише серед живих гравців). Після міграції збігів немає.
+-- case-insensitive name uniqueness (live players only). No duplicates remain after the migration.
 create unique index if not exists players_name_uq on public.players (public.name_key(name)) where name is not null and merged_into is null and deleted_at is null;
 
--- 8. лічильники «гравців» — за гравцем (старі рядки без player_id — за пристроєм)
+-- 8. "players" counters by player_id (old rows without player_id fall back to device)
 create or replace function public.game_stats()
 returns json language sql stable security definer set search_path = public as $$
   select json_build_object(
@@ -263,7 +263,7 @@ returns json language sql stable security definer set search_path = public as $$
   );
 $$;
 grant execute on function public.game_stats() to anon, authenticated;
--- рідкість трофеїв: скільки гравців (player_id) має кожен трофей і скільки гравців узагалі грало
+-- trophy rarity: how many players (player_id) hold each trophy and how many players played at all
 create or replace function public.trophy_stats()
 returns json language sql stable security definer set search_path = public as $$
   select json_build_object(
@@ -273,8 +273,8 @@ returns json language sql stable security definer set search_path = public as $$
 $$;
 grant execute on function public.trophy_stats() to anon, authenticated;
 
--- 9. сторінка гравця: лише публічні цифри. Історію сезонів бачить лише власник (сайт бере її сам, за своїм player_id).
---    Сезони — не тренувальні й не визнані сервером підробкою (verified = false); старі неперевірені (null) рахуються.
+-- 9. player page: public numbers only. Season history is visible only to the owner (the client loads it by its own player_id).
+--    Seasons: not training and not flagged as forged by the server (verified = false); old unverified (null) ones count.
 create or replace function public.player_profile(p_player uuid) returns json language plpgsql stable security definer set search_path = public as $$
 declare pid uuid := p_player; p players%rowtype; hops int := 0; res json;
 begin
@@ -347,10 +347,10 @@ revoke execute on function public.player_profile_pub(text) from public;
 grant execute on function public.player_profile(uuid) to anon, authenticated;
 grant execute on function public.player_profile_pub(text) to anon, authenticated;
 
--- 10. «Видалити акаунт» (DECISIONS п. 12): лише власник пристрою (секрет). Особисті дані — ім'я, копії імен і імена Telegram у результатах,
---     номер Telegram у сезонах/результатах дня/трофеях, прив'язки пристроїв і входів, стан акаунта (user_state), сам вхід (auth.users) — стираємо.
---     Результати лишаються й показуються під анонімним іменем гравця. Пристрій після цього — новий гравець.
---     У табло ліг груп номер Telegram лишається (він — частина ключа рядка), ім'я там замінюється анонімним.
+-- 10. account deletion (DECISIONS item 12): device owner only (secret). Personal data is erased: name, name copies and Telegram names in results,
+--     Telegram id in seasons/daily results/trophies, device and sign-in links, account state (user_state), the sign-in itself (auth.users).
+--     Results stay and are shown under the player's anonymous name. The device then becomes a new player.
+--     Group league tables keep the Telegram id (part of the row key); the name there is replaced with the anonymous one.
 create or replace function public.delete_player(p_device uuid, p_secret text) returns json language plpgsql security definer set search_path = public as $$
 declare pid uuid; acc uuid; an text; uids uuid[]; tgs bigint[];
 begin
@@ -363,7 +363,7 @@ begin
   update players set name = null, name_changed_at = null, deleted_at = now() where id = pid;
   update players set name = null where merged_into = pid;
   update seasons set nickname = null, tg_name = null, tg_user_id = null where player_id = pid;
-  update daily_results set nickname = an, tg_name = null, tg_user_id = null where player_id = pid;   -- nickname у основній базі NOT NULL, 2–24
+  update daily_results set nickname = an, tg_name = null, tg_user_id = null where player_id = pid;   -- nickname is NOT NULL (2-24 chars) in the main DB
   update trophies set tg_name = null, tg_user_id = null where player_id = pid;
   update challenges set name = an where player_id = pid;
   update challenge_results set name = an where player_id = pid;
@@ -374,18 +374,18 @@ begin
   delete from user_state where user_id = any(uids);
   begin
     delete from auth.users where id = any(uids);
-  exception when others then raise notice 'auth.users: %', sqlerrm;   -- немає прав — вхід лишиться, але він уже ні до кого не прив'язаний
+  exception when others then raise notice 'auth.users: %', sqlerrm;   -- no privileges: the sign-in stays but is no longer linked to anyone
   end;
   return json_build_object('ok', true);
 end $$;
 revoke execute on function public.delete_player(uuid, text) from public;
 grant execute on function public.delete_player(uuid, text) to anon, authenticated;
 
--- службові — не для браузера
+-- internal, not for the browser
 revoke execute on function public.gen_public_id() from public, anon, authenticated;
 
--- 0.58: епоха вільної гри (сайт уже надсилає її; сервер пише й перевіряє, щойно колонка з'явиться)
+-- free-play epoch (the client already sends it; the server writes and checks it once the column exists)
 alter table public.seasons add column if not exists era text;
 
--- результат запуску: чиї імена переписано (повторний запуск — порожньо)
+-- run output: names that were rewritten (empty on re-run)
 select was as "було", became as "стало" from v059_renames order by 2;

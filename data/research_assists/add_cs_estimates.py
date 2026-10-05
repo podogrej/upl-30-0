@@ -1,9 +1,9 @@
-"""Оцінка «сухих» матчів гравців для сезонів без реальних даних (1992/93–2011/12, 2021/22).
-Командні сухі — з повних протоколів результатів (rsssf / en.wikipedia, звірено з підсумковими таблицями).
-Розподіл між гравцями (підібрано на реальних даних 2012+):
-  воротар:  сухі = команда × min(1, матчі/ігри)                      (MAE 0.67, 89% у межах ±1)
-  польовий: сухі = команда × min(1, матчі/ігри)^1.6 × 0.892           (MAE 1.09, 72% у межах ±1)
-Запуск ПІСЛЯ positions/inject_positions.py (той перезаписує p[8], p[9]). Позначка клуб-сезону: c['cs_est']=1.
+"""Estimated player clean sheets for seasons without real data (1992/93-2011/12, 2021/22).
+Team clean sheets come from full result lists (rsssf / en.wikipedia, checked against final tables).
+Split between players (fitted on real 2012+ data):
+  goalkeeper: cs = team x min(1, apps/games)                         (MAE 0.67, 89% within +-1)
+  outfield:   cs = team x min(1, apps/games)^1.6 x 0.892              (MAE 1.09, 72% within +-1)
+Run AFTER positions/inject_positions.py (it overwrites p[8], p[9]). Club-season flag: c['cs_est']=1.
 """
 import json
 ROOT = '/home/claude/upl-dataset'

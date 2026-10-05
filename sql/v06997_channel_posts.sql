@@ -1,20 +1,20 @@
--- 0.69.97 (власник 05.10): черга постів для Telegram-каналу про історію УПЛ. Бот @upl30_bot — адмін каналу.
--- Пости потрапляють сюди чернетками (окрема сесія Claude через коннектор Supabase, або автопости сервера) чи одразу схваленими
--- (власник командою /post у боті); власник схвалює кнопками в особистих; сервер публікує, коли настав publish_at (api/_channel.js).
--- Пише й читає лише сервер (ключ сервера) і власник через Supabase; anon і authenticated доступу не мають (DECISIONS: нові таблиці — без запису для anon).
--- Лише додаємо; можна запускати повторно; попередню версію сайту не ламає. Запускати в ОБОХ базах (тестовій і основній).
+-- 0.69.97: post queue for the Telegram channel about UPL history. The bot @upl30_bot is a channel admin.
+-- Posts arrive as drafts (a separate Claude session via the Supabase connector, or server autoposts) or already approved
+-- (admin /post command in the bot); the admin approves drafts with buttons in private chat; the server publishes once publish_at is reached (api/_channel.js).
+-- Read/written only by the server (service key) and the admin via Supabase; anon and authenticated have no access (new tables: no anon writes).
+-- Additive only; idempotent; safe for the previous client. Run on BOTH DBs (test and main).
 create table if not exists public.channel_posts (
   id bigserial primary key,
-  text text not null,                       -- HTML-розмітка Telegram (<b>, <i>, <a href>, …); видимого тексту ≤ 4096, з картинкою ≤ 1024
-  image_url text,                           -- необов'язково: адреса картинки (https://…) або file_id картинки з Telegram
-  publish_at timestamptz not null,          -- коли вийти (вводять за Києвом, зберігається як момент часу)
-  status text not null default 'draft',     -- draft → approved → published; або skipped / failed
-  source text not null default 'chat',      -- хто додав: chat (сесія Claude), owner (власник через бота), auto (сервер)
+  text text not null,                       -- Telegram HTML markup (<b>, <i>, <a href>, ...); visible text <= 4096, with an image <= 1024
+  image_url text,                           -- optional: image URL (https://...) or a Telegram image file_id
+  publish_at timestamptz not null,          -- when to publish (entered in Kyiv time, stored as a timestamp)
+  status text not null default 'draft',     -- draft -> approved -> published; or skipped / failed
+  source text not null default 'chat',      -- who added it: chat (Claude session), owner (admin via the bot), auto (server)
   created_at timestamptz not null default now(),
   published_at timestamptz,
   tg_message_id bigint,
   error text,
-  notified_at timestamptz                   -- коли чернетку надіслано власнику на схвалення (щоб не надсилати двічі)
+  notified_at timestamptz                   -- when the draft was sent to the admin for approval (to avoid sending twice)
 );
 alter table public.channel_posts add column if not exists notified_at timestamptz;
 do $$ begin
@@ -23,12 +23,12 @@ exception when duplicate_object then null; end $$;
 do $$ begin
   alter table public.channel_posts add constraint channel_posts_source_chk check (source in ('chat','owner','auto'));
 exception when duplicate_object then null; end $$;
--- довжина видимого тексту (без HTML-тегів), як рахує Telegram: 4096 для звичайного поста, 1024 — підпис до картинки
+-- visible text length (HTML tags stripped), as Telegram counts it: 4096 for a plain post, 1024 for an image caption
 do $$ begin
   alter table public.channel_posts add constraint channel_posts_len_chk check (
     char_length(regexp_replace(text, '<[^>]+>', '', 'g')) <= case when image_url is null or image_url = '' then 4096 else 1024 end);
 exception when duplicate_object then null; end $$;
-alter table public.channel_posts enable row level security;   -- політик немає
+alter table public.channel_posts enable row level security;   -- no policies
 revoke all on public.channel_posts from anon, authenticated;
 revoke all on sequence public.channel_posts_id_seq from anon, authenticated;
 create index if not exists channel_posts_due on public.channel_posts (status, publish_at);

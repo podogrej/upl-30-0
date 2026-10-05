@@ -1,4 +1,4 @@
-# Автоперевірки (0.64; з 05.10 — tests.yml): на кожен push у test і main та на кожен pull request у main. Те саме, що bash tools/tests/all.sh локально.
+# Automated checks on every push to test and main and every pull request to main. Same as running bash tools/tests/all.sh locally.
 name: Перевірки
 on:
   push:
@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'push' }}   # аудит P2-19: перевірку PR не скасовуємо
+  cancel-in-progress: ${{ github.event_name == 'push' }}   # audit P2-19: never cancel PR checks
 jobs:
   checks:
     runs-on: ubuntu-24.04

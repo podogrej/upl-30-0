@@ -1,5 +1,5 @@
-// 0.69.69 (фідбек 03.10: «під час симуляції сезону екран скаче — висота картки матчу змінюється»): картка поточного матчу
-// у живому показі сезону має однакову висоту на кожному турі (телефон і iPad). Запуск з кореня: node tools/tests/live_height.js
+// During the live season replay the current-match card keeps the same height every round (phone and iPad), so the screen doesn't jump.
+// Run from repo root: node tools/tests/live_height.js
 const {openSite,makeDB,checker,launch}=require('./_site.js');
 (async()=>{const T=checker('live_height');const b=await launch();
  for(const w of [390,1000]){const {pg,errs}=await openSite({b,db:makeDB({}),viewport:{width:w,height:900},wait:1200});

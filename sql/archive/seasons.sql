@@ -1,6 +1,6 @@
--- НЕ ЗАПУСКАТИ (архів, 0.67). Старий SQL: відкриває пряму запис для anon і зламає крок 2 (v054_close_writes). Для нової бази — README, розділ sql/.
--- 30-0 УПЛ · v0.13 · журнал усіх зіграних сезонів
--- Вставити цілком у Supabase → SQL Editor → Run
+-- DO NOT RUN (archived). Legacy SQL: re-opens direct anon writes and breaks v054_close_writes. For a new DB see README, section sql/.
+-- v0.13: log of all played seasons
+-- Run the whole file in Supabase SQL Editor.
 
 create table if not exists public.seasons (
   id          bigint generated always as identity primary key,
@@ -37,13 +37,13 @@ drop policy if exists "seasons insert" on public.seasons;
 create policy "seasons insert" on public.seasons for insert to anon
   with check (w + d + l = 30 and pts = w * 3 + d and place between 1 and 16);
 
--- нік можна дописати пізніше (після відправки в таблицю дня); змінювати можна лише цю колонку
+-- nick may be set after submission to the daily table; only this column is updatable
 drop policy if exists "seasons nick" on public.seasons;
 create policy "seasons nick" on public.seasons for update to anon using (true) with check (true);
 revoke update on public.seasons from anon;
 grant update (nickname) on public.seasons to anon;
 
--- лічильники для головної сторінки
+-- counters for the home page
 create or replace function public.game_stats()
 returns json language sql stable security definer set search_path = public as $$
   select json_build_object(

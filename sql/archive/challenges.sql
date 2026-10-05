@@ -1,6 +1,6 @@
--- НЕ ЗАПУСКАТИ (архів, 0.67). Старий SQL: відкриває пряму запис для anon і зламає крок 2 (v054_close_writes). Для нової бази — README, розділ sql/.
--- 30-0 УПЛ · v0.28 · виклики «побий мій результат» + тижневий підсумок ліг
--- Вставити цілком у Supabase → SQL Editor → Run
+-- DO NOT RUN (archived). Legacy SQL: re-opens direct anon writes and breaks v054_close_writes. For a new DB see README, section sql/.
+-- v0.28: "beat my score" challenges + weekly league summary
+-- Run the whole file in Supabase SQL Editor.
 
 create table if not exists public.challenges (
   id         text primary key,
@@ -40,5 +40,5 @@ create trigger chal_uid before insert on public.challenges for each row execute 
 drop trigger if exists chal_res_uid on public.challenge_results;
 create trigger chal_res_uid before insert on public.challenge_results for each row execute function public.set_user_id();
 
--- тижневий підсумок ліг: позначка «вже надіслано»
+-- weekly league summary: already-sent marker
 alter table public.league_boards add column if not exists weekly_sent boolean not null default false;

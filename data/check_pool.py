@@ -1,24 +1,24 @@
-"""Перевірка інваріантів src/pool.json (з 0.54 — у списку перевірок перед випуском, README → «Проверки перед выпуском»).
-Запуск з кореня репозиторію: python3 data/check_pool.py            — код виходу 1, якщо щось порушено
-                             python3 data/check_pool.py --write-transfers — дописати нові переходи посеред сезону в білий список
-                             (лише після того, як перевірив їх руками: див. data/README.md)
-Нічого в пулі не змінює.
+"""Invariant checks for src/pool.json (part of the pre-release checklist, see README).
+Run from repo root: python3 data/check_pool.py            - exit code 1 if anything is violated
+                    python3 data/check_pool.py --write-transfers - append new mid-season transfers to the whitelist
+                    (only after verifying them by hand, see data/README.md)
+Does not modify the pool.
 
-Жорсткі правила (порушення → exit 1):
-- картка — 12 полів потрібних типів: [ім'я, лінія GK/DF/MF/FW, рейтинг 45–99, матчі, голи, id, основна позиція, додаткові,
-  асисти|null, сухі|null, громадянство (індекс у nats або -1), рік народження];
-- id формату tm:<число> або w:<рррр-мм-дд>:<латиниця>; у клуб-сезоні кожен id один раз;
-- основна позиція — одна з 15 позицій гри; додаткові — з тих самих кодів (з часткою «:0.23» або без);
-  лінія GK ⇔ основна GK;
-- в однієї людини (id) на всіх картках те саме ім'я, рік народження, громадянство;
-- кожна команда сезону (seasons[рік].teams) має клуб-сезон, і кожен клуб-сезон — у командах свого сезону;
-- ключі foot — id з пулу, значення L/R/B;
-- alias: обидва id є в пулі, ланцюжків немає, дубль і canonical не в одному клуб-сезоні;
-- meta.club_seasons / players / persons / person_ids / aliases дорівнюють реальним (data/update_meta.py);
-- одна людина (canonical id) у двох клубах одного сезону — лише якщо цей перехід є в data/check_pool_transfers.csv
-  (білий список: сезон, id, клуби). Новий перехід без запису — помилка (так знайшли б «Алефіренка» в Чорноморці й Зорі).
-Попередження (не зупиняють): сума матчів людини в сезоні більша за тури сезону (у білому списку з приміткою), два різні id
-з однаковим ім'ям в одному клуб-сезоні, клуб-сезон без двох воротарів тощо. Інформація: кількість карток 90+.
+Hard rules (violation -> exit 1):
+- a card has 12 fields of the right types: [name, line GK/DF/MF/FW, rating 45-99, apps, goals, id, main position, alts,
+  assists|null, clean_sheets|null, citizenship (index into nats or -1), birth year];
+- id format tm:<number> or w:<yyyy-mm-dd>:<latin>; each id once per club-season;
+- main position is one of the game's 15 positions; alts use the same codes (with or without a ":0.23" share);
+  line GK <=> main GK;
+- one person (id) has the same name, birth year and citizenship on all cards;
+- every season team (seasons[year].teams) has a club-season, and every club-season is among its season's teams;
+- foot keys are pool ids, values L/R/B;
+- alias: both ids are in the pool, no chains, duplicate and canonical never in the same club-season;
+- meta.club_seasons / players / persons / person_ids / aliases equal the real counts (data/update_meta.py);
+- one person (canonical id) in two clubs in one season only if that transfer is in data/check_pool_transfers.csv
+  (whitelist: season, id, clubs). A new unlisted transfer is an error (catches a card attached to the wrong person).
+Warnings (non-fatal): a person's season apps exceed the season's rounds (whitelisted with a note), two different ids
+with the same name in one club-season, a club-season with fewer than two goalkeepers, etc. Info: number of 90+ cards.
 """
 import csv, json, os, re, sys
 from collections import Counter, defaultdict
@@ -79,13 +79,13 @@ def main():
 
     if few_gk: warn.append(f'менше двох воротарів у {len(few_gk)} клуб-сезонах (так у джерелах; гра бере воротаря з колеса): {", ".join(few_gk[:3])}…')
 
-    # одна людина — ті самі ім'я, рік народження, громадянство
+    # one person: same name, birth year, citizenship
     for pid, L in per.items():
         for k, i in (('ім\'я', 2), ('рік народження', 3), ('громадянство', 4)):
             vals = {x[i] for x in L}
             if len(vals) > 1: E(f'{pid}: різне {k} на картках: {sorted(map(str, vals))}')
 
-    # сезони ↔ клуб-сезони
+    # seasons <-> club-seasons
     cs_keys = Counter((c['y'], c['c']) for c in pool['clubs'])
     for k, v in cs_keys.items():
         if v > 1: E(f'клуб-сезон {k} двічі')
@@ -95,12 +95,12 @@ def main():
     for k in sorted(teams - set(cs_keys)): E(f'команда сезону {k} без клуб-сезону')
     for k in sorted(set(cs_keys) - teams): E(f'клуб-сезон {k} не в командах свого сезону')
 
-    # нога
+    # foot
     for k, v in pool.get('foot', {}).items():
         if k not in ids: E(f'foot: {k} немає в пулі')
         if v not in ('L', 'R', 'B'): E(f'foot: {k} = {v}')
 
-    # псевдоніми
+    # aliases
     for d, k in alias.items():
         if d not in ids: E(f'alias: дубль {d} немає в пулі')
         if k not in ids: E(f'alias: canonical {k} немає в пулі')
@@ -118,8 +118,8 @@ def main():
     for k, v in real.items():
         if m.get(k) != v: E(f'meta.{k} = {m.get(k)}, а насправді {v} (python3 data/update_meta.py)')
 
-    # одна людина в двох клубах одного сезону
-    seasons = defaultdict(list)   # (рік, canonical) → [(клуб, id, ім'я, матчі)]
+    # one person in two clubs in the same season
+    seasons = defaultdict(list)   # (year, canonical) -> [(club, id, name, apps)]
     for pid, L in per.items():
         for y, club, nm, by, nat, apps, r in L: seasons[(y, canon(pid))].append((club, pid, nm, apps))
     rounds = {}

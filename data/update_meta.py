@@ -1,7 +1,7 @@
-"""pool['meta'] — лічильники пулу з самих даних (до 0.54 їх вписували руками, і вони відстали: 16 250 карток замість 16 256).
-Запуск з кореня репозиторію: python3 data/update_meta.py   (після будь-якого скрипта, що додає картки чи псевдоніми). Повторний запуск нічого не змінює.
-club_seasons — клуб-сезонів; players — карток (гравець-сезонів); person_ids — різних id; persons — різних людей (id з урахуванням
-pool['alias']); aliases — псевдонімів. Поля names/positions (опис версій) не чіпаємо. Гра meta не читає (сайт рахує з DATA сам).
+"""pool['meta']: pool counters computed from the data itself (previously maintained by hand and drifted).
+Run from repo root: python3 data/update_meta.py   (after any script that adds cards or aliases). Idempotent.
+club_seasons: club-seasons; players: cards (player-seasons); person_ids: distinct ids; persons: distinct people (ids resolved
+through pool['alias']); aliases: alias count. Fields names/positions (version notes) are left as is. The game does not read meta.
 """
 import json, os
 POOL = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'src', 'pool.json')

@@ -1,7 +1,7 @@
-// 0.63 «Ліги 5×5»: «Грати з друзями» → «Створити лігу» → формат 5×5 (збір 1 год) → своя п'ятірка (колесо, лінії, перекрут) → «Відправити склад»;
-// другий учасник надсилає склад → творець «Почати зараз» → турнір грає сервер (справжній api/fl5.js play() із рушієм src/five_core.js) →
-// «Турнір зіграно», чемпіон, матчі → матч: рахунок, епізоди, «Дивитися наживо»; гість за посиланням бачить склади й «Увійти, щоб приєднатися».
-// База й RPC — у пам'яті (SQL — bash tools/tests/setup.sh). Знімки: tools/tests/out/fl63_*.png. Запуск з кореня: node tools/tests/fl63.js
+// 5x5 leagues: Play with friends -> Create league -> 5x5 format (1h signup) -> own five (wheel, lines, respin) -> Submit squad;
+// second member submits -> creator presses Start now -> server plays the tournament (real api/fl5.js play() with src/five_core.js) ->
+// tournament finished, champion, matches -> match: score, events, watch live; guest via link sees squads and the sign-in-to-join prompt.
+// DB and RPC are in memory (SQL: bash tools/tests/setup.sh). Screenshots: tools/tests/out/fl63_*.png. Run from repo root: node tools/tests/fl63.js
 const path=require('path'),fs=require('fs');const {ROOT,launch,makeDB,openSite,checker}=require('./_site.js');
 const {play}=require(path.join(ROOT,'api','fl5.js'));
 const OUT=path.join(ROOT,'tools','tests','out');fs.mkdirSync(OUT,{recursive:true});
@@ -39,7 +39,7 @@ function mkDB(){
  await pg.click('#flCreate');await pg.waitForTimeout(500);
  const cr=M.calls.find(c=>c[0]==='fl_create5');T.check(cr&&cr[1].p_hours===1&&cr[1].p_rerolls===3,'fl_create5: правила ('+JSON.stringify(cr&&cr[1])+')');
  T.check(/Твоя п'ятірка/.test(await pg.textContent('#fl'))&&!!await pg.$('[data-f5form]'),'одразу — драфт п\'ятірки, вибір схеми');
- // 0.69 (власник: «вибір схеми недороблений, поле величезне»): схеми — 4 плитки в ряд, поле не вище за 420px; на iPad — по центру
+ // formation picker: 4 tiles per row, pitch at most 420px tall; centered on iPad
  const f5f=await pg.evaluate(()=>{const t=[...document.querySelectorAll('#fl [data-f5form]')].map(e=>e.getBoundingClientRect());const p=document.querySelector('#fl .pitch.p5').getBoundingClientRect();return {n:t.length,row:t.every(r=>Math.abs(r.top-t[0].top)<2),ph:Math.round(p.height),sub:t.every((r,i)=>!!document.querySelectorAll('#fl [data-f5form] small')[i])};});
  T.check(f5f.n===4&&f5f.row&&f5f.sub&&f5f.ph<=420,'схеми: 4 плитки в ряд з назвою, поле '+f5f.ph+'px');
  await pg.screenshot({path:path.join(OUT,'fl63_draft_start.png'),fullPage:true});
@@ -56,7 +56,7 @@ function mkDB(){
  T.check(sub&&sub[1].p_form==='2-2'&&xi.length===5&&xi.every(x=>x.id&&x.c&&x.y&&x.slot),'fl5_submit: схема 2-2, 5 гравців з клубом і сезоном');
  T.check(/Твій склад відправлено/.test(await pg.textContent('#fl')),'лобі: «Твій склад відправлено»');
  T.check(await pg.$eval('#fl5Start',e=>e.disabled)&&/запрацює, коли складів буде хоча б 2/.test(await pg.textContent('#fl')),'0.69: один склад — «Почати зараз» видно, але неактивна, з поясненням');
- // другий учасник (vitia) надсилає склад — ті самі гравці (колесо в кожного своє)
+ // second member submits a squad with the same players (each has their own wheel)
  const L=M.leagues[0];M.members.push({l:L.id,p:'p-v'});M.fives.push({l:L.id,p:'p-v',form:'2-2',xi:xi.map(x=>({...x}))});
  await pg.click('#flBack');await pg.waitForTimeout(400);await pg.click(`[data-l="${L.id}"]`);await pg.waitForTimeout(600);
  T.check(/Зібрали 2 з 2/.test(await pg.textContent('#fl'))&&!!await pg.$('#fl5Start'),'лобі: «Зібрали 2 з 2», у творця — «Почати зараз»; склади відкриті');
@@ -72,7 +72,7 @@ function mkDB(){
  T.check(played===1&&/Турнір зіграно/.test(txt)&&/Серія \d:\d/.test(txt),'«Почати зараз» → сервер зіграв турнір: серія до двох перемог ('+txt.slice(0,120)+')');
  const res=M.leagues[0].result;T.check(res&&res.n===2&&res.matches.length>=2&&Math.max(...res.wins)>=1&&res.teams.length===2&&!res.bad.length,'результат: '+JSON.stringify({n:res&&res.n,m:res&&res.matches.length,wins:res&&res.wins,bad:res&&res.bad}));
  await pg.screenshot({path:path.join(OUT,'fl63_result.png'),fullPage:true});
- // 0.64: трофеї за турнір (раз на лігу) і «Реванш»
+ // tournament trophies (once per league) and Rematch
  const tr=await pg.evaluate(id=>{const s=JSON.parse(localStorage.getItem('upl30_tr')||'{}');return {play:s.t&&s.t.f5play&&s.t.f5play.n,f5:s.f5||[],box:!document.getElementById('fl5Tro').hidden&&document.getElementById('fl5Tro').textContent};},L.id);
  T.check(tr.play===1&&tr.f5.includes(L.id)&&/Двір на двір/.test(tr.box||''),'трофеї 5×5: «Двір на двір» видано й показано '+JSON.stringify(tr));
  await pg.click('#flBack');await pg.waitForTimeout(400);await pg.click(`[data-l="${L.id}"]`);await pg.waitForTimeout(600);
@@ -92,13 +92,13 @@ function mkDB(){
  await pg.screenshot({path:path.join(OUT,'fl63_match.png'),fullPage:true});
  await pg.click('#fl5Back');await pg.waitForTimeout(400);
  T.check(!A.errs.length,'помилок на сторінці немає '+A.errs.join(' | '));
- // турнір на 8: група, півфінали, фінал — рушій сервера напряму
+ // 8-team tournament: group, semis, final - server engine called directly
  {const many={...M.get(L.id),fives:Array.from({length:8},(_,k)=>({u:'u'+k,name:'T'+k,form:'2-2',xi})),id:'abcdef',deadline:'2026-10-01T10:00:00Z'};const r=await play(many);
   T.check(r.table.length===8&&r.matches.filter(m=>m.stage==='sf').length===2&&r.matches.filter(m=>m.stage==='final').length===1&&r.matches.filter(m=>m.stage==='group').length===28,'8 учасників: 28 матчів групи, 2 півфінали, фінал');
   const r2=await play(many);T.check(JSON.stringify(r)===JSON.stringify(r2),'той самий seed — той самий турнір (однаково для всіх)');
   const bad={...many,fives:[{u:'x',name:'X',form:'2-2',xi:xi.map((x,i)=>i?x:{...x,slot:x.slot==='GK'?'FW':'GK'})},...many.fives.slice(0,1)]};const r3=await play(bad);
   T.check(r3.cancelled&&r3.bad[0]==='x','склад з неправильною лінією відкинуто → менше 2 — ліга скасована');}
- // гість за посиланням
+ // guest via link
  const G=await openSite({b,db,api,query:'?l='+L.id,wait:1800});const gp=(await G.pg.textContent('#fl')).replace(/\s+/g,' ');
  T.check(gp.includes(L.name)&&/Турнір зіграно/.test(gp),'гість за посиланням: ліга й результат');
  T.check(!G.errs.length,'гість: помилок немає '+G.errs.join(' | '));

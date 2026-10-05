@@ -1,11 +1,11 @@
--- 30-0 УПЛ · v0.59 · ЛИШЕ ЧИТАННЯ: чиї імена sql/v059_player_page.sql перепише латиницею (DECISIONS п. 2). Нічого не змінює.
--- Можна запускати ДО v059_player_page.sql: Supabase → SQL Editor → вставити цілком → Run. Після v059 — порожньо.
--- Результат — одна таблиця:
---   problem = «збіг»     — кілька живих гравців з тим самим іменем без урахування регістру («Вітя» і «вітя»): старший лишає ім'я
---                           (якщо воно за правилами), молодший отримує номер (vitia2);
---   «довжина» — не 3–20 символів; «символи» — щось, крім a-z, цифр, «_» і «.» (кирилиця, пробіл, великі літери, «é»);
---   «краї» — починається чи закінчується не літерою або цифрою; «мат».
--- Нове ім'я (транслітерація КМУ 2010: вітя → vitia, андрій ш → andrii_sh, andré → andre) покаже сам v059_player_page.sql — таблицею «було → стало».
+-- v0.59, READ ONLY: whose names sql/v059_player_page.sql will rewrite in Latin (DECISIONS item 2). Changes nothing.
+-- Can be run BEFORE v059_player_page.sql. Returns nothing after v059 has run.
+-- Output is a single table:
+--   problem = duplicate: several live players with the same case-insensitive name; the oldest keeps the name
+--                     (if it is valid), the younger ones get a number suffix (vitia2);
+--   length: not 3-20 chars; chars: anything other than a-z, digits, '_' and '.' (Cyrillic, space, uppercase, accents);
+--   edges: starts or ends with a non-alphanumeric char; profanity. (Labels in the output are Ukrainian.)
+-- The new name (KMU 2010 transliteration, plus accent stripping) is shown by v059_player_page.sql itself as an old -> new table.
 with k as (
   select p.id, p.name, p.created_at,
          btrim(regexp_replace(translate(lower(p.name), 'АБВГҐДЕЄЖЗИІЇЙКЛМНОПРСТУФХЦЧШЩЬЮЯЫЭЪЁ’ʼ`‘', 'абвгґдеєжзиіїйклмнопрстуфхцчшщьюяыэъё' || repeat(chr(39), 4)), '\s+', ' ', 'g')) as key

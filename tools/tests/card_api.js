@@ -1,8 +1,8 @@
-// /api/card без мережі: підроблений Telegram (fetch) і справжній підпис initData тестовим токеном.
-// Запуск з кореня: node tools/tests/card_api.js
+// /api/card offline: fake Telegram (fetch) and a real initData signature made with a test token.
+// Run from repo root: node tools/tests/card_api.js
 const crypto = require('crypto');
 const TOKEN = '123:TEST'; process.env.TG_TOKEN = TOKEN; process.env.TG_BOT = 'upl30_bot'; process.env.SUPABASE_SERVICE_KEY = 'svc'; process.env.SUPABASE_URL = 'https://sb.test';
-let STORAGE_OK = true, RATE_OK = true;   // RATE_OK — відповідь rate_hit (0.55)
+let STORAGE_OK = true, RATE_OK = true;   // RATE_OK: rate_hit response
 const hmac = (k, d) => crypto.createHmac('sha256', k).update(d).digest();
 function initData(user) {
   const p = new URLSearchParams({ auth_date: String(Math.floor(Date.now() / 1000)), user: JSON.stringify(user), query_id: 'q1' });

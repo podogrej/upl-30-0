@@ -1,10 +1,9 @@
-"""Вписати асисти 2021/22 (assists_2021_more.csv) у src/pool.json: поле p[8] гравців клуб-сезону 2021.
-Запуск з кореня репозиторію: python3 data/research_assists/inject_assists_2021.py
-Потім: python3 src/build.py && node tools/make_engine.js
-Повторний запуск безпечний (0.54): рядки, чиї картки data/fix_2021/fix_pool_2021.py віддав іншій людині (REPLACED), пропускаються —
-асисти тих карток ставить сам fix_pool_2021.py.
-0.54: рядок «Чорноморець — Данило Алефіренко» виправлено на «Даниїл Сухоручко» (tm:539448): на sports.ru у Чорноморці 2021/22 — Сухоручко
-(1 М, 4 хв), Алефіренко — у Зорі (data/fixes/fix_pool_054.py).
+"""Writes 2021/22 assists (assists_2021_more.csv) into src/pool.json: field p[8] of 2021 club-season players.
+Run from repo root: python3 data/research_assists/inject_assists_2021.py
+Then: python3 src/build.py && node tools/make_engine.js
+Idempotent: rows whose cards data/fix_2021/fix_pool_2021.py reassigned to another person (REPLACED) are skipped;
+fix_pool_2021.py sets assists for those cards itself.
+The Chornomorets row for tm:539448 was corrected per sports.ru (see data/fixes/fix_pool_054.py).
 """
 import json, os
 D = os.path.dirname(os.path.abspath(__file__))
@@ -21,7 +20,7 @@ for c in pool['clubs']:
     if c['y'] != 2021: continue
     for p in c['pl']:
         key = (c['c'], p[5], p[0])
-        if key not in ast:  # id у пулі міг змінитися після злиття дублів (names/merged_ids.csv) — тоді за іменем у клубі
+        if key not in ast:  # id may have changed after duplicate merge (names/merged_ids.csv): fall back to name within the club
             same = [k for k in ast if k[0] == c['c'] and k[2] == p[0]]
             key = same[0] if len(same) == 1 else key
         if key in ast:
