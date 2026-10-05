@@ -42,7 +42,7 @@ p{margin:0 0 10px;max-width:62ch}
 button{font:inherit;cursor:pointer;border:1px solid var(--ink);background:var(--surface);color:var(--ink);border-radius:var(--radius);padding:10px 16px;font-weight:600}
 button:focus-visible,.pl:focus-visible{outline:3px solid var(--amber2);outline-offset:2px}
 button.primary{background:var(--ink);color:var(--bg)}
-.spin0{display:grid;gap:8px;justify-items:center;padding:22px 16px;cursor:pointer}   /* 0.67 (як у 38-0): зона дотику без рамки й заливки */.spin0>span{font-size:12px;color:var(--muted)}.spin0:has(#spinBtn[hidden]){display:none}
+.spin0{display:grid;gap:8px;justify-items:center;align-content:center;min-height:180px;padding:36px 16px;cursor:pointer;-webkit-tap-highlight-color:transparent;outline:none;user-select:none}   /* 0.67 (як у 38-0): зона дотику без рамки й заливки; 0.69.69: більша, без сірого спалаху й обводки при торканні */.spin0>span{font-size:12px;color:var(--muted)}.spin0:has(#spinBtn[hidden]){display:none}
 button.spin{background:var(--pitch);border-color:var(--pitch);color:#fff;font-family:var(--font-display);font-weight:700;font-size:16px;padding:14px 22px;width:100%}
 button.spin:disabled,button:disabled{opacity:.45;cursor:not-allowed}
 button.ghost{border-color:var(--line);background:transparent;color:var(--ink2);padding:8px 12px;font-weight:500}
@@ -509,8 +509,7 @@ button.stick0{position:sticky;bottom:12px;z-index:5;max-width:none;margin-top:20
 .duo0{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:20px}
 .tile0{display:grid;justify-items:start;gap:10px;padding:16px 14px;border:0;border-radius:14px;background:var(--card);color:var(--ink);text-align:left;font-weight:600}
 .tile0 .ic{width:30px;height:30px;background:none;margin:0}.tile0 .ic .ico{width:22px;height:22px}.tile0 b{font-size:15px;line-height:1.25}.tile0 em{font-style:normal;color:var(--amber)}
-.about0{margin-top:0;border:0;background:none;padding:14px 2px;border-radius:0}.about0>summary{font-weight:700}
-.facts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0 14px}.fact{display:grid;gap:2px;justify-items:center;text-align:center;padding:12px 8px;border-radius:12px;background:var(--card)}.fact b{font:900 24px/1.1 var(--font-display);font-variant-numeric:tabular-nums}.fact span{font-size:12.5px;color:var(--ink2)}   /* 0.69.2: стиль цифр «Про гру та дані» випав у чистці 0.67 — плитки 2×2 */
+.about0{margin-top:0;border:0;background:none;padding:14px 2px;border-radius:0}.about0>h3{margin:0 0 6px}.foot.cred{margin-top:8px;font-family:var(--font-body);font-size:10.5px;line-height:1.5;max-width:560px;margin-left:auto;margin-right:auto;padding:0 16px}
 .foot0{display:flex;flex-wrap:wrap;justify-content:center;gap:6px 16px;margin-top:36px;padding-top:20px;border-top:1px solid var(--line2);font-size:13px}.foot0 a{color:var(--ink2);text-decoration:none}.foot0 a:hover{color:var(--amber)}
 table.lbt th.n,table.lbt td.n{width:28px;padding-left:2px;padding-right:2px;text-align:center}
 .lbfoot{margin-top:6px;font-size:13px}
@@ -691,18 +690,11 @@ section>h3:first-child,.box h3:first-of-type,#viewBody>h3:first-child,#viewBody>
       <details><summary>Що ви збираєте?</summary><p>Анонімно дивимося, куди натискають, щоб покращувати гру (Microsoft Clarity). Якщо увійдеш — ім'я та ідентифікатор входу. Пошту — лише якщо сам впишеш її на своїй сторінці для новин. Паролів не бачимо. Усе своє можна стерти кнопкою «Видалити акаунт» на своїй сторінці. <a href="privacy.html">Докладніше</a>.</p></details>
       <details><summary>Звідки дані?</summary><p>Склади, матчі, голи та підсумкові таблиці всіх сезонів Вищої ліги й Прем'єр-ліги 1992–2026 з відкритих джерел. Асисти — з 2012/13 і за 2021/22, сухі матчі до 2012 — оцінка за командною статистикою (≈).</p></details>
     </div>
-    <details class="about0" id="aboutBox"><summary>Про гру та дані</summary>
-      <div class="facts">
-        <div class="fact" id="fcSeasons"><b>34</b><span>сезони, 1992/93 – 2025/26</span></div>
-        <div class="fact" id="fcClubs"><b>51</b><span>клуб за всю історію</span></div>
-        <div class="fact" id="fcCards"><b>16 256</b><span>гравець-сезонів</span></div>
-        <div class="fact" id="fcPersons"><b>4 546</b><span>футболістів</span></div>
-      </div>
+    <div class="about0" id="aboutBox"><h3>Про гру та дані</h3>   <!-- 0.69.69 (власник): завжди відкрито; плитки з цифрами прибрано — вони дублювали блок цифр вище -->
       <p>Рейтинг кожного гравця рахується за його сезон: голи й асисти за матч, частка зіграних матчів, місце команди, пропущені та сухі матчі для воротарів. Порівняння йде всередині сезону та позиції, тож зірки 90-х і 2020-х стоять поруч.</p>
       <p>Симуляція: кожен матч розігрується як два пуассонівські потоки голів. Атака твоєї команди складається з нападу й півзахисту, оборона з воротаря, захисту й півзахисту. Суперники — «Ліга легенд»: 15 клубів, що зробили історію УПЛ, кожен у сезоні з найсильнішим складом (середній рейтинг 11 найкращих гравців; лише сезони ліги на 16 команд). Домашнє поле дає невелику перевагу; форма гравців коливається від сезону до сезону й від матчу до матчу; гравці одного клубу дають «хімію».</p>
       <p class="muted">Прототип, неофіційний фан-проєкт. Рейтинги розрахункові й ще будуть донастроюватися.</p>
-      <p class="muted" style="font-size:12px">Шрифт: KyivType Sans, © Дмитро Растворцев (айдентика Києва). Кілька іконок: Material Design Icons (Pictogrammers, Apache 2.0) і логотип Telegram з Font Awesome Free (CC BY 4.0); решта — емодзі.</p>
-    </details>
+    </div>
   </section>
 
   <!-- ВІЛЬНА ГРА: налаштування -->
@@ -823,6 +815,7 @@ section>h3:first-child,.box h3:first-of-type,#viewBody>h3:first-child,#viewBody>
 <div class="overlay" id="viewBox" hidden><div class="box"><div class="vhead"><h3 id="viewTitle">Склад</h3><button class="ghost" id="viewClose">Закрити</button></div><div id="viewBody"></div></div></div>
 <nav class="foot0" aria-label="Розділи"><a href="#" data-go="dailyBtn">Драфт дня</a><a href="#" data-go="pickOpen">Вибір сезону</a><a href="#" data-go="flOpen">Ліга з друзями</a><a href="#" data-go="boardOpen">Таблиця</a><a href="#" data-go="trBtn">Трофеї</a><a href="#" data-go="howQ">Питання</a><a href="#" data-go="aboutBox">Про гру</a></nav>
 <div class="foot">30-0 УПЛ · <a href="#" id="newsBtn">Що нового у версії 0.69.6<b id="newsDot" hidden></b></a> · <a href="#" id="themeBtn" class="thm" role="switch" aria-checked="false" aria-label="Світла тема"></a> · неофіційний фан-проєкт</div>
+<div class="foot cred">Шрифт KyivType Sans © Дмитро Растворцев (айдентика Києва) · іконки Material Design Icons (Apache 2.0) і логотип Telegram з Font Awesome Free (CC BY 4.0), решта — емодзі</div>
 <script id="pool" type="application/json">__POOL__</script>
 <script>
 (function(){
@@ -1008,10 +1001,6 @@ const DSTAT=(()=>{const ids=new Set(),cl=new Set(),ys=new Set(),dy=new Set();let
 {const n=x=>x.toLocaleString('uk-UA'),set=(id,h)=>{const e=document.getElementById(id);if(e)e.innerHTML=h;};
   set('stat0n',n(DSTAT.persons));set('stat0l',plUk(DSTAT.persons,'футболіст','футболісти','футболістів')+' у грі');   // 0.62: блок «про гру» з великим числом (як у 38-0)
   set('stat0s',`<span><b>${DSTAT.seasons}</b>${plUk(DSTAT.seasons,'сезон','сезони','сезонів')}</span><span><b>${n(DSTAT.cs)}</b>${plUk(DSTAT.cs,'клуб-сезон','клуб-сезони','клуб-сезонів')}</span><span><b>з ${DSTAT.y0}</b>року</span>`);
-  set('fcSeasons',`<b>${DSTAT.seasons}</b><span>${plUk(DSTAT.seasons,'сезон','сезони','сезонів')}, ${seasonLabel(DSTAT.y0)} – ${seasonLabel(DSTAT.y1)}</span>`);
-  set('fcClubs',`<b>${DSTAT.clubs}</b><span>${plUk(DSTAT.clubs,'клуб','клуби','клубів')} за всю історію</span>`);
-  set('fcCards',`<b>${n(DSTAT.cards)}</b><span>${plUk(DSTAT.cards,'гравець-сезон','гравець-сезони','гравець-сезонів')}</span>`);
-  set('fcPersons',`<b>${n(DSTAT.persons)}</b><span>${plUk(DSTAT.persons,'футболіст','футболісти','футболістів')}</span>`);
   FORMATS.classic.desc=`Усі ${DSTAT.cs} ${plUk(DSTAT.cs,'клуб-сезон','клуб-сезони','клуб-сезонів')}.`;
   FORMATS.derby.desc=`Лише «Динамо» і «Шахтар» за ${DSTAT.derbyS} ${plUk(DSTAT.derbyS,'сезон','сезони','сезонів')}.`;}
 // ---------- step 1
@@ -1239,8 +1228,8 @@ function spin(mode){
   S.wheel=cs;S.move=null;S.pending=null;
   const w=document.getElementById('wheel');w.hidden=false;document.getElementById('spinBtn').hidden=true;
   document.getElementById('squad').innerHTML='';document.getElementById('rerollRow').style.visibility='hidden';
-  const spinClub=mode!=='year',spinYear=mode!=='club';
-  const y0=ERAS[eraOf()].y0,WP=DATA.clubs.filter(c=>c.y>=y0),names=[...new Set(WP.map(c=>shortTeam(c.n)))],years=[...new Set(WP.map(c=>c.y))].sort();   // на барабанах — клуби й сезони лише своєї епохи
+  const one=S.format==='oneclub'&&!S.daily&&!S.league,spinClub=mode!=='year'&&!one,spinYear=mode!=='club';   // 0.69.69: в «Одному клубі» клуб не крутиться, сезони — лише цього клубу
+  const y0=ERAS[eraOf()].y0,WP=DATA.clubs.filter(c=>c.y>=y0&&(!one||c.c===S.club)),names=[...new Set(WP.map(c=>shortTeam(c.n)))],years=[...new Set(WP.map(c=>c.y))].sort();   // на барабанах — клуби й сезони лише своєї епохи
   Promise.all([reelRoll('reelClub','club',names,shortTeam(cs.n),spinClub?14:0),reelRoll('reelYear','season',years.map(seasonLabel),seasonLabel(cs.y),spinYear?16:0)]).then(()=>{if(S.wheel===cs){S.wheelFresh=true;renderWheel();}});
 }
 function alertNoCands(){document.getElementById('wheel').hidden=false;document.querySelector('#reelClub .strip').innerHTML='<div class="club">Гравців більше немає</div>';document.querySelector('#reelYear .strip').innerHTML='<div class="season"></div>';document.getElementById('squad').innerHTML='<p class="muted">У цьому клубі закінчились гравці на вільні позиції. Спробуй іншу схему.</p>';}
@@ -1305,7 +1294,7 @@ function place(p,s){
 }
 document.getElementById('spinBtn').onclick=e=>{e.stopPropagation();spin();};
 document.querySelectorAll('.foot0 a').forEach(a=>a.onclick=e=>{e.preventDefault();const id=a.dataset.go,el=document.getElementById(id);if(!el)return;   // 0.65: підвал як у 38-0 — посилання на розділи
-  if(el.tagName==='DETAILS'){if(CUR_SEC!==1)go(1);el.open=true;el.scrollIntoView({behavior:'smooth',block:'start'});}else{if(CUR_SEC!==1)go(1);el.click();}});
+  if(el.tagName==='DETAILS'||el.tagName==='DIV'){if(CUR_SEC!==1)go(1);el.open=true;el.scrollIntoView({behavior:'smooth',block:'start'});}else{if(CUR_SEC!==1)go(1);el.click();}});
 document.getElementById('spinZone').onclick=()=>{const b=document.getElementById('spinBtn');if(!b.hidden&&!b.disabled)spin();};   // 0.65 (як у 38-0): уся підсвічена зона крутить колесо
 document.getElementById('rerollBtn').onclick=()=>{if(S.rerolls>0){S.rerolls--;spin('both');}};
 document.getElementById('rerollClub').onclick=()=>{if(S.rerolls>0){S.rerolls--;spin('club');}};
@@ -1982,6 +1971,6 @@ document.getElementById('newsDot').hidden=lsGet('upl30_news_seen')===WHATSNEW.v;
 /*__FIVE__*/
 document.getElementById('f5Open').onclick=f5Start;
 // 0.67 (аудит P2-5): лише те, що беруть тести; drawCard — для перевірки картки, simulate/rerun — для швидкого детермінізму
-window.__dbg={ic,BOARD_FROM,setFmt,leagueLoad,boardHtml,oppYear,champModal,drawCard,chalNewGame,DAILY,LEAGUE_CULT,LEAGUE_LEGENDS,openTrophies,renderNewTro,bestPerPlayer,renderWheel,posOpts,eraOf,ptsWord,viewHtml,renderPitch,pitchHtml,f5Pitch,F5_FORMS,cardName,clubShort,simulate,shareTextOf,trCtxNow,trAward,trStore,FORMATIONS,GROUP_OF,DATA,TROPHIES,trEval,PERSON,effRating,get S(){return S;},rerun(seed,year,xi){rnd=mulberry32(seed);const r=simulate(xi||S.slots.map(s=>s.player),MODES[S.mode],year);rnd=Math.random;return {W:r.W,D:r.D,L:r.L,gf:r.gf,ga:r.ga,place:r.place};}};
+window.__dbg={ic,seasonLabel,BOARD_FROM,setFmt,leagueLoad,boardHtml,oppYear,champModal,drawCard,chalNewGame,DAILY,LEAGUE_CULT,LEAGUE_LEGENDS,openTrophies,renderNewTro,bestPerPlayer,renderWheel,posOpts,eraOf,ptsWord,viewHtml,renderPitch,pitchHtml,f5Pitch,F5_FORMS,cardName,clubShort,simulate,shareTextOf,trCtxNow,trAward,trStore,FORMATIONS,GROUP_OF,DATA,TROPHIES,trEval,PERSON,effRating,get S(){return S;},rerun(seed,year,xi){rnd=mulberry32(seed);const r=simulate(xi||S.slots.map(s=>s.player),MODES[S.mode],year);rnd=Math.random;return {W:r.W,D:r.D,L:r.L,gf:r.gf,ga:r.ga,place:r.place};}};
 })();
 </script>

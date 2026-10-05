@@ -2,7 +2,7 @@
 // один клуб (вибір клубу, усі гравці з нього), антисезон (гравці з 10+ матчами), виклик дня (після офіційної спроби кнопка вимкнена).
 // Тексти й картки цих сезонів перевіряє scenarios.js. Запуск з кореня: node tools/tests/modes.js
 const {openPage,pickFmt}=require('./_page.js');const {checker}=require('./_site.js');
-async function draft(pg){for(let i=0;i<11;i++){await pg.click('#spinBtn');await pg.waitForSelector('#squad .pl:not([disabled])',{timeout:8000});const btn=await pg.$('.pl:not([disabled])');await btn.click();await pg.waitForTimeout(80);const pk=await pg.$('#pitch .slot.target');if(pk){await pk.click();await pg.waitForTimeout(60);}}
+async function draft(pg,n=11){for(let i=0;i<n;i++){await pg.click('#spinBtn');await pg.waitForSelector('#squad .pl:not([disabled])',{timeout:8000});const btn=await pg.$('.pl:not([disabled])');await btn.click();await pg.waitForTimeout(80);const pk=await pg.$('#pitch .slot.target');if(pk){await pk.click();await pg.waitForTimeout(60);}}
   await pg.waitForSelector('#simBtn:not([hidden])');}
 async function free(pg,fi,before){await pg.evaluate(()=>document.getElementById('homeBtn').click());await pg.click('#freeOpen');await pickFmt(pg,['','classic','derby','oneclub','anti','legends'][fi]);if(before)await before();await pg.click('#startBtn');}
 const clubsOf=pg=>pg.evaluate(()=>[...new Set(window.__dbg.S.slots.map(s=>s.player.cc))]);
@@ -27,7 +27,13 @@ const clubsOf=pg=>pg.evaluate(()=>[...new Set(window.__dbg.S.slots.map(s=>s.play
  let club='';
  await free(pg,3,async()=>{T.check(await pg.$eval('#clubPickRow',e=>!e.hidden),'один клуб: видно вибір клубу');
    club=await pg.evaluate(()=>{const o=[...document.getElementById('clubPick').options];return (o.find(x=>x.value==='metalist-kharkiv')||o[1]).value;});await pg.selectOption('#clubPick',club);});
- await draft(pg);const oc=await clubsOf(pg);T.check(oc.length===1&&oc[0]===club,'один клуб: усі гравці з «'+club+'» ('+oc.join(', ')+')');
+ // 0.69.69 (власник): в «Одному клубі» барабан клубу стоїть, а барабан сезонів крутить лише сезони цього клубу
+ {const r=await pg.evaluate(()=>{document.getElementById('spinBtn').click();const D=window.__dbg,c=D.S.club,ys=new Set(D.DATA.clubs.filter(x=>x.c===c).map(x=>D.seasonLabel(x.y)));
+   const cl=[...document.querySelectorAll('#reelClub .strip>div')].map(e=>e.textContent),se=[...document.querySelectorAll('#reelYear .strip>div')].map(e=>e.textContent);
+   return {cl:cl.length,se:se.length,bad:se.filter(t=>!ys.has(t))};});
+  T.check(r.cl===1&&!r.bad.length,`один клуб: барабан клубу не крутиться (${r.cl}), сезони лише цього клубу (${r.se} на барабані${r.bad.length?', чужі: '+r.bad.join(', '):''})`);
+  await pg.waitForSelector('#squad .pl:not([disabled])',{timeout:8000});const btn=await pg.$('.pl:not([disabled])');await btn.click();await pg.waitForTimeout(80);const pk=await pg.$('#pitch .slot.target');if(pk){await pk.click();await pg.waitForTimeout(60);}}
+ await draft(pg,10);const oc=await clubsOf(pg);T.check(oc.length===1&&oc[0]===club,'один клуб: усі гравці з «'+club+'» ('+oc.join(', ')+')');
  await pg.click('#simBtn');await pg.click('#skipBtn');
  T.check(/Найкращий результат/.test(await pg.evaluate(()=>{document.getElementById('homeBtn').click();document.getElementById('freeOpen').click();return document.getElementById('bestLine').textContent;})),'один клуб: після сезону є «Найкращий результат»');
  // антисезон: лише гравці з 10+ матчами за клуб-сезон

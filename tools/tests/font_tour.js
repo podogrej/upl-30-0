@@ -27,8 +27,8 @@ const CHECK=()=>{const W=innerWidth,bad=[];const vis=el=>!el.closest('[hidden]')
   await chk('головна');
   T.check(await pg.evaluate(()=>{const b=document.getElementById('fbBtn'),r=b.getBoundingClientRect();return !b.hidden&&r.width>=36&&r.right<=innerWidth;}),`${w}px · шапка: кнопка «Відгук» на місці`);   // 0.69.5
   await pg.evaluate(()=>document.querySelectorAll('#s1 details').forEach(d=>d.open=true));await chk('головна: усі «Питання та відповіді» й «Про гру» розгорнуто');
-  // 0.69.2 (власник: «блок про гру зламався»): цифри «Про гру та дані» — плитками 2×2, не злиплим текстом
-  T.check(await pg.evaluate(()=>{const f=document.querySelector('#aboutBox .facts'),k=[...f.children].map(c=>c.getBoundingClientRect());return getComputedStyle(f).display==='grid'&&k.length===4&&Math.abs(k[0].top-k[1].top)<2&&k[2].top>k[0].bottom-1&&getComputedStyle(f.querySelector('.fact')).display==='grid';}),`${w}px · «Про гру та дані»: цифри плитками 2×2`);
+  // 0.69.69 (власник): «Про гру та дані» завжди відкрито, без плиток-дублів; шрифт і іконки — у підвалі
+  T.check(await pg.evaluate(()=>{const a=document.getElementById('aboutBox'),c=document.querySelector('.foot.cred');return a.tagName!=='DETAILS'&&!a.querySelector('.facts')&&a.offsetHeight>100&&!!c&&/KyivType/.test(c.textContent)&&c.getBoundingClientRect().right<=innerWidth+1;}),`${w}px · «Про гру та дані» відкрито, без плиток; подяки — у підвалі`);
   await safe(async()=>{await pg.click('#newsBtn');await chk('«Що нового»');await pg.click('#viewClose');});
   await safe(async()=>{await pg.click('#boardOpen');await chk('загальна таблиця');await pg.click('#viewClose');});
   await safe(async()=>{await pg.click('#trBtn');await chk('трофеї');await pg.click('#homeBtn');});
