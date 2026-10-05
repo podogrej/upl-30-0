@@ -54,6 +54,9 @@ async function run(MODE,b){const T=checker('v39 '+MODE);const v39=MODE==='new';c
  // таблиця 11×11
  let rows=await board();T.check(rows.length===1&&rows[0].startsWith('* ')&&(!v39||rows[0].includes('andrii')),'таблиця: мій рядок '+JSON.stringify(rows));
  await pg.screenshot({path:path.join(OUT,`v39_board_${MODE}.png`)});
+ // 0.69.69: таблицю відкрили, поки вона ще догружається у фоні (запис кешу без rows) — без помилки, потім рядки
+ {await pg.click('#viewClose');const e0=errs.length;await pg.evaluate(()=>{window.__dbg.boardStale();window.__dbg.boardPrefetch();document.getElementById('boardOpen').click();});
+  await pg.waitForTimeout(800);const nr=await pg.$$eval('#boardBody tr[data-q]',e=>e.length);T.check(errs.length===e0&&nr>=1,'таблиця під час фонового завантаження: без помилки, рядки з\'явились ('+nr+(errs.length>e0?'; '+errs.slice(e0).join(' | '):'')+')');}
  // 0.69: BOARD_FROM (скидання загальної таблиці) — увімкнено: старого сезону немає; вимкнено (зараз, власник 02.10): усі сезони
  {await pg.click('#viewClose');const old={...DB.seasons[DB.seasons.length-1],id:9999,nickname:'old_one',created_at:'2026-09-01T10:00:00Z',pts:90};DB.seasons.push(old);
   const r2=await board(),bf=await pg.evaluate(()=>window.__dbg.BOARD_FROM),bt=await pg.textContent('#boardBody');

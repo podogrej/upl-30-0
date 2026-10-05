@@ -1810,7 +1810,7 @@ function boardHtml(rows,b){
 let BOARD='main';
 function openBoard(b){BOARD=b||BOARD;screenTag('table');const box=document.getElementById('viewBox'),body=document.getElementById('viewBody');document.getElementById('viewTitle').textContent='Таблиця · 11×11';box.hidden=false;
   const bt=Object.entries(BOARDS).filter(([k,v])=>!v.hidden||k===BOARD);   // 0.65: одна вкладка — без ряду вкладок
-  body.innerHTML=`<div class="tabs" style="margin-top:0" role="tablist"${bt.length<2?' hidden':''}>${bt.map(([k,v])=>`<button class="tab${k===BOARD?' on':''}" data-board="${k}" role="tab">${v.name}</button>`).join('')}</div><p class="muted" style="font-size:12.5px;margin:10px 0 8px">${BOARDS[BOARD].note}</p><div id="boardBody">${BOARD_CACHE[BOARD]?boardHtml(BOARD_CACHE[BOARD].rows,BOARD):'<p class="muted">Завантаження…</p>'}</div>`;
+  body.innerHTML=`<div class="tabs" style="margin-top:0" role="tablist"${bt.length<2?' hidden':''}>${bt.map(([k,v])=>`<button class="tab${k===BOARD?' on':''}" data-board="${k}" role="tab">${v.name}</button>`).join('')}</div><p class="muted" style="font-size:12.5px;margin:10px 0 8px">${BOARDS[BOARD].note}</p><div id="boardBody">${BOARD_CACHE[BOARD]&&BOARD_CACHE[BOARD].rows?boardHtml(BOARD_CACHE[BOARD].rows,BOARD):'<p class="muted">Завантаження…</p>'}</div>`;
   body.querySelectorAll('[data-board]').forEach(t=>t.onclick=()=>openBoard(t.dataset.board));
   loadBoard(BOARD);}
 // 0.69.69 (власник 03.10: «таблиця щоразу вантажиться, і при перемиканні вкладок — „Завантаження…“»): вкладки таблиці
@@ -2016,6 +2016,6 @@ document.getElementById('newsDot').hidden=lsGet('upl30_news_seen')===WHATSNEW.v;
 /*__FIVE__*/
 document.getElementById('f5Open').onclick=f5Start;
 // 0.67 (аудит P2-5): лише те, що беруть тести; drawCard — для перевірки картки, simulate/rerun — для швидкого детермінізму
-window.__dbg={ic,seasonLabel,BOARD_FROM,setFmt,leagueLoad,boardHtml,oppYear,champModal,drawCard,chalNewGame,DAILY,LEAGUE_CULT,LEAGUE_LEGENDS,openTrophies,renderNewTro,bestPerPlayer,renderWheel,posOpts,eraOf,ptsWord,viewHtml,renderPitch,pitchHtml,f5Pitch,F5_FORMS,cardName,clubShort,simulate,shareTextOf,trCtxNow,trAward,trStore,FORMATIONS,GROUP_OF,DATA,TROPHIES,trEval,PERSON,effRating,get S(){return S;},rerun(seed,year,xi){rnd=mulberry32(seed);const r=simulate(xi||S.slots.map(s=>s.player),MODES[S.mode],year);rnd=Math.random;return {W:r.W,D:r.D,L:r.L,gf:r.gf,ga:r.ga,place:r.place};}};
+window.__dbg={ic,seasonLabel,boardPrefetch,boardStale,BOARD_FROM,setFmt,leagueLoad,boardHtml,oppYear,champModal,drawCard,chalNewGame,DAILY,LEAGUE_CULT,LEAGUE_LEGENDS,openTrophies,renderNewTro,bestPerPlayer,renderWheel,posOpts,eraOf,ptsWord,viewHtml,renderPitch,pitchHtml,f5Pitch,F5_FORMS,cardName,clubShort,simulate,shareTextOf,trCtxNow,trAward,trStore,FORMATIONS,GROUP_OF,DATA,TROPHIES,trEval,PERSON,effRating,get S(){return S;},rerun(seed,year,xi){rnd=mulberry32(seed);const r=simulate(xi||S.slots.map(s=>s.player),MODES[S.mode],year);rnd=Math.random;return {W:r.W,D:r.D,L:r.L,gf:r.gf,ga:r.ga,place:r.place};}};
 })();
 </script>
