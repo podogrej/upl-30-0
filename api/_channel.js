@@ -61,7 +61,8 @@ function parseWhen(s, now = new Date()) {
 
 // ---------- текст поста: видима довжина, розмітка з повідомлення власника (entities → HTML)
 const esc = s => String(s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
-const visibleLen = html => String(html).replace(/<[^>]+>/g, '').replace(/&(lt|gt|amp|quot|#\d+);/g, 'x').length;
+// рахуємо так само, як перевірка в базі (channel_posts_len_chk): без тегів, «&amp;» — 5 знаків (Telegram рахує 1 — тут трохи суворіше, зате база не відмовить)
+const visibleLen = html => String(html).replace(/<[^>]+>/g, '').length;
 function checkPost(p) {
   const text = String(p.text || ''), img = String(p.image_url || '').trim();
   if (!text.trim() && !img) return 'порожній пост';
@@ -200,7 +201,9 @@ async function handleUpdate(u) {
       const photo = Array.isArray(m.photo) && m.photo.length ? m.photo[m.photo.length - 1].file_id : null;
       const row = { text: photo ? entitiesToHtml(m.caption, m.caption_entities) : entitiesToHtml(m.text, m.entities), image_url: photo, publish_at: w.val, status: 'approved', source: 'owner' };
       const bad = checkPost(row); if (bad) { await say(m.chat.id, `Не підходить: ${bad}. Надішли інший текст або /cancel.`); return true; }
-      const [p] = await q('channel_posts', { method: 'POST', body: row, prefer: 'return=representation' }) || [];
+      let p = null;
+      try { [p] = await q('channel_posts', { method: 'POST', body: row, prefer: 'return=representation' }) || []; }
+      catch (e) { await say(m.chat.id, `База не прийняла пост: ${String(e.message).slice(0, 200)}. Надішли інший текст або /cancel.`); return true; }
       await clearWait();
       await say(m.chat.id, `${label(w.tag)}Заплановано: пост #${p.id} вийде ${fmtKyiv(p.publish_at)} за Києвом. Ось як він виглядатиме:`);
       await preview(m.chat.id, w.tag, p);
@@ -212,6 +215,8 @@ async function handleUpdate(u) {
 
 // ---------- автопости: чернетки на схвалення, раз на день / раз на тиждень (позначки app_marks — щоб не двічі)
 async function once(key) { return ((await L.sb('app_marks?on_conflict=key', { method: 'POST', prefer: 'resolution=ignore-duplicates,return=representation', body: { key } })) || []).length > 0; }
+const unmark = key => L.sb(`app_marks?key=eq.${encodeURIComponent(key)}`, { method: 'DELETE', prefer: 'return=minimal' }).catch(() => {});   // чернетку не вставили — наступний запуск спробує ще раз
+async function insertAuto(key, body) { try { const [p] = await L.sb('channel_posts', { method: 'POST', prefer: 'return=representation', body }) || []; return p; } catch (e) { await unmark(key); throw e; } }
 const laterOf = (at, now) => new Date(Math.max(+at, +now + 15 * 6e4));   // уже минуло — через 15 хвилин, щоб власник встиг схвалити
 async function autoPosts(now = new Date()) {
   const made = [];
@@ -223,12 +228,16 @@ async function autoPosts(now = new Date()) {
     const text = `<b>🎯 Драфт дня №${L.dayNo(tday)} · ${L.dayShort(tday)}</b>\n` +
       `Схема <b>${esc(ds.formation)}</b>, суперники — «Ліга легенд», ${rr === 1 ? 'одне перекручування' : rr + ' перекручування'} колеса.\n` +
       `Колесо однакове для всіх — хто збере найкращий сезон?\n\n<a href="${DAILY_LINK()}">Зіграти драфт дня →</a>`;
-    const [p] = await L.sb('channel_posts', { method: 'POST', prefer: 'return=representation', body: { text, publish_at: laterOf(kyivToUtc(tk.y, tk.m, tk.d, ...DAILY_AT), now).toISOString(), status: 'draft', source: 'auto' } }) || [];
+    const p = await insertAuto(`ch_daily:${tday}`, { text, publish_at: laterOf(kyivToUtc(tk.y, tk.m, tk.d, ...DAILY_AT), now).toISOString(), status: 'draft', source: 'auto' });
     if (p) made.push(p.id);
   }
   if (k.wd === 0 && k.H >= WEEKLY_PREP_H && await once(`ch_week:${day}`)) {   // понеділок: підсумки минулого тижня (пн–нд за Києвом)
     const to = kyivToUtc(k.y, k.m, k.d, 0, 0), from = new Date(+to - 7 * 864e5);
-    const rows = await L.sb(`seasons?created_at=gte.${from.toISOString()}&created_at=lt.${to.toISOString()}&verified=is.true&practice=is.false&select=pts,w,d,l,gf,ga,nickname,xi&limit=20000`) || [];
+    const rows = [];   // Supabase віддає щонайбільше 1000 рядків за раз — читаємо сторінками (як api/backup.js)
+    for (let off = 0; ; off += 1000) {
+      const pg = await L.sb(`seasons?created_at=gte.${from.toISOString()}&created_at=lt.${to.toISOString()}&verified=is.true&practice=is.false&select=id,pts,w,d,l,gf,ga,nickname,xi&order=id.asc&limit=1000&offset=${off}`) || [];
+      rows.push(...pg); if (pg.length < 1000 || off > 200000) break;
+    }
     if (rows.length) {
       const best = [...rows].sort((a, b) => b.pts - a.pts || (b.gf - b.ga) - (a.gf - a.ga) || b.gf - a.gf)[0];
       const cnt = {}; for (const r of rows) for (const x of (Array.isArray(r.xi) ? r.xi : [])) if (x && x.n) cnt[x.n] = (cnt[x.n] || 0) + 1;
@@ -239,7 +248,7 @@ async function autoPosts(now = new Date()) {
         `🏆 Найкращий сезон: <b>${esc(best.nickname || 'анонім')}</b> — ${best.w}-${best.d}-${best.l}, ${best.pts} ${plUk(best.pts, 'очко', 'очки', 'очок')}\n` +
         (top ? `⭐ Найчастіше брали: <b>${esc(top)}</b> — у ${topN} ${plUk(topN, 'складі', 'складах', 'складах')}\n` : '') +
         `\n<a href="${DAILY_LINK()}">Зіграти →</a>`;
-      const [p] = await L.sb('channel_posts', { method: 'POST', prefer: 'return=representation', body: { text, publish_at: laterOf(kyivToUtc(k.y, k.m, k.d, ...WEEKLY_AT), now).toISOString(), status: 'draft', source: 'auto' } }) || [];
+      const p = await insertAuto(`ch_week:${day}`, { text, publish_at: laterOf(kyivToUtc(k.y, k.m, k.d, ...WEEKLY_AT), now).toISOString(), status: 'draft', source: 'auto' });
       if (p) made.push(p.id);
     }
   }
@@ -251,12 +260,19 @@ async function runChannel(now = new Date()) {
   const tag = OWN(), owner = L.env('OWNER_TG_ID'), chan = tag === 'p' ? L.env('CHANNEL_ID') : L.env('TEST_CHANNEL_ID');
   const out = { env: tag, auto: [], notified: 0, published: 0, failed: 0 };
   if (!owner || !chan) { out.off = `не задано ${!owner ? 'OWNER_TG_ID' : tag === 'p' ? 'CHANNEL_ID' : 'TEST_CHANNEL_ID'}`; return out; }
+  if (tag === 't' && /qruhcbwycrnfgzzdbljr/.test(L.SB_URL)) { out.off = 'тестовий сайт дивиться в основну базу (немає SUPABASE_URL тестової) — не публікую'; return out; }
   try { out.auto = await autoPosts(now); } catch (e) { out.autoError = String(e.message).slice(0, 160); }
   const iso = now.toISOString();
   for (const d of await L.sb('channel_posts?status=eq.draft&notified_at=is.null&select=id&order=publish_at.asc&limit=10') || []) {
     const [p] = await L.sb(`channel_posts?id=eq.${d.id}&notified_at=is.null`, { method: 'PATCH', prefer: 'return=representation', body: { notified_at: iso } }) || [];
     if (!p) continue;   // інший запуск уже надіслав
     await preview(owner, tag, p); out.notified++;
+  }
+  // забрали на публікацію, але не дописали tg_message_id (запуск обірвався між зміною статусу й Telegram) — раз сказати власнику, перевірити канал
+  const stale = new Date(+now - 15 * 6e4).toISOString();
+  for (const d of await L.sb(`channel_posts?status=eq.published&tg_message_id=is.null&error=is.null&published_at=lt.${encodeURIComponent(stale)}&select=id`) || []) {
+    const [p] = await L.sb(`channel_posts?id=eq.${d.id}&tg_message_id=is.null&error=is.null`, { method: 'PATCH', prefer: 'return=representation', body: { error: 'не підтверджено: запуск обірвався під час публікації' } }) || [];
+    if (p) await say(owner, `❓ ${label(tag)}Пост #${p.id} мав вийти ${fmtKyiv(p.publish_at)}, але публікація не підтвердилась. Перевір канал; якщо поста немає — додай його ще раз.`);
   }
   for (const d of await L.sb(`channel_posts?status=eq.approved&publish_at=lte.${encodeURIComponent(iso)}&select=id&order=publish_at.asc&limit=5`) || []) {
     // атомарно забираємо пост: approved → published лише в одному запуску; другий отримає порожньо й пропустить

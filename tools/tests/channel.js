@@ -14,9 +14,9 @@ function match(row,k,v){const i=v.indexOf('.'),op=v.slice(0,i),a=decodeURICompon
   if(op==='in')return a.replace(/^\(|\)$/g,'').split(',').includes(String(x));if(op==='like')return new RegExp('^'+a.replace(/[.+?^${}()|[\]\\]/g,'\\$&').replace(/\*/g,'.*')+'$').test(String(x));
   const c=x==null?null:String(x);if(c==null)return false;return op==='lt'?c<a:op==='lte'?c<=a:op==='gt'?c>a:op==='gte'?c>=a:true;}
 function rest(base,pathq,o){const [t,qs='']=pathq.split('?');const P=[...new URLSearchParams(qs)];const m=o.method||'GET',pref=(o.headers||{}).Prefer||'';
-  const filt=P.filter(([k])=>!['select','order','limit','on_conflict','apikey'].includes(k));const rows=tbl(base,t);const sel=r=>filt.every(([k,v])=>match(r,k,v));
+  const filt=P.filter(([k])=>!['select','order','limit','offset','on_conflict','apikey'].includes(k));const rows=tbl(base,t);const sel=r=>filt.every(([k,v])=>match(r,k,v));
   if(m==='GET'){let out=rows.filter(sel);const ord=(P.find(([k])=>k==='order')||[])[1];if(ord){const [c,d]=ord.split(',')[0].split('.');out=[...out].sort((a,b)=>(String(a[c])<String(b[c])?-1:1)*(d==='desc'?-1:1));}
-    const lim=+((P.find(([k])=>k==='limit')||[])[1]||0);return lim?out.slice(0,lim):out;}
+    const lim=Math.min(1000,+((P.find(([k])=>k==='limit')||[])[1]||1000)),off=+((P.find(([k])=>k==='offset')||[])[1]||0);return out.slice(off,off+lim);}   // як Supabase: щонайбільше 1000 рядків
   if(m==='POST'){const body=JSON.parse(o.body);const list=Array.isArray(body)?body:[body];const oc=(P.find(([k])=>k==='on_conflict')||[])[1];const done=[];
     for(const b of list){if(oc&&rows.some(r=>r[oc]===b[oc])){if(/ignore-duplicates/.test(pref))continue;}
       const r={...b};if(t==='channel_posts'){r.id=SEQ++;r.status=r.status||'draft';r.source=r.source||'chat';r.created_at=new Date().toISOString();for(const k of ['notified_at','published_at','tg_message_id','error','image_url'])if(!(k in r))r[k]=null;}
@@ -101,13 +101,30 @@ const P=()=>tbl('https://prod.db','channel_posts'),T=()=>tbl('https://test.db','
   const dl=P().filter(p=>p.source==='auto'&&/Драфт дня №\d+ · 15\.10/.test(p.text));
   ok(dl.length===1&&/start=ch_daily/.test(dl[0].text)&&dl[0].status==='draft'&&dl[0].publish_at==='2030-10-15T06:00:00.000Z','автопост: анонс драфту дня на 15.10 — чернетка, вийде о 9:00 за Києвом, з посиланням ch_daily');
   await C.runChannel(new Date('2030-10-14T17:00:00Z'));ok(P().filter(p=>p.source==='auto'&&/Драфт дня №\d+ · 15\.10/.test(p.text)).length===1,'анонс — лише раз на день');
-  tbl('https://prod.db','seasons').push({created_at:'2030-10-09T10:00:00.000Z',verified:true,practice:false,pts:85,w:27,d:4,l:-1+0,gf:70,ga:20,nickname:'andre',xi:[{n:'Андрій Шевченко'},{n:'Сергій Ребров'}]},
-    {created_at:'2030-10-10T10:00:00.000Z',verified:true,practice:false,pts:60,w:18,d:6,l:6,gf:50,ga:30,nickname:'vitya',xi:[{n:'Андрій Шевченко'}]});
+  tbl('https://prod.db','seasons').push({id:1,created_at:'2030-10-09T10:00:00.000Z',verified:true,practice:false,pts:85,w:27,d:4,l:-1+0,gf:70,ga:20,nickname:'andre',xi:[{n:'Андрій Шевченко'},{n:'Сергій Ребров'}]},
+    {id:2,created_at:'2030-10-10T10:00:00.000Z',verified:true,practice:false,pts:60,w:18,d:6,l:6,gf:50,ga:30,nickname:'vitya',xi:[{n:'Андрій Шевченко'}]});
   DBS['https://prod.db'].app_marks=DBS['https://prod.db'].app_marks.filter(m=>!/^ch_week/.test(m.key));await C.runChannel(new Date('2030-10-14T04:30:00Z'));ok(!P().some(p=>/Тиждень у 30-0/.test(p.text)),'підсумки тижня не готуються вночі');await C.runChannel(new Date('2030-10-14T05:30:00Z'));
   const wk=P().find(p=>p.source==='auto'&&/Тиждень у 30-0 УПЛ/.test(p.text));
   ok(wk&&wk.publish_at==='2030-10-14T09:00:00.000Z'&&/Зіграно сезонів: <b>2<\/b>/.test(wk.text)&&/andre/.test(wk.text)&&/Андрій Шевченко<\/b> — у 2/.test(wk.text),'автопост тижня: сезони, найкращий, найчастіший гравець');
   TG.length=0;await bot(msg(777,'/auto off'));const n0=P().length;DBS['https://prod.db'].app_marks=DBS['https://prod.db'].app_marks.filter(m=>!/^ch_daily/.test(m.key)||m.key==='ch_auto_off');
   await C.runChannel(new Date('2030-10-15T16:00:00Z'));ok(sent(777,/вимкнено/).length===1&&P().length===n0,'/auto off — автопостів немає');
+  // понад 1000 сезонів за тиждень — читаємо сторінками
+  const S=tbl('https://prod.db','seasons');for(let i=0;i<2500;i++)S.push({id:10+i,created_at:'2030-10-16T10:00:00.000Z',verified:true,practice:false,pts:i===2400?99:40,w:i===2400?33:12,d:4,l:14,gf:40,ga:40,nickname:i===2400?'last_page':'x',xi:[{n:'Гравець '+(i%7)}]});
+  DBS['https://prod.db'].app_marks=DBS['https://prod.db'].app_marks.filter(m=>m.key!=='ch_auto_off');
+  await C.runChannel(new Date('2030-10-21T06:00:00Z'));const wk2=P().find(p=>p.source==='auto'&&/Тиждень у 30-0 УПЛ · 14\.10–20\.10/.test(p.text));
+  ok(wk2&&/Зіграно сезонів: <b>2500<\/b>/.test(wk2.text)&&/last_page/.test(wk2.text),'підсумки тижня: 2500 сезонів (сторінками по 1000), найкращий — з останньої сторінки');
+  // база відмовила в пості — бот каже власнику, а не мовчить
+  const realRest=rest;let REJECT=true;
+  global.fetch=(f=>async(url,o={})=>{if(REJECT&&String(url).includes('/rest/v1/channel_posts')&&o.method==='POST')return {ok:false,status:400,json:async()=>({}),text:async()=>'{"code":"23514","message":"violates check constraint channel_posts_len_chk"}'};return f(url,o);})(global.fetch);
+  TG.length=0;await bot(msg(777,'/post 25.10.2030 10:00'));await bot(msg(777,'Текст, який база не прийме'));
+  ok(sent(777,/База не прийняла пост/).length===1,'база відмовила — власнику пояснення');REJECT=false;
+  // тестовий сайт з основною базою — не публікує
+  process.env.VERCEL_ENV='preview';const sbu=require(path.join(__dirname,'..','..','api','_league.js'));const keepU=sbu.SB_URL;sbu.SB_URL='https://qruhcbwycrnfgzzdbljr.supabase.co';
+  const g=await C.runChannel(new Date());ok(g.off&&/основну базу/.test(g.off),'тестовий сайт, підключений до основної бази, — не публікує');sbu.SB_URL=keepU;process.env.VERCEL_ENV='production';
+  // обірвана публікація: published без tg_message_id — власнику раз
+  P().push({id:SEQ++,text:'Обірваний',image_url:null,publish_at:'2030-10-22T07:00:00.000Z',status:'published',source:'chat',notified_at:'x',published_at:'2030-10-22T07:00:00.000Z',tg_message_id:null,error:null});
+  TG.length=0;await C.runChannel(new Date('2030-10-22T07:20:00Z'));await C.runChannel(new Date('2030-10-22T07:30:00Z'));
+  ok(sent(777,/публікація не підтвердилась/).length===1,'обірвана публікація — власнику одне повідомлення');
   // ключ запуску
   ok((await cron({task:'channel'})).c===401&&(await cron({task:'channel'},'wrong')).c===401,'?task=channel без ключа / з чужим — 401');
   const rc=await cron({task:'channel'},'chan');ok(rc.c===200&&rc.j.channel&&rc.j.channel.env==='p','?task=channel з CHANNEL_SECRET — працює');
