@@ -635,7 +635,8 @@ section>h3:first-child,.box h3:first-of-type,#viewBody>h3:first-child,#viewBody>
 .sec0+.row0,.sec0+.daily,h3+.daily{margin-top:0}
 .trg,.fl5ms,.fl5teams{gap:12px}
 .tro0{display:flex;flex-wrap:wrap;gap:8px}.tro0>span{display:inline-flex;align-items:center;gap:8px;padding:6px 14px 6px 6px;border-radius:99px;background:var(--surface);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--amber) 32%,transparent);font-size:14px;font-weight:600}
-#viewBody .trsec,.trsec{margin:16px 0 0;font-size:14px;color:var(--muted)}
+#viewBody .trsec,.trsec{display:flex;justify-content:center;align-items:center;gap:6px;margin:18px 0 0;font-size:14px;color:var(--muted);text-align:center}.trsec .ico{vertical-align:0}   /* 0.69.69: значок на одній лінії з текстом */
+.pp-ms{gap:6px;margin-top:12px;justify-content:center}#ppCabAll{display:block;margin:14px auto 0}
 .row:has(.chip.ms){gap:10px!important;margin-bottom:8px}
 /* трофеї «плитками» (референс власника): по одному в рядку, маленький значок біля назви, назва — градієнтом, опис під нею; закриті — приглушені */
 .tro{grid-template-columns:40px 1fr auto;column-gap:10px;row-gap:3px;align-items:start;padding:14px 16px}
@@ -1729,7 +1730,10 @@ async function trRetro(){
   }catch(e){}
 }
 // ---------- UI: кнопка на головній, шафа трофеїв, нові трофеї після сезону
-function renderTrBtn(){const s=trStore();const n=Object.values(s.t).filter(e=>e.n).length;const b=document.getElementById('trCount');if(b)b.textContent=n?` · ${n}`:'';}
+// 0.69.69 (власник 03.10: на головній «Трофеї · 14», на своїй сторінці «Відкрито 27»): головна рахує так само, як сторінка —
+// трофеї цього пристрою + трофеї акаунта з сервера (upl30_tr_srv: id з player_profile, оновлює trSrvRefresh у player.js), лише ті, що є в TROPHIES
+function trCountAll(){const s=trStore();const ids=new Set(Object.entries(s.t).filter(([,e])=>e&&e.n).map(([id])=>id));for(const id of (lsGet('upl30_tr_srv')||[]))ids.add(id);return TROPHIES.filter(t=>ids.has(t.id)).length;}
+function renderTrBtn(){const n=trCountAll();const b=document.getElementById('trCount');if(b)b.textContent=n?` · ${n}`:'';}
 function trCard(t,e,pct,prog){
   const got=e&&e.n;const p=pct!=null?`<span class="trp">${pct===0?'ще ніхто не відкрив':`є в ${pct<1?'<1':Math.round(pct)}% гравців`}</span>`:'';
   const pr=!got&&prog?`<span class="trp">${Math.min(prog[0],prog[1])}/${prog[1]}</span>`:'';
@@ -2133,9 +2137,14 @@ async function ppRpc(fn,args){const r=await fetch(`${SB_URL}/rest/v1/rpc/${fn}?a
 async function ppLoad(st){
   let prof=null,err=false;
   if(ONLINE)try{prof=st.own?(PLAYER&&PLAYER.id?await ppRpc('player_profile',{p_player:PLAYER.id}):null):await ppRpc('player_profile_pub',{p_public:st.u});}catch(e){err=true;}
+  if(st.own&&prof)trSrvRefresh(prof);
   if(prof&&!prof.public_id&&!prof.name)prof=null;   // гравця немає
   if(PP!==st)return;st.prof=prof;st.loading=false;st.err=err;ppRender();}
 // своя сторінка: трофеї — з цього пристрою (з лічильниками), плюс відкриті на інших пристроях цього гравця (з бази)
+// 0.69.69: трофеї акаунта з сервера — у кеш для лічильника на головній (renderTrBtn); раз на завантаження сторінки
+let TR_SRV_AT=0;
+async function trSrvRefresh(prof){if(!prof){if(!ONLINE||!PLAYER||!PLAYER.id||Date.now()-TR_SRV_AT<6e4)return;TR_SRV_AT=Date.now();try{prof=await ppRpc('player_profile',{p_player:PLAYER.id});}catch(e){return;}}
+  if(prof&&Array.isArray(prof.trophies)){lsSet('upl30_tr_srv',prof.trophies.map(t=>t.id));renderTrBtn();}}
 function ppHave(){const st=PP;const h={};
   if(st.own){const s=trStore();for(const [id,e] of Object.entries(s.t))if(e&&e.n)h[id]={n:e.n,at:e.at};}
   for(const t of (st.prof&&st.prof.trophies)||[])if(!h[t.id])h[t.id]={n:1,at:t.at};
@@ -2198,14 +2207,15 @@ function ppRenderCab(){
     const meta=[t.sec?'секретний':tier?tier[2]:'',p!=null&&!t.sec?(p===0?'ще ніхто не відкрив':`є в ${p<1?'<1':Math.round(p)}% гравців`):'',e&&e.at?fmtShort(e.at):''].filter(Boolean).join(' · ');
     return `<div class="tro${e?' on':''}${t.sec?' sec':''}${tier&&e?' rt-'+tier[1]:''}" data-tr="${esc(t.id)}"><span class="tri">${trBadge(t,!!e)}</span><div class="trt"><b>${esc(t.n)}</b>${trQ(t)}<span>${esc(t.d)}</span>${meta?`<span class="trp">${meta}</span>`:''}</div>${e&&e.n>1?`<span class="trn">×${e.n}</span>`:''}</div>`;};
   const cnt=c=>{const l=LIVE.filter(t=>inCat(t,c));return `${l.filter(got).length}/${l.length}`;};
+  // 0.69.69 (власник 03.10): порядок — картки → «+N секретних» → віхи → «Згорнути»; рядок секретних по центру, значок на одній лінії з текстом
   el.innerHTML=`<div class="pp-sec"><h3>Трофеї</h3><span class="best">Відкрито ${n} з ${total}</span></div><div class="pp-bar"><i style="width:${total?Math.round(100*n/total):0}%"></i></div>
     ${own&&n?`<button class="ghost wbtn" id="ppCabShare">${ic('bookshelf','sm')}Поділитися шафою</button><div id="ppCabOut" hidden class="pp-cabout"><img id="ppCabImg" alt="Шафа трофеїв"><div class="row"><button class="primary" id="ppCabSend" hidden>${ic('share-variant','sm')}Поділитися</button><span class="muted" id="ppCabMsg" style="font-size:13px"></span></div></div>`:''}
     ${st.all?`<div class="pp-filt" role="tablist">${cats.filter(([c])=>c==='all'||LIVE.some(t=>t.cat===c)).map(([c,l])=>`<button class="chip${st.f===c?' onc':''}" data-f="${c}" role="tab" aria-selected="${st.f===c}">${l} <i>${cnt(c)}</i></button>`).join('')}</div>
     <div class="seg pp-sort"><button data-s="rare" class="${st.s==='rare'?'on':''}">За рідкістю</button><button data-s="recent" class="${st.s==='recent'?'on':''}">Нещодавні</button></div>`:''}
     ${shown.length?`<div class="trg">${shown.map(card).join('')}</div>`:`<p class="pp-empty">${own?'Тут поки порожньо — зіграй сезон.':'Поки жодного трофея.'}</p>`}
-    ${cards.length>shown.length||st.all?`<button class="link0 pp-all" id="ppCabAll">${st.all?'Згорнути ▴':`Усі трофеї · ${total} ▾`}</button>`:''}
-    ${secOff&&own&&st.all?`<p class="trsec">+${secOff} ${plUk(secOff,'секретний трофей чекає','секретні трофеї чекають','секретних трофеїв чекають')} ${icon('eye')}</p>`:''}
-    ${own&&st.all?`<div class="row" style="gap:6px;margin-top:10px">${MILESTONES.map(([k,,nm])=>{const e=have['ms'+k];return `<span class="chip ms${e?' onc':''}">${trBadge({id:'ms'+k,cat:'milestone'},!!e)}${nm}${!e&&trStore().seasons<k?` · ${trStore().seasons}/${k}`:''}</span>`;}).join('')}</div>`:''}`;
+    ${secOff&&own&&st.all?`<p class="trsec"><span>+${secOff} ${plUk(secOff,'секретний трофей чекає','секретні трофеї чекають','секретних трофеїв чекають')}</span>${icon('eye')}</p>`:''}
+    ${own&&st.all?`<div class="row pp-ms">${MILESTONES.map(([k,,nm])=>{const e=have['ms'+k];return `<span class="chip ms${e?' onc':''}">${trBadge({id:'ms'+k,cat:'milestone'},!!e)}${nm}${!e&&trStore().seasons<k?` · ${trStore().seasons}/${k}`:''}</span>`;}).join('')}</div>`:''}
+    ${cards.length>shown.length||st.all?`<button class="link0 pp-all" id="ppCabAll">${st.all?'Згорнути ▴':`Усі трофеї · ${total} ▾`}</button>`:''}`;
   el.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{st.f=b.dataset.f;ppRenderCab();});
   el.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>{st.s=b.dataset.s;ppRenderCab();});
   const all=document.getElementById('ppCabAll');if(all)all.onclick=()=>{st.all=!st.all;ppRenderCab();};
@@ -2678,7 +2688,7 @@ function myName(){return String((PLAYER&&(PLAYER.name||PLAYER.anon_name))||lsGet
 async function playerRpc(fn,extra){
   const r=await fetch(`${SB_URL}/rest/v1/rpc/${fn}?apikey=${SB_KEY}`,{method:'POST',headers:{apikey:SB_KEY,'Content-Type':'application/json'},body:JSON.stringify({p_device:deviceId(),p_secret:devSecret(),...(extra||{})})});
   const t=await r.text();if(!r.ok)throw new Error(`${fn} ${r.status}: ${t.slice(0,120)}`);return JSON.parse(t);}
-function playerSet(p){if(!p||!p.id)return;const was=PLAYER&&PLAYER.id;PLAYER=p;lsSet("upl30_player",p);if(p.name)lsSet("upl30_nick",p.name);renderAcct();
+function playerSet(p){if(!p||!p.id)return;const was=PLAYER&&PLAYER.id;PLAYER=p;lsSet("upl30_player",p);if(p.name)lsSet("upl30_nick",p.name);renderAcct();if(was&&was!==p.id)lsSet('upl30_tr_srv',null);trSrvRefresh();
   if(PP&&PP.own&&CUR_SEC===6){if(was!==p.id){PP.prof=null;ppLoad(PP);}ppRender();}}
 async function playerSync(){
   if(!ONLINE)return;

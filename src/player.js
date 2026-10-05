@@ -40,9 +40,14 @@ async function ppRpc(fn,args){const r=await fetch(`${SB_URL}/rest/v1/rpc/${fn}?a
 async function ppLoad(st){
   let prof=null,err=false;
   if(ONLINE)try{prof=st.own?(PLAYER&&PLAYER.id?await ppRpc('player_profile',{p_player:PLAYER.id}):null):await ppRpc('player_profile_pub',{p_public:st.u});}catch(e){err=true;}
+  if(st.own&&prof)trSrvRefresh(prof);
   if(prof&&!prof.public_id&&!prof.name)prof=null;   // гравця немає
   if(PP!==st)return;st.prof=prof;st.loading=false;st.err=err;ppRender();}
 // своя сторінка: трофеї — з цього пристрою (з лічильниками), плюс відкриті на інших пристроях цього гравця (з бази)
+// 0.69.69: трофеї акаунта з сервера — у кеш для лічильника на головній (renderTrBtn); раз на завантаження сторінки
+let TR_SRV_AT=0;
+async function trSrvRefresh(prof){if(!prof){if(!ONLINE||!PLAYER||!PLAYER.id||Date.now()-TR_SRV_AT<6e4)return;TR_SRV_AT=Date.now();try{prof=await ppRpc('player_profile',{p_player:PLAYER.id});}catch(e){return;}}
+  if(prof&&Array.isArray(prof.trophies)){lsSet('upl30_tr_srv',prof.trophies.map(t=>t.id));renderTrBtn();}}
 function ppHave(){const st=PP;const h={};
   if(st.own){const s=trStore();for(const [id,e] of Object.entries(s.t))if(e&&e.n)h[id]={n:e.n,at:e.at};}
   for(const t of (st.prof&&st.prof.trophies)||[])if(!h[t.id])h[t.id]={n:1,at:t.at};
@@ -105,14 +110,15 @@ function ppRenderCab(){
     const meta=[t.sec?'секретний':tier?tier[2]:'',p!=null&&!t.sec?(p===0?'ще ніхто не відкрив':`є в ${p<1?'<1':Math.round(p)}% гравців`):'',e&&e.at?fmtShort(e.at):''].filter(Boolean).join(' · ');
     return `<div class="tro${e?' on':''}${t.sec?' sec':''}${tier&&e?' rt-'+tier[1]:''}" data-tr="${esc(t.id)}"><span class="tri">${trBadge(t,!!e)}</span><div class="trt"><b>${esc(t.n)}</b>${trQ(t)}<span>${esc(t.d)}</span>${meta?`<span class="trp">${meta}</span>`:''}</div>${e&&e.n>1?`<span class="trn">×${e.n}</span>`:''}</div>`;};
   const cnt=c=>{const l=LIVE.filter(t=>inCat(t,c));return `${l.filter(got).length}/${l.length}`;};
+  // 0.69.69 (власник 03.10): порядок — картки → «+N секретних» → віхи → «Згорнути»; рядок секретних по центру, значок на одній лінії з текстом
   el.innerHTML=`<div class="pp-sec"><h3>Трофеї</h3><span class="best">Відкрито ${n} з ${total}</span></div><div class="pp-bar"><i style="width:${total?Math.round(100*n/total):0}%"></i></div>
     ${own&&n?`<button class="ghost wbtn" id="ppCabShare">${ic('bookshelf','sm')}Поділитися шафою</button><div id="ppCabOut" hidden class="pp-cabout"><img id="ppCabImg" alt="Шафа трофеїв"><div class="row"><button class="primary" id="ppCabSend" hidden>${ic('share-variant','sm')}Поділитися</button><span class="muted" id="ppCabMsg" style="font-size:13px"></span></div></div>`:''}
     ${st.all?`<div class="pp-filt" role="tablist">${cats.filter(([c])=>c==='all'||LIVE.some(t=>t.cat===c)).map(([c,l])=>`<button class="chip${st.f===c?' onc':''}" data-f="${c}" role="tab" aria-selected="${st.f===c}">${l} <i>${cnt(c)}</i></button>`).join('')}</div>
     <div class="seg pp-sort"><button data-s="rare" class="${st.s==='rare'?'on':''}">За рідкістю</button><button data-s="recent" class="${st.s==='recent'?'on':''}">Нещодавні</button></div>`:''}
     ${shown.length?`<div class="trg">${shown.map(card).join('')}</div>`:`<p class="pp-empty">${own?'Тут поки порожньо — зіграй сезон.':'Поки жодного трофея.'}</p>`}
-    ${cards.length>shown.length||st.all?`<button class="link0 pp-all" id="ppCabAll">${st.all?'Згорнути ▴':`Усі трофеї · ${total} ▾`}</button>`:''}
-    ${secOff&&own&&st.all?`<p class="trsec">+${secOff} ${plUk(secOff,'секретний трофей чекає','секретні трофеї чекають','секретних трофеїв чекають')} ${icon('eye')}</p>`:''}
-    ${own&&st.all?`<div class="row" style="gap:6px;margin-top:10px">${MILESTONES.map(([k,,nm])=>{const e=have['ms'+k];return `<span class="chip ms${e?' onc':''}">${trBadge({id:'ms'+k,cat:'milestone'},!!e)}${nm}${!e&&trStore().seasons<k?` · ${trStore().seasons}/${k}`:''}</span>`;}).join('')}</div>`:''}`;
+    ${secOff&&own&&st.all?`<p class="trsec"><span>+${secOff} ${plUk(secOff,'секретний трофей чекає','секретні трофеї чекають','секретних трофеїв чекають')}</span>${icon('eye')}</p>`:''}
+    ${own&&st.all?`<div class="row pp-ms">${MILESTONES.map(([k,,nm])=>{const e=have['ms'+k];return `<span class="chip ms${e?' onc':''}">${trBadge({id:'ms'+k,cat:'milestone'},!!e)}${nm}${!e&&trStore().seasons<k?` · ${trStore().seasons}/${k}`:''}</span>`;}).join('')}</div>`:''}
+    ${cards.length>shown.length||st.all?`<button class="link0 pp-all" id="ppCabAll">${st.all?'Згорнути ▴':`Усі трофеї · ${total} ▾`}</button>`:''}`;
   el.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{st.f=b.dataset.f;ppRenderCab();});
   el.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>{st.s=b.dataset.s;ppRenderCab();});
   const all=document.getElementById('ppCabAll');if(all)all.onclick=()=>{st.all=!st.all;ppRenderCab();};

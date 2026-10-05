@@ -99,7 +99,7 @@ const TROPHIES=[
   {id:"kukuriku",i:"🐓",n:"Кукуріку",d:"Анатолій Тимощук у складі",cat:"secret",sec:1,t:c=>c.xi.some(x=>x.id==='w:1979-03-30:timoschuk')},
   {id:"lobanovsky",i:"📋",n:"Лобан би схвалив",d:"Чемпіон, у складі 6+ гравців «Динамо» 1997–2001",cat:"secret",sec:1,t:c=>notAnti(c)&&c.r.place===1&&c.xi.filter(x=>x.cc==='dynamo-kyiv'&&x.y>=1997&&x.y<=2000).length>=6},
   {id:"panenka",i:"🪶",n:"Паненка",d:"Артем Мілевський у складі, команда в трійці",cat:"secret",sec:1,t:c=>notAnti(c)&&c.r.place<=3&&c.xi.some(x=>x.id==='tm:9800')},
-  {id:"samba8",i:"💃",n:"Самба",d:"8+ бразильців в одному складі",cat:"secret",sec:1,t:c=>c.xi.filter(x=>DATA.nats[x.nat]==='Бразилія').length>=8},
+  {id:"samba8",i:"💃",n:"Карнавал",d:"8+ бразильців в одному складі",cat:"secret",sec:1,t:c=>c.xi.filter(x=>DATA.nats[x.nat]==='Бразилія').length>=8},
   // 0.58, ідея Віті: 106 грузинів у пулі, розкидані по клубах; бот, що полює на грузинів, збирає 6+ приблизно в 1 драфті з 8, випадково — майже ніколи
   {id:"gamarjoba",i:"🇬🇪",n:"Гамарджоба",d:"6+ грузинів в одному складі",cat:"secret",sec:1,t:c=>c.xi.filter(x=>DATA.nats[x.nat]==='Грузія').length>=6},
   // Кварцяний, Блохін, Лобановський
@@ -211,7 +211,10 @@ async function trRetro(){
   }catch(e){}
 }
 // ---------- UI: кнопка на головній, шафа трофеїв, нові трофеї після сезону
-function renderTrBtn(){const s=trStore();const n=Object.values(s.t).filter(e=>e.n).length;const b=document.getElementById('trCount');if(b)b.textContent=n?` · ${n}`:'';}
+// 0.69.69 (власник 03.10: на головній «Трофеї · 14», на своїй сторінці «Відкрито 27»): головна рахує так само, як сторінка —
+// трофеї цього пристрою + трофеї акаунта з сервера (upl30_tr_srv: id з player_profile, оновлює trSrvRefresh у player.js), лише ті, що є в TROPHIES
+function trCountAll(){const s=trStore();const ids=new Set(Object.entries(s.t).filter(([,e])=>e&&e.n).map(([id])=>id));for(const id of (lsGet('upl30_tr_srv')||[]))ids.add(id);return TROPHIES.filter(t=>ids.has(t.id)).length;}
+function renderTrBtn(){const n=trCountAll();const b=document.getElementById('trCount');if(b)b.textContent=n?` · ${n}`:'';}
 function trCard(t,e,pct,prog){
   const got=e&&e.n;const p=pct!=null?`<span class="trp">${pct===0?'ще ніхто не відкрив':`є в ${pct<1?'<1':Math.round(pct)}% гравців`}</span>`:'';
   const pr=!got&&prog?`<span class="trp">${Math.min(prog[0],prog[1])}/${prog[1]}</span>`:'';
