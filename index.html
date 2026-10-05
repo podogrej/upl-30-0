@@ -446,9 +446,8 @@ header.top.in #homeBtn .hl{display:none}header.top.in #homeBtn{padding-right:8px
 #acctBtn.avbtn{display:inline-flex;align-items:center;gap:8px;max-width:46vw;padding:3px 12px 3px 3px;border:1px solid var(--line2);border-radius:999px;background:var(--card);box-shadow:none;color:var(--ink);font:600 14px/1 var(--font-body)}
 /* 0.69.5 (власник 02.10, варіант B): «💬 Відгук» поруч з аватаркою; підпис — лише на широкому екрані, на вузькому всередині гри ховається ім'я (лишається аватарка) */
 .hdr-r{display:flex;align-items:center;gap:8px;min-width:0}
-.fbk{display:inline-flex;align-items:center;gap:6px;height:40px;padding:0 12px;border-radius:999px;border:1px solid var(--line2);background:var(--card);color:var(--ink);font:600 14px var(--font-body);white-space:nowrap;flex:none}
 #acctBtn.avbtn{max-width:calc(46vw - 96px)}
-@media (max-width:420px){.fbk .t{display:none}.fbk{padding:0;width:40px;justify-content:center}#acctBtn.avbtn{max-width:calc(46vw - 48px)}}
+@media (max-width:420px){#acctBtn.avbtn{max-width:calc(46vw - 48px)}}
 @media (max-width:360px){header.top.in #acctBtn .me-n{display:none}header.top.in #acctBtn.avbtn{padding:3px}}
 #acctBtn.avbtn.noname{padding:3px}#acctBtn.avbtn .av{border-radius:999px;flex:none}#acctBtn .me-n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* головна */
@@ -525,8 +524,18 @@ button.stick0{position:sticky;bottom:12px;z-index:5;max-width:none;margin-top:20
 .duo0{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:20px}
 .tile0{display:grid;justify-items:start;gap:10px;padding:16px 14px;border:0;border-radius:14px;background:var(--card);color:var(--ink);text-align:left;font-weight:600}
 .tile0 .ic{width:30px;height:30px;background:none;margin:0}.tile0 .ic .ico{width:22px;height:22px}.tile0 b{font-size:15px;line-height:1.25}.tile0 em{font-style:normal;color:var(--amber)}
-.about0{margin-top:0;border:0;background:none;padding:14px 2px;border-radius:0}.about0>h3{margin:0 0 6px}.foot.cred{margin-top:8px;font-family:var(--font-body);font-size:10.5px;line-height:1.5;max-width:560px;margin-left:auto;margin-right:auto;padding:0 16px}
-.foot0{display:flex;flex-wrap:wrap;justify-content:center;gap:6px 16px;margin-top:36px;padding-top:20px;border-top:1px solid var(--line2);font-size:13px}.foot0 a{color:var(--ink2);text-decoration:none}.foot0 a:hover{color:var(--amber)}
+.about0{margin-top:0;border:0;background:none;padding:14px 2px;border-radius:0}.about0>h3{margin:0 0 6px}
+.ft{display:grid;gap:14px;justify-items:center;margin:40px auto 28px;padding:20px 16px 0;border-top:1px solid var(--line2);max-width:760px;text-align:center;font-family:var(--font-body)}   /* 0.69.69: підвал A (власник 04.10) */
+.foot0{display:flex;flex-wrap:wrap;justify-content:center;gap:8px 18px;font-size:13px;font-weight:600}.foot0 a{color:var(--ink2);text-decoration:none}.foot0 a:hover{color:var(--amber)}
+.ft .foot{margin:0;font-family:var(--font-body);font-size:12px}.ft-small{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:6px 10px}.ft .ft-small a{color:var(--muted);font-weight:500}.ft .ft-small #newsBtn{color:var(--ink2)}
+.ft-pills{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}.ft-pill{display:inline-flex;align-items:center;gap:7px;height:34px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:none;color:var(--ink2);font:500 13px var(--font-body);cursor:pointer;white-space:nowrap;text-decoration:none}.ft-pill[hidden]{display:none}.ft-pill .ico{width:15px;height:15px}
+.ft-cred{font-size:11px;line-height:1.5;color:var(--muted);opacity:.8;max-width:64ch;text-wrap:balance}
+.ft-form{width:min(100%,380px);text-align:left;display:grid;gap:8px}.ft-form[hidden]{display:none}.ft-form .ttl{font-size:14px;font-weight:700;color:var(--ink2)}
+.ft-form textarea,.ft-form input{width:100%;box-sizing:border-box;font:400 14px var(--font-body);color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 12px}.ft-form textarea{min-height:84px;resize:vertical}.ft-form textarea::placeholder{color:var(--muted)}
+.ft-form label{font-size:13px;color:var(--muted);margin-top:4px}.ft-form small{font-size:12px;color:var(--muted);line-height:1.4;margin-top:-2px}.ft-form small[hidden],.ft-form .err[hidden]{display:none}
+.ft-form .hint{margin:2px 0 0;font-size:12.5px;color:var(--muted)}.ft-form .hint a{color:var(--ink2);font-weight:700;text-decoration:underline;text-underline-offset:2px}.ft-form .err{margin:0;font-size:13px;color:var(--loss)}
+.ft-form .acts{display:flex;align-items:center;gap:12px;margin-top:4px}.ft-send{border:0;border-radius:7px;padding:7px 14px;font:700 13px var(--font-body);background:var(--ink);color:var(--bg);cursor:pointer}.ft-send:disabled{opacity:.5}.ft-cancel{border:0;background:none;padding:6px 2px;font:500 13px var(--font-body);color:var(--muted);cursor:pointer}
+.ft-done{width:min(100%,380px);display:flex;gap:10px;align-items:center;justify-content:center;text-align:left;padding:12px 14px;border-radius:10px;font-size:14px;color:var(--ink);background:color-mix(in srgb,var(--win) 12%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--win) 45%,transparent)}.ft-done[hidden]{display:none}.ft-done b{color:var(--win);font-size:16px}
 table.lbt th.n,table.lbt td.n{width:28px;padding-left:2px;padding-right:2px;text-align:center}
 .lbfoot{margin-top:6px;font-size:13px}
 /* вільна гра: картки режимів — іконка, назва, опис (видно всім — нічого не скаче) */
@@ -656,7 +665,7 @@ section>h3:first-child,.box h3:first-of-type,#viewBody>h3:first-child,#viewBody>
 <div class="wrap">
   <header class="top">
     <div class="navl"><button class="nav" id="backBtn" hidden><!--i:chevron-right-->Назад</button><button class="nav" id="homeBtn" title="На головну"><!--i:home-outline--><span class="hl">Головна</span></button></div>
-    <div class="hdr-r"><button class="fbk" id="fbBtn" title="Відгук розробнику" aria-label="Відгук">💬<span class="t"> Відгук</span></button><button class="nav" id="acctBtn" hidden>Увійти</button></div>
+    <div class="hdr-r"><button class="nav" id="acctBtn" hidden>Увійти</button></div>
   </header>
 
   <!-- ГОЛОВНА -->
@@ -829,9 +838,20 @@ section>h3:first-child,.box h3:first-of-type,#viewBody>h3:first-child,#viewBody>
 </div>
 
 <div class="overlay" id="viewBox" hidden><div class="box"><div class="vhead"><h3 id="viewTitle">Склад</h3><button class="ghost" id="viewClose">Закрити</button></div><div id="viewBody"></div></div></div>
-<nav class="foot0" aria-label="Розділи"><a href="#" data-go="dailyBtn">Драфт дня</a><a href="#" data-go="pickOpen">Вибір сезону</a><a href="#" data-go="flOpen">Ліга з друзями</a><a href="#" data-go="boardOpen">Таблиця</a><a href="#" data-go="trBtn">Трофеї</a><a href="#" data-go="howQ">Питання</a><a href="#" data-go="aboutBox">Про гру</a></nav>
-<div class="foot">30-0 УПЛ · <a href="#" id="newsBtn">Що нового у версії 0.69.6<b id="newsDot" hidden></b></a> · <a href="#" id="themeBtn" class="thm" role="switch" aria-checked="false" aria-label="Світла тема"></a> · неофіційний фан-проєкт</div>
-<div class="foot cred">Шрифт KyivType Sans © Дмитро Растворцев (айдентика Києва) · іконки Material Design Icons (Apache 2.0) і логотип Telegram з Font Awesome Free (CC BY 4.0), решта — емодзі</div>
+<footer class="ft" id="ft">   <!-- 0.69.69 (власник 04.10, макет A): підвал як у 38-0 — розділи, відгук формою, бот, версія, подяки -->
+<nav class="foot0" aria-label="Розділи"><a href="#" data-go="dailyBtn">Драфт дня</a><a href="#" data-go="pickOpen">Вибір сезону</a><a href="#" data-go="clubOpen">Один клуб</a><a href="#" data-go="flOpen">Ліга з друзями</a><a href="#" data-go="boardOpen">Таблиця</a><a href="#" data-go="trBtn">Трофеї</a><a href="#" data-go="howQ">Питання</a></nav>
+<form class="ft-form" id="fbForm" hidden novalidate><div class="ttl">Повідомити про проблему</div>
+  <textarea id="fbTxt" maxlength="2000" placeholder="Що сталося? Баг, ідея, будь-що" aria-label="Що сталося?"></textarea>
+  <label for="fbContact">Пошта або @нік у Telegram, щоб ми відповіли</label><input id="fbContact" maxlength="100" autocomplete="email">
+  <small id="fbFilled" hidden>Заповнено з Telegram — можна змінити або стерти</small>
+  <p class="hint">Скріншот? Надішли його боту <a href="#" id="fbBot">@upl30_bot</a></p><p class="err" id="fbErr" hidden></p>
+  <div class="acts"><button class="ft-send" id="fbSend" type="submit">Надіслати</button><button class="ft-cancel" id="fbCancel" type="button">Скасувати</button></div></form>
+<div class="ft-done" id="fbDone" hidden><b>✓</b><span>Дякуємо! Прочитаємо найближчим часом</span></div>
+<div class="ft-pills"><button class="ft-pill" id="fbBtn" type="button">✉️ Відгук і баги</button><a class="ft-pill" id="ftBot" href="https://t.me/upl30_bot" target="_blank" rel="noopener"><!--i:telegram-->Telegram-бот</a></div>
+<div class="foot ft-small"><a href="#" id="newsBtn">Що нового у версії 0.69.6<b id="newsDot" hidden></b></a><span>·</span><a href="privacy.html">Конфіденційність</a></div>
+<div class="foot ft-copy">© 2026 30-0 УПЛ · неофіційний фан-проєкт <a href="#" id="themeBtn" class="thm" role="switch" aria-checked="false" aria-label="Світла тема"></a></div>
+<div class="ft-cred">Шрифт KyivType Sans © Дмитро Растворцев (айдентика Києва)<br>Іконки: Material Design Icons (Apache 2.0), логотип Telegram — Font Awesome Free (CC BY 4.0)</div>
+</footer>
 <script src="pool.d63f138d2.js"></script>
 <script>
 (function(){
@@ -1878,14 +1898,28 @@ function deviceId(){let id=lsGet("upl30_device");if(!id){try{id=crypto.randomUUI
 async function sbTop(day){const q=sel=>`${SB_URL}/rest/v1/daily_results?apikey=${SB_KEY}&day=eq.${day}&verified=is.true&select=${sel}&order=pts.desc,ga.asc,gf.desc&limit=500`;   // лише результати, які сервер записав з перевіреного сезону
   let r=await fetch(q('*,'+PL_SEL[0]));if(!r.ok)r=await fetch(q('*,'+PL_SEL[1]));if(!r.ok)r=await fetch(q('*'));if(!r.ok){throw new Error('GET '+r.status+' '+(await r.text()).slice(0,200));}return r.json();}
 async function sbInsert(row){const r=await fetch(`${SB_URL}/rest/v1/daily_results?apikey=${SB_KEY}`,{method:"POST",headers:{apikey:SB_KEY,"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify(row)});if(!r.ok){const t=await r.text();const e=new Error(r.status+" "+t);e.status=r.status;e.body=t;throw e;}}
-const VERSION=(document.querySelector('.foot').textContent.match(/версі[яї] ([\d.]+)/)||[])[1]||'?';
+const VERSION=(document.getElementById('newsBtn').textContent.match(/версі[яї] ([\d.]+)/)||[])[1]||'?';
 window.__errCtx=()=>({version:VERSION,screen:SEC_NAME[CUR_SEC],tg:TG&&TG.initData?`${TG.platform||'?'} ${TG.version||''}`:null,player:PLAYER&&PLAYER.public_id||null});   // для звітів про помилки (перший <script>)
 // ---------- Telegram Mini App: якщо сторінку відкрито всередині Telegram, беремо ім'я з профілю, тему і кнопку «Надіслати в чат»
 const TG_BOT='upl30_bot';   // username бота без @
 let TG=null,TGU=null;
-// 0.69.5: «💬 Відгук» — особисті з ботом (api/bot.js приймає будь-яке повідомлення як відгук)
-function openFeedback(){const u=`https://t.me/${TG_BOT}?start=feedback`;screenTag('feedback');try{if(TG&&TG.openTelegramLink){TG.openTelegramLink(u);return;}}catch(e){}window.open(u,'_blank','noopener');}
-document.getElementById('fbBtn').onclick=openFeedback;
+// 0.69.69 (власник 04.10, підвал A): відгук — формою в підвалі → /api/err ({feedback}) → Telegram власника й таблиця feedback.
+// Скріни — як і раніше, боту в особисті (api/bot.js приймає будь-яке повідомлення як відгук)
+function tgOpen(u){try{if(TG&&TG.openTelegramLink){TG.openTelegramLink(u);return;}}catch(e){}window.open(u,'_blank','noopener');}
+{const $=id=>document.getElementById(id),form=$('fbForm'),btn=$('fbBtn'),done=$('fbDone'),err=$('fbErr'),send=$('fbSend');
+  const show=on=>{form.hidden=!on;btn.hidden=on;if(on){done.hidden=true;err.hidden=true;}};
+  btn.onclick=()=>{screenTag('feedback');show(true);const c=$('fbContact');if(!c.value&&TGU&&TGU.username){c.value='@'+TGU.username;$('fbFilled').hidden=false;}$('fbTxt').focus();};
+  $('fbCancel').onclick=()=>show(false);
+  $('fbBot').onclick=e=>{e.preventDefault();tgOpen(`https://t.me/${TG_BOT}?start=feedback`);};
+  $('ftBot').onclick=e=>{e.preventDefault();tgOpen(`https://t.me/${TG_BOT}`);};
+  form.onsubmit=async e=>{e.preventDefault();const text=$('fbTxt').value.trim();if(!text){$('fbTxt').focus();return;}
+    if(!ONLINE){err.textContent='Відгук працює на сайті й у Telegram-боті @'+TG_BOT+'.';err.hidden=false;return;}
+    send.disabled=true;err.hidden=true;
+    try{const c=window.__errCtx(),r=await fetch('/api/err',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({version:c.version,screen:c.screen,player:c.player,initData:TG&&TG.initData||null,feedback:{text,contact:$('fbContact').value.trim()}})});
+      const j=await r.json().catch(()=>({}));if(!r.ok||!j.ok)throw new Error(j.error||('HTTP '+r.status));
+      $('fbTxt').value='';show(false);done.hidden=false;}
+    catch(x){err.textContent=/^HTTP|fetch/i.test(x.message)?'Не вдалося надіслати. Спробуй ще раз або напиши боту @'+TG_BOT+'.':x.message;err.hidden=false;}
+    finally{send.disabled=false;}};}
 function tgLink(){return TG_BOT?`https://t.me/${TG_BOT}?startapp`:SITE;}
 function tgInit(){
   try{TG=window.Telegram&&window.Telegram.WebApp;if(!TG||!TG.initData)return;TG.ready();TG.expand();try{TG.disableVerticalSwipes&&TG.disableVerticalSwipes();}catch(e){}   // 0.69: свайп униз по сторінці не згортає Mini App (iOS)
