@@ -561,6 +561,12 @@ chk "v06997: channel_posts закрита для anon/authenticated; стату�
   begin insert into channel_posts(text, publish_at) values (repeat('x', 4097), now()); assert false, 'довгий текст прийнято'; exception when check_violation then null; end;
   begin insert into channel_posts(text, publish_at, status) values ('x', now(), 'weird'); assert false, 'чужий статус прийнято'; exception when check_violation then null; end;
   begin insert into channel_posts(text, publish_at, source) values ('x', now(), 'bot'); assert false, 'чуже джерело прийнято'; exception when check_violation then null; end;"
+# upgrade from the earlier test-DB version: rows with old statuses must not break the re-run
+$P -d t1 -q -c "alter table channel_posts drop constraint channel_posts_status_chk; insert into channel_posts(text, publish_at, status) values ('old-a', now(), 'approved'), ('old-s', now(), 'skipped');" >/dev/null 2>&1
+if $P -d t1 -f "$ROOT/sql/v06997_channel_posts.sql" >/dev/null 2>"$D/err"; then ok "v06997 поверх старої версії (approved/skipped)"; else bad "v06997 поверх старої версії — $(grep -v NOTICE "$D/err" | head -3)"; fi
+chk "v06997: старі статуси approved → pending_approval, skipped → rejected" postgres "
+  assert (select status from channel_posts where text = 'old-a') = 'pending_approval' and (select status from channel_posts where text = 'old-s') = 'rejected', 'старі статуси';
+  assert exists (select 1 from pg_constraint where conname = 'channel_posts_status_chk'), 'перевірка статусу є';"
 echo "база: $D (порт $PORT)"
 [ $FAIL = 0 ] && echo "SQL: УСЕ ГАРАЗД ($N перевірок)" || echo "SQL: ПРОБЛЕМИ $FAIL/$N"
 exit $((FAIL>0))

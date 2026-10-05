@@ -78,9 +78,10 @@ module.exports = async (req, res) => {
     // bot added to a group
     const mc = u.my_chat_member;
     const joined = mc && mc.chat && ['member', 'administrator'].includes(mc.new_chat_member.status) && !['member', 'administrator'].includes(mc.old_chat_member.status);
-    // cards service channel (api/card.js, TG_CARDS_CHAT): the bot, as channel admin, posts its ID so it can be set in Vercel
+    // bot became a channel admin: send the channel ID to the admin privately (never post into the channel itself, it may be public)
     if (mc && mc.chat && mc.chat.type === 'channel' && mc.new_chat_member.status === 'administrator' && mc.old_chat_member.status !== 'administrator') {
-      await L.tg('sendMessage', { chat_id: mc.chat.id, text: `Канал для карток підключено ✅\nID каналу: ${mc.chat.id}\nУпиши його у Vercel → Settings → Environment Variables як TG_CARDS_CHAT і зроби Redeploy.` });
+      const owner = L.env('OWNER_TG_ID');
+      if (owner) await L.tg('sendMessage', { chat_id: owner, text: `Мене зробили адміністратором каналу «${String(mc.chat.title || '').slice(0, 60)}» ✅\nID каналу: ${mc.chat.id}${mc.chat.username ? ' (@' + mc.chat.username + ')' : ''}\nДля карток — змінна TG_CARDS_CHAT, для публікацій — CHANNEL_CHAT_ID у Vercel → Settings → Environment Variables, потім Redeploy.` });
     } else if (joined && mc.chat.type !== 'private' && mc.chat.type !== 'channel') {
       await L.tg('sendMessage', { chat_id: mc.chat.id, text: mc.new_chat_member.status === 'administrator' ? GROUP_HELLO_ADMIN : GROUP_HELLO });
     }

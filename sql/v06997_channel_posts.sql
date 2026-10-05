@@ -1,25 +1,24 @@
--- 0.69.97: post queue for the Telegram channel about UPL history. The bot @upl30_bot is a channel admin.
--- Posts arrive as drafts (a separate Claude session via the Supabase connector, or server autoposts) or already approved
--- (admin /post command in the bot); the admin approves drafts with buttons in private chat; the server publishes once publish_at is reached (api/_channel.js).
--- Read/written only by the server (service key) and the admin via Supabase; anon and authenticated have no access (new tables: no anon writes).
--- Additive only; idempotent; safe for the previous client. Run on BOTH DBs (test and main).
+-- 0.69.97: post queue for the public Telegram channel @upl_nostalgia (bot @upl30_bot is a channel admin), code in api/_channel.js.
+-- Flow: draft -> pending_approval (preview sent to the admin) -> published (Publish button) | rejected | failed (Telegram error, retry).
+-- Read/written only by the server (service key) and the admin via Supabase; anon and authenticated have no access.
+-- Additive and idempotent; works on top of a table that was created by hand (id, text, image_url, publish_at, status, source, created_at). Run on BOTH DBs.
 create table if not exists public.channel_posts (
-  id bigserial primary key,
+  id bigint generated always as identity primary key,
   text text not null,                       -- Telegram HTML markup (<b>, <i>, <a href>, ...); visible text <= 4096, with an image <= 1024
   image_url text,                           -- optional: image URL (https://...) or a Telegram image file_id
-  publish_at timestamptz not null,          -- when to publish (entered in Kyiv time, stored as a timestamp)
-  status text not null default 'draft',     -- draft -> approved -> published; or skipped / failed
-  source text not null default 'chat',      -- who added it: chat (Claude session), owner (admin via the bot), auto (server)
-  created_at timestamptz not null default now(),
-  published_at timestamptz,
-  tg_message_id bigint,
-  error text,
-  notified_at timestamptz                   -- when the draft was sent to the admin for approval (to avoid sending twice)
+  publish_at timestamptz not null,          -- when the draft is shown to the admin for approval
+  status text not null default 'draft',
+  source text not null default 'chat',      -- chat (Claude session via Supabase), owner (/post in the bot), auto (server)
+  created_at timestamptz not null default now()
 );
-alter table public.channel_posts add column if not exists notified_at timestamptz;
-do $$ begin
-  alter table public.channel_posts add constraint channel_posts_status_chk check (status in ('draft','approved','published','skipped','failed'));
-exception when duplicate_object then null; end $$;
+alter table public.channel_posts add column if not exists published_at timestamptz;
+alter table public.channel_posts add column if not exists tg_message_id bigint;   -- message_id of the post in the channel
+alter table public.channel_posts add column if not exists error text;             -- last Telegram error (status failed)
+-- status list (re-created so a re-run also widens an older list from earlier test runs)
+-- statuses from the earlier test-DB version (approved, skipped) mapped to the current ones, so the new check passes on re-run
+update public.channel_posts set status = case status when 'approved' then 'pending_approval' else 'rejected' end where status in ('approved', 'skipped');
+alter table public.channel_posts drop constraint if exists channel_posts_status_chk;
+alter table public.channel_posts add constraint channel_posts_status_chk check (status in ('draft','pending_approval','published','rejected','failed'));
 do $$ begin
   alter table public.channel_posts add constraint channel_posts_source_chk check (source in ('chat','owner','auto'));
 exception when duplicate_object then null; end $$;

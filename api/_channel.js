@@ -1,17 +1,16 @@
-// 30-0 UPL Telegram channel: post queue channel_posts (sql/v06997_channel_posts.sql),
-// approval via bot buttons in private chat, scheduled publishing, auto posts (daily draft announcement, weekly summary).
+// 30-0 UPL Telegram channel (@upl_nostalgia): post queue channel_posts (sql/v06997_channel_posts.sql).
+// Flow: draft -> pending_approval (preview sent to the admin) -> published (Publish button, sent right away) | rejected | failed (retry).
+// Drafts come from the DB (Supabase connector), from /post <text> in the bot, or from auto posts; due drafts (publish_at <= now) are sent to the admin by runChannel.
 // "_" prefix: not a route (Vercel Hobby function limit). Called from api/bot.js (commands, buttons) and api/cron.js?task=channel (run).
-// Vercel env: OWNER_TG_ID (channel admin), CHANNEL_ID (Production only), TEST_CHANNEL_ID (Preview / test site),
-// CHANNEL_SECRET (key for frequent runs from GitHub Actions, .github/workflows/channel.yml).
-// One bot, webhook on prod. Test-DB posts are shown with a TEST label and callback tag t (TEST_SUPABASE_URL/KEY, as in bot login);
-// the test site publishes them to TEST_CHANNEL_ID. Only Production publishes to CHANNEL_ID.
+// Vercel env: OWNER_TG_ID (admin), CHANNEL_CHAT_ID (channel id or @username, Production), TEST_CHANNEL_ID (test channel),
+// CHANNEL_SECRET (key for the frequent run from GitHub Actions, .github/workflows/channel.yml).
+// One bot, webhook on prod: test-DB posts carry callback tag t (TEST_SUPABASE_URL/KEY) and go only to TEST_CHANNEL_ID.
 const L = require('./_league.js');
 const SITE = 'https://upl30.com.ua/';
 const BOT = () => L.env('TG_BOT') || 'upl30_bot';
 const DAILY_LINK = () => `https://t.me/${BOT()}?start=ch_daily`;
-const WAIT_MIN = 30;   // minutes the bot waits for post text / new time after a command
-const DAILY_AT = [9, 0], WEEKLY_AT = [12, 0];   // publish time (Kyiv): daily draft announcement 9:00, weekly summary Monday 12:00
-const DAILY_PREP_H = 18, WEEKLY_PREP_H = 8;   // draft prep hour (Kyiv): announcement the day before after 18:00, summary Monday after 8:00; avoids night-time notifications
+const DAILY_AT = [9, 0], WEEKLY_AT = [12, 0];   // when the auto draft is sent to the admin (Kyiv): daily draft announcement 9:00, weekly summary Monday 12:00
+const DAILY_PREP_H = 18, WEEKLY_PREP_H = 8;   // when auto drafts are created (Kyiv): announcement the evening before, summary Monday morning
 
 // ---------- DBs: p = main, t = test. Each environment knows its own DB from VERCEL_ENV
 const OWN = () => (process.env.VERCEL_ENV === 'production' ? 'p' : 't');
@@ -39,26 +38,6 @@ function kyivToUtc(y, m, d, H, M) {   // UTC instant for Kyiv local y-m-d H:M (D
 }
 const pad = n => String(n).padStart(2, '0');
 function fmtKyiv(iso) { const k = kyivParts(new Date(iso)); return `${pad(k.d)}.${pad(k.m)} ${pad(k.H)}:${pad(k.M)}`; }
-// accepts "10.10 18:00", "10.10.2026 18:00", "18:00" (today, or tomorrow if past), "now" (Ukrainian or English)
-function parseWhen(s, now = new Date()) {
-  s = String(s || '').trim().toLowerCase();
-  if (s === 'зараз' || s === 'now') return now;
-  const k = kyivParts(now);
-  let m = /^(\d{1,2})\.(\d{1,2})(?:\.(\d{2}|\d{4}))?\s+(\d{1,2})[:.](\d{2})$/.exec(s);
-  if (m) {
-    const [d, mo, H, M] = [+m[1], +m[2], +m[4], +m[5]];
-    if (mo < 1 || mo > 12 || d < 1 || d > 31 || H > 23 || M > 59) return null;
-    let y = m[3] ? (m[3].length === 2 ? 2000 + +m[3] : +m[3]) : k.y;
-    let t = kyivToUtc(y, mo, d, H, M);
-    if (!m[3] && t < now - 864e5) t = kyivToUtc(y + 1, mo, d, H, M);   // "02.01" in December -> next year
-    const back = kyivParts(t); if (back.d !== d || back.m !== mo) return null;   // rejects invalid dates like 31.02
-    return t;
-  }
-  m = /^(\d{1,2})[:.](\d{2})$/.exec(s);
-  if (m && +m[1] < 24 && +m[2] < 60) { let t = kyivToUtc(k.y, k.m, k.d, +m[1], +m[2]); if (t < now) t = new Date(+t + 864e5); return t; }
-  return null;
-}
-
 // ---------- post text: visible length, Telegram entities -> HTML
 const esc = s => String(s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
 // matches DB check channel_posts_len_chk: tags stripped, "&amp;" counts as 5 (stricter than Telegram, so the DB never rejects)
@@ -97,43 +76,55 @@ async function sendPost(chat_id, p, extra = {}) {
   return img ? L.tg('sendPhoto', { chat_id, photo: img, caption: p.text, parse_mode: 'HTML', ...extra })
     : L.tg('sendMessage', { chat_id, text: p.text, parse_mode: 'HTML', ...extra });
 }
-const STATUS = { draft: '📝 чернетка', approved: '✅ схвалено', published: '📣 вийшов', skipped: '⏭ пропущено', failed: '⚠️ не вийшов' };
+// target channel per DB tag: main-DB posts only to CHANNEL_CHAT_ID (CHANNEL_ID as fallback name) and only from Production; test-DB posts only to TEST_CHANNEL_ID
+const channelFor = tag => (tag === 'p' ? (process.env.VERCEL_ENV === 'production' ? L.env('CHANNEL_CHAT_ID') || L.env('CHANNEL_ID') : '') : L.env('TEST_CHANNEL_ID'));
+const STATUS = { draft: '📝 чернетка', pending_approval: '⏳ чекає рішення', published: '📣 опубліковано', rejected: '🚫 відхилено', failed: '⚠️ не вийшов' };
 function postKb(tag, p) {
-  const id = p.id, cb = a => `cp:${tag}:${id}:${a}`;
-  if (p.status === 'published') return { inline_keyboard: [[{ text: `📣 Вийшов ${p.published_at ? fmtKyiv(p.published_at) : ''}`.trim(), callback_data: 'cp:x' }]] };
-  if (p.status === 'skipped') return { inline_keyboard: [[{ text: '⏭ Пропущено', callback_data: 'cp:x' }]] };
-  const top = p.status === 'approved' ? { text: `✅ Схвалено · вийде ${fmtKyiv(p.publish_at)}`, callback_data: 'cp:x' }
-    : { text: `${p.status === 'failed' ? '🔁 Спробувати ще' : '✅ Опублікувати за розкладом'} · ${fmtKyiv(p.publish_at)}`, callback_data: cb('ok') };
-  return { inline_keyboard: [[top], [{ text: '⏭ Пропустити', callback_data: cb('skip') }, { text: '🕒 Змінити час', callback_data: cb('time') }]] };
+  const cb = a => `cp:${tag}:${p.id}:${a}`;
+  if (p.status === 'published') return { inline_keyboard: [[{ text: '📣 Опубліковано', callback_data: 'cp:x' }]] };
+  if (p.status === 'rejected') return { inline_keyboard: [[{ text: '🚫 Відхилено', callback_data: 'cp:x' }]] };
+  return { inline_keyboard: [[{ text: p.status === 'failed' ? '🔁 Спробувати ще' : '✅ Опублікувати', callback_data: cb('pub') }, { text: '🚫 Відхилити', callback_data: cb('rej') }]] };
 }
-// admin preview: post as it will appear in the channel plus buttons; if Telegram rejects the markup, an explanation with the same buttons
+// admin preview: the post exactly as it will appear in the channel, buttons under it; if Telegram rejects the markup, an explanation with the same buttons
 async function preview(owner, tag, p) {
-  const head = `${label(tag)}Пост #${p.id} · ${STATUS[p.status] || p.status} · ${fmtKyiv(p.publish_at)} за Києвом`;
-  await L.tg('sendMessage', { chat_id: owner, text: head });
+  await L.tg('sendMessage', { chat_id: owner, text: `${label(tag)}Пост #${p.id} · ${STATUS[p.status] || p.status}` });
   const bad = checkPost(p);
   const r = bad ? null : await sendPost(owner, p, { reply_markup: postKb(tag, p) });
   if (!r || !r.ok) await L.tg('sendMessage', { chat_id: owner, text: `⚠️ Пост #${p.id} не вийде в такому вигляді: ${bad || (r && r.description) || 'Telegram не прийняв'}`, reply_markup: postKb(tag, p) });
 }
-
-// ---------- pending admin reply (post text after /post, new time after "change time"): mark in app_marks of the bot's main DB
-async function setWait(kind, tag, val) { await clearWait(); await L.sb('app_marks', { method: 'POST', prefer: 'return=minimal', body: { key: `chw:${kind}:${tag}:${val}` } }); }
-async function clearWait() { await L.sb('app_marks?key=like.chw:*', { method: 'DELETE', prefer: 'return=minimal' }); }
-async function getWait() {
-  const [w] = await L.sb(`app_marks?key=like.chw:*&select=key,at&order=at.desc&limit=1`) || [];
-  if (!w || Date.now() - Date.parse(w.at) > WAIT_MIN * 6e4) return null;
-  const [, kind, tag, ...rest] = w.key.split(':'); return { kind, tag, val: rest.join(':') };
+// draft -> pending_approval atomically, then preview; returns false if another run/handler already took it
+async function askOwner(q, owner, tag, id) {
+  const [p] = await q(`channel_posts?id=eq.${id}&status=eq.draft`, { method: 'PATCH', prefer: 'return=representation', body: { status: 'pending_approval' } }) || [];
+  if (!p) return false;
+  await preview(owner, tag, p); return true;
+}
+// publish now: atomic claim pending_approval|failed -> published (a double tap or a concurrent handler gets nothing), then Telegram
+async function publish(q, tag, id) {
+  const chan = channelFor(tag);
+  if (!chan) return { err: tag === 'p' ? 'не задано CHANNEL_CHAT_ID' : 'не задано TEST_CHANNEL_ID' };
+  const iso = new Date().toISOString();
+  const [p] = await q(`channel_posts?id=eq.${id}&status=in.(pending_approval,failed)`, { method: 'PATCH', prefer: 'return=representation', body: { status: 'published', published_at: iso, error: null } }) || [];
+  if (!p) return { gone: true };
+  let err = checkPost(p), r = null;
+  if (!err) { try { r = await sendPost(chan, p); } catch (e) { err = String(e.message); } if (!err && !(r && r.ok)) err = (r && r.description) || 'Telegram не відповів'; }
+  if (err) {
+    await q(`channel_posts?id=eq.${id}`, { method: 'PATCH', prefer: 'return=minimal', body: { status: 'failed', published_at: null, error: String(err).slice(0, 500) } });
+    return { err, p: { ...p, status: 'failed' } };
+  }
+  await q(`channel_posts?id=eq.${id}`, { method: 'PATCH', prefer: 'return=minimal', body: { tg_message_id: r.result && r.result.message_id } });
+  return { p };
 }
 
 const isOwner = from => { const o = L.env('OWNER_TG_ID'); return !!o && !!from && String(from.id) === o; };
 const say = (chat_id, text, extra = {}) => L.tg('sendMessage', { chat_id, text, ...extra });
-const POST_HELP = 'Як додати пост:\n/post 10.10 18:00 — потім надішли текст (можна картинку з підписом).\n/post 18:00 — сьогодні (або завтра, якщо вже минуло), /post зараз — одразу.\n/post test 10.10 18:00 — у тестовий канал.\n/queue — найближчі пости, /queue test — тестові.\n/auto off|on — автопости (анонс драфту дня, підсумки тижня); /auto test off — у тесті.\n/cancel — скасувати.';
+const POST_HELP = 'Як додати пост:\n/post <текст> — чернетка одразу приходить сюди з кнопками «Опублікувати» / «Відхилити». Розмітка (жирний, курсив, посилання) зберігається.\nКартинка: надішли фото з підписом «/post текст».\n/post test <текст> — у тестовий канал.\n/queue — пости, що чекають рішення; /queue test — тестові.\n/auto off|on — автопости (анонс драфту дня, підсумки тижня).';
 
 async function queue(chat_id, tag) {
   const q = db(tag); if (!q) return say(chat_id, 'Ця база недоступна.');
-  const rows = await q(`channel_posts?status=in.(draft,approved,failed)&select=id,status,publish_at,text,image_url&order=publish_at.asc&limit=10`) || [];
+  const rows = await q(`channel_posts?status=in.(draft,pending_approval,failed)&select=id,status,publish_at,text,image_url&order=publish_at.asc&limit=10`) || [];
   if (!rows.length) return say(chat_id, `${label(tag)}У черзі порожньо.`);
   const short = t => String(t || '').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim().slice(0, 50);
-  const text = `${label(tag)}Найближчі пости:\n` + rows.map(r => `#${r.id} · ${fmtKyiv(r.publish_at)} · ${STATUS[r.status]}${r.image_url ? ' · 🖼' : ''}\n${short(r.text)}`).join('\n\n');
+  const text = `${label(tag)}Пости в черзі:\n` + rows.map(r => `#${r.id} · ${fmtKyiv(r.publish_at)} · ${STATUS[r.status]}${r.image_url ? ' · 🖼' : ''}\n${short(r.text)}`).join('\n\n');
   const kb = []; for (let i = 0; i < rows.length; i += 3) kb.push(rows.slice(i, i + 3).map(r => ({ text: `👁 #${r.id}`, callback_data: `cp:${tag}:${r.id}:show` })));
   return say(chat_id, text, { reply_markup: { inline_keyboard: kb } });
 }
@@ -145,79 +136,67 @@ async function handleUpdate(u) {
     if (!isOwner(cq.from)) { await L.tg('answerCallbackQuery', { callback_query_id: cq.id, text: 'Ці кнопки — лише для адміністратора каналу.', show_alert: true }); return true; }
     const [, tag, id, act] = cq.data.split(':'), q = db(tag), msg = cq.message || {};
     if (!q || !/^\d+$/.test(id || '')) { await L.tg('answerCallbackQuery', { callback_query_id: cq.id }); return true; }
-    const patch = async (filter, body) => (await q(`channel_posts?id=eq.${id}&${filter}`, { method: 'PATCH', body, prefer: 'return=representation' }) || [])[0];
     let p = null, note = '';
-    if (act === 'ok') { p = await patch('status=in.(draft,failed)', { status: 'approved', error: null }); note = p ? `Схвалено: вийде ${fmtKyiv(p.publish_at)}` : 'Вже не чернетка'; }
-    else if (act === 'skip') { p = await patch('status=in.(draft,approved,failed)', { status: 'skipped' }); note = p ? 'Пропущено' : 'Уже вийшов або пропущений'; }
-    else if (act === 'time') { await setWait('time', tag, id); note = 'Напиши новий час'; await say(cq.from.id, `${label(tag)}Новий час для поста #${id} за Києвом, наприклад: 10.10 18:00 (або 18:00, «зараз»). /cancel — скасувати.`); }
-    else if (act === 'show') { const [r] = await q(`channel_posts?id=eq.${id}&select=*`) || []; if (r) await preview(cq.from.id, tag, r); }
-    await L.tg('answerCallbackQuery', { callback_query_id: cq.id, text: note });
+    if (act === 'pub') {
+      const r = await publish(q, tag, id); p = r.p || null;
+      note = r.gone ? 'Уже опубліковано або відхилено' : r.err ? `Не вийшло: ${String(r.err).slice(0, 150)}` : 'Опубліковано ✅';
+    } else if (act === 'rej') {
+      [p] = await q(`channel_posts?id=eq.${id}&status=in.(draft,pending_approval,failed)`, { method: 'PATCH', prefer: 'return=representation', body: { status: 'rejected' } }) || [];
+      note = p ? 'Відхилено' : 'Уже опубліковано або відхилено';
+    } else if (act === 'show') {
+      const [r] = await q(`channel_posts?id=eq.${id}&select=*`) || [];
+      if (r && r.status === 'draft') await askOwner(q, cq.from.id, tag, id); else if (r) await preview(cq.from.id, tag, r);
+    }
+    await L.tg('answerCallbackQuery', { callback_query_id: cq.id, text: note, show_alert: /^Не вийшло/.test(note) });
     if (p && msg.chat) await L.tg('editMessageReplyMarkup', { chat_id: msg.chat.id, message_id: msg.message_id, reply_markup: postKb(tag, p) });
     return true;
   }
   const m = u.message;
   if (!m || !m.chat) return false;
-  const text = typeof m.text === 'string' ? m.text.trim() : '', isPrivate = m.chat.type === 'private';
+  const photo = Array.isArray(m.photo) && m.photo.length ? m.photo[m.photo.length - 1].file_id : null;
+  const raw = typeof m.text === 'string' ? m.text : photo && typeof m.caption === 'string' ? m.caption : '';
+  const ents = typeof m.text === 'string' ? m.entities : m.caption_entities;
+  const text = raw.trim(), isPrivate = m.chat.type === 'private';
   const cmd = text.startsWith('/') ? text.split(/[\s@]/)[0].toLowerCase() : '', args = text.split(/\s+/).slice(1);
   if (cmd === '/whoami') { await say(m.chat.id, `Твій Telegram ID: ${m.from && m.from.id}`); return true; }
   if (cmd === '/start' && isPrivate && args[0] === 'ch_daily') {
     await say(m.chat.id, '🎯 Драфт дня — однакове колесо для всіх, одна офіційна спроба. Тисни «Грати»!', { reply_markup: { inline_keyboard: [[{ text: '▶️ Грати', web_app: { url: SITE } }]] } });
     return true;
   }
-  if (['/post', '/queue', '/auto', '/cancel'].includes(cmd)) {
-    if (!isOwner(m.from) || !isPrivate) { await say(m.chat.id, 'Ця команда — лише для адміністратора каналу, в особистих повідомленнях з ботом.'); return true; }
-    const tag = args[0] === 'test' ? 't' : OWN(), rest = args[0] === 'test' ? args.slice(1) : args;
-    if (cmd === '/cancel') { await clearWait(); await say(m.chat.id, 'Скасовано.'); return true; }
-    if (cmd === '/queue') { await queue(m.chat.id, tag); return true; }
-    if (cmd === '/auto') {
-      const q = db(tag), on = rest[0] === 'on', off = rest[0] === 'off';
-      if (!q) { await say(m.chat.id, 'Ця база недоступна.'); return true; }
-      if (off) await q('app_marks?on_conflict=key', { method: 'POST', prefer: 'resolution=ignore-duplicates,return=minimal', body: { key: 'ch_auto_off' } });
-      if (on) await q('app_marks?key=eq.ch_auto_off', { method: 'DELETE', prefer: 'return=minimal' });
-      const isOff = (await q('app_marks?key=eq.ch_auto_off&select=key') || []).length > 0;
-      await say(m.chat.id, `${label(tag)}Автопости (анонс драфту дня, підсумки тижня): ${isOff ? 'вимкнено' : 'увімкнено'}. Вони приходять тобі чернетками на схвалення.`);
-      return true;
-    }
-    const when = parseWhen(rest.join(' '));
-    if (!when) { await say(m.chat.id, POST_HELP); return true; }
-    if (!db(tag)) { await say(m.chat.id, 'Тестова база не налаштована — пост нікуди записати.'); return true; }
-    await setWait('post', tag, when.toISOString());
-    await say(m.chat.id, `${label(tag)}Надішли текст поста (можна картинку з підписом). Вийде ${fmtKyiv(when)} за Києвом у ${tag === 't' ? 'тестовий канал' : 'канал'}. /cancel — скасувати.`);
+  if (!['/post', '/queue', '/auto'].includes(cmd)) return false;
+  if (!isOwner(m.from) || !isPrivate) { await say(m.chat.id, 'Ця команда — лише для адміністратора каналу, в особистих повідомленнях з ботом.'); return true; }
+  const test = args[0] === 'test', tag = test ? 't' : OWN(), q = db(tag);
+  if (!q) { await say(m.chat.id, 'Ця база недоступна.'); return true; }
+  if (cmd === '/queue') { await queue(m.chat.id, tag); return true; }
+  if (cmd === '/auto') {
+    const opt = args[test ? 1 : 0];
+    if (opt === 'off') await q('app_marks?on_conflict=key', { method: 'POST', prefer: 'resolution=ignore-duplicates,return=minimal', body: { key: 'ch_auto_off' } });
+    if (opt === 'on') await q('app_marks?key=eq.ch_auto_off', { method: 'DELETE', prefer: 'return=minimal' });
+    const isOff = (await q('app_marks?key=eq.ch_auto_off&select=key') || []).length > 0;
+    await say(m.chat.id, `${label(tag)}Автопости (анонс драфту дня, підсумки тижня): ${isOff ? 'вимкнено' : 'увімкнено'}. Вони приходять тобі чернетками на схвалення.`);
     return true;
   }
-  // admin reply to /post or "change time" (otherwise regular feedback, api/bot.js)
-  if (isPrivate && !cmd && isOwner(m.from)) {
-    const w = await getWait(); if (!w) return false;
-    const q = db(w.tag); if (!q) { await clearWait(); return false; }
-    if (w.kind === 'time') {
-      const when = parseWhen(text); if (!when) { await say(m.chat.id, 'Не зрозумів час. Приклад: 10.10 18:00, 18:00 або «зараз». /cancel — скасувати.'); return true; }
-      const [p] = await q(`channel_posts?id=eq.${w.val}&status=in.(draft,approved,failed)`, { method: 'PATCH', body: { publish_at: when.toISOString() }, prefer: 'return=representation' }) || [];
-      await clearWait();
-      if (!p) { await say(m.chat.id, `Пост #${w.val} уже вийшов або пропущений.`); return true; }
-      await say(m.chat.id, `${label(w.tag)}Пост #${p.id}: новий час ${fmtKyiv(p.publish_at)} за Києвом.`, { reply_markup: postKb(w.tag, p) });
-      return true;
-    }
-    if (w.kind === 'post') {
-      const photo = Array.isArray(m.photo) && m.photo.length ? m.photo[m.photo.length - 1].file_id : null;
-      const row = { text: photo ? entitiesToHtml(m.caption, m.caption_entities) : entitiesToHtml(m.text, m.entities), image_url: photo, publish_at: w.val, status: 'approved', source: 'owner' };
-      const bad = checkPost(row); if (bad) { await say(m.chat.id, `Не підходить: ${bad}. Надішли інший текст або /cancel.`); return true; }
-      let p = null;
-      try { [p] = await q('channel_posts', { method: 'POST', body: row, prefer: 'return=representation' }) || []; }
-      catch (e) { await say(m.chat.id, `База не прийняла пост: ${String(e.message).slice(0, 200)}. Надішли інший текст або /cancel.`); return true; }
-      await clearWait();
-      await say(m.chat.id, `${label(w.tag)}Заплановано: пост #${p.id} вийде ${fmtKyiv(p.publish_at)} за Києвом. Ось як він виглядатиме:`);
-      await preview(m.chat.id, w.tag, p);
-      return true;
-    }
-  }
-  return false;
+  // /post [test] <text>: the post body is everything after the command (and "test"), with its formatting converted to HTML
+  const lead = raw.length - raw.trimStart().length;
+  const head = /^\/post(@\w+)?\s*(test(\s+|$))?/i.exec(raw.trimStart());
+  const cut = lead + (head ? head[0].length : 0);
+  const shifted = (ents || []).filter(e => e.offset >= cut).map(e => ({ ...e, offset: e.offset - cut }));
+  const body = entitiesToHtml(raw.slice(cut), shifted).trim();
+  if (!body && !photo) { await say(m.chat.id, POST_HELP); return true; }
+  const row = { text: body, image_url: photo, publish_at: new Date().toISOString(), status: 'draft', source: 'owner' };
+  const bad = checkPost(row); if (bad) { await say(m.chat.id, `Не підходить: ${bad}.`); return true; }
+  let p = null;
+  try { [p] = await q('channel_posts', { method: 'POST', body: row, prefer: 'return=representation' }) || []; }
+  catch (e) { await say(m.chat.id, `База не прийняла пост: ${String(e.message).slice(0, 200)}`); return true; }
+  if (p) await askOwner(q, m.chat.id, tag, p.id);
+  return true;
 }
 
 // ---------- auto posts: drafts for approval, daily / weekly (app_marks keys prevent duplicates)
 async function once(key) { return ((await L.sb('app_marks?on_conflict=key', { method: 'POST', prefer: 'resolution=ignore-duplicates,return=representation', body: { key } })) || []).length > 0; }
 const unmark = key => L.sb(`app_marks?key=eq.${encodeURIComponent(key)}`, { method: 'DELETE', prefer: 'return=minimal' }).catch(() => {});   // draft insert failed -> next run retries
 async function insertAuto(key, body) { try { const [p] = await L.sb('channel_posts', { method: 'POST', prefer: 'return=representation', body }) || []; return p; } catch (e) { await unmark(key); throw e; } }
-const laterOf = (at, now) => new Date(Math.max(+at, +now + 15 * 6e4));   // already past -> in 15 minutes, so the admin can approve
+const laterOf = (at, now) => new Date(Math.max(+at, +now));   // already past -> ask the admin on the next run
 async function autoPosts(now = new Date()) {
   const made = [];
   if ((await L.sb('app_marks?key=eq.ch_auto_off&select=key') || []).length) return made;
@@ -255,41 +234,22 @@ async function autoPosts(now = new Date()) {
   return made;
 }
 
-// ---------- run (every ~10 min from GitHub Actions, daily from Vercel Cron): auto posts -> notify admin of new drafts -> publish
+// ---------- run (every ~10 min from GitHub Actions, daily from Vercel Cron): auto posts -> drafts due (publish_at <= now) to the admin
 async function runChannel(now = new Date()) {
-  const tag = OWN(), owner = L.env('OWNER_TG_ID'), chan = tag === 'p' ? L.env('CHANNEL_ID') : L.env('TEST_CHANNEL_ID');
-  const out = { env: tag, auto: [], notified: 0, published: 0, failed: 0 };
-  if (!owner || !chan) { out.off = `не задано ${!owner ? 'OWNER_TG_ID' : tag === 'p' ? 'CHANNEL_ID' : 'TEST_CHANNEL_ID'}`; return out; }
-  if (tag === 't' && /qruhcbwycrnfgzzdbljr/.test(L.SB_URL)) { out.off = 'тестовий сайт дивиться в основну базу (немає SUPABASE_URL тестової) — не публікую'; return out; }
+  const tag = OWN(), owner = L.env('OWNER_TG_ID');
+  const out = { env: tag, auto: [], asked: 0 };
+  if (!owner) { out.off = 'не задано OWNER_TG_ID'; return out; }
+  if (tag === 't' && /qruhcbwycrnfgzzdbljr/.test(L.SB_URL)) { out.off = 'тестовий сайт дивиться в основну базу (немає SUPABASE_URL тестової) — нічого не роблю'; return out; }
   try { out.auto = await autoPosts(now); } catch (e) { out.autoError = String(e.message).slice(0, 160); }
-  const iso = now.toISOString();
-  for (const d of await L.sb('channel_posts?status=eq.draft&notified_at=is.null&select=id&order=publish_at.asc&limit=10') || []) {
-    const [p] = await L.sb(`channel_posts?id=eq.${d.id}&notified_at=is.null`, { method: 'PATCH', prefer: 'return=representation', body: { notified_at: iso } }) || [];
-    if (!p) continue;   // another run already sent it
-    await preview(owner, tag, p); out.notified++;
-  }
-  // claimed for publishing but tg_message_id missing (run died between status change and Telegram): notify admin once to check the channel
+  for (const d of await L.sb(`channel_posts?status=eq.draft&publish_at=lte.${encodeURIComponent(now.toISOString())}&select=id&order=publish_at.asc&limit=10`) || [])
+    if (await askOwner(L.sb, owner, tag, d.id)) out.asked++;
+  // claimed for publishing but tg_message_id missing (handler died between status change and Telegram): tell the admin once
   const stale = new Date(+now - 15 * 6e4).toISOString();
   for (const d of await L.sb(`channel_posts?status=eq.published&tg_message_id=is.null&error=is.null&published_at=lt.${encodeURIComponent(stale)}&select=id`) || []) {
-    const [p] = await L.sb(`channel_posts?id=eq.${d.id}&tg_message_id=is.null&error=is.null`, { method: 'PATCH', prefer: 'return=representation', body: { error: 'не підтверджено: запуск обірвався під час публікації' } }) || [];
-    if (p) await say(owner, `❓ ${label(tag)}Пост #${p.id} мав вийти ${fmtKyiv(p.publish_at)}, але публікація не підтвердилась. Перевір канал; якщо поста немає — додай його ще раз.`);
-  }
-  for (const d of await L.sb(`channel_posts?status=eq.approved&publish_at=lte.${encodeURIComponent(iso)}&select=id&order=publish_at.asc&limit=5`) || []) {
-    // atomic claim: approved -> published in only one run; a concurrent run gets nothing and skips
-    const [p] = await L.sb(`channel_posts?id=eq.${d.id}&status=eq.approved`, { method: 'PATCH', prefer: 'return=representation', body: { status: 'published', published_at: iso } }) || [];
-    if (!p) continue;
-    let err = checkPost(p), r = null;
-    if (!err) { try { r = await sendPost(chan, p); } catch (e) { err = String(e.message); } if (!err && !(r && r.ok)) err = (r && r.description) || 'Telegram не відповів'; }
-    if (err) {
-      await L.sb(`channel_posts?id=eq.${p.id}`, { method: 'PATCH', prefer: 'return=minimal', body: { status: 'failed', published_at: null, error: String(err).slice(0, 500) } });
-      out.failed++;
-      await say(owner, `⚠️ ${label(tag)}Пост #${p.id} не вийшов: ${err}`, { reply_markup: postKb(tag, { ...p, status: 'failed' }) });
-    } else {
-      await L.sb(`channel_posts?id=eq.${p.id}`, { method: 'PATCH', prefer: 'return=minimal', body: { tg_message_id: r.result && r.result.message_id } });
-      out.published++;
-    }
+    const [p] = await L.sb(`channel_posts?id=eq.${d.id}&tg_message_id=is.null&error=is.null`, { method: 'PATCH', prefer: 'return=representation', body: { error: 'не підтверджено: публікація обірвалась' } }) || [];
+    if (p) await say(owner, `❓ ${label(tag)}Пост #${p.id}: публікація не підтвердилась. Перевір канал; якщо поста немає — додай його ще раз.`);
   }
   return out;
 }
 
-module.exports = { handleUpdate, runChannel, autoPosts, parseWhen, kyivToUtc, fmtKyiv, entitiesToHtml, checkPost, visibleLen };
+module.exports = { handleUpdate, runChannel, autoPosts, publish, kyivToUtc, fmtKyiv, entitiesToHtml, checkPost, visibleLen };

@@ -1,4 +1,4 @@
-# Telegram channel queue: every 10 minutes calls /api/cron?task=channel (api/_channel.js): new drafts to admin, scheduled publishing.
+# Telegram channel queue: every 10 minutes calls /api/cron?task=channel (api/_channel.js): due drafts (publish_at <= now) sent to the admin for approval, auto posts.
 # Vercel Hobby allows Cron only once a day, so the frequent run lives here. GitHub runs schedules only from main and may lag 5–15 min.
 # Repository secrets (Settings → Secrets and variables → Actions):
 #   CHANNEL_SECRET: same value as the CHANNEL_SECRET env var in Vercel (Production and Preview);
