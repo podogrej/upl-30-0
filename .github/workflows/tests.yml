@@ -1,8 +1,8 @@
-# Автоперевірки (0.64): на кожен push у test і на pull request у main. Те саме, що bash tools/tests/all.sh локально.
+# Автоперевірки (0.64; з 05.10 — tests.yml): на кожен push у test і main та на кожен pull request у main. Те саме, що bash tools/tests/all.sh локально.
 name: Перевірки
 on:
   push:
-    branches: [test]
+    branches: [test, main]
   pull_request:
     branches: [main]
   workflow_dispatch:

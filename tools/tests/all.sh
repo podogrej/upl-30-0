@@ -1,5 +1,5 @@
 #!/bin/bash
-# Усі автоперевірки одним запуском (0.64): локально й у GitHub Actions (.github/workflows/ci.yml).
+# Усі автоперевірки одним запуском (0.64): локально й у GitHub Actions (.github/workflows/tests.yml).
 # Запуск з кореня: bash tools/tests/all.sh   (QUICK=1 — швидкий набір ~1 хв; JOBS=N — скільки тестів у браузері одночасно, типово 3)
 # Код виходу 0 — усе гаразд; інакше в кінці список того, що впало.
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"; cd "$ROOT" || exit 1
