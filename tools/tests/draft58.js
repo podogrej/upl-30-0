@@ -109,5 +109,11 @@ const findPl=(pg,multi)=>pg.evaluate(multi=>{const D=window.__dbg,S=D.S;const bs
  check(await pg.evaluate(()=>{const D=window.__dbg,g=D.DATA.nats.indexOf('Грузія');const X=n=>Array.from({length:11},(_,i)=>({id:'x'+i,name:'Гравець Тест'+i,nat:i<n?g:0}));
    const c=xi=>({r:{W:10,D:10,L:10,pts:40,place:8,gf:40,ga:40,xp:40,log:[]},xi,pl:[],mode:'normal',format:'classic',reveal:true});
    return D.trEval(c(X(6))).includes('gamarjoba')&&!D.trEval(c(X(5))).includes('gamarjoba')&&D.TROPHIES.find(t=>t.id==='gamarjoba').sec===1;}),'трофей «Гамарджоба»: 6 грузинів — так, 5 — ні, секретний');
+ // ---- 0.69.96 (власник 05.10): «Хлопці Анчелотті» — усі четверо в складі; троє — ні
+ check(await pg.evaluate(()=>{const D=window.__dbg,A=['Андрій Шевченко','Каха Каладзе','Андрій Лунін','Дуглас Коста'];
+   const X=k=>Array.from({length:11},(_,i)=>({id:'x'+i,name:i<k?A[i]:'Гравець Тест'+i,nat:0}));
+   const c=xi=>({r:{W:10,D:10,L:10,pts:40,place:8,gf:40,ga:40,xp:40,log:[]},xi,pl:[],mode:'normal',format:'classic',reveal:true});
+   const inPool=A.every(n=>D.DATA.clubs.some(cl=>cl.pl.some(p=>p[0]===n)));
+   return inPool&&D.trEval(c(X(4))).includes('ancelotti')&&!D.trEval(c(X(3))).includes('ancelotti')&&D.TROPHIES.find(t=>t.id==='ancelotti').sec===1;}),'трофей «Хлопці Анчелотті»: усі четверо є в пулі; четверо — так, троє — ні, секретний');
  check(!errs.length,'помилки на сторінці: '+errs.join(' | '));
  console.log('\nзнімки:',OUT);console.log(fail.length?'ПРОБЛЕМИ:\n- '+fail.join('\n- '):'УСЕ ГАРАЗД');await b.close();process.exit(fail.length?1:0);})();

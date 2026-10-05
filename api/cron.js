@@ -26,13 +26,11 @@ module.exports = async (req, res) => {
       const st = await L.standings(chat_id);
       const win = list[0], ws = st.find(s => s.name === win.name);
       const medal = ['🥇', '🥈', '🥉'];
+      // 0.69.96 (власник 05.10: «бот кидає дуже великі повідомлення»): без трофеїв і без «Завтра нове колесо»
       let t = `<b>🌙 Підсумок дня №${L.dayNo(day)} — ліга «${L.esc(lg ? lg.title : '')}»</b>\n\n`;
       t += list.map((r, i) => `${medal[i] || (i + 1) + '.'} ${L.esc(r.name)} — <b>${r.pts}</b> (${r.w}-${r.d}-${r.l}, ${r.gf}:${r.ga})`).join('\n');
       t += `\n\n👑 Переможець дня: <b>${L.esc(win.name)}</b>${ws && ws.wins > 1 ? ` (уже ${ws.wins}-й раз)` : ''}`;
-      const tro = list.filter(r => r.trophies && r.trophies.length);
-      if (tro.length) t += '\n' + tro.map(r => `🏆 ${L.esc(r.name)}: ${r.trophies.map(x => x.startsWith('✨') ? `секретний «${L.esc(x.slice(1).trim())}»` : `«${L.esc(x)}»`).join(', ')}`).join('\n');
       if (st.length > 1) t += `\n\n<b>Залік ліги</b> (перемоги в днях): ` + st.slice(0, 8).map(s => `${L.esc(s.name)} ${s.wins}`).join(' · ');
-      t += `\n\nЗавтра нове колесо — о 00:00 за Києвом.`;
       await L.tg('sendMessage', { chat_id, text: t, parse_mode: 'HTML', reply_markup: L.playKb(chat_id), disable_web_page_preview: true });
       await L.sb('league_boards?on_conflict=chat_id,day', { method: 'POST', prefer: 'resolution=merge-duplicates,return=minimal', body: { chat_id, day, summary_sent: true } });
       done.push(chat_id);
@@ -54,9 +52,11 @@ module.exports = async (req, res) => {
         for (const list of Object.values(byDay)) { list.sort(L.sortRes); list.forEach((r, i) => { const s = st[r.tg_user_id] || (st[r.tg_user_id] = { name: r.name, pts: 0, days: 0, wins: 0 }); s.pts += r.pts; s.days++; s.name = r.name; if (i === 0) s.wins++; }); }
         const tab = Object.values(st).sort((a, b) => b.pts - a.pts || b.wins - a.wins);
         const medal = ['🥇', '🥈', '🥉'];
-        let t = `<b>📅 Підсумок тижня ${L.dayShort(from)}–${L.dayShort(day)} — ліга «${L.esc(lg ? lg.title : '')}»</b>\n(сума очків за всі виклики тижня)\n\n`;
+        // 0.69.96 (власник 05.10): ліга з'явилась посеред тижня — період від її першого дня, а не з понеділка
+        const first = rows.reduce((m, r) => (String(r.day) < m ? String(r.day) : m), day);
+        let t = `<b>📅 Підсумок тижня ${L.dayShort(first)}–${L.dayShort(day)} — ліга «${L.esc(lg ? lg.title : '')}»</b>\n(сума очків за всі виклики тижня)\n\n`;
         t += tab.map((s, i) => `${medal[i] || (i + 1) + '.'} ${L.esc(s.name)} — <b>${s.pts}</b> за ${s.days} ${plUk(s.days, 'день', 'дні', 'днів')}${s.wins ? `, перемог: ${s.wins}` : ''}`).join('\n');
-        t += `\n\n🏅 Гравець тижня: <b>${L.esc(tab[0].name)}</b>. Новий тиждень — з понеділка!`;
+        t += `\n\n🏅 Гравець тижня: <b>${L.esc(tab[0].name)}</b>`;
         await L.tg('sendMessage', { chat_id, text: t, parse_mode: 'HTML', reply_markup: L.playKb(chat_id), disable_web_page_preview: true });
         await L.sb('league_boards?on_conflict=chat_id,day', { method: 'POST', prefer: 'resolution=merge-duplicates,return=minimal', body: { chat_id, day, weekly_sent: true } });
         weekly.push(chat_id);

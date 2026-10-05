@@ -843,7 +843,7 @@ section>h3:first-child,.box h3:first-of-type,#viewBody>h3:first-child,#viewBody>
   <div class="acts"><button class="ft-send" id="fbSend" type="submit">Надіслати</button><button class="ft-cancel" id="fbCancel" type="button">Скасувати</button></div></form>
 <div class="ft-done" id="fbDone" hidden><b>✓</b><span>Дякуємо! Прочитаємо найближчим часом</span></div>
 <div class="ft-pills"><button class="ft-pill" id="fbBtn" type="button">✉️ Відгук і баги</button><a class="ft-pill" id="ftBot" href="https://t.me/upl30_bot" target="_blank" rel="noopener"><!--i:telegram-->Telegram-бот</a></div>
-<div class="foot ft-small"><a href="#" id="newsBtn">Що нового у версії 0.69.69<b id="newsDot" hidden></b></a><span>·</span><a href="privacy.html">Конфіденційність</a></div>
+<div class="foot ft-small"><a href="#" id="newsBtn">Що нового у версії 0.69.96<b id="newsDot" hidden></b></a><span>·</span><a href="privacy.html">Конфіденційність</a></div>
 <div class="foot ft-copy">© 2026 30-0 УПЛ · неофіційний фан-проєкт <a href="#" id="themeBtn" class="thm" role="switch" aria-checked="false" aria-label="Світла тема"></a></div>
 <div class="ft-cred">Шрифт KyivType Sans © Дмитро Растворцев (айдентика Києва)<br>Іконки: Material Design Icons (Apache 2.0), логотип Telegram — Font Awesome Free (CC BY 4.0)</div>
 </footer>
@@ -1991,7 +1991,9 @@ function drawCard(r){   // 0.64: картка в стилі сайту — те�
 }
 document.getElementById('chalOpen').onclick=()=>{const b=document.getElementById('chalBox'),t=document.getElementById('chalOpen');b.hidden=!b.hidden;t.classList.toggle('on',!b.hidden);if(!b.hidden){b.scrollIntoView({behavior:'smooth',block:'center'});const n=document.getElementById('chalName');if(n&&!n.hidden&&!n.value)n.focus();}};
 // ---------- «Що нового»: коротко й по-людськи про останню версію (технічний журнал — CHANGELOG.md у репозиторії)
-const WHATSNEW={v:'0.69.69',date:'05.10.2026',items:[
+const WHATSNEW={v:'0.69.96',date:'05.10.2026',items:[
+  ['trophy','Новий секретний трофей','Для тих, хто знає, хто з УПЛ грав в одного великого італійського тренера.'],
+  ['account-group','Бот у групі — коротше','Вечірній підсумок дня і тижня — без зайвих рядків. Підсумок тижня рахує дні від появи ліги в групі.'],
   ['handshake','Відгук — у підвалі','Унизу сторінки — «Відгук і баги»: напиши, що зламалось або чого бракує, прямо на сайті. Скріншот можна надіслати боту.'],
   ['trophy','Кольори трофеїв','Трофеї тепер трьох класів — основні, з друзями, секретні: за ними колір картки й фільтри. Рідкість — значком праворуч.'],
   ['trophy','Лічильник трофеїв','На головній тепер стільки ж трофеїв, скільки на твоїй сторінці. Два трофеї «Самба» більше не плутаються: один тепер «Карнавал».'],

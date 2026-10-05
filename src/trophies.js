@@ -72,6 +72,7 @@ const TROPHIES=[
   // секретні
   {id:"golden",i:"🥇",n:"Як у 2006-му",d:"Стань чемпіоном через золотий матч",cat:"secret",sec:1,t:c=>notAnti(c)&&c.r.place===1&&!!c.r.golden},
   {id:"rebsh",i:"🤝",n:"Дует Лобановського",d:"Ребров і Шевченко в одному складі",cat:"secret",sec:1,t:c=>c.xi.some(x=>x.name==='Сергій Ребров')&&c.xi.some(x=>x.name==='Андрій Шевченко')},
+  {id:"ancelotti",i:"🤌",n:"Хлопці Анчелотті",d:"Шевченко, Каладзе, Лунін і Дуглас Коста в одному складі",cat:"secret",sec:1,t:c=>["Андрій Шевченко","Каха Каладзе","Андрій Лунін","Дуглас Коста"].every(n=>c.xi.some(x=>x.name===n))},   // 0.69.96 (власник 05.10): усі четверо грали в УПЛ і в Анчелотті («Мілан», «Реал», «Баварія»)
   {id:"samba",i:"🇧🇷",n:"Самба на Донбасі",d:"5 бразильців «Шахтаря» в одному складі",cat:"secret",sec:1,t:c=>c.xi.filter(x=>x.cc==='shakhtar-donetsk'&&DATA.nats[x.nat]==='Бразилія').length>=5},
   {id:"noua",i:"✈️",n:"Іноземний легіон",d:"У складі немає жодного українця",cat:"secret",sec:1,t:c=>c.xi.every(x=>x.nat>=0&&x.nat!==UA)},
   {id:"namesakes",i:"🪪",n:"Ні, не родичі",d:"3 гравці з однаковим прізвищем",cat:"secret",sec:1,t:c=>{const m={};for(const x of c.xi){const k=surname(x.name);m[k]=(m[k]||0)+1;}return Math.max(...Object.values(m))>=3;}},

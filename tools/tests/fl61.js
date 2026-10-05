@@ -93,9 +93,10 @@ function mkDB(){
  T.check(!A.errs.length,'помилок на сторінці немає '+A.errs.join(' | '));
  // ---- гість за посиланням: бачить лігу, «Увійти, щоб приєднатися»
  const G=await openSite({b,db,api,query:'?l='+M.leagues[0].id,wait:1800});
- await G.pg.waitForFunction(()=>/Увійти, щоб приєднатися/.test((document.getElementById('fl')||{}).textContent||''),null,{timeout:8000}).catch(()=>{});   // 0.69.69: під навантаженням 1,8 с не вистачало — чекаємо текст, а не час
+ await G.pg.waitForFunction(n=>{const s7=document.getElementById('s7'),t=((document.getElementById('fl')||{}).textContent||'').replace(/\s+/g,' ');return s7&&!s7.hidden&&/Увійти, щоб приєднатися/.test(t)&&t.includes(n);},M.leagues[0].name,{timeout:15000}).catch(()=>{});   // 0.69.69: під навантаженням 1,8 с не вистачало — чекаємо екран, текст і назву, а не час
  const gp=(await G.pg.textContent('#fl')).replace(/\s+/g,' ');
- T.check(await G.pg.$eval('#s7',e=>!e.hidden)&&/Увійти, щоб приєднатися/.test(gp)&&gp.includes(M.leagues[0].name),'гість за посиланням: ліга й «Увійти, щоб приєднатися»');
+ {const s7=await G.pg.$eval('#s7',e=>!e.hidden),ok=s7&&/Увійти, щоб приєднатися/.test(gp)&&gp.includes(M.leagues[0].name);   // 0.69.96: CI падав двічі, локально не відтворюється — при збої показуємо, що бачив гість
+  T.check(ok,'гість за посиланням: ліга й «Увійти, щоб приєднатися»'+(ok?'':` — бачить: s7 ${s7}, ліга «${M.leagues[0].name}», текст: ${gp.slice(0,240)} | помилки: ${G.errs.join(' | ')}`));}
  T.check(!G.errs.length,'гість: помилок немає '+G.errs.join(' | '));
  // ---- 0.69: fl_mine не відповів — «Не вдалося завантажити ліги» з повтором, а не «ти ще не граєш»
  global.MINE_FAIL=true;const E=await openSite({b,db,api,signed:true,wait:1500});
