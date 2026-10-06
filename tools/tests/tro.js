@@ -13,7 +13,7 @@ const DEV='aaaaaaaa-0000-4000-a000-000000000001';
  const got=()=>db.DB.trophies.map(x=>x.trophy);
  T.check(['champ','unbeaten','ms1'].every(t=>got().includes(t))&&!got().includes('top3')&&db.DB.trophies.every(x=>x.device_id===DEV),'заднім числом видано й записано: '+got().join(', '));
  const st0=await pg.evaluate(()=>({s:window.__dbg.trStore().seasons,retro:localStorage.getItem('upl30_tr_retro'),cnt:document.getElementById('trCount').textContent}));
- T.check(st0.s===1&&st0.retro==='1'&&/· \d+/.test(st0.cnt),`після видачі: сезонів ${st0.s}, кнопка «Трофеї${st0.cnt}»`);
+ T.check(st0.s===1&&st0.retro==='1'&&/^Зібрано \d+$/.test(st0.cnt),`після видачі: сезонів ${st0.s}, кнопка «Трофеї${st0.cnt}»`);
  for(let k=0;k<2;k++){
   await pg.evaluate(()=>{document.getElementById('homeBtn').click();document.getElementById('freeOpen').click();});await pg.click('#formats .opt[data-fmt="classic"]');await pg.click('#startBtn');
   const n0=db.DB.trophies.length;await draftSeason(pg);await pg.waitForTimeout(700);

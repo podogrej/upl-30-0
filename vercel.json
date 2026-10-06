@@ -1,4 +1,5 @@
 {
+  "ignoreCommand": "git diff --quiet ${VERCEL_GIT_PREVIOUS_SHA:-HEAD^} HEAD -- . ':(exclude)*.md' ':(exclude)docs' ':(exclude)tools' ':(exclude)sql' ':(exclude)data' ':(exclude).github' ':(exclude).claude'",
   "crons": [
     {
       "path": "/api/cron",
