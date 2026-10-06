@@ -8,7 +8,8 @@ const OUT=path.join(ROOT,'tools','tests','out');
  T.check(Object.keys(R).length===48,`рекорди є в ${Object.keys(R).length} клубів (48, без трьох новачків)`);
  T.check(R['dnipro'][3]===13&&R['dnipro'][4]===2016&&R['volyn-lutsk'][3]===10,'2016/17 зі знятими очками: Дніпро 13, Волинь 10');
  T.check(R['shakhtar-donetsk'].join()==='83,2018,32,34,1992,30','Шахтар: рекорд 83 (2018/19, 32 тури), найгірший 34 (1992/93)');
- T.check(R['karpaty-lviv'][3]===15&&R['karpaty-lviv'][5]===32,'Карпати 2019/20 — повна таблиця (15 оч., 32 тури)');
+ T.check(R['karpaty-lviv'][3]===15&&R['karpaty-lviv'][4]===2014&&R['metalurh-donetsk'][3]===22&&R['hoverla-uzhhorod'][3]===7,'знято очки 2014/15–2015/16: Карпати 15, Металург Д. 22, Говерла 7');
+ T.check(R['arsenal-kyiv'][4]!==2013&&R['tavriya-simferopol'].slice(3).join()==='10,2013,28','2013/14: Арсенал анульовано, Таврія 10 за 28 турів');
  T.check(Object.values(R).every(v=>![2021,2025].includes(v[1])&&![2021,2025].includes(v[4])),'2021/22 і поточний сезон у рекордах не враховано');
  T.check(!R['epicentr']&&!R['kudrivka']&&!R['sc-poltava'],'новачки без рекордів');
  // list page
@@ -45,6 +46,9 @@ const OUT=path.join(ROOT,'tools','tests','out');
  await pg.click('#ocChange');await pg.waitForTimeout(200);T.check(await pg.$eval('#s8',e=>!e.hidden),'«Змінити клуб» веде до списку клубів');
  await pg.click('#ocGrid .oct[data-c="kudrivka"]');await pg.waitForTimeout(200);
  T.check(/Новачок УПЛ/.test(await pg.textContent('#ocCard'))&&/Ще не грав/.test(await pg.textContent('#ocCard')),'картка новачка: рекордів ще немає');
+ // challenge sets S.format directly: free play must still show the format choice
+ await pg.click('#ocChange');await pg.click('#ocGrid .oct[data-c="karpaty-lviv"]');await pg.evaluate(()=>{window.__dbg.S.format='classic';document.getElementById('homeBtn').click();});await pg.click('#freeOpen');
+ T.check(await pg.evaluate(()=>!document.getElementById('fmtBox').hidden&&document.getElementById('ocCard').hidden&&!/Карпати/.test(document.getElementById('startBtn').textContent)),'після виклику «Вільна гра» без картки клубу');
  // free play returns to the format choice
  await pg.evaluate(()=>document.getElementById('homeBtn').click());await pg.click('#freeOpen');
  T.check(await pg.evaluate(()=>!document.getElementById('fmtBox').hidden&&document.getElementById('ocCard').hidden&&window.__dbg.S.format==='classic'),'«Вільна гра» знову з режимами');

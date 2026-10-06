@@ -8,15 +8,15 @@ import csv,json
 _cc={r['code']:[r['c1'],r['c2'],r['c3']] for r in csv.DictReader(open('../data/club_colors.csv',encoding='utf-8')) if r['c1']}
 assert '/*__CLUB_COLORS__*/{}' in tpl
 tpl=tpl.replace('/*__CLUB_COLORS__*/{}',json.dumps(_cc,separators=(',',':')))
-# club records for One club (data/data/standings.csv + data/fixes/*.csv override by season+club) -> CLUB_REC {code:[best pts,year,games,worst pts,year,games]}
+# club records for One club (data/data/standings.csv + data/fixes/standings_*.csv override by season+club; final tables, deductions applied) -> CLUB_REC {code:[best pts,year,games,worst pts,year,games]}
 # 2021/22 (unfinished) and the current season are not records; points as in the final table (deductions applied, 2 pts per win in 1992/93-1993/94)
 _rows={(r['season'],r['canonical_id']):r for r in csv.DictReader(open('../data/data/standings.csv',encoding='utf-8'))}
-for _f in ('standings_full_2017_2019.csv','standings_2016_deductions.csv'):
+for _f in ('standings_wiki_2010_2015.csv','standings_full_2017_2019.csv','standings_2016_deductions.csv'):
     for r in csv.DictReader(open('../data/fixes/'+_f,encoding='utf-8')):_rows[(r['season'],r['canonical_id'])]=r
 _cur=max(int(y) for y,_ in _rows);_rec={}
 for (y,c),r in sorted(_rows.items(),key=lambda kv:int(kv[0][0])):
     y=int(y)
-    if y in (2021,_cur):continue
+    if y in (2021,_cur) or not float(r['games']):continue   # games=0: results annulled (Arsenal 2013/14)
     v=(int(float(r['pts'])),y,int(float(r['games'])));b=_rec.get(c)
     if not b:_rec[c]=[*v,*v];continue
     if v[0]>b[0]:b[0:3]=v
