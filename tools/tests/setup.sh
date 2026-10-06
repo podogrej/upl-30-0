@@ -565,6 +565,17 @@ chk "v070: tg_notify закрита для anon/authenticated, за замовч
   assert not has_table_privilege('anon', 'tg_notify', 'select') and not has_table_privilege('anon', 'tg_notify', 'insert') and not has_table_privilege('authenticated', 'tg_notify', 'update'), 'права tg_notify';
   insert into tg_notify(tg_user_id) values (777); assert (select enabled from tg_notify where tg_user_id = 777) = false, 'типово вимкнено';
   assert has_function_privilege('anon', 'tg_leagues_mine(uuid,text)', 'execute') and (select prosecdef from pg_proc where proname = 'tg_leagues_mine'), 'tg_leagues_mine: anon викликає, security definer';"
+# ===== v0711: decade eras in friend leagues =====
+for pass in 1 2; do
+  if $P -d t1 -f "$ROOT/sql/v0711_decades.sql" >/dev/null 2>"$D/err"; then ok "запуск $pass: v0711_decades.sql"; else bad "запуск $pass: v0711_decades.sql — $(grep -v NOTICE "$D/err" | head -3)"; fi
+done
+chk "v0711: ліги з десятиліттям (11×11 і 5×5) створюються; невідома епоха — fl_bad; старі епохи ще приймаються" authenticated "
+  j := fl_create('$MX', '$SEC', 'Дев''яності', 3, 1, 'best', 'place', 1, 'show', 'd1990'); assert j->>'era' = 'd1990', j::text;
+  j := fl_create5('$MX', '$SEC', 'Двадцяті', 3, 1, 'show', 'd2020'); assert j->>'era' = 'd2020', j::text;
+  j := fl_create('$MX', '$SEC', 'Стара епоха', 3, 1, 'best', 'place', 1, 'show', 'y2015'); assert j->>'era' = 'y2015', j::text;
+  begin j := fl_create('$MX', '$SEC', 'Вісімдесяті', 3, 1, 'best', 'place', 1, 'show', 'd1980'); assert false, 'd1980'; exception when sqlstate '22023' then assert sqlerrm = 'fl_bad', sqlerrm; end;" ',"sub":"'$UG'"'
+chk "v0711: anon не створює лігу" anon "
+  begin j := fl_create5('$MX', '$SEC', 'Анон', 3, 1, 'show', 'd2000'); assert false, 'anon створив'; exception when insufficient_privilege then null; end;"
 # upgrade from the earlier test-DB version: rows with old statuses must not break the re-run
 $P -d t1 -q -c "alter table channel_posts drop constraint channel_posts_status_chk; insert into channel_posts(text, publish_at, status) values ('old-a', now(), 'approved'), ('old-s', now(), 'skipped');" >/dev/null 2>&1
 if $P -d t1 -f "$ROOT/sql/v06997_channel_posts.sql" >/dev/null 2>"$D/err"; then ok "v06997 поверх старої версії (approved/skipped)"; else bad "v06997 поверх старої версії — $(grep -v NOTICE "$D/err" | head -3)"; fi

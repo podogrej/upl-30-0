@@ -24,7 +24,7 @@ function yearOk(row, E, chalYearOk, prev) {
 
 // The previous site version stays open for players (browser cache, Mini App): if simulation didn't change between versions, add it here
 // so its seasons are verified by the new engine. History for 0.57-0.64 is in CHANGELOG.
-const PREV_VERSIONS = ['0.70'];   // only versions with identical simulation; others get null ("not verified"). Keeping it short also blocks forged version (audit P1-2)
+const PREV_VERSIONS = ['0.71', '0.70'];   // only versions with identical simulation; others get null ("not verified"). Keeping it short also blocks forged version (audit P1-2)
 
 // main check: returns [true|false|null, reason]; null = cannot verify (old version etc.)
 function check(row, seedRow, opts = {}) {
@@ -70,7 +70,7 @@ function checkCore(row, seedRow, { chalYearOk = false, prev = false } = {}) {
     if (row.format === 'derby' && !E.FORMATS.derby.clubs.includes(club.c)) return [false, 'дербі: чужий клуб'];
     if (row.format === 'oneclub' && row.club && club.c !== row.club) return [false, 'один клуб: чужий клуб'];
     if (row.format === 'anti' && p[3] < E.ANTI_MIN_APPS) return [false, 'антисезон: замало матчів'];
-    if (era && club.y < era.y0) return [false, `епоха «${era.name}»: ${x.c} ${x.y}`];
+    if (era && (club.y < era.y0 || (era.y1 != null && club.y > era.y1))) return [false, `епоха «${era.name}»: ${x.c} ${x.y}`];
   }
   if (row.day) {   // daily challenge: same formation, opponents and wheel
     const d = E.dailySetupFor(String(row.day).slice(0, 10));
