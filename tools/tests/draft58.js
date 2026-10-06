@@ -37,7 +37,7 @@ const findPl=(pg,multi)=>pg.evaluate(multi=>{const D=window.__dbg,S=D.S;const bs
  await pg.click('#eras button[data-era="d2000"]');
  check(await pg.evaluate(()=>localStorage.getItem('upl30_era')==='"d2000"'&&document.querySelector('#eras button.on').dataset.era==='d2000'&&document.querySelector('#eras button.on').getAttribute('aria-checked')==='true'),'епохи: вибір збережено');
  await pickFmt(pg,'oneclub');check(await pg.evaluate(()=>document.getElementById('eraBox').hidden),'епохи: в «Одному клубі» вибору немає');
- await pg.click('#formats .opt[data-fmt="classic"]');check(await pg.evaluate(()=>!document.getElementById('eraBox').hidden),'епохи: у класиці вибір є');
+ await home(pg);await pg.click('#freeOpen');check(await pg.evaluate(()=>!document.getElementById('eraBox').hidden&&window.__dbg.S.format==='classic'),'епохи: у класиці вибір є');
  await pg.screenshot({path:path.join(OUT,'era_setup.png'),fullPage:true});
  await pg.setViewportSize({width:320,height:700});await pg.waitForTimeout(100);
  check(await pg.evaluate(()=>{const el=document.getElementById('eras'),r=el.getBoundingClientRect();return r.right<=document.documentElement.clientWidth&&el.scrollWidth<=el.clientWidth+1&&[...document.querySelectorAll('#eras button')].every(b=>b.scrollWidth<=b.clientWidth+1);}),'епохи: на 320 px кнопки влазять');
