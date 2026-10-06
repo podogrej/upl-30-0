@@ -235,7 +235,7 @@ async function openTrophies(){screenTag('trophies');
       list.sort((a,b)=>((s.t[b.id]||{}).n?1:0)-((s.t[a.id]||{}).n?1:0));
       h+=`<h3>${title}</h3><div class="trg">${list.map(t=>trCard(t,s.t[t.id],pctOf(t.id),t.prog&&t.prog(st))).join('')}</div>`;
       if(hiddenN)h+=`<p class="trsec">+${hiddenN} ${plUk(hiddenN,'секретний трофей чекає','секретні трофеї чекають','секретних трофеїв чекають')} ${icon('eye')}</p>`;}
-    h+=`<h3>Віхи</h3><div class="row" style="gap:6px">${MILESTONES.map(([k,i,n])=>{const on=s.t['ms'+k]&&s.t['ms'+k].n;return `<span class="chip ms${on?' onc':''}">${trBadge({id:'ms'+k,cat:'milestone'},on)}${n}${!on&&s.seasons<k?` · ${s.seasons}/${k}`:''}</span>`;}).join('')}</div>`;
+    h+=`<h3>Віхи</h3><div class="row" style="gap:var(--sp-2)">${MILESTONES.map(([k,i,n])=>{const on=s.t['ms'+k]&&s.t['ms'+k].n;return `<span class="chip ms${on?' onc':''}">${trBadge({id:'ms'+k,cat:'milestone'},on)}${n}${!on&&s.seasons<k?` · ${s.seasons}/${k}`:''}</span>`;}).join('')}</div>`;
     body.innerHTML=h;};
   draw();if(ONLINE&&!TR_PCT){await trLoadPct();if(!box.hidden)draw();}
 }
@@ -251,7 +251,7 @@ function renderNewTro(r){
   const rareTag=t=>{const x=tierOf(t);return x?`<em class="rtag rt-${x[1]}">${x[2]}</em>`:'';};
   // first 6 as big cards (new first, then repeats), 7th onward smaller in a row; repeats without the xN note
   const list=[...nw,...rep],big=list.slice(0,6),small=list.slice(6),isNew=t=>fresh.has(t.id);
-  el.hidden=false;el.innerHTML=`<div class="kicker" style="margin-bottom:6px">${nw.length&&!rep.length?(nw.length>1?'Нові трофеї':'Новий трофей'):'Трофеї сезону'}</div><div class="trg">`
+  el.hidden=false;el.innerHTML=`<div class="kicker" style="margin-bottom:var(--sp-2)">${nw.length&&!rep.length?(nw.length>1?'Нові трофеї':'Новий трофей'):'Трофеї сезону'}</div><div class="trg">`
     +big.map((t,k)=>`<div class="tro k-${trKind(t)} on pop${isNew(t)?' new':''}${t.sec?' sec':''}${isNew(t)?rareCls(t):''}" style="animation-delay:${k*120+(isNew(t)&&rareCls(t)?250:0)}ms"><span class="tri">${trBadge(t,true)}</span><div class="trt"><b>${esc(t.n)}</b>${trQ(t)}<span>${esc(t.d)}</span>${isNew(t)?(t.sec?'<em class="trsx">секретний!</em>':'')+rareTag(t):''}</div></div>`).join('')+`</div>`
-    +(small.length?`<div class="trrep" style="margin-top:8px">`+small.map(t=>`<span class="trchip${t.sec?' sec':''}" title="${esc(t.d)}">${trBadge(t,true)}<b>${esc(t.n)}</b></span>`).join('')+`</div>`:'');
+    +(small.length?`<div class="trrep" style="margin-top:var(--sp-2)">`+small.map(t=>`<span class="trchip${t.sec?' sec':''}" title="${esc(t.d)}">${trBadge(t,true)}<b>${esc(t.n)}</b></span>`).join('')+`</div>`:'');
 }
