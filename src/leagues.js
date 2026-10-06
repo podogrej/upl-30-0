@@ -69,7 +69,7 @@ function flCreateHtml(){const f=FL.form;
     ${f.tries>1?`<div class="sec0">У залік туру</div>${flTiles('take',2)}`:''}`}
     <div class="sec0">Перекрути колеса</div>${flTiles('rerolls',3)}
     <div class="sec0">Рейтинги гравців</div>${flTiles('ratings',2)}
-    <div class="sec0">Епоха</div><div class="fl-opts c2">${Object.entries(ERAS).map(([k,e])=>`<button class="opt${f.era===k?' on':''}" data-k="era" data-v="${k}"><b>${esc(e.name)}</b><small>${e.y0?seasonLabel(e.y0)+' – '+seasonLabel(DSTAT.y1):seasonLabel(DSTAT.y0)+' – '+seasonLabel(DSTAT.y1)}</small></button>`).join('')}</div>
+    <div class="sec0">Епоха</div><div class="fl-opts c2">${ERA_KEYS.map(k=>{const e=ERAS[k];return `<button class="opt${f.era===k?' on':''}" data-k="era" data-v="${k}"><b>${esc(e.name)}</b><small>${seasonLabel(e.y0||DSTAT.y0)+' – '+seasonLabel(e.y1==null?DSTAT.y1:e.y1)}</small></button>`;}).join('')}</div>
     <button class="primary big0" id="flCreate" style="margin-top:var(--sp-4)">${f.fmt==='5'?'Створити й зібрати п\'ятірку':'Створити й грати'}</button><p class="muted" id="flMsg" style="font-size:var(--fs-footnote);text-align:center">${f.fmt==='5'?'Далі — посилання для друзів (до 10) і твоя п\'ятірка. Коли збір закінчиться, турнір зіграє сервер.':'Далі — посилання для друзів і твоя перша спроба.'}</p>`;}
 function flLeagueHtml(){const d=FL.data;
   if(!d)return `<div class="fl-hero"><p class="muted">${esc(FL.err||'Завантаження…')}</p>${FL.err?'<button class="ghost" id="flBack">До ліг</button>':''}</div>`;
@@ -138,8 +138,8 @@ const FL5_STAGE={group:'Група',sf:'Півфінал',final:'Фінал',due
 function fl5Draft(){const d=FL&&FL.data;if(!d)return;const form=lsGet('upl30_fl5_form')||'1-2-1';
   FL.view='draft5';FL.d5={form:F5_FORMS[form]?form:'1-2-1',rerolls:d.rerolls,taken:new Set(),cs:null};fl5Slots();fl5Spin();screenTag('league5_draft');window.scrollTo({top:0});}
 function fl5Slots(){const t=FL.d5;t.slots=F5_FORMS[t.form].rows.flat().map(slot=>({slot,player:null}));}
-function fl5Pool(){const y0=(ERAS[FL.data.era]||{}).y0||0,t=FL.d5,need=new Set(t.slots.filter(s=>!s.player).map(s=>s.slot));
-  return DATA.clubs.filter(c=>c.y>=y0&&c.pl.some(p=>!t.taken.has(canon(p[5]))&&need.has(f5G(p))));}
+function fl5Pool(){const era=FL.data.era,t=FL.d5,need=new Set(t.slots.filter(s=>!s.player).map(s=>s.slot));
+  return DATA.clubs.filter(c=>inEra(era,c.y)&&c.pl.some(p=>!t.taken.has(canon(p[5]))&&need.has(f5G(p))));}
 function fl5Spin(){const t=FL.d5;const pool=fl5Pool();t.cs=pool.length?pickWeighted(pool,Math.random):null;flRender();}
 function fl5Pick(p){const t=FL.d5,cs=t.cs;const s=t.slots.find(x=>!x.player&&x.slot===f5G(p));if(!s)return;
   s.player={name:p[0],id:p[5],slot:s.slot,r:p[2],goals:p[4],club:cs.n,c:cs.c,cc:cs.c,y:cs.y};t.taken.add(canon(p[5]));t.cs=null;
@@ -216,7 +216,7 @@ function fl5Wire($,el){
   if($('fl5Go'))$('fl5Go').onclick=fl5Draft;
   // "Rematch": new 5x5 league form with the same rules and a "Rematch: ..." name (deadline editable), then a regular invite link
   if($('fl5Rev'))$('fl5Rev').onclick=()=>{const d=FL.data,nm=Array.from('Реванш: '+String(d.name).replace(/^Реванш: /,'')).slice(0,40).join('');const names=[nm,...flShuffle().filter(x=>x!==nm)];
-    FL={view:'create',form:{names,name:nm,fmt:'5',hours:3,days:3,scoring:'place',tries:3,take:'best',rerolls:d.rerolls,ratings:d.ratings,era:ERAS[d.era]?d.era:'all'}};screenTag('league_new');flRender();window.scrollTo({top:0});};
+    FL={view:'create',form:{names,name:nm,fmt:'5',hours:3,days:3,scoring:'place',tries:3,take:'best',rerolls:d.rerolls,ratings:d.ratings,era:ERA_KEYS.includes(d.era)?d.era:'all'}};screenTag('league_new');flRender();window.scrollTo({top:0});};
   if($('fl5Back'))$('fl5Back').onclick=()=>{clearInterval(FL.liveT);FL.view='league';FL.live=null;flRender();flLoad();};
   el.querySelectorAll('[data-f5form]').forEach(b=>b.onclick=()=>{FL.d5.form=b.dataset.f5form;lsSet('upl30_fl5_form',FL.d5.form);fl5Slots();flRender();});
   el.querySelectorAll('[data-p5]').forEach(b=>b.onclick=()=>{const p=FL.d5.cs&&FL.d5.cs.pl.find(q=>q[5]===b.dataset.p5);if(p)fl5Pick(p);});

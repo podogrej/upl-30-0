@@ -128,6 +128,10 @@ function honestXi(formation) {
   { const early = Math.min(...legit.xi.map(x => x.y));
     await tamper(`епоха «Сучасність», а в складі сезон ${early}`, r => { r.era = 'y2015'; }, early >= 2015);
     await tamper('епоха «Усі роки» — як без епохи', r => { r.era = 'all'; }, true);
+    const late = Math.max(...legit.xi.map(x => x.y));
+    await tamper(`десятиліття «90-ті», а в складі сезон ${late}`, r => { r.era = 'd1990'; }, late <= 1999);
+    await tamper(`десятиліття «2020-ті», а в складі сезон ${early}`, r => { r.era = 'd2020'; }, early >= 2020);
+    await tamper(`десятиліття «2000-ні» (${early}–${late})`, r => { r.era = 'd2000'; }, early >= 2000 && late <= 2009);
     await tamper('невідома епоха', r => { r.era = 'y1900'; }, false); }
   await tamper('r0 підроблено (показ у таблицях і на картці)', r => { r.xi[0].r0 = 99; }, false);
   await tamper('r0 немає (старий клієнт) — пропускаємо', r => { r.xi.forEach(x => { delete x.r0; }); }, true);

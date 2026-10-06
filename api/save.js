@@ -34,7 +34,7 @@ function seasonRow(r) {
     tier: str(r.tier, 80), golden: !!r.golden, perfect: !!r.perfect, seed_id: /^[0-9A-Za-z-]{1,64}$/.test(String(r.seed_id || '')) ? String(r.seed_id) : null, practice: !!r.practice,
     day: dayRe.test(String(r.day || '')) ? r.day : null, xi: r.xi.map(xiItem), tbl: (r.tbl || []).map(tblItem),
     // era: only when not "all years" (otherwise the site doesn't send it). seasons.era may be missing: insert() retries without it
-    ...(/^y\d{4}$/.test(String(r.era || '')) ? { era: String(r.era) } : {}),
+    ...(/^[yd]\d{4}$/.test(String(r.era || '')) ? { era: String(r.era) } : {}),
     // "show ratings" was enabled in the draft (seasons.show_r; if the column is missing insert() retries without it)
     ...(r.show_r === true ? { show_r: true } : {}),
     // friends league attempt (league code); credited by the server after verification (api/verify.js -> fl_record)

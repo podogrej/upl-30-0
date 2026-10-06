@@ -11,9 +11,9 @@ const lineOf = p => E.GROUP_OF[p[6]] || p[1];   // player's line for 5x5: GK / D
 // squad -> engine team, or null if validation fails
 function team(f, era) {
   const form = C.F5_FORMS[f.form]; if (!form || !Array.isArray(f.xi) || f.xi.length !== 5) return null;
-  const need = form.rows.flat().sort().join(), y0 = (E.ERAS[era] || {}).y0 || 0, seen = new Set(), slots = [];
+  const need = form.rows.flat().sort().join(), e = E.ERAS[era] || E.ERAS.all, seen = new Set(), slots = [];
   for (const x of f.xi) {
-    const cl = E.DATA.clubs.find(c => c.c === x.c && c.y === Number(x.y)); if (!cl || cl.y < y0) return null;
+    const cl = E.DATA.clubs.find(c => c.c === x.c && c.y === Number(x.y)); if (!cl || cl.y < e.y0 || (e.y1 != null && cl.y > e.y1)) return null;
     const p = cl.pl.find(q => q[5] === x.id); if (!p || lineOf(p) !== x.slot || seen.has(canon(p[5]))) return null;
     seen.add(canon(p[5]));
     slots.push({ slot: x.slot, player: { id: p[5], name: p[0], slot: x.slot, r: p[2], goals: p[4] } });

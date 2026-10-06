@@ -42,7 +42,7 @@ function mkDB(){
  T.check(!!await pg.$('[data-k="fmt"][data-v="f5"]'),'0.69: формат 5×5 при створенні знову є');
  const names0=await pg.$$eval('[data-name]',es=>es.map(e=>e.dataset.name));await pg.click('#flShuf');const names1=await pg.$$eval('[data-name]',es=>es.map(e=>e.dataset.name));
  T.check(names0.length===3&&names1.length===3&&(names0.join()!==names1.join()),'назви: 3 варіанти, «Перемішати» міняє ('+names1.join(', ')+')');
- await pg.click('[data-k="days"][data-v="7"]');await pg.click('[data-k="scoring"][data-v="sum"]');await pg.click('[data-k="ratings"][data-v="memory"]');await pg.click('[data-k="era"][data-v="y2010"]');await pg.click('[data-k="rerolls"][data-v="0"]');
+ await pg.click('[data-k="days"][data-v="7"]');await pg.click('[data-k="scoring"][data-v="sum"]');await pg.click('[data-k="ratings"][data-v="memory"]');await pg.click('[data-k="era"][data-v="d2010"]');await pg.click('[data-k="rerolls"][data-v="0"]');
  T.check(await pg.$$eval('#fl .opt.on',es=>es.length)>=7,'правила: вибрано по одному в кожному блоці');
  await pg.screenshot({path:path.join(OUT,'fl61_create.png'),fullPage:true});
  // Create button and rule tile labels are centered
@@ -55,9 +55,9 @@ function mkDB(){
  await pg.screenshot({path:path.join(OUT,'fl61_create_ipad.png'),fullPage:true});await pg.setViewportSize({width:390,height:844});
  await pg.click('#flCreate');await pg.waitForTimeout(500);
  const cr=M.calls.find(c=>c[0]==='fl_create');
- T.check(cr&&cr[1].p_days===7&&cr[1].p_scoring==='sum'&&cr[1].p_ratings==='memory'&&cr[1].p_era==='y2010'&&cr[1].p_rerolls===0&&cr[1].p_tries===3&&cr[1].p_take==='best','fl_create: правила передано ('+JSON.stringify(cr&&cr[1])+')');
+ T.check(cr&&cr[1].p_days===7&&cr[1].p_scoring==='sum'&&cr[1].p_ratings==='memory'&&cr[1].p_era==='d2010'&&cr[1].p_rerolls===0&&cr[1].p_tries===3&&cr[1].p_take==='best','fl_create: правила передано ('+JSON.stringify(cr&&cr[1])+')');
  const dr=await pg.evaluate(()=>{const S=window.__dbg.S;return {sec:!document.getElementById('s2').hidden,label:document.getElementById('modeLabel').textContent,mode:S.mode,fmt:S.format,rr:S.rerolls,era:window.__dbg.eraOf(),lg:S.league&&S.league.id};});
- T.check(dr.sec&&/Ліга «/.test(dr.label)&&dr.mode==='normal'&&dr.fmt==='classic'&&dr.rr===0&&dr.era==='y2010'&&dr.lg,'одразу — спроба: драфт класики за правилами ліги ('+dr.label+', перекрути '+dr.rr+', епоха '+dr.era+')');
+ T.check(dr.sec&&/Ліга «/.test(dr.label)&&dr.mode==='normal'&&dr.fmt==='classic'&&dr.rr===0&&dr.era==='d2010'&&dr.lg,'одразу — спроба: драфт класики за правилами ліги ('+dr.label+', перекрути '+dr.rr+', епоха '+dr.era+')');
  await pg.click('#spinBtn');await pg.waitForSelector('#squad .pl:not([disabled])',{timeout:8000});
  T.check(await pg.$eval('#showRRow',e=>e.hidden),'«на пам\'ять»: галочки «Показати рейтинги» немає');
  const yrs=await pg.evaluate(()=>window.__dbg.S.wheel.y);T.check(yrs>=2010,'епоха ліги: колесо дає сезони з 2010-х ('+yrs+')');
@@ -65,7 +65,7 @@ function mkDB(){
    await (await pg.$('#squad .pl:not([disabled])')).click();await pg.waitForTimeout(60);const t=await pg.$('#pitch .slot.target');if(t){await t.click();await pg.waitForTimeout(60);}}
  await pg.waitForSelector('#simBtn:not([hidden])');await pg.click('#simBtn');await pg.click('#skipBtn');await pg.waitForTimeout(1500);
  const sv=saves.find(x=>x.kind==='season');
- T.check(sv&&sv.row.fl_id===M.leagues[0].id&&sv.row.mode==='normal'&&sv.row.era==='y2010','сезон записано з кодом ліги ('+(sv&&sv.row.fl_id)+')');
+ T.check(sv&&sv.row.fl_id===M.leagues[0].id&&sv.row.mode==='normal'&&sv.row.era==='d2010','сезон записано з кодом ліги ('+(sv&&sv.row.fl_id)+')');
  const msg=await pg.textContent('#leagueMsg');T.check(/Спробу 1 зараховано в лігу/.test(msg),'підсумки: «'+msg.trim()+'»');
  T.check(/До ліги/.test(await pg.textContent('#againBtn')),'кнопка «До ліги»');
  T.check(await pg.evaluate(()=>!/Рейт/.test(document.getElementById('playerStats').textContent)),'«на пам\'ять»: у статистиці сезону рейтингів немає');

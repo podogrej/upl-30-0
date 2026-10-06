@@ -33,28 +33,30 @@ const findPl=(pg,multi)=>pg.evaluate(multi=>{const D=window.__dbg,S=D.S;const bs
  // ---- eras: chosen on the free-play screen, remembered; One Club has no era
  await pg.click('#freeOpen');
  const e0=await pg.evaluate(()=>({vis:!document.getElementById('eraBox').hidden,names:[...document.querySelectorAll('#eras button')].map(b=>b.textContent).join(','),on:(document.querySelector('#eras button.on')||{}).textContent}));
- check(e0.vis&&e0.names==='Усі роки,З 2000-х,З 2010-х,Сучасність'&&e0.on==='Усі роки','епохи: 4 кнопки, за замовчуванням «Усі роки» ('+JSON.stringify(e0)+')');
- await pg.click('#eras button[data-era="y2015"]');
- check(await pg.evaluate(()=>localStorage.getItem('upl30_era')==='"y2015"'&&document.querySelector('#eras button.on').dataset.era==='y2015'&&document.querySelector('#eras button.on').getAttribute('aria-checked')==='true'),'епохи: вибір збережено');
+ check(e0.vis&&e0.names==='Усі роки,90-ті,2000-ні,2010-ті,2020-ті'&&e0.on==='Усі роки','епохи: 5 кнопок (десятиліття), за замовчуванням «Усі роки» ('+JSON.stringify(e0)+')');
+ await pg.click('#eras button[data-era="d2000"]');
+ check(await pg.evaluate(()=>localStorage.getItem('upl30_era')==='"d2000"'&&document.querySelector('#eras button.on').dataset.era==='d2000'&&document.querySelector('#eras button.on').getAttribute('aria-checked')==='true'),'епохи: вибір збережено');
  await pickFmt(pg,'oneclub');check(await pg.evaluate(()=>document.getElementById('eraBox').hidden),'епохи: в «Одному клубі» вибору немає');
  await pg.click('#formats .opt[data-fmt="classic"]');check(await pg.evaluate(()=>!document.getElementById('eraBox').hidden),'епохи: у класиці вибір є');
  await pg.screenshot({path:path.join(OUT,'era_setup.png'),fullPage:true});
  await pg.setViewportSize({width:320,height:700});await pg.waitForTimeout(100);
- check(await pg.evaluate(()=>{const r=document.getElementById('eras').getBoundingClientRect();return r.right<=document.documentElement.clientWidth&&[...document.querySelectorAll('#eras button')].every(b=>b.scrollWidth<=b.clientWidth+1);}),'епохи: на 320 px кнопки влазять');
+ check(await pg.evaluate(()=>{const el=document.getElementById('eras'),r=el.getBoundingClientRect();return r.right<=document.documentElement.clientWidth&&el.scrollWidth<=el.clientWidth+1&&[...document.querySelectorAll('#eras button')].every(b=>b.scrollWidth<=b.clientWidth+1);}),'епохи: на 320 px кнопки влазять');
  await (await pg.$('#eraBox')).screenshot({path:path.join(OUT,'era_320.png')});await pg.setViewportSize({width:390,height:844});
  await pg.click('#modes .opt:nth-child(1)');await pg.click('#startBtn');
- check(await pg.evaluate(()=>/Сучасність/.test(document.getElementById('modeLabel').textContent)&&window.__dbg.S.chal===null),'епохи: підпис драфту з епохою, «Виклику другу» немає');
+ check(await pg.evaluate(()=>/2000-ні/.test(document.getElementById('modeLabel').textContent)&&window.__dbg.S.chal===null),'епохи: підпис драфту з епохою, «Виклику другу» немає');
  const ys=[];for(let i=0;i<11;i++){await spin(pg);ys.push(await pg.evaluate(()=>window.__dbg.S.wheel.y));await (await pg.$('#squad .pl:not([disabled])')).click();await pg.waitForTimeout(60);const pb=await pg.$('#squad .plpos button');if(pb){await pb.click();await pg.waitForTimeout(60);}}
- check(ys.every(y=>y>=2015),'епохи: колесо «Сучасність» дає лише сезони 2015/16+ ('+ys.join(',')+')');
- check(await pg.evaluate(()=>window.__dbg.S.slots.every(s=>s.player&&s.player.y>=2015)),'епохи: увесь склад з 2015/16+');
+ check(ys.every(y=>y>=2000&&y<=2009),'епохи: колесо «2000-ні» дає лише сезони 2000/01–2009/10 ('+ys.join(',')+')');
+ check(await pg.evaluate(()=>window.__dbg.S.slots.every(s=>s.player&&s.player.y>=2000&&s.player.y<=2009)),'епохи: увесь склад з 2000/01–2009/10');
  await pg.waitForSelector('#simBtn:not([hidden])');await pg.click('#simBtn');await pg.click('#skipBtn');await pg.waitForTimeout(400);
- check(await pg.evaluate(()=>/Сучасність/.test(document.getElementById('shareText').value)&&document.getElementById('chalBox').hidden),'епохи: епоха в тексті результату, виклику другу немає');
+ check(await pg.evaluate(()=>/2000-ні/.test(document.getElementById('shareText').value)&&document.getElementById('chalBox').hidden),'епохи: епоха в тексті результату, виклику другу немає');
  await pg.reload();await pg.waitForTimeout(600);
- check(await pg.evaluate(()=>window.__dbg.S.era==='y2015'),'епохи: вибір пам\'ятається після перезавантаження');
+ check(await pg.evaluate(()=>window.__dbg.S.era==='d2000'),'епохи: вибір пам\'ятається після перезавантаження');
+ await pg.evaluate(()=>localStorage.setItem('upl30_era','"y2015"'));await pg.reload();await pg.waitForTimeout(600);
+ check(await pg.evaluate(()=>window.__dbg.S.era==='all'),'епохи: стара «Сучасність» із пам\'яті — «Усі роки»');
  // derby from the 2010s
- await pg.click('#freeOpen');await pg.click('#eras button[data-era="y2010"]');await pickFmt(pg,'derby');await pg.click('#startBtn');
+ await pg.click('#freeOpen');await pg.click('#eras button[data-era="d2010"]');await pickFmt(pg,'derby');await pg.click('#startBtn');
  const dy=[];for(let i=0;i<4;i++){await spin(pg);dy.push(await pg.evaluate(()=>{const w=window.__dbg.S.wheel;return w.c+' '+w.y;}));await (await pg.$('#squad .pl:not([disabled])')).click();await pg.waitForTimeout(60);const pb=await pg.$('#squad .plpos button');if(pb)await pb.click();}
- check(dy.every(s=>/^(dynamo-kyiv|shakhtar-donetsk) 20(1\d|2\d)$/.test(s)),'епохи: дербі з 2010-х — лише Динамо/Шахтар 2010+ ('+dy.join(', ')+')');
+ check(dy.every(s=>/^(dynamo-kyiv|shakhtar-donetsk) 201\d$/.test(s)),'епохи: дербі «2010-ті» — лише Динамо/Шахтар 2010/11–2019/20 ('+dy.join(', ')+')');
  // daily challenge always uses all years
  await home(pg);await pg.click('#dailyBtn');
  const dd=[];for(let i=0;i<11;i++){await spin(pg);dd.push(await pg.evaluate(()=>window.__dbg.S.wheel.y));await (await pg.$('#squad .pl:not([disabled])')).click();await pg.waitForTimeout(60);const pb=await pg.$('#squad .plpos button');if(pb)await pb.click();}
