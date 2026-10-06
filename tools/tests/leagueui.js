@@ -1,6 +1,6 @@
-// Ліга групи в Telegram Mini App (Telegram, /api/league і /api/auth підроблені): гру відкрито з кнопки групи (start_param g-…) →
-// вступ у лігу й картка ліги на головній; тихий вхід через Telegram; виклик дня → результат іде в /api/league і показується в табло.
-// Запуск з кореня: node tools/tests/leagueui.js [папка для знімків]
+// Group league in the Telegram Mini App (Telegram, /api/league and /api/auth are faked): game opened from the group button (start_param g-…) →
+// joins the league, league card on home; silent Telegram sign-in; daily challenge → result goes to /api/league and shows on the board.
+// Run from repo root: node tools/tests/leagueui.js [screenshot dir]
 const path=require('path'),fs=require('fs');const {ROOT,makeDB,openSite,draftSeason,checker}=require('./_site.js');
 const OUT=process.argv[2]||path.join(ROOT,'tools','tests','out');fs.mkdirSync(OUT,{recursive:true});
 (async()=>{const T=checker('ліга');const posts=[],auth=[];
@@ -27,7 +27,7 @@ await pg.click('#homeBtn');
  await pg.click('#againBtn');await pg.waitForTimeout(600);
  const after=await pg.$eval('#leagueCard',e=>e.textContent.replace(/\s+/g,' ').trim());
  T.check(/Сьогодні зіграли 2 з 3/.test(after)&&!/уже в табло групи/.test(after)&&!(await pg.$('#leagueGo')),'картка після гри (0.65: без «уже в табло групи», без кнопки): '+after.slice(0,90));
- // 0.68 (чат на 40 людей): на головній — топ-3 + свій рядок, «Уся таблиця (N)» → екран зі вкладками «Сьогодні» / «Залік»
+ // large chat: home shows top-3 + own row; "full table (N)" opens a screen with today/standings tabs
  const nm=['Олег','Марко','Саша','Дмитро','Іра','Петро','Сергій','Таня','Юра','Ліза','Костя','Влад'];
  today=nm.map((x,i)=>({name:x,w:20-i,d:5,l:5+i,pts:70-3*i,gf:50,ga:30}));today.splice(6,0,{name:'Андрій',w:12,d:5,l:13,pts:41,gf:40,ga:40});
  standings=today.map((r,i)=>({name:r.name,wins:13-i,days:14,pts:600}));members=40;

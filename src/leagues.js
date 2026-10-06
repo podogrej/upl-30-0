@@ -1,13 +1,13 @@
-// ---------- ЛІГИ З ДРУЗЯМИ: 11×11 (0.61) і 5×5 (0.63) — docs/leagues_online.md, макети docs/mockups/lg_1_list … lg_6_match5.
-// Ліга — правила для всіх (тривалість, спроби, у залік, очки за тур, перекрути, рейтинги, епоха); кожен день — тур; колесо в кожного своє.
-// Спроба — звичайний сезон класики «Звичайний» з кодом ліги (seasons.fl_id): зараховує сервер після перевірки (api/verify.js → fl_record).
-// Створити й вступити — лише з входом (RPC fl_create / fl_join, sql/v061_leagues.sql). Посилання — ?l=<код> (DECISIONS п. 10, 11).
+// ---------- Leagues with friends: 11x11 and 5x5. Spec: docs/leagues_online.md, mockups docs/mockups/lg_1_list ... lg_6_match5.
+// A league sets shared rules (duration, attempts, counted attempts, points per round, rerolls, ratings, era); each day is a round; each player has own wheel.
+// An attempt is a regular classic season tagged with the league code (seasons.fl_id), credited by the server after verification (api/verify.js -> fl_record).
+// Create/join require sign-in (RPC fl_create / fl_join, sql/v061_leagues.sql). Link: ?l=<code> (DECISIONS items 10, 11).
 const FL_NAMES=['Паляниця Ліга','Ліга диванних тренерів','Банка на воротах','Сухарі з родзинками','Кефаль і Ко','Автобус на воротах','Штанга-Перекладина','Мазила ФК','Гра в одні ворота',
   'Кум у запасі','Дворовий Кубок','Тренер, випусти мене','Жовта картка за сміх','Суддю на мило','Мʼяч круглий','Все буде добре','Біля кутового','Золотий дубль',
   'Офсайд по-київськи','Вареники в додатковий час','Ні кроку назад','Шаланди, повні голів','Лобан би схвалив','Пенальті на 90+5','Легенди двору','Кубок кума',
   'Сало і стандарти','Не робіть мені нерви','Дві великі різниці','Щоб я так жив','Не смішіть мої капці','Щоб ви були здорові','Чемпіони дивана','Друзі по лаві',
   'Ліга запасних','Мундіаль на кухні','Каштани і кутові','Бутси на цвях','Ліга вихідного дня','Футбол до темряви','Мама кличе додому','Хто останній — на воротах',
-  'Ворота з портфелів','Мʼяч через паркан','Ліга за гаражами','Коробка біля школи','Хто програв — біжить по мʼяч'];   // 0.68: назви за вибором власника (одеські, дворові); без дужок
+  'Ворота з портфелів','Мʼяч через паркан','Ліга за гаражами','Коробка біля школи','Хто програв — біжить по мʼяч'];   // default league name suggestions; no parentheses
 const FL_OPT={days:[[1,'1 день'],[3,'3 дні'],[7,'7 днів']],
   scoring:[['place','За місце','1-й отримує стільки, скільки зіграло; останній — 1'],['sum','Сума','очки сезону додаються']],
   tries:[[1,'1 спроба','без права на помилку'],[3,'3 спроби','']],
@@ -22,27 +22,27 @@ async function flRpc(fn,args){const r=await fetch(`${SB_URL}/rest/v1/rpc/${fn}?a
   const t=await r.text();if(!r.ok)throw new Error(`${fn} ${r.status}: ${t.slice(0,160)}`);return t?JSON.parse(t):null;}
 const flErr=e=>{const m=String(e&&e.message||e);return /login\?|28000/.test(m)?'Спершу увійди через Google чи Telegram.':/fl_over/.test(m)?'Ця ліга вже завершилась.':/fl_full/.test(m)?'У лізі 5×5 уже 10 гравців.':/fl_few/.test(m)?'Потрібно щонайменше 2 зібрані склади.':/fl_member/.test(m)?'Спершу приєднайся до ліги.':/fl_none/.test(m)?'Такої ліги немає. Перевір посилання.':/fl_many/.test(m)?'Забагато ліг за день. Спробуй завтра.':/404|PGRST202/.test(m)?'Ліги ще не ввімкнено. Спробуй трохи пізніше.':'Не вдалося. Спробуй ще раз.';};
 function flShuffle(){const a=[...FL_NAMES],o=[];while(o.length<3)o.push(a.splice(Math.floor(Math.random()*a.length),1)[0]);return o;}
-// хвилин до кінця туру (опівночі за Києвом)
+// minutes until round end (midnight Kyiv time)
 function flLeft(){try{const p=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Kyiv',hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date()).split(':');const m=24*60-(+p[0]%24)*60-(+p[1]);return `${Math.floor(m/60)}:${String(m%60).padStart(2,'0')}`;}catch(e){return '';}}
-// ---------- вхід на екран
+// ---------- screen entry
 function openFriends(){FL={view:'list',mine:null};screenTag('friends');flUrl(null);go(7);flRender();flLoadMine();}
 function openLeague(id){FL={view:'league',id,data:null,tab:'all',formation:lsGet('upl30_fl_form')||'4-4-2'};screenTag('league');go(7);flUrl(id);flRender();flLoad();}
-// 0.69: збій fl_mine — «Не вдалося завантажити ліги» з повтором, а не «ліг немає» (без входу — просто порожньо)
+// fl_mine failure shows a retryable load error instead of "no leagues" (signed out: just empty)
 const flMineFail=e=>!/login\?|28000/.test(String(e&&e.message||e));
 async function flLoadMine(){if(!ONLINE||!FL)return;const st=FL;st.mineErr=false;try{st.mine=await playerRpc('fl_mine');}catch(e){st.mine=[];st.mineErr=flMineFail(e);}if(FL===st&&st.view==='list')flRender();}
 const flMineErrHtml=id=>`<p class="pp-empty">Не вдалося завантажити ліги. <button class="link0" id="${id}">Спробувати ще</button></p>`;
 async function flLoad(){const st=FL;try{st.data=await flRpc('fl_get',{p_id:st.id});st.err=st.data?'':'Такої ліги немає. Перевір посилання.';}catch(e){st.err=flErr(e);}if(FL===st)flRender();
   if(FL===st&&fl5Due(st.data))fl5Play();}
-// 5×5: збір закінчився, турніру ще немає → сервер розігрує (api/fl5.js) і повертає лігу з результатом
+// 5x5: entry window closed and no tournament yet -> server plays it (api/fl5.js) and returns the league with result
 const fl5Due=d=>d&&d.fmt==='5'&&!d.result&&d.deadline&&new Date(d.deadline)<=new Date(d.now||Date.now());
 async function fl5Play(){const st=FL;try{const r=await _fetch('/api/fl5',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:st.id,device_id:deviceId()})});
   if(r.ok){const d=await r.json();if(FL===st&&d&&d.id){st.data=d;flRender();}}}catch(e){}}
 const flMe=d=>PLAYER&&PLAYER.public_id&&d&&d.board.some(r=>r.u===PLAYER.public_id);
-// 0.69 (власник, iPad): правила ліги — чипами, а не довгим рядком через «·»
+// league rules rendered as chips
 const flRules=r=>`<div class="fl-rules">${r.split(' · ').map(x=>`<span class="chip">${esc(x)}</span>`).join('')}</div>`;
 const flBadge=f=>`<i class="fl-badge">${f==='5'?'5×5':'11×11'}</i>`;
 const flTime=t=>{try{return new Intl.DateTimeFormat('uk-UA',{timeZone:'Europe/Kyiv',hour:'2-digit',minute:'2-digit',day:'numeric',month:'short'}).format(new Date(t));}catch(e){return '';}};
-// ---------- розмітка
+// ---------- markup
 function flRender(){const el=document.getElementById('fl');if(!el||!FL)return;
   el.innerHTML=FL.view==='create'?flCreateHtml():FL.view==='draft5'?fl5DraftHtml():FL.view==='match5'?fl5MatchHtml():FL.view==='league'?(FL.data&&FL.data.fmt==='5'?fl5LeagueHtml():flLeagueHtml()):flListHtml();flWire();}
 function flListHtml(){const mine=FL.mine||[];const on=mine.filter(x=>!x.over),off=mine.filter(x=>x.over);
@@ -94,7 +94,7 @@ function flLeagueHtml(){const d=FL.data;
     <p class="muted" style="font-size:12.5px">${d.scoring==='place'?'За місце в турі: 1-й отримує стільки очок, скільки гравців зіграло того дня, останній — 1. Не зіграв — 0.':'Сума: у залік туру йдуть очки сезону. Не зіграв — 0.'}</p>
     ${d.over?'':`<div class="sec0">Запросити</div><div class="fl-inv"><input readonly value="${esc(link)}" id="flLinkIn" aria-label="Посилання на лігу"><button class="primary" id="flShare">${icon('share-variant')}<span>Поділитися</span></button></div><p class="muted" id="flShareMsg" style="font-size:13px"></p>`}
     <button class="ghost" id="flBack" style="margin-top:14px">Усі мої ліги</button>`;}
-// ---------- дії
+// ---------- actions
 function flWire(){const $=id=>document.getElementById(id),el=$('fl');
   if($('flLogin'))$('flLogin').onclick=()=>{ACCT_MSG='';openAcct();};
   if($('flRetry'))$('flRetry').onclick=()=>{FL.mine=null;flRender();flLoadMine();};
@@ -123,18 +123,18 @@ function flWire(){const $=id=>document.getElementById(id),el=$('fl');
       if(navigator.share){try{await navigator.share({title:d.name,text,url});return;}catch(e){if(e&&e.name==='AbortError')return;}}
       try{await navigator.clipboard.writeText(url);m.textContent='Посилання скопійовано — надішли його друзям у WhatsApp, Viber чи Telegram.';}catch(e){const i=$('flLinkIn');i.focus();i.select();m.textContent='Скопіюй посилання вручну.';}};}
 }
-// спроба ліги: звичайний драфт класики за правилами ліги (перекрути, рейтинги, епоха); схема — своя
+// league attempt: regular classic draft under league rules (rerolls, ratings, era); formation is the player's own
 function flPlay(){const d=FL&&FL.data;if(!d)return;
   S.league={id:d.id,name:d.name,rerolls:d.rerolls,memory:d.ratings==='memory',era:ERAS[d.era]?d.era:'all'};
   S.daily=null;S.challenge=null;S.chal=null;S.result=null;setFmt('classic');S.mode='normal';
   S.formation=FORMATIONS[FL.formation]?FL.formation:'4-4-2';S.slots=newSlots(S.formation);S.taken=new Set();S.wheel=null;S.rerolls=d.rerolls;S.showR=false;S.moveMode=false;
   document.getElementById('modeLabel').textContent=`Ліга «${d.name}» · ${S.formation}`;renderDraft();go(2);}
-// після сезону ліги: рядок під результатом (зараховано / ні)
+// after a league season: line under the result (credited or not)
 function flAfterSave(r,j){if(!S.league||S.result!==r)return;const el=document.getElementById('leagueMsg');if(!el)return;
   if(j&&j.verified===true){el.hidden=false;el.textContent=j.fl?`Спробу ${j.fl} зараховано в лігу «${S.league.name}».`:j.fl===null?`Цю спробу не зараховано в лігу «${S.league.name}»: спроби на сьогодні вичерпано або тур закінчився.`:'';}}
-// ---------- 5×5 (0.63): збір п'ятірок до кінця збору → турнір грає сервер (api/fl5.js, рушій src/five_core.js) → таблиця, сітка, матчі з епізодами
+// ---------- 5x5: squads collected until the deadline -> server plays the tournament (api/fl5.js, engine src/five_core.js) -> table, bracket, matches with events
 const FL5_STAGE={group:'Група',sf:'Півфінал',final:'Фінал',duel:'Матч серії'};
-// драфт своєї п'ятірки: колесо в кожного своє, епоха й перекрути — з правил ліги; гравець — лише у своїй лінії
+// drafting own five: own wheel per player, era and rerolls from league rules; a player only fits his own line
 function fl5Draft(){const d=FL&&FL.data;if(!d)return;const form=lsGet('upl30_fl5_form')||'1-2-1';
   FL.view='draft5';FL.d5={form:F5_FORMS[form]?form:'1-2-1',rerolls:d.rerolls,taken:new Set(),cs:null};fl5Slots();fl5Spin();screenTag('league5_draft');window.scrollTo({top:0});}
 function fl5Slots(){const t=FL.d5;t.slots=F5_FORMS[t.form].rows.flat().map(slot=>({slot,player:null}));}
@@ -156,13 +156,13 @@ function fl5DraftHtml(){const d=FL.data,t=FL.d5,cs=t.cs,n=t.slots.filter(s=>s.pl
       ${t.rerolls>0?`<div class="rr"><span class="lbl"><span>Перекрутити колесо</span><span class="rrn">залишилось <b>${t.rerolls}</b></span></span><span class="seg"><button id="fl5Rr">Інший клуб і сезон</button></span></div>`:''}
       <div class="squad">${list.map(p=>`<div class="plrow"><button class="pl" data-p5="${esc(p[5])}"><span class="pos ${f5G(p)}">${F5_L[f5G(p)]}</span><span class="nm">${esc(p[0])}</span><span class="rt"></span></button></div>`).join('')}</div></div>`}</div>
     <button class="ghost" id="fl5Back" style="margin-top:14px">До ліги</button>`;}
-// сторінка ліги 5×5: збір → турнір → підсумок
-// 0.69 (власник: «склади строкою»): склад — по лініях від воротаря, лише прізвища
+// 5x5 league page: entry -> tournament -> summary
+// squad shown by line from the keeper, surnames only
 const fl5Xi=xi=>`<div class="fl5xi">${['GK','DF','MF','FW'].map(g=>{const ps=xi.filter(x=>x.slot===g);return ps.length?`<div><i class="pos ${g}">${F5_L[g]}</i>${ps.map(x=>esc(String(x.name||'').split(' ').pop())).join(' · ')}</div>`:'';}).join('')}</div>`;
-// 0.64: скільки лишилось до кінця збору (нагадування на сторінці ліги); останні 15 хвилин — помітніше
+// time left until entry deadline; last 15 minutes highlighted
 function fl5Left(d){const ms=new Date(d.deadline)-new Date(d.now||Date.now());if(!(ms>0))return '';const m=Math.ceil(ms/60000),h=Math.floor(m/60),mm=m%60;
   const t=h?`${h} год${mm?` ${mm} хв`:''}`:`${m} хв`;return `<p class="fl5left${m<=15?' soon':''}">${ic('timer-sand','sm')}<span>До кінця збору — ${t}<span class="muted"> · до ${flTime(d.deadline)}</span></span></p>`;}
-// 0.64: трофеї за зіграний турнір (раз на лігу; лише учасник зі своєю п'ятіркою)
+// trophies for a played tournament (once per league; only for entrants with a squad)
 function fl5Award(d){const me=PLAYER&&PLAYER.public_id,res=d.result;if(!me||!res||res.cancelled||!res.teams)return;const team=res.teams.findIndex(t=>t.u===me);if(team<0)return;
   const {fresh}=trAwardF5(d.id,res,team);if(fresh.length)setTimeout(()=>{const el=document.getElementById('fl5Tro');if(el){el.hidden=false;el.innerHTML=`<div class="sec0">Нові трофеї</div><div class="tro0">${fresh.map(id=>{const t=trDef(id);return t?`<span>${trBadge(t,true)}${esc(t.n)}</span>`:'';}).join('')}</div>`;}},0);}
 function fl5LeagueHtml(){const d=FL.data,me=PLAYER&&PLAYER.public_id,member=flMe(d),my=d.fives.find(f=>f.u===me),res=d.result,owner=me&&d.owner===me;
@@ -193,7 +193,7 @@ function fl5LeagueHtml(){const d=FL.data,me=PLAYER&&PLAYER.public_id,member=flMe
   return `<div class="fl-head"><h1>${esc(d.name)} ${flBadge('5')}</h1>${flRules(rules)}</div>${card}<div id="fl5Tro" hidden></div>${out}
     ${!res&&!fl5Due(d)?`<div class="sec0">Запросити</div><div class="fl-inv"><input readonly value="${esc(link)}" id="flLinkIn" aria-label="Посилання на лігу"><button class="primary" id="flShare">${icon('share-variant')}<span>Поділитися</span></button></div><p class="muted" id="flShareMsg" style="font-size:13px"></p>`:''}
     <button class="ghost" id="flBack" style="margin-top:14px">Усі мої ліги</button>`;}
-// матч: рахунок, епізоди по хвилинах (голи, пенальті, VAR), серія пенальті; «Дивитися наживо» — епізоди по одному
+// match: score, events by minute (goals, penalties, VAR), shootout; "watch live" reveals events one by one
 function fl5Feed(m,nm){const it=[];
   for(const e of m.ev)if(!e.pen)it.push({min:e.min,side:e.side,g:1,h:`${ic('soccer','sm')}<b>${esc(e.sc.name)}</b>${e.as?`<span class="muted"> · пас ${esc(e.as.name)}</span>`:''}`});
   for(const e of m.ep)it.push({min:e.min,side:e.side,h:e.k==='var'?`📺 <b>VAR:</b> суддя йде до монітора — ${e.ok?'пенальті підтверджено':'<b>рішення скасовано</b>'}`
@@ -202,7 +202,7 @@ function fl5Feed(m,nm){const it=[];
   return it.map(x=>({...x,html:`<div class="f5ev s${x.side}"><span class="mono">${x.min}'</span><span>${x.h}</span><span class="muted fl5who">${esc(nm(x.side))}</span></div>`}));}
 function fl5MatchHtml(){const d=FL.data,res=d.result,m=res.matches[FL.mi],nm=s=>res.teams[s?m.j:m.i].name;
   const feed=fl5Feed(m,nm),shown=FL.live==null?feed.length:FL.live,seen=feed.slice(0,shown);
-  const sc=FL.live==null?[m.ga,m.gb]:[0,1].map(sd=>seen.filter(x=>x.g&&x.side===sd).length);   // наживо — рахунок росте з епізодами
+  const sc=FL.live==null?[m.ga,m.gb]:[0,1].map(sd=>seen.filter(x=>x.g&&x.side===sd).length);   // live: score grows with revealed events
   const all=[...m.ra.map(x=>({...x,t:nm(0)})),...m.rb.map(x=>({...x,t:nm(1)}))].sort((a,b)=>b.rt-a.rt),mvp=all[0];
   return `<div class="hero f5live" style="margin-top:14px"><div class="kicker">${FL5_STAGE[m.stage]||''} · 2×20 хвилин</div>
     <div class="f5score"><span>${esc(nm(0))}</span><b>${sc[0]}:${sc[1]}</b><span>${esc(nm(1))}</span></div>
@@ -214,7 +214,7 @@ function fl5MatchHtml(){const d=FL.data,res=d.result,m=res.matches[FL.mi],nm=s=>
     <button class="ghost" id="fl5Back" style="margin-top:14px">До ліги</button>`;}
 function fl5Wire($,el){
   if($('fl5Go'))$('fl5Go').onclick=fl5Draft;
-  // 0.64 «Реванш»: форма нової ліги 5×5 з тими самими правилами й назвою «Реванш: …» (збір можна змінити) — далі звичайне посилання-запрошення
+  // "Rematch": new 5x5 league form with the same rules and a "Rematch: ..." name (deadline editable), then a regular invite link
   if($('fl5Rev'))$('fl5Rev').onclick=()=>{const d=FL.data,nm=Array.from('Реванш: '+String(d.name).replace(/^Реванш: /,'')).slice(0,40).join('');const names=[nm,...flShuffle().filter(x=>x!==nm)];
     FL={view:'create',form:{names,name:nm,fmt:'5',hours:3,days:3,scoring:'place',tries:3,take:'best',rerolls:d.rerolls,ratings:d.ratings,era:ERAS[d.era]?d.era:'all'}};screenTag('league_new');flRender();window.scrollTo({top:0});};
   if($('fl5Back'))$('fl5Back').onclick=()=>{clearInterval(FL.liveT);FL.view='league';FL.live=null;flRender();flLoad();};
@@ -232,11 +232,11 @@ function fl5Wire($,el){
     FL.live=0;flRender();const st=FL,res=st.data.result,m=res.matches[st.mi],n=fl5Feed(m,()=>'').length;
     st.liveT=setInterval(()=>{if(FL!==st||st.view!=='match5'){clearInterval(st.liveT);return;}st.live++;if(st.live>=n){clearInterval(st.liveT);st.live=null;}flRender();},1400);};
 }
-// «Мої ліги» на своїй сторінці гравця
+// "My leagues" on the player's own page
 async function ppLeagues(){if(!document.getElementById('ppLeagues'))return;let mine=[],err=false;try{mine=await playerRpc('fl_mine');}catch(e){err=flMineFail(e);}
-  const el=document.getElementById('ppLeagues');if(!el)return;   // сторінку могли перемалювати, поки чекали відповіді — беремо свіжий блок
+  const el=document.getElementById('ppLeagues');if(!el)return;   // page may have re-rendered while awaiting the response; take the fresh element
   el.innerHTML=`<div class="pp-sec"><h3>Мої ліги</h3><button class="ghost" id="ppFl">${mine.length?'Усі':'Створити'}</button></div>`+(mine.length?mine.slice(0,5).map(x=>`<button class="fl-row" data-l="${esc(x.id)}">${ic(x.over?'trophy':'account-group')}<span class="t"><b>${esc(x.name)} ${flBadge(x.fmt)}</b><small>${x.fmt==='5'?fl5Sub(x):`${x.over?'завершена':`день ${numOr0(x.day_n)} з ${numOr0(x.days)}`} · ${numOr0(x.members)} ${plUk(x.members,'гравець','гравці','гравців')}`}</small></span>${x.place?`<span class="fl-place"><b>${numOr0(x.place)}</b><small>місце</small></span>`:''}</button>`).join(''):(err?flMineErrHtml('ppFlRetry'):`<p class="pp-empty">Ти ще не граєш у лігах з друзями.</p>`));
   el.querySelectorAll('[data-l]').forEach(b=>b.onclick=()=>openLeague(b.dataset.l));el.querySelector('#ppFl').onclick=openFriends;
   const r=el.querySelector('#ppFlRetry');if(r)r.onclick=()=>{r.disabled=true;ppLeagues();};}
-// відкрито посилання ?l=… — сторінка ліги
+// ?l=... link opened: league page
 if(ONLINE){const m=/[?&]l=([a-z2-9]{6})(?:&|$)/.exec(location.search);if(m)setTimeout(()=>openLeague(m[1]),0);}

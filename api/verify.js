@@ -1,33 +1,32 @@
-// 30-0 УПЛ — перевірка сезону (адреса /api/verify)
-// POST {season_id}: сервер бере запис сезону з журналу, перевіряє seed, склад, рейтинги й правила формату
-// і перераховує сезон тим самим рушієм, що й гра (lib/engine.js). Результат: seasons.verified = true/false.
+// 30-0 UPL: season verification (/api/verify)
+// POST {season_id}: the server takes the season record from the log, checks seed, squad, ratings and format rules
+// and recomputes the season with the same engine as the game (lib/engine.js). Result: seasons.verified = true/false.
 const crypto = require('crypto');
-const { sb, rateLimit } = require('./_device.js');   // запити до бази ключем сервера
+const { sb, rateLimit } = require('./_device.js');   // DB requests with the service key
 const xiHash = xi => crypto.createHash('sha256').update(xi.map(x => `${x.id}|${x.slot}|${x.c}|${x.y}`).join(';')).digest('hex');
 let E = null;
-const CHAL_OLD_BEFORE = '2026-10-01T14:56:00Z';   // мерж 0.64 (#30): з цього моменту виклики створюються лише проти «Ліги легенд»
+const CHAL_OLD_BEFORE = '2026-10-01T14:56:00Z';   // since this merge (0.64) challenges are created only against "League of Legends"
 function engine() { if (!E) E = require('../lib/engine.js'); return E; }
 
-// рік суперників, дозволений для сезону: для формату — той, що дає гра (oppYear: «Ліга легенд» або «Ліга культових клубів»).
-// Виняток — класика за старим «Викликом другу» (до 0.50 виклик міг мати справжній сезон УПЛ на 16 команд):
-// такий рік приймаємо, лише якщо в таблиці challenges є виклик з цим роком і схемою (chalYearOk рахує обробник нижче).
+// opponent year allowed for a season: for the format, the one the game uses (oppYear: LEAGUE_LEGENDS or LEAGUE_CULT).
+// Exception: classic mode from an old friend challenge (before 0.50 a challenge could use a real 16-team UPL season):
+// such a year is accepted only if challenges has a challenge with that year and formation (chalYearOk computed by the handler below).
 function yearOk(row, E, chalYearOk, prev) {
   const y = +row.year;
-  // 0.64: класика (і «Вибір сезону», драфт дня) — проти «Ліги легенд»; «Ліга культових клубів» — лише сезони сайту 0.63 і раніше
-  // або виклик другу, створений до 0.64 (chalYearOk). Антисезон і приховані дербі / один клуб — як і раніше, культові клуби.
+  // classic (and season pick, daily draft) is against LEAGUE_LEGENDS; LEAGUE_CULT only for seasons from site 0.63 and earlier
+  // or a friend challenge created before 0.64 (chalYearOk). Anti-season and hidden derby / one-club modes: cult clubs as before.
   if (row.format === 'legends') return y === E.LEAGUE_LEGENDS;
   if (row.format !== 'classic') return y === E.LEAGUE_CULT;
   if (y === E.LEAGUE_LEGENDS) return true;
-  if (y === E.LEAGUE_CULT) return !row.day && !!chalYearOk;   // 0.67 (аудит P1-2): без винятку для «старої версії» — його можна було підробити полем version
+  if (y === E.LEAGUE_CULT) return !row.day && !!chalYearOk;   // audit P1-2: no "old version" exception, it could be forged via the version field
   return !row.day && E.YEARS16.includes(y) && !!chalYearOk;
 }
 
-// Сайт попередньої версії ще відкритий у гравців (кеш браузера, Mini App): якщо симуляція між версіями не мінялась, версію додаємо сюди —
-// її сезони перевіряються новим рушієм. Історія 0.57–0.64 — у CHANGELOG.
-const PREV_VERSIONS = ['0.69.69', '0.69.6', '0.69.5', '0.69.4', '0.69.3', '0.69.2', '0.69.1', '0.69'];   // 0.69.1: лише шрифт, симуляція та сама — сезони відкритих вкладок 0.69 перевіряє рушій 0.69.1. 0.67/0.68: симуляція змінилась (баланс v3; 0.68 — refA/refD −1); старі вкладки — null («не перевірено»). Порожньо також закриває підробку version (аудит P1-2)
-// було: ['0.65', '0.64']   // 0.66 знову змінила симуляцію (баланс, «сезон-диво», штрафи позицій): сезони 0.65/0.64 з відкритих вкладок рушій 0.66 не відтворить — null («не перевірено»), а не false
+// The previous site version stays open for players (browser cache, Mini App): if simulation didn't change between versions, add it here
+// so its seasons are verified by the new engine. History for 0.57-0.64 is in CHANGELOG.
+const PREV_VERSIONS = ['0.69.96', '0.69.69', '0.69.6', '0.69.5', '0.69.4', '0.69.3', '0.69.2', '0.69.1', '0.69'];   // only versions with identical simulation; others get null ("not verified"). Keeping it short also blocks forged version (audit P1-2)
 
-// головна перевірка: повертає [true|false|null, пояснення]; null — перевірити неможливо (стара версія тощо)
+// main check: returns [true|false|null, reason]; null = cannot verify (old version etc.)
 function check(row, seedRow, opts = {}) {
   const E = engine();
   if (!row.version || row.version === E.VERSION) return checkCore(row, seedRow, opts);
@@ -41,13 +40,13 @@ function checkCore(row, seedRow, { chalYearOk = false, prev = false } = {}) {
   if (String(seedRow.device_id) !== String(row.device_id)) return [false, 'seed іншого пристрою'];
   if (+seedRow.seed !== +row.seed) return [false, 'seed не збігається'];
   if (seedRow.used_by && +seedRow.used_by !== +row.id) return [false, 'seed уже використано'];
-  // схема, режим, формат і рік — ті самі, під які сервер видав seed (у старих seed полів може не бути)
+  // formation, mode, format and year must match what the seed was issued for (old seeds may lack these fields)
   for (const k of ['formation', 'mode', 'format']) if (seedRow[k] != null && seedRow[k] !== '' && String(seedRow[k]) !== String(row[k])) return [false, `${k}: seed видано для «${seedRow[k]}»`];
   if (seedRow.year != null && +seedRow.year !== +row.year) return [false, `рік: seed видано для ${seedRow.year}`];
   if (!E.FORMATS[row.format]) return [false, 'невідомий формат'];
   if (!E.MODES[row.mode]) return [false, 'невідомий режим'];
   if (!yearOk(row, E, chalYearOk, prev)) return [false, `суперники ${row.year} не для формату ${row.format}`];
-  // епоха (0.58): seasons.era є, лише коли в базі з'явиться колонка; тоді всі клуб-сезони складу мають бути не раніше її початку
+  // era: seasons.era exists only once the DB column is added; then every club-season in the squad must be no earlier than its start
   const era = row.era == null || row.era === 'all' ? null : E.ERAS && E.ERAS[row.era];
   if (row.era != null && row.era !== 'all' && !era) return [false, `невідома епоха ${row.era}`];
   if (era && row.day) return [false, 'виклик дня — без епохи'];
@@ -56,7 +55,7 @@ function checkCore(row, seedRow, { chalYearOk = false, prev = false } = {}) {
   if (xiHash(xi) !== seedRow.xi_hash) return [false, 'склад змінено після видачі seed'];
   const F = E.FORMATIONS[row.formation]; if (!F) return [false, 'невідома схема'];
   if (F.slots.join() !== xi.map(x => x.slot).join()) return [false, 'позиції не відповідають схемі'];
-  const canon = id => (E.DATA.alias && E.DATA.alias[id]) || id;   // одна людина під двома id (data/aliases) — теж «двічі»
+  const canon = id => (E.DATA.alias && E.DATA.alias[id]) || id;   // one person under two ids (data/aliases) also counts as a duplicate
   if (new Set(xi.map(x => canon(x.id))).size !== 11) return [false, 'гравець двічі'];
   E.setFormat(row.format);
   for (const x of xi) {
@@ -67,65 +66,65 @@ function checkCore(row, seedRow, { chalYearOk = false, prev = false } = {}) {
     const r = E.effRating(p, x.slot);
     if (r == null) return [false, `${x.n} не може грати на ${x.slot}`];
     if (r !== +x.r) return [false, `рейтинг ${x.n}: ${x.r} ≠ ${r}`];
-    if (x.r0 != null && +x.r0 !== p[2]) return [false, `базовий рейтинг ${x.n}: ${x.r0} ≠ ${p[2]}`];   // r0 показують таблиці й картка
+    if (x.r0 != null && +x.r0 !== p[2]) return [false, `базовий рейтинг ${x.n}: ${x.r0} ≠ ${p[2]}`];   // r0 is shown in tables and on the card
     if (row.format === 'derby' && !E.FORMATS.derby.clubs.includes(club.c)) return [false, 'дербі: чужий клуб'];
     if (row.format === 'oneclub' && row.club && club.c !== row.club) return [false, 'один клуб: чужий клуб'];
     if (row.format === 'anti' && p[3] < E.ANTI_MIN_APPS) return [false, 'антисезон: замало матчів'];
     if (era && club.y < era.y0) return [false, `епоха «${era.name}»: ${x.c} ${x.y}`];
   }
-  if (row.day) {   // виклик дня: та сама схема, суперники й колесо
+  if (row.day) {   // daily challenge: same formation, opponents and wheel
     const d = E.dailySetupFor(String(row.day).slice(0, 10));
-    if (d.formation !== row.formation || (d.year !== +row.year && !(prev && +row.year === E.LEAGUE_CULT))) return [false, 'не той виклик дня'];   // 0.63 і раніше — культові клуби
+    if (d.formation !== row.formation || (d.year !== +row.year && !(prev && +row.year === E.LEAGUE_CULT))) return [false, 'не той виклик дня'];   // 0.63 and earlier: cult clubs
     const inSeq = new Set(d.seq.slice(0, 400));
     const onWheel = xi.filter(x => { const i = E.DATA.clubs.findIndex(c => c.n === x.c && c.y === +x.y); return inSeq.has(i); }).length;
-    if (onWheel < 10) return [false, `колесо дня: лише ${onWheel} з 11 клуб-сезонів`];   // 1 перекручування дозволено
+    if (onWheel < 10) return [false, `колесо дня: лише ${onWheel} з 11 клуб-сезонів`];   // 1 reroll allowed
   }
   if (row.perfect != null && !!row.perfect !== (+row.w === 30)) return [false, 'позначка 30-0 не відповідає результату'];
-  // 0.65: код клубу й сезон — для «хімії» (гравці одного клубу)
+  // club code and season, for "chemistry" (players from the same club)
   const ccOf = x => (E.DATA.clubs.find(c => c.n === x.c && c.y === +x.y) || {}).c;
   const sim = E.run({ xi: xi.map(x => ({ id: x.id, name: x.n, slot: x.slot, pos: E.GROUP_OF[x.slot], r: +x.r, cc: ccOf(x), y: +x.y })), mode: row.mode, format: row.format, year: +row.year, seed: +row.seed });
   const same = sim.W === row.w && sim.D === row.d && sim.L === row.l && sim.gf === row.gf && sim.ga === row.ga && sim.place === row.place && (row.pts == null || sim.pts === row.pts);
   return same ? [true, 'ok'] : [false, `перерахунок: ${sim.W}-${sim.D}-${sim.L} ${sim.gf}:${sim.ga} #${sim.place}`];
 }
 
-// результат виклику дня пише сам сервер — з перевіреного сезону (цифри з браузера в daily_results не довіряємо).
-// Лише перша офіційна спроба дня (seed official) і лише сезон, якому цей seed віддано (used_by).
-// Рядок уже є (браузер вставив його кнопкою «Надіслати») — переписуємо цифри й ставимо verified; немає — вставляємо сами.
+// daily challenge result is written by the server from the verified season (browser numbers in daily_results are not trusted).
+// Only the first official attempt of the day (seed official) and only the season that seed was assigned to (used_by).
+// Row exists (browser inserted it via the submit button): overwrite numbers and set verified; otherwise insert it.
 async function syncDaily(row, seedRow) {
   if (!row.day || row.verified !== true || row.practice || !seedRow || !seedRow.official || +seedRow.used_by !== +row.id) return false;
   const day = String(row.day).slice(0, 10), dev = encodeURIComponent(String(row.device_id));
   const res = { w: row.w, d: row.d, l: row.l, pts: row.w * 3 + row.d, gf: row.gf, ga: row.ga, place: row.place, formation: row.formation, xp: row.xp == null ? null : +row.xp,
     xi: (row.xi || []).map(x => [x.n, x.slot, x.r, x.c, x.y]), verified: true };
-  // табло ліг групи: результат, надісланий до того, як браузер дізнався номер сезону, прив'язуємо до цього сезону
+  // group league boards: bind a result submitted before the browser knew the season id to this season
   if (row.tg_user_id) await sb(`league_results?day=eq.${day}&tg_user_id=eq.${+row.tg_user_id}&season_id=is.null`, { method: 'PATCH', prefer: 'return=minimal', body: { season_id: row.id } });
   const upd = await sb(`daily_results?day=eq.${day}&device_id=eq.${dev}`, { method: 'PATCH', prefer: 'return=representation', body: res });
   if (upd && upd.length) return true;
-  let nick = Array.from(String(row.nickname || row.tg_name || '').trim()).slice(0, 24).join('').trim();   if (Array.from(nick).length < 2) nick = 'Гравець';   // основна база: char_length 2–24
+  let nick = Array.from(String(row.nickname || row.tg_name || '').trim()).slice(0, 24).join('').trim();   if (Array.from(nick).length < 2) nick = 'Гравець';   // main DB: char_length 2-24
   const ins = { day, device_id: row.device_id, nickname: nick, ...res };
   if (row.tg_user_id) { ins.tg_user_id = row.tg_user_id; ins.tg_name = row.tg_name || null; }
   await sb('daily_results?on_conflict=day,device_id', { method: 'POST', prefer: 'resolution=merge-duplicates,return=minimal', body: ins });
   return true;
 }
 
-// 0.61: сезон зіграно як спробу ліги з друзями (seasons.fl_id) — після перевірки зараховуємо (fl_record у базі: правила ліги, ліміт спроб).
-// SQL 0.61 ще не виконано або спробу не зараховано — сезон однаково перевірено, повертаємо fl = null
+// season played as a friends league attempt (seasons.fl_id): credit it after verification (fl_record in DB: league rules, attempt limit).
+// SQL 0.61 not applied or attempt not credited: season is still verified, return fl = null
 async function flRecord(row, id) {
   if (!row.fl_id) return undefined;
   try { const n = await sb('rpc/fl_record', { method: 'POST', body: { p_season: id } }); return n == null ? null : +n; } catch (e) { return null; }
 }
-// перевірка сезону за номером (спільна для /api/verify і /api/save): {verified, note, cached?, fl?}
+// verify season by id (shared by /api/verify and /api/save): {verified, note, cached?, fl?}
 async function verifyById(id) {
   const [row] = await sb(`seasons?id=eq.${id}&select=*`) || [];
   if (!row) return { status: 404, error: 'no season' };
   const [seedRow] = row.seed_id ? (await sb(`season_seeds?id=eq.${encodeURIComponent(row.seed_id)}&select=*`) || []) : [];
   if (row.verified !== null && row.verified !== undefined) {
-    if (row.verified === true) await syncDaily(row, seedRow);   // повторний виклик — пишемо перевірені цифри дня ще раз
+    if (row.verified === true) await syncDaily(row, seedRow);   // repeated call: rewrite the verified daily numbers again
     const fl = row.verified === true ? await flRecord(row, id) : undefined;
     return { verified: row.verified, note: row.verify_note, cached: true, fl };
   }
   let chalYearOk = false;
   if (row.format === 'classic' && !row.day && row.year != null && Number.isInteger(+row.year) && (engine().YEARS16.includes(+row.year) || +row.year === engine().LEAGUE_CULT)) {
-    // 0.67 (аудит P1-1): лише виклики, створені до 0.64 (тоді виклик міг мати справжній сезон УПЛ); нові виклики — завжди «Ліга легенд»
+    // audit P1-1: only challenges created before 0.64 (could use a real UPL season); new challenges are always LEAGUE_LEGENDS
     const ch = await sb(`challenges?year=eq.${+row.year}&formation=eq.${encodeURIComponent(String(row.formation || ''))}&created_at=lt.${CHAL_OLD_BEFORE}&select=id&limit=1`) || [];
     chalYearOk = ch.length > 0;
   }
@@ -140,13 +139,13 @@ async function verifyById(id) {
   return { verified: v, note, fl };
 }
 
-// POST {season_id}: сайт 0.52 (записав сезон сам) і повторна перевірка. З 0.53 сезон пише й одразу перевіряє /api/save.
+// POST {season_id}: legacy clients (wrote the season themselves) and re-verification. Normally /api/save writes and verifies at once.
 module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
   try {
     let b = req.body || {}; if (typeof b === 'string') b = JSON.parse(b);
     const id = +b.season_id; if (!id) return res.status(400).json({ error: 'season_id?' });
-    if (await rateLimit(req, res, 'verify')) return;   // за IP (0.55)
+    if (await rateLimit(req, res, 'verify')) return;   // per IP
     const r = await verifyById(id);
     if (r.status) return res.status(r.status).json({ error: r.error });
     res.status(200).json(r);

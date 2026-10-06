@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Генератор блокнота Colab: этап 5 — детальные позиции игроков (13 позиций + основная/дополнительные)."""
+"""Colab notebook generator: stage 5, detailed player positions (13 positions + main/alternatives)."""
 import json
 cells = []
 def md(s): cells.append({"cell_type": "markdown", "metadata": {}, "source": s})

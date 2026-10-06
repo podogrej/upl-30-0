@@ -1,10 +1,10 @@
--- НЕ ЗАПУСКАТИ (архів, 0.67). Старий SQL: відкриває пряму запис для anon і зламає крок 2 (v054_close_writes). Для нової бази — README, розділ sql/.
--- 30-0 УПЛ · v0.29 · захист таблиць: seed видає сервер, сервер перевіряє сезони
--- Вставити цілком у Supabase → SQL Editor → Run
+-- DO NOT RUN (archived). Legacy SQL: re-opens direct anon writes and breaks v054_close_writes. For a new DB see README, section sql/.
+-- v0.29: anti-cheat, server issues seeds and verifies seasons
+-- Run the whole file in Supabase SQL Editor.
 
 create extension if not exists pgcrypto;
 
--- видані seed (доступ лише серверу: політик для anon немає)
+-- issued seeds (server only: no anon policies)
 create table if not exists public.season_seeds (
   id         uuid primary key default gen_random_uuid(),
   created_at timestamptz not null default now(),
@@ -26,7 +26,7 @@ alter table public.seasons       add column if not exists verify_note text;
 alter table public.daily_results add column if not exists verified    boolean;
 create index if not exists seasons_verified_top_idx on public.seasons (format, verified, pts desc) where verified;
 
--- позначку «перевірено» може ставити лише сервер; браузер не підробить
+-- only the server may set the verified flag
 create or replace function public.strip_verified() returns trigger language plpgsql security definer set search_path = public as $$
 begin
   if coalesce(auth.role(), '') <> 'service_role' then

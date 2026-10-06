@@ -1,6 +1,6 @@
--- 0.68 (владелець 02.10: «Мої ліги» порожні, хоча ліги створено): fl_mine позначено stable, тож PostgREST
--- запускає її в транзакції лише для читання, а device_check усередині робить SELECT … FOR UPDATE / INSERT →
--- «cannot execute SELECT FOR UPDATE in a read-only transaction». Сайт ловив помилку й показував порожній список
--- (і на сторінці гравця, і в «Ліга з друзями»). Лікування — volatile, як у всіх RPC з device_check.
--- Можна запускати повторно; попередню версію сайту не ламає (тіло й параметри функції ті самі).
+-- 0.68: fl_mine was declared stable, so PostgREST
+-- runs it in a read-only transaction, while device_check inside does SELECT ... FOR UPDATE / INSERT ->
+-- "cannot execute SELECT FOR UPDATE in a read-only transaction". The client caught the error and showed an empty league list
+-- (player page and friend leagues). Fix: volatile, like every RPC that calls device_check.
+-- Idempotent; safe for the previous client (same body and parameters).
 alter function public.fl_mine(uuid, text) volatile;

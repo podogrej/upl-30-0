@@ -1,15 +1,15 @@
-"""Робоча нога гравців пулу → data/foot/foot.csv (person_id, name, foot L/R/B, source, url, note).
+"""Preferred foot of pool players -> data/foot/foot.csv (person_id, name, foot L/R/B, source, url, note).
 
-Джерела (жодних здогадок, у кожного значення є джерело):
-1. data/positions/positions.csv, колонка foot — Transfermarkt через набір Kaggle «transfermarkt-datasets» (players.csv, поле foot);
-   url — профіль гравця на transfermarkt.com.
-2. Живий профіль transfermarkt.com (поле «Foot:»):
-   - для id tm:<N> — одразу профіль N;
-   - для id w:<дата>:<прізвище> — Transfermarkt ID береться з Wikidata (P2446) серед футболістів із тією ж датою народження (P569)
-     і схожим прізвищем латиницею; далі дата народження на профілі Transfermarkt мусить збігтися з нашою.
-Порядок: data/foot/priority.csv (спершу крайні захисники й півзахисники, потім вінгери), далі решта; воротарі — в кінці.
-Запуск з кореня: python3 data/foot/collect.py <тека для кешу> [ліміт профілів]
-Кеш (wd_foot.json, tm_profiles.json) дозволяє зупиняти й продовжувати.
+Sources (no guesses, every value has a source):
+1. data/positions/positions.csv, column foot: Transfermarkt via the Kaggle transfermarkt-datasets set (players.csv, field foot);
+   url is the player's transfermarkt.com profile.
+2. Live transfermarkt.com profile (field "Foot:"):
+   - ids tm:<N>: profile N directly;
+   - ids w:<date>:<surname>: Transfermarkt ID from Wikidata (P2446) among footballers with the same date of birth (P569)
+     and a similar Latin surname; the date of birth on the TM profile must then match ours.
+Order: data/foot/priority.csv (full-backs and wide midfielders first, then wingers), then the rest; goalkeepers last.
+Run from repo root: python3 data/foot/collect.py <cache dir> [profile limit]
+Cache (wd_foot.json, tm_profiles.json) allows stop/resume.
 """
 import json, csv, os, sys, re, time, subprocess, io, difflib, unicodedata, collections, datetime
 
@@ -33,8 +33,8 @@ def jload(f, d):
 def jsave(f, o):
     json.dump(o, open(os.path.join(CACHE, f), 'w'), ensure_ascii=False)
 
-WD = jload('wd_foot.json', {})          # батч дат → рядки Wikidata
-TMP = {k: v for k, v in jload('tm_profiles.json', {}).items() if v.get('dob') and 'err' not in v}     # tm id → {foot, dob, name} або {err}; без дати — перезавантажити
+WD = jload('wd_foot.json', {})          # date -> Wikidata rows
+TMP = {k: v for k, v in jload('tm_profiles.json', {}).items() if v.get('dob') and 'err' not in v}     # tm id -> {foot, dob, name} or {err}; entries without dob are refetched
 
 def latin(s):
     s = unicodedata.normalize('NFKD', s.replace('ł', 'l').replace('Ł', 'L'))
@@ -53,7 +53,7 @@ def sparql(q, head):
     return None
 
 def wd_tm_ids(dates):
-    """дата → [(label, tm_id)] для футболістів з Transfermarkt ID"""
+    """date -> [(label, tm_id)] for footballers with a Transfermarkt ID"""
     out = collections.defaultdict(list)
     todo = sorted(d for d in dates if d not in WD)
     for i in range(0, len(todo), 15):
@@ -73,7 +73,7 @@ def wd_tm_ids(dates):
     return out
 
 MON = {m: i for i, m in enumerate(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'], 1)}
-CACHE_ONLY = os.environ.get('CACHE_ONLY') == '1'   # лише вже завантажені профілі, без запитів до Transfermarkt
+CACHE_ONLY = os.environ.get('CACHE_ONLY') == '1'   # cached profiles only, no Transfermarkt requests
 def tm_profile(tid, tries=3):
     if CACHE_ONLY:
         return TMP.get(tid, {'err': 'not cached'})
@@ -94,7 +94,7 @@ def tm_profile(tid, tries=3):
         e['dob'] = f'{d.group(3)}-{MON[d.group(1)]:02d}-{int(d.group(2)):02d}' if d else ''
     if not e['name'] or 'Transfermarkt' not in h:
         if tries > 1:
-            time.sleep(90)   # заглушка від частих запитів — пауза й повтор
+            time.sleep(90)   # rate-limit page: wait and retry
             return tm_profile(tid, tries - 1)
         e = {'err': f'http/parse ({len(h)} bytes)'}
     TMP[tid] = e
@@ -109,7 +109,7 @@ for pid in order:
         tid = pid[3:] if pid.startswith('tm:') else ''
         rows[pid] = dict(person_id=pid, name=per[pid]['name'], foot=FOOT[f], source='transfermarkt (kaggle transfermarkt-datasets)',
                          url=f'https://www.transfermarkt.com/-/profil/spieler/{tid}' if tid else '', note='')
-# 2) живий Transfermarkt
+# 2) live Transfermarkt
 need = [pid for pid in order if pid not in rows]
 dates = {pid.split(':')[1] for pid in need if pid.startswith('w:') and '-00' not in pid}
 cand = wd_tm_ids(dates)
@@ -135,7 +135,7 @@ for pid in need:
         if pid.startswith('w:') and e.get('dob') != pid.split(':')[1]:
             continue
         if pid.startswith('w:') and difflib.SequenceMatcher(None, latin(pid.split(':', 2)[2]), latin(e['name'].split(' ')[-1])).ratio() < 0.7:
-            continue   # та сама дата народження, але інша людина
+            continue   # same date of birth, different person
         rows[pid] = dict(person_id=pid, name=per[pid]['name'], foot=FOOT[e['foot']], source='transfermarkt (profile)',
                          url=f'https://www.transfermarkt.com/-/profil/spieler/{tid}',
                          note=('via wikidata P2446, dob match' if pid.startswith('w:') else '') + f'; tm name: {e["name"]}; checked {datetime.date.today()}')

@@ -51,7 +51,7 @@ for c in pool['clubs']:
             alts = ';'.join(out)
         a, cs = extra.get((c['y'], c['c'], pid), (None, None))
         if a is not None or cs is not None: n_extra += 1
-        p[6:10] = [main, alts, a, cs]   # 10+ (nat, birth year) — з add_nat_dob.py
+        p[6:10] = [main, alts, a, cs]   # 10+ (nat, birth year) come from add_nat_dob.py
 
 json.dump(pool, open(f'{ROOT}/game/pool.json', 'w'), ensure_ascii=False, separators=(',', ':'))
 print(f'alts kept {kept}, dropped {dropped}; cards with assists/cs: {n_extra}')

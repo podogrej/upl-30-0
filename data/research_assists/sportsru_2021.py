@@ -1,9 +1,9 @@
-"""Асисти УПЛ 2021/22 з sports.ru: завантаження, розбір і зіставлення з нашим списком гравців.
-Запуск з кореня репозиторію: python3 data/research_assists/sportsru_2021.py [--fetch]
-  --fetch  заново скачати сторінки клубів (інакше береться sportsru_2021_clubs.json)
-Джерело: https://www.sports.ru/football/club/<slug>/stat/2021-2022/ — лише ліга, 18 турів, повний склад
-(польові + воротарі, стовпець «П» — гольові передачі).
-Вихід: assists_2021_more.csv (для 14 клубів із players_2021_todo.csv).
+"""UPL 2021/22 assists from sports.ru: download, parse and match against our player list.
+Run from repo root: python3 data/research_assists/sportsru_2021.py [--fetch]
+  --fetch  re-download club pages (otherwise sportsru_2021_clubs.json is used)
+Source: https://www.sports.ru/football/club/<slug>/stat/2021-2022/ (league only, 18 rounds, full squad:
+outfield + goalkeepers, column "P" = assists).
+Output: assists_2021_more.csv (for the 14 clubs in players_2021_todo.csv).
 """
 import csv, difflib, html, json, os, re, subprocess, sys
 D = os.path.dirname(os.path.abspath(__file__))
@@ -13,9 +13,9 @@ SL = {'dnipro-1': 'dnipro-1', 'vorskla': 'vorskla-poltava', 'zarya': 'zorya-luha
       'chernomorets-odessa': 'chornomorets-odesa', 'minaj': 'minaj', 'veres': 'veres-rivne', 'kolos-kovalivka': 'kolos-kovalivka',
       'fc-lviv': 'pfk-lviv', 'inhulets': 'inhulets-petrove', 'dynamo-kiev': 'dynamo-kyiv', 'mariupol': 'mariupol'}
 URL = 'https://www.sports.ru/football/club/{}/stat/2021-2022/'
-# Перевірено вручну: транслітерація або футбольне ім'я відрізняються, але матчі й голи збігаються.
+# Manually verified: transliteration or football name differs, but apps and goals match.
 MANUAL_OK = {'Мохаммед Кадірі', 'Ренан', 'Ренан Олівейра', 'Дієго Каріока', 'Олексій Хахльов', 'Шина', 'Раймонд Овусу', 'Жуніор Рейс'}
-# Статистика збігається, а ім'я — ні: у нашому пулі, схоже, змішані два гравці (див. assists_2021_more_report.md).
+# Stats match but name does not: the pool likely mixes two players (see assists_2021_more_report.md).
 CHECK_NAME = {('Євген Паст', 'desna-chernihiv'), ('Дмитро Махнєв', 'veres-rivne')}
 
 
@@ -55,7 +55,7 @@ def nsim(a, b):
 
 
 def match(our, site, nm):
-    """Жадібне зіставлення 1:1 у межах клубу: схожість імені + бонус за однакові матчі й голи."""
+    """Greedy 1:1 matching within a club: name similarity + bonus for equal apps and goals."""
     cand = []
     for i, o in enumerate(our):
         m = nm.get(o['pid'], {})

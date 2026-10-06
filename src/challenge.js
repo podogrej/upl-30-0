@@ -1,12 +1,12 @@
-// ---------- ВИКЛИК ДРУГОВІ «побий мій результат»: те саме колесо (seed), та сама схема, режим і суперники
-// Кожна вільна класична гра має seed колеса; після сезону можна створити виклик (таблиця challenges) і надіслати посилання.
+// ---------- Friend challenge ("beat my result"): same wheel seed, formation, mode and opponents
+// Every free classic game has a wheel seed; after the season a challenge (table challenges) can be created and shared by link.
 const CHAL_ALPH='abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 function chalId(){let s='';const a=new Uint32Array(8);try{crypto.getRandomValues(a);}catch(e){for(let i=0;i<8;i++)a[i]=Math.floor(Math.random()*4e9);}for(const x of a)s+=CHAL_ALPH[x%CHAL_ALPH.length];return s;}
 function wheelSeq(seed){const r=mulberry32(seed);const seq=[];for(let i=0;i<600;i++){const c=pickWeighted(DATA.clubs,r);seq.push(DATA.clubs.indexOf(c));}return seq;}
-// нова вільна гра: seed колеса й сезон суперників визначаються наперед (щоб гру можна було повторити у виклику)
+// new free game: wheel seed and opponents' season are fixed up front so the game can be replayed as a challenge
 function chalNewGame(seed,year){seed=seed||Math.floor(Math.random()*2147483647);return {seed,year:year||LEAGUE_LEGENDS,seq:wheelSeq(seed),ptr:0};}
-let CHAL=null;   // виклик, який зараз відкрито за посиланням
-// ім'я у виклику — з профілю гравця (0.59, аудит В5); старі рядки без гравця — копія name
+let CHAL=null;   // challenge currently opened via link
+// challenger name comes from the player profile (audit V5); legacy rows without player fall back to name
 const chalWho=x=>x&&x.players&&(x.players.name||x.players.anon_name)?pname(x):String((x&&x.name)||'друг').toLowerCase();
 const chalLink=x=>x&&x.players&&x.players.public_id?plink(x):esc(chalWho(x));
 const chalName=()=>{const el=document.getElementById('chalName');const v=el&&el.value.trim();if(v&&v.length>=2){if(!TGU)nickSet(v);return v;}return (TGU?[TGU.first_name,TGU.last_name].filter(Boolean).join(' '):'')||myName()||'Друг';};
@@ -14,7 +14,7 @@ function chalLinkWeb(id){return `${SITE}?c=${id}`;}
 function chalLinkTg(id){return `https://t.me/${TG_BOT}?startapp=c${id}`;}
 async function chalCreate(r){
   const id=chalId();const row={id,device_id:deviceId(),name:chalName().slice(0,40),seed:S.chal.seed,formation:S.formation,year:r.year,mode:S.mode,w:r.W,d:r.D,l:r.L,pts:r.pts,place:r.place,gf:r.gf,ga:r.ga};
-  try{await saveApi('challenge',{row});return id;}catch(e){if(!e.legacy)throw e;}   // 0.53: пише сервер; запасний шлях — напряму, як 0.52
+  try{await saveApi('challenge',{row});return id;}catch(e){if(!e.legacy)throw e;}   // server writes; fallback: direct insert for legacy API
   const res=await fetch(`${SB_URL}/rest/v1/challenges?apikey=${SB_KEY}`,{method:'POST',headers:{apikey:SB_KEY,'Content-Type':'application/json',Prefer:'return=minimal'},body:JSON.stringify(row)});
   if(!res.ok)throw new Error('HTTP '+res.status);return id;
 }
@@ -34,7 +34,7 @@ async function chalCopy(){
     try{await navigator.clipboard.writeText(link);msg.textContent='Посилання скопійовано: '+link;}catch(e){msg.innerHTML=`Скопіюй посилання: <span class="mono" style="user-select:all">${esc(link)}</span>`;}
   }catch(e){msg.textContent='Не вдалося створити виклик. Спробуй ще раз.';}
 }
-// відкрито посилання з викликом
+// challenge link opened
 function chalParam(){const m=/[?&]c=([A-Za-z0-9]{6,12})/.exec(location.search);if(m)return m[1];const sp=TG&&TG.initDataUnsafe&&TG.initDataUnsafe.start_param||'';const t=/^c([A-Za-z0-9]{6,12})$/.exec(sp);return t?t[1]:null;}
 async function chalLoad(force){
   if(!ONLINE)return;const id=chalParam();if(!id||(!force&&CHAL&&CHAL.id===id))return;
@@ -57,10 +57,10 @@ function chalStart(){
   S.slots=newSlots(S.formation);S.taken=new Set();S.wheel=null;S.rerolls=MODES[S.mode].rerolls;
   document.getElementById('modeLabel').textContent=`Виклик · ${S.formation} · ${MODES[S.mode].name}`;renderDraft();go(2);
 }
-// після сезону: порівняння з викликом і запис результату
+// after the season: compare with the challenge and save the result
 function chalAfterSeason(r){
   const line=document.getElementById('chalLine'),box=document.getElementById('chalBox');
-  const can=ONLINE&&S.chal&&!S.daily&&S.format==='classic';   // 0.60: плитка «Виклик» відкриває блок (варіант A)
+  const can=ONLINE&&S.chal&&!S.daily&&S.format==='classic';   // the Challenge tile opens this block
   if(box)box.hidden=true;const tile=document.getElementById('chalOpen');if(tile)tile.hidden=!can;
   const ni=document.getElementById('chalName');if(ni){ni.hidden=!!TGU;if(!ni.value)ni.value=myName();}
   document.getElementById('chalMsg').textContent='';

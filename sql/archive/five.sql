@@ -1,6 +1,6 @@
--- НЕ ЗАПУСКАТИ (архів, 0.67). Старий SQL: відкриває пряму запис для anon і зламає крок 2 (v054_close_writes). Для нової бази — README, розділ sql/.
--- 30-0 УПЛ · v0.38 · 5×5 онлайн: кімнати, учасники, піки
--- Вставити цілком у Supabase → SQL Editor → Run
+-- DO NOT RUN (archived). Legacy SQL: re-opens direct anon writes and breaks v054_close_writes. For a new DB see README, section sql/.
+-- v0.38: online 5x5, rooms, members, picks
+-- Run the whole file in Supabase SQL Editor.
 
 create table if not exists public.f5_rooms (
   id          text primary key,
@@ -26,12 +26,12 @@ create table if not exists public.f5_players (
 create table if not exists public.f5_picks (
   room_id    text not null references public.f5_rooms(id) on delete cascade,
   seat       int  not null,
-  k          int  not null check (k between 0 and 4),   -- номер піку цього гравця
-  n          int  not null,                               -- загальний номер піку (для «по черзі»)
+  k          int  not null check (k between 0 and 4),   -- pick index of this player
+  n          int  not null,                               -- global pick index (for alternating turns)
   club_idx   int  not null,
   person_id  text not null,
   slot_idx   int  not null,
-  ptr        int  not null default 0,                     -- позиція в спільній послідовності колеса після цього піку
+  ptr        int  not null default 0,                     -- position in the shared wheel sequence after this pick
   created_at timestamptz not null default now(),
   primary key (room_id, seat, k)
 );

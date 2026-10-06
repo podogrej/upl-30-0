@@ -1,5 +1,5 @@
-// 0.69: у Telegram гра вимикає згортання Mini App свайпом униз (disableVerticalSwipes) — свайп по сторінці лише гортає.
-// Запуск з кореня: node tools/tests/tg_swipes.js
+// In Telegram the game disables swipe-down-to-collapse of the Mini App (disableVerticalSwipes), so a swipe only scrolls the page.
+// Run from repo root: node tools/tests/tg_swipes.js
 const {openSite,checker}=require('./_site.js');
 (async()=>{const T=checker('tg_swipes');
   const {b,pg,errs}=await openSite({tg:{initData:'x',platform:'ios'},hash:'#tgWebAppData=x'});

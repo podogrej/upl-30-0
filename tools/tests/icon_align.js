@@ -1,11 +1,10 @@
-// 0.69.69 (власник 03.10: «у "Результат перевірено сервером" емодзі нижче тексту — перевірити, щоб ніде такого не було»):
-// на основних екранах кожна іконка/емодзі, що стоїть у рядку з текстом, — центр по вертикалі збігається з центром тексту (±3 px).
-// Запуск з кореня: node tools/tests/icon_align.js
+// On the main screens every icon/emoji inline with text is vertically centered on that text (±3 px).
+// Run from repo root: node tools/tests/icon_align.js
 const {openSite,makeDB,checker,draftSeason,launch}=require('./_site.js');
 const ALIGN=()=>{const bad=[];const vis=e=>!e.closest('[hidden]')&&e.getClientRects().length&&getComputedStyle(e).visibility!=='hidden';
   for(const ic of document.querySelectorAll('.ic,.ico')){if(!vis(ic)||ic.parentElement.closest('.ic'))continue;
     const r=ic.getBoundingClientRect();if(!r.height)continue;const par=ic.parentElement;
-    // найближчий текст у тому самому рядку: текстовий вузол-сусід або текст сусіднього inline-елемента
+    // nearest text on the same line: a sibling text node or the text of an adjacent inline element
     let tn=null;for(const n of par.childNodes){if(n!==ic&&n.nodeType===3&&n.textContent.trim()){tn=n;break;}}
     if(!tn){for(const s of [ic.nextElementSibling,ic.previousElementSibling])if(s&&vis(s)&&getComputedStyle(s).display.startsWith('inline')&&s.textContent.trim()){const w=document.createTreeWalker(s,NodeFilter.SHOW_TEXT);let x;while((x=w.nextNode()))if(x.textContent.trim()){tn=x;break;}if(tn)break;}}
     if(!tn)continue;const rg=document.createRange();rg.selectNodeContents(tn);const lines=[...rg.getClientRects()];
@@ -21,7 +20,7 @@ const ALIGN=()=>{const bad=[];const vis=e=>!e.closest('[hidden]')&&e.getClientRe
   await pg.evaluate(()=>document.querySelectorAll('#s1 details').forEach(d=>d.open=true));await chk('головна, FAQ розгорнуто');
   await pg.click('#acctBtn');await pg.waitForTimeout(400);await pg.click('#ppCabAll').catch(()=>{});await chk('своя сторінка, усі трофеї');
   await pg.click('#homeBtn');await pg.click('#freeOpen');await pg.click('#startBtn');await draftSeason(pg);await pg.waitForTimeout(1500);
-  await pg.evaluate(()=>{const el=document.getElementById('verLine');el.hidden=false;el.innerHTML=window.__dbg.ic('check-decagram','sm')+'Результат перевірено сервером';});   // як у saveSeason після перевірки
+  await pg.evaluate(()=>{const el=document.getElementById('verLine');el.hidden=false;el.innerHTML=window.__dbg.ic('check-decagram','sm')+'Результат перевірено сервером';});   // same as saveSeason after verification
   if(w===390)await (await pg.$('#verLine')).screenshot({path:require('path').join(__dirname,'out','verline.png')});
   await chk('підсумки сезону');
   T.check(!errs.length,`${w}px: помилок JS немає`);await pg.context().close();}

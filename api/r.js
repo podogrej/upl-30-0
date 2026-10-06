@@ -1,8 +1,8 @@
-// 30-0 УПЛ — посилання на результат з превʼю для месенджерів (0.63): /r/<id сезону> (vercel.json → /api/r?id=<id>)
-// Віддає маленьку сторінку з og:title / og:description / og:image (Telegram, WhatsApp, Viber малюють картку) і одразу веде на сайт,
-// де відкривається цей склад (?s=<id>). Читає лише публічні поля сезону публічним ключем — як і сайт. Змінні: SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY (у тесті).
+// 30-0 UPL: result link with messenger preview: /r/<season id> (vercel.json -> /api/r?id=<id>)
+// Serves a tiny page with og:title / og:description / og:image (Telegram, WhatsApp, Viber render a card) and redirects to the site,
+// which opens that squad (?s=<id>). Reads only public season fields with the publishable key, like the site. Env: SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY (test).
 const { SB_URL, plUk } = require('./_lib.js');
-const SB_KEY = (process.env.SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_pEszTOPsCHLgpiPpwB4JKg_SS-X07hY').trim();   // публічний ключ, як на сайті
+const SB_KEY = (process.env.SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_pEszTOPsCHLgpiPpwB4JKg_SS-X07hY').trim();   // publishable key, same as on the site
 const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const FMT = { classic: 'Класика', derby: 'Класичне дербі', oneclub: 'Один клуб', anti: 'Антисезон', legends: 'Ліга легенд' };
 
@@ -11,7 +11,7 @@ async function season(id) {
     try {
       const r = await fetch(`${SB_URL}/rest/v1/seasons?select=${sel}&id=eq.${id}&limit=1`, { headers: { apikey: SB_KEY } });
       if (r.ok) { const j = await r.json(); return j[0] || null; }
-    } catch (e) { /* далі — простіший запит */ }
+    } catch (e) { /* fall back to a simpler query */ }
   }
   return null;
 }
@@ -45,4 +45,4 @@ module.exports = async (req, res) => {
   res.setHeader('Cache-Control', 's-maxage=86400, stale-while-revalidate=604800');
   res.status(200).send(page(site, id, s));
 };
-module.exports.page = page;   // для тесту
+module.exports.page = page;   // for tests

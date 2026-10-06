@@ -1,18 +1,18 @@
 #!/bin/bash
-# База з нуля в локальному Postgres (заглушка Supabase — stub.sql) і перевірки SQL:
-#  - new_db_part_A.sql + v039_part_B.sql + cards_bucket.sql проходять і ПОВТОРНИЙ запуск нічого не ламає (CLAUDE.md, «База»);
-#  - гравець v0.39: player_hello, set_player_name, секрет пристрою (чужий пристрій не перейменує), тригер player_id, strip_verified;
-#  - 0.53 (v053_writes.sql, двічі): device_ok лише для сервера, старий пристрій без секрету не забирає чужу історію (К6),
-#    спільний пристрій не зливає два акаунти (В6), одна офіційна спроба дня (В2), дублі — NOTICE без падіння;
-#  - крок 2 (v054_close_writes.sql, двічі): прямий запис anon/authenticated закрито, читання й сервер працюють;
-#  - 0.55 (v055_backups.sql, двічі): сховище backups приватне, anon/authenticated не читають і не бачать файлів; rate_hit — лише сервер.
-#  - 0.59 (v059_player_page.sql, двічі): імена лише латиницею (правила, транслітерація, міграція старих імен і її повтор), унікальність без регістру, 30 днів, public_id, сторінка гравця, видалення акаунта,
-#    лічильники за гравцем, жодного нового прямого запису для anon; база зі збігами імен і база зі старою версією v059 — доводяться до правил.
-#  - 0.60 (v060_one_player.sql, двічі): питання «Це ти?» при другому вході, відповідь лише тим самим входом, злиття з журналом і відкат (unmerge_players),
-#    «andré» лише власнику (і повторний v059 його не чіпає), пошта для новин (правила, не публічна, стирається з акаунтом), show_r, «Вибір сезону» на сторінці гравця.
-#  - 0.61 (v061_leagues.sql, двічі): ліги 11×11 — створення й вступ лише з входом, коди, зарахування спроб (перевірений сезон, правила й епоха ліги, ліміт спроб), таблиці «за місце» і «сума», найкраща/остання спроба, «Мої ліги».
-#  База — UTF8 з локаллю C (lower() не чіпає кирилицю — як найгірший випадок; ключ імені робить переклад сам).
-# Потрібні бінарники Postgres (/usr/lib/postgresql/*/bin). Запуск з кореня: bash tools/tests/setup.sh   (KEEP=1 — не зупиняти базу)
+# Builds a DB from scratch in local Postgres (Supabase stub: stub.sql) and checks the SQL:
+#  - new_db_part_A.sql + v039_part_B.sql + cards_bucket.sql apply, and a REPEATED run breaks nothing;
+#  - v0.39 player: player_hello, set_player_name, device secret (another device can't rename), player_id trigger, strip_verified;
+#  - v053_writes.sql (twice): device_ok server-only, an old device without a secret can't take over someone else's history (K6),
+#    a shared device doesn't merge two accounts (V6), one official daily attempt (V2), duplicates → NOTICE without failing;
+#  - v054_close_writes.sql (twice): direct anon/authenticated writes closed, reads and server still work;
+#  - v055_backups.sql (twice): backups bucket private, anon/authenticated can't read or list files; rate_hit server-only.
+#  - v059_player_page.sql (twice): Latin-only names (rules, transliteration, migration of old names and its rerun), case-insensitive uniqueness, 30 days, public_id, player page, account deletion,
+#    per-player counters, no new direct anon writes; a DB with name collisions and a DB with the old v059 are brought to the rules.
+#  - v060_one_player.sql (twice): "is this you?" prompt on second sign-in, answer only from the same sign-in, merge with log and rollback (unmerge_players),
+#    "andré" reserved for the admin (rerun of v059 leaves it alone), news email (rules, private, erased with the account), show_r, season pick on the player page.
+#  - v061_leagues.sql (twice): 11×11 leagues: create/join only when signed in, codes, attempt scoring (verified season, league rules and era, attempt limit), "by place" and "sum" tables, best/last attempt, my leagues.
+#  DB is UTF8 with locale C (lower() leaves Cyrillic alone, the worst case; the name key does its own transliteration).
+# Needs Postgres binaries (/usr/lib/postgresql/*/bin). Run from repo root: bash tools/tests/setup.sh   (KEEP=1: keep the DB running)
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 BIN=$(ls -d /usr/lib/postgresql/*/bin 2>/dev/null | sort -V | tail -1); [ -x "$BIN/initdb" ] || { echo "SQL: немає Postgres — пропускаю"; exit 2; }
 D=$(mktemp -d /tmp/upl-pg.XXXXXX); PORT=${PGPORT_TEST:-5439}
@@ -29,7 +29,7 @@ $P -d t1 -f "$ROOT/tools/tests/stub.sql" >/dev/null 2>"$D/err" || { cat "$D/err"
 for pass in 1 2; do for f in new_db_part_A v039_part_B cards_bucket; do
   if $P -d t1 -f "$ROOT/sql/$f.sql" >/dev/null 2>"$D/err"; then ok "запуск $pass: $f.sql"; else bad "запуск $pass: $f.sql — $(grep -v NOTICE "$D/err" | head -3)"; fi
 done; done
-# перевірка = блок plpgsql від імені ролі; assert падає — перевірка не пройшла
+# check = plpgsql block run as a role; a failing assert fails the check
 chk(){ local name="$1" role="$2" sql="$3"
   if $P -d t1 >/dev/null 2>"$D/err" <<SQL
 begin; set local role $role; select set_config('request.jwt.claims', '{"role":"$role"$4}', true);
@@ -70,7 +70,7 @@ chk "link_account: у player_links є device, auth і tg одного гравц
 # ===== 0.53 =====
 LDEV=bbbbbbbb-0000-4000-a000-000000000002; EDEV=bbbbbbbb-0000-4000-a000-000000000003; NDEV=bbbbbbbb-0000-4000-a000-000000000004
 SEC2=fedcba9876543210fedcba9876543210; U2=22222222-2222-4222-a222-222222222222
-# старий пристрій (до 0.39: сезон є, секрету немає) і старий пристрій без історії; «прод»-назви політик дня
+# legacy device (pre-0.39: has a season, no secret) and a legacy device without history; production names of the daily policies
 $P -d t1 >/dev/null 2>"$D/err" <<SQL || { cat "$D/err"; exit 1; }
 begin; set local role anon; select set_config('request.jwt.claims', '{"role":"anon"}', true);
 insert into seasons(device_id, mode, format, formation, w, d, l, pts, place, gf, ga, nickname) values ('$LDEV', 'normal', 'classic', '4-4-2', 10, 10, 10, 40, 8, 30, 30, 'Власник');
@@ -79,7 +79,7 @@ select player_for_device('$EDEV');
 update players set name = 'Власник' where id = (select player_id from player_links where key = '$LDEV');
 create policy "insert today" on daily_results for insert to anon with check (day between (now() at time zone 'Europe/Kyiv')::date - 1 and (now() at time zone 'Europe/Kyiv')::date);
 create policy "read all" on daily_results for select to anon using (true);
--- лише для тесту: читати player_links (RLS) з перевірок від імені anon/authenticated
+-- test only: let anon/authenticated checks read player_links (RLS)
 create function t_link(p_kind text, p_key text) returns uuid language sql security definer as \$\$ select player_id from player_links where kind = p_kind and key = p_key \$\$;
 create function t_row(p_key text) returns player_links language sql security definer as \$\$ select * from player_links where kind = 'device' and key = p_key \$\$;
 SQL
@@ -141,14 +141,14 @@ chk "В2: друга офіційна спроба дня того ж прист
   exception when unique_violation then null; end;"
 chk "сайт 0.52 у кроці 1: anon ще пише сезон напряму" anon "
   insert into seasons(device_id, mode, format, formation, w, d, l, pts, place, gf, ga) values ('$NDEV', 'normal', 'classic', '4-4-2', 10, 10, 10, 40, 8, 30, 30);"
-# В2 у базі, де дублі вже є: файл не падає, індекс не створено
+# V2 on a DB that already has duplicates: file doesn't fail, index is not created
 $P -c "create database t2" >/dev/null
 if { $P -d t2 -f "$ROOT/tools/tests/stub.sql" && $P -d t2 -f "$ROOT/sql/new_db_part_A.sql" && $P -d t2 -f "$ROOT/sql/v039_part_B.sql" \
      && $P -d t2 -c "insert into season_seeds(device_id, xi_hash, seed, day, daily, official) select '$DEV', 'x', g, '2026-10-01', true, true from generate_series(1,2) g" \
      && $P -d t2 -f "$ROOT/sql/v053_writes.sql"; } >/dev/null 2>"$D/err" && grep -q "НЕ створено" "$D/err" \
    && [ "$($P -d t2 -tAc "select count(*) from pg_indexes where indexname = 'season_seeds_official_uq'")" = 0 ]
 then ok "В2: дублі вже є — NOTICE, індекс не створено, файл не падає"; else bad "В2: база з дублями — $(grep -v NOTICE "$D/err" | head -2)"; fi
-# ===== крок 2 =====
+# ===== v054: close direct writes =====
 for pass in 1 2; do
   if $P -d t1 -f "$ROOT/sql/v054_close_writes.sql" >/dev/null 2>"$D/err"; then ok "запуск $pass: v054_close_writes.sql"; else bad "запуск $pass: v054_close_writes.sql — $(grep -v NOTICE "$D/err" | head -3)"; fi
 done
@@ -176,7 +176,7 @@ chk "крок 2: сервер пише (player_id — з пристрою), devi
   insert into trophies(device_id, trophy) values ('$LDEV', 'srv') on conflict do nothing;
   insert into daily_results(day, device_id, nickname, w, d, l, pts, place, gf, ga, formation, xi, verified) values ((now() at time zone 'Europe/Kyiv')::date, '$LDEV', 'Сервер', 10, 10, 10, 40, 8, 30, 30, '4-4-2', '[]', true);
   assert not legacy_writes_open(), 'legacy ще відкрито';"
-# ===== 0.55: резервні копії й обмеження частоти =====
+# ===== v055: backups and rate limiting =====
 $P -d t1 -c "update storage.buckets set public = true where id = 'backups'" >/dev/null
 for pass in 1 2; do
   if $P -d t1 -f "$ROOT/sql/v055_backups.sql" >/dev/null 2>"$D/err"; then ok "запуск $pass: v055_backups.sql"; else bad "запуск $pass: v055_backups.sql — $(grep -v NOTICE "$D/err" | head -3)"; fi
@@ -206,9 +206,9 @@ $P -d t1 -c "insert into rate_hits(key, minute, n) select 'old'||g, now() - inte
 chk "v055: старі хвилини прибираються" service_role "
   declare i int; begin for i in 1..400 loop perform rate_hit('clean', 1000); end loop;
   assert (select count(*) from rate_hits where key like 'old%') = 0, 'не прибрано'; end;"
-# ===== 0.59: сторінка гравця й імена (лише латиниця, рішення власника 30.09.2026) =====
+# ===== v059: player page and names (Latin only) =====
 $P -d t1 -c "select count(*) from pg_policies" -tA > "$D/pol_before" 2>/dev/null
-$P -d t1 -c "insert into players(anon_name, name) values ('Brave Fox', 'Вітя'), ('Calm Owl', 'andré'), ('Bold Hawk', 'Anna Maria'), ('Quiet Lynx', 'Щербак')" >/dev/null   # старі імена: кирилиця, «é», пробіл і великі літери
+$P -d t1 -c "insert into players(anon_name, name) values ('Brave Fox', 'Вітя'), ('Calm Owl', 'andré'), ('Bold Hawk', 'Anna Maria'), ('Quiet Lynx', 'Щербак')" >/dev/null   # legacy names: Cyrillic, "é", space and uppercase
 snap(){ $P -d t1 -tAc "select string_agg(id || ':' || coalesce(name, '-') || ':' || anon_name || ':' || coalesce(name_changed_at::text, '-'), ',' order by id) from players"; }
 if $P -d t1 -f "$ROOT/sql/v059_player_page.sql" -tA >"$D/ren1" 2>"$D/err"; then ok "запуск 1: v059_player_page.sql"; else bad "запуск 1: v059_player_page.sql — $(grep -v NOTICE "$D/err" | head -3)"; fi
 S1=$(snap)
@@ -303,7 +303,7 @@ chk "delete_player: ім'я й прив'язки стерто, результа�
   end;"
 chk "delete_player: вхід іншого гравця — відмова" authenticated "
   begin j := delete_player('$DEV', '$SEC'); assert false, 'видалив чужого'; exception when sqlstate '28000' then null; end;" ',"sub":"'$U2'"'
-# ===== 0.60: «Один гравець» — питання «Це ти?», журнал злиттів, «andré», пошта, show_r, «Вибір сезону» на сторінці =====
+# ===== v060: one player per person: "is this you?" prompt, merge log, "andré", email, show_r, season pick on the page =====
 $P -d t1 -c "select count(*) from pg_policies" -tA > "$D/pol_before60" 2>/dev/null
 for pass in 1 2; do
   if $P -d t1 -f "$ROOT/sql/v060_one_player.sql" >/dev/null 2>"$D/err"; then ok "запуск $pass: v060_one_player.sql"; else bad "запуск $pass: v060_one_player.sql — $(grep -v NOTICE "$D/err" | head -3)"; fi
@@ -317,7 +317,7 @@ chk "v060: нових політик немає; нові таблиці зак�
 MX=eeeeeeee-0000-4000-a000-000000000001; UT=33333333-3333-4333-a333-333333333333; UG=44444444-4444-4444-a444-444444444444
 $P -d t1 >/dev/null 2>"$D/err" <<SQL || { cat "$D/err"; exit 1; }
 insert into auth.users(id,email) values ('$UT','tg-777@users.upl-30-0.vercel.app'), ('$UG','g60@example.com');
--- лише для тесту: читати закриті таблиці 0.60 з перевірок від імені authenticated
+-- test only: let authenticated checks read the closed v060 tables
 create function t_offers() returns bigint language sql security definer as \$\$ select count(*) from merge_offers \$\$;
 create function t_offer() returns uuid language sql security definer as \$\$ select id from merge_offers order by created_at limit 1 \$\$;
 create function t_new_offer(s uuid, d uuid) returns uuid language sql security definer as \$\$ insert into merge_offers(src, dst) values (s, d) returning id \$\$;
@@ -393,7 +393,7 @@ chk "v060: «Видалити акаунт» стирає пошту" anon "
 chk "v060: player_profile — «Вибір сезону» окремим режимом" postgres "
   insert into seasons(device_id, mode, format, formation, w, d, l, pts, place, gf, ga) values ('$DEV', 'pick', 'classic', '4-4-2', 25, 3, 2, 78, 1, 70, 20);
   j := player_profile(t_link('device', '$DEV')); assert j->'best'->'pick' is not null and (j->'best'->'pick'->>'pts')::int = 78, j::text;"
-# ===== 0.61: ліги 11×11 на сайті (fl_*) =====
+# ===== v061: 11×11 leagues on the site (fl_*) =====
 $P -d t1 -c "select count(*) from pg_policies" -tA > "$D/pol_before61" 2>/dev/null
 for pass in 1 2; do
   if $P -d t1 -f "$ROOT/sql/v061_leagues.sql" >/dev/null 2>"$D/err"; then ok "запуск $pass: v061_leagues.sql"; else bad "запуск $pass: v061_leagues.sql — $(grep -v NOTICE "$D/err" | head -3)"; fi
@@ -465,7 +465,7 @@ chk "v061: «Це ти?» → «так» повертає локальний п�
   j := merge_answer('$MX', '$SEC', o, true);
   assert (j->'prev_state'->'upl30_tr'->>'seasons')::int = 5, j::text;
   end;" ',"sub":"'$UG'"'
-# ===== 0.63: ліги 5×5 (fl_create5, fl5_submit, fl5_start, fl5_store) =====
+# ===== v063: 5×5 leagues (fl_create5, fl5_submit, fl5_start, fl5_store) =====
 for pass in 1 2; do
   if $P -d t1 -f "$ROOT/sql/v063_fives.sql" >/dev/null 2>"$D/err"; then ok "запуск $pass: v063_fives.sql"; else bad "запуск $pass: v063_fives.sql — $(grep -v NOTICE "$D/err" | head -3)"; fi
 done
@@ -483,7 +483,7 @@ chk "v063: створити 5×5 — збір 3 год; неправильний
   j := fl_create5('$MX', '$SEC', 'Кубок кума', 3, 1, 'memory', 'all');
   assert j->>'fmt' = '5' and (j->>'over')::boolean = false and json_array_length(j->'fives') = 0 and (j->>'deadline')::timestamptz between now() + interval '2 hours 59 minutes' and now() + interval '3 hours 1 minute', j::text;" ',"sub":"'$UG'"'
 F5ID=$($P -d t1 -tAc "select id from fl_leagues where fmt = '5' order by created_at desc limit 1")
-# у 0.61 «Це ти?» злило гравця LD з гравцем MX — для 5×5 потрібен окремий друг: новий пристрій і новий вхід
+# the v061 section merged player LD into MX, so 5×5 needs a separate friend: new device and new sign-in
 L3=ffffffff-0000-4000-a000-000000000063; U3=33333333-0000-4000-a000-000000000063
 $P -d t1 -c "select player_hello('$L3', '$SEC')" >/dev/null
 chk "v063: друг — новий вхід на своєму пристрої" authenticated "k := link_account('$L3', '$SEC');" ',"sub":"'$U3'"'
@@ -511,7 +511,7 @@ chk "v063: турнір пише лише сервер, один раз; ліг�
   j := fl_mine('$L3', '$SEC'); assert exists (select 1 from json_array_elements(j) x where x->>'fmt' = '5' and (x->>'my_five')::boolean and (x->>'over')::boolean and (x->>'fives')::int = 2), j::text;"
 chk "v063: сезон з кодом ліги 5×5 не зараховується" postgres "
   declare a bigint; begin a := t_fl_season('$MX', '$F5ID', 70); assert fl_record(a) is null, 'зараховано'; end;"
-# база, де збіги імен уже є: v059_name_conflicts.sql їх показує; v059 дає молодшому номер і створює індекс
+# DB with existing name collisions: v059_name_conflicts.sql lists them; v059 suffixes the newer one and creates the index
 $P -c "create database t3" >/dev/null
 if { $P -d t3 -f "$ROOT/tools/tests/stub.sql" && $P -d t3 -f "$ROOT/sql/new_db_part_A.sql" && $P -d t3 -f "$ROOT/sql/v039_part_B.sql" \
      && $P -d t3 -c "insert into players(anon_name, name, created_at) values ('a', 'Вітя', now() - interval '2 days'), ('b', 'вітя ', now() - interval '1 day'), ('c', 'Oleg', now()), ('d', 'vitia', now())" \
@@ -522,7 +522,7 @@ if { $P -d t3 -f "$ROOT/tools/tests/stub.sql" && $P -d t3 -f "$ROOT/sql/new_db_p
    && [ "$($P -d t3 -tAc "select string_agg(anon_name || '=' || name, ',' order by anon_name) from players")" = "a=vitia2,b=vitia3,c=oleg,d=vitia" ]
 then ok "збіги імен: v059_name_conflicts.sql показує; v059 — ім'я за правилами лишається (vitia), переписані — з номером (vitia2, vitia3), індекс створено"
 else bad "база зі збігами імен — $(grep -v NOTICE "$D/err" | head -2) $($P -d t3 -tAc "select string_agg(anon_name || '=' || name, ',' order by anon_name) from players")"; fi
-# тестова база, де вже виконано ПОПЕРЕДНЮ версію v059 (імена кирилицею в нижньому регістрі, індекс на name_key): нова версія доводить до латиниці
+# test DB where the PREVIOUS v059 was already applied (lowercase Cyrillic names, index on name_key): the new version converts to Latin
 OLD059=$(git -C "$ROOT" show 8765782:sql/v059_player_page.sql 2>/dev/null)
 if [ -z "$OLD059" ]; then echo "(стара v059 недоступна в git — пропускаю)"; else
 $P -c "create database t4" >/dev/null
@@ -535,7 +535,7 @@ if { $P -d t4 -f "$ROOT/tools/tests/stub.sql" && $P -d t4 -f "$ROOT/sql/new_db_p
 then ok "база зі старою v059: нова версія переписує імена латиницею (вітя → vitia, андрій ш → andrii_sh), анонімні — silent_owl, двічі без помилок"
 else bad "база зі старою v059 — $(grep -v NOTICE "$D/err" | head -2) $($P -d t4 -tAc "select string_agg(name, ',') from players where name is not null")"; fi
 fi
-# ===== 0.68: fl_mine volatile; client_errors — лише сервер =====
+# ===== v068: fl_mine volatile; client_errors server-only =====
 for pass in 1 2; do for f in v068_fl_mine_volatile v068_client_errors; do
   if $P -d t1 -f "$ROOT/sql/$f.sql" >/dev/null 2>"$D/err"; then ok "запуск $pass: $f.sql"; else bad "запуск $pass: $f.sql — $(grep -v NOTICE "$D/err" | head -3)"; fi
 done; done
@@ -544,6 +544,29 @@ chk "v068: fl_mine — volatile (PostgREST не кличе її в транза�
   assert not has_table_privilege('anon', 'client_errors', 'insert') and not has_table_privilege('anon', 'client_errors', 'select')
      and not has_table_privilege('authenticated', 'client_errors', 'insert'), 'права client_errors';
   insert into client_errors(version, msg) values ('0.68', 'x'); assert (select count(*) from client_errors) >= 1, 'сервер пише';"
+# ===== feedback and channel_posts (channel queue): server-only =====
+for pass in 1 2; do for f in v0695_feedback v06969_feedback_site v06997_channel_posts; do
+  if $P -d t1 -f "$ROOT/sql/$f.sql" >/dev/null 2>"$D/err"; then ok "запуск $pass: $f.sql"; else bad "запуск $pass: $f.sql — $(grep -v NOTICE "$D/err" | head -3)"; fi
+done; done
+chk "v0695/v06969: feedback закрита для anon/authenticated, нові колонки є" postgres "
+  assert not has_table_privilege('anon', 'feedback', 'select') and not has_table_privilege('anon', 'feedback', 'insert') and not has_table_privilege('authenticated', 'feedback', 'insert'), 'права feedback';
+  insert into feedback(kind, text, source, contact, version) values ('text', 'x', 'site', 'a@b.c', '0.69.97');"
+chk "v06997: channel_posts закрита для anon/authenticated; статуси, джерела й довжина перевіряються" postgres "
+  assert not has_table_privilege('anon', 'channel_posts', 'select') and not has_table_privilege('anon', 'channel_posts', 'insert')
+     and not has_table_privilege('authenticated', 'channel_posts', 'select') and not has_table_privilege('authenticated', 'channel_posts', 'update'), 'права channel_posts';
+  insert into channel_posts(text, publish_at) values ('<b>Привіт</b>', now());
+  assert (select status from channel_posts order by id desc limit 1) = 'draft' and (select source from channel_posts order by id desc limit 1) = 'chat', 'типові значення';
+  insert into channel_posts(text, image_url, publish_at) values ('<b>' || repeat('x', 1024) || '</b>', 'file', now());
+  begin insert into channel_posts(text, image_url, publish_at) values (repeat('x', 1025), 'file', now()); assert false, 'довгий підпис прийнято'; exception when check_violation then null; end;
+  begin insert into channel_posts(text, publish_at) values (repeat('x', 4097), now()); assert false, 'довгий текст прийнято'; exception when check_violation then null; end;
+  begin insert into channel_posts(text, publish_at, status) values ('x', now(), 'weird'); assert false, 'чужий статус прийнято'; exception when check_violation then null; end;
+  begin insert into channel_posts(text, publish_at, source) values ('x', now(), 'bot'); assert false, 'чуже джерело прийнято'; exception when check_violation then null; end;"
+# upgrade from the earlier test-DB version: rows with old statuses must not break the re-run
+$P -d t1 -q -c "alter table channel_posts drop constraint channel_posts_status_chk; insert into channel_posts(text, publish_at, status) values ('old-a', now(), 'approved'), ('old-s', now(), 'skipped');" >/dev/null 2>&1
+if $P -d t1 -f "$ROOT/sql/v06997_channel_posts.sql" >/dev/null 2>"$D/err"; then ok "v06997 поверх старої версії (approved/skipped)"; else bad "v06997 поверх старої версії — $(grep -v NOTICE "$D/err" | head -3)"; fi
+chk "v06997: старі статуси approved → pending_approval, skipped → rejected" postgres "
+  assert (select status from channel_posts where text = 'old-a') = 'pending_approval' and (select status from channel_posts where text = 'old-s') = 'rejected', 'старі статуси';
+  assert exists (select 1 from pg_constraint where conname = 'channel_posts_status_chk'), 'перевірка статусу є';"
 echo "база: $D (порт $PORT)"
 [ $FAIL = 0 ] && echo "SQL: УСЕ ГАРАЗД ($N перевірок)" || echo "SQL: ПРОБЛЕМИ $FAIL/$N"
 exit $((FAIL>0))

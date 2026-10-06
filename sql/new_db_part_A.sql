@@ -1,4 +1,4 @@
--- 30-0 УПЛ · ЧАСТИНА A · лише ТЕСТОВА база (upl-30-0-test): базові таблиці
+-- 30-0 UPL, part A, TEST DB only (upl-30-0-test): base tables
 create table if not exists public.seasons (
   id bigint generated always as identity primary key,
 created_at timestamptz not null default now(),

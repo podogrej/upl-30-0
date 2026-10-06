@@ -1,8 +1,8 @@
-// 30-0 УПЛ — видача seed сезону (адреса /api/seed)
-// Браузер надсилає зібраний склад перед симуляцією; сервер запам'ятовує склад і видає випадковий seed.
-// Так результат не можна «підібрати» перебором seed у себе, а сервер потім перерахує сезон (/api/verify, /api/save).
-// З 0.53 браузер надсилає й секрет пристрою (secret): чужий пристрій не «спалить» офіційну спробу дня (аудит К5).
-// Без секрету (сайт 0.52) — лише до кроку 2 (sql/v054_close_writes.sql → legacy_writes_open() = false).
+// 30-0 UPL: season seed issuance (/api/seed)
+// The browser sends the built squad before simulation; the server stores it and issues a random seed.
+// So the result can't be tuned by brute-forcing seeds locally, and the server later recomputes the season (/api/verify, /api/save).
+// The browser also sends the device secret: another device can't burn the official daily attempt (audit K5).
+// Without a secret (legacy clients): only until step 2 (sql/v054_close_writes.sql -> legacy_writes_open() = false).
 const crypto = require('crypto');
 const { sb, deviceOk, legacyOpen, body, kyivDate, uuidRe, rateLimit } = require('./_device.js');
 const xiHash = xi => crypto.createHash('sha256').update(xi.map(x => `${x.id}|${x.slot}|${x.c}|${x.y}`).join(';')).digest('hex');
@@ -19,14 +19,14 @@ module.exports = async (req, res) => {
     stage = 'device';
     if (b.secret != null) {
       const d = await deviceOk(b.device_id, b.secret);
-      if (d.status && !d.fallback) return res.status(d.status).json({ error: d.error });   // fallback: SQL 0.53 ще не виконано — як раніше
+      if (d.status && !d.fallback) return res.status(d.status).json({ error: d.error });   // fallback: SQL 0.53 not applied, legacy behaviour
     } else if (!(await legacyOpen())) return res.status(401).json({ error: 'secret?' });
     const day = kyivDate();
     const daily = !!b.daily;
     let official = false;
     stage = 'daily';
     if (daily) {
-      // офіційна лише перша спроба дня з цього пристрою
+      // only the first attempt of the day from this device is official
       const prev = await sb(`season_seeds?device_id=eq.${b.device_id}&day=eq.${day}&daily=is.true&official=is.true&select=id&limit=1`) || [];
       official = prev.length === 0;
     }
@@ -36,7 +36,7 @@ module.exports = async (req, res) => {
     let ins;
     try { [ins] = await sb('season_seeds?select=id', { method: 'POST', prefer: 'return=representation', body: row }) || []; }
     catch (e) {
-      // В2: два запити одночасно — унікальний індекс (season_seeds_official_uq) пропускає лише одну офіційну спробу; друга — звичайна
+      // audit V2: concurrent requests: unique index season_seeds_official_uq lets only one official attempt through; the other is regular
       if (!(official && (e.status === 409 || /23505/.test(e.body || '')))) throw e;
       row.official = official = false;
       [ins] = await sb('season_seeds?select=id', { method: 'POST', prefer: 'return=representation', body: row }) || [];

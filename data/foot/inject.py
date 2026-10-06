@@ -1,5 +1,5 @@
-"""Вписує робочу ногу в src/pool.json окремим словником "foot": {person_id: "L"|"R"|"B"} (картки гравців не змінюються).
-Джерело — data/foot/foot.csv (кожен рядок має source і url). Запуск з кореня: python3 data/foot/inject.py
+"""Writes preferred foot into src/pool.json as a separate dict "foot": {person_id: "L"|"R"|"B"} (player cards unchanged).
+Source: data/foot/foot.csv (every row has source and url). Run from repo root: python3 data/foot/inject.py
 """
 import json, csv
 pool = json.load(open('src/pool.json'))

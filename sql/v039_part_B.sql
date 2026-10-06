@@ -1,4 +1,4 @@
--- 30-0 УПЛ · ЧАСТИНА B · v0.39: 5×5 + єдиний гравець (і тестова, і основна база)
+-- 30-0 UPL, part B, v0.39: 5x5 mode + single player identity (both test and main DB)
 create table if not exists public.f5_rooms (
   id text primary key,
 created_at timestamptz not null default now(),

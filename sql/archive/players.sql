@@ -1,10 +1,10 @@
--- НЕ ЗАПУСКАТИ (архів, 0.67). Старий SQL: відкриває пряму запис для anon і зламає крок 2 (v054_close_writes). Для нової бази — README, розділ sql/.
--- 30-0 УПЛ · v0.39 · єдиний гравець: одна людина — один запис «гравець»; пристрої та входи (Google, Telegram) прив'язуються до нього
--- Вставити цілком у Supabase → SQL Editor → Run. Можна запускати повторно — нічого не зламається.
+-- DO NOT RUN (archived). Legacy SQL: re-opens direct anon writes and breaks v054_close_writes. For a new DB see README, section sql/.
+-- v0.39: unified player, one person = one player row; devices and logins (Google, Telegram) link to it
+-- Run the whole file in Supabase SQL Editor. Idempotent.
 
 create extension if not exists pgcrypto;
 
--- ---------- гравці (публічне: номер та імена) ----------
+-- ---------- players (public: id and names) ----------
 create table if not exists public.players (
   id          uuid primary key default gen_random_uuid(),
   created_at  timestamptz not null default now(),
@@ -17,8 +17,8 @@ alter table public.players enable row level security;
 drop policy if exists "players read" on public.players;
 create policy "players read" on public.players for select to anon, authenticated using (true);
 
--- ---------- прив'язки (приватне: лише сервер і функції нижче) ----------
--- kind: device — пристрій (key = device_id), auth — акаунт Google/Telegram (key = auth user id), tg — Telegram id
+-- ---------- links (private: server and the functions below only) ----------
+-- kind: device (key = device_id), auth = Google/Telegram account (key = auth user id), tg = Telegram id
 create table if not exists public.player_links (
   kind        text not null check (kind in ('device','auth','tg')),
   key         text not null,
@@ -30,7 +30,7 @@ create table if not exists public.player_links (
 create index if not exists player_links_player_idx on public.player_links (player_id);
 alter table public.player_links enable row level security;
 
--- ---------- анонімне ім'я: «Silent Owl» ----------
+-- ---------- anonymous name, e.g. "Silent Owl" ----------
 create or replace function public.anon_name() returns text language sql volatile as $$
   select (array['Silent','Swift','Clever','Brave','Lucky','Sneaky','Calm','Bold','Quiet','Wild','Sharp','Happy',
                 'Mighty','Rapid','Hidden','Golden','Cosmic','Stormy','Sunny','Frosty','Nimble','Fearless','Curious','Steady'])[1 + floor(random() * 24)::int]
@@ -39,7 +39,7 @@ create or replace function public.anon_name() returns text language sql volatile
                 'Falcon','Raven','Bison','Hare','Moose','Panther','Tiger','Dolphin','Hedgehog','Squirrel','Marten','Crane'])[1 + floor(random() * 24)::int];
 $$;
 
--- гравець цього пристрою; якщо пристрій новий — створюємо гравця
+-- player for this device; creates one for a new device
 create or replace function public.player_for_device(p_device uuid) returns uuid language plpgsql security definer set search_path = public as $$
 declare pid uuid;
 begin
@@ -57,7 +57,7 @@ create or replace function public.player_for_auth(p_uid uuid) returns uuid langu
   select player_id from player_links where kind = 'auth' and key = p_uid::text;
 $$;
 
--- ---------- player_id у всіх таблицях з результатами (ставить база, не браузер) ----------
+-- ---------- player_id in all result tables (set by the DB, not the client) ----------
 alter table public.seasons           add column if not exists player_id uuid references public.players(id);
 alter table public.daily_results     add column if not exists player_id uuid references public.players(id);
 alter table public.trophies          add column if not exists player_id uuid references public.players(id);
@@ -69,7 +69,7 @@ alter table public.league_members    add column if not exists player_id uuid ref
 create index if not exists seasons_player_idx on public.seasons (player_id, created_at desc);
 create index if not exists daily_player_idx   on public.daily_results (player_id);
 
--- чемпіонат (на майбутнє — інші ліги), версія даних, різниця м'ячів для сортування таблиці
+-- championship (reserved for other leagues), data version, goal difference for table sorting
 alter table public.seasons       add column if not exists competition  text not null default 'upl';
 alter table public.daily_results add column if not exists competition  text not null default 'upl';
 alter table public.challenges    add column if not exists competition  text not null default 'upl';
@@ -105,7 +105,7 @@ create trigger league_results_pid before insert on public.league_results for eac
 drop trigger if exists league_members_pid on public.league_members;
 create trigger league_members_pid before insert on public.league_members for each row execute function public.set_player_from_tg();
 
--- ---------- злиття двох гравців в одного (коли людина увійшла в акаунт з нового пристрою) ----------
+-- ---------- merge two players into one (account login from a new device) ----------
 create or replace function public.merge_players(p_src uuid, p_dst uuid) returns void language plpgsql security definer set search_path = public as $$
 begin
   if p_src is null or p_dst is null or p_src = p_dst then return; end if;
@@ -122,8 +122,8 @@ begin
   update players set merged_into = p_dst where id = p_src;
 end $$;
 
--- перевірка секрету пристрою: device_id видно в таблицях, тому діяти від імені пристрою можна лише з його секретом.
--- Перший, хто прийшов із секретом, його й закріплює (пристрої, що грали до 0.39).
+-- device secret check: device_id is public in tables, so acting as a device requires its secret.
+-- First caller with a secret pins it (devices created before 0.39).
 create or replace function public.device_check(p_device uuid, p_secret text) returns uuid language plpgsql security definer set search_path = public as $$
 declare pid uuid; h text; want text;
 begin
@@ -136,13 +136,13 @@ begin
   return pid;
 end $$;
 
--- volatile, не stable: інакше в тому самому запиті не видно щойно створеного гравця
+-- volatile, not stable: otherwise a player created in the same query is not visible
 create or replace function public.player_json(p_id uuid) returns json language sql volatile security definer set search_path = public as $$
   select json_build_object('id', id, 'name', name, 'anon_name', anon_name) from players where id = p_id;
 $$;
 
--- ---------- те, що викликає гра ----------
--- «привіт»: хто я на цьому пристрої
+-- ---------- RPCs called by the game ----------
+-- hello: resolve the player for this device
 create or replace function public.player_hello(p_device uuid, p_secret text) returns json language plpgsql security definer set search_path = public as $$
 declare pid uuid;
 begin
@@ -150,7 +150,7 @@ begin
   return public.player_json(pid);
 end $$;
 
--- змінити ім'я (порожнє — повернутися до анонімного)
+-- rename (empty = revert to anonymous name)
 create or replace function public.set_player_name(p_device uuid, p_secret text, p_name text) returns json language plpgsql security definer set search_path = public as $$
 declare pid uuid; nm text := nullif(btrim(coalesce(p_name, '')), '');
 begin
@@ -160,7 +160,7 @@ begin
   return public.player_json(pid);
 end $$;
 
--- після входу в акаунт: пристрій і акаунт — один гравець; якщо акаунт уже мав гравця — зливаємо
+-- after sign-in: device and account become one player; merge if the account already had one
 create or replace function public.link_account(p_device uuid, p_secret text) returns json language plpgsql security definer set search_path = public as $$
 declare uid uuid := auth.uid(); dev uuid; acc uuid; tgid text;
 begin
@@ -191,8 +191,8 @@ grant  execute on function public.player_hello(uuid, text)       to anon, authen
 grant  execute on function public.set_player_name(uuid, text, text) to anon, authenticated;
 grant  execute on function public.link_account(uuid, text)       to authenticated;
 
--- ---------- перенесення того, що вже зіграно ----------
--- кожен пристрій, що вже грав, отримує гравця
+-- ---------- backfill existing results ----------
+-- every device that has played gets a player
 select public.player_for_device(d) from (
   select device_id d from seasons union select device_id from daily_results union select device_id from trophies
   union select device_id from challenges union select device_id from challenge_results union select device_id from f5_players
@@ -205,14 +205,14 @@ update challenges        t set player_id = l.player_id from player_links l where
 update challenge_results t set player_id = l.player_id from player_links l where l.kind = 'device' and l.key = t.device_id::text and t.player_id is null;
 update f5_players        t set player_id = l.player_id from player_links l where l.kind = 'device' and l.key = t.device_id::text and t.player_id is null;
 
--- ім'я: останній нік, яким гравець підписувався
+-- name: the player's latest nick
 update players p set name = x.nick
 from (select distinct on (device_id) device_id, btrim(nickname) nick from seasons
       where nickname is not null and length(btrim(nickname)) between 2 and 24 order by device_id, created_at desc) x
 join player_links l on l.kind = 'device' and l.key = x.device_id::text
 where p.id = l.player_id and p.name is null;
 
--- один акаунт грав з кількох пристроїв — зливаємо в одного гравця
+-- account used on several devices: merge into one player
 do $$
 declare r record; i int;
 begin
@@ -226,7 +226,7 @@ select distinct on (user_id) 'auth', user_id::text, player_id from seasons
 where user_id is not null and player_id is not null order by user_id, created_at
 on conflict (kind, key) do nothing;
 
--- Telegram-акаунти: прив'язка Telegram id → гравець, щоб ліги груп теж знали гравця
+-- Telegram accounts: link Telegram id -> player so group leagues resolve the player
 insert into player_links (kind, key, player_id)
 select 'tg', substring(u.email from '^tg-(\d+)@users\.'), l.player_id
 from auth.users u join player_links l on l.kind = 'auth' and l.key = u.id::text

@@ -1,4 +1,4 @@
-// Браузер і сервер (lib/engine.js) мають порахувати сезон однаково: 10/10 (з 0.60 — ще «Вибір сезону»). Запуск з кореня: node tools/tests/determinism.js
+// Browser and server (lib/engine.js) must compute the same season: 10/10, season-pick mode included. Run from repo root: node tools/tests/determinism.js
 const path=require('path');const {ROOT,openPage,playSeason}=require('./_page.js');
 const E=require(path.join(ROOT,'lib','engine.js'));
 (async()=>{const {b,pg,errs}=await openPage();
@@ -8,7 +8,7 @@ const E=require(path.join(ROOT,'lib','engine.js'));
   await playSeason(pg,fmt,mode,form);
   const c=await pg.evaluate(()=>{const S=window.__dbg.S;const r=S.result;return {seed:r.seed,year:r.year,mode:S.mode,format:S.format,formation:S.formation,
     xi:S.slots.map(s=>({id:s.player.id,name:s.player.name,slot:s.slot,pos:s.player.pos,r:s.player.r,c:s.player.club,y:s.player.y})),W:r.W,D:r.D,L:r.L,gf:r.gf,ga:r.ga,place:r.place}});
-  // 0.65: код клубу для «хімії» сервер бере з пулу за назвою клубу й сезоном — так само, як api/verify.js
+  // server resolves the club code for chemistry from the pool by club name and season, same as api/verify.js
   const ccOf=x=>(E.DATA.clubs.find(k=>k.n===x.c&&k.y===+x.y)||{}).c;c.xi=c.xi.map(x=>({...x,cc:ccOf(x),y:+x.y}));
   const s=E.run({xi:c.xi,mode:c.mode,format:c.format,year:c.year,seed:c.seed});
   const same=s.W===c.W&&s.D===c.D&&s.L===c.L&&s.gf===c.gf&&s.ga===c.ga&&s.place===c.place;if(same)ok++;

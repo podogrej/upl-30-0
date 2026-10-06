@@ -1,17 +1,17 @@
-"""Перевірка «позицій з пам'яті» в positions_manual.csv за Transfermarkt.
+"""Verifies memory-based positions in positions_manual.csv against Transfermarkt.
 
-Рядки, де source = knowledge / own-knowledge / own_knowledge / own (і варіанти з «own-knowledge»), звіряються з профілем
-гравця на transfermarkt.com (поля «Main position» / «Other position»).
-- id tm:<N>  → профіль N;
-- id w:<дата>:<прізвище> → Transfermarkt ID з Wikidata (P2446) серед футболістів з тією ж датою народження (P569) і схожим
-  прізвищем латиницею (≥0.7); далі дата народження на профілі мусить збігтися з нашою, прізвище на профілі — схоже (≥0.7).
-Second Striker → ST (нападник). Якщо на профілі лише загальна позиція («Midfield») — verdict tm_generic, нічого не міняємо.
+Rows with source = knowledge / own-knowledge / own_knowledge / own (and own-knowledge variants) are checked against the
+player's transfermarkt.com profile (Main position / Other position).
+- id tm:<N>  -> profile N;
+- id w:<date>:<surname> -> Transfermarkt ID from Wikidata (P2446) among footballers with the same date of birth (P569) and a similar
+  Latin surname (>=0.7); then the profile's date of birth must match ours and the profile surname must be similar (>=0.7).
+Second Striker -> ST. If the profile only has a generic position (Midfield): verdict tm_generic, nothing changes.
 
-Вихід: data/positions/verify_manual_report.csv; з --apply ще й правка positions_manual.csv
-(main/alts з TM, conf=tm, source=url профілю) лише для знайдених із збігом дати, і тих самих позицій у src/pool.json
-(p[6] main, p[7] alts усіх карток цієї людини — як робить inject_positions.py для ручних рядків).
-Запуск з кореня: python3 data/positions/verify_manual.py <тека для кешу> [--apply]
-Кеш positions_tm.json (tm id → позиції, дата, ім'я) — можна зупиняти й продовжувати; скрипт ідемпотентний.
+Output: data/positions/verify_manual_report.csv; with --apply also updates positions_manual.csv
+(main/alts from TM, conf=tm, source=profile url) only for date-matched hits, and the same positions in src/pool.json
+(p[6] main, p[7] alts of all the person's cards, as inject_positions.py does for manual rows).
+Run from repo root: python3 data/positions/verify_manual.py <cache dir> [--apply]
+Cache positions_tm.json (tm id -> positions, dob, name) allows stop/resume; the script is idempotent.
 """
 import json, csv, os, sys, re, time, subprocess, io, difflib, unicodedata, collections
 
@@ -36,8 +36,8 @@ def jsave(f, o):
     json.dump(o, open(os.path.join(CACHE, f), 'w'), ensure_ascii=False, indent=0)
 
 
-WD = jload('wd_foot.json', {})        # дата → [[label, tm_id]] (спільний кеш з data/foot/collect.py)
-TMP = jload('positions_tm.json', {})  # tm id → {name, dob, main, other[]} або {err}
+WD = jload('wd_foot.json', {})        # date -> [[label, tm_id]] (cache shared with data/foot/collect.py)
+TMP = jload('positions_tm.json', {})  # tm id -> {name, dob, main, other[]} or {err}
 
 
 def is_memory(src):
@@ -66,8 +66,8 @@ def translit(s):
 
 
 def name_sim(pid, label):
-    """найкраща схожість між словами нашого імені (slug з id + ім'я з пулу латиницею) і словами імені з Wikidata/TM
-    (slug іноді — ім'я, а не прізвище: w:…:badr, w:…:chiprian)"""
+    """best similarity between words of our name (slug from id + pool name in Latin) and words of the Wikidata/TM name
+    (the slug is sometimes a first name, not a surname: w:...:badr, w:...:chiprian)"""
     ours = {pid.split(':', 2)[2]} | {translit(t) for t in re.split(r'[\s-]+', names.get(pid, '')) if t}
     theirs = [t for t in re.split(r'[\s-]+', label) if len(latin(t)) >= 3]
     return max((sim(a, b) for a in ours for b in theirs if len(latin(a)) >= 3), default=0)
@@ -118,7 +118,7 @@ def tm_profile(tid, tries=3):
     e['main'] = mm.group(1).strip() if mm else ''
     om = re.search(r'Other position:</dt>(.*?)</dl>', h, re.S)
     e['other'] = [x.strip() for x in re.findall(r'<dd[^>]*>([^<]+)</dd>', om.group(1))] if om else []
-    if not e['main']:   # старі профілі: лише «Position: Attack - Second Striker» або «Position: Midfield»
+    if not e['main']:   # old profiles only have 'Position: Attack - Second Striker' or 'Position: Midfield'
         p = re.search(r'Position: ([A-Za-z -]+?) (?:Foot|Current club|Former International|Joined|Citizenship|Height)', txt)
         e['main'] = p.group(1).split(' - ')[-1].strip() if p else ''
     if not e['name'] or 'Transfermarkt' not in h or 'Human Verification' in h:
@@ -132,11 +132,11 @@ def tm_profile(tid, tries=3):
     return e
 
 
-SEARCH = {k: v for k, v in jload('positions_tm_search.json', {}).items() if all(isinstance(x, list) for x in v)}   # запит → [[slug, tm id]]
+SEARCH = {k: v for k, v in jload('positions_tm_search.json', {}).items() if all(isinstance(x, list) for x in v)}   # query -> [[slug, tm id]]
 
 
 def tm_search(q, tries=3):
-    """запасний шлях, коли у Wikidata немає Transfermarkt ID: пошук на transfermarkt.com за прізвищем латиницею"""
+    """fallback when Wikidata has no Transfermarkt ID: search transfermarkt.com by Latin surname"""
     if q in SEARCH:
         return SEARCH[q]
     time.sleep(6)
@@ -169,7 +169,7 @@ with open(MANUAL, newline='') as f:
     rd = csv.DictReader(f)
     hdr = rd.fieldnames
     allrows = list(rd)
-# список рядків і їхні початкові позиції фіксуються в кеші при першому запуску — повторний запуск після --apply дає той самий звіт
+# rows and their original positions are frozen in the cache on first run, so a rerun after --apply gives the same report
 ORIG = jload('positions_orig.json', {})
 if not ORIG:
     ORIG = {r['person_id']: [r['main'], r['alts'], r['conf'], r['source']] for r in allrows if is_memory(r['source'])}
@@ -191,7 +191,7 @@ for r in todo:
         _, d, slug = pid.split(':', 2)
         c = sorted(((name_sim(pid, lab) if lab else 0, tid) for lab, tid in WD.get(d, [])), reverse=True)
         tids = [tid for s, tid in c if s >= 0.7][:2]
-        if not tids:   # кілька варіантів написання прізвища латиницею (Гармаш → harmash / garmash, Чернат → chernat / cernat)
+        if not tids:   # try several Latin spellings of the surname (e.g. harmash / garmash, chernat / cernat)
             t = translit(names.get(pid, '').split(' ')[-1]) or slug
             g = t.replace('kh', 'h').replace('h', 'g')
             qs = [t, slug, g, g.replace('y', 'i'), g.replace('ts', 'c').replace('ch', 'c'), re.sub('i$', 'y', t.replace('ie', 'ye')), re.sub('ov$', 'ev', g)]
@@ -237,11 +237,11 @@ if APPLY:
         if x:
             r['main'], r['alts'], r['conf'], r['source'] = x['new_main'], x['new_alts'], 'tm', x['url']
     with open(MANUAL, 'w', newline='') as f:
-        w = csv.DictWriter(f, fieldnames=hdr)   # як в оригіналі: CRLF
+        w = csv.DictWriter(f, fieldnames=hdr)   # CRLF, same as the original file
         w.writeheader()
         w.writerows(allrows)
     print('positions_manual.csv: оновлено рядків', len(by))
-    # у пул: як inject_positions.py для ручних рядків — p[6] main, p[7] alts (без часток); інші поля карток не чіпаємо
+    # into the pool as inject_positions.py does for manual rows: p[6] main, p[7] alts (no shares); other card fields untouched
     n = 0
     for c in pool['clubs']:
         for x in c['pl']:

@@ -1,38 +1,38 @@
-"""Виправлення пулу 0.57: картки, які етап 3 прив'язав не до тієї людини (BACKLOG «Данные», 0.54). Повторний запуск нічого не змінює.
-Запуск з кореня репозиторію: python3 data/fixes/fix_pool_057.py
-Далі: python3 data/aliases/apply.py && python3 data/ratings/class_v2.py && python3 data/update_meta.py && python3 data/check_pool.py
+"""Pool fixes: cards that stage 3 attached to the wrong person. Idempotent.
+Run from repo root: python3 data/fixes/fix_pool_057.py
+Then: python3 data/aliases/apply.py && python3 data/ratings/class_v2.py && python3 data/update_meta.py && python3 data/check_pool.py
       && python3 src/build.py && node tools/make_engine.js
 
-Правила (DECISIONS п. 7): id не змінюються і не зникають, чужий id іншій людині не віддаємо. Картка, яку етап 3 віддав не тій людині,
-отримує id справжньої людини; якщо її в пулі немає — Transfermarkt id `tm:<N>` (у всіх знайденому профілі та сама дата народження).
-Старий id лишається на картках людини, якій він справді належить. Картки не переставляються й не додаються — ключі
-pool_ratings_raw.json («рік|клуб|індекс») ті самі, сирий рейтинг картки (етап 4, за статистикою саме цього рядка) не змінюється;
-підсумковий рейтинг — smooth_cameo.final() (згладжування камео залежить від того, чия картка).
+Rules (DECISIONS #7): ids never change or disappear, and an id is never given to a different person. A card that stage 3 gave to the
+wrong person gets the real person's id; if that person is not in the pool, the Transfermarkt id `tm:<N>` (every found profile has the
+same date of birth). The old id stays on the cards of the person it really belongs to. Cards are not reordered or added, so
+pool_ratings_raw.json keys ("year|club|index") stay the same and the raw card rating (stage 4, from this row's stats) is unchanged;
+the final rating comes from smooth_cameo.final() (cameo smoothing depends on whose card it is).
 
-Звідки відомо, що картка чужа: у сирому рядку data/data_v2/ratings_player_seasons.csv (player_name — ПІБ зі складу на uk-вікі)
-інша людина, ніж у id. Друге джерело — профіль і історія переходів Transfermarkt (tmapi.transfermarkt.technology, 30.09.2026).
-Кілька випадків — близнюки з однаковою датою народження (id `w:<дата>:<прізвище>` у них спільний, тому етап 3 їх злив):
-Мазури, Капанадзе, Бабійчуки, Пашаєви, Баранці, Маковські. Карток «другого близнюка», яких у пулі немає зовсім, тут не додаємо (BACKLOG).
+Evidence that a card is someone else's: the raw row in data/data_v2/ratings_player_seasons.csv (player_name = full name from the
+uk-wiki squad) names a different person than the id. Second source: Transfermarkt profile and transfer history (tmapi.transfermarkt.technology).
+Several cases are twins with the same date of birth (shared id `w:<date>:<surname>`, so stage 3 merged them):
+Mazur, Kapanadze, Babiichuk, Pashaiev, Baranets, Makovskyi. Missing cards of the second twin are not added here (BACKLOG).
 
-Джерела по людях (TM = https://www.transfermarkt.com/-/profil/spieler/<N>):
-- Микола Каліщук, TM 999526, 26.11.1967 (та сама дата, що в Анатолія Поліщука): Верес → Карпати 14.03.1993; у Поліщука 1992/93 —
-  лише Волинь (14 М; разом із «Вересом» і «Карпатами» вийшло б 33 М за 30 турів). Позиція — «ЗХ» у складі «Карпат»
-  (uk-вікі «Сезон ФК «Карпати» (Львів) 1992—1993»).
-- Василь Мазур, TM 518654, 23.05.1970, SW → CB (близнюк Сергія, TM 999294: Кривбас → Зоря 11.1992 → Кривбас 1993 → Сіріус 01.1994
-  → Кривбас 07.1995). Рядки Зоря 1992 (30 М), Кривбас 1993–1995 (33/34/17 М) — Василь; Кривбас 1992 (6 М) — Сергій.
-- Віталій Левченко, TM 251328, 28.03.1972 (та сама дата, що в Олексія Коробченка, TM 774168), LB, Таджикистан:
-  ЦСКА-Борисфен 1994 → ЦСКА 1996 → Таврія 01.2001. Коробченко — лише Зоря 1992–1995; його позиція за TM — RW, громадянство (сирі рядки) — Україна.
-- Олексій Кузнецов (id уже є, w:1976-02-23:kuznetsov), TM 969948: Таврія до 01.1995. Картка Таврії 1993/94 — він, не Віктор.
-- Михайло Маковський, TM 92633, 23.04.1977, CM, Білорусь (близнюк Володимира, TM 158439: у «Ворсклі» лише з 01.2000, 15 М).
-  Картка «Ворскли» 1999/2000 (22 М, 1 гол) — рядок Михайла (TM: Динамо → Ворскла 07.1999).
-- Автанділ Капанадзе, TM 843683, 01.12.1962, SS → ST, Грузія (близнюк Таріела, TM 843175): Темп → Нива Т 01.1996.
-  Картки «Ниви» 1997/98 і 1998/99 (28 М 15 г, 29 М 10 г) — рядки Автанділа; решта карток id — Таріел.
-- Руслан Суанов, TM 63164, 18.06.1975, SS → ST, Росія: Металург З 01.2004 – 01.2005 (картка 2003/04, 5 М).
-- Олександр Бабійчук, TM 992337, 02.02.1973, CF → ST (близнюк Сергія, TM 986515): Нива В 01.1997 – 1999 (картка 1996/97).
-- Максим Пашаєв, TM 59114, 04.01.1988, LB (близнюк Павла): Кривбас (оренда) 2007/08, Дніпро з 06.2008 (картки Кривбас 2007, Дніпро 2008).
-  id tm:58961 — це Павло Пашаєв (TM 58961: Кривбас 08–12.2008, Дніпро 2009–2012, …) → решта карток лише перейменовуються.
-- Григорій Баранець, TM 82593, 22.07.1986, AM → CAM (близнюк Бориса, TM 82592): Карпати 07.2010 → Оболонь 02.2011 (картка Карпат 2010/11).
-Тутиченко: окремо, псевдонім у data/aliases/aliases.csv (одна людина, TM 533750); рік народження дубля 1971 → 1970.
+Per-person sources (TM = https://www.transfermarkt.com/-/profil/spieler/<N>):
+- Mykola Kalishchuk, TM 999526, 1967-11-26 (same date as Anatolii Polishchuk): Veres -> Karpaty 1993-03-14; Polishchuk in 1992/93
+  played only for Volyn (14 apps; adding Veres and Karpaty would give 33 apps in 30 rounds). Position DF in the Karpaty squad
+  (uk-wiki Karpaty Lviv 1992-93 season).
+- Vasyl Mazur, TM 518654, 1970-05-23, SW -> CB (twin of Serhii, TM 999294: Kryvbas -> Zorya 11.1992 -> Kryvbas 1993 -> Sirius 01.1994
+  -> Kryvbas 07.1995). Rows Zorya 1992 (30 apps), Kryvbas 1993-1995 (33/34/17 apps) are Vasyl; Kryvbas 1992 (6 apps) is Serhii.
+- Vitalii Levchenko, TM 251328, 1972-03-28 (same date as Oleksii Korobchenko, TM 774168), LB, Tajikistan:
+  CSKA-Borysfen 1994 -> CSKA 1996 -> Tavriya 01.2001. Korobchenko played only for Zorya 1992-1995; TM position RW, citizenship (raw rows) Ukraine.
+- Oleksii Kuznetsov (existing id w:1976-02-23:kuznetsov), TM 969948: Tavriya until 01.1995. The Tavriya 1993/94 card is his, not Viktor's.
+- Mykhailo Makovskyi, TM 92633, 1977-04-23, CM, Belarus (twin of Volodymyr, TM 158439: at Vorskla only from 01.2000, 15 apps).
+  The Vorskla 1999/2000 card (22 apps, 1 goal) is Mykhailo's row (TM: Dynamo -> Vorskla 07.1999).
+- Avtandil Kapanadze, TM 843683, 1962-12-01, SS -> ST, Georgia (twin of Tariel, TM 843175): Temp -> Nyva Ternopil 01.1996.
+  Nyva cards 1997/98 and 1998/99 (28 apps 15 goals, 29 apps 10 goals) are Avtandil's rows; the id's other cards are Tariel's.
+- Ruslan Suanov, TM 63164, 1975-06-18, SS -> ST, Russia: Metalurh Zaporizhzhia 01.2004 - 01.2005 (card 2003/04, 5 apps).
+- Oleksandr Babiichuk, TM 992337, 1973-02-02, CF -> ST (twin of Serhii, TM 986515): Nyva Vinnytsia 01.1997 - 1999 (card 1996/97).
+- Maksym Pashaiev, TM 59114, 1988-01-04, LB (twin of Pavlo): Kryvbas (loan) 2007/08, Dnipro from 06.2008 (cards Kryvbas 2007, Dnipro 2008).
+  id tm:58961 is Pavlo Pashaiev (TM 58961: Kryvbas 08-12.2008, Dnipro 2009-2012, ...) -> his other cards are only renamed.
+- Hryhorii Baranets, TM 82593, 1986-07-22, AM -> CAM (twin of Borys, TM 82592): Karpaty 07.2010 -> Obolon 02.2011 (Karpaty card 2010/11).
+Tutychenko: handled separately as an alias in data/aliases/aliases.csv (one person, TM 533750); duplicate's birth year 1971 -> 1970.
 """
 import json, os, sys
 
@@ -43,8 +43,8 @@ RAW = os.path.join(ROOT, 'data', 'ratings', 'pool_ratings_raw.json')
 sys.path.insert(0, os.path.join(ROOT, 'data', 'ratings'))
 import smooth_cameo as SC
 
-# картка: [ім'я, лінія, рейтинг, матчі, голи, person_id, основна, додаткові, асисти, сухі, громадянство, рік народження]
-UA, TJ, GE, BY, RU = 0, 81, 31, 20, 71   # індекси pool['nats'] (перевіряються нижче)
+# card: [name, line, rating, apps, goals, person_id, main, alts, assists, clean_sheets, nat, birth_year]
+UA, TJ, GE, BY, RU = 0, 81, 31, 20, 71   # pool['nats'] indices (asserted below)
 KALISCHUK = {0: 'Микола Каліщук', 5: 'tm:999526', 6: 'CB', 7: '', 10: UA, 11: 1967}
 V_MAZUR = {0: 'Василь Мазур', 5: 'tm:518654', 6: 'CB', 7: '', 10: UA, 11: 1970}
 LEVCHENKO = {0: 'Віталій Левченко', 5: 'tm:251328', 6: 'LB', 7: '', 10: TJ, 11: 1972}
@@ -56,7 +56,7 @@ KOROBCHENKO = ('Олексій Коробченко', 'w:1972-03-28:korobchenko'
 T_KAPANADZE = ('Таріел Капанадзе', 'w:1962-12-01:kapanadze')
 P_PASHAEV_OLD = ('Максим Пашаєв', 'tm:58961')
 
-REASSIGN = [   # (рік, клуб, (ім'я, id) до виправлення, нові поля {індекс: значення})
+REASSIGN = [   # (year, club, (name, id) before fix, new fields {index: value})
     (1992, 'veres-rivne', POLISCHUK, KALISCHUK),
     (1992, 'karpaty-lviv', POLISCHUK, KALISCHUK),
     (1992, 'zorya-luhansk', S_MAZUR, V_MAZUR),
@@ -80,12 +80,12 @@ REASSIGN = [   # (рік, клуб, (ім'я, id) до виправлення, �
     (2010, 'karpaty-lviv', ('Борис Баранець', 'w:1986-07-22:baranets'),
      {0: 'Григорій Баранець', 5: 'tm:82593', 6: 'CAM', 7: '', 10: UA, 11: 1986}),
 ]
-# людина лишається на своєму id, але поля id були взяті з чужих рядків
+# person keeps their id, but these fields were taken from someone else's rows
 PERSON = {
     'tm:58961': {0: 'Павло Пашаєв'},                     # TM 58961 = Pavlo Pashayev
-    'w:1972-03-28:korobchenko': {6: 'RW', 7: '', 10: UA},  # TM 774168: RW; сирі рядки «Зорі» — Україна (81 = Таджикистан — від Левченка)
+    'w:1972-03-28:korobchenko': {6: 'RW', 7: '', 10: UA},  # TM 774168: RW; raw Zorya rows say Ukraine (81 = Tajikistan came from Levchenko)
 }
-BIRTH_YEAR = {'w:1971-07-10:tutichenko': 1970}   # псевдонім до w:1970-03-05:tutichenko (TM 533750: 05.03.1970)
+BIRTH_YEAR = {'w:1971-07-10:tutichenko': 1970}   # alias of w:1970-03-05:tutichenko (TM 533750: born 1970-03-05)
 
 
 def main():
@@ -105,7 +105,7 @@ def main():
         assert len(hit) == 1, (y, club, before, hit)
         p = cl['pl'][hit[0]]
         if (p[0], p[5]) == before:
-            # новий tm-id не має належати комусь іншому в пулі
+            # the new tm id must not belong to anyone else in the pool
             owners = {q[0] for c in pool['clubs'] for q in c['pl'] if q[5] == new[5]}
             assert owners <= {new[0]}, (new[5], owners)
             touched |= {before[1], new[5]}
@@ -123,10 +123,10 @@ def main():
                 log.append(f'{c["y"]} {c["c"]}: {p[0]} ({p[5]}) — рік народження {p[11]} → {BIRTH_YEAR[p[5]]}')
                 p[11] = BIRTH_YEAR[p[5]]
 
-    # старі id нікуди не зникли
+    # no old id disappeared
     assert ids <= {p[5] for c in pool['clubs'] for p in c['pl']}
 
-    # рейтинг: згладжування камео після зміни «чия картка» — лише для карток зачеплених людей
+    # rating: re-run cameo smoothing after ownership changes; only touched people's cards may change
     alias = pool.get('alias', {})
     canon = lambda i: alias.get(i, i)
     touched_c = {canon(i) for i in touched}

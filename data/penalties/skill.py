@@ -1,28 +1,28 @@
-"""Модель навику пенальті з data/penalties/penalties.csv → data/penalties/skill.md (пропозиція, у грі нічого не змінює).
+"""Penalty skill model: data/penalties/penalties.csv -> data/penalties/skill.md (proposal only, does not change the game).
 
-Пенальтист: байєсова (бета-біноміальна) оцінка реалізації
-    skill = (забив + k·m) / (пробив + k),
-де m — апріорна реалізація для позиції і рейтингу людини, k — «вага апріорі» у пенальті (скільки ударів потрібно,
-щоб власна статистика переважила). m і k оцінюються з самих даних (емпіричний Байєс):
-  - m(група, рейтинг) = m_групи + b·(макс. картка − 85)/10; m_групи — зважена реалізація групи, b — зважений МНК по людях;
-  - k = m(1−m)/σ²_між − 1, де σ²_між — дисперсія реалізації між людьми за вирахуванням біноміального шуму
-    (люди з ≥ 8 ударами); обмежено 10…300.
-Воротар: те саме для частки відбитих (saved / faced), апріорі — середня по воротарях (групи не потрібні).
-Люди без даних TM отримують просто m (для воротарів — середню частку відбитих).
+Taker: Bayesian (beta-binomial) conversion estimate
+    skill = (scored + k*m) / (taken + k),
+where m is the prior conversion for the player's position group and rating, and k is the prior weight in penalties
+(how many attempts it takes for own stats to dominate). m and k are fitted from the data (empirical Bayes):
+  - m(group, rating) = m_group + b*(max card - 85)/10; m_group = weighted group conversion, b = weighted least squares over players;
+  - k = m(1-m)/var_between - 1, where var_between = between-player variance minus binomial noise
+    (players with >= 8 attempts); clamped to 10..300.
+Keeper: same for save rate (saved / faced); prior = mean over keepers (no groups).
+Players without TM data get plain m (keepers: mean save rate).
 
-Запуск з кореня: python3 data/penalties/skill.py            # друкує підсумок
-                 python3 data/penalties/skill.py --md       # + перезаписує data/penalties/skill.md
-                 python3 data/penalties/skill.py --js       # + таблиця для 5×5: src/pen_skill.js
+Run from repo root: python3 data/penalties/skill.py            # print summary
+                    python3 data/penalties/skill.py --md       # + overwrite data/penalties/skill.md
+                    python3 data/penalties/skill.py --js       # + 5x5 table: src/pen_skill.js
 """
 import csv, sys, collections, json
 
 ROWS = list(csv.DictReader(open('data/penalties/penalties.csv', newline='')))
 GROUP = {'ST': 'FW', 'LW': 'W', 'RW': 'W', 'CAM': 'AM', 'LM': 'W', 'RM': 'W', 'CM': 'MF', 'CDM': 'MF',
          'CB': 'DF', 'LB': 'DF', 'RB': 'DF', 'LWB': 'DF', 'GK': 'GK'}
-MIN_ATT_VAR = 8          # для оцінки дисперсії між людьми
-MIN_TOP = 5              # у топ-списки — лише хто мав ≥ 5 пенальті (без даних skill = апріорі, це не «топ»)
+MIN_ATT_VAR = 8          # min attempts for between-player variance
+MIN_TOP = 5              # min attempts for top lists (without data skill equals the prior)
 K_RANGE = (10, 300)
-GROUP_SHRINK = 1000      # умовних ударів, з якими групове апріорі стягується до загального
+GROUP_SHRINK = 1000      # pseudo-attempts shrinking group priors toward the overall mean
 
 
 def i(x):
@@ -34,14 +34,14 @@ def grp(r):
 
 
 def beta_k(items, m):
-    """items = [(успіхи, спроби)]; метод моментів для сили апріорі бета-розподілу"""
+    """items = [(successes, attempts)]; method of moments for the beta prior strength"""
     xs = [(s / n, n) for s, n in items if n >= MIN_ATT_VAR]
     if len(xs) < 10:
         return K_RANGE[1]
     w = sum(n for _, n in xs)
     mean = sum(p * n for p, n in xs) / w
     var = sum(n * (p - mean) ** 2 for p, n in xs) / w
-    noise = len(xs) * mean * (1 - mean) / w   # E[Σ n(p−p̄)²]/Σn = σ²_між·(≈1) + (кількість людей)·p̄(1−p̄)/Σn
+    noise = len(xs) * mean * (1 - mean) / w   # E[sum n(p-mean)^2]/sum n = var_between*(~1) + n_players*mean(1-mean)/sum n
     between = var - noise
     if between <= 1e-6:
         return K_RANGE[1]
@@ -57,10 +57,10 @@ def fit_takers():
         g[1] += i(r['pen_taken'])
     tot_s, tot_n = sum(v[0] for v in by.values()), sum(v[1] for v in by.values())
     m0 = tot_s / tot_n
-    # групові середні зі стягуванням до загальної: різниця груп статистично слабка (AM проти решти ≈ 1.7σ),
-    # тому сильне стягування — 1000 умовних ударів
+    # group means shrunk toward the overall mean; group differences are weak (AM vs rest ~1.7 sigma),
+    # hence strong shrinkage
     mg = {g: (s + GROUP_SHRINK * m0) / (n + GROUP_SHRINK) for g, (s, n) in by.items()}
-    # нахил за рейтингом: зважений МНК залишків (вага = спроби)
+    # rating slope: weighted least squares on residuals (weight = attempts)
     pts = [((i(r['max_rating']) - 85) / 10, i(r['pen_scored']) / i(r['pen_taken']) - mg[grp(r)], i(r['pen_taken'])) for r in data if i(r['pen_taken'])]
     w = sum(n for _, _, n in pts)
     xm = sum(x * n for x, _, n in pts) / w
@@ -146,11 +146,11 @@ def main():
     print(txt)
     if '--md' in sys.argv:
         open('data/penalties/skill.md', 'w').write(txt)
-    if '--js' in sys.argv:   # 0.65: таблиця для 5×5 → src/pen_skill.js (лише ті, у кого є удари / пенальті у ворота)
+    if '--js' in sys.argv:   # 5x5 table -> src/pen_skill.js (only players with attempts / faced penalties)
         tk = {r['person_id']: [round(sk * 1000), round(1000 * n / max(1, i(r['games_tm'])))] for sk, s, n, m, r in takers if n}
         kp = {r['person_id']: round(sk * 1000) for sk, s, n, r in keepers if n}
-        js = ('// ЗГЕНЕРОВАНО: python3 data/penalties/skill.py --js (дані Transfermarkt, data/penalties). Не правити.\n'
-              '// F5_PK: id → [навик пенальтиста ×1000, пенальті за матч ×1000]; F5_GK: id воротаря → частка відбитих ×1000; F5_PM, F5_GM — середні\n'
+        js = ('// GENERATED by python3 data/penalties/skill.py --js (Transfermarkt data, data/penalties). Do not edit.\n'
+              '// F5_PK: id -> [penalty skill x1000, penalties per match x1000]; F5_GK: keeper id -> save rate x1000; F5_PM, F5_GM: averages\n'
               f'const F5_PM={m0:.4f},F5_GM={gm:.4f};\n'
               'const F5_PK=' + json.dumps(tk, ensure_ascii=False, separators=(',', ':')) + ';\n'
               'const F5_GK=' + json.dumps(kp, ensure_ascii=False, separators=(',', ':')) + ';\n')

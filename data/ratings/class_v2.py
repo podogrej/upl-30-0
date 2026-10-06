@@ -1,24 +1,24 @@
-"""Рейтинги v2 (0.57, пакет затверджено власником 30.09.2026 — docs/ratings_v2.md): формула C + ручні піки власника + «Моряки Григорчука».
-Запуск з кореня репозиторію: python3 data/ratings/class_v2.py   (потім python3 data/update_meta.py && python3 data/check_pool.py,
-python3 src/build.py && node tools/make_engine.js). Друкує звіт: k, скільки людей 90+/95+, хто 90+.
+"""Ratings v2 (docs/ratings_v2.md): formula C + manual peaks + Chornomorets 2011-2013 bonus.
+Run from repo root: python3 data/ratings/class_v2.py   (then python3 data/update_meta.py && python3 data/check_pool.py,
+python3 src/build.py && node tools/make_engine.js). Prints a report: k, number of people 90+/95+, who is 90+.
 
-Рахує завжди від вихідних рейтингів (data/ratings/pool_ratings_raw.json → smooth_cameo.smoothed()), тому повторний запуск нічого не змінює
-і порядок запуску з іншими скриптами не важливий: smooth_cameo.final() = цей крок після згладжування (так пишуть і fix-скрипти).
+Always computes from source ratings (data/ratings/pool_ratings_raw.json -> smooth_cameo.smoothed()), so it is idempotent
+and order-independent with other scripts: smooth_cameo.final() = this step after smoothing (fix scripts use it too).
 
-Кроки для кожної картки (S — рейтинг після згладжування камео і стиснення TOP_PTS, як до 0.57):
-1. Формула C (data/class/proposal.md): S ≥ 70 → s = S, якщо S ≤ 82, інакше 82 + (S − 82)·0.4 (стиснення верху для всіх),
-   R = min(99, round(s + K·C²)), де C — клас людини (0…1) з data/class/class.csv; S < 70 → R = S.
-   Клас C = зважене середнє: збірна 25% (матчі за дорослу збірну, 120 = 1), єврокубки 25% (матчі клубних єврокубків, 150 = 1),
-   гроші 20% (більше з піку ринкової вартості TM і найдорожчого трансферу: €1 млн = 0, €60 млн = 1, логарифм),
-   нагороди 30% (бали, 20 = 1: Золотий м'яч 1–3 — 6, 4–10 — 4, 11–30 — 2; «Український футбол» 1-е — 3, 2–3-є — 1.5;
-   «Команда» 1-е — 2, 2–3-є — 1; бомбардир УПЛ — 1.5; команда року UEFA — 2). Ветеранам 90-х (нар. ≤ 1977) «гроші» можуть
-   лише підняти клас (у TM немає вартостей до ~2004). Людина без рядка в class.csv або без TM — клас 0.
-   Людина — canonical id (pool['alias']): клас і пік рахуються за всіма її id.
-   K підібрано (proposal.py, calibrate) так, щоб до ручних піків 90+ мали ~15 людей.
-2. Ручні піки (data/ratings/anchors_v2.csv): найкраща картка людини = пік власника, усі інші її картки зсуваються на ту саму різницю.
-3. «Моряки Григорчука» (свідомий бонус власника, DECISIONS): +3 усім карткам «Чорноморця» 2011/12–2013/14 (y 2011–2013);
-   у людини з ручним піком (Шацьких, Чорноморець 2013) — не вище за її пік.
-4. Межі 45–99.
+Steps per card (S = rating after cameo smoothing and TOP_PTS compression):
+1. Formula C (data/class/proposal.md): S >= 70 -> s = S if S <= 82, else 82 + (S - 82)*0.4 (top compression for everyone),
+   R = min(99, round(s + K*C^2)), where C is the person's class (0..1) from data/class/class.csv; S < 70 -> R = S.
+   Class C = weighted mean: national team 25% (senior caps, 120 = 1), European cups 25% (club European apps, 150 = 1),
+   money 20% (max of TM peak market value and top transfer fee: EUR 1M = 0, EUR 60M = 1, log scale),
+   awards 30% (points, 20 = 1: Ballon d'Or 1-3 = 6, 4-10 = 4, 11-30 = 2; Ukrainian Footballer of the Year 1st = 3, 2nd-3rd = 1.5;
+   Komanda 1st = 2, 2nd-3rd = 1; UPL top scorer = 1.5; UEFA Team of the Year = 2). For 90s veterans (born <= 1977) money can
+   only raise the class (TM has no values before ~2004). No class.csv row or no TM id -> class 0.
+   Person = canonical id (pool['alias']): class and peak are computed over all their ids.
+   K is calibrated (proposal.py, calibrate) so that ~15 people are 90+ before manual peaks.
+2. Manual peaks (data/ratings/anchors_v2.csv): the person's best card = the peak, all their other cards shift by the same delta.
+3. Deliberate bonus (DECISIONS): +3 to all Chornomorets cards for y 2011-2013;
+   a person with a manual peak is capped at that peak.
+4. Clamp to 45-99.
 """
 import csv, json, math, os, re, sys
 
@@ -31,7 +31,7 @@ ANCHORS = os.path.join(D, 'anchors_v2.csv')
 sys.path.insert(0, D)
 import smooth_cameo as SC
 
-K = 10.5                     # бонус класу K·C² (proposal.py → calibrate(): ~15 людей 90+ до ручних піків)
+K = 10.5                     # class bonus K*C^2 (proposal.py -> calibrate(): ~15 people 90+ before manual peaks)
 KNEE, SLOPE, FLOOR = 82, 0.4, 70
 SAILORS = ('chornomorets-odesa', (2011, 2012, 2013), 3)
 W = {'intl': .25, 'euro': .25, 'money': .20, 'awards': .30}
@@ -63,7 +63,7 @@ def award_points(s):
 
 
 def class_score(r):
-    """рядок class.csv → (C 0…1, складові)"""
+    """class.csv row -> (C 0..1, components)"""
     parts, w = {}, dict(W)
     parts['intl'] = min(num(r['caps']) or 0, 120) / 120
     parts['euro'] = min(num(r['euro_apps']) or 0, 150) / 150
@@ -73,7 +73,7 @@ def class_score(r):
     veteran = dob[:4].isdigit() and int(dob[:4]) <= 1977
     parts['awards'] = min(1.0, award_points(r['awards']) / 20)
     full = sum(parts[k] * v for k, v in w.items())
-    if veteran:   # вартості TM є лише з ~2004: ветерану 90-х «гроші» можуть лише додати, але не зменшити клас
+    if veteran:   # TM values exist only from ~2004: for 90s veterans money may raise the class but never lower it
         w.pop('money')
         no_money = sum(parts[k] * v for k, v in w.items()) / sum(w.values())
         return max(full, no_money), parts
@@ -84,7 +84,7 @@ def load_class(alias):
     out = {}
     for r in csv.DictReader(open(CLASS, encoding='utf-8', newline='')):
         if not r['tm_id']:
-            continue   # немає даних — клас 0
+            continue   # no data: class 0
         p = alias.get(r['person_id'], r['person_id'])
         out[p] = max(out.get(p, 0.0), class_score(r)[0])
     return out
@@ -102,7 +102,7 @@ def formula_c(S, c, k=K):
 
 
 def apply_v2(pool, sm, k=K, anchors=True):
-    """{ключ картки: рейтинг після згладжування} → {ключ: рейтинг v2}; anchors=False — лише формула C (для калібрування й звіту)"""
+    """{card key: smoothed rating} -> {key: v2 rating}; anchors=False applies formula C only (calibration and report)"""
     alias = pool.get('alias') or {}
     canon = lambda i: alias.get(i, i)
     C = load_class(alias)
@@ -121,7 +121,7 @@ def apply_v2(pool, sm, k=K, anchors=True):
                 out[key] += A[pid] - best[pid]
             if c['c'] == club and c['y'] in years:
                 out[key] += bonus
-                if pid in A: out[key] = min(out[key], A[pid])   # «моряк» з ручним піком (Шацьких 2013) — не вище за пік
+                if pid in A: out[key] = min(out[key], A[pid])   # bonus card of a person with a manual peak: capped at the peak
             out[key] = max(45, min(99, out[key]))
     return out
 
@@ -141,7 +141,7 @@ def persons_at(pool, r, lo):
 
 
 def calibrate(pool, sm, target=15):
-    """k з тієї ж сітки, що proposal.py (0.5 крок): ~target людей 90+ лише за формулою C"""
+    """k from the same grid as proposal.py (0.5 step): ~target people 90+ with formula C only"""
     grid = [x / 2 for x in range(6, 41)]
     return min(grid, key=lambda k: (abs(len(persons_at(pool, apply_v2(pool, sm, k, anchors=False), 90)) - target), -k))
 

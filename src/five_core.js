@@ -1,6 +1,6 @@
-// ---------- 5×5: рушій матчу й турніру (0.63). Спільний для сайту (build.py вбудовує його перед five.js) і сервера (api/fl5.js — require).
-// Без DOM і глобального стану: уся випадковість — R() від seed, тож турнір ліги, зіграний сервером, однаковий для всіх і перевірний.
-// Гравець: {id, name, slot, r, goals, form?}; команда: {label, form, slots:[{slot, player}]}. Позиції спрощені: ВР / ЗХ / ПЗ / НП.
+// ---------- 5x5 match and tournament engine. Shared by the site (build.py inlines it before five.js) and the server (api/fl5.js via require).
+// No DOM or global state: all randomness is R() from the seed, so a server-played league tournament is identical for everyone and verifiable.
+// Player: {id, name, slot, r, goals, form?}; team: {label, form, slots:[{slot, player}]}. Simplified positions: GK / DF / MF / FW.
 const F5_FORMS={
   "1-2-1":{tag:"Ромб",rows:[["FW"],["MF","MF"],["DF"],["GK"]]},
   "2-2":{tag:"Квадрат",rows:[["FW","FW"],["DF","DF"],["GK"]]},
@@ -10,13 +10,13 @@ const F5_L={GK:"ВР",DF:"ЗХ",MF:"ПЗ",FW:"НП"};
 const F5_ATT={GK:0,DF:0.35,MF:0.8,FW:1.1}, F5_DEF={GK:1.6,DF:1.2,MF:0.6,FW:0.2};
 const F5_GOAL={GK:0,DF:0.3,MF:0.7,FW:1.2}, F5_AST={GK:0.05,DF:0.4,MF:1,FW:0.6};
 const F5_BASE=2.6, F5_BETA=0.05;
-// пенальті в матчі (0.63, docs/leagues_online.md): ймовірність, що команді призначать пенальті; VAR перевіряє частину й іноді скасовує
+// in-match penalties (docs/leagues_online.md): award probability per team; VAR reviews some and sometimes cancels
 const F5_PEN={award:0.13,varCheck:0.3,varCancel:0.35};
-// 0.65: навик пенальті з даних Transfermarkt (src/pen_skill.js, data/penalties/skill.md): бьющий — байєсова реалізація, воротар — частка відбитих.
-// Кого немає в даних — середня реалізація (воротар як бьющий — 0.70). Розкид між людьми малий, тож у грі він підсилений ×F5_PEN_A.
+// penalty skill from Transfermarkt data (src/pen_skill.js, data/penalties/skill.md): taker = Bayesian conversion rate, keeper = save rate.
+// Missing players get the average (keeper as taker: 0.70). Real spread is small, so it is amplified by F5_PEN_A in game.
 const F5_PEN_A=3;
 function f5PenSkill(p){const d=F5_PK[p.id];return d?d[0]/1000:p.slot==='GK'?0.7:F5_PM;}
-function f5PenRate(p){const d=F5_PK[p.id];return d?d[1]:0;}   // штатний пенальтист: пенальті за матч ×1000
+function f5PenRate(p){const d=F5_PK[p.id];return d?d[1]:0;}   // designated taker: penalties per match x1000
 function f5GkSave(g){const d=F5_GK[g.id];return d!=null?d/1000:F5_GM;}
 function f5PenP(by,gk,lo,hi){return Math.max(lo,Math.min(hi,F5_PM+F5_PEN_A*(f5PenSkill(by)-F5_PM)-F5_PEN_A*(f5GkSave(gk)-F5_GM)));}
 function f5Idx(team){let a=0,wa=0,d=0,wd=0;for(const s of team.slots){const r=s.player.r+(s.player.form||0);a+=F5_ATT[s.slot]*r;wa+=F5_ATT[s.slot];d+=F5_DEF[s.slot]*r;wd+=F5_DEF[s.slot];}return {att:a/wa,def:d/wd};}
@@ -26,13 +26,13 @@ function f5Match(A,B,knockout,R){
   const pick=(T,W,excl)=>{let tot=0;for(const s of T.slots)if(s.player.id!==excl)tot+=W[s.slot]*Math.max(1,s.player.r-40);let x=R()*tot;
     for(const s of T.slots){if(s.player.id===excl)continue;x-=W[s.slot]*Math.max(1,s.player.r-40);if(x<=0)return s.player;}return T.slots[T.slots.length-1].player;};
   const gkOf=T=>T.slots.find(s=>s.slot==='GK').player;
-  // хто б'є: навик (до 0.01), далі штатний пенальтист (пенальті за матч), далі голи, далі id — без випадковості
+  // taker order: skill (to 0.01), then penalties per match, then goals, then id; deterministic
   const takers=T=>T.slots.map(s=>s.player).sort((x,y)=>Math.round(f5PenSkill(y)*100)-Math.round(f5PenSkill(x)*100)||f5PenRate(y)-f5PenRate(x)||(y.goals||0)-(x.goals||0)||String(x.id).localeCompare(String(y.id)));
   const ia=f5Idx(A),ib=f5Idx(B);
   const la=F5_BASE*Math.exp(F5_BETA*(ia.att-ib.def)+N()*0.15),lb=F5_BASE*Math.exp(F5_BETA*(ib.att-ia.def)+N()*0.15);
   const ev=[],ep=[];const add=(T,side,n)=>{for(let k=0;k<n;k++){const sc=pick(T,F5_GOAL);const as=R()<0.6?pick(T,F5_AST,sc.id):null;ev.push({min:1+Math.floor(R()*40),side,sc,as});}};
   let ga=P(la),gb=P(lb);add(A,0,ga);add(B,1,gb);
-  // пенальті в грі: «Суддя призначив пенальті» → (VAR: підтверджено / скасовано) → удар: забив / сейв / мимо
+  // in-game penalty: awarded -> (VAR: confirmed / cancelled) -> kick: goal / save / miss
   for(const [T,O,side] of [[A,B,0],[B,A,1]]){
     if(R()>=F5_PEN.award)continue;const min=1+Math.floor(R()*40);
     if(R()<F5_PEN.varCheck){const cancel=R()<F5_PEN.varCancel;ep.push({min,side,k:'var',ok:!cancel});if(cancel)continue;}
@@ -40,13 +40,13 @@ function f5Match(A,B,knockout,R){
     const res=R()<pr?'goal':R()<0.6?'save':'miss';ep.push({min,side,k:'pen',by,gk,res});
     if(res==='goal'){ev.push({min,side,sc:by,as:null,pen:true});if(side)gb++;else ga++;}}
   ev.sort((x,y)=>x.min-y.min||x.side-y.side);ep.sort((x,y)=>x.min-y.min||x.side-y.side);
-  // серія пенальті (лише плей-офф): 5 ударів — найкращі пенальтисти, далі до першого промаху
+  // shootout (knockout only): 5 kicks by best takers, then sudden death
   let pens=null,so=null;
   if(knockout&&ga===gb){so=[];const ta=takers(A),tb=takers(B);let a=0,b=0;
     const kick=(T,O,side,k)=>{const by=T[k%T.length],gk=gkOf(O),pr=f5PenP(by,gk,0.55,0.92),ok=R()<pr;so.push({side,by,ok});return ok?1:0;};
     for(let k=0;k<5;k++){a+=kick(ta,B,0,k);b+=kick(tb,A,1,k);}
     for(let k=5;a===b&&k<40;k++){a+=kick(ta,B,0,k);b+=kick(tb,A,1,k);}
-    if(a===b)a++;   // запобіжник: серія не нескінченна
+    if(a===b)a++;   // safety cap: shootout cannot run forever
     pens=[a,b];}
   const rate=(T,side,gf,gaa)=>T.slots.map(s=>{const p=s.player;const g=ev.filter(e=>e.side===side&&e.sc.id===p.id).length,a=ev.filter(e=>e.side===side&&e.as&&e.as.id===p.id).length;
     let v=6.5+(gf>gaa?0.4:gf<gaa?-0.4:0)+(p.r-80)*0.02+N()*0.35+g*0.9+a*0.5;
@@ -55,11 +55,11 @@ function f5Match(A,B,knockout,R){
     return {id:p.id,name:p.name,slot:s.slot,g,a,rt:Math.max(3,Math.min(10,v))};});
   return {A,B,ga,gb,ev,ep,so,pens,la,lb,ra:rate(A,0,ga,gb),rb:rate(B,1,gb,ga)};}
 function f5Winner(m){return m.ga>m.gb?0:m.ga<m.gb?1:m.pens?(m.pens[0]>m.pens[1]?0:1):-1;}
-// форма на турнір: у команди й у кожного гравця свій «день» (як у 5×5 на одному телефоні)
+// tournament form: random "day" per team and per player (same as local 5x5)
 function f5SetForm(teams,R){for(const t of teams){let u=0,v=0;while(u===0)u=R();while(v===0)v=R();const tf=Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)*2;
   for(const s of t.slots){let a=0,b=0;while(a===0)a=R();while(b===0)b=R();s.player.form=Math.max(-8,Math.min(8,Math.round(tf+Math.sqrt(-2*Math.log(a))*Math.cos(2*Math.PI*b)*3)));}}}
-// турнір ліги 5×5 (docs/leagues_online.md, крок 5): 2 учасники — серія до двох перемог; 3–7 — група «кожен з кожним» і фінал; 8–10 — група, півфінали (1–4, 2–3), фінал.
-// Група: 3 очки за перемогу, 1 за нічию; рівність — різниця → забиті → очна зустріч → порядок вступу. Результат — простий JSON (без посилань на об'єкти).
+// 5x5 league tournament (docs/leagues_online.md, step 5): 2 entrants: best of three; 3-7: round robin + final; 8-10: group, semis (1-4, 2-3), final.
+// Group: 3 pts win, 1 draw; ties: goal diff -> goals for -> head-to-head -> join order. Result is plain JSON (no object references).
 function f5Tournament(teams,R){
   f5SetForm(teams,R);const n=teams.length,out={v:1,n,matches:[],table:null,champ:null};
   const pl=p=>p?{id:p.id,name:p.name}:null;

@@ -1,36 +1,36 @@
--- 30-0 УПЛ · v0.53 · КРОК 1 з 2: результати пише сервер, власність пристрою — секретом (аудит 30.09: К5, К6, В2, В6)
--- Запускати: спершу тестова база (upl-30-0-test), потім основна. Supabase → SQL Editor → вставити цілком → Run.
--- Повторний запуск нічого не ламає. Сайт 0.52, ще відкритий у гравців, працює як раніше:
--- старі політики прямого запису (seasons/trophies/daily_results/challenges) у цьому кроці НЕ чіпаємо — їх закриває крок 2 (v054_close_writes.sql).
+-- v0.53, step 1 of 2: results are written by the server; device ownership is proven by a secret (audit K5, K6, V2, V6).
+-- Run on the test DB first (upl-30-0-test), then on the main DB.
+-- Idempotent. Older clients (0.52) keep working:
+-- the old direct-write policies (seasons/trophies/daily_results/challenges) are dropped only in step 2 (v054_close_writes.sql).
 --
--- Що тут:
---  1. app_marks — позначки часу запуску (межа «старих» пристроїв для К6; перемикач кроку 2).
---  2. player_links.secret_set_at, player_links.claimed_from — коли пристрій отримав секрет і від якого гравця його відʼєднано (К6).
---  3. device_check (та сама сигнатура): старий пристрій без секрету, що вже має історію, не забирає її собі (К6, див. нижче).
---  4. device_ok(p_device, p_secret) → player_id: перевірка секрету для сервера (/api/save, /api/seed); виконувати може лише service_role.
---  5. legacy_writes_open(): чи ще дозволено /api/seed без секрету (сайт 0.52). Після кроку 2 — false.
---  6. link_account: вхід другим акаунтом на спільному пристрої не зливає двох людей (В6).
---  7. Унікальний індекс «одна офіційна спроба дня на пристрій» (В2) — лише якщо дублів немає, інакше NOTICE.
---  8. Індекси player_id для trophies / challenges / challenge_results.
+-- Contents:
+--  1. app_marks: rollout timestamps (cut-off for "old" devices in K6; switch for step 2).
+--  2. player_links.secret_set_at, player_links.claimed_from: when the device got its secret and which player it was detached from (K6).
+--  3. device_check (same signature): an old secret-less device whose player has history does not take that history (K6, see below).
+--  4. device_ok(p_device, p_secret) -> player_id: secret check for the server (/api/save, /api/seed); service_role only.
+--  5. legacy_writes_open(): whether /api/seed still accepts requests without a secret (0.52 clients). False after step 2.
+--  6. link_account: signing in with a second account on a shared device does not merge two people (V6).
+--  7. Unique index "one official daily attempt per device" (V2), only if there are no duplicates; otherwise NOTICE.
+--  8. player_id indexes for trophies / challenges / challenge_results.
 --
--- Примітка про daily_results: в ОСНОВНІЙ базі таблиця суворіша, ніж у new_db_part_A.sql
--- (w,d,l,pts,place,gf,ga — smallint NOT NULL, formation і xi NOT NULL, перевірки w+d+l=30, pts=3w+d, nickname 2–24 символи;
--- політики anon названо "insert today" / "read all", а не "daily insert" / "daily read").
--- Файли з визначенням таблиць не змінюємо (правило: лише додаємо). Сервер (api/verify.js, syncDaily) заповнює всі ці поля з перевіреного сезону.
+-- Note on daily_results: in the MAIN DB the table is stricter than in new_db_part_A.sql
+-- (w,d,l,pts,place,gf,ga are smallint NOT NULL, formation and xi NOT NULL, checks w+d+l=30, pts=3w+d, nickname 2-24 chars;
+-- anon policies are named "insert today" / "read all" instead of "daily insert" / "daily read").
+-- Table definition files are not changed (additive-only rule). The server (api/verify.js, syncDaily) fills all these fields from the verified season.
 
--- 1. позначки часу. Перший запуск ставить 'v053' і більше його не змінює
+-- 1. rollout marks. The first run sets 'v053' and never changes it
 create table if not exists public.app_marks (
   key text primary key,
   at timestamptz not null default now()
 );
-alter table public.app_marks enable row level security;   -- політик немає: anon/authenticated не читають і не пишуть
+alter table public.app_marks enable row level security;   -- no policies: anon/authenticated can neither read nor write
 insert into public.app_marks (key) values ('v053') on conflict (key) do nothing;
 
--- 2. нові колонки звʼязків
+-- 2. new link columns
 alter table public.player_links add column if not exists secret_set_at timestamptz;
 alter table public.player_links add column if not exists claimed_from uuid references public.players(id);
 
--- 3. чи є в гравця історія (результати, імʼя, інші входи) — крім самого цього пристрою
+-- 3. whether the player has history (results, name, other links) besides this device itself
 create or replace function public.player_has_history(p_player uuid, p_device uuid) returns boolean language sql stable security definer set search_path = public as $$
   select exists (select 1 from players where id = p_player and name is not null)
       or exists (select 1 from player_links where player_id = p_player and not (kind = 'device' and key = p_device::text))
@@ -45,13 +45,13 @@ create or replace function public.player_has_history(p_player uuid, p_device uui
 $$;
 revoke execute on function public.player_has_history(uuid, uuid) from public, anon, authenticated;
 
--- К6. Пристрій без секрету:
---  • звʼязок створено після першого запуску цього файлу (новий пристрій) або в гравця нема історії → секрет просто реєструється;
---  • звʼязок старий (до 0.53) і в гравця Є історія → device_id публічний (є в seasons), тож «перший, хто прийшов із секретом», може бути
---    не власником. Такий пристрій отримує НОВОГО гравця; стара історія лишається на старому гравці (claimed_from — для ручного
---    відновлення: select merge_players(claimed_from, player_id) — лише за зверненням людини, яку владелець упізнав).
---    Справжній власник, що не відкривав гру з 0.38, продовжує грати, але стара історія не підтягується автоматично; зловмисник
---    отримує порожній профіль і не може ні перейменувати, ні злити чужу історію.
+-- K6. Device without a secret:
+--  - link created after this file's first run (new device), or the player has no history -> the secret is simply registered;
+--  - link is old (pre-0.53) and the player HAS history -> device_id is public (it is in seasons), so the first caller with a secret may
+--    not be the owner. Such a device gets a NEW player; the old history stays with the old player (claimed_from allows manual
+--    recovery: select merge_players(claimed_from, player_id), only on a verified request from the real owner).
+--    The real owner keeps playing but the old history is not reattached automatically; an attacker
+--    gets an empty profile and can neither rename nor merge someone else's history.
 create or replace function public.device_check(p_device uuid, p_secret text) returns uuid language plpgsql security definer set search_path = public as $$
 declare pid uuid; h text; want text; lk_at timestamptz; cut timestamptz; fresh uuid;
 begin
@@ -75,7 +75,7 @@ begin
 end $$;
 revoke execute on function public.device_check(uuid, text) from public, anon, authenticated;
 
--- 4. перевірка власності пристрою для сервера (ключ сервера — лише у Vercel)
+-- 4. device ownership check for the server (service key lives only in Vercel)
 create or replace function public.device_ok(p_device uuid, p_secret text) returns uuid language plpgsql security definer set search_path = public as $$
 begin
   return public.device_check(p_device, p_secret);
@@ -83,16 +83,16 @@ end $$;
 revoke execute on function public.device_ok(uuid, text) from public, anon, authenticated;
 grant execute on function public.device_ok(uuid, text) to service_role;
 
--- 5. перехідний період: /api/seed без секрету (сайт 0.52) дозволено, доки не виконано крок 2
+-- 5. transition period: /api/seed without a secret (0.52 clients) is allowed until step 2 has run
 create or replace function public.legacy_writes_open() returns boolean language sql stable security definer set search_path = public as $$
   select not exists (select 1 from app_marks where key = 'v054');
 $$;
 revoke execute on function public.legacy_writes_open() from public, anon, authenticated;
 grant execute on function public.legacy_writes_open() to service_role;
 
--- 6. В6. Вхід акаунтом на пристрої, чий гравець уже належить ІНШОМУ акаунту (Google/Telegram), — історії не зливаємо:
---    пристрій переходить до гравця цього акаунта (перший вхід акаунта — новий гравець). Нічого не видаляється.
---    Пристрій без чужого акаунта (грав анонімно) — як раніше: його історія приєднується до акаунта.
+-- 6. V6. Signing in on a device whose player already belongs to ANOTHER account (Google/Telegram): histories are not merged;
+--    the device moves to this account's player (first sign-in of the account creates a new player). Nothing is deleted.
+--    Device without a foreign account (played anonymously): as before, its history is attached to the account.
 create or replace function public.link_account(p_device uuid, p_secret text) returns json language plpgsql security definer set search_path = public as $$
 declare uid uuid := auth.uid(); dev uuid; acc uuid; tgid text; other boolean;
 begin
@@ -122,8 +122,8 @@ end $$;
 revoke execute on function public.link_account(uuid, text) from public, anon;
 grant execute on function public.link_account(uuid, text) to authenticated;
 
--- 7. В2. Одна офіційна спроба дня на пристрій. Якщо дублі вже є — індекс не створюємо (файл не падає), пишемо NOTICE.
---    Подивитися дублі: select device_id, day, count(*) from season_seeds where daily and official group by 1, 2 having count(*) > 1;
+-- 7. V2. One official daily attempt per device. If duplicates already exist, the index is skipped (no failure) with a NOTICE.
+--    List duplicates: select device_id, day, count(*) from season_seeds where daily and official group by 1, 2 having count(*) > 1;
 do $$
 declare n int;
 begin
@@ -136,7 +136,7 @@ begin
   end if;
 end $$;
 
--- 8. індекси player_id (сторінка гравця, player_has_history)
+-- 8. player_id indexes (player page, player_has_history)
 create index if not exists trophies_player_idx on public.trophies (player_id);
 create index if not exists challenges_player_idx on public.challenges (player_id);
 create index if not exists challenge_results_player_idx on public.challenge_results (player_id);

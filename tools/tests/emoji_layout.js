@@ -1,5 +1,5 @@
-// 0.67.1 (власник: «серія» наїхала на вогник — «такого не має бути ніде»): на основних екранах телефона й iPad
-// жоден емодзі не виходить за свою рамку й не налазить на текст поруч. Запуск з кореня: node tools/tests/emoji_layout.js
+// On the main phone and iPad screens no emoji overflows its box or overlaps adjacent text.
+// Run from repo root: node tools/tests/emoji_layout.js
 const {launch,ROOT}=require('./_page.js');const path=require('path');const {checker}=require('./_site.js');
 const CHECK=()=>{const bad=[];
   for(const el of document.querySelectorAll('.ic.em,.ico.em,.tre')){
@@ -36,7 +36,7 @@ async function pickOne(pg){await pg.click('#spinBtn');await pg.waitForSelector('
     await pg.click('#trBtn');await scan('трофеї');
     await pg.keyboard.press('Escape');await pg.evaluate(()=>{const v=document.getElementById('viewBox');if(v)v.hidden=true;document.getElementById('homeBtn').click();});await pg.waitForTimeout(200);
     await pg.click('#flOpen');await scan('ліги з друзями');
-    // 0.68 (скрин власника з iPad): у шапці «Грати з друзями» кнопка й текст стояли ліворуч під заголовком — усе в героях має бути по центру
+    // all children of the friends-league hero must be horizontally centered
     const off=await pg.evaluate(()=>[...document.querySelectorAll('.fl-hero>*')].filter(e=>e.getBoundingClientRect().width).map(e=>{const r=e.getBoundingClientRect(),p=e.parentElement.getBoundingClientRect();return [e.tagName+' '+e.textContent.trim().slice(0,20),Math.abs((r.left+r.right)/2-(p.left+p.right)/2)];}).filter(x=>x[1]>2));
     T.check(!off.length,`${tag} · ліги з друзями: заголовок, текст і кнопка по центру`+(off.length?' — '+off.map(x=>x[0]+' зсув '+Math.round(x[1])+'px').join('; '):''));
     T.check(!errs.length,`${tag}: помилок на сторінці немає`,errs.join('; '));

@@ -1,11 +1,11 @@
-// 0.69 (власник 02.10: «сводка ошибок в Telegram — да»): раз на добу (api/cron.js, 18:00 UTC) — коротка зведення помилок гравців
-// з таблиці client_errors (sql/v068_client_errors.sql) за останні 24 години. Немає помилок — нічого не надсилає.
-// Куди: змінна Vercel TG_ERRORS_CHAT (ID чату власника з ботом), інакше службовий канал карток TG_CARDS_CHAT.
-// Повторний запуск того ж дня не дублює: позначка app_marks «errdigest-ДАТА» (таблиця з 0.53, лише для сервера).
+// Daily (api/cron.js, 18:00 UTC) digest of player errors sent to Telegram
+// from client_errors (sql/v068_client_errors.sql) for the last 24 h. No errors -> nothing is sent.
+// Target: Vercel env TG_ERRORS_CHAT (admin's chat with the bot), else the cards service channel TG_CARDS_CHAT.
+// Same-day reruns don't duplicate: app_marks key "errdigest-DATE" (server-only table).
 const TOP = 8;
 const esc = s => String(s == null ? '' : s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
 const where = r => r.tg ? 'Telegram ' + r.tg.split(' ')[0] : /iPad|iPhone/.test(r.ua || '') ? 'Safari iOS' : /Android/.test(r.ua || '') ? 'Android' : 'браузер';
-// рядки client_errors → текст повідомлення (HTML) або null, якщо помилок немає
+// client_errors rows -> message text (HTML), or null when there are no errors
 function digestText(rows, day) {
   if (!rows || !rows.length) return null;
   const g = {};
@@ -21,7 +21,7 @@ function digestText(rows, day) {
   if (list.length > TOP) t += `\n\n…і ще ${list.length - TOP}. Усі — у Supabase → Table Editor → client_errors.`;
   return t;
 }
-// sb, tg, env — з api/_league.js; повертає {sent, n}
+// sb, tg, env from api/_league.js; returns {sent, n}
 async function errDigest({ sb, tg, env, day, now = Date.now() }) {
   const chat = env('TG_ERRORS_CHAT') || env('TG_CARDS_CHAT');
   if (!chat) return { sent: false, n: 0, why: 'no chat' };

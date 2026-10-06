@@ -1,5 +1,4 @@
-// 30-0 УПЛ — спільні функції ліг Telegram-груп для api/bot.js, api/cron.js, api/league.js (не адреса: файли з «_» Vercel не публікує).
-// До 0.60 цей блок був трьома однаковими копіями в кожному файлі (аудит 30.09, «Порядок»).
+// 30-0 UPL: shared Telegram group league helpers for api/bot.js, api/cron.js, api/league.js ("_" prefix: not a route).
 const L = (() => {
 const { SB_URL, env, sb, kyivDate, miniApp } = require('./_lib.js');
 const esc = s => String(s == null ? '' : s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
@@ -15,7 +14,7 @@ const LAUNCH = Date.UTC(2026, 8, 28);
 const dayNo = day => Math.max(1, Math.round((Date.UTC(+day.slice(0, 4), +day.slice(5, 7) - 1, +day.slice(8, 10)) - LAUNCH) / 864e5) + 1);
 const dayShort = day => `${day.slice(8, 10)}.${day.slice(5, 7)}`;
 
-const checkMiniApp = initData => miniApp(initData);   // {user, start_param} або null
+const checkMiniApp = initData => miniApp(initData);   // {user, start_param} or null
 const nameOf = u => ([u.first_name, u.last_name].filter(Boolean).join(' ') || u.username || 'Гравець').slice(0, 40);
 
 const playUrl = chat_id => `https://t.me/${env('TG_BOT') || 'upl30_bot'}?startapp=g${chat_id}`;
@@ -23,8 +22,8 @@ const playKb = chat_id => ({ inline_keyboard: [[{ text: '▶️ Зіграти �
 
 const sortRes = (a, b) => b.pts - a.pts || (b.gf - b.ga) - (a.gf - a.ga) || b.gf - a.gf || String(a.created_at).localeCompare(String(b.created_at));
 
-// ім'я в табло — з профілю гравця (players.name, інакше анонімне; з 0.59 — латиниця в нижньому регістрі), а не копія імені Telegram у рядку (аудит В5).
-// Гравця шукаємо за прив'язкою Telegram (player_links, kind = 'tg'); немає прив'язки чи SQL 0.59 ще не виконано — ім'я з рядка, як було.
+// board name comes from the player profile (players.name, else anonymous; lowercase Latin since 0.59), not a copy of the Telegram name in the row.
+// Player is found via Telegram link (player_links, kind = 'tg'); no link or SQL 0.59 not applied -> name from the row.
 async function withNames(rows) {
   const keys = [...new Set(rows.map(r => r.tg_user_id).filter(x => x != null && /^\d+$/.test(String(x))).map(String))];
   const pl = {};
@@ -36,8 +35,8 @@ async function withNames(rows) {
   return rows.map(r => { const p = pl[String(r.tg_user_id)]; const n = p && (p.name || p.anon_name);
     return n ? { ...r, name: String(n), u: p.public_id || undefined } : r; });
 }
-// з 0.52 у табло й підсумках ліг — лише результати, чий сезон сервер перевірив (цифри беремо із сезону, а не з браузера).
-// Дні до VERIFIED_FROM показуємо як були, щоб не переписувати історію ліг.
+// league boards and summaries count only server-verified seasons (numbers taken from the season, not the browser).
+// Days before VERIFIED_FROM are shown as they were, to keep league history intact.
 const VERIFIED_FROM = '2026-10-01';
 async function onlyVerified(rows) {
   const ids = [...new Set(rows.filter(r => String(r.day) >= VERIFIED_FROM).map(r => +r.season_id).filter(Boolean))];
@@ -51,7 +50,7 @@ async function onlyVerified(rows) {
   }).map(r => { const s = ok[+r.season_id]; return s ? { ...r, w: s.w, d: s.d, l: s.l, pts: s.w * 3 + s.d, gf: s.gf, ga: s.ga, place: s.place } : r; }));
 }
 
-// загальний залік ліги: перемоги в днях (минулі дні + сьогодні)
+// overall league standings: day wins (past days + today)
 async function standings(chat_id) {
   const rows = await onlyVerified(await sb(`league_results?chat_id=eq.${chat_id}&select=day,tg_user_id,name,pts,gf,ga,created_at,season_id&order=day.desc&limit=3000`) || []);
   const byDay = {}; for (const r of rows) (byDay[r.day] = byDay[r.day] || []).push(r);
@@ -76,11 +75,10 @@ async function boardText(chat_id, day) {
   return t;
 }
 
-// одне повідомлення-табло на день: редагуємо, а не шлемо нові
-// 0.69.6 (власник 03.10: «у групі має бути одне закріплене повідомлення»): табло — ОДНЕ повідомлення на групу.
-// Бот створює й закріплює його один раз; кожного нового дня редагує те саме повідомлення (рядок league_boards на день
-// отримує той самий message_id). Нове повідомлення + закріплення — лише якщо старого немає або його не вдалося відредагувати
-// (видалили). copy: true (/top, /league в уже наявній лізі) — після оновлення ще й копія табло звичайним повідомленням, без закріплення.
+// one board message per group
+// The bot creates and pins it once; each new day edits the same message (each day's league_boards row
+// gets the same message_id). A new message + pin only if the old one is missing or can't be edited
+// (deleted). copy: true (/top, /league in an existing league): after updating, also send an unpinned copy of the board.
 async function upsertBoard(chat_id, day, { copy = false } = {}) {
   const text = await boardText(chat_id, day);
   const opts = { parse_mode: 'HTML', reply_markup: playKb(chat_id), disable_web_page_preview: true };
@@ -95,7 +93,7 @@ async function upsertBoard(chat_id, day, { copy = false } = {}) {
     const m = await tg('sendMessage', { chat_id, text, ...opts });
     if (!m.ok) throw new Error('send: ' + m.description);
     mid = m.result.message_id;
-    await tg('pinChatMessage', { chat_id, message_id: mid, disable_notification: true });   // вийде, лише якщо бот — адмін
+    await tg('pinChatMessage', { chat_id, message_id: mid, disable_notification: true });   // succeeds only if the bot is an admin
   }
   if (fresh || !b || String(b.day).slice(0, 10) !== day)
     await sb('league_boards?on_conflict=chat_id,day', { method: 'POST', prefer: 'resolution=merge-duplicates,return=minimal', body: { chat_id, day, message_id: mid } });
@@ -103,9 +101,8 @@ async function upsertBoard(chat_id, day, { copy = false } = {}) {
   return mid;
 }
 
-// 0.69.4 (власник 02.10, група «трицать восем нуль»): Telegram перетворив групу на супергрупу (новий chat_id «-100…»),
-// а ліга, учасники й результати лишились на старому номері — кнопка табло вела в «мертву» групу, вступ відмовляв.
-// Копіюємо лігу на новий номер (старі рядки не видаляємо — DECISIONS п. 13); повторний виклик нічого не дублює.
+// When Telegram upgrades a group to a supergroup (new chat_id "-100..."), the league, members and results stay on the old id.
+// Copy the league to the new id (old rows are kept, DECISIONS item 13); repeated calls don't duplicate.
 async function migrateLeague(from, to) {
   if (!from || !to || String(from) === String(to)) return false;
   const [lg] = await sb(`leagues?chat_id=eq.${from}&select=*`) || [];

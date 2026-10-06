@@ -1,6 +1,6 @@
-// «Що нового»: крапка біля версії до першого перегляду, вікно з пунктами WHATSNEW, після перегляду крапки немає (і після перезавантаження).
-// Вхід через бота на сайті: посилання t.me/upl30_bot?start=login_<токен>, сторінка опитує /api/auth (202 — чекаємо «Start», потім token_hash) і входить.
-// Запуск з кореня: node tools/tests/news.js [папка для знімків]
+// What's-new: a dot next to the version until first viewed, a dialog with WHATSNEW items, no dot after viewing (also after reload).
+// Bot sign-in on the site: link t.me/upl30_bot?start=login_<token>, page polls /api/auth (202 = waiting for Start, then token_hash) and signs in.
+// Run from repo root: node tools/tests/news.js [screenshot dir]
 const path=require('path'),fs=require('fs');const {ROOT,makeDB,openSite,checker}=require('./_site.js');
 const OUT=process.argv[2]||path.join(ROOT,'tools','tests','out');fs.mkdirSync(OUT,{recursive:true});
 (async()=>{const T=checker('новини й вхід');const auth=[];let mode='pending';
@@ -14,7 +14,7 @@ const OUT=process.argv[2]||path.join(ROOT,'tools','tests','out');fs.mkdirSync(OU
  await pg.locator('#viewBox .box').screenshot({path:path.join(OUT,'news.png')});
  await pg.click('#viewClose');T.check(await pg.$eval('#newsDot',e=>e.hidden),'після перегляду крапки немає');
  await pg.reload();await pg.waitForTimeout(1000);T.check(await pg.$eval('#newsDot',e=>e.hidden),'після перезавантаження крапки теж немає');
- // вхід через бота
+ // bot sign-in
  await pg.click('#acctBtn');await pg.waitForTimeout(300);await pg.click('#ppLogin');await pg.waitForTimeout(300);await pg.locator('#viewBox .box').screenshot({path:path.join(OUT,'acct.png')});
  const href=await pg.getAttribute('#acctBot','href');const tok=(/start=login_([0-9a-f]{32})$/.exec(href||'')||[])[1];
  T.check(/^https:\/\/t\.me\/upl30_bot\?start=login_/.test(href||'')&&!!tok,'посилання на бота з токеном: '+href);

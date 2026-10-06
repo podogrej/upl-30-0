@@ -1,16 +1,16 @@
-"""Аналіз для рейтингів v2: «клас» гравця з data/class/class.csv і три варіанти змішування з сезонним рейтингом.
-Нічого в грі не змінює (аналіз перед 0.57; з 0.57 у пулі вже рейтинги v2 — data/ratings/class_v2.py, тож «було» тут уже не сезонний S). Запуск з кореня: python3 data/class/proposal.py  → друкує таблиці для data/class/proposal.md
-і пише data/class/class_score.csv (person_id, name, клас і складові).
+"""Analysis for ratings v2: player class from data/class/class.csv and three ways of blending it with the season rating.
+Changes nothing in the game (pre-v2 analysis; the pool now already holds v2 ratings from data/ratings/class_v2.py, so "before" here is no longer the raw season S). Run from repo root: python3 data/class/proposal.py  -> prints tables for data/class/proposal.md
+and writes data/class/class_score.csv (person_id, name, class and components).
 
-Клас C (0…1) = зважене середнє складових (кожна 0…1) — формула в data/ratings/class_v2.py (class_score):
-  збірна   0.25 · min(caps, 120) / 120                            — основна збірна, будь-яка країна
-  єврокубки 0.25 · min(euro_apps, 150) / 150                      — матчі клубних єврокубків у базі TM
-  гроші    0.20 · log(max(пік вартості, найбільший трансфер) / €1 млн) / log(60), 0…1
-  нагороди 0.30 · min(1, бали / 20)                               — бали нижче
-Бали: Золотий м'яч — місце 1–3: 6, 4–10: 4, 11–30: 2 (за кожен рік); «Український футбол» (УФ) 1-е місце 3, 2–3-є 1.5;
-«Команда»/«Команда1» 1-е місце 2, 2–3-є 1; найкращий бомбардир УПЛ 1.5; команда року UEFA (опитування) 2.
-Гроші: у Transfermarkt ринкові вартості є лише приблизно з 2004 року, тож у ветеранів 90-х (народжені ≤ 1977) там лише
-вартість кінця кар'єри. Для них клас = більше з двох: з грошима або без них (вага ділиться між іншими складовими).
+Class C (0..1) = weighted mean of components (each 0..1); formula in data/ratings/class_v2.py (class_score):
+  national  0.25 * min(caps, 120) / 120                            - senior national team, any country
+  euro      0.25 * min(euro_apps, 150) / 150                       - club European cup matches in the TM data
+  money     0.20 * log(max(peak value, top transfer fee) / EUR 1M) / log(60), 0..1
+  awards    0.30 * min(1, points / 20)                             - points below
+Points: Ballon d'Or place 1-3: 6, 4-10: 4, 11-30: 2 (per year); Ukrainian Footballer of the Year (UF) 1st 3, 2nd-3rd 1.5;
+Komanda/Komanda1 1st 2, 2nd-3rd 1; UPL top scorer 1.5; UEFA Team of the Year (poll) 2.
+Money: Transfermarkt market values exist only from ~2004, so 90s veterans (born <= 1977) only have end-of-career values.
+For them class = max of with-money and without-money (weight redistributed over the other components).
 """
 import csv, json, math, collections, re, sys
 
@@ -22,7 +22,7 @@ for c in pool['clubs']:
 rows = {r['person_id']: r for r in csv.DictReader(open('data/class/class.csv'))}
 
 
-# клас C і його складові — та сама функція, що в підсумковому кроці data/ratings/class_v2.py (з 0.57), без копії формули
+# class C and components: same function as data/ratings/class_v2.py, no formula copy
 sys.path.insert(0, 'data/ratings')
 from class_v2 import class_score, W   # noqa: E402
 
@@ -30,20 +30,20 @@ from class_v2 import class_score, W   # noqa: E402
 C, PARTS = {}, {}
 for pid, r in rows.items():
     if not r['tm_id']:
-        continue    # без даних клас невідомий → 0 (див. README: такі люди позначені)
+        continue    # no data: class unknown -> 0 (see README: such people are flagged)
     C[pid], PARTS[pid] = class_score(r)
 
 
-# Кожен варіант має один «регулятор» k; calibrate() підбирає k так, щоб 90+ мали ~15 осіб.
-def var_a(S, c, k):   # A. стеля від класу: сезон не може бути вищим за 84 + k·C
+# Each variant has one knob k; calibrate() picks k so that ~15 people are 90+.
+def var_a(S, c, k):   # A. class ceiling: a season cannot exceed 84 + k*C
     return min(S, round(84 + k * c))
 
 
-def var_b(S, c, k):   # B. верх (понад 80) стискається тим сильніше, чим нижчий клас
+def var_b(S, c, k):   # B. top (above 80) is compressed more for lower class
     return S if S <= 80 else round(80 + (S - 80) * (k + (1 - k) * c))
 
 
-def var_c(S, c, k):   # C. верх стискається для всіх (понад 82 — ×0.4) + бонус класу k·C² до всіх карток ≥ 70
+def var_c(S, c, k):   # C. top compressed for everyone (above 82: x0.4) + class bonus k*C^2 for all cards >= 70
     s = S if S <= 82 else 82 + (S - 82) * 0.4
     return min(99, round(s + k * c * c)) if S >= 70 else S
 
@@ -118,7 +118,7 @@ def md_table():
 
 
 def card_shift():
-    """скільки карток змінюється і середня зміна — для оцінки впливу на баланс (sim30)"""
+    """how many cards change and the mean change, to estimate balance impact (sim30)"""
     out = {}
     for v in VARS:
         f = VARS[v][0]

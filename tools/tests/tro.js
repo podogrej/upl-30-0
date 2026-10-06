@@ -1,12 +1,12 @@
-// Трофеї онлайн: видача заднім числом за старими сезонами пристрою (журнал seasons) і запис у trophies; два нові сезони —
-// лічильник сезонів, блок «Нові трофеї» і рядок у тексті; шафа трофеїв з «є в X% гравців» (rpc trophy_stats).
-// Логіку окремих трофеїв перевіряє scenarios.js. Запуск з кореня: node tools/tests/tro.js [папка для знімків]
+// Online trophies: retroactive awards from the device's past seasons (seasons log) written to trophies; two new seasons →
+// season counter, "new trophies" block and a line in the share text; trophy cabinet with "X% of players have it" (rpc trophy_stats).
+// Individual trophy logic is covered by scenarios.js. Run from repo root: node tools/tests/tro.js [screenshot dir]
 const path=require('path'),fs=require('fs');const {ROOT,makeDB,openSite,draftSeason,checker}=require('./_site.js');
 const OUT=process.argv[2]||path.join(ROOT,'tools','tests','out');fs.mkdirSync(OUT,{recursive:true});
 const DEV='aaaaaaaa-0000-4000-a000-000000000001';
 (async()=>{const T=checker('трофеї');
  const db=makeDB({seasons:{auto:'id'},trophies:{pk:['device_id','trophy']}},{trophy_stats:()=>({players:40,t:{champ:12,top3:25,perfect:0}})});
- // старий сезон цього пристрою: чемпіон без поразок
+ // past season on this device: unbeaten champion
  db.DB.seasons.push({id:1,device_id:DEV,mode:'normal',format:'classic',w:24,d:6,l:0,pts:78,place:1,gf:70,ga:12,xp:66,golden:false,practice:false,day:null,created_at:'2026-09-28T10:00:00Z',
    xi:[{n:'Сергій Ребров',id:'x1',slot:'ST',r:95,c:'Динамо (Київ)',y:1997,f:2,g:26,a:5,rt:7.9},{n:'Андрій Шевченко',id:'x2',slot:'ST',r:96,c:'Динамо (Київ)',y:1997,f:1,g:20,a:6,rt:7.7}]});
  const {b,pg,errs}=await openSite({db,init:`if(!localStorage.getItem('upl30_device'))localStorage.setItem('upl30_device','"${DEV}"');`,viewport:{width:430,height:900},wait:1500});
@@ -24,7 +24,7 @@ const DEV='aaaaaaaa-0000-4000-a000-000000000001';
   T.check(db.DB.trophies.length===n0+r.fresh.length,`сезон ${k+1}: у trophies записано лише нові (${r.fresh.length})`);
   if(k===0)await pg.screenshot({path:path.join(OUT,'tro_result.png')});
  }
- // 0.60: «Трофеї» на головній відкриває шафу своєї сторінки; старе вікно лишилось для файлу без сайту — перевіряємо обидва
+ // home trophies button opens the cabinet on the own page; the legacy dialog remains for the offline file; check both
  await pg.evaluate(()=>document.getElementById('homeBtn').click());await pg.click('#trBtn');await pg.waitForTimeout(900);
  const ppc=(await pg.textContent('#ppCab')).replace(/\s+/g,' ');
  T.check(/Трофеї\s*Відкрито \d+ з \d+/.test(ppc)&&await pg.evaluate(()=>!document.getElementById('s6').hidden),'«Трофеї» → шафа своєї сторінки: '+ppc.slice(0,50));

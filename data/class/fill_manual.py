@@ -1,16 +1,16 @@
-"""Клас гравця для людей, яких data/class/collect.py не знайшов на Transfermarkt (0.57, пакет «Рейтинги v2», п. 4).
-collect.py приймає профіль TM, лише якщо дата народження збігається з нашою; у цих людей дата в id неточна (день/місяць),
-тому профіль знайдено вручну — за прізвищем і клубами (історія переходів TM збігається з нашими картками), доказ — у MANUAL.
-Добиті лише ті, у кого найкраща картка ≥ 88; решта ненайдених лишаються з класом 0 (proposal.py / ratings/class_v2.py).
+"""Player class for people that data/class/collect.py did not find on Transfermarkt.
+collect.py accepts a TM profile only if the date of birth matches ours; these people have an inexact date in their id (day/month),
+so the profile was found manually by surname and clubs (TM transfer history matches our cards); evidence is in MANUAL.
+Only people whose best card is >= 88 are filled; the rest stay at class 0 (proposal.py / ratings/class_v2.py).
 
-Запуск з кореня репозиторію:
-    python3 data/class/fill_manual.py --fetch   # мережа: tmapi → data/class/class_manual.csv (ті самі колонки, що в class.csv)
-    python3 data/class/fill_manual.py           # без мережі: рядки class_manual.csv → class.csv (замість порожніх рядків тих самих людей)
-Повторний запуск нічого не змінює. Після повного перезапуску collect.py (він перезапише class.csv) — запустити ще раз без --fetch.
-Числа рахуються так само, як у collect.py (write()): основна збірна — сума за всі дорослі збірні (без U17–U23, олімпійських, «B»);
-єврокубки — зіграні матчі в турнірах типу 10 у /performance-game; найдорожчий трансфер (не оренда); пік ринкової вартості.
-Нагороди («Український футбол», «Команда», бомбардир УПЛ, Золотий м'яч, UEFA Team of the Year): у списках 1991–2024
-(ті самі сторінки Вікіпедії, що в collect.py) цих людей немає — поле порожнє.
+Run from repo root:
+    python3 data/class/fill_manual.py --fetch   # network: tmapi -> data/class/class_manual.csv (same columns as class.csv)
+    python3 data/class/fill_manual.py           # offline: class_manual.csv rows -> class.csv (replacing those people's empty rows)
+Idempotent. After a full rerun of collect.py (it overwrites class.csv) run again without --fetch.
+Numbers are computed as in collect.py (write()): national team = sum over all senior teams (no U17-U23, Olympic, "B");
+European cups = matches played in competition type 10 in /performance-game; top transfer fee (not loan); peak market value.
+Awards (Ukrainian Footballer of the Year, Komanda, UPL top scorer, Ballon d'Or, UEFA Team of the Year): these people are absent
+from the 1991-2024 lists (same Wikipedia pages as collect.py), so the field is empty.
 """
 import csv, json, os, re, subprocess, sys, time
 
@@ -22,7 +22,7 @@ UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML,
 EURO_TYPE = 10
 YOUTH = re.compile(r'\bU-?\d{2}\b|Olympic|\bB\b|Amateur|Futsal|Beach|Military|Universiade|Youth|Students|\bII\b', re.I)
 
-# person_id → (TM id, доказ: чому це та сама людина)
+# person_id -> (TM id, evidence that it is the same person)
 MANUAL = {
     'w:1980-05-10:chernat': ('3132', 'Florin Cernat, 10.03.1980 (у нас 10.05): Динамо Київ 01.2001–2007 і 2008/09 — як наші картки Динамо 2000–2008'),
     'w:1971-06-22:bukel': ('86568', 'Букель Юрій Олександрович, 30.11.1971: Чорноморець до 1998, Маріуполь 1998, Чорноморець 1999–2000 — як наші картки'),
@@ -102,7 +102,7 @@ def merge():
     for i, r in enumerate(rows):
         m = man.get(r['person_id'])
         if m and not r['tm_id']:
-            # з пулу беремо свіже (ім'я, рейтинг, найкраща картка), решта — з class_manual.csv
+            # fresh fields (name, rating, best card) from the pool, the rest from class_manual.csv
             rows[i] = {**m, **{k: r[k] for k in ('name', 'max_rating', 'best_card', 'cards84', 'dk_sh_seasons')}}
             n += 1
     import io

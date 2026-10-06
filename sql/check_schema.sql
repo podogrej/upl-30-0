@@ -1,6 +1,6 @@
--- ТІЛЬКИ ЧИТАННЯ: нічого не змінює. «Відбиток» схеми public (таблиці, колонки, індекси, політики, функції, тригери, права).
--- Запускати в основній базі (SQL Editor → Run) і в тестовій; результат — порівняти з тим, що будують A+B (tools/tests/setup.sh).
--- Тіла функцій і умови політик — md5, щоб результат був коротким.
+-- READ ONLY: changes nothing. Fingerprint of the public schema (tables, columns, indexes, policies, functions, triggers, grants).
+-- Run on the main and test DBs; compare the output with what parts A+B build (tools/tests/setup.sh).
+-- Function bodies and policy expressions are md5-hashed to keep the output short.
 with t as (
   select 'table' kind, c.relname name,
          'rls=' || c.relrowsecurity || ' rows≈' || greatest(c.reltuples, 0)::bigint || ' | ' ||

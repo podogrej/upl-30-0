@@ -1,8 +1,8 @@
-"""Порядок сбора рабочей ноги: кого искать первым.
-Группа 1 — LB, RB, LWB, RWB, LM, RM (основная или запасная позиция), группа 2 — LW, RW (кто не попал в группу 1).
-Внутри группы: частота появления на колесе (вес клуб-сезона как в игре: STAR_BIAS=0.04, топ-4 ×1.5, Динамо/Шахтар ×0.8)
-× лучший рейтинг карточки. Пишет data/foot/priority.csv; колонка tm_foot — что уже есть в data/positions/positions.csv (Transfermarkt).
-Запуск из корня: python3 data/foot/priority.py
+"""Collection order for preferred foot: who to look up first.
+Group 1: LB, RB, LWB, RWB, LM, RM (main or alternative position); group 2: LW, RW (not already in group 1).
+Within a group: wheel frequency (club-season weight as in the game: STAR_BIAS=0.04, top-4 x1.5, Dynamo/Shakhtar x0.8)
+x best card rating. Writes data/foot/priority.csv; tm_foot column is what data/positions/positions.csv already has (Transfermarkt).
+Run from repo root: python3 data/foot/priority.py
 """
 import json, math, csv, collections
 pool = json.load(open('src/pool.json'))

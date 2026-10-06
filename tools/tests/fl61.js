@@ -1,8 +1,8 @@
-// 0.61 «Ліги з друзями» (11×11): головна → «Грати з друзями» → «Створити лігу» (правила) → спроба = драфт класики за правилами ліги
-// (перекрути, «на пам'ять», епоха, своя схема) → сезон із кодом ліги → «зараховано» → сторінка ліги (тур, спроби, таблиці, запрошення);
-// гість за посиланням ?l=… бачить лігу й «Увійти, щоб приєднатися»; «Мої ліги» на своїй сторінці.
-// База й RPC — у пам'яті (SQL-частину перевіряє bash tools/tests/setup.sh). Знімки: tools/tests/out/fl61_*.png
-// Запуск з кореня: node tools/tests/fl61.js
+// Friends leagues (11x11): home -> Play with friends -> Create league (rules) -> attempt = classic draft under league rules
+// (respins, from-memory, era, own formation) -> season tagged with league code -> counted -> league page (round, attempts, tables, invite);
+// guest via ?l=... link sees the league and the sign-in-to-join prompt; My leagues on the own page.
+// DB and RPC are in memory (SQL part is covered by bash tools/tests/setup.sh). Screenshots: tools/tests/out/fl61_*.png
+// Run from repo root: node tools/tests/fl61.js
 const path=require('path'),fs=require('fs');const {ROOT,launch,makeDB,openSite,checker}=require('./_site.js');
 const OUT=path.join(ROOT,'tools','tests','out');fs.mkdirSync(OUT,{recursive:true});
 const T=checker('ліги з друзями');
@@ -31,7 +31,7 @@ function mkDB(){
  const api={'/api/save':async req=>{const x=req.body;saves.push(x);if(x.kind!=='season')return {json:{ok:true}};
    const id=1000+saves.length;let fl;if(x.row.fl_id){const L=M.leagues.find(l=>l.id===x.row.fl_id);const n=M.entries.filter(e=>e.l===L.id&&e.p==='p-me').length;if(n<L.tries){M.entries.push({l:L.id,p:'p-me',pts:x.row.pts});fl=n+1;}else fl=null;}
    return {json:{id,verified:true,note:'ok',fl}};},'/api/seed':async()=>({json:{seed:12345,seed_id:'s1'}})};
- // ---- зі входом: головна → «Грати з друзями» → створити лігу
+ // ---- signed in: home -> Play with friends -> create league
  const A=await openSite({b,db,api,signed:true,viewport:{width:390,height:844},wait:1500});const pg=A.pg;
  T.check(await pg.$eval('#flOpen',e=>!e.hidden),'головна: «Грати з друзями» є');
  await pg.click('#flOpen');await pg.waitForTimeout(500);
@@ -44,7 +44,7 @@ function mkDB(){
  await pg.click('[data-k="days"][data-v="7"]');await pg.click('[data-k="scoring"][data-v="sum"]');await pg.click('[data-k="ratings"][data-v="memory"]');await pg.click('[data-k="era"][data-v="y2010"]');await pg.click('[data-k="rerolls"][data-v="0"]');
  T.check(await pg.$$eval('#fl .opt.on',es=>es.length)>=7,'правила: вибрано по одному в кожному блоці');
  await pg.screenshot({path:path.join(OUT,'fl61_create.png'),fullPage:true});
- // 0.68 (скрин власника з iPad): кнопка «Створити» й написи в плитках правил — по центру
+ // Create button and rule tile labels are centered
  await pg.setViewportSize({width:1000,height:1400});await pg.waitForTimeout(200);
  const offC=await pg.evaluate(()=>{const mid=e=>{const r=e.getBoundingClientRect();return (r.left+r.right)/2;};const bad=[];
    for(const b of [document.getElementById('flCreate'),document.getElementById('flMsg')])if(Math.abs(mid(b)-mid(b.parentElement))>2)bad.push(b.id+' зсув '+Math.round(mid(b)-mid(b.parentElement))+'px');
@@ -72,7 +72,7 @@ function mkDB(){
  const page=(await pg.textContent('#fl')).replace(/\s+/g,' ');
  T.check(/Тур 1 з 7/.test(page)&&/Зіграти спробу 2 з 3/.test(page)&&/Загальна/.test(page)&&/andre/.test(page),'сторінка ліги: тур, наступна спроба, таблиця ('+page.slice(0,90)+')');
  T.check(await pg.evaluate(()=>/[?&]l=abc/.test(location.search)),'адреса сторінки ліги — ?l=…');
- // 0.69 (власник, iPad): схеми й «Зіграти спробу» — по центру картки туру; правила — чипами; «Поділитися» з підписом
+ // formations and the play-attempt button centered in the round card; rules as chips; Share has a caption
  await pg.setViewportSize({width:1000,height:1400});await pg.waitForTimeout(200);
  const offL=await pg.evaluate(()=>{const mid=e=>{const r=e.getBoundingClientRect();return (r.left+r.right)/2;};const bad=[],card=document.querySelector('#fl .fl-tour');
    for(const e of [document.getElementById('flPlay'),document.querySelector('#fl .fl-forms .chip:nth-child(3)')?document.querySelector('#fl .fl-forms'):null])if(e){const r=[...(e.children.length?e.children:[e])].map(x=>x.getBoundingClientRect());const c=(Math.min(...r.map(x=>x.left))+Math.max(...r.map(x=>x.right)))/2;if(Math.abs(c-mid(card))>3)bad.push((e.id||e.className)+' зсув '+Math.round(c-mid(card))+'px');}
@@ -82,23 +82,23 @@ function mkDB(){
  await pg.screenshot({path:path.join(OUT,'fl61_league_ipad.png'),fullPage:true});await pg.setViewportSize({width:390,height:844});
  await pg.click('[data-tab="tour"]');T.check(/сьогодні/.test(await pg.textContent('#fl')),'вкладка «Тур · сьогодні»');await pg.click('[data-tab="all"]');
  await pg.screenshot({path:path.join(OUT,'fl61_league.png'),fullPage:true});
- // своя сторінка: «Мої ліги»
+ // own page: My leagues
  await pg.evaluate(()=>document.getElementById('acctBtn').click());await pg.waitForTimeout(1200);
  const ppl=(await pg.textContent('#ppLeagues').catch(()=>'')).replace(/\s+/g,' ');
  T.check(/Мої ліги/.test(ppl)&&ppl.includes(M.leagues[0].name),'своя сторінка: «Мої ліги» — '+ppl.slice(0,60));
- // список ліг: «Грають зараз»
+ // league list: Playing now
  await pg.evaluate(()=>document.getElementById('homeBtn').click());await pg.click('#flOpen');await pg.waitForTimeout(600);
  T.check(/Грають зараз/.test(await pg.textContent('#fl')),'список: «Грають зараз»');
  await pg.screenshot({path:path.join(OUT,'fl61_list.png'),fullPage:true});
  T.check(!A.errs.length,'помилок на сторінці немає '+A.errs.join(' | '));
- // ---- гість за посиланням: бачить лігу, «Увійти, щоб приєднатися»
+ // ---- guest via link: sees the league and the sign-in-to-join prompt
  const G=await openSite({b,db,api,query:'?l='+M.leagues[0].id,wait:1800});
- await G.pg.waitForFunction(n=>{const s7=document.getElementById('s7'),t=((document.getElementById('fl')||{}).textContent||'').replace(/\s+/g,' ');return s7&&!s7.hidden&&/Увійти, щоб приєднатися/.test(t)&&t.includes(n);},M.leagues[0].name,{timeout:15000}).catch(()=>{});   // 0.69.69: під навантаженням 1,8 с не вистачало — чекаємо екран, текст і назву, а не час
+ await G.pg.waitForFunction(n=>{const s7=document.getElementById('s7'),t=((document.getElementById('fl')||{}).textContent||'').replace(/\s+/g,' ');return s7&&!s7.hidden&&/Увійти, щоб приєднатися/.test(t)&&t.includes(n);},M.leagues[0].name,{timeout:15000}).catch(()=>{});   // wait for screen, text and name rather than a fixed delay (slow under load)
  const gp=(await G.pg.textContent('#fl')).replace(/\s+/g,' ');
- {const s7=await G.pg.$eval('#s7',e=>!e.hidden),ok=s7&&/Увійти, щоб приєднатися/.test(gp)&&gp.includes(M.leagues[0].name);   // 0.69.96: CI падав двічі, локально не відтворюється — при збої показуємо, що бачив гість
+ {const s7=await G.pg.$eval('#s7',e=>!e.hidden),ok=s7&&/Увійти, щоб приєднатися/.test(gp)&&gp.includes(M.leagues[0].name);   // flaky on CI only: on failure dump what the guest saw
   T.check(ok,'гість за посиланням: ліга й «Увійти, щоб приєднатися»'+(ok?'':` — бачить: s7 ${s7}, ліга «${M.leagues[0].name}», текст: ${gp.slice(0,240)} | помилки: ${G.errs.join(' | ')}`));}
  T.check(!G.errs.length,'гість: помилок немає '+G.errs.join(' | '));
- // ---- 0.69: fl_mine не відповів — «Не вдалося завантажити ліги» з повтором, а не «ти ще не граєш»
+ // ---- fl_mine failed: show load error with retry, not 'not playing yet'
  global.MINE_FAIL=true;const E=await openSite({b,db,api,signed:true,wait:1500});
  await E.pg.click('#flOpen');await E.pg.waitForTimeout(600);
  T.check(/Не вдалося завантажити ліги/.test(await E.pg.textContent('#fl'))&&!!await E.pg.$('#flRetry'),'збій fl_mine: «Не вдалося завантажити ліги» + «Спробувати ще»');

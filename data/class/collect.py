@@ -1,41 +1,40 @@
-"""«Клас» гравця (кар'єра поза сезонною статистикою УПЛ) → data/class/class.csv.
+"""Player class (career beyond UPL season stats) -> data/class/class.csv.
 
-Навіщо: рейтинг картки зараз рахується лише з сезонної статистики УПЛ (docs/ratings.md). Для рейтингів v2
-(docs/ratings_v2.md) потрібні дані про клас людини: збірна, єврокубки, ринкова вартість, трансфери, нагороди.
-Цей скрипт лише збирає дані з джерелами — у грі нічого не змінює.
+Why: card ratings are computed only from UPL season stats (docs/ratings.md). Ratings v2 (docs/ratings_v2.md)
+need data on a person's class: national team, European cups, market value, transfers, awards.
+This script only collects sourced data; it changes nothing in the game.
 
-Кандидати: кожна людина (p[5] у src/pool.json) з хоча б однією карткою ≥ 84, плюс люди з ≥ 5 сезонами
-в «Динамо» або «Шахтарі». Порядок обробки — за максимальним рейтингом (спадання), щоб при зупинці за бюджетом
-найважливіші були готові.
+Candidates: every person (p[5] in src/pool.json) with at least one card >= 84, plus people with >= 5 seasons
+at Dynamo or Shakhtar. Processed by max rating (descending) so the most important are done if the budget runs out.
 
-Джерела (жодних здогадок, у кожного числа є джерело):
+Sources (no guesses, every number has a source):
 1. Transfermarkt ID:
-   - id tm:<N> → N;
-   - id w:<дата>:<прізвище> → кандидати: посилання на профіль TM у data/foot/foot.csv, data/positions/verify_manual_report.csv,
-     data/positions/positions_manual.csv; Wikidata P2446 серед футболістів з тією ж датою народження (P569);
-     запасний шлях — пошук transfermarkt.com за прізвищем латиницею. Кожен кандидат перевіряється: дата народження
-     в TM мусить збігтися з нашою, прізвище (латиницею) — схоже ≥ 0.7.
-2. tmapi.transfermarkt.technology (API, яким користується сам сайт Transfermarkt):
-   - /players?ids[]=… → ім'я, дата народження, найвища ринкова вартість (marketValueDetails.highest);
-   - /player/<id>/national-career-history → матчі/голи за кожну збірну; /clubs?ids[]=… → назви збірних
-     (молодіжні U17–U23, олімпійські, «B» — не рахуються як основна збірна);
-   - /player/<id>/performance-game → усі матчі гравця в базі TM; рахуємо зіграні (participationState = played)
-     матчі в турнірах типу 10 (єврокубки клубів: CL, CLQ, EL, ELQ, UEFA, UCOL, ECLQ, Кубок кубків, Інтертото, Суперкубок УЄФА).
-   - /transfer/history/player/<id> → найбільша сума трансферу (платна оренда — окремо).
-4. Вікіпедія (action=raw, кілька сторінок): «Ukrainian Footballer of the Year» (опитування «Український футбол», топ-3 з 1991;
-   премія «Команди» 1995–2016 і «Команди1» 2017–2020, топ-3), шаблон «Ukrainian Premier League top scorers»,
-   «<рік> Ballon d'Or» (місця 1–30), «UEFA Team of the Year» (опитування вболівальників UEFA.com 2001–2020).
-   Посилання зі сторінок → Wikidata (SPARQL за sitelink, P2446) → Transfermarkt ID → наша людина.
+   - id tm:<N> -> N;
+   - id w:<date>:<surname> -> candidates: TM profile links in data/foot/foot.csv, data/positions/verify_manual_report.csv,
+     data/positions/positions_manual.csv; Wikidata P2446 among footballers with the same date of birth (P569);
+     fallback: transfermarkt.com search by Latin surname. Every candidate is verified: TM date of birth
+     must match ours, Latin surname similarity >= 0.7.
+2. tmapi.transfermarkt.technology (the API used by the Transfermarkt site itself):
+   - /players?ids[]=... -> name, date of birth, highest market value (marketValueDetails.highest);
+   - /player/<id>/national-career-history -> apps/goals per national team; /clubs?ids[]=... -> national team names
+     (youth U17-U23, Olympic, "B" do not count as the senior team);
+   - /player/<id>/performance-game -> all the player's matches in TM; counts played (participationState = played)
+     matches in competition type 10 (club European cups: CL, CLQ, EL, ELQ, UEFA, UCOL, ECLQ, Cup Winners' Cup, Intertoto, UEFA Super Cup).
+   - /transfer/history/player/<id> -> top transfer fee (paid loans separately).
+3. Wikipedia (action=raw, several pages): "Ukrainian Footballer of the Year" (Ukrainskyi Futbol poll, top 3 since 1991;
+   Komanda award 1995-2016 and Komanda1 2017-2020, top 3), template "Ukrainian Premier League top scorers",
+   "<year> Ballon d'Or" (places 1-30), "UEFA Team of the Year" (UEFA.com fan poll 2001-2020).
+   Page links -> Wikidata (SPARQL by sitelink, P2446) -> Transfermarkt ID -> our person.
 
-Обмеження швидкості: ≥ 6 с між запитами до www.transfermarkt.com (лише пошук; при «Human Verification» — пауза 90 с і повтор),
-≥ 1.5 с між запитами до tmapi, ≥ 3 с до Вікіпедії. Один процес, без браузера.
+Rate limits: >= 6 s between www.transfermarkt.com requests (search only; on Human Verification wait 90 s and retry),
+>= 1.5 s between tmapi requests, >= 3 s for Wikipedia. Single process, no browser.
 
-Запуск з кореня репозиторію:
-    python3 data/class/collect.py <тека кешу> [хвилин_бюджету=300]
-    CACHE_ONLY=1 python3 data/class/collect.py <тека кешу>   # без мережі: лише перебудувати class.csv з кешу
-Кеш (tm_players.json, tm_nat.json, tm_perf.json, tm_transfers.json, tm_clubs.json, tm_search.json, wd_dates.json,
-wiki/*.wt, wd_titles.json) дозволяє зупиняти й продовжувати; повторний запуск ідемпотентний.
-Для ідентифікації повторно використовується кеш Wikidata з data/foot/collect.py (wd_foot.json), якщо він лежить у ../foot.
+Run from repo root:
+    python3 data/class/collect.py <cache dir> [budget_minutes=300]
+    CACHE_ONLY=1 python3 data/class/collect.py <cache dir>   # offline: only rebuild class.csv from cache
+Cache (tm_players.json, tm_nat.json, tm_perf.json, tm_transfers.json, tm_clubs.json, tm_search.json, wd_dates.json,
+wiki/*.wt, wd_titles.json) allows stop/resume; reruns are idempotent.
+For identification the Wikidata cache of data/foot/collect.py (wd_foot.json) is reused if present in ../foot.
 """
 import json, csv, os, sys, re, time, subprocess, io, difflib, unicodedata, collections, datetime, urllib.parse
 
@@ -49,7 +48,7 @@ UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML,
 WUA = 'upl30-research/0.1 (football game research)'
 TODAY = str(datetime.date.today())
 OUT = 'data/class/class.csv'
-EURO_TYPE = 10           # competitionTypeId єврокубків клубів у tmapi
+EURO_TYPE = 10           # tmapi competitionTypeId of club European cups
 YOUTH = re.compile(r'\bU-?\d{2}\b|Olympic|\bB\b|Amateur|Futsal|Beach|Military|Universiade|Youth|Students|\bII\b', re.I)
 
 
@@ -72,7 +71,7 @@ def over_budget():
     return (time.time() - T0) / 60 > BUDGET_MIN
 
 
-# ---------- кандидати ----------
+# ---------- candidates ----------
 pool = json.load(open('src/pool.json'))
 P = {}
 for c in pool['clubs']:
@@ -87,7 +86,7 @@ CAND = sorted((p for p, e in P.items() if e['max'] >= 84 or len(e['dksh']) >= 5)
 log('кандидатів', len(CAND))
 
 
-# ---------- імена ----------
+# ---------- names ----------
 def latin(s):
     s = unicodedata.normalize('NFKD', s.replace('ł', 'l').replace('Ł', 'L'))
     s = ''.join(ch for ch in s if not unicodedata.combining(ch)).lower()
@@ -119,12 +118,12 @@ def name_sim(pid, *labels):
     return best
 
 
-# ---------- мережа ----------
+# ---------- network ----------
 _last = collections.defaultdict(float)
 
 
 def fetch(url, host, gap, tries=3, headers=()):
-    """GET з паузою між запитами до одного хоста; повертає текст або None"""
+    """GET with a per-host delay between requests; returns text or None"""
     if CACHE_ONLY:
         return None
     for a in range(tries):
@@ -155,9 +154,9 @@ def fetch_json(url, host, gap):
 TMAPI = 'https://tmapi.transfermarkt.technology'
 
 # ---------- 1. Transfermarkt ID ----------
-TMPL = jload('tm_players.json', {})     # tm id → компактний профіль tmapi
-SEARCH = jload('tm_search.json', {})    # запит → [[slug, tm id]]
-WD = jload('wd_dates.json', {})         # дата → [[label, tm id]]
+TMPL = jload('tm_players.json', {})     # tm id -> compact tmapi profile
+SEARCH = jload('tm_search.json', {})    # query -> [[slug, tm id]]
+WD = jload('wd_dates.json', {})         # date -> [[label, tm id]]
 for f in (os.path.join(CACHE, '..', 'foot', 'wd_foot.json'),):
     if os.path.exists(f):
         for k, v in json.load(open(f)).items():
@@ -233,7 +232,7 @@ def tm_search(q):
 
 
 def known_links():
-    """w:-id → tm id з уже перевірених файлів репозиторію"""
+    """w: id -> tm id from already verified repo files"""
     out = collections.defaultdict(list)
     rx = re.compile(r'spieler/(\d+)')
     for f, col in (('data/foot/foot.csv', 'url'), ('data/positions/verify_manual_report.csv', 'url'), ('data/positions/positions_manual.csv', 'source')):
@@ -253,13 +252,13 @@ def ok_identity(pid, e):
     return e.get('dob') == pid.split(':')[1] and name_sim(pid, e['name'], e.get('short', ''), e.get('passport', '')) >= 0.7
 
 
-IDMAP = jload('idmap.json', {})    # person_id → {tm, how} або {tm: '', how: 'not found'}
+IDMAP = jload('idmap.json', {})    # person_id -> {tm, how} or {tm: '', how: 'not found'}
 
 
 def resolve_ids(search=True):
     links = known_links()
     wd_dates({p.split(':')[1] for p in CAND if p.startswith('w:') and '-00' not in p})
-    # перший прохід: tm: і кандидати без пошуку TM
+    # first pass: tm: ids and candidates without TM search
     cands = {}
     for pid in CAND:
         if pid.startswith('tm:'):
@@ -279,7 +278,7 @@ def resolve_ids(search=True):
             if ok_identity(pid, TMPL.get(t, {'err': 1})):
                 IDMAP[pid] = {'tm': t, 'how': how}
                 break
-    # запасний шлях — пошук transfermarkt.com (лише для тих, кого ще не знайшли); робиться після основного збору
+    # fallback: transfermarkt.com search (only for those not found yet); runs after the main collection
     for pid in (CAND if search else []):
         if (pid in IDMAP and (IDMAP[pid].get('tm') or IDMAP[pid].get('searched'))) or pid.startswith('tm:') or '-00' in pid or over_budget() or CACHE_ONLY:
             continue
@@ -305,7 +304,7 @@ def resolve_ids(search=True):
     jsave('idmap.json', IDMAP)
 
 
-# ---------- 2. дані з Transfermarkt ----------
+# ---------- 2. Transfermarkt data ----------
 NAT = jload('tm_nat.json', {})        # tm id → [[clubId, games, goals, state]]
 PERF = jload('tm_perf.json', {})      # tm id → {comp: [typeId, national, played, goals]} + '_euro_by_club'
 TRF = jload('tm_transfers.json', {})  # tm id → [[date, from, to, fee, mv]]
@@ -357,7 +356,7 @@ def get_perf(t):
 
 
 def get_transfers(t):
-    """tmapi /transfer/history/player/<id> → [[дата, клуб звідки (id), клуб куди (id), сума текстом, ринкова вартість, сума €, тип]]"""
+    """tmapi /transfer/history/player/<id> -> [[date, from club id, to club id, fee text, market value, fee EUR, type]]"""
     if t in TRF:
         return TRF[t]
     d = fetch_json(f'{TMAPI}/transfer/history/player/{t}', 'tmapi', 1.5)
@@ -376,7 +375,7 @@ def get_transfers(t):
     return TRF[t]
 
 
-# ---------- 3. нагороди з Вікіпедії ----------
+# ---------- 3. awards from Wikipedia ----------
 WT = {}
 
 
@@ -396,7 +395,7 @@ SORTNAME = re.compile(r'\{\{\s*[Ss]ortname\s*\|([^|}]+)\|([^|}]+)(?:\|([^|}]*))?
 
 
 def person_titles(row):
-    """посилання [[…]] і {{sortname|Ім'я|Прізвище|посилання}} у порядку появи"""
+    """links [[...]] and {{sortname|First|Last|link}} in order of appearance"""
     found = []
     for m in re.finditer(LINK.pattern + '|' + SORTNAME.pattern, row):
         if m.group(1):
@@ -435,14 +434,14 @@ def awards_raw():
             out.append((pl.strip(), f'UPL top scorer {season}', 'https://en.wikipedia.org/wiki/Template:Ukrainian_Premier_League_top_scorers'))
     for year in range(1992, 2026):
         if year == 2020:
-            continue   # у 2020 «Золотий м'яч» не вручали
+            continue   # no Ballon d'Or in 2020
         title = f"{year} Ballon d'Or"
         t = wiki('en', title)
         red = re.match(r'#REDIRECT\s*\[\[([^\]]+)\]\]', t, re.I)
         if red:   # 2010–2015: FIFA Ballon d'Or
             title = red.group(1)
             t = wiki('en', title)
-        # таблиці з колонкою Rank; на сторінках FIFA Ballon d'Or (2010–2015) перша — лише 3 фіналісти, беремо довшу з перших двох
+        # tables with a Rank column; on FIFA Ballon d'Or pages (2010-2015) the first lists only 3 finalists, so take the longer of the first two
         tabs = []
         for m in re.finditer(r'Rank', t):
             end = t.find('\n|}', m.start())
@@ -461,7 +460,7 @@ def awards_raw():
                     continue
                 if rank > 30:
                     break
-                for nm in names:   # у рядку ще й клуби/позиції — зайве відсіється при зіставленні з нашими людьми
+                for nm in names:   # rows also contain clubs/positions; extra names are dropped when matching to our people
                     out.append((nm, f"Ballon d'Or #{rank} {year}", 'https://en.wikipedia.org/wiki/' + urllib.parse.quote(title.replace(' ', '_'))))
     t = wiki('en', 'UEFA Team of the Year')
     for year, body in re.findall(r'==\s*Team of the Year (\d{4})\s*==(.*?)(?=\n==)', t, re.S):
@@ -477,8 +476,8 @@ TITLES = jload('wd_titles.json', {})   # enwiki title → [qid, [tm ids]]
 
 
 def titles_to_tm(titles):
-    """назва статті англ. Вікіпедії → [QID, [TM id]] через SPARQL (sitelink). Перенаправлення SPARQL не розв'язує —
-    для них лишається зіставлення за іменем (див. main)."""
+    """English Wikipedia article title -> [QID, [TM id]] via SPARQL (sitelink). SPARQL does not resolve redirects;
+    those fall back to name matching (see main)."""
     need = [t for t in dict.fromkeys(titles) if t not in TITLES]
     for k in range(0, len(need), 40):
         part = need[k:k + 40]
@@ -497,7 +496,7 @@ def titles_to_tm(titles):
         jsave('wd_titles.json', TITLES)
 
 
-# ---------- головний прохід ----------
+# ---------- main pass ----------
 def collect_tm():
     order = [p for p in CAND if IDMAP.get(p, {}).get('tm')]
     log('з TM id', len(order), 'з', len(CAND))
@@ -523,8 +522,8 @@ def main():
     club_names([h[0] for v in NAT.values() for h in v] + [c for v in PERF.values() for c in v.get('euro_by_club', {})]
                + [str(x[i]) for v in TRF.values() for x in v for i in (1, 2)])
     aw = awards_raw()
-    # зіставлення: назва статті → наша людина. Спершу грубий фільтр за іменем (TM), потім Wikidata P2446 = наш TM id;
-    # якщо у Wikidata немає TM id або стаття-перенаправлення — лише однозначний збіг повного імені (≥ 0.9), з позначкою.
+    # matching: article title -> our person. First a rough name filter (TM), then Wikidata P2446 = our TM id;
+    # if Wikidata has no TM id or the article is a redirect, only an unambiguous full-name match (>= 0.9), flagged.
     tm2p = {IDMAP[p]['tm']: p for p in CAND if IDMAP[p].get('tm')}
     tmnames = {t: TMPL.get(t, {}).get('name', '') for t in tm2p}
 

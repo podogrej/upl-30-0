@@ -1,8 +1,8 @@
-// Замір складності 30-0: «розумний гравець» збирає склад з колеса за правилами гри, рушій (lib/engine.js) симулює сезон.
-// Запуск з кореня: node tools/sim30.js [сезонів, 2000] [expert|fan|casual]  → tools/results_<тип|all>.json (у .gitignore). Результати — у DECISIONS («Замір …»).
-// Змінні: SIM_SEE=eff|base (що бачить бот), SIM_ENGINE=<шлях> (інший рушій, напр. «до» правки).
-const E = require(process.env.SIM_ENGINE || __dirname + '/../lib/engine.js');   // SIM_ENGINE — інший рушій (напр. «до» правки)
-const SEE = process.env.SIM_SEE || 'eff';   // eff — бот бачить рейтинг зі штрафом за позицію й ногою; base — лише базовий рейтинг картки, як живий гравець з 0.50
+// 30-0 difficulty benchmark: a "smart player" bot drafts from the wheel by game rules, the engine (lib/engine.js) simulates the season.
+// Run from repo root: node tools/sim30.js [seasons, 2000] [expert|fan|casual] → tools/results_<type|all>.json (gitignored). Results go to DECISIONS.
+// Env: SIM_SEE=eff|base (what the bot sees), SIM_ENGINE=<path> (alternative engine, e.g. pre-change).
+const E = require(process.env.SIM_ENGINE || __dirname + '/../lib/engine.js');   // SIM_ENGINE: alternative engine, e.g. pre-change build
+const SEE = process.env.SIM_SEE || 'eff';   // eff: bot sees rating with position/foot penalty; base: card base rating only, as a real player sees it
 const { DATA, FORMATIONS, FORMATS, GROUP_OF, MODES, YEARS16, ANTI_MIN_APPS, effRating, mulberry32, hashStr } = E;
 const FORMS = Object.keys(FORMATIONS);
 const canon = id => (DATA.alias && DATA.alias[id]) || id;
@@ -14,21 +14,21 @@ function pickW(cands, r, uniform) {
   for (const c of cands) { x -= c.w; if (x <= 0) return c; } return cands[cands.length - 1];
 }
 
-// один драфт + сезон
-// cfg: {format, club, mode, sigma, formation, daily:{seq,year,formation}|null, seed, y0} — y0: епоха (0.58), колесо лише з клуб-сезонів від y0
+// one draft + season
+// cfg: {format, club, mode, sigma, formation, daily:{seq,year,formation}|null, seed, y0}; y0: era, wheel uses only club-seasons from y0
 function play(cfg) {
   const r = mulberry32(cfg.seed);
   E.setFormat(cfg.format);
   const anti = cfg.format === 'anti';
   const formation = cfg.daily ? cfg.daily.formation : cfg.formation;
   const slots = FORMATIONS[formation].slots.map(slot => ({ slot, p: null }));
-  const taken = new Set();   // людей — за canonical id (DATA.alias), як S.taken у грі
-  const noise = {};   // сприйняття гравця стабільне протягом драфту: знаєш когось як «сильного» — він сильний для тебе весь драфт
+  const taken = new Set();   // people by canonical id (DATA.alias), same as S.taken in the game
+  const noise = {};   // perception noise is fixed per player for the whole draft
   const perceived = (p, slot) => { const er = effRating(p, slot); if (er == null) return null; if (!(p[5] in noise)) noise[p[5]] = normal(r) * cfg.sigma; return (SEE === 'base' ? p[2] : er) + noise[p[5]]; };
   const pool0 = anti || cfg.format === 'classic' || cfg.format === 'legends' || cfg.daily ? DATA.clubs : cfg.format === 'derby' ? DATA.clubs.filter(c => FORMATS.derby.clubs.includes(c.c)) : DATA.clubs.filter(c => c.c === cfg.club);
   const pool = cfg.y0 && !cfg.daily ? pool0.filter(c => c.y >= cfg.y0) : pool0;
   const okP = p => !taken.has(canon(p[5])) && (!anti || p[3] >= ANTI_MIN_APPS);
-  const best = cs => {   // найкращий (для анти — найгірший) хід у цьому клуб-сезоні
+  const best = cs => {   // best move (worst for anti) in this club-season
     let b = null;
     for (const p of cs.pl) { if (!okP(p)) continue;
       for (const s of slots) { if (s.p) continue; const v = perceived(p, s.slot); if (v == null) continue;
@@ -36,14 +36,14 @@ function play(cfg) {
     return b;
   };
   let rerolls = cfg.daily ? 1 : MODES[cfg.mode].rerolls, ptr = 0;
-  // вибірка з відхиленням = те саме, що гра робить фільтром «є кого взяти» + зважений вибір, але швидше
+  // rejection sampling: same result as the game's "has a pickable player" filter + weighted pick, but faster
   const spinFresh = () => { for (let t = 0; t < 5000; t++) { const c = pickW(pool, r, anti); if (best(c)) return c; } return pool.find(c => best(c)); };
   const spin = () => {
     if (cfg.daily) { while (ptr < cfg.daily.seq.length) { const c = DATA.clubs[cfg.daily.seq[ptr++]]; if (best(c)) return c; } }
     return spinFresh();
   };
   const REROLL_BELOW = cfg.rerollBelow ?? 83;
-  // «Вибір сезону» (0.60): колесо дає клуб, бот бере найкращий хід серед трьох випадкових сезонів цього клубу (де є кого взяти)
+  // season-pick mode: wheel gives a club, bot takes the best move among three random seasons of that club (with pickable players)
   const pickN = MODES[cfg.mode] && MODES[cfg.mode].pick;
   const spinPick = () => { const c0 = spinFresh(); const all = pool.filter(c => c.c === c0.c && best(c)); const opts = [];
     while (opts.length < pickN && all.length) opts.push(all.splice(Math.floor(r() * all.length), 1)[0]);
@@ -55,7 +55,7 @@ function play(cfg) {
     b.s.p = b.p; b.s.cc = cs.c; b.s.y = cs.y; taken.add(canon(b.p[5]));
   }
   const xi = slots.map(s => ({ id: s.p[5], name: s.p[0], slot: s.slot, pos: GROUP_OF[s.slot], r: effRating(s.p, s.slot), cc: s.cc, y: s.y }));
-  const year = cfg.daily ? cfg.daily.year : cfg.year || (E.LEAGUE_CULT ? (cfg.format === 'legends' || (cfg.format === 'classic' && E.VERSION >= '0.64') ? E.LEAGUE_LEGENDS : E.LEAGUE_CULT) : YEARS16[Math.floor(r() * YEARS16.length)]);   // з 0.50 — ліга культових клубів, з 0.64 класика — «Ліга легенд» (як oppYear); старий рушій — випадковий сезон
+  const year = cfg.daily ? cfg.daily.year : cfg.year || (E.LEAGUE_CULT ? (cfg.format === 'legends' || (cfg.format === 'classic' && E.VERSION >= '0.64') ? E.LEAGUE_LEGENDS : E.LEAGUE_CULT) : YEARS16[Math.floor(r() * YEARS16.length)]);   // cult-clubs league; classic uses the legends league since 0.64 (as oppYear); old engines use a random season
   const mode = cfg.daily ? 'daily' : cfg.mode;
   const res = E.run({ xi, mode, format: cfg.format, year, seed: Math.floor(r() * 2147483647) });
   const avg = xi.reduce((a, x) => a + x.r, 0) / 11;
@@ -83,7 +83,7 @@ if (require.main === module) {
   for (const [who, sigma] of Object.entries(SIGMAS)) {
     for (const mode of ['normal', 'hard', 'pick'])
       runSet(`classic|${mode}|${who}`, i => ({ format: 'classic', mode, sigma, formation: FORMS[i % FORMS.length], seed: seedBase++ }));
-    // виклик дня: різні дні
+    // daily challenge: different days
     runSet(`daily|daily|${who}`, i => { const day = new Date(Date.UTC(2026, 8, 28) + (i % 365) * 864e5).toISOString().slice(0, 10); return { format: 'classic', mode: 'daily', sigma, daily: E.dailySetupFor(day), seed: seedBase++ }; });
     for (const mode of ['normal', 'hard'])
       runSet(`derby|${mode}|${who}`, i => ({ format: 'derby', mode, sigma, formation: FORMS[i % FORMS.length], seed: seedBase++ }));

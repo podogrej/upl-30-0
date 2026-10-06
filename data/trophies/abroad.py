@@ -1,12 +1,12 @@
-"""Трофей «Заробітчани»: українці з пулу, які грали в клубах Європи (без Росії й Білорусі та інших країн колишнього СРСР поза ЄС).
+"""Abroad trophy: Ukrainians from the pool who played for European clubs (excluding Russia, Belarus and other non-EU ex-USSR countries).
 
-Джерело: Wikidata (query.wikidata.org), клуби гравця (P54) → країна клубу (P17).
-- гравці з id tm:<N> шукаються за Transfermarkt ID (P2446);
-- гравці з id w:<дата>:<прізвище> — за датою народження (P569) серед футболістів + схожість прізвища латиницею.
-Збірні України не рахуються (країна — Україна).
+Source: Wikidata (query.wikidata.org), player clubs (P54) -> club country (P17).
+- ids tm:<N> are looked up by Transfermarkt ID (P2446);
+- ids w:<date>:<surname> by date of birth (P569) among footballers + Latin surname similarity.
+Ukraine national teams do not count (country is Ukraine).
 
-Запуск з кореня репозиторію: python3 data/trophies/abroad.py <тека для кешу запитів>
-Пише data/trophies/abroad_ua.json — {person_id: [коди країн]}; список id вписано в src/trophies.js (ABROAD).
+Run from repo root: python3 data/trophies/abroad.py <query cache dir>
+Writes data/trophies/abroad_ua.json {person_id: [country codes]}; the id list is embedded in src/trophies.js (ABROAD).
 """
 import json, subprocess, csv, io, sys, time, os, re, difflib, unicodedata, collections, random
 
@@ -18,7 +18,7 @@ per = {}
 for c in pool['clubs']:
     for x in c['pl']:
         per.setdefault(x[5], (x[0], x[10]))
-ua = [k for k, v in per.items() if v[1] == 0]   # nats[0] = Україна
+ua = [k for k, v in per.items() if v[1] == 0]   # nats[0] = Ukraine
 
 cache_f = os.path.join(CACHE_DIR, 'wd_cache.json')
 C = json.load(open(cache_f)) if os.path.exists(cache_f) else {}

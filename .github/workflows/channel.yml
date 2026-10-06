@@ -1,0 +1,35 @@
+# Telegram channel queue: every 10 minutes calls /api/cron?task=channel (api/_channel.js): due drafts (publish_at <= now) sent to the admin for approval, auto posts.
+# Vercel Hobby allows Cron only once a day, so the frequent run lives here. GitHub runs schedules only from main and may lag 5–15 min.
+# Repository secrets (Settings → Secrets and variables → Actions):
+#   CHANNEL_SECRET: same value as the CHANNEL_SECRET env var in Vercel (Production and Preview);
+#   VERCEL_BYPASS: optional "Protection Bypass for Automation" key to reach the test deployment (behind Vercel auth).
+name: Канал
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+concurrency:
+  group: channel
+  cancel-in-progress: false
+jobs:
+  run:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Прод (upl30.com.ua)
+        env:
+          SECRET: ${{ secrets.CHANNEL_SECRET }}
+        run: |
+          if [ -z "$SECRET" ]; then echo "CHANNEL_SECRET не задано — пропускаю"; exit 0; fi
+          code=$(curl -sS -o out.json -w '%{http_code}' -H "Authorization: Bearer $SECRET" "https://upl30.com.ua/api/cron?task=channel" || echo 000)
+          echo "HTTP $code"; cat out.json; echo
+          case "$code" in 2*) ;; 401) echo "::warning::401 — CHANNEL_SECRET у GitHub і у Vercel не збігаються або прод ще без цієї версії";; *) exit 1;; esac
+      - name: Тест (гілка test)
+        env:
+          SECRET: ${{ secrets.CHANNEL_SECRET }}
+          BYPASS: ${{ secrets.VERCEL_BYPASS }}
+        run: |
+          if [ -z "$SECRET" ] || [ -z "$BYPASS" ]; then echo "CHANNEL_SECRET або VERCEL_BYPASS не задано — тестовий сайт пропускаю"; exit 0; fi
+          code=$(curl -sS -o out.json -w '%{http_code}' -H "Authorization: Bearer $SECRET" -H "x-vercel-protection-bypass: $BYPASS" "https://upl-30-0-git-test-30-01.vercel.app/api/cron?task=channel" || echo 000)
+          echo "HTTP $code"; cat out.json; echo
+          case "$code" in 2*) ;; *) echo "::warning::тестовий сайт відповів $code";; esac

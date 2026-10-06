@@ -1,20 +1,20 @@
-// ---------- 5×5 з друзями. Позиції спрощені: ВР / ЗХ / ПЗ / НП; гравець грає лише у своїй лінії.
-// Драфт «по черзі» (A-B-A-B з одного колеса, взятий гравець зникає для всіх) або «кожен сам» (однакове колесо, склади можуть збігатися).
-// 2 гравці — один матч; 3–10 — «кожен з кожним» і фінал двох найкращих. Нічия в матчі на вибування — пенальті.
-// Усе випадкове в матчі йде від seed гри, щоб онлайн у всіх учасників вийшов однаковий результат.
-// рушій матчу (F5_FORMS, f5Match, f5Winner…) — у src/five_core.js (0.63: спільний із сервером)
+// ---------- 5x5 with friends. Simplified positions: GK / DF / MF / FW; a player only plays in his own line.
+// Draft "turns" (A-B-A-B from one wheel, a picked player is gone for all) or "solo" (same wheel, squads may overlap).
+// 2 players: one match; 3-10: round robin plus final of the top two. Knockout draw goes to penalties.
+// All match randomness derives from the game seed so every online participant gets the same result.
+// match engine (F5_FORMS, f5Match, f5Winner...) lives in src/five_core.js, shared with the server
 const F5_REROLLS=1, F5_MAX=10;
 const F5_TEAMS=["ФК Диван","Динамо Двір","Шахтар Гаражний","Металіст Під'їзд","Зірка Району","Спартак Балкон","Арсенал Кухня","Олімпік Лавочка","Карпати Кава","Ворскла Вечір"];
 let F5=null;
-const f5G=p=>GROUP_OF[p[6]]||p[1];                     // лінія гравця: ВР/ЗХ/ПЗ/НП
+const f5G=p=>GROUP_OF[p[6]]||p[1];                     // player line: GK/DF/MF/FW
 const f5Open=t=>t.slots.filter(s=>!s.player);
 const f5Fits=(t,p)=>f5Open(t).some(s=>s.slot===f5G(p));
 const f5Label=t=>t.team||t.name;
 function f5Rng(tag){return mulberry32((F5.seed^hashStr(tag))>>>0);}
-// схема з бази (f5_players.form) — лише зі списку F5_FORMS, інакше «1-2-1» (запис у f5_* відкритий, туди можна вписати що завгодно)
+// formation from DB (f5_players.form) is whitelisted against F5_FORMS, else 1-2-1 (f5_* tables are publicly writable)
 const f5Form=x=>Object.prototype.hasOwnProperty.call(F5_FORMS,x)?x:'1-2-1';
 function f5Team(name,team,form){return {name,team,form,slots:F5_FORMS[form].rows.flat().map(slot=>({slot,player:null})),rerolls:F5_REROLLS,taken:new Set()};}
-function f5Seat(){const n=F5.teams.length;return F5.mode==='turns'?F5.pick%n:F5.solo;}   // по черзі: суворо A-B-A-B
+function f5Seat(){const n=F5.teams.length;return F5.mode==='turns'?F5.pick%n:F5.solo;}   // turns mode: strict A-B-A-B
 function f5Taken(team){return F5.mode==='turns'?F5.takenAll:team.taken;}
 function f5Eligible(cs,team){const tk=f5Taken(team);return cs.pl.filter(p=>!tk.has(canon(p[5]))&&f5Fits(team,p));}
 function f5Spin(){
@@ -45,7 +45,7 @@ function f5Play(){
     st.sort((x,y)=>y.p-x.p||(y.gf-y.ga)-(x.gf-x.ga)||y.gf-x.gf||T.indexOf(x.t)-T.indexOf(y.t));res.table=st;
     res.final=f5Match(st[0].t,st[1].t,true,R);}
   F5.res=res;F5.phase='live';f5Render();window.scrollTo({top:0});}
-// ---------- живий матч: смуга 0'→40' іде 5 с, на кожному голі — пауза 1 с з автором і хвилиною
+// ---------- live match: 0'->40' bar runs 5 s, 1 s pause on each goal showing scorer and minute
 function f5Live(m,done){
   const bar=document.getElementById('f5Bar'),dot=document.getElementById('f5Dot'),min=document.getElementById('f5Min'),sa=document.getElementById('f5Sa'),sb=document.getElementById('f5Sb'),goal=document.getElementById('f5Goal');
   const RUN=5000,PAUSE=1000;let t0=null,paused=0,gi=0,a=0,b=0,stop=false;
@@ -60,7 +60,7 @@ function f5Live(m,done){
     const pc=mm/40*100;bar.style.width=pc+'%';dot.style.left=pc+'%';min.textContent=Math.floor(mm)+"'";
     if(mm>=40){finish();return;}requestAnimationFrame(frame);}
   requestAnimationFrame(frame);}
-// ---------- інтерфейс
+// ---------- UI
 function f5Start(){go(5);f5StopPoll();const nick=myName();F5={phase:'setup',where:ONLINE?'online':'local',n:2,mode:'turns',names:Array.from({length:F5_MAX},(_,i)=>i===0?nick:''),teams_:Array(F5_MAX).fill(''),forms:Array(F5_MAX).fill('1-2-1')};f5Render();}
 function f5Begin(){
   for(let i=0;i<F5.n;i++)if(!String(F5.names[i]||'').trim()){const el=document.querySelector(`[data-nm="${i}"]`);if(el){el.focus();el.classList.add('bad');}return;}
@@ -150,7 +150,7 @@ function f5Render(){
       const msg=document.getElementById('f5Msg');try{navigator.clipboard.writeText(t).then(()=>{msg.textContent='Скопійовано';},()=>{msg.textContent=t;});}catch(e){msg.textContent=t;}};}
 }
 
-// ---------- 5×5 онлайн: кімната в Supabase, усі пристрої опитують її раз на 2 с і будують однаковий стан із seed + піків
+// ---------- 5x5 online: Supabase room, every device polls it every 2 s and rebuilds identical state from seed + picks
 const F5_SB=(q,opt={})=>fetch(`${SB_URL}/rest/v1/${q}${q.includes('?')?'&':'?'}apikey=${SB_KEY}`,{method:opt.method||'GET',headers:{apikey:SB_KEY,'Content-Type':'application/json',Prefer:opt.prefer||'return=representation'},body:opt.body?JSON.stringify(opt.body):undefined})
   .then(async r=>{const tx=await r.text();let j=null;try{j=tx?JSON.parse(tx):null;}catch(e){}if(!r.ok){const e=new Error((j&&(j.message||j.details))||tx||r.status);e.status=r.status;e.code=j&&j.code;throw e;}return j;});
 function f5Link(id){return `${SITE}?r=${id}`;}
@@ -187,7 +187,7 @@ async function f5Sync(){
   const picks=await F5_SB(`f5_picks?room_id=eq.${o.id}&select=*&order=n.asc`)||[];
   if(F5.phase!=='draft'||!F5.wheel){const r=f5Rng('wheel');F5.wheel=[];for(let i=0;i<2000;i++)F5.wheel.push(DATA.clubs.indexOf(pickWeighted(DATA.clubs,r)));}
   const n=room.players_n||players.length;const pl=players.slice(0,n);
-  // той самий стан на кожному пристрої: склади з таблиці гравців + піки по порядку
+  // identical state on every device: squads from players table + picks in order
   const myN=picks.filter(k=>k.seat===o.seat).length,key=(F5.mode==='turns'?picks.length:myN)+'|'+n;const keepCs=F5.phase==='draft'&&F5.cs&&F5.myTurnKey===key;const cs0=F5.cs;
 F5.teams=pl.map(p=>f5Team(String(p.name||''),String(p.team||''),f5Form(p.form)));F5.takenAll=new Set();F5.seqAll={ptr:0};F5.seqs=[];
   for(const k of picks){const team=F5.teams[k.seat];if(!team)continue;const cs=DATA.clubs[k.club_idx];const pp=cs&&cs.pl.find(x=>x[5]===k.person_id);const s=team.slots[k.slot_idx];if(!pp||!s)continue;
@@ -229,7 +229,7 @@ function f5RenderOnline(el){const f=F5,o=f.online;
     document.getElementById('f5TgInv').onclick=()=>{const u=`https://t.me/share/url?url=${encodeURIComponent(TG?f5TgLink(o.id):f5Link(o.id))}&text=${encodeURIComponent(txt)}`;if(TG&&TG.openTelegramLink)TG.openTelegramLink(u);else window.open(u,'_blank');};
     document.getElementById('f5CopyInv').onclick=()=>{const m=document.getElementById('f5InvMsg');try{navigator.clipboard.writeText(f5Link(o.id)).then(()=>{m.textContent='Скопійовано: '+f5Link(o.id);},()=>{});}catch(e){}};
     const sr=document.getElementById('f5StartR');if(sr)sr.onclick=f5StartRoom;return;}
-  // драфт онлайн
+  // online draft
   const n=f.teams.length,mine=f.teams[o.seat];const turnSeat=f.mode==='turns'?f.pick%n:o.seat;const myTurn=f.mode==='turns'?turnSeat===o.seat:!!f5Open(mine).length;
   if(!myTurn||!f.cs){const who=f.teams[turnSeat];
     el.innerHTML=`<div class="daily"><div class="kicker">Кімната ${esc(o.id)} · ${f.mode==='turns'?`хід ${f.pick+1} з ${n*5}`:'кожен драфтить сам'}</div><div class="ttl">${f.mode==='turns'?`Ходить ${esc(f5Label(who))}`:(f5Open(mine).length?'Крутимо колесо…':'Твій склад готовий — чекаємо інших')}</div><p class="muted" style="margin:0">Оновлюється автоматично.</p></div>

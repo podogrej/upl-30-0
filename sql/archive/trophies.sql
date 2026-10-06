@@ -1,6 +1,6 @@
--- НЕ ЗАПУСКАТИ (архів, 0.67). Старий SQL: відкриває пряму запис для anon і зламає крок 2 (v054_close_writes). Для нової бази — README, розділ sql/.
--- 30-0 УПЛ · v0.19 · трофеї: хто який трофей відкрив (для «є в X% гравців»)
--- Вставити цілком у Supabase → SQL Editor → Run
+-- DO NOT RUN (archived). Legacy SQL: re-opens direct anon writes and breaks v054_close_writes. For a new DB see README, section sql/.
+-- v0.19: unlocked trophies per player (for trophy share %)
+-- Run the whole file in Supabase SQL Editor.
 
 alter table public.seasons add column if not exists golden boolean;
 
@@ -19,7 +19,7 @@ create policy "trophies read" on public.trophies for select to anon using (true)
 drop policy if exists "trophies insert" on public.trophies;
 create policy "trophies insert" on public.trophies for insert to anon with check (length(trophy) <= 24);
 
--- скільки гравців відкрили кожен трофей
+-- number of players per unlocked trophy
 create or replace function public.trophy_stats()
 returns json language sql stable security definer set search_path = public as $$
   select json_build_object(

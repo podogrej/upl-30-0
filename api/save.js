@@ -1,19 +1,19 @@
-// 30-0 УПЛ — запис результатів (адреса /api/save), з 0.53. Аудит 30.09, К5: у чужу історію гравця ніхто не допише.
-// POST {kind, device_id, secret, tg_init?, …}: база перевіряє секрет пристрою (device_ok), рядок пише сервер своїм ключем.
-// Гравець рядка — з прив'язки пристрою в базі (тригер player_id), Telegram — лише з перевіреного підпису Mini App (tg_init).
-//   kind 'season'      {row}           → сезон + одразу перевірка (як /api/verify) → {id, verified, note}
-//   kind 'trophies'    {ids:[…]}       → перші відкриття трофеїв → {ok}
-//   kind 'challenge'   {row}           → «Виклик другу» → {id}
-//   kind 'chal_result' {row}           → результат прийнятого виклику → {ok}
-// Результат виклику дня окремо не пишеться: його пише сервер із перевіреного сезону (api/verify.js, syncDaily).
-// 503 {fallback:true} — у базі ще немає device_ok (SQL 0.53 не виконано): браузер тоді пише як 0.52.
+// 30-0 UPL: result writes (/api/save). Audit K5: nobody can write into another player's history.
+// POST {kind, device_id, secret, tg_init?, ...}: the DB checks the device secret (device_ok); the server writes the row with its key.
+// Row owner comes from the device binding in the DB (player_id trigger); Telegram only from a verified Mini App signature (tg_init).
+//   kind 'season'      {row}           -> season + immediate verification (as /api/verify) -> {id, verified, note}
+//   kind 'trophies'    {ids:[...]}     -> first trophy unlocks -> {ok}
+//   kind 'challenge'   {row}           -> friend challenge -> {id}
+//   kind 'chal_result' {row}           -> accepted challenge result -> {ok}
+// Daily challenge result is not written here: the server writes it from the verified season (api/verify.js, syncDaily).
+// 503 {fallback:true}: DB has no device_ok yet (SQL 0.53 not applied); the browser then writes directly (legacy path).
 const { sb, deviceOk, tgUser, body, rateLimit } = require('./_device.js');
 const { verifyById } = require('./verify.js');
 
 const int = (v, lo, hi) => { const n = Number(v); return Number.isInteger(n) && n >= lo && n <= hi ? n : null; };
 const num = (v, lo, hi) => { if (v == null || v === '') return null; const n = Number(v); return Number.isFinite(n) && n >= lo && n <= hi ? n : null; };
 const str = (v, max) => v == null ? null : Array.from(String(v)).slice(0, max).join('');
-// рахунок сезону: ті самі правила, що й у політиках бази (w+d+l=30, pts=3w+d, місце 1–16)
+// season score: same rules as DB policies (w+d+l=30, pts=3w+d, place 1-16)
 function score(r) {
   const o = { w: int(r.w, 0, 30), d: int(r.d, 0, 30), l: int(r.l, 0, 30), pts: int(r.pts, 0, 90), place: int(r.place, 1, 16), gf: int(r.gf, 0, 999), ga: int(r.ga, 0, 999) };
   if (Object.values(o).some(v => v == null) || o.w + o.d + o.l !== 30 || o.pts !== o.w * 3 + o.d) return null;
@@ -33,14 +33,14 @@ function seasonRow(r) {
     year: int(r.year, 1900, 9999), seed: int(r.seed, 0, 2 ** 53), version: str(r.version, 12), xp: num(r.xp, 0, 90), xg: num(r.xg, 0, 999), xga: num(r.xga, 0, 999),
     tier: str(r.tier, 80), golden: !!r.golden, perfect: !!r.perfect, seed_id: /^[0-9A-Za-z-]{1,64}$/.test(String(r.seed_id || '')) ? String(r.seed_id) : null, practice: !!r.practice,
     day: dayRe.test(String(r.day || '')) ? r.day : null, xi: r.xi.map(xiItem), tbl: (r.tbl || []).map(tblItem),
-    // епоха (0.58) — лише не «Усі роки» (сайт інакше її не надсилає). Колонки seasons.era поки немає: insert() повторить запис без неї
+    // era: only when not "all years" (otherwise the site doesn't send it). seasons.era may be missing: insert() retries without it
     ...(/^y\d{4}$/.test(String(r.era || '')) ? { era: String(r.era) } : {}),
-    // 0.60: у драфті вмикали «Показати рейтинги» (seasons.show_r; колонки ще немає — insert() повторить без неї)
+    // "show ratings" was enabled in the draft (seasons.show_r; if the column is missing insert() retries without it)
     ...(r.show_r === true ? { show_r: true } : {}),
-    // 0.61: спроба ліги з друзями (код ліги); зараховує сервер після перевірки (api/verify.js → fl_record)
+    // friends league attempt (league code); credited by the server after verification (api/verify.js -> fl_record)
     ...(/^[a-z2-9]{6}$/.test(String(r.fl_id || '')) ? { fl_id: String(r.fl_id) } : {}) };
 }
-// вставка з повтором без колонки, якої в базі ще немає (як робив браузер)
+// insert, retrying without columns the DB doesn't have yet
 async function insert(table, row, qs = '', prefer = 'return=representation') {
   for (let n = 0; ; n++) {
     try { return await sb(`${table}${qs}`, { method: 'POST', prefer, body: row }); }

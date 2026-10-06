@@ -1,6 +1,6 @@
-// 0.69.6 (власник 03.10: «у групі — одне закріплене повідомлення»): табло ліги групи — одне повідомлення, закріплене один раз;
-// новий день редагує те саме повідомлення; /top — копія без закріплення; видалили табло — нове й закріплення. Без браузера: Telegram і база — заглушки.
-// Запуск з кореня: node tools/tests/board_pin.js
+// Group league board: a single message pinned once; a new day edits the same message; /top sends an unpinned copy;
+// if the board message was deleted, a new one is sent and pinned. No browser: Telegram and DB are stubs.
+// Run from repo root: node tools/tests/board_pin.js
 const path=require('path');const {checker}=require('./_site.js');
 process.env.SUPABASE_SERVICE_KEY='svc';process.env.TG_TOKEN='123:T';
 const TG=[],BOARDS=[];let MID=100,DELETED=new Set(),PIN_OK=true;
@@ -13,7 +13,7 @@ global.fetch=async(url,o={})=>{const u=new URL(url),t=u.pathname.split('/').pop(
   if(t==='league_boards'){
     if(m==='POST'){const b=JSON.parse(o.body);const old=BOARDS.find(r=>String(r.chat_id)===String(b.chat_id)&&r.day===b.day);if(old)Object.assign(old,b);else BOARDS.push({...b});return J(201,null);}
     const chat=u.searchParams.get('chat_id').replace('eq.','');return J(200,BOARDS.filter(r=>String(r.chat_id)===chat&&r.message_id!=null).sort((a,b)=>b.day.localeCompare(a.day)).slice(0,1));}
-  return J(200,[]);};   // league_results, leagues, seasons — порожньо: табло без результатів
+  return J(200,[]);};   // league_results, leagues, seasons are empty: board without results
 const L=require(path.join(__dirname,'..','..','api','_league.js'));
 const count=(m,f=()=>true)=>TG.filter(x=>x.m===m&&f(x.b)).length;
 (async()=>{const T=checker('board_pin');const C=-1001;

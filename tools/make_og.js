@@ -1,5 +1,5 @@
-// Картинка-превʼю для месенджерів og.png (1200×630) — у кольорах УПЛ (0.64). Запуск з кореня: node tools/make_og.js
-// Шрифти Unbounded і Manrope — з Google Fonts через curl (потрібна мережа), вбудовуються в сторінку; якщо мережі немає — системні.
+// Generates the messenger preview image og.png (1200×630) in UPL colors. Run from repo root: node tools/make_og.js
+// Unbounded and Manrope fonts are fetched from Google Fonts via curl and embedded; without network, system fonts are used.
 const path=require('path'),{execFileSync}=require('child_process');
 const UA='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36';
 function fonts(){try{let css=execFileSync('curl',['-sS','-A',UA,'https://fonts.googleapis.com/css2?family=Unbounded:wght@800&family=Manrope:wght@600;700&subset=cyrillic&display=block']).toString();

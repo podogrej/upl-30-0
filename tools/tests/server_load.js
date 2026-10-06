@@ -1,5 +1,5 @@
-// Сервер на Vercel бачить лише api/ і lib/ (src/, tools/, data/, docs/, sql/ — у .vercelignore). Перевірка: кожен api/*.js завантажується
-// з копії, де є тільки api/, lib/ і корінні файли, що не в .vercelignore (так упав /api/fl5 у 0.63). Запуск з кореня: node tools/tests/server_load.js
+// On Vercel the server sees only api/ and lib/ (src/, tools/, data/, docs/, sql/ are in .vercelignore). Check: every api/*.js loads
+// from a copy containing only api/, lib/ and root files not in .vercelignore. Run from repo root: node tools/tests/server_load.js
 const fs=require('fs'),path=require('path'),os=require('os'),cp=require('child_process');
 const ROOT=path.join(__dirname,'..','..');const ign=fs.readFileSync(path.join(ROOT,'.vercelignore'),'utf8').split('\n').map(s=>s.trim().replace(/\/$/,'')).filter(Boolean);
 const tmp=fs.mkdtempSync(path.join(os.tmpdir(),'vc-'));

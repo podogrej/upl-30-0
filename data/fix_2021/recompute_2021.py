@@ -1,19 +1,19 @@
-"""Рейтинги сезону 2021/22 тією самою формулою, що й етап 4 (data/build_stage4.py, розділ «4. Признаки и рейтинг»).
+"""2021/22 season ratings with the same formula as stage 4 (data/build_stage4.py, section 4: features and rating).
 
-Запуск з кореня репозиторію:
-  python3 data/fix_2021/recompute_2021.py      — перевірка: перерахувати ВСІ картки 2021 і порівняти з
-                                                 data/ratings/pool_ratings_raw.json (нічого не записує)
-Як модуль: compute(pool) -> {(club, index_in_club): рейтинг з 1 знаком} — використовує fix_pool_2021.py.
+Run from repo root:
+  python3 data/fix_2021/recompute_2021.py      - check: recompute ALL 2021 cards and compare with
+                                                 data/ratings/pool_ratings_raw.json (writes nothing)
+As a module: compute(pool) -> {(club, index_in_club): rating with 1 decimal}; used by fix_pool_2021.py.
 
-Що береться (як і в етапі 4 для 2021/22):
-  - картка: лінія p[1], матчі p[3], голи p[4]. Асистів і сухих у етапі 4 для 2021 не було (усі NaN) —
-    тому й тут вони НЕ враховуються, інакше нові картки рахувалися б інакше, ніж решта сезону;
-  - команда: місце (team_rank_pct), голи за/проти за матч = att/def × base з pool.seasons['2021'];
-    ігор у клубу — data/data/standings.csv (18, у Руху й Інгульця 17 — чемпіонат зупинено після 18 турів);
-  - пропущені воротаря: stage4 брав їх із ru-Вікіпедії; тут — стовпець «Проп» sports.ru
-    (data/research_assists/sportsru_2021_clubs.json), воротар без збігу → пропущені команди за матч (як у етапі 4).
-Шкала: перцентиль у (сезон, лінія) → N(72, 10), розтяг малих груп до 150, межі 45–99, менше 8 матчів → до 50.
-Після етапу 4: round → stretch_top.py (лише 90+) → pool_ratings_raw.json → smooth_cameo.py.
+Inputs (same as stage 4 for 2021/22):
+  - card: line p[1], apps p[3], goals p[4]. Stage 4 had no assists or clean sheets for 2021 (all NaN),
+    so they are NOT used here either, otherwise new cards would be rated differently from the rest of the season;
+  - team: place (team_rank_pct), goals for/against per game = att/def x base from pool.seasons['2021'];
+    club games from data/data/standings.csv (18; Rukh and Inhulets 17, the league stopped after 18 rounds);
+  - goalkeeper goals conceded: stage 4 took them from ru-Wikipedia; here from the sports.ru conceded column
+    (data/research_assists/sportsru_2021_clubs.json); unmatched goalkeeper -> team conceded per game (as in stage 4).
+Scale: percentile within (season, line) -> N(72, 10), small groups stretched to 150, clamp 45-99, under 8 apps -> toward 50.
+After stage 4: round -> stretch_top.py (90+ only) -> pool_ratings_raw.json -> smooth_cameo.py.
 """
 import csv, json, math, os, sys
 from statistics import NormalDist
@@ -72,7 +72,7 @@ def team_table(pool):
 
 
 def gk_conceded(pool):
-    """(club, person_id) -> пропущені за sports.ru (зіставлення воротарів у клубі за іменем і матчами)."""
+    """(club, person_id) -> goals conceded per sports.ru (goalkeepers matched within club by name and apps)."""
     sys.path.insert(0, os.path.join(ROOT, 'data', 'research_assists'))
     from sportsru_2021 import lat, nsim
     S = json.load(open(SPORTS, encoding='utf-8'))
@@ -123,7 +123,7 @@ def compute(pool, use_assists=False):
         F['gapg_adj'] = shrunk(gs, den, [True] * len(g))
         has = [r['ast'] is not None for r in g]
         F['apg_adj'] = [v if h else None for v, h in zip(shrunk([r['ast'] for r in g], den, has), has)] if any(has) else [None] * len(g)
-        F['cs_rate'] = [None] * len(g)   # сухих у етапі 4 для 2021 не було
+        F['cs_rate'] = [None] * len(g)   # stage 4 had no clean sheets for 2021
         if pg == 'GK':
             hc = [r['conc'] is not None for r in g]
             cp = shrunk([r['conc'] for r in g], den, hc) if any(hc) else [None] * len(g)
@@ -133,7 +133,7 @@ def compute(pool, use_assists=False):
             num = sum(Z[k][n] * w for k, w in W.items() if Z[k][n] is not None)
             dn = sum(w for k, w in W.items() if Z[k][n] is not None)
             raw[r['key']] = num / dn if dn else None
-        # перцентиль → шкала
+        # percentile -> scale
         vals = [raw[r['key']] for r in g]; rk = avg_rank(vals)
         zp = [ND.inv_cdf(min(max((x - 0.5) / len(g), 1e-4), 1 - 1e-4)) for x in rk]
         z_ref = ND.inv_cdf((RATING_REF_GROUP - 0.5) / RATING_REF_GROUP); zmax = max(zp)
@@ -155,7 +155,7 @@ def validate(pool, raw, skip=()):
         return dict(n=n, corr=round(cov / math.sqrt(va * vb), 4), mae=round(sum(abs(x - y) for x, y in ps) / n, 3),
                     exact=round(sum(x == y for x, y in ps) / n, 3), within1=round(sum(abs(x - y) <= 1 for x, y in ps) / n, 3),
                     maxdiff=max(abs(x - y) for x, y in ps))
-    below = [(x, y) for x, y in pairs if y < 90 and x < 90]   # 90+ переставлені stretch_top.py за квотами всієї бази
+    below = [(x, y) for x, y in pairs if y < 90 and x < 90]   # 90+ were re-ranked by stretch_top.py using whole-pool quotas
     return stats(pairs), stats(below), rt
 
 

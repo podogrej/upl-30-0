@@ -1,22 +1,22 @@
--- 30-0 УПЛ · v0.60 · «Один гравець»: об'єднання двох входів питанням, журнал злиттів, виняток «andré», пошта для новин,
--- позначка «рейтинги відкриті» в сезоні, «Вибір сезону» на сторінці гравця (DECISIONS п. 2, 4, 12, 16).
--- Запускати: спершу тестова база (upl-30-0-test), потім основна. Supabase → SQL Editor → вставити цілком → Run.
--- Повторний запуск нічого не ламає. Сайт 0.59, ще відкритий у гравців, працює як раніше (link_account і player_json лише отримали нові поля).
--- Нових політик запису для anon/authenticated немає: нові таблиці закриті (RLS без політик, прав немає), запис — лише через RPC
--- з перевіркою секрету пристрою й входу.
+-- v0.60: "one player": joining two sign-ins via a prompt, merge log, reserved-name exception, newsletter email,
+-- "ratings shown" flag on a season, "pick season" mode on the player page (DECISIONS items 2, 4, 12, 16).
+-- Run on the test DB first (upl-30-0-test), then on the main DB.
+-- Idempotent. 0.59 clients keep working (link_account and player_json only gained fields).
+-- No new anon/authenticated write policies: new tables are closed (RLS without policies, no grants); writes only via RPCs
+-- that check the device secret and the sign-in.
 --
--- Що тут:
---  1. merge_log — журнал злиттів (що саме перенесено), unmerge_players(id) — відкотити помилкове злиття (лише сервер / SQL Editor).
---     merge_players_logged(src, dst, reason, prefer_src_name) — злиття з записом у журнал.
---  2. merge_offers + link_account: вхід другим способом на пристрої, де вже грає гравець іншого входу з історією, — не зливає мовчки (В6),
---     а повертає питання «Це ти?» (merge_offer). merge_answer(device, secret, offer, yes) — відповідь; «так» — злиття з журналом.
---  3. name_reserved — іменні винятки з правил (рішення власника 30.09.2026: «andré» — лише власнику). set_player_name пропускає своє зарезервоване ім'я.
---  4. player_contacts — пошта для новин і галочка «Іноді надсилати новини 30-0» (окрема закрита таблиця: players читають усі);
---     set_player_contact(device, secret, email, optin). player_json (лише власнику пристрою) повертає їх; delete_player стирає.
---  5. seasons.show_r — у драфті була увімкнена галочка «Показати рейтинги гравців» (таблиці показують позначку поруч із результатом).
---  6. player_profile: «Вибір сезону» (mode = 'pick') — окремий режим у «Найкращий і найгірший XI».
+-- Contents:
+--  1. merge_log: merge journal (what was moved); unmerge_players(id) reverts a wrong merge (server / SQL Editor only).
+--     merge_players_logged(src, dst, reason, prefer_src_name): merge with a journal entry.
+--  2. merge_offers + link_account: signing in another way on a device where another sign-in's player with history plays does not merge silently (V6);
+--     it returns a "Is this you?" prompt (merge_offer). merge_answer(device, secret, offer, yes) answers it; yes = logged merge.
+--  3. name_reserved: per-player exceptions to the name rules. set_player_name lets a player keep their own reserved name.
+--  4. player_contacts: newsletter email and opt-in flag (separate closed table, because players is world-readable);
+--     set_player_contact(device, secret, email, optin). player_json returns them to the device owner only; delete_player erases them.
+--  5. seasons.show_r: the "show player ratings" toggle was on during the draft (tables show a marker next to the result).
+--  6. player_profile: "pick season" (mode = 'pick') is a separate mode in best/worst XI.
 
--- 1. журнал злиттів
+-- 1. merge journal
 create table if not exists public.merge_log (
   id bigint generated always as identity primary key,
   at timestamptz not null default now(),
@@ -45,7 +45,7 @@ begin
     'league_members',    coalesce((select jsonb_agg(jsonb_build_array(chat_id, tg_user_id)) from league_members where player_id = p_src), '[]'));
   insert into merge_log (src, dst, reason, moved, dst_name_before)
     values (p_src, p_dst, left(p_reason, 200), mv, (select name from players where id = p_dst)) returning id into lid;
-  -- новий акаунт без історії бере ім'я старого гравця (інакше ім'я, щойно підставлене з Google/Telegram, затерло б вибране)
+  -- a new account without history takes the old player's name (otherwise a name just filled from Google/Telegram would overwrite the chosen one)
   if p_prefer_src_name and exists (select 1 from players where id = p_src and name is not null) then
     update players set name = null where id = p_dst;
   end if;
@@ -55,7 +55,7 @@ begin
 end $$;
 revoke execute on function public.merge_players_logged(uuid, uuid, text, boolean) from public, anon, authenticated;
 
--- відкотити злиття за записом журналу: усе перенесене повертається старому гравцю, він знову «живий»
+-- revert a merge from its journal entry: everything moved goes back to the old player, who becomes live again
 create or replace function public.unmerge_players(p_log bigint) returns text language plpgsql security definer set search_path = public as $$
 declare L merge_log%rowtype; x jsonb;
 begin
@@ -65,7 +65,7 @@ begin
   update players set name = L.dst_name_before where id = L.dst;
   begin
     update players set merged_into = null where id = L.src;
-  exception when unique_violation then   -- ім'я старого гравця вже зайняв хтось інший — він повертається з анонімним
+  exception when unique_violation then   -- the old player's name is taken by someone else: restore them with an anonymous name
     update players set name = null, merged_into = null where id = L.src;
   end;
   for x in select * from jsonb_array_elements(L.moved -> 'player_links') loop
@@ -88,12 +88,12 @@ begin
 end $$;
 revoke execute on function public.unmerge_players(bigint) from public, anon, authenticated;
 
--- 2. питання «Це ти?» при вході другим способом (рішення власника 30.09.2026, варіант 1: автоматично не склеюємо — питаємо)
+-- 2. "Is this you?" prompt on signing in another way (never merge automatically, ask instead)
 create table if not exists public.merge_offers (
   id uuid primary key default gen_random_uuid(),
-  src uuid not null,            -- гравець, що вже грав на цьому пристрої (інший вхід)
-  dst uuid not null,            -- гравець щойно входу
-  uid uuid,                     -- вхід (auth.users), під яким питання створено
+  src uuid not null,            -- player who already played on this device (other sign-in)
+  dst uuid not null,            -- player of the current sign-in
+  uid uuid,                     -- sign-in (auth.users) that created the prompt
   created_at timestamptz not null default now(),
   answered_at timestamptz, answer text
 );
@@ -101,7 +101,7 @@ alter table public.merge_offers enable row level security;
 revoke all on table public.merge_offers from anon, authenticated;
 create index if not exists merge_offers_dst_idx on public.merge_offers (dst, created_at desc);
 
--- відкрите питання для гравця (7 днів, без відповіді, старий гравець живий): {id, name, seasons}
+-- open prompt for a player (7 days, unanswered, old player still live): {id, name, seasons}
 create or replace function public.merge_offer_json(p_dst uuid) returns json language sql stable security definer set search_path = public as $$
   select json_build_object('id', o.id, 'name', public.name_key(coalesce(s.name, s.anon_name)),
                            'seasons', (select count(*) from seasons x where x.player_id = o.src and not x.practice))
@@ -111,8 +111,8 @@ create or replace function public.merge_offer_json(p_dst uuid) returns json lang
 $$;
 revoke execute on function public.merge_offer_json(uuid) from public, anon, authenticated;
 
--- link_account (0.53, В6) + питання: пристрій, чий гравець належить ІНШОМУ входу, переходить до гравця цього входу, як і раніше;
--- якщо в старого гравця є сезони — створюємо питання «Це ти?» (раз на пару гравців). Відповідь — merge_answer.
+-- link_account (0.53, V6) + prompt: a device whose player belongs to ANOTHER sign-in moves to this sign-in's player, as before;
+-- if the old player has seasons, create a "Is this you?" prompt (once per player pair). Answered via merge_answer.
 create or replace function public.link_account(p_device uuid, p_secret text) returns json language plpgsql security definer set search_path = public as $$
 declare uid uuid := auth.uid(); dev uuid; acc uuid; tgid text; other boolean;
 begin
@@ -147,7 +147,7 @@ end $$;
 revoke execute on function public.link_account(uuid, text) from public, anon;
 grant execute on function public.link_account(uuid, text) to authenticated;
 
--- відповідь на питання: лише той самий вхід (гравець питання) і пристрій, що вже належить йому. «Так» — злиття з журналом (відкотити — unmerge_players)
+-- answer: only the same sign-in (prompt's player) and a device already owned by it. Yes = logged merge (revert with unmerge_players)
 create or replace function public.merge_answer(p_device uuid, p_secret text, p_offer uuid, p_yes boolean) returns json language plpgsql security definer set search_path = public as $$
 declare uid uuid := auth.uid(); dev uuid; acc uuid; o merge_offers%rowtype; fresh boolean;
 begin
@@ -168,7 +168,7 @@ end $$;
 revoke execute on function public.merge_answer(uuid, text, uuid, boolean) from public, anon;
 grant execute on function public.merge_answer(uuid, text, uuid, boolean) to authenticated;
 
--- 3. іменні винятки (рішення власника 30.09.2026): «andré» — єдине ім'я поза правилами, лише власнику
+-- 3. reserved names: the only names allowed outside the rules, each for one player
 create table if not exists public.name_reserved (
   name text primary key,
   player_id uuid not null,
@@ -181,7 +181,7 @@ insert into public.name_reserved (name, player_id, note)
   select 'andré', id, 'власник проєкту, 30.09.2026' from public.players where name = 'andré' and merged_into is null and deleted_at is null
   on conflict (name) do nothing;
 
--- ім'я гравця (вибране вручну): як у 0.59 + своє зарезервоване ім'я проходить повз правила
+-- player name (chosen manually): as in 0.59, plus the player's own reserved name bypasses the rules
 create or replace function public.set_player_name(p_device uuid, p_secret text, p_name text) returns json language plpgsql security definer set search_path = public as $$
 declare pid uuid; nm text; cur players%rowtype;
 begin
@@ -192,15 +192,15 @@ begin
   exception when sqlstate '22023' then
     nm := nullif(regexp_replace(lower(btrim(coalesce(p_name, ''))), '\s+', '_', 'g'), '');
     if nm is not null and exists (select 1 from name_reserved r where r.name = nm and r.player_id = pid) then
-      null;   -- зарезервоване ім'я цього гравця
+      null;   -- this player's reserved name
     elsif cur.name is null then
-      -- сайт 0.58 (ще відкритий у гравців) підставляє перше ім'я з Telegram як є («Андрій») — переписуємо латиницею, а не падаємо
+      -- 0.58 clients send the raw Telegram first name (Cyrillic): transliterate instead of failing
       perform public.name_auto_set(pid, p_name); return public.player_json(pid);
     else
       raise;
     end if;
   end;
-  -- те саме ім'я (інший регістр) — лише зберігаємо в нижньому регістрі, без відліку 30 днів
+  -- same name with different case: just store lowercase, no 30-day timer
   if nm is not distinct from public.name_key(cur.name) then
     if nm is not null and cur.name is distinct from nm then update players set name = nm where id = pid; end if;
     return public.player_json(pid);
@@ -214,7 +214,7 @@ begin
     raise exception 'name_taken' using errcode = '23505';
   end if;
   begin
-    -- перше ім'я (з анонімного, зокрема автоматичне з Telegram/Google) не запускає відлік; зміна чи скидання імені — запускає
+    -- first name (from anonymous, incl. automatic from Telegram/Google) does not start the timer; changing or clearing it does
     update players set name = nm, name_changed_at = case when cur.name is not null then now() else name_changed_at end where id = pid;
   exception when unique_violation then raise exception 'name_taken' using errcode = '23505';
   end;
@@ -222,7 +222,7 @@ begin
 end $$;
 grant execute on function public.set_player_name(uuid, text, text) to anon, authenticated;
 
--- 4. пошта для новин (лише за згодою; видно тільки власнику пристрою). Не в players: players читає будь-хто (таблиці, сторінка гравця)
+-- 4. newsletter email (opt-in only; visible to the device owner only). Not in players: players is world-readable (tables, player page)
 create table if not exists public.player_contacts (
   player_id uuid primary key,
   email text,
@@ -242,7 +242,7 @@ create or replace function public.player_json(p_id uuid) returns json language s
 $$;
 revoke execute on function public.player_json(uuid) from public, anon, authenticated;
 
--- порожня пошта — стерти (і галочку); помилка email_bad (22023) — не схоже на адресу
+-- empty email = erase (and the opt-in); error email_bad (22023) = does not look like an address
 create or replace function public.set_player_contact(p_device uuid, p_secret text, p_email text, p_optin boolean) returns json language plpgsql security definer set search_path = public as $$
 declare pid uuid; em text := nullif(lower(btrim(coalesce(p_email, ''))), '');
 begin
@@ -259,7 +259,7 @@ end $$;
 revoke execute on function public.set_player_contact(uuid, text, text, boolean) from public;
 grant execute on function public.set_player_contact(uuid, text, text, boolean) to anon, authenticated;
 
--- «Видалити акаунт» (0.59) + пошта й галочка новин стираються
+-- account deletion (0.59) + newsletter email and opt-in are erased
 create or replace function public.delete_player(p_device uuid, p_secret text) returns json language plpgsql security definer set search_path = public as $$
 declare pid uuid; acc uuid; an text; uids uuid[]; tgs bigint[];
 begin
@@ -274,7 +274,7 @@ begin
   delete from player_contacts where player_id = pid or player_id in (select id from players where merged_into = pid);
   delete from name_reserved where player_id = pid;
   update seasons set nickname = null, tg_name = null, tg_user_id = null where player_id = pid;
-  update daily_results set nickname = an, tg_name = null, tg_user_id = null where player_id = pid;   -- nickname у основній базі NOT NULL, 2–24
+  update daily_results set nickname = an, tg_name = null, tg_user_id = null where player_id = pid;   -- nickname is NOT NULL (2-24 chars) in the main DB
   update trophies set tg_name = null, tg_user_id = null where player_id = pid;
   update challenges set name = an where player_id = pid;
   update challenge_results set name = an where player_id = pid;
@@ -285,17 +285,17 @@ begin
   delete from user_state where user_id = any(uids);
   begin
     delete from auth.users where id = any(uids);
-  exception when others then raise notice 'auth.users: %', sqlerrm;   -- немає прав — вхід лишиться, але він уже ні до кого не прив'язаний
+  exception when others then raise notice 'auth.users: %', sqlerrm;   -- no privileges: the sign-in stays but is no longer linked to anyone
   end;
   return json_build_object('ok', true);
 end $$;
 revoke execute on function public.delete_player(uuid, text) from public;
 grant execute on function public.delete_player(uuid, text) to anon, authenticated;
 
--- 5. «рейтинги відкриті» в драфті (галочка «Показати рейтинги гравців»): пише сервер (/api/save), таблиці показують позначку
+-- 5. "ratings shown" during the draft: written by the server (/api/save), tables show a marker
 alter table public.seasons add column if not exists show_r boolean;
 
--- 6. сторінка гравця: «Вибір сезону» (mode = 'pick') — окремий режим у «Найкращий і найгірший XI» (решта — як у 0.59)
+-- 6. player page: "pick season" (mode = 'pick') is a separate mode in best/worst XI (rest as in 0.59)
 create or replace function public.player_profile(p_player uuid) returns json language plpgsql stable security definer set search_path = public as $$
 declare pid uuid := p_player; p players%rowtype; hops int := 0; res json;
 begin
@@ -363,7 +363,7 @@ end $$;
 revoke execute on function public.player_profile(uuid) from public;
 grant execute on function public.player_profile(uuid) to anon, authenticated;
 
--- результат запуску: коротка перевірка
+-- run output: quick check
 select 'andré зарезервовано' as "що", count(*)::text as "скільки" from public.name_reserved
 union all select 'відкритих питань «Це ти?»', count(*)::text from public.merge_offers where answered_at is null
 union all select 'записів у журналі злиттів', count(*)::text from public.merge_log;

@@ -1,15 +1,15 @@
-// Фішки на полі не налазять одна на одну (0.56). Для кожної схеми 11×11 (FORMATIONS) і 5×5 (F5_FORMS) поле заповнюємо
-// найдовшими прізвищами з пулу (cardName; «(пітух)» у Тимощука теж рахується), кожному слоту — гравці, що можуть на ньому грати.
-// Стани: драфт з рейтингами, драфт без рейтингів, підсумки сезону (середня оцінка + загальний рейтинг у рядку клубу),
-// перегляд збереженого сезону (вікно таблиці); 5×5 — драфт, склади з рейтингами, фінал з оцінками (одне поле й сітка з 3 команд).
-// Ширини екрана 320, 360, 390, 768, 1024. Для кожної пари фішок порівнюємо прямокутники кружка, плашки, прізвища й рядка клубу
-// (текст — через Range): перетинів немає, усе всередині поля з запасом 2px. Очікуємо 0.
-// Запуск з кореня: node tools/tests/pitch_layout.js [ширина …]
+// Player chips on the pitch must not overlap. For every 11x11 (FORMATIONS) and 5x5 (F5_FORMS) formation the pitch is filled
+// with the longest surnames in the pool (cardName, incl. nickname suffixes), each slot with players eligible for it.
+// States: draft with ratings, draft without ratings, season summary (average grade + overall rating in the club line),
+// saved-season view (board modal); 5x5: draft, squads with ratings, final with grades (single pitch and a 3-team grid).
+// Viewport widths 320, 360, 390, 768, 1024. For every chip pair compare rects of the circle, badge, surname and club line
+// (text via Range): no intersections, everything inside the pitch with a 2px margin. Expect 0.
+// Run from repo root: node tools/tests/pitch_layout.js [width ...]
 const {openPage}=require('./_page.js');
 const WIDTHS=process.argv.slice(2).map(Number).filter(Boolean);
 (async()=>{
   const {b,pg,errs}=await openPage({viewport:{width:390,height:900}});
-  await pg.addStyleTag({content:'.slot *{animation:none!important;transition:none!important}'});   // плашка «pop» масштабує — міряємо кінцевий стан
+  await pg.addStyleTag({content:'.slot *{animation:none!important;transition:none!important}'});   // the 'pop' badge scales - measure the final state
   await pg.evaluate(()=>document.fonts.ready);
   let total=0;const byW={};
   for(const W of (WIDTHS.length?WIDTHS:[320,360,390,768,1024])){
@@ -24,7 +24,7 @@ const WIDTHS=process.argv.slice(2).map(Number).filter(Boolean);
         return {name:x.p[0],id:x.p[5],r0:x.p[2],r:x.p[2],cc:x.c.c,club:x.c.n,c:x.c.c,y:x.c.y,slot:sl};});};
       const nf=()=>new Promise(res=>requestAnimationFrame(()=>requestAnimationFrame(res)));
       const show=id=>{for(const s of document.querySelectorAll('main section, section'))s.hidden=s.id!==id;};
-      // прямокутники частин кожної фішки
+      // rects of each chip's parts
       function measure(pe,label){const pr=pe.getBoundingClientRect(),rg=document.createRange(),bad=[];
         const chips=[...pe.querySelectorAll('.slot')].map((sl,i)=>{const parts=[];
           const add=(k,e,txt)=>{if(!e)return;let r;if(txt){rg.selectNodeContents(e);r=rg.getBoundingClientRect();}else r=e.getBoundingClientRect();if(r.width>0)parts.push({k,r,i});};
@@ -51,7 +51,7 @@ const WIDTHS=process.argv.slice(2).map(Number).filter(Boolean);
         const vb=document.getElementById('viewBox');vb.hidden=false;document.getElementById('viewBody').innerHTML=D.pitchHtml(f,xi.map(p=>({n:p.name,id:p.id,slot:p.slot,r:p.r,r0:p.r0,c:p.club,y:p.y})));
         await run(document.querySelector('#viewBody .pitch'),`${f} перегляд сезону`);vb.hidden=true;document.getElementById('viewBody').innerHTML='';}
       Object.assign(S,sv);
-      // 5×5: лінія гравця — GROUP_OF[основна позиція]
+      // 5x5: player line = GROUP_OF[primary position]
       const f5G=p=>D.GROUP_OF[p[6]]||p[1];show('s5');const host=document.getElementById('f5');const keep=host.innerHTML;
       for(const f of Object.keys(D.F5_FORMS)){
         const slots=D.F5_FORMS[f].rows.flat();const xi=pick(slots,(p,sl)=>f5G(p)===sl);

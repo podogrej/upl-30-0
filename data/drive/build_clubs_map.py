@@ -89,7 +89,7 @@ ALIASES = {
  "«Чорноморець» (Одеса)": "chornomorets-odesa", "«Шахтар» (Донецьк)": "shakhtar-donetsk", "ПФК «Севастополь»": "sevastopol",
  "СК «Миколаїв»": "mykolaiv", "ФК «Львів»": "fc-lviv-2008", "ФК «Олександрія»": "oleksandriya", "ФК «Харків»": "fc-kharkiv",
  "ЦСКА (Київ)": "cska-kyiv",
- # --- ru.wikipedia (2011 + запас на інші сезони)
+ # --- ru.wikipedia (2011 + spare entries for other seasons)
  "Александрия": "oleksandriya", "Арсенал (Киев)": "arsenal-kyiv", "Волынь (Луцк)": "volyn-lutsk", "Ворскла (Полтава)": "vorskla-poltava",
  "Динамо (Киев)": "dynamo-kyiv", "Днепр (Днепропетровск)": "dnipro", "Заря (Луганск)": "zorya-luhansk", "Ильичёвец (Мариуполь)": "mariupol",
  "Карпаты (Львов)": "karpaty-lviv", "Кривбасс (Кривой Рог)": "kryvbas", "Металлист (Харьков)": "metalist-kharkiv",
