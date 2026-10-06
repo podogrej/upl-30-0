@@ -7,3 +7,7 @@ tools/tests/preview.html
 tools/tests/out/
 tools/results_*.json
 .claude/worktrees/
+
+# Claude Code ralph-loop state
+.claude/ralph-loop.local.md
+.claude/.ralph-loop.local.md
