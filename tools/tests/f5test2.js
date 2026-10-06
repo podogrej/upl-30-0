@@ -11,7 +11,7 @@ const OUT=process.argv[2]||path.join(ROOT,'tools','tests','out');fs.mkdirSync(OU
      hidden=hidden&&await pg.$$eval('#f5Sq .pl .rt',e=>e.every(x=>x.textContent===''));
      picked.push(await btn.$eval('.nm',e=>e.textContent));await btn.click();await pg.waitForTimeout(80);}
    return {turns,picked,hidden};}
- await pg.evaluate(()=>document.getElementById('f5Open').click());   /* entry button is hidden on home */await pg.click('[data-w="local"]');
+ await pg.evaluate(()=>document.getElementById('f5Open').click());   /* entry button is hidden on home */
  await pg.click('#f5Go');T.check(!!(await pg.$('#f5Go'))&&await pg.$eval('[data-nm="0"]',e=>e.classList.contains('bad')),'без ніку драфт не починається');
  await pg.fill('[data-nm="0"]','Андрій');await pg.fill('[data-nm="1"]','Сергій');await pg.fill('[data-tm="1"]','Динамо Двір');await pg.click('[data-fi="1"][data-fm="2-2"]');
  await pg.click('#f5Go');const d2=await draft();
@@ -22,11 +22,12 @@ const OUT=process.argv[2]||path.join(ROOT,'tools','tests','out');fs.mkdirSync(OU
  T.check(ready.length===2&&/2-2/.test(ready[1])&&/1-2-1/.test(ready[0]),'склади зібрано: схеми 1-2-1 і 2-2');
  await pg.screenshot({path:path.join(OUT,'f5_ready.png'),fullPage:true});
  await pg.click('#f5Play');await pg.waitForTimeout(1500);T.check(!!(await pg.$('#f5Skip')),'живий матч іде');
- const t0=Date.now();await pg.waitForSelector('#f5Again',{timeout:20000});const sc=await pg.textContent('.f5score');
+ // match lasts ~5 s plus 1 s per goal; long margin for loaded CI runners
+ const t0=Date.now();await pg.waitForSelector('#f5Again',{timeout:45000});const sc=await pg.textContent('.f5score');
  T.check(/\d+:\d+/.test(sc),`матч дограв сам за ~${Math.round((Date.now()-t0+1500)/1000)} с: ${sc.replace(/\s+/g,' ')}`);
  await pg.screenshot({path:path.join(OUT,'f5_result.png'),fullPage:true});
  // three players, each drafting alone
- await pg.click('#f5New');await pg.click('[data-w="local"]');await pg.click('#f5Plus');await pg.click('[data-m="solo"]');
+ await pg.click('#f5New');await pg.click('#f5Plus');await pg.click('[data-m="solo"]');
  for(const [i,n] of [[0,'А'],[1,'Б'],[2,'В']])await pg.fill(`[data-nm="${i}"]`,n);
  await pg.click('#f5Go');const d3=await draft();
  T.check(d3.turns.join('')==='АБВ'&&d3.picked.length===15,'кожен сам: драфт А, Б, В по 5 гравців');

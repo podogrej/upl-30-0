@@ -7,31 +7,11 @@
 const path=require('path');const {checker}=require('./_site.js');
 Object.assign(process.env,{SUPABASE_URL:'https://prod.db',SUPABASE_SERVICE_KEY:'svc',TEST_SUPABASE_URL:'https://test.db',TEST_SUPABASE_SERVICE_KEY:'tsvc',
   TG_TOKEN:'123:T',TG_SECRET:'sec',OWNER_TG_ID:'777',CHANNEL_CHAT_ID:'-100111',TEST_CHANNEL_ID:'-100222',CRON_SECRET:'cron',CHANNEL_SECRET:'chan',VERCEL_ENV:'production'});
-// ---- PostgREST stub: filters eq/neq/is/lt/lte/gt/gte/in/like, order, limit, on_conflict, Prefer return/resolution
-const DBS={'https://prod.db':{},'https://test.db':{}};let SEQ=1;
-const tbl=(base,t)=>(DBS[base][t]=DBS[base][t]||[]);
-function match(row,k,v){const i=v.indexOf('.'),op=v.slice(0,i),a=decodeURIComponent(v.slice(i+1));const x=row[k];
-  if(op==='eq')return String(x)===a;if(op==='neq')return String(x)!==a;if(op==='is')return a==='null'?x==null:String(x)===a;
-  if(op==='in')return a.replace(/^\(|\)$/g,'').split(',').includes(String(x));if(op==='like')return new RegExp('^'+a.replace(/[.+?^${}()|[\]\\]/g,'\\$&').replace(/\*/g,'.*')+'$').test(String(x));
-  const c=x==null?null:String(x);if(c==null)return false;return op==='lt'?c<a:op==='lte'?c<=a:op==='gt'?c>a:op==='gte'?c>=a:true;}
-function rest(base,pathq,o){const [t,qs='']=pathq.split('?');const P=[...new URLSearchParams(qs)];const m=o.method||'GET',pref=(o.headers||{}).Prefer||'';
-  const filt=P.filter(([k])=>!['select','order','limit','offset','on_conflict','apikey'].includes(k));const rows=tbl(base,t);const sel=r=>filt.every(([k,v])=>match(r,k,v));
-  if(m==='GET'){let out=rows.filter(sel);const ord=(P.find(([k])=>k==='order')||[])[1];if(ord){const [c,d]=ord.split(',')[0].split('.');out=[...out].sort((a,b)=>(String(a[c])<String(b[c])?-1:1)*(d==='desc'?-1:1));}
-    const lim=Math.min(1000,+((P.find(([k])=>k==='limit')||[])[1]||1000)),off=+((P.find(([k])=>k==='offset')||[])[1]||0);return out.slice(off,off+lim);}   // like Supabase: at most 1000 rows
-  if(m==='POST'){const body=JSON.parse(o.body);const list=Array.isArray(body)?body:[body];const oc=(P.find(([k])=>k==='on_conflict')||[])[1];const done=[];
-    for(const b of list){if(oc&&rows.some(r=>r[oc]===b[oc])){if(/ignore-duplicates/.test(pref))continue;}
-      const r={...b};if(t==='channel_posts'){r.id=SEQ++;r.status=r.status||'draft';r.source=r.source||'chat';r.created_at=new Date().toISOString();for(const k of ['published_at','tg_message_id','error','image_url'])if(!(k in r))r[k]=null;}
-      if(t==='app_marks')r.at=r.at||new Date().toISOString();rows.push(r);done.push(r);}
-    return /return=representation/.test(pref)?done.map(r=>({...r})):null;}
-  if(m==='PATCH'){const body=JSON.parse(o.body);const hit=rows.filter(sel);for(const r of hit)Object.assign(r,body);return /return=representation/.test(pref)?hit.map(r=>({...r})):null;}
-  if(m==='DELETE'){const keep=rows.filter(r=>!sel(r));DBS[base][t]=keep;return null;}}
-const TG=[];let FAILCHAT=null;
-global.fetch=async(url,o={})=>{const u=String(url);const J=(s,j)=>({ok:s<300,status:s,json:async()=>j,text:async()=>j==null?'':JSON.stringify(j)});
-  if(u.startsWith('https://api.telegram.org/')){const method=u.split('/').pop(),b=JSON.parse(o.body||'{}');TG.push({m:method,b});
-    if(/^(sendMessage|sendPhoto)$/.test(method)&&String(b.chat_id)===FAILCHAT)return J(200,{ok:false,description:'Bad Request: chat not found'});
-    return J(200,{ok:true,result:{message_id:TG.length+1000}});}
-  const base=Object.keys(DBS).find(b=>u.startsWith(b+'/rest/v1/'));if(!base)return J(404,{message:'?'+u});
-  return J(200,rest(base,u.slice(base.length+9),o));};
+// ---- PostgREST + Telegram stub (tools/tests/_rest.js); channel_posts get server defaults on insert
+let SEQ=1;
+const ST=require('./_rest.js').pgStub(['https://prod.db','https://test.db'],{onInsert:(t,r)=>{if(t!=='channel_posts')return;r.id=SEQ++;r.status=r.status||'draft';r.source=r.source||'chat';r.created_at=new Date().toISOString();for(const k of ['published_at','tg_message_id','error','image_url'])if(!(k in r))r[k]=null;}});
+const {DBS,tbl,TG}=ST;let FAILCHAT=null;
+global.fetch=(url,o)=>{for(const k in ST.FAIL)delete ST.FAIL[k];if(FAILCHAT)ST.FAIL[FAILCHAT]={description:'Bad Request: chat not found'};return ST.fetch(url,o);};
 const C=require(path.join(__dirname,'..','..','api','_channel.js'));
 const BOT=require(path.join(__dirname,'..','..','api','bot.js')),CRON=require(path.join(__dirname,'..','..','api','cron.js'));
 const bot=body=>new Promise(r=>BOT({method:'POST',headers:{'x-telegram-bot-api-secret-token':'sec'},body},{status(){return this;},send(){r();},json(){r();}}));

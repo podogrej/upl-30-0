@@ -8,7 +8,7 @@ const CHECK=()=>{const W=innerWidth,bad=[];const vis=el=>!el.closest('[hidden]')
   const name=el=>(el.id?'#'+el.id:el.tagName.toLowerCase()+(el.className&&typeof el.className==='string'?'.'+el.className.split(' ')[0]:''))+' «'+(el.innerText||'').trim().slice(0,24)+'»';
   for(const el of document.querySelectorAll('body *')){if(!vis(el))continue;const r=el.getBoundingClientRect();if(r.width&&r.right>W+1&&!clipAnc(el))bad.push('за краєм: '+name(el));}
   // headings, buttons, labels whose text is wider than its box and clipped (player names with an ellipsis are intentional and skipped)
-  for(const el of document.querySelectorAll('h1,h2,h3,summary,button,.kicker,.ttl,.lbl,.sec0,label,.chip,.lv,.tile0 b,.row0 b,.opt b,.opt small')){
+  for(const el of document.querySelectorAll('h1,h2,h3,summary,button,.kicker,.ttl,.lbl,.sec0,label,.chip,.lv,.tile1 b,.tile1 small,.row0 b,.opt b,.opt small')){
     if(!vis(el)||el.closest('.nmt,.nm,.tbl'))continue;const cs=getComputedStyle(el);
     if(el.scrollWidth>el.clientWidth+1&&(cs.overflow!=='visible'||cs.textOverflow==='ellipsis'))bad.push('обрізано: '+name(el));}
   // font: all visible text uses KyivType Sans and the font is loaded

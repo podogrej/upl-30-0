@@ -2,6 +2,7 @@
 // Vercel env: TG_TOKEN, TG_SECRET (required, else 401), TG_BOT, SUPABASE_SERVICE_KEY
 const L = require('./_league.js');   // shared group league helpers
 const C = require('./_channel.js');   // Telegram channel: admin commands, approval buttons, /whoami
+const N = require('./_notify.js');   // opt-in evening notifications: /notify, nt:on|off buttons
 const SITE = 'https://upl30.com.ua/';   // must stay code (not commented out): /start, /play, /top in private chat depend on it
 const SB_KEY = (process.env.SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_pEszTOPsCHLgpiPpwB4JKg_SS-X07hY').trim(); // publishable key, same as on the site
 
@@ -27,7 +28,7 @@ async function topToday() {
 
 const HELLO = 'Збери XI з усієї історії Прем\'єр-ліги України і пройди сезон 30-0.\n\n' +
   'Колесо видає клуб і сезон, з кожного береш одного гравця. Одинадцять обертів — і 30 турів чемпіонату.\n\n' +
-  '/play — грати\n/top — таблиця драфту дня\n\nДодай мене в групу з друзями, зроби адміністратором і напиши там /league — буде ліга вашої групи.';
+  '/play — грати\n/top — таблиця драфту дня\n/notify — вечірні сповіщення (за замовчуванням вимкнені)\n\nДодай мене в групу з друзями, зроби адміністратором і напиши там /league — буде ліга вашої групи.';
 // make the bot admin before /league: otherwise Telegram upgrades the group to a supergroup with a new id and a league created earlier stays in the old chat
 const GROUP_ABOUT = 'Щодня однакове колесо для всіх, таблиця дня оновлюється сама, а ввечері підсумок: хто виграв день і хто відкрив трофеї.';
 const GROUP_HELLO = 'Привіт! Я — 30-0 УПЛ ⚽️\n\nДва кроки:\n1. Зробіть мене адміністратором (досить одного права — «Закріплення повідомлень»), щоб я закріплював табло.\n' +
@@ -75,6 +76,7 @@ module.exports = async (req, res) => {
   try {
     const u = req.body || {};
     if (await C.handleUpdate(u)) return res.status(200).send('ok');   // channel (/post, /queue, /auto, /whoami, cp:... buttons) handled before feedback and game commands
+    if (await N.handleUpdate(u)) return res.status(200).send('ok');   // /notify, /start notify, nt:on|off
     // bot added to a group
     const mc = u.my_chat_member;
     const joined = mc && mc.chat && ['member', 'administrator'].includes(mc.new_chat_member.status) && !['member', 'administrator'].includes(mc.old_chat_member.status);

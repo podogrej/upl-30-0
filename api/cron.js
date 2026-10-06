@@ -3,6 +3,7 @@
 // Vercel env: CRON_SECRET (required, else 401).
 const L = require('./_league.js');
 const C = require('./_channel.js');   // channel post queue
+const N = require('./_notify.js');   // opt-in evening notifications to players
 const { plUk } = require('./_lib.js');
 const { errDigest } = require('./_errdigest.js');   // errors digest
 const safeEq = (a, b) => { const x = Buffer.from(String(a)), y = Buffer.from(String(b)); return x.length === y.length && require('crypto').timingSafeEqual(x, y); };
@@ -69,13 +70,16 @@ module.exports = async (req, res) => {
         weekly.push(chat_id);
       }
     }
+    // opt-in evening notifications (one message per player): after the group summaries; failure doesn't break them
+    let notify = null;
+    try { notify = await N.sendEvening(day); } catch (e) { notify = { error: String(e && e.message || e).slice(0, 120) }; }
     // channel queue: daily fallback run (primary is GitHub Actions); failure doesn't break league summaries
     let channel = null;
     try { channel = await C.runChannel(); } catch (e) { channel = { error: String(e && e.message || e).slice(0, 120) }; }
     // player errors digest to admin (api/_errdigest.js); failure doesn't break league summaries
     let errs = null;
     try { errs = await errDigest({ sb: L.sb, tg: L.tg, env: L.env, day }); } catch (e) { errs = { error: String(e && e.message || e).slice(0, 120) }; }
-    res.status(200).json({ ok: true, day, summaries: done.length, weekly: weekly.length, errs, channel });
+    res.status(200).json({ ok: true, day, summaries: done.length, weekly: weekly.length, errs, channel, notify });
   } catch (e) {
     res.status(500).json({ error: String(e && e.message || e).slice(0, 200) });
   }

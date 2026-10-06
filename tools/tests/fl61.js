@@ -23,6 +23,7 @@ function mkDB(){
     fl_mine:()=>global.MINE_FAIL?{status:500,body:'{"message":"boom"}'}:leagues.filter(L=>members.some(m=>m.l===L.id&&m.p==='p-me')).map(L=>({id:L.id,name:L.name,fmt:'11',days:L.days,tries:L.tries,day_n:1,over:false,members:members.filter(m=>m.l===L.id).length,tries_today:entries.filter(e=>e.l===L.id&&e.p==='p-me').length,place:1})),
     fl_create:a=>{calls.push(['fl_create',a]);const id='abc'+String(leagues.length+2).repeat(3);leagues.push({id,name:a.p_name,fmt:'11',start_day:TODAY,days:a.p_days,tries:a.p_tries,take:a.p_take,scoring:a.p_scoring,rerolls:a.p_rerolls,ratings:a.p_ratings,era:a.p_era});members.push({l:id,p:'p-me'});return get(id);},
     fl_join:a=>{calls.push(['fl_join',a.p_id]);members.push({l:a.p_id,p:'p-me'});return get(a.p_id);},
+    tg_leagues_mine:()=>[{chat_id:-100777,title:'Друзі по лаві',members:4,played_today:2}],
     fl_get:a=>get(a.p_id)};
   const db=makeDB({seasons:{auto:'id'},season_seeds:{auto:'id'},daily_results:{auto:'id'},player_links:{},user_state:{}},rpc);
   db.DB.players=players;global.fetch=db.fetch;
@@ -86,6 +87,7 @@ function mkDB(){
  await pg.evaluate(()=>document.getElementById('acctBtn').click());await pg.waitForTimeout(1200);
  const ppl=(await pg.textContent('#ppLeagues').catch(()=>'')).replace(/\s+/g,' ');
  T.check(/Мої ліги/.test(ppl)&&ppl.includes(M.leagues[0].name),'своя сторінка: «Мої ліги» — '+ppl.slice(0,60));
+ T.check(/Друзі по лаві/.test(ppl)&&/група в Telegram · 4 гравці · сьогодні зіграли 2/.test(ppl)&&await pg.$eval('#ppLeagues a.fl-row',a=>a.href).then(h=>/t\.me\/upl30_bot\?startapp=g-100777$/.test(h)),'«Мої ліги»: і ліга Telegram-групи з посиланням у бот');
  // league list: Playing now
  await pg.evaluate(()=>document.getElementById('homeBtn').click());await pg.click('#flOpen');await pg.waitForTimeout(600);
  T.check(/Грають зараз/.test(await pg.textContent('#fl')),'список: «Грають зараз»');

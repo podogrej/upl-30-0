@@ -215,7 +215,7 @@ async function trRetro(){
 // home counter matches the player page:
 // this device's trophies + account trophies from server (upl30_tr_srv: ids from player_profile, refreshed by trSrvRefresh in player.js), only those present in TROPHIES
 function trCountAll(){const s=trStore();const ids=new Set(Object.entries(s.t).filter(([,e])=>e&&e.n).map(([id])=>id));for(const id of (lsGet('upl30_tr_srv')||[]))ids.add(id);return TROPHIES.filter(t=>ids.has(t.id)).length;}
-function renderTrBtn(){const n=trCountAll();const b=document.getElementById('trCount');if(b)b.textContent=n?` · ${n}`:'';}
+function renderTrBtn(){const n=trCountAll();const b=document.getElementById('trCount');if(b)b.textContent=n?`Зібрано ${n}`:'Зібрані нагороди';}
 // card color: only three classes: base, friends, secret
 function trKind(t){return t.sec||t.cat==='secret'?'secret':t.cat==='friends'?'friends':'base';}
 function trCard(t,e,pct,prog){

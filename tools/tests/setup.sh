@@ -545,7 +545,7 @@ chk "v068: fl_mine — volatile (PostgREST не кличе її в транза�
      and not has_table_privilege('authenticated', 'client_errors', 'insert'), 'права client_errors';
   insert into client_errors(version, msg) values ('0.68', 'x'); assert (select count(*) from client_errors) >= 1, 'сервер пише';"
 # ===== feedback and channel_posts (channel queue): server-only =====
-for pass in 1 2; do for f in v0695_feedback v06969_feedback_site v06997_channel_posts; do
+for pass in 1 2; do for f in v0695_feedback v06969_feedback_site v06997_channel_posts v070; do
   if $P -d t1 -f "$ROOT/sql/$f.sql" >/dev/null 2>"$D/err"; then ok "запуск $pass: $f.sql"; else bad "запуск $pass: $f.sql — $(grep -v NOTICE "$D/err" | head -3)"; fi
 done; done
 chk "v0695/v06969: feedback закрита для anon/authenticated, нові колонки є" postgres "
@@ -561,6 +561,10 @@ chk "v06997: channel_posts закрита для anon/authenticated; стату�
   begin insert into channel_posts(text, publish_at) values (repeat('x', 4097), now()); assert false, 'довгий текст прийнято'; exception when check_violation then null; end;
   begin insert into channel_posts(text, publish_at, status) values ('x', now(), 'weird'); assert false, 'чужий статус прийнято'; exception when check_violation then null; end;
   begin insert into channel_posts(text, publish_at, source) values ('x', now(), 'bot'); assert false, 'чуже джерело прийнято'; exception when check_violation then null; end;"
+chk "v070: tg_notify закрита для anon/authenticated, за замовчуванням вимкнено" postgres "
+  assert not has_table_privilege('anon', 'tg_notify', 'select') and not has_table_privilege('anon', 'tg_notify', 'insert') and not has_table_privilege('authenticated', 'tg_notify', 'update'), 'права tg_notify';
+  insert into tg_notify(tg_user_id) values (777); assert (select enabled from tg_notify where tg_user_id = 777) = false, 'типово вимкнено';
+  assert has_function_privilege('anon', 'tg_leagues_mine(uuid,text)', 'execute') and (select prosecdef from pg_proc where proname = 'tg_leagues_mine'), 'tg_leagues_mine: anon викликає, security definer';"
 # upgrade from the earlier test-DB version: rows with old statuses must not break the re-run
 $P -d t1 -q -c "alter table channel_posts drop constraint channel_posts_status_chk; insert into channel_posts(text, publish_at, status) values ('old-a', now(), 'approved'), ('old-s', now(), 'skipped');" >/dev/null 2>&1
 if $P -d t1 -f "$ROOT/sql/v06997_channel_posts.sql" >/dev/null 2>"$D/err"; then ok "v06997 поверх старої версії (approved/skipped)"; else bad "v06997 поверх старої версії — $(grep -v NOTICE "$D/err" | head -3)"; fi

@@ -10,10 +10,10 @@ const fail=[];let n=0;const check=(ok,msg)=>{n++;console.log((ok?'✓ ':'✗ ')+
  const {b,pg,errs}=await openSite({db,api:{'/api/save':async req=>{saves.push(req.body||{});return {json:{id:7,verified:true}};},'/api/seed':async()=>({json:{seed:12345,seed_id:'s1'}})}});
  // ---- home: new-mode badge, 5x5 hidden, FAQ up to date
  const home=await pg.evaluate(()=>({pick:!document.getElementById('pickOpen').hidden,f5:document.getElementById('f5Open').hidden,
-   faq:document.querySelector('.faq0').textContent.replace(/\s+/g,' '),daily:document.getElementById('dKicker').textContent+' / '+document.getElementById('dailyBtn').textContent}));   // daily draft is in the card title, button says Play
+   faq:document.querySelector('.faq0').textContent.replace(/\s+/g,' '),daily:document.getElementById('dailyBtn').textContent}));   // daily draft button: icon, title, date and formation on one line
  check(home.pick&&home.f5,'головна: «Вибір сезону» є, 5×5 на одному телефоні сховано');
  check(/Що таке «Драфт дня»/.test(home.faq)&&/Що таке «Вибір сезону»/.test(home.faq)&&!/5×5 на одному пристрої/.test(home.faq)&&/Це ти\?/.test(home.faq),'FAQ: драфт дня, вибір сезону, «Це ти?», без 5×5 на одному пристрої');
- check(/^драфт дня/i.test(home.daily)&&/ \/ Грати$/.test(home.daily.trim())&&!/виклик дня/i.test(home.daily),'картка дня: «'+home.daily.trim()+'»');
+ check(/^🎯Драфт дня\d\d\.\d\d · [\d-]+/.test(home.daily.trim())&&!/виклик дня/i.test(home.daily),'кнопка дня: «'+home.daily.trim()+'»');
  // ---- season pick: format tile, no modes
  // season pick from home goes straight to the draft; settings via Play -> season pick tile
  await pg.click('#pickOpen');await pg.waitForTimeout(300);

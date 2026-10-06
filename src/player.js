@@ -183,6 +183,7 @@ function ppSettingsHtml(){
   h+=ppRow('ppRowTeam','Назва команди','на полі й у картці',team||'Твоя 11-ка',!team);
   if(PLAYER&&'contact_email' in PLAYER){h+=ppRow('ppRowMail','Пошта для новин','видно лише тобі',mail||'не вказано',!mail);
     h+=`<label class="set-r tg"><span class="k">Новини 30-0<small>великі оновлення, не частіше разу на місяць</small></span><input type="checkbox" role="switch" class="sw" id="ppNews"${PLAYER.news_optin?' checked':''}></label>`;}
+  if(TG_BOT)h+=`<a class="set-r" id="ppNotify" href="https://t.me/${TG_BOT}?start=notify" target="_blank" rel="noopener"><span class="k">Сповіщення в Telegram<small>підсумок дня в лігах і нагадування про серію — вмикаєш у боті</small></span>${icon('chevron-right')}</a>`;   // opt-in lives in the bot (/notify), off by default
   h+=`</div><p class="pp-hint" id="ppSetMsg" hidden></p><div class="pp-sec"><h3>Акаунт</h3></div><div class="set-card">`;
   if(SESSION){const em=via==='Google'?(SESSION.user.email||''):acctName();
     h+=`<div class="set-r who"><i class="set-ic ${via==='Google'?'g':'t'}">${icon(via==='Google'?'google':'telegram')}</i><span class="k">Увійшов через ${via}<small>${esc(em)}</small></span></div>`+
