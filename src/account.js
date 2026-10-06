@@ -169,9 +169,9 @@ function openAcct(){screenTag('account');
   // compact sheet: title, purpose, two big buttons, play without sign-in; phone: bottom sheet, iPad: centered
   viewMode('login');
   body.innerHTML=`${msg}<h2 class="lg-h">Увійди в 30-0</h2><p class="lg-sub">Щоб трофеї, серія й рекорди не загубились і були на всіх пристроях.</p>
-    <div class="lg-btns">${AUTH_GOOGLE&&!IN_TG()?`<button class="lgb g" id="acctG">${icon('google')}Продовжити з Google</button>`:''}${IN_TG()?`<button class="lgb t" id="acctT">${icon('telegram')}Продовжити з Telegram</button>`:''}${AUTH_TG()&&!IN_TG()?`<a class="lgb t" id="acctBot" href="https://t.me/${TG_BOT}?start=login_${acctBotPending()||acctBotToken()}" target="_blank" rel="noopener">${icon('telegram')}Продовжити з Telegram</a><span class="muted" style="font-size:12px" id="acctBotHint">${acctBotPending()&&BOT_POLL?'Чекаємо підтвердження: у чаті з ботом натисни «Start», потім «Підтвердити вхід» і повернись сюди.':'Відкриється чат з @'+TG_BOT+' — натисни там «Start», потім «Підтвердити вхід» і повернись сюди.'}</span>`:''}</div>
+    <div class="lg-btns">${AUTH_GOOGLE&&!IN_TG()?`<button class="lgb g" id="acctG">${icon('google')}Продовжити з Google</button>`:''}${IN_TG()?`<button class="lgb t" id="acctT">${icon('telegram')}Продовжити з Telegram</button>`:''}${AUTH_TG()&&!IN_TG()?`<a class="lgb t" id="acctBot" href="https://t.me/${TG_BOT}?start=login_${acctBotPending()||acctBotToken()}" target="_blank" rel="noopener">${icon('telegram')}Продовжити з Telegram</a><span class="muted" style="font-size:var(--fs-caption)" id="acctBotHint">${acctBotPending()&&BOT_POLL?'Чекаємо підтвердження: у чаті з ботом натисни «Start», потім «Підтвердити вхід» і повернись сюди.':'Відкриється чат з @'+TG_BOT+' — натисни там «Start», потім «Підтвердити вхід» і повернись сюди.'}</span>`:''}</div>
     <button class="link0 lg-skip" id="acctSkip">Грати без входу</button>
-    ${ACCT_ERR||!SB?`<p class="muted mono" style="font-size:11px;margin:0">Діагностика: ${!SB?'бібліотека входу не завантажилась':esc(ACCT_ERR)}</p>`:''}
+    ${ACCT_ERR||!SB?`<p class="muted mono" style="font-size:var(--fs-caption2);margin:0">Діагностика: ${!SB?'бібліотека входу не завантажилась':esc(ACCT_ERR)}</p>`:''}
     <p class="lg-fine">Зберігаємо лише ім'я та ідентифікатор входу. Зігране на цьому пристрої перейде в акаунт.</p>`;
   document.getElementById('acctSkip').onclick=()=>{document.getElementById('viewBox').hidden=true;};
   const g=document.getElementById('acctG');if(g)g.onclick=acctGoogle;
@@ -185,7 +185,7 @@ function mergeAsk(o){if(!SESSION||!o||mergeAsk.shown===o.id)return;mergeAsk.show
   const n=+o.seasons||0;
   body.innerHTML=`<p style="margin:0">На цьому пристрої вже грав <b>${esc(String(o.name||''))}</b> — ${n} ${plUk(n,'сезон','сезони','сезонів')}, але з іншим входом (Google чи Telegram).</p>
     <p class="muted" style="margin:0">Якщо це ти — об'єднаємо: сезони, трофеї, серія й ім'я стануть одним гравцем, і обидва входи відкриватимуть його. Якщо це хтось інший — нічого не зміниться.</p>
-    <div class="grid" style="gap:8px"><button class="primary" id="mergeYes">${ic('account-multiple-check')}Так, це я — об'єднати</button><button class="ghost" id="mergeNo">Ні, це інший гравець</button></div><p class="note" id="mergeMsg" hidden style="margin:0"></p>`;
+    <div class="grid" style="gap:var(--sp-2)"><button class="primary" id="mergeYes">${ic('account-multiple-check')}Так, це я — об'єднати</button><button class="ghost" id="mergeNo">Ні, це інший гравець</button></div><p class="note" id="mergeMsg" hidden style="margin:0"></p>`;
   const ans=async yes=>{const m=document.getElementById('mergeMsg');['mergeYes','mergeNo'].forEach(id=>document.getElementById(id).disabled=true);
     try{const p=await playerRpc('merge_answer',{p_offer:o.id,p_yes:yes});const prev=p&&p.prev_state;if(p)delete p.prev_state;if(PP)PP.prof=null;playerSet(p);
       if(yes){try{if(prev&&typeof prev==='object'){const m=acctMerge(acctLocal(),prev);for(const [k,v] of Object.entries(m))lsSet(k,v);if(m.upl30_best_v2)BEST=m.upl30_best_v2;}await acctPull();}catch(e){}}   // also bring over trophies, streak and records of the previous sign-in
@@ -202,7 +202,7 @@ function acctNudge(r){
   else if(streak>=3)why=`Серія ${streak} дні поспіль — не загуби її, якщо зміниш телефон.`;
   else if(s.seasons>=3){const nt=Object.values(s.t).filter(e=>e.n).length;why=`Уже ${s.seasons} ${plUk(s.seasons,'сезон','сезони','сезонів')} і ${nt} ${plUk(nt,'трофей','трофеї','трофеїв')}.`;}
   if(!why)return;
-  el.hidden=false;el.innerHTML=`<span>${why} Увійди, щоб зберегти прогрес.</span><span class="row" style="gap:6px"><button class="primary" id="nudgeGo">Увійти</button><button class="ghost" id="nudgeLater">Пізніше</button></span>`;
+  el.hidden=false;el.innerHTML=`<span>${why} Увійди, щоб зберегти прогрес.</span><span class="row" style="gap:var(--sp-2)"><button class="primary" id="nudgeGo">Увійти</button><button class="ghost" id="nudgeLater">Пізніше</button></span>`;
   document.getElementById('nudgeGo').onclick=()=>openAcct();
   document.getElementById('nudgeLater').onclick=()=>{lsSet("upl30_nudge_until",Date.now()+3*864e5);el.hidden=true;};
 }
@@ -236,8 +236,8 @@ function renderLeague(){
     <div class="meta">Сьогодні зіграли ${L.today.length} з ${Math.max(L.members,L.today.length)}</div>
     ${L.today.length?`<div class="tbl"><table>${top}</table></div>`:`<p class="muted" style="margin:0">${played?'Сьогодні з групи ще ніхто не зіграв.':'Ще ніхто не зіграв — будь першим!'}</p>`}
     ${all?`<button class="link0 lgall" id="leagueAll">Уся таблиця (${Math.max(L.members,L.today.length)})</button>`:''}
-    ${LEAGUE_DENIED&&me<0?'<p class="muted" style="margin:0;font-size:13px">Тебе ще немає в цій лізі: Telegram не підтвердив, що ти в групі. Відкрий гру кнопкою з останнього повідомлення бота в групі.</p>':''}
-    ${played?`<p class="muted" style="margin:0;font-size:13px">${me>=0?'Твій результат уже в табло.':'Драфт дня ти вже зіграв.'} Наступний — завтра о 00:00 за Києвом.</p>`:'<div class="row"><button class="primary" id="leagueGo">Зіграти драфт дня</button></div>'}`;
+    ${LEAGUE_DENIED&&me<0?'<p class="muted" style="margin:0;font-size:var(--fs-footnote)">Тебе ще немає в цій лізі: Telegram не підтвердив, що ти в групі. Відкрий гру кнопкою з останнього повідомлення бота в групі.</p>':''}
+    ${played?`<p class="muted" style="margin:0;font-size:var(--fs-footnote)">${me>=0?'Твій результат уже в табло.':'Драфт дня ти вже зіграв.'} Наступний — завтра о 00:00 за Києвом.</p>`:'<div class="row"><button class="primary" id="leagueGo">Зіграти драфт дня</button></div>'}`;
   const g=document.getElementById('leagueGo');if(g)g.onclick=()=>document.getElementById('dailyBtn').click();
   const a=document.getElementById('leagueAll');if(a)a.onclick=()=>openLeagueAll('today');
 }
@@ -245,7 +245,7 @@ function openLeagueAll(tab){if(!LEAGUE)return;const L=LEAGUE,box=document.getEle
   document.getElementById('viewTitle').textContent=`«${L.title}»`;
   const st=L.standings||[];
   const body=tab==='today'?(L.today.length?`<div class="tbl"><table>${L.today.map(lgToday).join('')}</table></div>`:'<p class="muted">Сьогодні ще ніхто не зіграв.</p>')
-    :(st.length?`<div class="tbl"><table><tr class="th"><td></td><td></td><td class="num">днів</td><td class="num">перемог</td></tr>${st.map((s,i)=>`<tr${lgMe(s)?' class="me"':''}><td>${lgPlace(i)}</td><td class="nm"><span class="nmt">${plink({players:{name:s.name,public_id:s.u}})}</span></td><td class="num">${s.days}</td><td class="num"><b>${s.wins}</b></td></tr>`).join('')}</table></div><p class="muted" style="font-size:13px">Перемога в дні — найбільше очок у драфті дня серед чату. При рівності — більше очок у середньому.</p>`:'<p class="muted">Залік зʼявиться після першого дня.</p>');
+    :(st.length?`<div class="tbl"><table><tr class="th"><td></td><td></td><td class="num">днів</td><td class="num">перемог</td></tr>${st.map((s,i)=>`<tr${lgMe(s)?' class="me"':''}><td>${lgPlace(i)}</td><td class="nm"><span class="nmt">${plink({players:{name:s.name,public_id:s.u}})}</span></td><td class="num">${s.days}</td><td class="num"><b>${s.wins}</b></td></tr>`).join('')}</table></div><p class="muted" style="font-size:var(--fs-footnote)">Перемога в дні — найбільше очок у драфті дня серед чату. При рівності — більше очок у середньому.</p>`:'<p class="muted">Залік зʼявиться після першого дня.</p>');
   document.getElementById('viewBody').innerHTML=`<div class="seg fl-tabs" id="lgTabs"><button data-t="today"${tab==='today'?' class="on"':''}>Сьогодні</button><button data-t="st"${tab!=='today'?' class="on"':''}>Залік</button></div>${body}`;
   document.querySelectorAll('#lgTabs button').forEach(b=>b.onclick=()=>openLeagueAll(b.dataset.t));
   box.hidden=false;}

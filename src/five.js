@@ -87,8 +87,8 @@ function f5Render(){
         <input data-nm="${i}" value="${esc(f.names[i]||'')}" maxlength="18" placeholder="Нік" aria-label="Нік гравця ${i+1}">
         <input data-tm="${i}" value="${esc(f.teams_[i]||'')}" maxlength="22" placeholder="${F5_TEAMS[i%F5_TEAMS.length]}" aria-label="Назва команди гравця ${i+1}">
         <div class="f5forms">${Object.keys(F5_FORMS).map(k=>`<button class="f5f${f.forms[i]===k?' on':''}" data-fi="${i}" data-fm="${k}"><b>${k}</b><small>${F5_FORMS[k].tag}</small></button>`).join('')}</div></div>`).join('')}</div>
-      <p class="muted cap" style="margin-top:6px">Назва команди — за бажанням; без неї показуємо нік.</p>
-      <div class="row" style="margin-top:14px"><button class="primary" id="f5Go">${ic('ferris-wheel')}Почати драфт</button><button class="ghost" id="f5Back">На головну</button></div>`;
+      <p class="muted cap" style="margin-top:var(--sp-2)">Назва команди — за бажанням; без неї показуємо нік.</p>
+      <div class="row" style="margin-top:var(--sp-4)"><button class="primary" id="f5Go">${ic('ferris-wheel')}Почати драфт</button><button class="ghost" id="f5Back">На головну</button></div>`;
     document.getElementById('f5Minus').onclick=()=>{f.n=Math.max(2,f.n-1);f5Render();};document.getElementById('f5Plus').onclick=()=>{f.n=Math.min(F5_MAX,f.n+1);f5Render();};
     el.querySelectorAll('[data-m]').forEach(d=>d.onclick=()=>{f.mode=d.dataset.m;f5Render();});
     el.querySelectorAll('[data-nm]').forEach(x=>x.oninput=()=>{f.names[+x.dataset.nm]=x.value;x.classList.remove('bad');});
@@ -103,13 +103,13 @@ function f5Render(){
       document.getElementById('f5Ready').onclick=()=>{f.handoff=false;f5Spin();};return;}
     const cs=f.cs;const need=new Set(f5Open(team).map(s=>s.slot));
     const list=cs?[...cs.pl].map(p=>({p,ok:!f5Taken(team).has(canon(p[5]))&&need.has(f5G(p))})).sort((a,b)=>(b.ok-a.ok)||(b.p[3]-a.p[3])):[];
-    el.innerHTML=`<div class="row" style="justify-content:space-between;margin-block:14px 8px"><div>${f5Head(team)} <span class="muted mono">${5-f5Open(team).length}/5 · ${team.form}</span></div><span class="muted mono">${f.mode==='turns'?`хід ${f.pick+1}/${total}`:''}</span></div>
+    el.innerHTML=`<div class="row" style="justify-content:space-between;margin-block:var(--sp-4) var(--sp-2)"><div>${f5Head(team)} <span class="muted mono">${5-f5Open(team).length}/5 · ${team.form}</span></div><span class="muted mono">${f.mode==='turns'?`хід ${f.pick+1}/${total}`:''}</span></div>
       ${f5Pitch(team)}
-      <div class="wheel" style="margin-top:12px"><div class="reels"><div class="reel"><div class="strip"><div class="club">${cs?esc(cs.n):''}</div></div></div><div class="reel"><div class="strip"><div class="season">${cs?seasonLabel(cs.y):''}</div></div></div></div>
+      <div class="wheel" style="margin-top:var(--sp-3)"><div class="reels"><div class="reel"><div class="strip"><div class="club">${cs?esc(cs.n):''}</div></div></div><div class="reel"><div class="strip"><div class="season">${cs?seasonLabel(cs.y):''}</div></div></div></div>
       <div class="row" style="justify-content:space-between"><span class="muted">${cs?cs.pos+' місце в тому сезоні · потрібні: '+[...need].map(s=>F5_L[s]).join(', '):''}</span>${team.rerolls>0?`<button class="ghost" id="f5Rr">Перекрутити (${team.rerolls})</button>`:''}</div>
-      <div class="sqHead noast"><span></span><span></span><span>Матчі</span><span>Голи</span><span></span><span class="h"></span></div><div class="squad noast" id="f5Sq"></div></div>`;
+      <div class="sqHead noast"><span></span><span></span><span><b>Матчі</b><i>Мат</i></span><span><b>Голи</b><i>Гол</i></span><span></span><span class="h"></span></div><div class="squad noast" id="f5Sq"></div></div>`;
     const sq=document.getElementById('f5Sq');let sep=false;
-    for(const {p,ok} of list){if(!ok&&!sep){sep=true;const h=document.createElement('div');h.className='muted';h.style.cssText='font-size:12px;margin:8px 0 2px';h.textContent='Лінія вже заповнена або гравця взяли';sq.appendChild(h);}
+    for(const {p,ok} of list){if(!ok&&!sep){sep=true;const h=document.createElement('div');h.className='muted';h.style.cssText='font-size:var(--fs-caption);margin:var(--sp-2) 0 var(--sp-0h)';h.textContent='Лінія вже заповнена або гравця взяли';sq.appendChild(h);}
       const b=document.createElement('button');b.className='pl';b.disabled=!ok;const g=f5G(p);
       b.innerHTML=`<span class="pos ${g}">${F5_L[g]}</span><span class="nm">${esc(p[0])}</span><span class="st">${p[3]}</span><span class="st">${p[4]}</span><span></span><span class="rt"></span>`;
       b.onclick=()=>f5Choose(p);sq.appendChild(b);}
@@ -121,7 +121,7 @@ function f5Render(){
     document.getElementById('f5Play').onclick=f5Play;return;}
   const r=f.res,m0=r.final;
   if(f.phase==='live'){
-    el.innerHTML=`<div class="hero f5live" style="margin-top:14px"><div class="kicker">${r.table?'Фінал':'Матч'} · 2×20 хвилин</div>
+    el.innerHTML=`<div class="hero f5live" style="margin-top:var(--sp-4)"><div class="kicker">${r.table?'Фінал':'Матч'} · 2×20 хвилин</div>
       <div class="f5score"><span>${esc(f5Label(m0.A))}</span><b><span id="f5Sa">0</span>:<span id="f5Sb">0</span></b><span>${esc(f5Label(m0.B))}</span></div>
       <div class="f5track"><div class="f5bar" id="f5Bar"></div><div class="f5dot" id="f5Dot"></div><i style="left:50%"></i></div>
       <div class="row" style="justify-content:space-between"><span class="mono" id="f5Min">0'</span><button class="ghost" id="f5Skip">Пропустити</button></div>
@@ -134,7 +134,7 @@ function f5Render(){
     const score=m=>`${m.ga}:${m.gb}${m.pens?` <span class="muted f5pen">(пен. ${m.pens[0]}:${m.pens[1]})</span>`:''}`;
     const evl=m=>m.ev.length?m.ev.map(e=>`<div class="f5ev s${e.side}"><span class="mono">${e.min}'</span><b>${esc(e.sc.name)}</b>${e.as?`<span class="muted"> · ${esc(e.as.name)}</span>`:''}</div>`).join(''):'<p class="muted" style="margin:0">Голів не було.</p>';
     const all=[...m0.ra.map(x=>({...x,t:f5Label(m0.A)})),...m0.rb.map(x=>({...x,t:f5Label(m0.B)}))].sort((a,b)=>b.rt-a.rt);const mvp=all[0];
-    el.innerHTML=`<div class="hero" style="margin-top:14px"><div class="tier gold">${ic('trophy','lg')} ${esc(f5Label(champ))}${r.table?' — чемпіон':' перемагає'}</div>
+    el.innerHTML=`<div class="hero" style="margin-top:var(--sp-4)"><div class="tier gold">${ic('trophy','lg')} ${esc(f5Label(champ))}${r.table?' — чемпіон':' перемагає'}</div>
       <div class="f5score"><span>${esc(f5Label(m0.A))}</span><b>${score(m0)}</b><span>${esc(f5Label(m0.B))}</span></div>
       <p class="muted" style="margin:0">${r.table?'Фінал':'Матч'} · xG ${m0.la.toFixed(1)} : ${m0.lb.toFixed(1)} · ${ic('star','sm')}гравець матчу: <b>${esc(mvp.name)}</b> (${esc(mvp.t)}) ${mvp.rt.toFixed(1)}</p>
       <div class="f5evs">${evl(m0)}</div>
