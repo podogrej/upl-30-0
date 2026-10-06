@@ -37,6 +37,7 @@ upl-30-0/
 │  ├─ challenge.js     «Виклик другу» по ссылке
 │  ├─ five.js          режим 5×5 (локально и онлайн)
 │  ├─ trophies.js      трофеи
+│  ├─ oneclub.js       «Один клуб» (0.72): страница клубов, карточка клуба, рекорды игрока по клубам; рекорды клубов (`CLUB_REC`) считает build.py из `data/data/standings.csv` + `data/fixes/standings_*.csv`
 │  ├─ icons.js         иконки (генерирует src/icons/make_icons.py)
 │  ├─ pool.json        все игроки и сезоны с рейтингами
 │  └─ build.py         сборка → ../index.html и ../dist/30-0-upl.html

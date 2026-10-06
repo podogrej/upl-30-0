@@ -27,7 +27,7 @@ async function acctInit(){
 }
 function acctTgAuto(){if(!acctTgAuto.lg&&IN_TG()){acctTgAuto.lg=1;leagueInit();}if(SB&&!SESSION&&TG&&TG.initData&&!acctTgAuto.done){acctTgAuto.done=1;acctTelegram({initData:TG.initData},true);}}   // inside Telegram: sign in silently
 // ---------- state sync (trophies, streak, records, nick, daily attempt) via user_state table
-const ACCT_KEYS=()=>["upl30_tr","upl30_streak","upl30_best_v2","upl30_nick","upl30_daily_"+DAY,"upl30_sent_"+DAY,"upl30_tr_retro"];
+const ACCT_KEYS=()=>["upl30_tr","upl30_streak","upl30_best_v2","upl30_nick","upl30_daily_"+DAY,"upl30_sent_"+DAY,"upl30_tr_retro","upl30_clubrec"];
 function acctLocal(){const o={};for(const k of ACCT_KEYS()){const v=lsGet(k);if(v!=null)o[k]=v;}return o;}
 function acctMerge(a,b){   // a: local, b: from server
   const o={...b,...a};
@@ -38,6 +38,7 @@ function acctMerge(a,b){   // a: local, b: from server
   const ba=a.upl30_best_v2||{},bb=b.upl30_best_v2||{};const best={...bb};
   for(const [k,v] of Object.entries(ba)){const w=best[k];const sc=x=>k==='anti'?-(x.pts*100-x.place):x.pts*100+(30-x.place);if(!w||sc(v)>sc(w))best[k]=v;}
   if(Object.keys(best).length)o.upl30_best_v2=best;
+  const ca=a.upl30_clubrec,cb=b.upl30_clubrec;if(ca&&cb){const c={...cb};for(const [k,v] of Object.entries(ca)){const w=c[k];c[k]=w?{b:Math.max(v.b,w.b),w:Math.min(v.w,w.w),n:Math.max(v.n,w.n)}:v;}o.upl30_clubrec=c;}   // One club records: best of both
   if(b.upl30_nick)o.upl30_nick=b.upl30_nick;
   return o;
 }

@@ -25,8 +25,8 @@ const clubsOf=pg=>pg.evaluate(()=>[...new Set(window.__dbg.S.slots.map(s=>s.play
  await pg.click('#simBtn');await pg.click('#skipBtn');T.check(/дербі/i.test(await pg.inputValue('#shareText')),'дербі: у тексті є «дербі»');
  // one club
  let club='';
- await free(pg,3,async()=>{T.check(await pg.$eval('#clubPickRow',e=>!e.hidden),'один клуб: видно вибір клубу');
-   club=await pg.evaluate(()=>{const o=[...document.getElementById('clubPick').options];return (o.find(x=>x.value==='metalist-kharkiv')||o[1]).value;});await pg.selectOption('#clubPick',club);});
+ await free(pg,3,async()=>{T.check((await pg.$$('#ocGrid .oct')).length===51,'один клуб: сторінка з 51 клубом');
+   club='karpaty-lviv';T.check(await pg.$eval('#ocCard',e=>!e.hidden&&/Карпати/.test(e.textContent))&&await pg.$eval('#fmtBox',e=>e.hidden),'один клуб: картка клубу замість режимів');});
  // One Club: the club reel stays fixed, the season reel spins only that club's seasons
  {const r=await pg.evaluate(()=>{document.getElementById('spinBtn').click();const D=window.__dbg,c=D.S.club,ys=new Set(D.DATA.clubs.filter(x=>x.c===c).map(x=>D.seasonLabel(x.y)));
    const cl=[...document.querySelectorAll('#reelClub .strip>div')].map(e=>e.textContent),se=[...document.querySelectorAll('#reelYear .strip>div')].map(e=>e.textContent);
