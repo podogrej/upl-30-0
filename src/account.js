@@ -171,7 +171,7 @@ function openAcct(){screenTag('account');
     <button class="link0 lg-skip" id="acctSkip">Грати без входу</button>
     ${ACCT_ERR||!SB?`<p class="muted mono" style="font-size:var(--fs-caption2);margin:0">Діагностика: ${!SB?'бібліотека входу не завантажилась':esc(ACCT_ERR)}</p>`:''}
     <p class="lg-fine">Зберігаємо лише ім'я та ідентифікатор входу. Зігране на цьому пристрої перейде в акаунт.</p>`;
-  document.getElementById('acctSkip').onclick=()=>{document.getElementById('viewBox').hidden=true;};
+  document.getElementById('acctSkip').onclick=viewHide;
   const g=document.getElementById('acctG');if(g)g.onclick=acctGoogle;
   const tb=document.getElementById('acctT');if(tb)tb.onclick=()=>{ACCT_MSG='Входимо…';openAcct();acctTelegram({initData:TG.initData},false);};
   const ab=document.getElementById('acctBot');if(ab)ab.onclick=()=>{ACCT_ERR='';setTimeout(()=>{acctBotPoll();const h=document.getElementById('acctBotHint');if(h)h.textContent='Чекаємо підтвердження: у чаті з ботом натисни «Start», потім «Підтвердити вхід» і повернись сюди.';},300);};
@@ -217,7 +217,7 @@ async function leagueInit(){
     // show last cached board (upl30_league_snap) at once, refresh from server quietly
     const el=document.getElementById('leagueCard'),snap=lsGet('upl30_league_snap');
     if(snap&&snap.chat===chat&&!LEAGUE){LEAGUE=snap.day===DAY?snap:{...snap,today:[]};renderLeague();}   // yesterday's board: drop "today"
-    else if(el&&!LEAGUE){el.hidden=false;el.innerHTML=`<div class="kicker">Ліга Telegram-чату</div><div class="ttl">&nbsp;</div><div class="meta muted">Завантажуємо табло…</div>`;}
+    else if(el&&!LEAGUE){el.hidden=false;el.innerHTML=`<div class="kicker">Ліга Telegram-чату</div><div class="ttl">&nbsp;</div><div class="meta" role="status" aria-busy="true" aria-label="Завантаження"><i class="sk w60"></i></div>`;}
     leagueLoad(chat,joined);}
 }
 async function leagueLoad(chat,fresh){try{const r=await _fetch('/api/league?chat='+encodeURIComponent(chat)+(fresh?'&t='+Date.now():''));if(!r.ok){if(!LEAGUE)document.getElementById('leagueCard').hidden=true;return;}LEAGUE={chat,...await r.json()};lsSet('upl30_league_snap',LEAGUE);renderLeague();}catch(e){if(!LEAGUE)document.getElementById('leagueCard').hidden=true;}}

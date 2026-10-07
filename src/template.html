@@ -34,6 +34,8 @@
 /* motion tokens: spring (linear() with cubic-bezier fallback), strong ease-out, four durations */
 :root{--spring:cubic-bezier(.2,1.2,.3,1);--ease-out:cubic-bezier(.23,1,.32,1);--dur-1:120ms;--dur-2:240ms;--dur-3:360ms;--dur-4:500ms}
 @supports (transition-timing-function:linear(0,1)){:root{--spring:linear(0,.065,.218,.406,.593,.757,.887,.981,1.041,1.072,1.083,1.08,1.068,1.053,1.037,1.023,1.011,1.003,.997,.994,.993,.993,.994,.995,1)}}
+:root{--spring-sheet:cubic-bezier(.32,.72,0,1)}
+@supports (transition-timing-function:linear(0,1)){:root{--spring-sheet:linear(0,.025,.088,.174,.271,.371,.468,.559,.641,.713,.776,.828,.872,.908,.936,.958,.975,.988,.997,1.003,1.007,1.01,1.011,1.011,1.011,1.01,1)}}   /* sheet spring: ~1% overshoot, ~420ms */
 @media (min-width:700px){:root{--sp-card:var(--sp-5)}}   /* card inset: 16 compact, 24 regular width */
 /* UPL palette: dark = navy (mockup A), light = mockup B; pink accents and UPL.TV gradient (--grad). Mockups: docs/mockups/design_upl/v63 */
 /* theme: data-theme is always set by the script above (light/dark, default dark), so no @media (prefers-color-scheme) needed */
@@ -268,7 +270,7 @@ section.enter{animation:secin var(--dur-3) var(--ease-out) both}section.back{ani
 @keyframes secin{from{opacity:0;transform:translateX(24px) scale(.992)}to{opacity:1;transform:none}}@keyframes secback{from{opacity:0;transform:translateX(-24px) scale(.992)}to{opacity:1;transform:none}}
 
 #moveBtn.on{border-color:var(--amber);color:var(--amber)}
-html.tgfs .overlay.full .vhead{padding-top:calc(var(--sp-3) + var(--tg-safe-area-inset-top,0px) + var(--tg-content-safe-area-inset-top,0px))}
+html.tgfs .overlay.full .sheet-head{padding-top:calc(var(--sp-3) + var(--tg-safe-area-inset-top,0px) + var(--tg-content-safe-area-inset-top,0px))}
 html.tgfs header.top{padding-top:calc(var(--sp-3) + var(--tg-safe-area-inset-top,0px) + var(--tg-content-safe-area-inset-top,0px))}
 .nick{font-weight:var(--wt-medium);color:var(--amber);font-size:.85em}
 details.tip{border:0;background:none;padding:0;margin:0}details.tip>summary{display:inline-flex;align-items:center;gap:var(--sp-2);padding-block:0;font-size:var(--fs-footnote);font-weight:var(--wt-medium);color:var(--ink2);list-style:none}
@@ -306,19 +308,55 @@ td .sub{font-size:var(--fs-caption2);color:var(--muted);margin-top:var(--sp-0h);
 .share img{width:100%;max-width:360px;border-radius:var(--r-md);border:1px solid var(--line);display:block}
 .share .hint{font-size:var(--fs-caption);color:var(--ink2)}
 .flag{font-family:var(--font-mono);font-size:var(--fs-caption);padding:var(--sp-1) var(--sp-2);border-radius:var(--r-pill);background:var(--amber);color:#fff;justify-self:start}
-.overlay{position:fixed;inset:0;background:rgba(10,14,12,.6);z-index:50;overflow:auto;padding:var(--sp-4);padding-top:calc(var(--sp-4) + env(safe-area-inset-top,0px))}
-.overlay .box{background:var(--bg);max-width:640px;margin:0 auto;border-radius:var(--r-lg);padding:var(--sp-4);border:1px solid var(--line);display:grid;gap:var(--sp-3);box-shadow:var(--sh-3)}
-.overlay .box>*{min-width:0} #viewBody .tabs .tab{white-space:nowrap;padding:var(--sp-3) var(--sp-2);font-size:var(--fs-body);flex:0 0 auto}
-/* sign-in dialog: bottom sheet on phone, centered on iPad */
-.overlay.full{padding:0;background:var(--bg)}.overlay.full .box{max-width:640px;min-height:100%;border:0;border-radius:0;box-shadow:none;align-content:start;padding:0 var(--sp-4) calc(var(--sp-6) + env(safe-area-inset-bottom,0px))}   /* board: sheet over the whole viewport */
-.overlay.full .vhead{position:sticky;top:0;z-index:2;align-items:center;margin-inline:calc(var(--sp-4) * -1);padding:calc(var(--sp-3) + env(safe-area-inset-top,0px)) var(--sp-4) var(--sp-3);background:color-mix(in srgb,var(--bg) 92%,transparent);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-bottom:1px solid var(--line2)}
+/* sheets: bottom sheet on phone (spring in, blurred dim, swipe down to close), centered card from 600px, full screen for the table */
+.overlay,.sheet0{--sx:var(--sp-card);position:fixed;inset:0;display:flex;align-items:flex-end;justify-content:center;overflow:hidden;overflow:clip;overscroll-behavior:contain}   /* clip: never scrolls (the spring gap filler overflows below) */
+.overlay{z-index:50}.sheet0{z-index:60}
+.sheet-bd{position:absolute;inset:0;background:rgba(5,10,25,.55);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);touch-action:none}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.sheet-bd{background:rgba(5,10,25,.74)}}
+@media (prefers-reduced-transparency:reduce){.sheet-bd{-webkit-backdrop-filter:none;backdrop-filter:none;background:rgba(5,10,25,.8)}}
+.overlay .box,.sheet0-box{position:relative;box-sizing:border-box;width:100%;max-height:92vh;max-height:92dvh;margin:0;padding:0 var(--sx);border:0;border-radius:var(--r-xl) var(--r-xl) 0 0;box-shadow:0 -1px 0 var(--line),var(--sh-3);outline:none}
+.overlay .box{display:flex;flex-direction:column;max-width:640px;background:var(--bg)}
+.overlay .box::after,.sheet0-box::after{content:"";position:absolute;left:0;right:0;top:100%;height:96px;background:inherit}   /* fills the gap while the spring overshoots */
+.overlay .box>*{min-width:0}
+.sheet-head{flex:none;margin:0 calc(var(--sx) * -1);padding:0 var(--sx) var(--sp-3);touch-action:none;-webkit-user-select:none;user-select:none}
+.grab{height:28px;display:grid;place-items:center;cursor:grab}.grab::before{content:"";width:36px;height:5px;border-radius:var(--r-pill);background:color-mix(in srgb,var(--ink) 22%,transparent)}
+#viewBody{flex:1 1 auto;min-height:0;margin:0 calc(var(--sx) * -1);padding:var(--sp-1) var(--sx) calc(var(--sp-5) + env(safe-area-inset-bottom,0px));overflow:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+#viewBody .tabs .tab{white-space:nowrap;padding:var(--sp-3) var(--sp-2);font-size:var(--fs-body);flex:0 0 auto}
+.sheet-ghost{pointer-events:none}
+@media (min-width:600px){
+  .overlay:not(.full),.sheet0{align-items:center;padding:var(--sp-4)}
+  .overlay:not(.full) .box,.sheet0-box{border-radius:var(--r-xl);max-height:min(88vh,880px)}
+  .overlay .box::after,.sheet0-box::after{display:none}
+  .overlay:not(.full) .grab,.sheet0 .grab{display:none}
+  .sheet-head{padding-top:var(--sp-4)}
+}
+/* all-time table: sheet over the whole viewport, no backdrop */
+.overlay.full{--sx:var(--sp-4);display:block;overflow:auto;background:var(--bg)}
+.overlay.full .sheet-bd,.overlay.full .grab,.overlay.full .box::after{display:none}
+.overlay.full .box{display:block;max-width:640px;min-height:100%;max-height:none;margin:0 auto;border-radius:0;box-shadow:none;padding:0 var(--sx) calc(var(--sp-6) + env(safe-area-inset-bottom,0px))}
+.overlay.full #viewBody{margin:0;padding:var(--sp-3) 0 0;overflow:visible}
+.overlay.full .sheet-head{position:sticky;top:0;z-index:2;padding-top:calc(var(--sp-3) + env(safe-area-inset-top,0px));background:color-mix(in srgb,var(--bg) 92%,transparent);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-bottom:1px solid var(--line2)}
+.overlay.full .vhead{align-items:center}
 .overlay.full #viewTitle{font:var(--wt-black) var(--fs-title2)/var(--lh-snug) var(--font-display);letter-spacing:var(--ls-tight);text-transform:none;color:var(--ink)}
 .overlay.full #viewClose{min-height:44px;min-width:44px}
-.overlay.login{display:flex;align-items:flex-end;padding:0}
-.overlay.login .box{width:100%;max-width:440px;margin:0 auto;background:var(--surface);border:0;border-radius:var(--r-xl) var(--r-xl) 0 0;padding:var(--sp-3) var(--sp-card) calc(var(--sp-5) + env(safe-area-inset-bottom,0px));gap:0;box-shadow:var(--sh-3)}
-@media (min-width:600px){.overlay.login{align-items:center;padding:var(--sp-4)}.overlay.login .box{border-radius:var(--r-xl);padding:var(--sp-card) var(--sp-5) var(--sp-5)}}
+/* sign-in dialog: compact sheet, title hidden, cross instead of the Close button */
+.overlay.login .box{max-width:440px;background:var(--surface)}
+.overlay.login .sheet-head{padding-bottom:0}
 .overlay.login .vhead{justify-content:flex-end}.overlay.login #viewTitle{display:none}
 .overlay.login #viewClose{border:0;background:none;color:var(--muted);font-size:var(--fs-title2);line-height:1;padding:var(--sp-1) var(--sp-2);letter-spacing:var(--ls-tight)}
+/* skeletons: shimmer blocks with the final layout (no text while loading) */
+.sk{position:relative;display:inline-block;vertical-align:middle;width:100%;height:1em;border-radius:var(--r-xs);background:color-mix(in srgb,var(--ink) 7%,transparent);overflow:hidden}
+.sk::after{content:"";position:absolute;inset:0;transform:translateX(-100%);background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--ink) 11%,transparent),transparent);animation:skim 1.4s linear infinite}
+@keyframes skim{to{transform:translateX(100%)}}
+.sk.w20{width:20px}.sk.w40{width:40%}.sk.w60{width:60%}.sk.w80{width:80%}.sk.num{width:2.2em}.sk.blk{display:block}.sk.dot{width:32px;height:32px;border-radius:50%;flex:none}
+.sk.sk-pitch{height:auto;aspect-ratio:68/105;max-width:460px;margin-inline:auto;border-radius:14px}.sk-hero{height:148px;border-radius:var(--r-lg)}.sk-h3{height:18px;width:30%;margin:var(--sp-5) 0 var(--sp-3)}
+.sk-bk{margin-bottom:var(--sp-3)}.sk-bk .sk{width:132px;height:44px;border-radius:var(--r-md)}
+.sk-row .sk.dot{width:20px;height:20px}.sk-row b,.sk-row small{display:block}
+.sk-h1{width:55%;height:var(--fs-title1);border-radius:var(--r-sm)}.sk-bar{height:8px;border-radius:var(--r-pill)}.sk-btn{height:48px;border-radius:var(--r-md)}
+.trp .sk{width:7em}
+.tile b .sk{display:block;height:calc(var(--fs-title1) * var(--lh-tight))}
+td .sub .sk{height:18px;border-radius:var(--r-pill)}
+@media (prefers-reduced-motion:reduce){.sk::after{animation:none;display:none}}
 .lg-h{font:var(--wt-black) var(--fs-title2)/var(--lh-snug) var(--font-display);margin:0 0 var(--sp-2);letter-spacing:var(--ls-tight)}.lg-sub{color:var(--ink2);margin:0 0 var(--sp-4);font-size:var(--fs-body)}
 .lg-btns{display:grid;gap:var(--sp-2)}
 .lgb{display:flex;align-items:center;justify-content:center;gap:var(--sp-2);width:100%;border:1px solid transparent;border-radius:var(--r-md);padding:var(--sp-4) var(--sp-4);font:var(--wt-bold) var(--fs-headline) var(--font-body);text-decoration:none;cursor:pointer}
@@ -437,9 +475,8 @@ input.sw{appearance:none;-webkit-appearance:none;flex:none;width:46px;height:28p
 input.sw::after{content:"";position:absolute;left:3px;top:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:transform var(--dur-2) var(--spring)}
 input.sw:checked{background:var(--win)}input.sw:checked::after{transform:translateX(18px)}
 #ppSet .pp-sec{margin-top:var(--sp-5)}#ppSetMsg{margin:var(--sp-2) var(--sp-0h) 0}#ppSet .pp-del{display:block;margin:var(--sp-4) auto 0}
-.sheet0{position:fixed;inset:0;z-index:60;background:rgba(5,10,25,.6);display:flex;align-items:flex-end;justify-content:center}
-.sheet0-box{width:100%;max-width:560px;background:var(--surface);border-radius:var(--r-xl) var(--r-xl) 0 0;padding:var(--sp-4) var(--sp-card) calc(var(--sp-5) + env(safe-area-inset-bottom,0px));display:grid;gap:var(--sp-2);box-shadow:var(--sh-3)}
-@media (min-width:600px){.sheet0{align-items:center;padding:var(--sp-4)}.sheet0-box{border-radius:var(--r-xl);max-width:460px}}
+.sheet0-box{display:grid;gap:var(--sp-2);align-content:start;max-width:560px;background:var(--surface);padding-bottom:calc(var(--sp-5) + env(safe-area-inset-bottom,0px))}
+@media (min-width:600px){.sheet0-box{max-width:460px}}
 .sheet0-bar{display:flex;justify-content:space-between;align-items:center}.sheet0-bar h3{margin:0;font:var(--wt-black) var(--fs-title3) var(--font-display)}
 .sheet0-box input{font:var(--fs-headline) var(--font-body);padding:var(--sp-3);border:1px solid var(--line);border-radius:var(--r-md);background:var(--bg);color:var(--ink);width:100%}
 .sheet0-box .big0{max-width:none}
@@ -932,7 +969,7 @@ h3,.sec0,#s1 .sec0,.pgh,.trleg .h{font-size:var(--fs-footnote);font-weight:var(-
   </section>
 </div>
 
-<div class="overlay" id="viewBox" hidden><div class="box"><div class="vhead"><h3 id="viewTitle">Склад</h3><button class="ghost" id="viewClose">Закрити</button></div><div id="viewBody"></div></div></div>
+<div class="overlay" id="viewBox" hidden><div class="sheet-bd"></div><div class="box" role="dialog" aria-modal="true" aria-labelledby="viewTitle" tabindex="-1"><div class="sheet-head" id="viewHead"><div class="grab" aria-hidden="true"></div><div class="vhead"><h3 id="viewTitle">Склад</h3><button class="ghost" id="viewClose">Закрити</button></div></div><div id="viewBody"></div></div></div>
 <footer class="ft" id="ft">   <!-- footer: sections, feedback form, bot, version, credits -->
 <nav class="foot0" aria-label="Розділи"><a href="#" data-go="dailyBtn">Драфт дня</a><a href="#" data-go="pickOpen">Вибір сезону</a><a href="#" data-go="clubOpen">Один клуб</a><a href="#" data-go="flOpen">Ліга з друзями</a><a href="#" data-go="boardOpen">Таблиця</a><a href="#" data-go="trBtn">Трофеї</a><a href="#" data-go="howQ">Питання</a></nav>
 <form class="ft-form" id="fbForm" hidden novalidate><div class="ttl">Повідомити про проблему</div>
@@ -943,7 +980,7 @@ h3,.sec0,#s1 .sec0,.pgh,.trleg .h{font-size:var(--fs-footnote);font-weight:var(-
   <div class="acts"><button class="ft-send" id="fbSend" type="submit">Надіслати</button><button class="ft-cancel" id="fbCancel" type="button">Скасувати</button></div></form>
 <div class="ft-done" id="fbDone" hidden><b>✓</b><span>Дякуємо! Прочитаємо найближчим часом</span></div>
 <div class="ft-pills"><button class="ft-pill" id="fbBtn" type="button">✉️ Відгук і баги</button><a class="ft-pill" id="ftBot" href="https://t.me/upl30_bot" target="_blank" rel="noopener"><!--i:telegram-->Telegram-бот</a></div>
-<div class="foot ft-small"><a href="#" id="newsBtn">Що нового у версії 0.75<b id="newsDot" hidden></b></a><span>·</span><a href="privacy.html">Конфіденційність</a></div>
+<div class="foot ft-small"><a href="#" id="newsBtn">Що нового у версії 0.76<b id="newsDot" hidden></b></a><span>·</span><a href="privacy.html">Конфіденційність</a></div>
 <div class="foot ft-copy">© 2026 30-0 УПЛ · неофіційний фан-проєкт <a href="#" id="themeBtn" class="thm" role="switch" aria-checked="false" aria-label="Світла тема"></a></div>
 <div class="ft-cred">Шрифт KyivType Sans © Дмитро Растворцев (айдентика Києва)<br>Іконки: Material Design Icons (Apache 2.0), логотип Telegram — Font Awesome Free (CC BY 4.0)</div>
 </footer>
@@ -1165,7 +1202,7 @@ function go(n,pop){if(n===2)PITCH_VIS=true;if(!pop&&n!==CUR_SEC)navPush(n);const
 // Back button + home icon. Every screen change is a browser history entry,
 // so swipe, browser back and Telegram BackButton go to the previous screen. Season summary replaces the draft (back goes to settings).
 let NAV_I=0,NAV_FREE=false;   // NAV_I: history entry index of this tab (0 = first screen); NAV_FREE: leaving the draft already confirmed
-let SHEET=0;   // full-screen sheet depth: 1 = table, 2 = squad opened from it; each level is a history entry
+let SHEET=0;   // sheet depth: every sheet is one history entry; the table adds a second level for a squad opened from it
 function navPush(n){const rep=n===3&&CUR_SEC===2;if(!rep)NAV_I++;try{history[rep?'replaceState':'pushState']({sec:n,i:NAV_I},'',location.href);}catch(e){}}
 function navUi(){const inner=CUR_SEC!==1;document.querySelector('header.top').classList.toggle('in',inner);document.getElementById('backBtn').hidden=!inner;document.getElementById('homeBtn').hidden=!inner;document.getElementById('hLogo').hidden=inner;
   try{if(TG&&TG.BackButton){if(inner||SHEET)TG.BackButton.show();else TG.BackButton.hide();}}catch(e){}}
@@ -1176,7 +1213,7 @@ function askLeave(ok){if(NAV_FREE||!draftBusy())return ok();const q='Вийти?
 function sheetOpen(){if(SHEET)return;SHEET=1;try{history.pushState({sec:CUR_SEC,i:NAV_I,sheet:1},'',location.href);}catch(e){}navUi();}
 function navBack(){if(SHEET){history.back();return;}askLeave(()=>{if(NAV_I>0){NAV_FREE=true;history.back();}else go(1);});}
 addEventListener('popstate',e=>{const sd=e.state&&e.state.sheet||0;
-  if(SHEET){if(sd){SHEET=sd;if(sd===1)openBoard();}else{SHEET=0;viewHide();navUi();}return;}   // back closes the sheet first, the screen underneath stays
+  if(SHEET){if(sd){SHEET=sd;if(sd===1)openBoard();}else{SHEET=0;sheetsDismiss();navUi();}return;}   // back closes the sheet first, the screen underneath stays
   if(sd){history.back();return;}   // stale sheet entry (sheet was left another way)
   const st=e.state&&e.state.sec?e.state:{sec:1,i:0};
   if(!NAV_FREE&&st.sec!==2&&draftBusy()){try{history.pushState({sec:2,i:NAV_I},'',location.href);}catch(_){}askLeave(()=>{NAV_FREE=true;history.back();});return;}
@@ -1950,10 +1987,17 @@ function boardHtml(rows,b){
   if(!rows.length)return `<p class="muted">Поки що порожньо${BOARD_FROM?`: з ${BOARD_FROM_TXT} таблиця почалась заново`:''}. Зіграй сезон — він з\'явиться тут після перевірки сервером.</p>`;
   const me=deviceId(),pid=PLAYER&&PLAYER.id;
   return `<div class="tbl clickable"><table><tr><th>#</th><th>Гравець</th><th class="num">В-Н-П</th><th class="num">Г</th><th class="num">О</th></tr>`+rows.map((r,i)=>`<tr data-q="id=eq.${numOr0(r.id)}"${(pid&&r.player_id===pid)||r.device_id===me?' class="me"':''}><td class="num">${i+1}</td><td class="nm"><span class="nmt">${plink(r)}${r.w===30?' <span class="lv lv-p">30-0</span>':''}</span><div class="sub"><span>${esc(r.formation)}</span>${lvChip(r.mode)}${r.show_r?'<span class="lv lv-r" title="У драфті були відкриті рейтинги гравців">рейтинги відкриті</span>':''}${b==='oneclub'&&r.club?`<span>${esc(CLUBN[r.club]||r.club)}</span>`:''}</div></td><td class="num">${numOr0(r.w)}-${numOr0(r.d)}-${numOr0(r.l)}</td><td class="num">${numOr0(r.gf)}:${numOr0(r.ga)}</td><td class="num"><b>${numOr0(r.pts)}</b></td></tr>`).join('')+`</table></div><p class="muted" style="font-size:var(--fs-caption);margin-top:var(--sp-2)">${BOARD_FROM?`Сезони з ${BOARD_FROM_TXT}; старі — на сторінках гравців. `:''}Лише сезони, перевірені сервером. Рівні очки: місце в сезоні → різниця м'ячів → забиті → хто раніше. Тап по рядку — склад, по імені — сторінка гравця.</p>`;}
+// skeletons: same layout as the loaded content, no text while loading
+const skBox=h=>`<div class="sk-box" role="status" aria-busy="true" aria-label="Завантаження">${h}</div>`;
+const skN=(n,f)=>Array.from({length:n},(_,i)=>f(i)).join('');
+const skNum='<td class="num"><i class="sk num"></i></td>';
+const skBoard=(n=10)=>skBox(`<div class="tbl"><table><tr><th>#</th><th>Гравець</th><th class="num">В-Н-П</th><th class="num">Г</th><th class="num">О</th></tr>${skN(n,()=>`<tr>${skNum}<td class="nm"><span class="nmt"><i class="sk w60"></i></span><div class="sub"><i class="sk w40"></i></div></td>${skNum}${skNum}${skNum}</tr>`)}</table></div>`);
+const skLb=(n=5)=>skBox(`<div class="clickable"><table class="lbt"><tr><th class="n">#</th><th>Гравець</th><th class="num">В-Н-П</th><th class="num">Голи</th><th class="num">Очки</th></tr>${skN(n,()=>`<tr><td class="n"><i class="sk w20"></i></td><td><i class="sk w60"></i></td>${skNum}${skNum}${skNum}</tr>`)}</table></div>`);
+const skView=back=>skBox(`${back?'<div class="row sk-bk"><i class="sk blk"></i></div>':''}<div class="sk blk sk-hero"></div><div class="sk blk sk-h3"></div><div class="sk blk sk-pitch"></div>`);
 let BOARD='main';
 function openBoard(b){BOARD=b||BOARD;screenTag('table');const box=document.getElementById('viewBox'),body=document.getElementById('viewBody');document.getElementById('viewTitle').textContent='Таблиця за весь час';box.classList.add('full');box.hidden=false;sheetOpen();
   const bt=Object.entries(BOARDS).filter(([k,v])=>!v.hidden||k===BOARD);   // single tab: no tab row
-  body.innerHTML=`<div class="tabs" style="margin-top:0" role="tablist"${bt.length<2?' hidden':''}>${bt.map(([k,v])=>`<button class="tab${k===BOARD?' on':''}" data-board="${k}" role="tab">${v.name}</button>`).join('')}</div><p class="muted" style="font-size:var(--fs-caption);margin:var(--sp-3) 0 var(--sp-2)">${BOARDS[BOARD].note}</p><div id="boardBody">${BOARD_CACHE[BOARD]&&BOARD_CACHE[BOARD].rows?boardHtml(BOARD_CACHE[BOARD].rows,BOARD):'<p class="muted">Завантаження…</p>'}</div>`;
+  body.innerHTML=`<div class="tabs" style="margin-top:0" role="tablist"${bt.length<2?' hidden':''}>${bt.map(([k,v])=>`<button class="tab${k===BOARD?' on':''}" data-board="${k}" role="tab">${v.name}</button>`).join('')}</div><p class="muted" style="font-size:var(--fs-caption);margin:var(--sp-3) 0 var(--sp-2)">${BOARDS[BOARD].note}</p><div id="boardBody">${BOARD_CACHE[BOARD]&&BOARD_CACHE[BOARD].rows?boardHtml(BOARD_CACHE[BOARD].rows,BOARD):skBoard()}</div>`;
   body.querySelectorAll('[data-board]').forEach(t=>t.onclick=()=>openBoard(t.dataset.board));
   loadBoard(BOARD);}
 // leaderboard tabs: prefetched in the background (boardPrefetch after start) and cached in memory;
@@ -1986,7 +2030,7 @@ function viewHtml(s){
     <div class="tbl"><table><tr><th>Гравець</th><th class="num">Оцінка</th><th class="num" title="Голи">Г</th><th class="num" title="Асисти">А</th><th class="num">Рейт.</th><th class="num">Форма</th></tr>${[...xi].sort((a,b)=>(b.rt||0)-(a.rt||0)).map(p=>`<tr><td class="pn"><div class="pnr">${lineDot(p.slot)}<span>${esc(p.n)}</span></div></td><td class="num"><b style="color:${rc(p.rt||0)}">${p.rt!=null?Number(p.rt).toFixed(2):'—'}</b></td><td class="num">${p.g||0}</td><td class="num">${p.a||0}</td><td class="num">${numOr0(baseR(p))}</td><td class="num" style="color:${p.f>=3?'var(--win)':p.f<=-3?'var(--loss)':'inherit'}">${p.f>0?'+':''}${p.f||0}</td></tr>`).join('')}</table></div>${LINE_KEY}
     ${tb.length?`<h3>Турнірна таблиця</h3><div class="tbl"><table><tr><th>#</th><th>Команда</th><th class="num">В</th><th class="num">Н</th><th class="num">П</th><th class="num">Г</th><th class="num">О</th></tr>${tb.map((t,i)=>`<tr${t.me?' class="me"':''}><td class="num">${i+1}</td><td>${esc(t.n)}</td><td class="num">${t.w}</td><td class="num">${t.d}</td><td class="num">${t.l}</td><td class="num">${t.gf}:${t.ga}</td><td class="num"><b>${t.pts}</b></td></tr>`).join('')}</table></div>`:''}`;
 }
-async function openView(q,back){screenTag('view');if(back&&SHEET===1){SHEET=2;try{history.pushState({sec:CUR_SEC,i:NAV_I,sheet:2},'',location.href);}catch(e){}}const box=document.getElementById('viewBox'),body=document.getElementById('viewBody');box.hidden=false;document.getElementById('viewTitle').textContent='Склад';body.innerHTML='<p class="muted">Завантаження…</p>';
+async function openView(q,back){screenTag('view');if(back&&SHEET===1){SHEET=2;try{history.pushState({sec:CUR_SEC,i:NAV_I,sheet:2},'',location.href);}catch(e){}}const box=document.getElementById('viewBox'),body=document.getElementById('viewBody');box.hidden=false;document.getElementById('viewTitle').textContent='Склад';body.innerHTML=skView(back);
   const bk=back?`<div class="row" style="margin-bottom:var(--sp-3)"><button class="ghost" id="viewBack">← До таблиці</button></div>`:'';
   try{const rows=await sbGetFallback([...PL_SEL.map(pl=>`seasons?select=*,${pl}&${q}&limit=1`),`seasons?select=*&${q}&limit=1`]);if(!rows.length){body.innerHTML=bk+'<p class="muted">Склад для цього результату не збережено.</p>';}else body.innerHTML=bk+viewHtml(rows[0]);}catch(e){body.innerHTML=bk+'<p class="muted">Не вдалося завантажити.</p>';}
   const vb=document.getElementById('viewBack');if(vb)vb.onclick=()=>{if(SHEET===2)history.back();else openBoard();};}
@@ -1997,9 +2041,74 @@ document.getElementById('trBtn').onclick=()=>{if(!ONLINE){openTrophies();return;
 document.getElementById('chalBtn').onclick=chalShare;document.getElementById('chalCopyBtn').onclick=chalCopy;
 document.getElementById('acctBtn').onclick=()=>openPlayer();
 document.getElementById('lbAcctGo').onclick=()=>{ACCT_MSG='';openAcct();};
-function viewHide(){if(SHEET){history.go(-SHEET);return;}document.getElementById('viewBox').hidden=true;screenTag(SEC_NAME[CUR_SEC]);}   // dialog closed: show the screen beneath again
+// ---------- Sheets: one controller for #viewBox and #ppSheet.
+// Phone: bottom sheet (spring in, drag the grabber/header down to close); from 600px: centered card; the table is full screen.
+const SHEET_MS=420;
+const sheetSlide=c=>c.full()||matchMedia('(max-width:599.98px)').matches;   // slides vs fades in
+const sheetMotion=()=>!matchMedia('(prefers-reduced-motion: reduce)').matches;
+const sheetEl=c=>c.full()?c.root:c.panel;   // the table moves as a whole
+const sheetY=el=>{try{return new DOMMatrix(getComputedStyle(el).transform).m42;}catch(e){return 0;}};
+const sheetTok=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+let SHEET_LAST=null,PPS=null;   // SHEET_LAST: last pressed control (Safari does not focus buttons on tap); PPS: open name sheet
+document.addEventListener('pointerdown',e=>{SHEET_LAST=e.target.closest&&e.target.closest('button,a,summary,[tabindex]');},true);
+function sheetCtl(root,o){return {root,panel:o.panel,bd:o.bd,full:o.full||(()=>false),request:o.request,anims:[],trigger:null,pushed:false,vy:0};}
+function sheetStop(c){c.anims.forEach(a=>{try{a.cancel();}catch(e){}});c.anims=[];}
+function sheetPlay(c,el,kf,opt){if(!el||!el.animate)return null;const a=el.animate(kf,{fill:'none',...opt});c.anims.push(a);a.finished.then(()=>{c.anims=c.anims.filter(x=>x!==a);},()=>{});return a;}
+function sheetEnter(c){
+  sheetStop(c);const ae=document.activeElement;c.trigger=ae&&ae!==document.body?ae:SHEET_LAST;
+  if(sheetMotion()){
+    if(sheetSlide(c))sheetPlay(c,sheetEl(c),[{transform:'translateY(100%)'},{transform:'translateY(0)'}],{duration:SHEET_MS,easing:sheetTok('--spring-sheet')});
+    else sheetPlay(c,c.panel,[{opacity:0,transform:'scale(.97)'},{opacity:1,transform:'none'}],{duration:240,easing:sheetTok('--ease-out')});
+    sheetPlay(c,c.bd,[{opacity:0},{opacity:1}],{duration:240,easing:sheetTok('--ease-out')});}
+  try{c.panel.focus({preventScroll:true});}catch(e){}}
+function sheetReset(c){sheetStop(c);sheetEl(c).style.transform='';if(c.bd)c.bd.style.opacity='';}
+// exit: the real sheet is hidden at once (state stays consistent), a ghost copy plays the way out
+function sheetGhost(c,vy){
+  if(!sheetMotion()||!c.root.animate)return;const root=c.root,slide=sheetSlide(c),y=sheetY(sheetEl(c));
+  const g=root.cloneNode(true);g.removeAttribute('id');g.querySelectorAll('[id]').forEach(e=>e.removeAttribute('id'));
+  g.hidden=false;g.inert=true;g.setAttribute('aria-hidden','true');g.classList.add('sheet-ghost');
+  const rb=root.querySelector('#viewBody');
+  root.after(g);g.scrollTop=root.scrollTop;const body=g.querySelector('.box>div:last-child');if(body&&rb)body.scrollTop=rb.scrollTop;
+  const m=c.full()?g:g.querySelector('.box,.sheet0-box'),bd=g.querySelector('.sheet-bd');
+  const done=()=>g.remove();let dur=160,a;
+  if(slide){const h=m.offsetHeight||innerHeight;dur=vy>.6?Math.max(120,Math.min(260,(h-y)/vy)):260;
+    a=m.animate([{transform:`translateY(${y}px)`},{transform:'translateY(100%)'}],{duration:dur,easing:sheetTok('--ease-out'),fill:'forwards'});}
+  else a=m.animate([{opacity:1,transform:'none'},{opacity:0,transform:'scale(.97)'}],{duration:dur,easing:sheetTok('--ease-out'),fill:'forwards'});
+  if(bd&&getComputedStyle(bd).display!=='none')bd.animate([{opacity:+getComputedStyle(bd).opacity||1},{opacity:0}],{duration:dur,easing:'linear',fill:'forwards'});
+  a.finished.then(done,done);setTimeout(done,dur+300);}
+function sheetBack(c){const t=c.trigger&&c.trigger.id&&document.getElementById(c.trigger.id)||c.trigger;c.trigger=null;if(t&&t.isConnected&&t!==document.body)try{t.focus({preventScroll:true});}catch(e){}}
+function sheetClose(c,after,vy){sheetGhost(c,vy||0);after();sheetBack(c);}
+function sheetSnap(c,y){const m=sheetEl(c);m.style.transform='';
+  if(c.bd){const o=+c.bd.style.opacity;c.bd.style.opacity='';if(sheetMotion()&&o)sheetPlay(c,c.bd,[{opacity:o},{opacity:1}],{duration:240,easing:'linear'});}
+  if(y&&sheetMotion())sheetPlay(c,m,[{transform:`translateY(${y}px)`},{transform:'translateY(0)'}],{duration:SHEET_MS,easing:sheetTok('--spring')});}
+// drag on the grabber/header follows the finger 1:1; release past a third of the height or with a fast swipe closes
+function sheetDrag(c,handle){let d=null;
+  handle.addEventListener('pointerdown',e=>{if(d||e.button>0||!sheetSlide(c))return;const m=sheetEl(c),y=sheetY(m),live=c.anims.length>0||Math.abs(y)>.5;
+    d={id:e.pointerId,y0:e.clientY,base:y,off:y,moved:false,live,s:[[e.timeStamp,e.clientY]]};if(live){sheetStop(c);m.style.transform=`translateY(${y}px)`;}});
+  handle.addEventListener('pointermove',e=>{if(!d||e.pointerId!==d.id)return;
+    if(!d.moved){if(Math.abs(e.clientY-d.y0)<8)return;d.moved=true;d.y0=e.clientY;try{handle.setPointerCapture(e.pointerId);}catch(_){}}
+    const m=sheetEl(c),h=m.offsetHeight||innerHeight;let off=d.base+e.clientY-d.y0;if(off<0)off=-(-off*h*.55)/(h+.55*-off);   // resist when pulled up
+    d.off=off;m.style.transform=`translateY(${off}px)`;if(c.bd)c.bd.style.opacity=String(1-Math.min(1,Math.max(0,off/h))*.9);
+    d.s.push([e.timeStamp,e.clientY]);while(d.s.length>2&&e.timeStamp-d.s[0][0]>100)d.s.shift();});
+  const end=e=>{if(!d||e.pointerId!==d.id)return;const q=d;d=null;if(!q.moved){if(q.live)sheetSnap(c,q.off);return;}
+    const r=q.s.filter(x=>e.timeStamp-x[0]<=100),a=r[0],b=r[r.length-1],vy=r.length>1&&b[0]>a[0]?(b[1]-a[1])/(b[0]-a[0]):0,h=sheetEl(c).offsetHeight||innerHeight;   // speed over the last 100 ms (0 after a pause)
+    if(e.type==='pointerup'&&q.off>40&&(q.off>h*.3||vy>.5)){c.vy=vy;c.request();setTimeout(()=>{if(c.root.isConnected&&!c.root.hidden&&!c.anims.length)sheetSnap(c,sheetY(sheetEl(c)));},900);}   // history did not close it: come back
+    else sheetSnap(c,q.off);};
+  handle.addEventListener('pointerup',end);handle.addEventListener('pointercancel',end);}
+const VIEW=sheetCtl(document.getElementById('viewBox'),{panel:document.querySelector('#viewBox .box'),bd:document.querySelector('#viewBox .sheet-bd'),full:()=>document.getElementById('viewBox').classList.contains('full'),request:()=>viewHide()});
+sheetDrag(VIEW,document.getElementById('viewHead'));
+// any code showing the dialog (box.hidden=false) gets the animation, focus and a history entry
+new MutationObserver(()=>{if(VIEW.root.hidden)sheetReset(VIEW);else{sheetEnter(VIEW);if(!SHEET)sheetOpen();}}).observe(VIEW.root,{attributes:true,attributeFilter:['hidden']});
+function viewHide(){if(VIEW.root.hidden)return;if(SHEET){history.go(-SHEET);return;}
+  const vy=VIEW.vy;VIEW.vy=0;sheetClose(VIEW,()=>{VIEW.root.hidden=true;screenTag(SEC_NAME[CUR_SEC]);},vy);}   // dialog closed: show the screen beneath again
+function sheetsDismiss(){if(PPS)PPS.dismiss();viewHide();}
 document.getElementById('viewClose').onclick=viewHide;
-document.getElementById('viewBox').onclick=e=>{if(e.target.id==='viewBox')viewHide();};
+VIEW.root.onclick=e=>{if(!VIEW.full()&&(e.target===VIEW.root||e.target.classList.contains('sheet-bd')))viewHide();};
+document.addEventListener('keydown',e=>{if(document.querySelector('.champ0'))return;const c=PPS||(!VIEW.root.hidden?VIEW:null);if(!c)return;
+  if(e.key==='Escape'){e.preventDefault();c.request();return;}
+  if(e.key==='Tab'){const f=[...c.panel.querySelectorAll('a[href],button,input,select,textarea,summary,[tabindex]')].filter(x=>!x.disabled&&x.tabIndex>=0&&x.getClientRects().length);
+    if(!f.length){e.preventDefault();return;}const i=f.indexOf(document.activeElement),last=f.length-1;
+    if(e.shiftKey&&(i<=0)){e.preventDefault();f[last].focus();}else if(!e.shiftKey&&(i===last||i<0)){e.preventDefault();f[0].focus();}}});
 document.addEventListener('click',e=>{const a=e.target.closest&&e.target.closest('a[data-u]');if(a){e.preventDefault();openPlayer(a.dataset.u);return;}   // name in the table -> player page
   const tr=e.target.closest&&e.target.closest('.clickable tr[data-q]');if(tr)openView(tr.dataset.q,!!tr.closest('#boardBody'));});
 /*__PLAYER__*/
@@ -2014,7 +2123,7 @@ function lbHtml(rows){
   if(!rows.length)return '<p class="muted">Поки що ніхто не зіграв. Будь першим!</p>';
   return `<div class="clickable"><table class="lbt"><tr><th class="n">#</th><th>Гравець</th><th class="num">В-Н-П</th><th class="num">Голи</th><th class="num">Очки</th></tr>`+show.map(r=>`<tr data-q="day=eq.${DAY}&device_id=eq.${esc(encodeURIComponent(r.device_id))}&practice=is.false"${r.i===mi?' class="me"':''}><td class="n">${r.i<3?`<span class="plc p${r.i+1}">${r.i+1}</span>`:r.i+1}</td><td>${plink(r)}</td><td class="num">${numOr0(r.w)}-${numOr0(r.d)}-${numOr0(r.l)}</td><td class="num">${numOr0(r.gf)}:${numOr0(r.ga)}</td><td class="num"><b>${numOr0(r.pts)}</b></td></tr>`).join('')+`</table></div><p class="muted lbfoot">Зіграли сьогодні: ${rows.length} · лише перевірені сервером · тап по рядку — склад</p>`;
 }
-async function loadLb(el){el.innerHTML='<p class="muted">Завантаження…</p>';try{el.innerHTML=lbHtml(await sbTop(DAY));}catch(e){el.innerHTML='<p class="muted">Таблиця зараз недоступна.</p><p class="muted mono" style="font-size:var(--fs-caption2)">'+esc(String(e&&e.message||e))+'</p>';}}
+async function loadLb(el){el.innerHTML=skLb();try{el.innerHTML=lbHtml(await sbTop(DAY));}catch(e){el.innerHTML='<p class="muted">Таблиця зараз недоступна.</p><p class="muted mono" style="font-size:var(--fs-caption2)">'+esc(String(e&&e.message||e))+'</p>';}}
 function renderLb(r){
   const box=document.getElementById('lbBox');box.hidden=!(ONLINE&&S.daily);if(box.hidden)return;
   const sent=lsGet("upl30_sent_"+DAY);const form=document.getElementById('lbForm');const msg=document.getElementById('lbMsg');
@@ -2126,10 +2235,10 @@ function drawCard(r){   // card in site style: UPL navy background, UPL.TV gradi
 }
 document.getElementById('chalOpen').onclick=()=>{const b=document.getElementById('chalBox'),t=document.getElementById('chalOpen');b.hidden=!b.hidden;t.classList.toggle('on',!b.hidden);if(!b.hidden){b.scrollIntoView({behavior:'smooth',block:'center'});const n=document.getElementById('chalName');if(n&&!n.hidden&&!n.value)n.focus();}};
 // ---------- What's new: short player-friendly notes on the latest version (technical log: CHANGELOG.md)
-const WHATSNEW={v:'0.75',date:'07.10.2026',items:[
-  ['ferris-wheel','Плавніше колесо','Барабани крутяться з легким розмиттям, другий стартує трохи пізніше й зупиняється з пружним доворотом. Екрани, таблиця сезону й списки рухаються м’якше.'],
-  ['lightning-bolt','Відгук на дотик','Кнопки та рядки трохи западають під пальцем і пружно повертаються.'],
-  ['check-decagram','Вібрація','Легкий відгук на старті й зупинці колеса, виборі гравця, голі твоєї команди, підсумку сезону та новому трофеї.']]};
+const WHATSNEW={v:'0.76',date:'07.10.2026',items:[
+  ['arrow-down-bold','Вікна — шторки знизу','Акаунт, новини, ліги й зміна імені виїжджають знизу з розмитим фоном. Закрити можна свайпом вниз, тапом поза вікном або «назад».'],
+  ['timer-sand','Заглушки замість очікування','Поки таблиці, ліги й сторінки гравців вантажаться, на їхньому місці — м’які заглушки тієї ж форми, тож нічого не стрибає.'],
+  ['check-decagram','Для iPad і з «Зменшити рух»','На широкому екрані вікно — картка посередині. Якщо в системі ввімкнено «Зменшити рух», вікна з’являються без анімації.']]};
 function openNews(){screenTag('news');const box=document.getElementById('viewBox');document.getElementById('viewTitle').textContent=`Що нового · версія ${WHATSNEW.v}`;
   document.getElementById('viewBody').innerHTML=`<div class="news">${WHATSNEW.items.map(([e,h,d])=>`<div class="ni">${ic(e,'lg')}<div><b>${esc(h)}</b><p>${esc(d)}</p></div></div>`).join('')}</div>`;
   box.hidden=false;lsSet('upl30_news_seen',WHATSNEW.v);document.getElementById('newsDot').hidden=true;}
@@ -2143,6 +2252,6 @@ document.getElementById('newsDot').hidden=lsGet('upl30_news_seen')===WHATSNEW.v;
 /*__FIVE__*/
 document.getElementById('f5Open').onclick=f5Start;
 // audit P2-5: only what tests use; drawCard for card checks, simulate/rerun for fast determinism
-window.__dbg={haptic,seasonHaptic,renderNewTro,TROPHIES,CLUB_REC,ocMine,ocAfter,renderOc,renderOcRes,openOc,acctMerge,get BEST(){return BEST;},ic,seasonLabel,boardPrefetch,boardStale,BOARD_FROM,setFmt,leagueLoad,boardHtml,oppYear,champModal,drawCard,chalNewGame,DAILY,LEAGUE_CULT,LEAGUE_LEGENDS,openTrophies,renderNewTro,bestPerPlayer,renderWheel,posOpts,eraOf,ptsWord,viewHtml,renderPitch,pitchHtml,f5Pitch,F5_FORMS,cardName,clubShort,simulate,shareTextOf,trCtxNow,trAward,trStore,FORMATIONS,GROUP_OF,DATA,TROPHIES,trEval,PERSON,effRating,get S(){return S;},rerun(seed,year,xi){rnd=mulberry32(seed);const r=simulate(xi||S.slots.map(s=>s.player),MODES[S.mode],year);rnd=Math.random;return {W:r.W,D:r.D,L:r.L,gf:r.gf,ga:r.ga,place:r.place};}};
+window.__dbg={loadLb,haptic,seasonHaptic,renderNewTro,TROPHIES,CLUB_REC,ocMine,ocAfter,renderOc,renderOcRes,openOc,acctMerge,get BEST(){return BEST;},ic,seasonLabel,boardPrefetch,boardStale,BOARD_FROM,setFmt,leagueLoad,boardHtml,oppYear,champModal,drawCard,chalNewGame,DAILY,LEAGUE_CULT,LEAGUE_LEGENDS,openTrophies,renderNewTro,bestPerPlayer,renderWheel,posOpts,eraOf,ptsWord,viewHtml,renderPitch,pitchHtml,f5Pitch,F5_FORMS,cardName,clubShort,simulate,shareTextOf,trCtxNow,trAward,trStore,FORMATIONS,GROUP_OF,DATA,TROPHIES,trEval,PERSON,effRating,get S(){return S;},rerun(seed,year,xi){rnd=mulberry32(seed);const r=simulate(xi||S.slots.map(s=>s.player),MODES[S.mode],year);rnd=Math.random;return {W:r.W,D:r.D,L:r.L,gf:r.gf,ga:r.ga,place:r.place};}};
 })();
 </script>
