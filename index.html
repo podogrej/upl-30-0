@@ -288,6 +288,7 @@ section.enter{animation:secin var(--dur-3) var(--ease-out) both}section.back{ani
 #moveBtn.on{border-color:var(--amber);color:var(--amber)}
 html.tgfs .overlay.full .sheet-head{padding-top:calc(var(--sp-3) + var(--tg-safe-area-inset-top,0px) + var(--tg-content-safe-area-inset-top,0px))}
 html.tgfs header.top{padding-top:calc(var(--sp-3) + var(--tg-safe-area-inset-top,0px) + var(--tg-content-safe-area-inset-top,0px))}
+html.tgfs .overlay:not(.full),html.tgfs .sheet0{padding-top:calc(var(--tg-safe-area-inset-top,0px) + var(--tg-content-safe-area-inset-top,0px))}html.tgfs .overlay:not(.full) .box,html.tgfs .sheet0-box{max-height:calc(100dvh - var(--tg-safe-area-inset-top,0px) - var(--tg-content-safe-area-inset-top,0px) - var(--sp-4))}   /* Telegram fullscreen: sheets stay below Telegram's top buttons */
 .nick{font-weight:var(--wt-medium);color:var(--amber);font-size:.85em}
 details.tip{border:0;background:none;padding:0;margin:0}details.tip>summary{display:inline-flex;align-items:center;gap:var(--sp-2);padding-block:0;font-size:var(--fs-footnote);font-weight:var(--wt-medium);color:var(--ink2);list-style:none}
 details.tip>summary::-webkit-details-marker{display:none}details.tip>summary::before{content:'';width:0;height:0;border-left:5px solid currentColor;border-top:4px solid transparent;border-bottom:4px solid transparent;transition:transform var(--dur-2) var(--ease-out)}
@@ -491,7 +492,7 @@ input.sw{appearance:none;-webkit-appearance:none;flex:none;width:46px;height:28p
 input.sw::after{content:"";position:absolute;left:3px;top:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:transform var(--dur-2) var(--spring)}
 input.sw:checked{background:var(--win)}input.sw:checked::after{transform:translateX(18px)}
 #ppSet .pp-sec{margin-top:var(--sp-5)}#ppSetMsg{margin:var(--sp-2) var(--sp-0h) 0}#ppSet .pp-del{display:block;margin:var(--sp-4) auto 0}
-.sheet0-box{display:grid;gap:var(--sp-2);align-content:start;max-width:560px;background:var(--surface);padding-bottom:calc(var(--sp-5) + env(safe-area-inset-bottom,0px))}
+.sheet0-box{display:grid;gap:var(--sp-2);align-content:start;overflow-y:auto;overscroll-behavior:contain;max-width:560px;background:var(--surface);padding-bottom:calc(var(--sp-5) + env(safe-area-inset-bottom,0px))}
 @media (min-width:600px){.sheet0-box{max-width:460px}}
 .sheet0-bar{display:flex;justify-content:space-between;align-items:center}.sheet0-bar h3{margin:0;font:var(--wt-black) var(--fs-title3) var(--font-display)}
 .sheet0-box input{font:var(--fs-headline) var(--font-body);padding:var(--sp-3);border:1px solid var(--line);border-radius:var(--r-md);background:var(--bg);color:var(--ink);width:100%}

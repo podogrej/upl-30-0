@@ -130,6 +130,11 @@ const sk=(pg,sel)=>pg.evaluate(s=>{const n=[...document.querySelectorAll(s+' .sk
   await p.keyboard.press('Escape');await wait(500);
   const s2=await p.evaluate(()=>({gone:!document.getElementById('ppSheet'),st:history.state&&history.state.sheet||0,foc:document.activeElement.id,sec:document.getElementById('s6').hidden}));
   T.check(s2.gone&&s2.st===0&&s2.foc==='ppRowName'&&!s2.sec,'ім’я: Escape закриває, запис знято, фокус на рядку «Ім’я», сторінка гравця на місці');
+  // low screen (keyboard up): the name sheet scrolls inside, the save button is reachable
+  await p.setViewportSize({width:320,height:300});await wait(200);await p.click('#ppRowName');await wait(700);
+  const lo=await p.evaluate(()=>{const b=document.querySelector('#ppSheet .sheet0-box');b.scrollTop=b.scrollHeight;const sv=[...b.querySelectorAll('button')].pop().getBoundingClientRect();return {ov:getComputedStyle(b).overflowY,bot:sv.bottom,vh:innerHeight};});
+  T.check(lo.ov==='auto'&&lo.bot<=lo.vh+1,`ім’я на низькому екрані: прокрутка всередині, кнопка видна (${Math.round(lo.bot)} ≤ ${lo.vh})`);
+  await p.keyboard.press('Escape');await wait(500);await p.setViewportSize({width:390,height:844});
   await p.click('#ppRowName');await wait(650);rel=await drag(p,'#ppSheet .sheet-head',170,{steps:8,pause:20});await rel();await wait(600);
   T.check(!(await p.$('#ppSheet'))&&(await st(p)).sheet===0,'ім’я: закривається свайпом вниз');
   await p.click('#ppRowName');await wait(650);await p.evaluate(()=>history.back());await wait(500);T.check(!(await p.$('#ppSheet')),'ім’я: системне «назад» закриває');
@@ -165,7 +170,7 @@ const sk=(pg,sel)=>pg.evaluate(s=>{const n=[...document.querySelectorAll(s+' .sk
   H.hold(/\/rest\/v1\/seasons/);await p.click('#boardOpen');await wait(300);
   const s1=await sk(p,'#viewBody'),skRow=await p.evaluate(()=>{const r=document.querySelectorAll('#boardBody tr');return {n:r.length,h:r[2].getBoundingClientRect().height,top:document.querySelector('#boardBody table').getBoundingClientRect().top};});
   T.check(s1.n>=20&&s1.anim==='skim'&&s1.box,`таблиця: скелетон (${s1.n} блоків, мерехтіння ${s1.anim}, role=status)`);await noText(p,'#viewBody',T,'таблиця');await shot(p,'skeleton_board_phone_dark');
-  await theme(p,'light');await shot(p,'skeleton_board_phone_light');await theme(p,'dark');
+  await theme(p,'light');await wait(900);await shot(p,'skeleton_board_phone_light');await theme(p,'dark');
   H.release();await wait(900);
   const rl=await p.evaluate(()=>{const r=document.querySelectorAll('#boardBody tr[data-q]');return {n:r.length,h:r[1].getBoundingClientRect().height,top:document.querySelector('#boardBody table').getBoundingClientRect().top,sk:document.querySelectorAll('#viewBody .sk').length};});
   T.check(rl.n>=10&&rl.sk===0&&Math.abs(rl.h-skRow.h)<=4&&Math.abs(rl.top-skRow.top)<=1,`таблиця: рядок ${Math.round(skRow.h)} → ${Math.round(rl.h)}px, верх таблиці ${Math.round(skRow.top)} → ${Math.round(rl.top)} — без стрибка`);
@@ -220,7 +225,7 @@ const sk=(pg,sel)=>pg.evaluate(s=>{const n=[...document.querySelectorAll(s+' .sk
   T.check(a2.sk===0&&a2.name==='vitia'&&Math.abs(a2.head-a1.head)<=2&&Math.abs(a2.big-a1.big)<=2&&Math.abs(a2.bigH-a1.bigH)<=2,`чужа сторінка (${a2.sk} скелетонів, ім'я ${a2.name}): шапка ${Math.round(a1.head)} → ${Math.round(a2.head)}, плитки ${Math.round(a1.big)} → ${Math.round(a2.big)}, висота ${Math.round(a1.bigH)} → ${Math.round(a2.bigH)}px — без стрибка`);
   await A.ctx.close();}
  await bb.close();
- // ---- F. source: no "Завантаження…" left in code for players
+ // ---- F. source: no old loading text left in code for players
  {const src=['template.html','account.js','leagues.js','player.js','trophies.js','five.js','oneclub.js','challenge.js'].map(f=>fs.readFileSync(path.join(ROOT,'src',f),'utf8')).join('\n');
   const left=(src.match(/[^`'"\n]{0,30}Завантаж(?:ення|уємо)…[^`'"\n]{0,20}/g)||[]);T.check(left.length===0,'у коді не лишилось «Завантаження…» / «Завантажуємо…» '+left.slice(0,2).join(' | '));}
  process.exit(T.done());})();
