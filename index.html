@@ -33,7 +33,10 @@ if(/^(upl30\.com\.ua|upl-30-0\.vercel\.app)$/.test(location.hostname)){(function
   addEventListener('error',function(e){if(e&&e.message)add(e.message,e.filename,e.lineno,e.colno,e.error&&e.error.stack);});
   addEventListener('unhandledrejection',function(e){var r=e&&e.reason;add('promise: '+(r&&r.message||r),'',0,0,r&&r.stack);});
   addEventListener('pagehide',flush);})();</script>
-<script>(function(){try{localStorage.removeItem('upl30_skin');localStorage.removeItem('upl30_pitch');localStorage.removeItem('upl30_league_title');}catch(e){}/* skins and turf variants were removed; clear old selections */try{var t=/[?&]theme=(light|dark)/.exec(location.search);var th=t?t[1]:(localStorage.getItem('upl30_theme')||'dark');if(t)localStorage.setItem('upl30_theme',th);document.documentElement.setAttribute('data-theme',th);}catch(e){document.documentElement.setAttribute('data-theme','dark');}})();</script>
+<script>(function(){try{localStorage.removeItem('upl30_skin');localStorage.removeItem('upl30_pitch');localStorage.removeItem('upl30_league_title');}catch(e){}/* skins and turf variants were removed; clear old selections */try{var t=/[?&]theme=(light|dark)/.exec(location.search);var th=t?t[1]:(localStorage.getItem('upl30_theme')||'dark');if(t)localStorage.setItem('upl30_theme',th);document.documentElement.setAttribute('data-theme',th);}catch(e){document.documentElement.setAttribute('data-theme','dark');}})();
+/* Telegram Mini App: start loading telegram-web-app.js now, in parallel with the page; the main script runs tgInit when both are ready */
+(function(){if(!true||!/tgWebApp/.test(location.hash+location.search))return;var s=document.createElement('script');s.src='https://telegram.org/js/telegram-web-app.js';s.async=true;
+  s.onload=function(){window.__tgOk=1;if(window.__tgCb)window.__tgCb();};document.head.appendChild(s);})();</script>
 <style>
 :root{
   --bg:#f4f5fa; --bg2:#eceef6; --surface:#ffffff; --line:#dfe3ef; --ink:#132346; --ink2:#4a5578; --muted:#5e6888; --pitch:#2a4fa8; --pitch2:#1d3a80; --chalk:#ffffff; --amber:#6d2abb; --amber2:#d8177b; --win:#0b7a3a; --draw:#c98a00; --loss:#e0263b; --grad:linear-gradient(90deg,#7e24b0,#d41e6f,#ff831e); --gk:#FFCC00; --df:#0062d1; --mf:#34C759; --fw:#FF3B30;
@@ -540,8 +543,29 @@ a.plink{color:inherit;text-decoration:underline;text-decoration-color:color-mix(
    spacing 8/12/16/24; borderless cards on translucent background; one primary button per screen; explanations collapsed */
 :root{--card:color-mix(in srgb,var(--surface) 72%,transparent);--line2:color-mix(in srgb,var(--line) 55%,transparent)}
 button.link0{border:0;background:none;min-height:44px;padding:var(--sp-1) var(--sp-3);color:var(--ink2);font:var(--wt-medium) var(--fs-body) var(--font-body);text-decoration:underline;text-underline-offset:3px}
-/* chat league on Home: top 3, ellipsis, own row; full table as a link */
-tr.gap td{padding:0 var(--sp-2);line-height:var(--lh-snug);color:var(--muted);text-align:center;border:0}#leagueCard .lgall{align-self:flex-start;padding-left:0}#viewBody tr.th td{font-size:var(--fs-caption);color:var(--muted);font-weight:var(--wt-bold)}
+/* chat league on Home: header with counter pill, top 3 with medals, gap, own row, full-table button; same table in the sheet */
+tr.gap td{padding:0 var(--sp-2);line-height:var(--lh-snug);color:var(--muted);text-align:center;border:0}
+#leagueCard{gap:var(--sp-2)}#leagueCard>*{width:100%;max-width:560px;justify-self:center}   /* wide screens: one readable column */
+.lg-hd{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--sp-3)}.lg-ht{flex:1;min-width:0}.lg-ht .ttl{margin-top:var(--sp-0h);overflow-wrap:anywhere}
+.lg-pill{flex:none;white-space:nowrap;padding:var(--sp-1) var(--sp-3);border-radius:var(--r-pill);background:color-mix(in srgb,var(--line) 60%,transparent);font-size:var(--fs-footnote);line-height:20px;font-weight:var(--wt-bold);color:var(--ink2)}
+.sk.lg-pill{width:110px;height:28px;padding:0}.sk.lg-sq{width:24px;height:24px}
+.lg-t th{height:28px;padding:0 var(--sp-2);border:0;font-size:var(--fs-caption);letter-spacing:0;text-transform:none;color:var(--muted);font-weight:var(--wt-bold);text-align:left}
+.lg-t td{height:44px;padding:0 var(--sp-2);border:0;border-top:1px solid color-mix(in srgb,var(--line) 70%,transparent);font-size:var(--fs-body)}
+.lg-t tbody tr:first-child td,.lg-t tr.gap td,.lg-t tr.gap+tr td,.lg-t tr.me+tr td{border-top-color:transparent}
+.lg-t th.num,.lg-t td.num{text-align:right;font-family:inherit}.lg-t td:first-child{width:32px}.lg-t td.nm{font-weight:var(--wt-bold)}
+.lg-t td.s{font-size:var(--fs-footnote);color:var(--muted)}.lg-t td.p{width:56px;font-size:var(--fs-headline);font-weight:var(--wt-black)}
+.lg-t .plc{width:24px;height:24px;font-size:var(--fs-footnote)}
+.lg-t tr.gap td{height:14px;line-height:14px;padding:0}
+.lg-t tr.me td,.lg-t tr.me td:first-child,.lg-t tr.me td:last-child{border:0;border-top:1px solid transparent;background:color-mix(in srgb,var(--amber) 12%,transparent);font-weight:inherit}.lg-t tr.me td.nm,.lg-t tr.me td.p{font-weight:var(--wt-black)}.lg-t tbody tr:nth-child(2) td.nm .sk{width:45%}.lg-t tbody tr:nth-child(3) td.nm .sk{width:52%}
+.lg-t tr.me td:first-child{box-shadow:inset 3px 0 var(--amber2);border-radius:var(--r-sm) 0 0 var(--r-sm)}.lg-t tr.me td:last-child{border-radius:0 var(--r-sm) var(--r-sm) 0}
+.nmw{display:flex;align-items:baseline;gap:var(--sp-1);min-width:0}.nmw .nmt{min-width:0}.nmw .you{flex:none;color:var(--ink2);white-space:nowrap}
+button.lg-all{display:flex;align-items:center;justify-content:space-between;min-height:48px;margin-top:var(--sp-1);padding:var(--sp-2) var(--sp-4);border:1px solid var(--line);border-radius:var(--r-md);background:transparent;color:var(--ink);font:var(--wt-bold) var(--fs-body) var(--font-body);text-align:left}
+button.lg-all i{font-style:normal;font-size:var(--fs-title3);line-height:1;color:var(--muted)}button.lg-all:disabled{opacity:.5}
+@media (hover:hover) and (pointer:fine){button.lg-all:not(:disabled):hover{background:color-mix(in srgb,var(--ink) 4%,transparent)}}
+.lg-note{margin:0;font-size:var(--fs-footnote);color:var(--ink2);text-align:center}.lg-empty{margin:0;color:var(--ink2)}
+.lg-err{margin:0;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;color:var(--ink2);font-size:var(--fs-footnote)}.lg-err button.link0{padding:0 var(--sp-2);font-size:inherit}
+.overlay.lgs #viewTitle{font:var(--wt-black) var(--fs-title2)/var(--lh-snug) var(--font-display);letter-spacing:var(--ls-tight);text-transform:none;color:var(--ink)}
+.lg-sub{margin:0 0 var(--sp-3);color:var(--ink2);font-size:var(--fs-footnote)}.lg-foot{font-size:var(--fs-footnote)}
 .opt,.row0,.daily,.wheel,.lb{border-color:transparent;background:var(--card);box-shadow:var(--sh-1)}   /* resting cards: depth level 1 */
 .opt.on{border-color:transparent;box-shadow:inset 0 0 0 1.5px var(--amber),var(--sh-1)}
 /* header: avatar + name */
@@ -875,6 +899,44 @@ h3,.sec0,#s1 .sec0,.pgh,.trleg .h{font-size:var(--fs-footnote);font-weight:var(-
     </div>
     <div class="daily" id="chalCard" hidden></div>
     <div class="daily" id="leagueCard" hidden></div>
+    <script>/* Chat league card markup (shared with account.js). In the Telegram Mini App opened from a group the first frame already
+   shows the cached board or a skeleton of the same size, before the player pool, the main script and telegram-web-app.js load. */
+(()=>{const E=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const J=k=>{try{return JSON.parse(localStorage.getItem(k)||'null');}catch(e){return null;}};
+  const COLS_T=['В-Н-П','Очки'],COLS_S=['Днів','Перемог'],NEXT='Наступний — завтра о 00:00 за Києвом.';
+  const head=c=>`<thead><tr><th>#</th><th>Гравець</th><th class="num">${c[0]}</th><th class="num">${c[1]}</th></tr></thead>`;
+  const tbl=(c,rows,busy)=>`<div class="tbl"${busy?' role="status" aria-busy="true" aria-label="Завантаження"':''}><table class="lg-t">${head(c)}<tbody>${rows}</tbody></table></div>`;
+  const place=i=>i<3?`<span class="plc p${i+1}">${i+1}</span>`:i+1;
+  const name=r=>{const n=E(String(r.name||'анонім').toLowerCase());return r.u&&/^[a-z2-9]{8}$/.test(r.u)?`<a class="plink" href="?u=${r.u}" data-u="${r.u}">${n}</a>`:n;};
+  const row=(r,i,me,a,b)=>`<tr${me?' class="me"':''}><td>${place(i)}</td><td class="nm"><span class="nmw"><span class="nmt">${name(r)}</span>${me?'<span class="you">· ти</span>':''}</span></td><td class="num s">${a}</td><td class="num p">${b}</td></tr>`;
+  const today=(r,i,me)=>row(r,i,me,`${r.w}-${r.d}-${r.l}`,r.pts);
+  const skRows=n=>'<tr><td><i class="sk lg-sq"></i></td><td class="nm"><i class="sk w60"></i></td><td class="num"><i class="sk num"></i></td><td class="num"><i class="sk num"></i></td></tr>'.repeat(n);
+  const hd=(t,pill)=>`<div class="lg-hd"><div class="lg-ht"><div class="kicker">Ліга чату</div>${t===null?'':`<div class="ttl">${t?E(t):'<i class="sk w60"></i>'}</div>`}</div>${pill||''}</div>`;
+  const allBtn=m=>`<button class="lg-all" id="leagueAll">Уся таблиця${m?' · '+m:''} <i aria-hidden="true">›</i></button>`;
+  // o: {me(row) -> bool, played: today's daily done on this device, denied: server refused to join}
+  const card=(L,o)=>{const t=L.today||[],n=t.length,m=Math.max(L.members||0,n),me=t.findIndex(o.me);
+    const rows=t.slice(0,3).map((r,i)=>today(r,i,i===me)).join('')+(me>=3?`<tr class="gap" aria-hidden="true"><td colspan="4">⋮</td></tr>${today(t[me],me,true)}`:'');
+    return hd(L.title,`<span class="lg-pill">${n} з ${m} зіграли</span>`)
+      +(n?tbl(COLS_T,rows):`<p class="lg-empty">${o.played?'Сьогодні з групи ще ніхто не зіграв.':'Ще ніхто не зіграв — будь першим!'}</p>`)
+      +(o.denied&&me<0?'<p class="lg-note">Ти ще не в цій лізі: відкрий гру кнопкою бота в групі.</p>':'')
+      +allBtn(m)+(o.played?`<p class="lg-note">${me>=0?'Твій результат уже в табло.':'Драфт дня ти вже зіграв.'} ${NEXT}</p>`:'');};
+  const skel=(t,played)=>hd(t,'<i class="sk lg-pill"></i>')+tbl(COLS_T,skRows(3),1)+'<button class="lg-all" disabled>Уся таблиця <i aria-hidden="true">›</i></button>'
+    +(played?`<p class="lg-note">Драфт дня ти вже зіграв. ${NEXT}</p>`:'');
+  const G=window.__lg0={E,COLS_T,COLS_S,tbl,row,today,skRows,hd,card,skel,chat:null};
+  if(!true)return;
+  try{   // Telegram passes launch data in the hash (tgWebAppData, includes start_param); on reload telegram-web-app.js keeps it in sessionStorage
+    const h=new URLSearchParams(location.hash.slice(1)),q=new URLSearchParams(location.search);
+    let d=h.get('tgWebAppData'),sp=h.get('tgWebAppStartParam')||q.get('tgWebAppStartParam')||'';
+    if(!d){const s=JSON.parse(sessionStorage.getItem('__telegram__initParams')||'null');if(s){d=s.tgWebAppData;sp=sp||s.tgWebAppStartParam||'';}}
+    if(!d)return;
+    const p=new URLSearchParams(d);sp=p.get('start_param')||sp;let u=null;try{u=JSON.parse(p.get('user'));}catch(e){}
+    const m=/^g(-?\d+)$/.exec(sp),j=m&&J('upl30_joined_'+m[1]);const chat=String(j&&j.chat||(m?m[1]:J('upl30_league'))||'');
+    if(!chat)return;G.chat=chat;G.req=fetch('/api/league?chat='+encodeURIComponent(chat)+'&card=1');G.req.catch(()=>{});   // public board; account.js picks up the response
+    const day=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Kyiv',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+    const el=document.getElementById('leagueCard'),played=!!J('upl30_daily_'+day),snap=J('upl30_league_snap'),pl=J('upl30_player');
+    const tn=u?[u.first_name,u.last_name].filter(Boolean).join(' '):'',mine=snap&&String(snap.chat)===chat;
+    el.innerHTML=mine&&snap.day===day?card(snap,{played,me:r=>!!((r.u&&pl&&r.u===pl.public_id)||(!r.u&&tn&&r.name===tn))}):skel(mine?snap.title:'',played);el.hidden=false;
+  }catch(e){}})();</script>
     <div class="sec0">Інші режими</div>
     <div class="tiles0 m3">
       <button class="tile1" id="flOpen" data-k="fl"><!--i:account-group--><span><b>Ліга з друзями</b><small>Посилання в чат</small></span><i class="chev" aria-hidden="true">›</i></button>
@@ -2277,7 +2339,6 @@ function tgInit(){
   if(typeof acctTgAuto==='function')acctTgAuto();if(typeof chalLoad==='function')chalLoad();
   }catch(e){TG=null;}
 }
-if(ONLINE&&/tgWebApp/.test(location.hash+location.search)){const sc=document.createElement('script');sc.src='https://telegram.org/js/telegram-web-app.js';sc.onload=tgInit;document.head.appendChild(sc);}
 // share card: in Telegram the bot prepares a message with the card (api/card, share) and the chat picker opens;
 // outside Telegram: system share sheet with the card file; fallback: text via t.me/share
 function shareTextLink(){const text=S.result?shareTextOf(S.result,true,true):document.getElementById('shareText').value;   // no squares: those are for the card
@@ -3215,7 +3276,7 @@ async function playerRename(v){if(PLAYER&&PLAYER.name&&nameKey(v)===PLAYER.name)
 function renderAcct(){const b=document.getElementById('acctBtn');if(!b)return;b.hidden=!ONLINE;b.className='avbtn';b.title='Моя сторінка';b.setAttribute('aria-label','Моя сторінка');const nm=myName();b.innerHTML=avatarSvg(mySeed(),28)+(nm?`<span class="me-n">${esc(nm)}</span>`:'');b.classList.toggle('noname',!nm);}   // name next to the avatar (button to own page)
 // modal in sign-in sheet mode: .login class, close cross instead of a Close button; normal mode restored on hide
 function viewMode(m){const box=document.getElementById('viewBox'),c=document.getElementById('viewClose');box.classList.toggle('login',m==='login');c.textContent=m==='login'?'✕':'Закрити';c.setAttribute('aria-label','Закрити');}
-new MutationObserver(()=>{const bx=document.getElementById('viewBox');if(bx.hidden){viewMode('');bx.classList.remove('full');if(SHEET){SHEET=0;navUi();}}}).observe(document.getElementById('viewBox'),{attributes:true,attributeFilter:['hidden']});
+new MutationObserver(()=>{const bx=document.getElementById('viewBox');if(bx.hidden){viewMode('');bx.classList.remove('full','lgs');if(SHEET){SHEET=0;navUi();}}}).observe(document.getElementById('viewBox'),{attributes:true,attributeFilter:['hidden']});
 function openAcct(){screenTag('account');
   const box=document.getElementById('viewBox'),body=document.getElementById('viewBody');document.getElementById('viewTitle').textContent='Акаунт';box.hidden=false;
   const msg=ACCT_MSG?`<p class="note">${esc(ACCT_MSG)}</p>`:'';
@@ -3263,55 +3324,87 @@ function acctNudge(r){
   document.getElementById('nudgeLater').onclick=()=>{lsSet("upl30_nudge_until",Date.now()+3*864e5);el.hidden=true;};
 }
 // ---------- TELEGRAM GROUP LEAGUES: game opened from a group button -> join league; official daily result -> boards of all player's leagues
-let LEAGUE=null,LEAGUE_DENIED=false;   // LEAGUE_DENIED: server refused (Telegram did not confirm group membership)   // {chat, title, today:[], members, standings:[]}
-function leagueChat(){const sp=TG&&TG.initDataUnsafe&&TG.initDataUnsafe.start_param||'';const m=/^g(-?\d+)$/.exec(sp);if(m){lsSet("upl30_league",m[1]);return m[1];}return lsGet("upl30_league");}
+// Card markup lives in the inline script after #leagueCard (window.__lg0): it already drew the cached board or a skeleton.
+// Here: GET ?card=1 (today + counters) starts at once, join POST runs alongside it at most once per 24 h per chat,
+// the full table (standings) loads when the sheet opens.
+let LEAGUE=null,LEAGUE_DENIED=false;   // LEAGUE: {chat, title, day, today:[], members}; LEAGUE_DENIED: Telegram did not confirm group membership
+let LG_CHAT=null,LG_ERR=false,LG_ST=null,LG_FULL=null,LG_BUST=false;   // chat being shown; card load failed; standings and their request (this page load); bypass CDN cache
+const LG=window.__lg0,LG_JOIN_TTL=864e5,LG_JOIN_KEEP=30*864e5;   // join is repeated after a day; join records older than a month are removed
+function leagueChat(){const sp=TG&&TG.initDataUnsafe&&TG.initDataUnsafe.start_param||'';const m=/^g(-?\d+)$/.exec(sp);
+  if(m){const j=lsGet('upl30_joined_'+m[1]),c=String(j&&j.chat||m[1]);lsSet("upl30_league",c);return c;}return lsGet("upl30_league");}   // j.chat: league moved to the supergroup id
+// upl30_joined_<chat from the button>: {u: Telegram user, at, chat: league chat id}; device-only, not synced to the account
+function lgJoined(sc){const j=lsGet('upl30_joined_'+sc);return !!(j&&TGU&&j.u===TGU.id&&Date.now()-j.at<LG_JOIN_TTL);}
+function lgJoinedSet(sc,chat){lsSet('upl30_joined_'+sc,{u:TGU&&TGU.id,at:Date.now(),chat});
+  try{for(let i=localStorage.length-1;i>=0;i--){const k=localStorage.key(i);if(k&&k.startsWith('upl30_joined_')){const v=lsGet(k);if(!v||!(Date.now()-v.at<LG_JOIN_KEEP))localStorage.removeItem(k);}}}catch(e){}}
+// show the chat's card from today's snapshot (or keep the skeleton) and load fresh data
+function leagueStart(chat){if(!chat||LG_CHAT===chat)return;
+  const snap=lsGet('upl30_league_snap');
+  if(snap&&String(snap.chat)===chat&&snap.day===DAY&&!LEAGUE){LEAGUE=snap;renderLeague();}   // yesterday's board would jump when data arrives
+  else if(!LEAGUE)lgSkel(snap&&String(snap.chat)===chat?snap.title:'');
+  leagueLoad(chat);}
+function lgSkel(title){const el=document.getElementById('leagueCard');if(!el||!LG)return;el.innerHTML=LG.skel(title,!!lsGet("upl30_daily_"+DAY));el.hidden=false;}
 async function leagueInit(){
-  if(!IN_TG())return;let chat=leagueChat();
-  let joined=false;   // just joined: fetch board bypassing cache (it may already include today's migrated result)
-  try{if(/^g-?\d+$/.test(TG.initDataUnsafe.start_param||'')){const r=await _fetch('/api/league',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({initData:TG.initData})});joined=r.ok;LEAGUE_DENIED=r.status===403;
-    // group became a supergroup: server moved the league to the new id, use that
-    const j=await r.json().catch(()=>({}));const c=j.joined&&j.joined[0]&&String(j.joined[0].chat_id);if(c&&c!==chat){chat=c;lsSet('upl30_league',c);}}}catch(e){}
-  if(chat){   // reserve league slot immediately (with last known title) so the home screen does not jump when the board loads
-    // show last cached board (upl30_league_snap) at once, refresh from server quietly
-    const el=document.getElementById('leagueCard'),snap=lsGet('upl30_league_snap');
-    if(snap&&snap.chat===chat&&!LEAGUE){LEAGUE=snap.day===DAY?snap:{...snap,today:[]};renderLeague();}   // yesterday's board: drop "today"
-    else if(el&&!LEAGUE){el.hidden=false;el.innerHTML=`<div class="kicker">Ліга Telegram-чату</div><div class="ttl">&nbsp;</div><div class="meta" role="status" aria-busy="true" aria-label="Завантаження"><i class="sk w60"></i></div>`;}
-    leagueLoad(chat,joined);}
+  if(!IN_TG())return;const sp=TG.initDataUnsafe&&TG.initDataUnsafe.start_param||'',m=/^g(-?\d+)$/.exec(sp);let chat=leagueChat();
+  if(!chat)return;chat=String(chat);leagueStart(chat);if(LEAGUE)renderLeague();   // Telegram user known now: own row by name
+  if(!m||lgJoined(m[1]))return;   // joined within a day: skip the join request
+  try{const r=await _fetch('/api/league',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({initData:TG.initData})});
+    LEAGUE_DENIED=r.status===403;const j=await r.json().catch(()=>({}));const jn=r.ok&&j.joined&&j.joined[0];
+    if(jn){const c=String(jn.chat_id);lgJoinedSet(m[1],c);
+      if(c!==chat){lsSet('upl30_league',c);leagueLoad(c,true);}   // group became a supergroup: server moved the league to the new id
+      else if(jn.backfilled)leagueLoad(chat,true);}   // today's result was just copied into this league
+    if(LEAGUE_DENIED&&LEAGUE)renderLeague();   // still loading: the board renders with the note
+  }catch(e){}
 }
-async function leagueLoad(chat,fresh){try{const r=await _fetch('/api/league?chat='+encodeURIComponent(chat)+(fresh?'&t='+Date.now():''));if(!r.ok){if(!LEAGUE)document.getElementById('leagueCard').hidden=true;return;}LEAGUE={chat,...await r.json()};lsSet('upl30_league_snap',LEAGUE);renderLeague();}catch(e){if(!LEAGUE)document.getElementById('leagueCard').hidden=true;}}
-// home shows today's top 3 (+ own row if lower) and "Full table (N)" -> screen with Today / Standings tabs
-const lgMe=r=>(r.u&&PLAYER&&r.u===PLAYER.public_id)||(!r.u&&TGU&&r.name===[TGU.first_name,TGU.last_name].filter(Boolean).join(' '));
-const lgPlace=i=>i<3?`<span class="plc p${i+1}">${i+1}</span>`:i+1;
-const lgToday=(r,i)=>`<tr${lgMe(r)?' class="me"':''}><td>${lgPlace(i)}</td><td class="nm"><span class="nmt">${plink({players:{name:r.name,public_id:r.u}})}</span></td><td class="num">${r.w}-${r.d}-${r.l}</td><td class="num"><b>${r.pts}</b></td></tr>`;
+// card data: today's board and counters (no standings); fresh: right after own result, bypass the CDN cache
+async function leagueLoad(chat,fresh){chat=String(chat);LG_CHAT=chat;LG_ERR=false;if(fresh){LG_BUST=true;LG_FULL=null;}
+  const early=!fresh&&LG&&LG.req&&LG.chat===chat?LG.req:null;if(early)LG.req=null;   // request already sent by the inline script
+  try{const r=await (early||_fetch('/api/league?chat='+encodeURIComponent(chat)+'&card=1'+(fresh?'&t='+Date.now():'')));
+    if(chat!==LG_CHAT)return;
+    if(r.status===404){if(!LEAGUE||LEAGUE.chat!==chat){LEAGUE=null;renderLeague();}return;}   // no league for this chat
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    const j=await r.json();if(chat!==LG_CHAT)return;
+    if(LEAGUE&&LEAGUE.chat!==chat){LG_ST=null;LG_FULL=null;}
+    lgSet({chat,title:j.title,day:j.day,today:j.today||[],members:j.members||0});
+  }catch(e){if(chat===LG_CHAT&&!(LEAGUE&&LEAGUE.chat===chat)){LG_ERR=true;renderLeague();}}}   // with a cached board keep it quietly
+function lgSet(L){LEAGUE=L;lsSet('upl30_league_snap',L);renderLeague();lgSheetRefresh();}
+// own row: player profile id, or Telegram name for rows without a profile
+const lgMe=r=>!!((r.u&&PLAYER&&r.u===PLAYER.public_id)||(!r.u&&TGU&&r.name===[TGU.first_name,TGU.last_name].filter(Boolean).join(' ')));
 function renderLeague(){
-  const el=document.getElementById('leagueCard');if(!el)return;if(!LEAGUE){el.hidden=true;return;}
-  const L=LEAGUE,played=lsGet("upl30_daily_"+DAY),me=L.today.findIndex(lgMe);
-  const top=L.today.slice(0,3).map(lgToday).join('')+(me>=3?`<tr class="gap"><td colspan="4">…</td></tr>${lgToday(L.today[me],me)}`:'');
-  const all=L.today.length>3||(L.standings&&L.standings.length>1);
-  el.hidden=false;el.innerHTML=`<div class="kicker">Ліга Telegram-чату</div><div class="ttl">«${esc(L.title)}»</div>
-    <div class="meta">Сьогодні зіграли ${L.today.length} з ${Math.max(L.members,L.today.length)}</div>
-    ${L.today.length?`<div class="tbl"><table>${top}</table></div>`:`<p class="muted" style="margin:0">${played?'Сьогодні з групи ще ніхто не зіграв.':'Ще ніхто не зіграв — будь першим!'}</p>`}
-    ${all?`<button class="link0 lgall" id="leagueAll">Уся таблиця (${Math.max(L.members,L.today.length)})</button>`:''}
-    ${LEAGUE_DENIED&&me<0?'<p class="muted" style="margin:0;font-size:var(--fs-footnote)">Тебе ще немає в цій лізі: Telegram не підтвердив, що ти в групі. Відкрий гру кнопкою з останнього повідомлення бота в групі.</p>':''}
-    ${played?`<p class="muted" style="margin:0;font-size:var(--fs-footnote)">${me>=0?'Твій результат уже в табло.':'Драфт дня ти вже зіграв.'} Наступний — завтра о 00:00 за Києвом.</p>`:'<div class="row"><button class="primary" id="leagueGo">Зіграти драфт дня</button></div>'}`;
-  const g=document.getElementById('leagueGo');if(g)g.onclick=()=>document.getElementById('dailyBtn').click();
-  const a=document.getElementById('leagueAll');if(a)a.onclick=()=>openLeagueAll('today');
+  const el=document.getElementById('leagueCard');if(!el||!LG)return;
+  if(!LEAGUE&&LG_ERR){const snap=lsGet('upl30_league_snap');
+    el.innerHTML=LG.hd(snap&&String(snap.chat)===LG_CHAT?snap.title:null)+'<p class="lg-err" role="alert">Не вдалося завантажити · <button class="link0" id="leagueRetry">Спробувати ще</button></p>';el.hidden=false;
+    document.getElementById('leagueRetry').onclick=()=>{const t=el.querySelector('.ttl');lgSkel(t?t.textContent:'');leagueLoad(LG_CHAT);};return;}
+  if(!LEAGUE){el.hidden=true;el.innerHTML='';return;}
+  el.innerHTML=LG.card(LEAGUE,{me:lgMe,played:!!lsGet("upl30_daily_"+DAY),denied:LEAGUE_DENIED});el.hidden=false;
+  document.getElementById('leagueAll').onclick=()=>openLeagueAll('today');
 }
-function openLeagueAll(tab){if(!LEAGUE)return;const L=LEAGUE,box=document.getElementById('viewBox');screenTag('league_all');
-  document.getElementById('viewTitle').textContent=`«${L.title}»`;
-  const st=L.standings||[];
-  const body=tab==='today'?(L.today.length?`<div class="tbl"><table>${L.today.map(lgToday).join('')}</table></div>`:'<p class="muted">Сьогодні ще ніхто не зіграв.</p>')
-    :(st.length?`<div class="tbl"><table><tr class="th"><td></td><td></td><td class="num">днів</td><td class="num">перемог</td></tr>${st.map((s,i)=>`<tr${lgMe(s)?' class="me"':''}><td>${lgPlace(i)}</td><td class="nm"><span class="nmt">${plink({players:{name:s.name,public_id:s.u}})}</span></td><td class="num">${s.days}</td><td class="num"><b>${s.wins}</b></td></tr>`).join('')}</table></div><p class="muted" style="font-size:var(--fs-footnote)">Перемога в дні — найбільше очок у драфті дня серед чату. При рівності — більше очок у середньому.</p>`:'<p class="muted">Залік зʼявиться після першого дня.</p>');
-  document.getElementById('viewBody').innerHTML=`<div class="seg fl-tabs" id="lgTabs"><button data-t="today"${tab==='today'?' class="on"':''}>Сьогодні</button><button data-t="st"${tab!=='today'?' class="on"':''}>Залік</button></div>${body}`;
+// full table: standings and fresh today's board, requested once per page load (again after own result)
+function leagueFull(){if(LG_FULL||!LEAGUE)return;const chat=LEAGUE.chat;
+  LG_FULL=_fetch('/api/league?chat='+encodeURIComponent(chat)+(LG_BUST?'&t='+Date.now():'')).then(r=>r.ok?r.json():Promise.reject(new Error('HTTP '+r.status)))
+    .then(j=>{if(!LEAGUE||chat!==LEAGUE.chat)return;LG_ST=j.standings||[];lgSet({chat,title:j.title,day:j.day,today:j.today||[],members:j.members||0});})
+    .catch(()=>{LG_FULL=null;if(LEAGUE&&chat===LEAGUE.chat&&!Array.isArray(LG_ST)){LG_ST='err';lgSheetRefresh();}});}
+function lgSheetRefresh(){const box=document.getElementById('viewBox');if(!box.hidden&&box.classList.contains('lgs'))openLeagueAll(openLeagueAll.tab);}
+function openLeagueAll(tab){if(!LEAGUE)return;const L=LEAGUE,box=document.getElementById('viewBox');if(box.hidden)screenTag('league_all');openLeagueAll.tab=tab;
+  const n=L.today.length,m=Math.max(L.members||0,n),st=Array.isArray(LG_ST)?LG_ST:null,day=String(L.day||DAY);
+  document.getElementById('viewTitle').textContent=L.title;box.classList.add('lgs');
+  const body=tab==='today'?(n?LG.tbl(LG.COLS_T,L.today.map((r,i)=>LG.today(r,i,lgMe(r))).join('')):'<p class="muted">Сьогодні ще ніхто не зіграв.</p>')
+    :LG_ST==='err'?'<p class="lg-err" role="alert">Не вдалося завантажити · <button class="link0" id="lgStRetry">Спробувати ще</button></p>'
+    :!st?LG.tbl(LG.COLS_S,LG.skRows(5),1)
+    :st.length?LG.tbl(LG.COLS_S,st.map((s,i)=>LG.row(s,i,lgMe(s),s.days,s.wins)).join(''))+'<p class="muted lg-foot">Перемога в дні — найбільше очок у драфті дня серед чату. При рівності — більше очок у середньому.</p>'
+    :'<p class="muted">Залік зʼявиться після першого дня.</p>';
+  document.getElementById('viewBody').innerHTML=`<p class="lg-sub">Драфт дня ${day.slice(8,10)}.${day.slice(5,7)} · зіграли ${n} з ${m}</p><div class="seg fl-tabs" id="lgTabs"><button data-t="today"${tab==='today'?' class="on"':''}>Сьогодні</button><button data-t="st"${tab!=='today'?' class="on"':''}>Залік</button></div>${body}`
+    +(LEAGUE_DENIED&&!L.today.some(lgMe)?'<p class="lg-note">Ти ще не в цій лізі: відкрий гру кнопкою бота в групі.</p>':'');
   document.querySelectorAll('#lgTabs button').forEach(b=>b.onclick=()=>openLeagueAll(b.dataset.t));
-  box.hidden=false;}
+  const rt=document.getElementById('lgStRetry');if(rt)rt.onclick=()=>{LG_ST=null;openLeagueAll('st');};
+  box.hidden=false;leagueFull();}
+if(ONLINE&&LG&&LG.chat)leagueStart(LG.chat);   // inside Telegram with the chat known from the launch URL: load before telegram-web-app.js is ready
 async function leagueSubmit(r){
   if(!IN_TG())return;const el=document.getElementById('leagueMsg');
   const tro=(r.tro&&r.tro.fresh||[]).map(id=>{const t=trDef(id);return t?(t.sec?'✨':'')+t.n:null;}).filter(Boolean);
   try{const res=await _fetch('/api/league',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({initData:TG.initData,result:{w:r.W,d:r.D,l:r.L,pts:r.pts,place:r.place,gf:r.gf,ga:r.ga,xp:Math.round(r.xp*10)/10,formation:S.formation,day:DAY,trophies:tro,season_id:r.rowId||null}})});
     const j=await res.json().catch(()=>({}));
     if(el&&j.posted&&j.posted.length){el.hidden=false;el.textContent=`Результат додано в табло ${j.posted.length>1?'груп':'групи'}: ${j.posted.map(t=>'«'+t+'»').join(', ')}`;}
-    if(LEAGUE)leagueLoad(LEAGUE.chat,true);   // bypass the 15 s cache so own result shows at once
+    if(LEAGUE)leagueLoad(LEAGUE.chat,true);   // bypass the CDN cache so own result shows at once
   }catch(e){}
 }
 
@@ -3760,6 +3853,8 @@ function f5Render(){
 document.getElementById('f5Open').onclick=f5Start;
 // audit P2-5: only what tests use; drawCard for card checks, simulate/rerun for fast determinism
 window.__dbg={loadLb,haptic,seasonHaptic,renderNewTro,TROPHIES,CLUB_REC,ocMine,ocAfter,renderOc,renderOcRes,openOc,acctMerge,get BEST(){return BEST;},get VT_N(){return VT_N;},ic,seasonLabel,boardPrefetch,boardStale,BOARD_FROM,setFmt,leagueLoad,boardHtml,oppYear,champModal,drawCard,chalNewGame,DAILY,LEAGUE_CULT,LEAGUE_LEGENDS,openTrophies,renderNewTro,bestPerPlayer,renderWheel,posOpts,eraOf,ptsWord,viewHtml,renderPitch,pitchHtml,f5Pitch,F5_FORMS,cardName,clubShort,simulate,shareTextOf,trCtxNow,trAward,trStore,FORMATIONS,GROUP_OF,DATA,TROPHIES,trEval,PERSON,effRating,get S(){return S;},rerun(seed,year,xi){rnd=mulberry32(seed);const r=simulate(xi||S.slots.map(s=>s.player),MODES[S.mode],year);rnd=Math.random;return {W:r.W,D:r.D,L:r.L,gf:r.gf,ga:r.ga,place:r.place};}};
+// Telegram script was requested by the first inline script: init now if it already loaded, otherwise on its load
+if(ONLINE){window.__tgCb=tgInit;if(window.__tgOk)tgInit();}
 })();
 </script>
 
