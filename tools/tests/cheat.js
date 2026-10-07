@@ -266,7 +266,11 @@ function honestXi(formation) {
   // two concurrent requests - only one official attempt
   const racer = crypto.randomUUID(), rs = 'racer-secret-0123456789ab';
   const both = await Promise.all([call(seedH, { device_id: racer, secret: rs, ...dayArgs }), call(seedH, { device_id: racer, secret: rs, ...dayArgs })]);
-  ok('seed: гонка двох запитів — одна офіційна спроба', both.every(x => x.c === 200) && both.filter(x => x.j.official).length === 1, both.map(x => x.j.official).join('/'));
+  ok('seed: гонка двох запитів — одна офіційна спроба (той самий seed обом)', both.every(x => x.c === 200) && both[0].j.seed_id === both[1].j.seed_id && DB.season_seeds.filter(x => x.device_id === racer && x.official).length === 1, both.map(x => x.j.official + ':' + x.j.seed).join('/'));
+  // race with a different squad: the second one is a regular attempt
+  const racer2 = crypto.randomUUID(), rs2 = 'racer2-secret-0123456789ab', alt = { ...dayArgs, xi: [...dayArgs.xi.slice(1), dayArgs.xi[0]] };
+  const both2 = await Promise.all([call(seedH, { device_id: racer2, secret: rs2, ...dayArgs }), call(seedH, { device_id: racer2, secret: rs2, ...alt })]);
+  ok('seed: гонка з різними складами — офіційна лише одна', both2.every(x => x.c === 200) && both2.filter(x => x.j.official).length === 1);
   // device-secret SQL not applied yet: server says 'write the old way', seed still works
   SQL053 = false;
   const fb = await call(saveH, { kind: 'season', device_id: me, secret: mySecret, row: season });

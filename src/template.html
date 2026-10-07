@@ -872,7 +872,7 @@ section>h3:first-child,.box h3:first-of-type,#viewBody>h3:first-child,#viewBody>
 /* odometer cell (custom tags dodge generic span rules): old digit rolls out, new one rolls in; width stays (tabular-nums) */
 .od{display:inline-block;position:relative;clip-path:inset(0 -2px)}.od-n,.od-o{display:inline-block}.od-o{position:absolute;left:0;top:0}
 /* picked player flies from the list to its slot; the ghost never takes taps; the slot content waits (.fw) until it lands */
-.flyg{position:fixed;left:0;top:0;z-index:45;pointer-events:none;will-change:transform,opacity}
+.flyg{position:fixed;left:0;top:0;z-index:39;pointer-events:none;will-change:transform,opacity}
 .flyg span{display:block;padding:var(--sp-1) var(--sp-2);border-radius:var(--r-pill);background:var(--surface);color:var(--ink);box-shadow:var(--sh-2);font-weight:var(--wt-bold);white-space:nowrap;line-height:var(--lh-snug)}
 .slot.fw>*{opacity:0}
 .tro:not(.on) .trt b{color:var(--muted)}.tro:not(.on) .trt>span{color:var(--muted)}
@@ -2082,8 +2082,8 @@ function flySrc(p){if(LESS_MOTION())return null;const b=[...document.querySelect
   if(!nm||!nm.getClientRects().length)return null;return {r:nm.getBoundingClientRect(),txt:p[0],fs:parseFloat(getComputedStyle(nm).fontSize)||14};}
 function flyLand(idx){FLY_WAIT.delete(idx);const sl=document.querySelectorAll('#pitch .slot')[idx];if(!sl||!sl.classList.contains('fw'))return;sl.classList.remove('fw');restartAnim(sl.querySelector('.disc'),'land0');}
 function flyTo(src,idx){const sl=document.querySelectorAll('#pitch .slot')[idx];if(!src||!sl||!document.body.animate)return false;
-  const d=sl.querySelector('.disc');if(!d)return false;const dr=d.getBoundingClientRect(),hh=document.querySelector('header.top').offsetHeight;
-  if(dr.top<hh||dr.bottom>innerHeight||dr.left<0||dr.right>innerWidth)return false;
+  const d=sl.querySelector('.disc');if(!d)return false;const dr=d.getBoundingClientRect();
+  if(dr.top>innerHeight||dr.left<0||dr.right>innerWidth)return false;   // a slot under the header or above the screen still gets the flight: the chip slides up under the header
   FLY_WAIT.add(idx);sl.classList.add('fw');
   requestAnimationFrame(()=>{const cur=document.querySelectorAll('#pitch .slot')[idx];if(!cur||!cur.classList.contains('fw')){flyLand(idx);return;}
     const tr=(cur.querySelector('.nm')||cur.querySelector('.disc')).getBoundingClientRect();

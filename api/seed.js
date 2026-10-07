@@ -5,6 +5,8 @@
 // Without a secret (legacy clients): only until step 2 (sql/v054_close_writes.sql -> legacy_writes_open() = false).
 const crypto = require('crypto');
 const { sb, deviceOk, legacyOpen, body, kyivDate, uuidRe, rateLimit } = require('./_device.js');
+// retry of an official daily attempt: same squad and year, not played yet
+const sameAttempt = (p, b) => !!p && p.used_by == null && p.xi_hash === xiHash(b.xi) && (p.year == null || p.year === (+b.year || null));
 const xiHash = xi => crypto.createHash('sha256').update(xi.map(x => `${x.id}|${x.slot}|${x.c}|${x.y}`).join(';')).digest('hex');
 
 module.exports = async (req, res) => {
@@ -31,8 +33,7 @@ module.exports = async (req, res) => {
       official = prev.length === 0;
       // retry after a client timeout: same squad, attempt not played yet -> the same official seed again
       const p = prev[0];
-      if (p && p.used_by == null && p.xi_hash === xiHash(b.xi) && (p.year == null || p.year === (+b.year || null)))
-        return res.status(200).json({ seed_id: p.id, seed: p.seed, official: true });
+      if (sameAttempt(p, b)) return res.status(200).json({ seed_id: p.id, seed: p.seed, official: true });
     }
     stage = 'insert';
     const seed = crypto.randomInt(1, 2147483647);
@@ -42,6 +43,9 @@ module.exports = async (req, res) => {
     catch (e) {
       // audit V2: concurrent requests: unique index season_seeds_official_uq lets only one official attempt through; the other is regular
       if (!(official && (e.status === 409 || /23505/.test(e.body || '')))) throw e;
+      // the parallel request (client retry while the first one was still running) won: hand out its seed if it is the same attempt
+      const [p] = await sb(`season_seeds?device_id=eq.${b.device_id}&day=eq.${day}&daily=is.true&official=is.true&select=id,seed,xi_hash,year,used_by&limit=1`) || [];
+      if (sameAttempt(p, b)) return res.status(200).json({ seed_id: p.id, seed: p.seed, official: true });
       row.official = official = false;
       [ins] = await sb('season_seeds?select=id', { method: 'POST', prefer: 'return=representation', body: row }) || [];
     }

@@ -34,7 +34,7 @@ const clean=pg=>pg.evaluate(()=>({g:document.querySelectorAll('.flyg').length,fw
     await wait(1100);const c=await clean(pg);
     T.check(c.g===0&&c.fw===0&&c.filled===i+1&&c.names>=c.filled-0&&c.vis,`${label}: гравець ${i+1} — привид знято, слот видно, у складі ${c.filled} (ghost ${c.g}, fw ${c.fw})`);}
   const fl=rec.filter(r=>r.ghost);
-  T.check(fl.length>=1,`${label}: переліт відбувся у ${fl.length} з 3 виборів`+(fl.length<3?' (решта — слот поза екраном, переліт пропущено)':''));
+  T.check(fl.length===3,`${label}: переліт відбувся у ${fl.length} з 3 виборів`+(fl.length<3?' (решта — слот поза екраном, переліт пропущено)':''));
   T.check(fl.every(r=>r.pe==='none'&&r.pos==='fixed'&&r.anims>=3&&r.fw>=1),`${label}: привид fixed, pointer-events:none, анімації transform/opacity/дуга, слот чекає посадки`);
   T.check(await noScroll(pg),`${label}: без горизонтальної прокрутки`);
   T.check(errs.length===0,`${label}: помилок JS немає`+(errs.length?': '+errs[0]:''));await b.close();}
@@ -192,4 +192,12 @@ const clean=pg=>pg.evaluate(()=>({g:document.querySelectorAll('.flyg').length,fw
   T.check(c.hap===0&&c.cnt==='4',`повторний показ: застарілі таймери мовчать (heavy ${c.hap}, лічильник ${c.cnt})`);
   T.check(errs.length===0,'повторний показ: помилок JS немає');await b.close();}
 
+ // milestone trophies (ms*) are shown but not counted in the cabinet total
+ {const {b,pg,errs}=await openPage({viewport:{width:390,height:844}});await pg.evaluate(STUB);const {ids}=await seed(pg);
+  await pg.evaluate(()=>{window.__dbg.renderNewTro({tro:{got:['ms1'],fresh:['ms1']}});document.getElementById('newTro').scrollIntoView({block:'center'});});await wait(300);
+  T.check(await pg.evaluate(()=>!document.getElementById('trTotN')),'лише рубіж: «Зібрано» не показано');
+  await pg.evaluate(id=>{window.__dbg.renderNewTro({tro:{got:[id,'ms1'],fresh:[id,'ms1']}});document.getElementById('newTro').scrollIntoView({block:'center'});},ids[1]);await wait(2500);
+  const c=await pg.evaluate(()=>document.getElementById('trTotN').textContent.trim());
+  T.check(c==='4',`трофей + рубіж: «Зібрано» дорахувало до 4, рубіж не враховано (${c})`);
+  T.check(errs.length===0,'рубежі: помилок JS немає');await b.close();}
  FAILS.forEach(m=>console.log('ПРОВАЛ:',m));process.exit(T.done());})();
