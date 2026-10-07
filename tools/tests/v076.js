@@ -230,4 +230,20 @@ const sk=(pg,sel)=>pg.evaluate(s=>{const n=[...document.querySelectorAll(s+' .sk
  // ---- F. source: no old loading text left in code for players
  {const src=['template.html','account.js','leagues.js','player.js','trophies.js','five.js','oneclub.js','challenge.js'].map(f=>fs.readFileSync(path.join(ROOT,'src',f),'utf8')).join('\n');
   const left=(src.match(/[^`'"\n]{0,30}Завантаж(?:ення|уємо)…[^`'"\n]{0,20}/g)||[]);T.check(left.length===0,'у коді не лишилось «Завантаження…» / «Завантажуємо…» '+left.slice(0,2).join(' | '));}
+ // ---- G. no repeated fades and no table height jumps
+ {const {b:bg,pg}=await openPage();
+  await pg.evaluate(()=>document.getElementById('homeBtn').click());await pg.click('#freeOpen');await pg.evaluate(()=>window.__dbg.setFmt('classic'));await pg.click('#modes .opt:nth-child(1)');await pg.click('#startBtn');
+  await pg.click('#spinBtn');await pg.waitForSelector('#squad .pl:not([disabled])',{timeout:8000});
+  await pg.click('#showR');await pg.waitForTimeout(600);
+  T.check(await pg.evaluate(()=>!document.getElementById('squad').classList.contains('rin')),'рейтинги: клас появи знято після першої анімації');
+  for(let i=0;i<11;i++){if(i){await pg.click('#spinBtn');await pg.waitForSelector('#squad .pl:not([disabled])',{timeout:8000});}
+    const btn=await pg.$('.pl:not([disabled])');await btn.click();await pg.waitForTimeout(80);const pick=await pg.$('#pitch .slot.target');if(pick){await pick.click();await pg.waitForTimeout(60);}
+    if(i===0)T.check(await pg.evaluate(()=>[...document.querySelectorAll('#squad .pl .rt')].every(e=>!e.getAnimations().length)),'рейтинги не з\'являються наново після вибору гравця');}
+  await pg.waitForSelector('#simBtn:not([hidden])');await pg.click('#simBtn');
+  const rows=new Set(),hs=new Set();
+  for(let k=0;k<70;k++){const v=await pg.evaluate(()=>{const t=document.getElementById('lvTable');return document.getElementById('live').hidden?null:[t.querySelectorAll('tr').length,Math.round(t.getBoundingClientRect().height)];});
+    if(!v)break;if(v[0]>1){   // ±3 px: web font may finish loading mid-season
+     rows.add(v[0]);hs.add(v[1]);}await wait(300);}
+  T.check(rows.size===1&&rows.has(7)&&Math.max(...hs)-Math.min(...hs)<=3,`живий сезон: завжди 6 рядків і та сама висота (рядків ${[...rows]}, висота ${[...hs]})`);
+  await bg.close();}
  process.exit(T.done());})();
