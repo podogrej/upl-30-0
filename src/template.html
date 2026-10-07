@@ -263,6 +263,7 @@ section.enter{animation:secin .26s cubic-bezier(.2,.8,.2,1) both}section.back{an
 @keyframes secin{from{opacity:0;transform:translateX(28px)}to{opacity:1;transform:none}}@keyframes secback{from{opacity:0;transform:translateX(-28px)}to{opacity:1;transform:none}}
 
 #moveBtn.on{border-color:var(--amber);color:var(--amber)}
+html.tgfs .overlay.full .vhead{padding-top:calc(var(--sp-3) + var(--tg-safe-area-inset-top,0px) + var(--tg-content-safe-area-inset-top,0px))}
 html.tgfs header.top{padding-top:calc(var(--sp-3) + var(--tg-safe-area-inset-top,0px) + var(--tg-content-safe-area-inset-top,0px))}
 .nick{font-weight:var(--wt-medium);color:var(--amber);font-size:.85em}
 details.tip{border:0;background:none;padding:0;margin:0}details.tip>summary{display:inline-flex;align-items:center;gap:var(--sp-2);padding-block:0;font-size:var(--fs-footnote);font-weight:var(--wt-medium);color:var(--ink2);list-style:none}
@@ -1156,15 +1157,20 @@ function go(n,pop){if(n===2)PITCH_VIS=true;if(!pop&&n!==CUR_SEC)navPush(n);const
 // Back button + home icon. Every screen change is a browser history entry,
 // so swipe, browser back and Telegram BackButton go to the previous screen. Season summary replaces the draft (back goes to settings).
 let NAV_I=0,NAV_FREE=false;   // NAV_I: history entry index of this tab (0 = first screen); NAV_FREE: leaving the draft already confirmed
+let SHEET=0;   // full-screen sheet depth: 1 = table, 2 = squad opened from it; each level is a history entry
 function navPush(n){const rep=n===3&&CUR_SEC===2;if(!rep)NAV_I++;try{history[rep?'replaceState':'pushState']({sec:n,i:NAV_I},'',location.href);}catch(e){}}
 function navUi(){const inner=CUR_SEC!==1;document.querySelector('header.top').classList.toggle('in',inner);document.getElementById('backBtn').hidden=!inner;document.getElementById('homeBtn').hidden=!inner;document.getElementById('hLogo').hidden=inner;
-  try{if(TG&&TG.BackButton){if(inner)TG.BackButton.show();else TG.BackButton.hide();}}catch(e){}}
+  try{if(TG&&TG.BackButton){if(inner||SHEET)TG.BackButton.show();else TG.BackButton.hide();}}catch(e){}}
 // draft in progress (players picked, no season yet): confirm before leaving
 const draftBusy=()=>CUR_SEC===2&&!S.result&&!!S.slots&&S.slots.some(x=>x.player);
 function askLeave(ok){if(NAV_FREE||!draftBusy())return ok();const q='Вийти? Склад не збережеться.';
   try{if(TG&&TG.showConfirm){TG.showConfirm(q,y=>{if(y)ok();});return;}}catch(e){}if(confirm(q))ok();}
-function navBack(){askLeave(()=>{if(NAV_I>0){NAV_FREE=true;history.back();}else go(1);});}
-addEventListener('popstate',e=>{const st=e.state&&e.state.sec?e.state:{sec:1,i:0};
+function sheetOpen(){if(SHEET)return;SHEET=1;try{history.pushState({sec:CUR_SEC,i:NAV_I,sheet:1},'',location.href);}catch(e){}navUi();}
+function navBack(){if(SHEET){history.back();return;}askLeave(()=>{if(NAV_I>0){NAV_FREE=true;history.back();}else go(1);});}
+addEventListener('popstate',e=>{const sd=e.state&&e.state.sheet||0;
+  if(SHEET){if(sd){SHEET=sd;if(sd===1)openBoard();}else{SHEET=0;viewHide();navUi();}return;}   // back closes the sheet first, the screen underneath stays
+  if(sd){history.back();return;}   // stale sheet entry (sheet was left another way)
+  const st=e.state&&e.state.sec?e.state:{sec:1,i:0};
   if(!NAV_FREE&&st.sec!==2&&draftBusy()){try{history.pushState({sec:2,i:NAV_I},'',location.href);}catch(_){}askLeave(()=>{NAV_FREE=true;history.back();});return;}
   NAV_FREE=false;NAV_I=st.i||0;go(st.sec,true);});
 try{history.replaceState({sec:1,i:0},'',location.href);}catch(e){}
@@ -1913,7 +1919,7 @@ function boardHtml(rows,b){
   const me=deviceId(),pid=PLAYER&&PLAYER.id;
   return `<div class="tbl clickable"><table><tr><th>#</th><th>Гравець</th><th class="num">В-Н-П</th><th class="num">Г</th><th class="num">О</th></tr>`+rows.map((r,i)=>`<tr data-q="id=eq.${numOr0(r.id)}"${(pid&&r.player_id===pid)||r.device_id===me?' class="me"':''}><td class="num">${i+1}</td><td class="nm"><span class="nmt">${plink(r)}${r.w===30?' <span class="lv lv-p">30-0</span>':''}</span><div class="sub"><span>${esc(r.formation)}</span>${lvChip(r.mode)}${r.show_r?'<span class="lv lv-r" title="У драфті були відкриті рейтинги гравців">рейтинги відкриті</span>':''}${b==='oneclub'&&r.club?`<span>${esc(CLUBN[r.club]||r.club)}</span>`:''}</div></td><td class="num">${numOr0(r.w)}-${numOr0(r.d)}-${numOr0(r.l)}</td><td class="num">${numOr0(r.gf)}:${numOr0(r.ga)}</td><td class="num"><b>${numOr0(r.pts)}</b></td></tr>`).join('')+`</table></div><p class="muted" style="font-size:var(--fs-caption);margin-top:var(--sp-2)">${BOARD_FROM?`Сезони з ${BOARD_FROM_TXT}; старі — на сторінках гравців. `:''}Лише сезони, перевірені сервером. Рівні очки: місце в сезоні → різниця м'ячів → забиті → хто раніше. Тап по рядку — склад, по імені — сторінка гравця.</p>`;}
 let BOARD='main';
-function openBoard(b){BOARD=b||BOARD;screenTag('table');const box=document.getElementById('viewBox'),body=document.getElementById('viewBody');document.getElementById('viewTitle').textContent='Таблиця за весь час';box.classList.add('full');box.hidden=false;
+function openBoard(b){BOARD=b||BOARD;screenTag('table');const box=document.getElementById('viewBox'),body=document.getElementById('viewBody');document.getElementById('viewTitle').textContent='Таблиця за весь час';box.classList.add('full');box.hidden=false;sheetOpen();
   const bt=Object.entries(BOARDS).filter(([k,v])=>!v.hidden||k===BOARD);   // single tab: no tab row
   body.innerHTML=`<div class="tabs" style="margin-top:0" role="tablist"${bt.length<2?' hidden':''}>${bt.map(([k,v])=>`<button class="tab${k===BOARD?' on':''}" data-board="${k}" role="tab">${v.name}</button>`).join('')}</div><p class="muted" style="font-size:var(--fs-caption);margin:var(--sp-3) 0 var(--sp-2)">${BOARDS[BOARD].note}</p><div id="boardBody">${BOARD_CACHE[BOARD]&&BOARD_CACHE[BOARD].rows?boardHtml(BOARD_CACHE[BOARD].rows,BOARD):'<p class="muted">Завантаження…</p>'}</div>`;
   body.querySelectorAll('[data-board]').forEach(t=>t.onclick=()=>openBoard(t.dataset.board));
@@ -1929,7 +1935,7 @@ function boardPrefetch(){if(!ONLINE)return;for(const [k,v] of Object.entries(BOA
 function boardStale(){for(const k in BOARD_CACHE)delete BOARD_CACHE[k];}   // own new season: next open fetches fresh data
 async function loadBoard(b){const el=document.getElementById('boardBody'),c=BOARD_CACHE[b];
   try{const rows=await boardFetch(b);if(BOARD===b&&el.isConnected)el.innerHTML=boardHtml(rows,b);}catch(e){if(el.isConnected&&!(c&&c.rows))el.innerHTML='<p class="muted">Таблиця зараз недоступна.</p>';}}
-document.getElementById('boardOpen').onclick=()=>{if(!ONLINE){screenTag('table');document.getElementById('viewTitle').textContent='Таблиця за весь час';document.getElementById('viewBox').classList.add('full');document.getElementById('viewBody').innerHTML='<p class="muted">Таблиця працює на сайті '+SITE_HOST+' і в Telegram-боті @upl30_bot.</p>';document.getElementById('viewBox').hidden=false;return;}openBoard('main');};
+document.getElementById('boardOpen').onclick=()=>{if(!ONLINE){screenTag('table');document.getElementById('viewTitle').textContent='Таблиця за весь час';document.getElementById('viewBox').classList.add('full');sheetOpen();document.getElementById('viewBody').innerHTML='<p class="muted">Таблиця працює на сайті '+SITE_HOST+' і в Telegram-боті @upl30_bot.</p>';document.getElementById('viewBox').hidden=false;return;}openBoard('main');};
 function pitchHtml(formation,xi){const G=pitchGeo(formation);const F=FORMATIONS[formation]||FORMATIONS['4-4-2'];let h=PITCH_MK;F.slots.forEach((sl,i)=>{const p=xi[i];if(!p)return;const pt=G.pts[i];h+=`<div class="slot filled ${GROUP_OF[p.slot]||''}" style="left:${pt.x}%;top:${pt.y}%">${slotInner(p.slot,p,{pill:rPill(numOr0(baseR(p)))})}</div>`;});return `<div class="pitch">${h}</div>`;}
 // season data from the DB (xi, tbl are jsonb written by the browser): numbers only via Number, text only via esc
 const numOr0=x=>Number(x)||0;
@@ -1948,10 +1954,10 @@ function viewHtml(s){
     <div class="tbl"><table><tr><th>Гравець</th><th class="num">Оцінка</th><th class="num" title="Голи">Г</th><th class="num" title="Асисти">А</th><th class="num">Рейт.</th><th class="num">Форма</th></tr>${[...xi].sort((a,b)=>(b.rt||0)-(a.rt||0)).map(p=>`<tr><td class="pn"><div class="pnr">${lineDot(p.slot)}<span>${esc(p.n)}</span></div></td><td class="num"><b style="color:${rc(p.rt||0)}">${p.rt!=null?Number(p.rt).toFixed(2):'—'}</b></td><td class="num">${p.g||0}</td><td class="num">${p.a||0}</td><td class="num">${numOr0(baseR(p))}</td><td class="num" style="color:${p.f>=3?'var(--win)':p.f<=-3?'var(--loss)':'inherit'}">${p.f>0?'+':''}${p.f||0}</td></tr>`).join('')}</table></div>${LINE_KEY}
     ${tb.length?`<h3>Турнірна таблиця</h3><div class="tbl"><table><tr><th>#</th><th>Команда</th><th class="num">В</th><th class="num">Н</th><th class="num">П</th><th class="num">Г</th><th class="num">О</th></tr>${tb.map((t,i)=>`<tr${t.me?' class="me"':''}><td class="num">${i+1}</td><td>${esc(t.n)}</td><td class="num">${t.w}</td><td class="num">${t.d}</td><td class="num">${t.l}</td><td class="num">${t.gf}:${t.ga}</td><td class="num"><b>${t.pts}</b></td></tr>`).join('')}</table></div>`:''}`;
 }
-async function openView(q,back){screenTag('view');const box=document.getElementById('viewBox'),body=document.getElementById('viewBody');box.hidden=false;document.getElementById('viewTitle').textContent='Склад';body.innerHTML='<p class="muted">Завантаження…</p>';
+async function openView(q,back){screenTag('view');if(back&&SHEET===1){SHEET=2;try{history.pushState({sec:CUR_SEC,i:NAV_I,sheet:2},'',location.href);}catch(e){}}const box=document.getElementById('viewBox'),body=document.getElementById('viewBody');box.hidden=false;document.getElementById('viewTitle').textContent='Склад';body.innerHTML='<p class="muted">Завантаження…</p>';
   const bk=back?`<div class="row" style="margin-bottom:var(--sp-3)"><button class="ghost" id="viewBack">← До таблиці</button></div>`:'';
   try{const rows=await sbGetFallback([...PL_SEL.map(pl=>`seasons?select=*,${pl}&${q}&limit=1`),`seasons?select=*&${q}&limit=1`]);if(!rows.length){body.innerHTML=bk+'<p class="muted">Склад для цього результату не збережено.</p>';}else body.innerHTML=bk+viewHtml(rows[0]);}catch(e){body.innerHTML=bk+'<p class="muted">Не вдалося завантажити.</p>';}
-  const vb=document.getElementById('viewBack');if(vb)vb.onclick=()=>openBoard();}
+  const vb=document.getElementById('viewBack');if(vb)vb.onclick=()=>{if(SHEET===2)history.back();else openBoard();};}
 // result link: ?s=<id> from /r/<id> (messenger preview) opens this squad immediately
 if(ONLINE){const sid=(new URLSearchParams(location.search).get('s')||'').replace(/\D/g,'');if(sid)setTimeout(()=>openView('id=eq.'+sid),0);}
 // Trophies: trophy cabinet on own player page (filters, rarity); without the site (file://) the old dialog
@@ -1959,7 +1965,7 @@ document.getElementById('trBtn').onclick=()=>{if(!ONLINE){openTrophies();return;
 document.getElementById('chalBtn').onclick=chalShare;document.getElementById('chalCopyBtn').onclick=chalCopy;
 document.getElementById('acctBtn').onclick=()=>openPlayer();
 document.getElementById('lbAcctGo').onclick=()=>{ACCT_MSG='';openAcct();};
-function viewHide(){document.getElementById('viewBox').hidden=true;screenTag(SEC_NAME[CUR_SEC]);}   // dialog closed: show the screen beneath again
+function viewHide(){if(SHEET){history.go(-SHEET);return;}document.getElementById('viewBox').hidden=true;screenTag(SEC_NAME[CUR_SEC]);}   // dialog closed: show the screen beneath again
 document.getElementById('viewClose').onclick=viewHide;
 document.getElementById('viewBox').onclick=e=>{if(e.target.id==='viewBox')viewHide();};
 document.addEventListener('click',e=>{const a=e.target.closest&&e.target.closest('a[data-u]');if(a){e.preventDefault();openPlayer(a.dataset.u);return;}   // name in the table -> player page

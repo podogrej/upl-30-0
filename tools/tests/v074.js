@@ -13,14 +13,15 @@ const ratio=(a,b)=>{const x=lum(a),y=lum(b);return (Math.max(x,y)+.05)/(Math.min
 // phone 390x844: draft 11 players and open the pre-season screen
 async function draftTo(pg,pre){for(let i=0;i<11;i++){if(!(pre&&!i))await pg.click('#spinBtn');await pg.waitForSelector('#squad .pl:not([disabled])',{timeout:8000});await (await pg.$('#squad .pl:not([disabled])')).click();await pg.waitForTimeout(80);
   const t=await pg.$('#pitch .slot.target');if(t){await t.click();await pg.waitForTimeout(60);}}await pg.waitForSelector('#simBtn:not([hidden])');}
-function mkDB(n){
+function mkDB(n,fmt5){
   const players=[{id:'p-me',name:'andre',anon_name:'calm_owl',public_id:'andr2345'},{id:'p-v',name:'vitia',anon_name:'brave_fox',public_id:'vitya234'},{id:'p-o',name:'oleh',anon_name:'sly_cat',public_id:'oleh2345'}];
   const base={format:'classic',formation:'4-3-3',verified:true,practice:false,competition:'upl',xi:[],tbl:[],gd:0,created_at:'2026-10-02T11:00:00Z'};
   const seasons=[{id:1,player_id:'p-v',mode:'hard',w:26,d:3,l:1,pts:81,place:1,gf:70,ga:20},{id:2,player_id:'p-me',mode:'normal',formation:'4-4-2',w:26,d:3,l:1,pts:81,place:1,gf:69,ga:21},
     {id:3,player_id:'p-o',mode:'daily',w:25,d:3,l:2,pts:78,place:2,gf:68,ga:22},{id:4,player_id:'p-v',mode:'normal',formation:'3-5-2',w:24,d:3,l:3,pts:75,place:2,gf:66,ga:24},{id:5,player_id:'p-me',mode:'pick',w:23,d:4,l:3,pts:73,place:3,gf:60,ga:30}].map(x=>({...base,...x}));
   const L={id:'abc222',name:'Ліга лави запасних',fmt:'11',start_day:'2026-10-07',days:5,tries:2,take:'best',scoring:'place',rerolls:1,ratings:'show',era:'all'};
   const members=players.slice(0,n).map(p=>p.id);
-  const get=()=>{const board=members.map(id=>{const p=players.find(x=>x.id===id);return {u:p.public_id,name:p.name,total:0,wins:0,best:null,played:0};});return {...L,today:'2026-10-07',day_n:2,over:false,owner:'andr2345',board,tour:[]};};
+  const get=()=>{if(fmt5){const board=members.map(id=>{const p=players.find(x=>x.id===id);return {u:p.public_id,name:p.name};});return {id:'abc222',name:'П\'ятірки',fmt:'5',owner:'andr2345',board,fives:[],result:null,rerolls:1,ratings:'show',era:'all',deadline:new Date(Date.now()+36e5).toISOString(),now:new Date().toISOString()};}
+    const board=members.map(id=>{const p=players.find(x=>x.id===id);return {u:p.public_id,name:p.name,total:0,wins:0,best:null,played:0};});return {...L,today:'2026-10-07',day_n:2,over:false,owner:'andr2345',board,tour:[]};};
   const js=p=>({id:p.id,name:p.name,anon_name:p.anon_name,public_id:p.public_id,name_next:null,contact_email:null,news_optin:false});
   const rpc={player_hello:()=>js(players[0]),link_account:()=>({...js(players[0]),merge_offer:null}),trophy_stats:()=>({players:3,t:{}}),fl_mine:()=>[],fl_get:()=>get(),tg_leagues_mine:()=>[]};
   const db=makeDB({seasons:{auto:'id'},season_seeds:{auto:'id'},daily_results:{auto:'id'},player_links:{},user_state:{}},rpc);
@@ -101,10 +102,35 @@ function mkDB(n){
   T.check(!/Поруч з іменем/.test(bd.txt),'таблиця: службового рядка про позначку режиму немає');
   await shot(p,'board_phone_dark');await theme(p,'light');await shot(p,'board_phone_light');await theme(p,'dark');
   await p.click('#boardBody tr[data-q]');await p.waitForTimeout(600);
+  const sq0=await p.evaluate(()=>history.state&&history.state.sheet);
   T.check(await p.$eval('#viewBox',e=>!e.hidden&&e.classList.contains('full'))&&/До таблиці/.test(await p.textContent('#viewBody')),'склад з таблиці: той самий екран, «До таблиці» є');
   await shot(p,'squad_phone_dark');
-  await p.click('#viewBack');await p.waitForTimeout(400);await p.click('#viewClose');await p.waitForTimeout(200);
+  T.check(sq0===2,'склад з таблиці: окремий запис історії');
+  await p.click('#viewBack');await p.waitForTimeout(400);
+  T.check(await p.$eval('#viewBox',e=>!e.hidden&&e.classList.contains('full'))&&/Таблиця за весь час/.test(await p.textContent('#viewTitle'))&&await p.evaluate(()=>history.state.sheet===1),'«До таблиці» повертає до таблиці (запис історії знято)');
+  await p.click('#boardBody tr[data-q]');await p.waitForTimeout(500);await p.click('#viewClose');await p.waitForTimeout(500);
+  T.check(await p.evaluate(()=>!(history.state&&history.state.sheet)&&document.getElementById('viewBox').hidden),'«Закрити» зі складу закриває все й знімає обидва записи історії');
+  await p.click('#boardOpen');await p.waitForTimeout(500);await p.click('#viewClose');await p.waitForTimeout(400);
   T.check(await p.$eval('#viewBox',e=>e.hidden&&!e.classList.contains('full')),'«Закрити» закриває таблицю і знімає повний екран');
+  // system back / swipe closes the sheet and leaves the screen underneath alone
+  await p.click('#freeOpen');await p.waitForTimeout(300);await home(p);await p.waitForTimeout(300);
+  const sec0=await p.evaluate(()=>window.__dbg.CUR_SEC!==undefined?window.__dbg.CUR_SEC:document.querySelector('section:not([hidden])').id);
+  await p.click('#boardOpen');await p.waitForTimeout(500);
+  await p.evaluate(()=>history.back());await p.waitForTimeout(500);
+  const bk=await p.evaluate(()=>({hidden:document.getElementById('viewBox').hidden,full:document.getElementById('viewBox').classList.contains('full'),sec:window.__dbg.CUR_SEC!==undefined?window.__dbg.CUR_SEC:document.querySelector('section:not([hidden])').id,st:history.state&&history.state.sheet}));
+  T.check(bk.hidden&&!bk.full&&bk.sec===sec0&&!bk.st,`системне «назад» закриває таблицю, екран під нею не змінюється (${sec0} → ${bk.sec})`);
+  await p.click('#boardOpen');await p.waitForTimeout(400);await p.click('#boardBody tr[data-q]');await p.waitForTimeout(500);
+  await p.evaluate(()=>history.back());await p.waitForTimeout(400);
+  T.check(await p.evaluate(()=>!document.getElementById('viewBox').hidden&&/Таблиця за весь час/.test(document.getElementById('viewTitle').textContent)),'системне «назад» зі складу — до таблиці');
+  await p.evaluate(()=>history.back());await p.waitForTimeout(400);
+  T.check(await p.evaluate(()=>document.getElementById('viewBox').hidden),'ще раз «назад» — таблицю закрито');
+  // Telegram fullscreen: title row sits below Telegram's own buttons
+  await p.evaluate(()=>{document.documentElement.classList.add('tgfs');document.documentElement.style.setProperty('--tg-safe-area-inset-top','60px');document.documentElement.style.setProperty('--tg-content-safe-area-inset-top','54px');});
+  await p.click('#boardOpen');await p.waitForTimeout(400);
+  const fsT=await p.evaluate(()=>({close:document.getElementById('viewClose').getBoundingClientRect().top,title:document.getElementById('viewTitle').getBoundingClientRect().top}));
+  T.check(fsT.close>=114&&fsT.title>=114,`tgfs: заголовок і «Закрити» нижче кнопок Telegram (${Math.round(fsT.title)}/${Math.round(fsT.close)}px ≥114)`);
+  await p.click('#viewClose');await p.waitForTimeout(400);
+  await p.evaluate(()=>{document.documentElement.classList.remove('tgfs');});
   await p.click('#newsBtn');await p.waitForTimeout(200);
   T.check(await p.$eval('#viewBox',e=>!e.hidden&&!e.classList.contains('full')),'«Що нового» лишається шторкою, не на весь екран');await p.click('#viewClose');
   await p.setViewportSize({width:820,height:1180});await p.click('#boardOpen');await p.waitForTimeout(700);await shot(p,'board_ipad');
@@ -113,23 +139,38 @@ function mkDB(n){
   await p.click('#viewClose');
   await A.ctx.close();}
  // ---- C. league page: invite card under the round card for small leagues, compact share otherwise
- for(const n of [1,3]){const {db}=mkDB(n);const A=await openSite({b:bb,db,signed:true,viewport:{width:390,height:844},query:'?l=abc222',init:"localStorage.setItem('upl30_player',JSON.stringify({id:'p-me',name:'andre',anon_name:'calm_owl',public_id:'andr2345'}))",wait:1800});const p=A.pg;
+ for(const [n,f5,guest] of [[1,0,0],[2,0,0],[3,0,0],[1,1,0],[2,1,0],[3,1,0],[1,0,1]]){const {db}=mkDB(n,f5);const A=await openSite({b:bb,db,signed:true,viewport:{width:390,height:844},query:'?l=abc222',init:guest?'localStorage.setItem("upl30_player",JSON.stringify({id:"p-x",name:"guest",anon_name:"g",public_id:"gest2345"}))':"localStorage.setItem('upl30_player',JSON.stringify({id:'p-me',name:'andre',anon_name:'calm_owl',public_id:'andr2345'}))",wait:1800});const p=A.pg;
   const lg=await p.evaluate(()=>{const q=s=>document.querySelector(s),R=e=>e&&e.getBoundingClientRect();const inv=q('#fl .fl-invc'),tour=q('#fl .fl-tour'),tbl=q('#fl .tbl,#fl .pp-empty'),sh=q('#flShare');
     return {tour:!!tour,inv:!!inv,invTop:inv&&R(inv).top,tourBottom:tour&&R(tour).bottom,tblTop:tbl&&R(tbl).top,share:!!sh,shareIn:sh&&!!sh.closest('.fl-head'),shareH:sh&&Math.round(R(sh).height),input:!!q('#flLinkIn'),text:q('#fl').innerText,
       grad:[...document.querySelectorAll('#fl button')].filter(e=>/gradient/.test(getComputedStyle(e).backgroundImage)&&e.getBoundingClientRect().width>0).map(e=>e.id)};});
-  if(n===1){T.check(lg.tour&&lg.inv&&lg.input&&lg.share&&lg.invTop>=lg.tourBottom-1&&lg.invTop<lg.tourBottom+40&&lg.invTop<lg.tblTop,'ліга з 1 учасником: «Запроси друзів» одразу під карткою туру, над таблицею');
-    T.check(/Тур 2 з 5/.test(lg.text)&&/Запроси друзів/.test(lg.text),'ліга з 1 учасником: «Тур 2 з 5» і запрошення на місці');
-    T.check(lg.grad.length===1&&lg.grad[0]==='flShare','ліга з 1 учасником: градієнт лише в «Поділитися» ('+lg.grad.join()+')');
-    await shot(p,'league1_phone_dark',true);await theme(p,'light');await shot(p,'league1_phone_light',true);}
-  else{T.check(!lg.inv&&lg.share&&lg.shareIn&&lg.shareH>=44&&!/Запроси друзів/.test(lg.text),`ліга з 3 учасниками: «Поділитися» в шапці (${lg.shareH}px), великої картки немає`);
-    T.check(lg.grad.length<=1,'ліга з 3 учасниками: градієнтних кнопок '+lg.grad.length+' ('+lg.grad.join()+')');
-    await shot(p,'league3_phone_dark',true);}
-  T.check(A.errs.length===0,`ліга (${n}): помилок на сторінці немає ${A.errs.join(' | ')}`);await A.ctx.close();}
+  const tag=`${f5?'5×5':'11×11'}, учасників ${n}${guest?' (гість за посиланням)':''}`;
+  if(guest){T.check(!lg.inv&&lg.tour&&lg.share&&lg.shareIn&&/Приєднатися/.test(lg.text),`${tag}: гість бачить «Приєднатися» і компактне «Поділитися», великої картки немає`);
+    T.check(lg.grad.length<=1,`${tag}: градієнтних кнопок ${lg.grad.length} (${lg.grad.join()})`);await shot(p,'league_guest_phone_dark',true);}
+  else if(n<3){T.check(lg.tour&&lg.inv&&lg.input&&lg.share&&lg.invTop>=lg.tourBottom-1&&lg.invTop<lg.tourBottom+40&&(f5||lg.invTop<lg.tblTop),`${tag}: «Запроси друзів» одразу під карткою туру/збору`);
+    T.check(lg.grad.length===1&&lg.grad[0]==='flShare',`${tag}: градієнт лише в «Поділитися» (${lg.grad.join()})`);
+    T.check(!/Запросити/.test(lg.text.replace(/Запроси друзів/g,'')),`${tag}: нижнього блоку «Запросити» немає`);
+    if(n===1&&!f5){T.check(/Тур 2 з 5/.test(lg.text),'11×11: «Тур 2 з 5» на місці');await shot(p,'league1_phone_dark',true);await theme(p,'light');await shot(p,'league1_phone_light',true);}
+    if(f5&&n===2)await shot(p,'league5_2_phone_dark',true);}
+  else{T.check(!lg.inv&&lg.share&&lg.shareIn&&lg.shareH>=44&&!/Запроси друзів/.test(lg.text),`${tag}: «Поділитися» в шапці (${lg.shareH}px), великої картки немає`);
+    T.check(lg.grad.length<=1,`${tag}: градієнтних кнопок ${lg.grad.length} (${lg.grad.join()})`);
+    if(!f5)await shot(p,'league3_phone_dark',true);}
+  T.check(A.errs.length===0,`ліга (${tag}): помилок на сторінці немає ${A.errs.join(' | ')}`);await A.ctx.close();}
  // league list: three steps in one row
  {const {db}=mkDB(1);const A=await openSite({b:bb,db,signed:true,viewport:{width:390,height:844},wait:1500});const p=A.pg;await p.click('#flOpen');await p.waitForTimeout(500);
   const hw=await p.evaluate(()=>{const li=[...document.querySelectorAll('#fl .fl-how li')].map(e=>e.getBoundingClientRect());return {n:li.length,sameRow:li.length===3&&li.every(r=>Math.abs(r.top-li[0].top)<2),cards:document.querySelectorAll('#fl .fl-how>div').length};});
   T.check(hw.n===3&&hw.sameRow&&!hw.cards,'«Як це працює»: три кроки в одному рядку, не три картки');
   T.check((await gradients(p)).length===1,'список ліг: один градієнтний елемент-кнопка');
   await shot(p,'fl_list_phone_dark',true);await theme(p,'light');await shot(p,'fl_list_phone_light',true);await A.ctx.close();}
+ // Telegram BackButton is shown while the sheet is open on Home, and its tap closes the sheet
+ {const {db}=mkDB(3);const init="window.__bb={vis:false,cb:null};let _t;Object.defineProperty(window,'Telegram',{configurable:true,get(){return _t},set(v){if(v&&v.WebApp)v.WebApp.BackButton={show(){window.__bb.vis=true},hide(){window.__bb.vis=false},onClick(f){window.__bb.cb=f}};_t=v}})";
+  const tg={initData:'user=x&hash=abc',initDataUnsafe:{user:{id:1,first_name:'A'}},colorScheme:'dark',platform:'android'};
+  const api={'/api/auth':async()=>({json:{token_hash:'TH'}}),'/api/league':async()=>({json:{ok:true}})};
+  const A=await openSite({b:bb,db,api,tg,init,hash:'#tgWebAppData=x',viewport:{width:430,height:900},wait:1800});const p=A.pg;
+  T.check(await p.evaluate(()=>window.__bb.vis===false),'Telegram: на головній BackButton схований');
+  await p.click('#boardOpen');await p.waitForTimeout(500);
+  T.check(await p.evaluate(()=>window.__bb.vis===true),'Telegram: поки таблиця відкрита, BackButton показано');
+  await p.evaluate(()=>window.__bb.cb());await p.waitForTimeout(500);
+  T.check(await p.evaluate(()=>document.getElementById('viewBox').hidden&&window.__bb.vis===false),'Telegram: BackButton закриває таблицю й знову ховається на головній');
+  await A.ctx.close();}
  await bb.close();
  process.exit(T.done());})();

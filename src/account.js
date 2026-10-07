@@ -157,7 +157,7 @@ async function playerRename(v){if(PLAYER&&PLAYER.name&&nameKey(v)===PLAYER.name)
 function renderAcct(){const b=document.getElementById('acctBtn');if(!b)return;b.hidden=!ONLINE;b.className='avbtn';b.title='Моя сторінка';b.setAttribute('aria-label','Моя сторінка');const nm=myName();b.innerHTML=avatarSvg(mySeed(),28)+(nm?`<span class="me-n">${esc(nm)}</span>`:'');b.classList.toggle('noname',!nm);}   // name next to the avatar (button to own page)
 // modal in sign-in sheet mode: .login class, close cross instead of a Close button; normal mode restored on hide
 function viewMode(m){const box=document.getElementById('viewBox'),c=document.getElementById('viewClose');box.classList.toggle('login',m==='login');c.textContent=m==='login'?'✕':'Закрити';c.setAttribute('aria-label','Закрити');}
-new MutationObserver(()=>{const bx=document.getElementById('viewBox');if(bx.hidden){viewMode('');bx.classList.remove('full');}}).observe(document.getElementById('viewBox'),{attributes:true,attributeFilter:['hidden']});
+new MutationObserver(()=>{const bx=document.getElementById('viewBox');if(bx.hidden){viewMode('');bx.classList.remove('full');if(SHEET){SHEET=0;navUi();}}}).observe(document.getElementById('viewBox'),{attributes:true,attributeFilter:['hidden']});
 function openAcct(){screenTag('account');
   const box=document.getElementById('viewBox'),body=document.getElementById('viewBody');document.getElementById('viewTitle').textContent='Акаунт';box.hidden=false;
   const msg=ACCT_MSG?`<p class="note">${esc(ACCT_MSG)}</p>`:'';
