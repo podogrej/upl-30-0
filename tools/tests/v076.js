@@ -230,6 +230,9 @@ const sk=(pg,sel)=>pg.evaluate(s=>{const n=[...document.querySelectorAll(s+' .sk
  // ---- F. source: no old loading text left in code for players
  {const src=['template.html','account.js','leagues.js','player.js','trophies.js','five.js','oneclub.js','challenge.js'].map(f=>fs.readFileSync(path.join(ROOT,'src',f),'utf8')).join('\n');
   const left=(src.match(/[^`'"\n]{0,30}Завантаж(?:ення|уємо)…[^`'"\n]{0,20}/g)||[]);T.check(left.length===0,'у коді не лишилось «Завантаження…» / «Завантажуємо…» '+left.slice(0,2).join(' | '));}
+ // ---- H. «Як грати?» on the home screen opens the FAQ answer
+ {const {b:bh,pg}=await openPage();await pg.click('#howGo');await pg.waitForTimeout(300);
+  T.check(await pg.evaluate(()=>document.getElementById('faqBox').open&&document.getElementById('howQ').open),'«Як грати?» відкриває відповідь у FAQ');await bh.close();}
  // ---- G. no repeated fades and no table height jumps
  {const {b:bg,pg}=await openPage();
   await pg.evaluate(()=>document.getElementById('homeBtn').click());await pg.click('#freeOpen');await pg.evaluate(()=>window.__dbg.setFmt('classic'));await pg.click('#modes .opt:nth-child(1)');await pg.click('#startBtn');
