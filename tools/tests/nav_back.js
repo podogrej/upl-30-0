@@ -10,9 +10,9 @@ async function pickOne(pg){await pg.click('#spinBtn');await pg.waitForSelector('
   const sec=()=>pg.evaluate(()=>[1,2,3,4,5,6,7].find(i=>!document.getElementById('s'+i).hidden));
   const wait=()=>pg.waitForTimeout(300);
   await pg.goto('file://'+path.join(ROOT,'index.html'));await pg.waitForTimeout(800);
-  T.check(await pg.$eval('#backBtn',e=>e.hidden),'головна: «Назад» сховано, «Головна» з текстом');
+  T.check(await pg.$eval('#backBtn',e=>e.hidden)&&await pg.$eval('#homeBtn',e=>e.hidden)&&await pg.$eval('#hLogo',e=>!e.hidden),'головна: «Назад» і домик сховано, логотип у шапці');
   await pg.click('#freeOpen');await wait();
-  T.check(await sec()===4&&await pg.$eval('#backBtn',e=>!e.hidden)&&await pg.$eval('#homeBtn .hl',e=>getComputedStyle(e).display==='none'),'режими: «‹ Назад» + лише домик');
+  T.check(await sec()===4&&await pg.$eval('#backBtn',e=>!e.hidden)&&await pg.$eval('#homeBtn',e=>!e.hidden&&!e.textContent.trim()),'режими: «‹ Назад» + лише домик');
   await pg.click('#backBtn');await wait();T.check(await sec()===1,'«Назад» з режимів → головна');
   await pg.click('#freeOpen');await pg.click('#startBtn');await wait();
   await pg.goBack();await wait();T.check(await sec()===4&&!asked.length,'порожній драфт: браузерне «назад» → режими без питання');

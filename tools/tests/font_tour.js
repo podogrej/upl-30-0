@@ -26,9 +26,9 @@ const CHECK=()=>{const W=innerWidth,bad=[];const vis=el=>!el.closest('[hidden]')
   await chk('головна');
   T.check(await pg.evaluate(()=>{const b=document.querySelector('#ft #fbBtn'),r=b&&b.getBoundingClientRect();return !!b&&!document.querySelector('header #fbBtn')&&r.width>=36&&r.right<=innerWidth;}),`${w}px · «Відгук і баги» у підвалі, шапка без 💬`);   // 0.69.69
   await safe(async()=>{await pg.click('#fbBtn');await chk('підвал: форма відгуку');await pg.click('#fbCancel');});
-  await pg.evaluate(()=>document.querySelectorAll('#s1 details').forEach(d=>d.open=true));await chk('головна: усі «Питання та відповіді» й «Про гру» розгорнуто');
-  // "about" section is always expanded, no duplicate fact tiles; font and icon credits are in the footer
-  T.check(await pg.evaluate(()=>{const a=document.getElementById('aboutBox'),c=document.querySelector('.ft-cred');return a.tagName!=='DETAILS'&&!a.querySelector('.facts')&&a.offsetHeight>100&&!!c&&/KyivType/.test(c.textContent)&&c.getBoundingClientRect().right<=innerWidth+1;}),`${w}px · «Про гру та дані» відкрито, без плиток; подяки — у підвалі`);
+  await pg.evaluate(()=>document.querySelectorAll('#s1 details').forEach(d=>d.open=true));await chk('головна: усі «Питання та відповіді» (разом із «Як рахується гра») розгорнуто');
+  // no home "about" block (moved to the FAQ); font and icon credits are in the footer
+  T.check(await pg.evaluate(()=>{const c=document.querySelector('.ft-cred');return !document.getElementById('aboutBox')&&document.getElementById('calcQ').open&&!!c&&/KyivType/.test(c.textContent)&&c.getBoundingClientRect().right<=innerWidth+1;}),`${w}px · «Як рахується гра» розгорнуто, блоку «Про гру» немає; подяки — у підвалі`);
   await safe(async()=>{await pg.click('#newsBtn');await chk('«Що нового»');await pg.click('#viewClose');});
   await safe(async()=>{await pg.click('#boardOpen');await chk('загальна таблиця');await pg.click('#viewClose');});
   await safe(async()=>{await pg.click('#trBtn');await chk('трофеї');await pg.click('#homeBtn');});

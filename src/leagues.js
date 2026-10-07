@@ -54,9 +54,7 @@ function flListHtml(){const mine=FL.mine||[];const on=mine.filter(x=>!x.over),of
     ${on.length?`<div class="sec0">Грають зараз <span>${on.length}</span></div>${on.map(row).join('')}`:''}
     ${off.length?`<div class="sec0">Завершені <span>${off.length}</span></div>${off.map(row).join('')}`:''}
     <div class="sec0">Як це працює</div>
-    <div class="fl-how"><div>${ic('format-list-numbered')}<span><b>Ти задаєш правила</b><small>Один раз для всіх — чесна гра.</small></span></div>
-    <div>${ic('soccer-field')}<span><b>Кожен збирає склад</b><small>Колесо в кожного своє.</small></span></div>
-    <div>${ic('trophy')}<span><b>Найкращий перемагає</b><small>Щодня тур, очки додаються до кінця ліги.</small></span></div></div>`;}
+    <ol class="fl-how"><li>${ic('format-list-numbered')}<b>Ти задаєш правила</b></li><li>${ic('soccer-field')}<b>Кожен збирає склад</b></li><li>${ic('trophy')}<b>Найкращий перемагає</b></li></ol>`;}
 const fl5Sub=x=>x.over?`турнір зіграно · ${numOr0(x.members)} ${plUk(x.members,'гравець','гравці','гравців')}`:`збір до ${flTime(x.deadline)} · складів ${numOr0(x.fives)} з ${numOr0(x.members)}${x.my_five?'':' · твій ще ні'}`;
 function flTiles(key,cols){const f=FL.form;return `<div class="fl-opts c${cols}">${FL_OPT[key].map(([v,t,s])=>`<button class="opt${f[key]===v?' on':''}" data-k="${key}" data-v="${v}"><b>${t}</b>${s?`<small>${s}</small>`:''}</button>`).join('')}</div>`;}
 function flCreateHtml(){const f=FL.form;
@@ -73,26 +71,28 @@ function flCreateHtml(){const f=FL.form;
     <button class="primary big0" id="flCreate" style="margin-top:var(--sp-4)">${f.fmt==='5'?'Створити й зібрати п\'ятірку':'Створити й грати'}</button><p class="muted" id="flMsg" style="font-size:var(--fs-footnote);text-align:center">${f.fmt==='5'?'Далі — посилання для друзів (до 10) і твоя п\'ятірка. Коли збір закінчиться, турнір зіграє сервер.':'Далі — посилання для друзів і твоя перша спроба.'}</p>`;}
 function flLeagueHtml(){const d=FL.data;
   if(!d)return `<div class="fl-hero"><p class="muted">${esc(FL.err||'Завантаження…')}</p>${FL.err?'<button class="ghost" id="flBack">До ліг</button>':''}</div>`;
-  const me=PLAYER&&PLAYER.public_id,member=flMe(d),mine=d.tour.find(r=>r.u===me),used=mine?numOr0(mine.tries):0,left=Math.max(0,d.tries-used);
+  const me=PLAYER&&PLAYER.public_id,member=flMe(d),few=!d.over&&d.board.length<3&&member,mine=d.tour.find(r=>r.u===me),used=mine?numOr0(mine.tries):0,left=Math.max(0,d.tries-used);
   const rules=`${d.board.length} ${plUk(d.board.length,'гравець','гравці','гравців')} · ${d.scoring==='place'?'очки за місце':'сума очок'} · ${d.tries>1?`${d.take==='best'?'найкраща':'остання'} з ${d.tries} спроб`:'1 спроба на день'} · перекрути ${d.rerolls}${d.ratings==='memory'?' · на пам\'ять':''}${d.era!=='all'&&ERAS[d.era]?' · '+ERAS[d.era].name.toLowerCase():''}`;
   const bars=Array.from({length:d.days},(_,i)=>`<i class="${i+1<d.day_n?'done':i+1===d.day_n&&!d.over?'now':''}"></i>`).join('');
   let card;
   if(d.over){const w=d.board[0];card=`<div class="fl-tour"><div class="fl-th"><b>Ліга завершена</b></div><div class="fl-bars">${bars}</div>${w?`<p style="margin:0">${ic('trophy','sm')}Переможець — <b>${esc(w.name)}</b>, ${numOr0(w.total)} ${ptsWord(numOr0(w.total))}</p>`:''}</div>`;}
   else{const chips=Array.from({length:d.tries},(_,i)=>`<span class="fl-try${i<used?' on':''}">${i<used&&mine&&d.tries===1?numOr0(mine.pts):i+1}</span>`).join('');
     const btn=!member?(SESSION?`<button class="primary big0" id="flJoin">Приєднатися й грати</button>`:`<button class="primary big0" id="flLogin">Увійти, щоб приєднатися</button>`)
-      :left?`<div class="fl-forms">${Object.keys(FORMATIONS).map(f=>`<button class="chip${FL.formation===f?' onc':''}" data-form="${f}">${f}</button>`).join('')}</div><button class="primary big0" id="flPlay">Зіграти спробу ${used+1} з ${d.tries}</button>`
+      :left?`<div class="fl-forms">${Object.keys(FORMATIONS).map(f=>`<button class="chip${FL.formation===f?' onc':''}" data-form="${f}">${f}</button>`).join('')}</div><button class="primary big0${few?' solid':''}" id="flPlay">Зіграти спробу ${used+1} з ${d.tries}</button>`
       :`<p class="muted" style="margin:0">Спроби на сьогодні вичерпано. Завтра — новий тур.</p>`;
     card=`<div class="fl-tour"><div class="fl-th"><b>Тур ${numOr0(d.day_n)} з ${numOr0(d.days)}</b><span class="mono muted">до кінця туру ${flLeft()}</span></div><div class="fl-bars">${bars}</div>
       ${member?`<div class="fl-tries"><span class="muted">Спроби сьогодні:</span>${chips}${mine?`<span class="muted">· у залік ${numOr0(mine.pts)} оч → ${numOr0(mine.rk)}-е місце в турі</span>`:''}</div>`:''}${btn}<p class="muted" id="flMsg" style="font-size:var(--fs-footnote);margin:0"></p></div>`;}
   const all=FL.tab!=='tour';
   const rows=all?d.board.map((r,i)=>`<tr${r.u===me?' class="me"':''}><td class="num">${i+1}</td><td>${plink({players:{name:r.name,public_id:r.u}})}</td><td class="num muted">${r.wins?`${numOr0(r.wins)} ${plUk(r.wins,'тур','тури','турів')}`:''}</td><td class="num"><b>${numOr0(r.total)}</b></td></tr>`).join('')
     :d.tour.map(r=>`<tr${r.u===me?' class="me"':''}><td class="num">${numOr0(r.rk)}</td><td>${plink({players:{name:r.name,public_id:r.u}})}</td><td class="num muted">${numOr0(r.w)}-${numOr0(r.d)}-${numOr0(r.l)} · ${numOr0(r.pts)} оч</td><td class="num"><b>${numOr0(r.score)}</b></td></tr>`).join('');
-  const link=flLink(d.id);
-  return `<div class="fl-head"><h1>${esc(d.name)} <i class="fl-badge">11×11</i></h1>${flRules(rules)}</div>${card}
+  const link=flLink(d.id),shareBtn=cls=>`<button class="${cls}" id="flShare">${icon('share-variant')}<span>Поділитися</span></button>`;
+  // fewer than 3 members: invite is the main action right under the round card; otherwise a compact share button in the header
+  const invite=few?`<div class="fl-invc"><b>Запроси друзів</b><p class="muted">У лізі ще мало гравців. Надішли посилання в чат.</p><div class="fl-inv"><input readonly value="${esc(link)}" id="flLinkIn" aria-label="Посилання на лігу">${shareBtn('primary')}</div><p class="muted" id="flShareMsg" style="font-size:var(--fs-footnote)"></p></div>`:'';
+  const compact=!d.over&&!few?shareBtn('ghost fl-sh'):'';
+  return `<div class="fl-head"><div class="fl-top"><h1>${esc(d.name)} <i class="fl-badge">11×11</i></h1>${compact}</div>${flRules(rules)}${compact?'<p class="muted" id="flShareMsg" style="font-size:var(--fs-footnote);margin:0"></p>':''}</div>${card}${invite}
     <div class="sec0">Таблиця</div><div class="seg fl-tabs"><button data-tab="all" class="${all?'on':''}">Загальна</button><button data-tab="tour" class="${all?'':'on'}">${d.over?'Останній тур':`Тур ${numOr0(d.day_n)} · сьогодні`}</button></div>
     ${rows?`<div class="tbl"><table><tr><th>#</th><th>Гравець</th><th class="num">${all?'Виграв':'Сезон'}</th><th class="num">Оч</th></tr>${rows}</table></div>`:`<p class="pp-empty">${all?'Поки нікого.':'Сьогодні ще ніхто не зіграв.'}</p>`}
     <p class="muted" style="font-size:var(--fs-caption)">${d.scoring==='place'?'За місце в турі: 1-й отримує стільки очок, скільки гравців зіграло того дня, останній — 1. Не зіграв — 0.':'Сума: у залік туру йдуть очки сезону. Не зіграв — 0.'}</p>
-    ${d.over?'':`<div class="sec0">Запросити</div><div class="fl-inv"><input readonly value="${esc(link)}" id="flLinkIn" aria-label="Посилання на лігу"><button class="primary" id="flShare">${icon('share-variant')}<span>Поділитися</span></button></div><p class="muted" id="flShareMsg" style="font-size:var(--fs-footnote)"></p>`}
     <button class="ghost" id="flBack" style="margin-top:var(--sp-4)">Усі мої ліги</button>`;}
 // ---------- actions
 function flWire(){const $=id=>document.getElementById(id),el=$('fl');
@@ -121,7 +121,7 @@ function flWire(){const $=id=>document.getElementById(id),el=$('fl');
     if($('flShare'))$('flShare').onclick=async()=>{const d=FL.data,url=flLink(d.id),text=`Грай зі мною в лігу «${d.name}» — 30-0 УПЛ`,m=$('flShareMsg');
       if(TG&&TG.openTelegramLink){TG.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`);return;}
       if(navigator.share){try{await navigator.share({title:d.name,text,url});return;}catch(e){if(e&&e.name==='AbortError')return;}}
-      try{await navigator.clipboard.writeText(url);m.textContent='Посилання скопійовано — надішли його друзям у WhatsApp, Viber чи Telegram.';}catch(e){const i=$('flLinkIn');i.focus();i.select();m.textContent='Скопіюй посилання вручну.';}};}
+      try{await navigator.clipboard.writeText(url);m.textContent='Посилання скопійовано — надішли його друзям у WhatsApp, Viber чи Telegram.';}catch(e){const i=$('flLinkIn');if(i){i.focus();i.select();}m.textContent=i?'Скопіюй посилання вручну.':'Скопіюй посилання вручну: '+url;}};}
 }
 // league attempt: regular classic draft under league rules (rerolls, ratings, era); formation is the player's own
 function flPlay(){const d=FL&&FL.data;if(!d)return;
@@ -191,7 +191,7 @@ function fl5LeagueHtml(){const d=FL.data,me=PLAYER&&PLAYER.public_id,member=flMe
     ${!res?waiting.map(b=>`<div class="fl5t off"><b>${esc(b.name)}</b> <span class="muted">збирає склад…</span></div>`).join(''):''}</div>`;
   const link=flLink(d.id);
   return `<div class="fl-head"><h1>${esc(d.name)} ${flBadge('5')}</h1>${flRules(rules)}</div>${card}<div id="fl5Tro" hidden></div>${out}
-    ${!res&&!fl5Due(d)?`<div class="sec0">Запросити</div><div class="fl-inv"><input readonly value="${esc(link)}" id="flLinkIn" aria-label="Посилання на лігу"><button class="primary" id="flShare">${icon('share-variant')}<span>Поділитися</span></button></div><p class="muted" id="flShareMsg" style="font-size:var(--fs-footnote)"></p>`:''}
+    ${!res&&!fl5Due(d)?`<div class="sec0">Запросити</div><div class="fl-inv"><input readonly value="${esc(link)}" id="flLinkIn" aria-label="Посилання на лігу"><button class="primary solid" id="flShare">${icon('share-variant')}<span>Поділитися</span></button></div><p class="muted" id="flShareMsg" style="font-size:var(--fs-footnote)"></p>`:''}
     <button class="ghost" id="flBack" style="margin-top:var(--sp-4)">Усі мої ліги</button>`;}
 // match: score, events by minute (goals, penalties, VAR), shootout; "watch live" reveals events one by one
 function fl5Feed(m,nm){const it=[];

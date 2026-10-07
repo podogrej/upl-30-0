@@ -13,7 +13,7 @@ async function pickOne(pg){await pg.click('#spinBtn');await pg.waitForSelector('
  // home (variant E): two buttons on top, then section labels in order: other modes (league, season pick, one club), board and trophies, about
  const home=await pg.evaluate(()=>{const s=[...document.querySelectorAll('#s1 .sec0')].map(x=>x.textContent);const sec=document.querySelectorAll('#s1 .sec0')[1];const o=id=>document.getElementById(id).compareDocumentPosition(sec);
    return {s,daily:!!document.querySelector('.btns0 #dailyBtn'),modes:['flOpen','pickOpen','clubOpen'].every(id=>o(id)&Node.DOCUMENT_POSITION_FOLLOWING),rest:['boardOpen','trBtn'].every(id=>o(id)&Node.DOCUMENT_POSITION_PRECEDING)};});
- T.check(home.s.join()==='Інші режими,Таблиця й трофеї,Про гру та дані'&&home.daily&&home.modes&&home.rest,'головна: дві кнопки, «Інші режими», «Таблиця й трофеї», «Про гру та дані» '+JSON.stringify(home));
+ T.check(home.s.join()==='Інші режими,Таблиця й трофеї'&&home.daily&&home.modes&&home.rest,'головна: дві кнопки, «Інші режими», «Таблиця й трофеї» '+JSON.stringify(home));
  await pg.screenshot({path:path.join(OUT,'v064_home.png'),fullPage:true});
  // draft: player flies to the pitch
  await pg.click('#freeOpen');await pg.click('#startBtn');
