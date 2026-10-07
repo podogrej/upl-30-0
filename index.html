@@ -105,7 +105,7 @@ button.ghost{border-color:var(--line);background:transparent;color:var(--ink2);p
 .slot .nm{margin-top:3px;font-weight:800;font-size:var(--nf);line-height:1.2;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.6)}
 .slot .nm.long{font-size:var(--nf10)}.slot .nm.xl{font-size:var(--nf12);letter-spacing:-.02em}
 .slot .nick{color:var(--amber2)}
-.slot .club{display:none;font-weight:600;font-size:var(--cf);line-height:1.2;color:rgba(225,240,230,.72)}   /* club line only on a wide pitch */
+.slot .club{display:none;font-weight:600;font-size:var(--cf);line-height:1.2;color:rgba(225,240,230,.72)}.slot .club.hr{display:block}.slot .club .ct{display:none}   /* narrow pitch: overall rating only; club name on a wide pitch */
 .slot.empty .disc{background:rgba(255,255,255,.06);border:1.5px dashed rgba(255,255,255,.45);box-shadow:none}
 .slot.empty .pos{color:rgba(255,255,255,.8)}
 .slot.target .disc{border:2px solid #7df0a8;animation:glow 1.1s ease-in-out infinite}.slot.target .pos{color:#7df0a8}
@@ -113,7 +113,7 @@ button.ghost{border-color:var(--line);background:transparent;color:var(--ink2);p
 @keyframes glow{0%,100%{box-shadow:0 0 0 1.5px rgba(125,240,168,.9)}50%{box-shadow:0 0 0 6px rgba(125,240,168,.3)}}
 .slot.moving .disc{outline:3px solid var(--amber2);outline-offset:2px}
 .slot:focus-visible .disc{outline:2px solid #fff;outline-offset:3px}
-@container (min-width:400px){.slot{--cs:42px;--bw:4.5px;--pf:11px;--nf:14px;--nf10:13px;--nf12:12px;--cf:10.5px;--rf:11.5px;--rr:-17px}.slot .club{display:block}}
+@container (min-width:400px){.slot{--cs:42px;--bw:4.5px;--pf:11px;--nf:14px;--nf10:13px;--nf12:12px;--cf:10.5px;--rf:11.5px;--rr:-17px}.slot .club{display:block}.slot .club .ct{display:inline}}
 @container (max-width:339.98px){.slot{--cs:32px;--bw:3.5px;--pf:9px;--nf:11.5px;--nf10:10.8px;--nf12:10px;--cf:8.3px;--rf:9.5px;--rr:-13px}}
 @container (max-width:299.98px){.slot{--cs:30px;--bw:3px;--pf:8.5px;--nf:10.5px;--nf10:10px;--nf12:9.4px;--cf:7.6px;--rf:9px;--rr:-12px;--rp:2px 4px}}
 .pl .alts{display:block;font-family:var(--font-mono);font-size:var(--fs-caption2);color:var(--muted);letter-spacing:var(--ls-0);line-height:var(--lh-normal)}.pl .alts i{font-style:normal;font-weight:var(--wt-bold)}.alts i.DF{color:var(--df)}.alts i.MF{color:var(--mf)}.alts i.FW{color:var(--fw)}
@@ -1173,7 +1173,7 @@ let CUR_SEC=1;
 // Clarity (production host only, build.py): current screen tag so recordings and heatmaps can be filtered by screen (Filters -> Custom tags -> screen)
 const SEC_NAME={1:'home',2:'draft',3:'result',4:'setup',5:'five',6:'player',7:'friends',8:'oneclub'};
 function screenTag(name){try{if(window.clarity)window.clarity('set','screen',name);}catch(e){}}
-function go(n,pop){if(!pop&&n!==CUR_SEC)navPush(n);const back=n===1&&CUR_SEC!==1;screenTag(SEC_NAME[n]);if(n!==6&&CUR_SEC===6)ppUrl(null);if(n!==7&&CUR_SEC===7)flUrl(null);if(n===8)renderOc();else if(n===4&&S.format==='oneclub')setFmt('oneclub');[1,2,3,4,5,6,7,8].forEach(i=>{const el=document.getElementById('s'+i);const was=el.hidden;el.hidden=(i!==n);if(i===n&&(was||CUR_SEC!==n)){el.classList.remove('enter','back');void el.offsetWidth;el.classList.add(back?'back':'enter');}});CUR_SEC=n;navUi();miniSync();window.scrollTo({top:0});}
+function go(n,pop){if(n===2)PITCH_VIS=true;if(!pop&&n!==CUR_SEC)navPush(n);const back=n===1&&CUR_SEC!==1;screenTag(SEC_NAME[n]);if(n!==6&&CUR_SEC===6)ppUrl(null);if(n!==7&&CUR_SEC===7)flUrl(null);if(n===8)renderOc();else if(n===4&&S.format==='oneclub')setFmt('oneclub');[1,2,3,4,5,6,7,8].forEach(i=>{const el=document.getElementById('s'+i);const was=el.hidden;el.hidden=(i!==n);if(i===n&&(was||CUR_SEC!==n)){el.classList.remove('enter','back');void el.offsetWidth;el.classList.add(back?'back':'enter');}});CUR_SEC=n;navUi();miniSync();window.scrollTo({top:0});}
 // Back button + home icon. Every screen change is a browser history entry,
 // so swipe, browser back and Telegram BackButton go to the previous screen. Season summary replaces the draft (back goes to settings).
 let NAV_I=0,NAV_FREE=false;   // NAV_I: history entry index of this tab (0 = first screen); NAV_FREE: leaving the draft already confirmed
@@ -1317,7 +1317,7 @@ const rPill=(v,reveal)=>`<span class="pill r${reveal?' reveal':''}" style="--pc:
 const avgPill=t=>`<span class="pill avg" title="Середня оцінка за сезон">${t}</span>`;
 // chip: circle (position, pill), surname, club and season; o.pill = pill, o.r0 = overall rating in the club line (season summary)
 function chipInner(pos,p,o){const disc=`<div class="disc"${p?` style="${clubPal(ccOf(p))}"`:''}><span class="pos">${pos}</span>${o.pill||''}</div>`;if(!p)return disc;const n=p.name||p.n;
-  return disc+`<div class="nm${nmCls(n)}" title="${esc(n)}">${esc(cardName(n))}${nickOf(p.id)}</div><div class="club">${esc(clubShort(p.club||p.c))}${p.y?' '+SEA_SHORT(p.y):''}${o.r0!=null?` · <span class="r0" title="Загальний рейтинг">${o.r0}</span>`:''}</div>`;}
+  return disc+`<div class="nm${nmCls(n)}" title="${esc(n)}">${esc(cardName(n))}${nickOf(p.id)}</div><div class="club${o.r0!=null?' hr':''}"><span class="ct">${esc(clubShort(p.club||p.c))}${p.y?' '+SEA_SHORT(p.y):''}${o.r0!=null?' · ':''}</span>${o.r0!=null?`<span class="r0" title="Загальний рейтинг">${o.r0}</span>`:''}</div>`;}
 function slotInner(slot,p,o){return chipInner(POSNAME[slot],p,o);}
 function renderPitch(el,slots,withClub){
   el.innerHTML=PITCH_MK;const G=pitchGeo(S.formation);
@@ -1427,7 +1427,7 @@ function spinPick(){
   document.getElementById('wHint').textContent='';document.getElementById('seaPick').hidden=true;
   const e=eraOf(),names=[...new Set(DATA.clubs.filter(c=>inEra(e,c.y)).map(c=>shortTeam(c.n)))];
   document.querySelector('.reels').classList.add('one');   // season pick: club only, no '?' placeholder for the season
-  reelRoll('reelClub','club',names,shortTeam(cs0.n),14).then(()=>{if(S.pickOpts===opts)renderPickOpts();});
+  reelRoll('reelClub','club',names,shortTeam(cs0.n),14).then(()=>{if(S.pickOpts===opts){renderPickOpts();revealList();}});
 }
 function renderPickOpts(){const box=document.getElementById('seaPick'),o=S.pickOpts||[];box.hidden=false;
   document.getElementById('wHint').textContent=o.length>1?'Обери сезон — назад не повернешся':'У цього клубу лише один сезон, де є кого взяти';
@@ -1511,7 +1511,7 @@ function place(p,s){
 }
 // phone draft: progress bar over the list + scroll to the list once the wheel stops
 const TWOCOL=()=>matchMedia('(min-width:1000px),(min-width:760px) and (min-height:700px)').matches;
-let PITCH_VIS=true;
+var PITCH_VIS=true;   // var: go() may run before this line
 function miniSync(){const el=document.getElementById('miniBar');if(!el)return;
   document.documentElement.style.setProperty('--hh',document.querySelector('header.top').offsetHeight+'px');
   el.classList.toggle('on',CUR_SEC===2&&!PITCH_VIS&&!TWOCOL());}
@@ -2001,7 +2001,7 @@ async function playSeason(year){
   const pre=S.pre&&year===S.year?S.pre:await xpRun(xi,mode,year);r.xp=pre.xp;r.egf=pre.egf;r.ega=pre.ega;const pl=pre.pl;
   if(pl&&pl.length){const q=pl.slice().sort((a,b)=>a-b);r.projPlace=q[Math.floor(q.length/2)];}   // place forecast for the summary verdict
   renderVerdict(r,xi);
-  const [tier,gold]=tierOf(r);const te=document.getElementById('tier');te.textContent=tier.replace(/^\d+ місце · /,'');te.classList.toggle('gold',gold);   // place is the big number next to it
+  const [tier,gold]=tierOf(r);const te=document.getElementById('tier');{const z=tier.replace(/^\d+ місце · /,'');te.textContent=z.charAt(0).toUpperCase()+z.slice(1);}te.classList.toggle('gold',gold);   // place is the big number next to it
   document.getElementById('placeBig').textContent=r.place;
   // record and points; place is the hero number above
   document.getElementById('recTiles').innerHTML=`<div><b><i class="W">${r.W}</i>-<i class="D">${r.D}</i>-<i class="L">${r.L}</i></b><span>в · н · п</span></div><div><b class="hot">${r.pts}</b><span>${ptsWord(r.pts)}</span></div>`;
