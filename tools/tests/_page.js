@@ -14,10 +14,10 @@ async function openPage(opts={}){
   const pg=await ctx.newPage();const errs=[];pg.on('pageerror',e=>errs.push(e.message));pg.on('dialog',d=>/Склад не збережеться/.test(d.message())?d.accept():d.dismiss());   // accept the "leave unfinished draft" confirm
   await pg.goto('file://'+path.join(ROOT,'index.html'));await pg.waitForTimeout(800);
   return {b,pg,errs};}
-// pick format on the setup screen via its tile; hidden formats (derby, legends; kept in the engine for old seasons) via setFmt
-// oneclub: the tile opens the club list; choose the club tile, as a player would
-async function pickFmt(pg,fmt){if(await pg.$(`#formats .opt[data-fmt="${fmt}"]`))await pg.click(`#formats .opt[data-fmt="${fmt}"]`);else await pg.evaluate(k=>window.__dbg.setFmt(k),fmt);
-  if(fmt==='oneclub')await pg.click('#ocGrid .oct[data-c="karpaty-lviv"]');}
+// pick format on the setup screen: the mode is chosen on the home screen, so the setup screen has no mode tiles; here setFmt stands in for the home entry points
+// (and for hidden formats: derby, legends). oneclub: the club list, then the club tile, as a player would
+async function pickFmt(pg,fmt){if(fmt==='oneclub'){await pg.evaluate(()=>window.__dbg.openOc());await pg.click('#ocGrid .oct[data-c="karpaty-lviv"]');return;}
+  await pg.evaluate(k=>window.__dbg.setFmt(k),fmt);}
 // play one season: fmt = tile data-fmt ('pick' = season pick, 'daily' = daily draft); mode/form = 1-based option index in setup lists
 async function playSeason(pg,fmt,mode,form){
   await pg.evaluate(()=>document.getElementById('homeBtn').click());await pg.waitForTimeout(200);

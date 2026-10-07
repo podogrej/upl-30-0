@@ -51,7 +51,7 @@ const OUT=path.join(ROOT,'tools','tests','out');
  T.check(await pg.evaluate(()=>!document.getElementById('fmtBox').hidden&&document.getElementById('ocCard').hidden&&!/Карпати/.test(document.getElementById('startBtn').textContent)),'після виклику «Вільна гра» без картки клубу');
  // free play returns to the format choice
  await pg.evaluate(()=>document.getElementById('homeBtn').click());await pg.click('#freeOpen');
- T.check(await pg.evaluate(()=>!document.getElementById('fmtBox').hidden&&document.getElementById('ocCard').hidden&&window.__dbg.S.format==='classic'),'«Вільна гра» знову з режимами');
+ T.check(await pg.evaluate(()=>!document.getElementById('fmtBox').hidden&&document.getElementById('ocCard').hidden&&window.__dbg.S.format==='classic'),'«Вільна гра» знову класика, без картки клубу');
  // a real season for Karpaty (from the card), records updated
  await playSeason(pg,'oneclub',1,1);
  const S1=await pg.evaluate(()=>({res:!document.getElementById('ocRes').hidden,txt:document.getElementById('ocRes').textContent,me:window.__dbg.ocMine()['karpaty-lviv']}));

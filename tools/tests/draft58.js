@@ -62,7 +62,7 @@ const findPl=(pg,multi)=>pg.evaluate(multi=>{const D=window.__dbg,S=D.S;const bs
  const dd=[];for(let i=0;i<11;i++){await spin(pg);dd.push(await pg.evaluate(()=>window.__dbg.S.wheel.y));await (await pg.$('#squad .pl:not([disabled])')).click();await pg.waitForTimeout(60);const pb=await pg.$('#squad .plpos button');if(pb)await pb.click();}
  check(await pg.evaluate(()=>window.__dbg.eraOf()==='all')&&dd.some(y=>y<2010),'епохи: виклик дня без епохи ('+dd.join(',')+')');
  // ---- position buttons: classic, all years, 4-4-2
- await home(pg);await pg.click('#freeOpen');await pg.click('#eras button[data-era="all"]');await pg.click('#formats .opt[data-fmt="classic"]');await pg.click('#formations .opt:nth-child(1)');await pg.click('#startBtn');
+ await home(pg);await pg.click('#freeOpen');await pg.click('#eras button[data-era="all"]');await pg.evaluate(()=>window.__dbg.setFmt('classic'));await pg.click('#formations .opt:nth-child(1)');await pg.click('#startBtn');
  let shot=false,tested=0,kb=false,single=false;
  for(let k=0;k<11&&!(tested>=2&&kb&&single);k++){
   await spin(pg);

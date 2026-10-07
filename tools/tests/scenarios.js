@@ -15,7 +15,7 @@ const fail=[];const check=(ok,msg)=>{if(!ok)fail.push(msg);};
  await pg.reload();await pg.waitForTimeout(500);check(await pg.evaluate(()=>document.documentElement.dataset.theme)==='light','тема не запам\'яталась');
  await pg.screenshot({path:path.join(OUT,'home_light.png')});await pg.click('#themeBtn');
  // show-ratings toggle: off by default, can be enabled mid-draft, doesn't change order, persists to the next spin
- await pg.evaluate(()=>document.getElementById('homeBtn').click());await pg.click('#freeOpen');await pg.click('#formats .opt[data-fmt="classic"]');await pg.click('#modes .opt:nth-child(1)');await pg.click('#startBtn');
+ await pg.evaluate(()=>document.getElementById('homeBtn').click());await pg.click('#freeOpen');await pg.evaluate(()=>window.__dbg.setFmt('classic'));await pg.click('#modes .opt:nth-child(1)');await pg.click('#startBtn');
  await pg.click('#spinBtn');await pg.waitForSelector('#squad .pl:not([disabled])',{timeout:8000});
  const before=await pg.evaluate(()=>({vis:!document.getElementById('showRRow').hidden,on:document.getElementById('showR').checked,names:[...document.querySelectorAll('#squad .pl .nm')].map(e=>e.textContent),rt:[...document.querySelectorAll('#squad .pl .rt')].map(e=>e.textContent).join('')}));
  check(before.vis&&!before.on&&before.rt==='','рейтинги: галочка не видна або рейтинги вже показані');
@@ -31,7 +31,7 @@ const fail=[];const check=(ok,msg)=>{if(!ok)fail.push(msg);};
  check(await pg.evaluate(()=>{document.getElementById('homeBtn').click();document.getElementById('freeOpen').click();return [...document.querySelectorAll('#modes .opt b')].map(b=>b.textContent).join(',');})==='Звичайний,Складний','режими: у виборі не лише «Звичайний» і «Складний»');
  await pickFmt(pg,'anti');await pg.click('#startBtn');await pg.click('#spinBtn');await pg.waitForSelector('#squad .pl:not([disabled])',{timeout:8000});
  check(await pg.evaluate(()=>document.getElementById('showRRow').hidden),'рейтинги: галочка є в антисезоні');
- await pg.evaluate(()=>document.getElementById('homeBtn').click());await pg.click('#freeOpen');await pg.click('#formats .opt[data-fmt="classic"]');await pg.click('#modes .opt:nth-child(1)');
+ await pg.evaluate(()=>document.getElementById('homeBtn').click());await pg.click('#freeOpen');await pg.evaluate(()=>window.__dbg.setFmt('classic'));await pg.click('#modes .opt:nth-child(1)');
  // swap-players: without the button a tap on a player does nothing; with it, target slots are highlighted
  await pg.click('#startBtn');
  for(let i=0;i<3;i++){await pg.click('#spinBtn');await pg.waitForSelector('#squad .pl:not([disabled])',{timeout:8000});const btn=await pg.$('.pl:not([disabled])');await btn.click();await pg.waitForTimeout(80);const pick=await pg.$('#pitch .slot.target');if(pick){await pick.click();await pg.waitForTimeout(60);}}

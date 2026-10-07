@@ -19,7 +19,7 @@ step "сервер завантажується (як на Vercel)" node tools/t
 # fast non-browser tests: always run
 for t in cheat card_api err_digest player_texts feedback board_pin cron_summary channel notify code_comments; do step "тест $t" node "tools/tests/$t.js"; done
 # browser tests are independent, so JOBS run in parallel (default 3), longest first; QUICK=1 runs only a short set
-UI="determinism scenarios fl63 modes chal tro v064 fl61 leagueui v060 player_page v39 news draft58 pitch_layout f5test2 emoji_layout nav_back err_report long_names tg_swipes font_tour icon_align live_height oneclub72"
+UI="determinism scenarios fl63 modes chal tro v064 fl61 leagueui v060 player_page v39 news draft58 pitch_layout f5test2 emoji_layout nav_back err_report long_names tg_swipes font_tour icon_align live_height oneclub72 v073"
 [ -n "$QUICK" ] && UI="draft58 v064 emoji_layout nav_back"
 [ -n "$FAST" ] && UI="determinism scenarios $(echo " $ONLY " | sed 's/ sql / /g')"
 JOBS=${JOBS:-3}; declare -A T0

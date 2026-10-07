@@ -9,7 +9,7 @@ const clubsOf=pg=>pg.evaluate(()=>[...new Set(window.__dbg.S.slots.map(s=>s.play
 (async()=>{const T=checker('modes');const {b,pg,errs}=await openPage();
  // modes: classic, season pick and anti-season only; classic and daily opponents are the Legends League, anti-season faces cult clubs
  await pg.click('#freeOpen');
- T.check(await pg.evaluate(()=>[...document.querySelectorAll('#formats .opt')].map(o=>o.dataset.fmt).join()==='classic,pick,oneclub'),'режими: класика, вибір сезону, один клуб (0.67; антисезон сховано, грається через __dbg)');
+ T.check(await pg.evaluate(()=>!document.getElementById('formats')&&document.getElementById('setTitle').textContent==='Класика'),'налаштування: плиток режимів немає, заголовок — «Класика» (режим обрано на головній)');
  T.check(await pg.evaluate(()=>{const D=window.__dbg,o=[];for(const f of ['classic','anti']){D.setFmt(f);o.push(D.oppYear());}D.setFmt('classic');return o.join()===D.LEAGUE_LEGENDS+','+D.LEAGUE_CULT&&D.DAILY.year===D.LEAGUE_LEGENDS&&D.chalNewGame(5).year===D.LEAGUE_LEGENDS;}),'суперники: класика/день/виклик — легенди, антисезон — культові');
  // classic: live view
  await free(pg,1);await draft(pg);await pg.click('#simBtn');await pg.waitForSelector('#live:not([hidden])',{timeout:15000});await pg.waitForTimeout(2000);
