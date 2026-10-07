@@ -926,7 +926,7 @@ section>h3:first-child,.box h3:first-of-type,#viewBody>h3:first-child,#viewBody>
   <div class="acts"><button class="ft-send" id="fbSend" type="submit">Надіслати</button><button class="ft-cancel" id="fbCancel" type="button">Скасувати</button></div></form>
 <div class="ft-done" id="fbDone" hidden><b>✓</b><span>Дякуємо! Прочитаємо найближчим часом</span></div>
 <div class="ft-pills"><button class="ft-pill" id="fbBtn" type="button">✉️ Відгук і баги</button><a class="ft-pill" id="ftBot" href="https://t.me/upl30_bot" target="_blank" rel="noopener"><!--i:telegram-->Telegram-бот</a></div>
-<div class="foot ft-small"><a href="#" id="newsBtn">Що нового у версії 0.73<b id="newsDot" hidden></b></a><span>·</span><a href="privacy.html">Конфіденційність</a></div>
+<div class="foot ft-small"><a href="#" id="newsBtn">Що нового у версії 0.73.1<b id="newsDot" hidden></b></a><span>·</span><a href="privacy.html">Конфіденційність</a></div>
 <div class="foot ft-copy">© 2026 30-0 УПЛ · неофіційний фан-проєкт <a href="#" id="themeBtn" class="thm" role="switch" aria-checked="false" aria-label="Світла тема"></a></div>
 <div class="ft-cred">Шрифт KyivType Sans © Дмитро Растворцев (айдентика Києва)<br>Іконки: Material Design Icons (Apache 2.0), логотип Telegram — Font Awesome Free (CC BY 4.0)</div>
 </footer>
@@ -1734,7 +1734,6 @@ if(SB_ENV==='test'){const b=document.getElementById('homeBtn');if(b)b.insertAdja
 function deviceId(){let id=lsGet("upl30_device");if(!id){try{id=crypto.randomUUID();}catch(e){const h=[...crypto.getRandomValues(new Uint8Array(16))].map(b=>b.toString(16).padStart(2,'0')).join('');id=`${h.slice(0,8)}-${h.slice(8,12)}-4${h.slice(13,16)}-a${h.slice(17,20)}-${h.slice(20,32)}`;}lsSet("upl30_device",id);}return id;}
 async function sbTop(day){const q=sel=>`${SB_URL}/rest/v1/daily_results?apikey=${SB_KEY}&day=eq.${day}&verified=is.true&select=${sel}&order=pts.desc,ga.asc,gf.desc&limit=500`;   // only results the server recorded from a verified season
   let r=await fetch(q('*,'+PL_SEL[0]));if(!r.ok)r=await fetch(q('*,'+PL_SEL[1]));if(!r.ok)r=await fetch(q('*'));if(!r.ok){throw new Error('GET '+r.status+' '+(await r.text()).slice(0,200));}return r.json();}
-async function sbInsert(row){const r=await fetch(`${SB_URL}/rest/v1/daily_results?apikey=${SB_KEY}`,{method:"POST",headers:{apikey:SB_KEY,"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify(row)});if(!r.ok){const t=await r.text();const e=new Error(r.status+" "+t);e.status=r.status;e.body=t;throw e;}}
 const VERSION=(document.getElementById('newsBtn').textContent.match(/версі[яї] ([\d.]+)/)||[])[1]||'?';
 window.__errCtx=()=>({version:VERSION,screen:SEC_NAME[CUR_SEC],tg:TG&&TG.initData?`${TG.platform||'?'} ${TG.version||''}`:null,player:PLAYER&&PLAYER.public_id||null});   // for error reports (first <script>)
 // ---------- Telegram Mini App: when opened inside Telegram take the profile name, theme and the Send to chat button
@@ -1771,7 +1770,6 @@ function tgInit(){
   }catch(e){TG=null;}
 }
 if(ONLINE&&/tgWebApp/.test(location.hash+location.search)){const sc=document.createElement('script');sc.src='https://telegram.org/js/telegram-web-app.js';sc.onload=tgInit;document.head.appendChild(sc);}
-function tgFields(){return TGU?{tg_user_id:TGU.id,tg_name:([TGU.first_name,TGU.last_name].filter(Boolean).join(' ')||TGU.username||'').slice(0,64)}:{};}
 // share card: in Telegram the bot prepares a message with the card (api/card, share) and the chat picker opens;
 // outside Telegram: system share sheet with the card file; fallback: text via t.me/share
 function shareTextLink(){const text=S.result?shareTextOf(S.result,true,true):document.getElementById('shareText').value;   // no squares: those are for the card
@@ -1801,7 +1799,6 @@ document.getElementById('tgShareBtn').onclick=async()=>{const b=document.getElem
   if(canFile){CARD_CANVAS.toBlob(bl=>{const f=new File([bl],'30-0-upl.png',{type:'image/png'});navigator.share({files:[f],text:shareTextOf(S.result,false,true)}).catch(e=>{if(e&&e.name!=='AbortError')shareTextLink();});},'image/png');return;}
   if(inTg)return shareTextLink();
   showCard();};
-async function sbPost(table,row){const r=await fetch(`${SB_URL}/rest/v1/${table}?apikey=${SB_KEY}`,{method:"POST",headers:{apikey:SB_KEY,"Content-Type":"application/json",Prefer:"return=representation"},body:JSON.stringify(row)});if(!r.ok)throw new Error(r.status+' '+(await r.text()).slice(0,200));return r.json();}
 async function sbGet(q){const r=await fetch(`${SB_URL}/rest/v1/${q}${q.includes('?')?'&':'?'}apikey=${SB_KEY}`);if(!r.ok)throw new Error('GET '+r.status);return r.json();}
 // ---------- log: every played season is written to the seasons table (squad, stats, table, seed)
 function logSeason(r){
@@ -1815,10 +1812,8 @@ function logSeason(r){
   if(eraOf()!=='all')row.era=eraOf();   // era only when not All years (seasons.era)
   if(S.showREver)row.show_r=true;   // ratings were enabled during the draft: tables show a badge (seasons.show_r)
   if(S.league)row.fl_id=S.league.id;   // friend league attempt is credited by the server after verification
-  // season is saved and verified by the server (/api/save, device secret); fallback: direct insert
-  saveApi('season',{row}).then(j=>{r.rowId=j.id;verifiedUi(r,j);flAfterSave(r,j);}).catch(e=>{if(!e.legacy){if(e.status===429){r.slow=e.message;verifiedUi(r,{});}console.warn('save',e);return;}
-    Object.assign(row,tgFields());const ok=rows=>{if(rows&&rows[0])r.rowId=rows[0].id;if(r.rowId&&r.seedId)verifySeason(r);};
-    const tryPost=(n)=>sbPost('seasons',row).then(ok).catch(e=>{const m=String(e&&e.message).match(/'([a-z_]+)' column/);if(m&&n>0&&m[1] in row){delete row[m[1]];if(m[1]==='tg_user_id')delete row.tg_name;tryPost(n-1);}else console.warn('log',e);});tryPost(6);});
+  // season is saved and verified by the server (/api/save, device secret)
+  saveApi('season',{row}).then(j=>{r.rowId=j.id;verifiedUi(r,j);flAfterSave(r,j);}).catch(e=>{if(e.status===429){r.slow=e.message;verifiedUi(r,{});}console.warn('save',e);});
 }
 // server recomputes the season and marks it verified
 async function verifySeason(r){
@@ -1989,17 +1984,9 @@ document.getElementById('lbSend').onclick=async()=>{
   const res=lsGet("upl30_daily_"+DAY);if(!res){msg.textContent='Спершу зіграй офіційну спробу.';return;}
   const r=S.result;const btn=document.getElementById('lbSend');btn.disabled=true;msg.textContent='Надсилаю…';
   const done=t=>{nickSet(nick);lsSet("upl30_sent_"+DAY,true);document.getElementById('lbForm').hidden=true;msg.textContent=t;loadLb(document.getElementById('lbTable'));};
-  // daily result is written to the table only by the server, from a verified season (nobody can write into another profile). The button now only saves the name.
-  if(!SAVE_LEGACY){nickSet(nick);if(r&&r.rowId&&r.verified==null&&r.seedId)await verifySeason(r);
-    if(r&&r.verified===true)done('Готово! Ти в таблиці.');else msg.textContent='Ім\'я збережено. Результат з\'явиться в таблиці, щойно сервер його перевірить.';
-    btn.disabled=false;return;}
-  try{const row={day:DAY,device_id:deviceId(),nickname:nick,w:res.W,d:res.D,l:res.L,pts:res.pts,place:res.place,gf:res.gf??r.gf,ga:res.ga??r.ga,formation:DAILY.formation,xp:res.xp??null,
-      xi:S.slots.map(s=>[s.player.name,s.slot,s.player.r,s.player.club,s.player.y])};
-    Object.assign(row,tgFields());
-    try{await sbInsert(row);}catch(e1){if(e1.status===400&&/tg_|xp/.test(e1.body||'')){delete row.tg_user_id;delete row.tg_name;if(/xp/.test(e1.body||''))delete row.xp;await sbInsert(row);}else throw e1;}
-    if(r&&r.rowId&&r.seedId)verifySeason(r);done('Готово! Ти в таблиці.');}
-  catch(e){if(e.status===409)done('Твій результат уже в таблиці дня.');
-    else{msg.textContent='Не вдалося надіслати. Спробуй ще раз. ('+String(e&&e.message||e).slice(0,220)+')';}}
+  // daily result is written to the table only by the server, from a verified season (nobody can write into another profile). The button only saves the name.
+  nickSet(nick);if(r&&r.rowId&&r.verified==null&&r.seedId)await verifySeason(r);
+  if(r&&r.verified===true)done('Готово! Ти в таблиці.');else msg.textContent='Ім\'я збережено. Результат з\'явиться в таблиці, щойно сервер його перевірить.';
   btn.disabled=false;};
 // ---------- share
 function gridOf(r){const m={W:"🟩",D:"🟨",L:"🟥"};let s="";r.log.forEach((x,i)=>{s+=m[x.res];if(i%10===9&&i<r.log.length-1)s+="\n";});return s;}
@@ -2093,7 +2080,8 @@ function drawCard(r){   // card in site style: UPL navy background, UPL.TV gradi
 }
 document.getElementById('chalOpen').onclick=()=>{const b=document.getElementById('chalBox'),t=document.getElementById('chalOpen');b.hidden=!b.hidden;t.classList.toggle('on',!b.hidden);if(!b.hidden){b.scrollIntoView({behavior:'smooth',block:'center'});const n=document.getElementById('chalName');if(n&&!n.hidden&&!n.value)n.focus();}};
 // ---------- What's new: short player-friendly notes on the latest version (technical log: CHANGELOG.md)
-const WHATSNEW={v:'0.73',date:'07.10.2026',items:[
+const WHATSNEW={v:'0.73.1',date:'07.10.2026',items:[
+  ['lock','Результати — лише через сервер','Сезони, трофеї й виклики тепер записує тільки сервер, після перевірки. Чужий результат не підробити.'],
   ['soccer-field','Драфт на телефоні','Після колеса екран сам прокручується до списку гравців. Угорі з\'являється смужка зі складом: скільки з 11 набрано й які позиції ще вільні. «Поле ▴» повертає до поля.'],
   ['trophy','Простіший підсумок сезону','Велике місце в таблиці, вердикт і підказка поруч — без накладань. Атака, оборона, xG і везіння тепер у «Статистика сезону».'],
   ['soccer','Найкращий бомбардир','Замість довгого списку — найкращий бомбардир сезону та «Гравець сезону». Це можуть бути різні люди.'],

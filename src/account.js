@@ -118,15 +118,12 @@ async function playerSync(){
     if(/28000|device secret/.test(String(e&&e.message))&&!playerSync.rot){playerSync.rot=1;lsSet("upl30_device",null);lsSet("upl30_dsecret",null);lsSet("upl30_player",null);PLAYER=null;return playerSync();}
     console.warn('player',e);}
 }
-// ---------- RESULT WRITES: seasons, trophies, challenges are written by the server (/api/save) after device-secret check,
-// so nobody can write into another player's history. Server unavailable / legacy schema (503, fallback): write directly.
-let SAVE_LEGACY=false;
+// ---------- RESULT WRITES: seasons, trophies, challenges are written only by the server (/api/save) after the device-secret check,
+// so nobody can write into another player's history (direct inserts are closed in the DB: sql/v054_close_writes.sql).
 async function saveApi(kind,payload){
-  const legacy=()=>Object.assign(new Error('legacy'),{legacy:true});
-  if(!ONLINE)throw new Error('offline');if(SAVE_LEGACY)throw legacy();
-  let r;try{r=await _fetch('/api/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({kind,device_id:deviceId(),secret:devSecret(),tg_init:(TG&&TG.initData)||undefined,...payload})});}catch(e){throw legacy();}
+  if(!ONLINE)throw new Error('offline');
+  const r=await _fetch('/api/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({kind,device_id:deviceId(),secret:devSecret(),tg_init:(TG&&TG.initData)||undefined,...payload})});
   const j=await r.json().catch(()=>({}));
-  if(r.status===404||j.fallback){SAVE_LEGACY=true;throw legacy();}
   if(!r.ok)throw Object.assign(new Error(j.error||('HTTP '+r.status)),{status:r.status});
   return j;}
 // ---------- NAME (DECISIONS item 2): unique, lowercase Latin only: a-z, digits, "_" and ".", 3-20 chars, at least one letter,

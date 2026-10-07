@@ -193,11 +193,8 @@ function trAwardF5(lid,res,team){const s=trStore();s.f5=s.f5||[];if(s.f5.include
   lsSet("upl30_tr",s);if(fresh.length)trSync(fresh);renderTrBtn();if(typeof SESSION!=='undefined'&&SESSION)acctPush();return {got,fresh};}
 const trDef=id=>{if(id.startsWith('ms')){const m=MILESTONES.find(x=>'ms'+x[0]===id);return m&&{id,i:m[1],n:m[2],d:`Зіграй ${m[0]} ${m[0]===1?'сезон':'сезонів'}`,cat:"milestone"};}return TROPHIES.find(t=>t.id===id);};
 // online: first unlock -> trophies table (for "X% of players")
-// server writes (/api/save, device secret); fallback: direct insert for legacy API
-function trSync(ids){if(!ONLINE)return;saveApi('trophies',{ids}).catch(e=>{if(e.legacy)trSyncDirect(ids);});}
-function trSyncDirect(ids){const rows=ids.map(t=>({device_id:deviceId(),trophy:t,...(typeof tgFields==='function'?tgFields():{})}));
-  fetch(`${SB_URL}/rest/v1/trophies?apikey=${SB_KEY}&on_conflict=device_id,trophy`,{method:'POST',headers:{apikey:SB_KEY,'Content-Type':'application/json',Prefer:'resolution=ignore-duplicates,return=minimal'},body:JSON.stringify(rows)})
-    .then(r=>{if(!r.ok&&rows[0].tg_user_id!=null){rows.forEach(x=>{delete x.tg_user_id;delete x.tg_name;});return fetch(`${SB_URL}/rest/v1/trophies?apikey=${SB_KEY}&on_conflict=device_id,trophy`,{method:'POST',headers:{apikey:SB_KEY,'Content-Type':'application/json',Prefer:'resolution=ignore-duplicates,return=minimal'},body:JSON.stringify(rows)});}}).catch(()=>{});}
+// server writes (/api/save, device secret)
+function trSync(ids){if(!ONLINE)return;saveApi('trophies',{ids}).catch(e=>console.warn('trophies',e));}
 let TR_PCT=null;
 async function trLoadPct(){if(!ONLINE)return null;try{const r=await fetch(`${SB_URL}/rest/v1/rpc/trophy_stats?apikey=${SB_KEY}`,{method:'POST',headers:{apikey:SB_KEY,'Content-Type':'application/json'},body:'{}'});if(!r.ok)return null;TR_PCT=await r.json();return TR_PCT;}catch(e){return null;}}
 // one-off retroactive awarding from this device's log

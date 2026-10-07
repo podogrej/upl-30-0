@@ -3,7 +3,7 @@
 //  new - DB with players.sql: player name, season with player_id/competition/data_version, server verification, 11x11 board, rename;
 //  old - DB before players.sql (new site before SQL is applied): game still works, season saved without new columns, board via fallback query.
 // SQL part (device secret, triggers, RLS, re-run) is covered by real Postgres: bash tools/tests/setup.sh
-// Run from repo root: node tools/tests/v39.js [new|old|both] (default both)
+// Run from repo root: node tools/tests/v39.js [new] (default new; 'old' relied on the direct-write fallback removed in 0.73.1)
 const path=require('path'),fs=require('fs');const {ROOT,launch,makeDB,callApi,openSite,draftSeason,checker}=require('./_site.js');
 const openSet=async p=>{if(!(await p.$('#ppSheet'))){await p.click('#ppRowName');await p.waitForTimeout(150);}};   // Settings are rows; the name is edited in a bottom sheet
 const setMsg=p=>p.evaluate(()=>(document.getElementById('ppNameMsg')||document.getElementById('ppSetMsg')||{}).textContent||'');   // error shows in the sheet, success under the settings
@@ -78,6 +78,6 @@ async function run(MODE,b){const T=checker('v39 '+MODE);const v39=MODE==='new';c
  }
  T.check(!errs.length,'помилок на сторінці немає '+errs.join(' | '));
  return T.done();}
-(async()=>{const want=process.argv[2]||'both';const b=await launch();let bad=0;
- for(const m of ['new','old'])if(want===m||want==='both')bad+=await run(m,b);
+(async()=>{const want=process.argv[2]||'new';const b=await launch();let bad=0;
+ for(const m of ['new','old'])if(want===m||want==='both')bad+=await run(m,b);   // 'old' (DB without SQL 0.53, direct-write fallback) is obsolete since 0.73.1: not run by default
  await b.close();console.log(bad?'v39: ПРОБЛЕМИ':'v39: УСЕ ГАРАЗД');process.exit(bad?1:0);})();
