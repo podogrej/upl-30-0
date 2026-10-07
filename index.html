@@ -284,6 +284,31 @@ button.ghost.big0{padding:var(--sp-3) var(--sp-card);font-size:var(--fs-body);fo
 #squad.rin .pl .rt{animation:rtin var(--dur-2) var(--ease-out) both}@keyframes rtin{from{opacity:0}to{opacity:1}}   /* ratings fade in softly, no jump */
 section.enter{animation:secin var(--dur-3) var(--ease-out) both}section.back{animation:secback var(--dur-3) var(--ease-out) both}
 @keyframes secin{from{opacity:0;transform:translateX(24px) scale(.992)}to{opacity:1;transform:none}}@keyframes secback{from{opacity:0;transform:translateX(-24px) scale(.992)}to{opacity:1;transform:none}}
+/* view transitions: JS adds html.vt + vt-fwd/vt-back and shared names for one transition only; reduced motion never starts one */
+html.vt::view-transition{background:var(--bg)}
+html.vt::view-transition-group(root){animation-duration:var(--dur-3)}
+html.vt::view-transition-old(root),html.vt::view-transition-new(root){mix-blend-mode:normal}
+html.vt-fwd::view-transition-old(root),html.vt-back::view-transition-old(root){animation:vtout var(--dur-2) var(--ease-out) both}
+html.vt-fwd::view-transition-new(root){animation:vtup var(--dur-3) var(--spring) both}
+html.vt-back::view-transition-new(root){animation:vtleft var(--dur-3) var(--ease-out) both}
+@keyframes vtout{to{opacity:0;transform:scale(.98)}}@keyframes vtup{from{opacity:0;transform:translateY(20px)}}@keyframes vtleft{from{opacity:0;transform:translateX(-24px)}}
+html.vt header.top{view-transition-name:vt-hdr}
+html.vt::view-transition-group(vt-hdr){animation-duration:0s}html.vt::view-transition-old(vt-hdr){display:none}html.vt::view-transition-new(vt-hdr){animation:none}
+html.vt::view-transition-group(vt-play),html.vt::view-transition-group(vt-rec),html.vt::view-transition-group(vt-pts){animation-duration:var(--dur-3);animation-timing-function:var(--spring);z-index:2}
+html.vt::view-transition-old(vt-play),html.vt::view-transition-new(vt-play),html.vt::view-transition-old(vt-rec),html.vt::view-transition-new(vt-rec),html.vt::view-transition-old(vt-pts),html.vt::view-transition-new(vt-pts){width:100%;height:100%;object-fit:contain;mix-blend-mode:normal}
+html.vt::view-transition-old(vt-play){object-fit:fill}html.vt::view-transition-new(vt-play){object-fit:fill}
+html.vt::view-transition-old(vt-play),html.vt::view-transition-old(vt-rec),html.vt::view-transition-old(vt-pts){animation:vtfade var(--dur-2) linear reverse both}
+html.vt::view-transition-new(vt-play),html.vt::view-transition-new(vt-rec),html.vt::view-transition-new(vt-pts){animation:vtfade var(--dur-2) linear var(--dur-1) both}
+@keyframes vtfade{from{opacity:0}to{opacity:1}}
+/* draft entry: slots from GK to forwards, spin button last, verdict chip springs in */
+#s2.wave{--wb:140ms}
+#s2.wave #pitch .slot{animation:slotin var(--dur-2) var(--spring) calc(var(--wb) + var(--wi,0) * 28ms) backwards}
+#s2.wave #spinZone{animation:vtrise var(--dur-3) var(--spring) calc(var(--wb) + 11 * 28ms) backwards}
+#s2.wave .spin{animation:breathe var(--dur-4) var(--ease-out) calc(var(--wb) + 11 * 28ms + var(--dur-3)) 1}
+@keyframes slotin{from{opacity:0;scale:.6}}@keyframes vtrise{from{opacity:0;translate:0 14px}}@keyframes breathe{40%{scale:1.03}}
+#final.fin-in .verd0 .vc{animation:chipin var(--dur-3) var(--spring) var(--dur-2) backwards}
+@keyframes chipin{from{opacity:0;scale:.6}}
+@media (prefers-reduced-motion:reduce){::view-transition-group(*),::view-transition-old(*),::view-transition-new(*){animation:none!important}#s2.wave #pitch .slot,#s2.wave #spinZone,#s2.wave .spin,#final.fin-in .verd0 .vc{animation:none}}
 
 #moveBtn.on{border-color:var(--amber);color:var(--amber)}
 html.tgfs .overlay.full .sheet-head{padding-top:calc(var(--sp-3) + var(--tg-safe-area-inset-top,0px) + var(--tg-content-safe-area-inset-top,0px))}
@@ -1230,7 +1255,29 @@ let CUR_SEC=1;
 // Clarity (production host only, build.py): current screen tag so recordings and heatmaps can be filtered by screen (Filters -> Custom tags -> screen)
 const SEC_NAME={1:'home',2:'draft',3:'result',4:'setup',5:'five',6:'player',7:'friends',8:'oneclub'};
 function screenTag(name){try{if(window.clarity)window.clarity('set','screen',name);}catch(e){}}
-function go(n,pop){if(n===2)PITCH_VIS=true;if(!pop&&n!==CUR_SEC)navPush(n);const back=n===1&&CUR_SEC!==1;screenTag(SEC_NAME[n]);if(n!==6&&CUR_SEC===6)ppUrl(null);if(n!==7&&CUR_SEC===7)flUrl(null);if(n===8)renderOc();else if(n===4&&S.format==='oneclub')setFmt('oneclub');[1,2,3,4,5,6,7,8].forEach(i=>{const el=document.getElementById('s'+i);const was=el.hidden;el.hidden=(i!==n);if(i===n&&(was||CUR_SEC!==n)){el.classList.remove('enter','back');void el.offsetWidth;el.classList.add(back?'back':'enter');}});CUR_SEC=n;navUi();miniSync();window.scrollTo({top:0});}
+// View transitions: without them (old WebView, reduced motion) swap() runs synchronously; with them it runs in the transition callback,
+// one frame later. A pending swap is flushed by the next go()/vtRun so state never lags behind more than one transition.
+let VT_PEND=null,VT_CUR=null,VT_N=0;
+const vtOK=()=>typeof document.startViewTransition==='function'&&!matchMedia('(prefers-reduced-motion: reduce)').matches&&document.visibilityState==='visible';
+// o.back: reverse direction; o.pairs: [fromElement, toSelector, name] shared elements (names live only for this transition)
+function vtRun(swap,o){o=o||{};if(VT_PEND)VT_PEND();if(VT_CUR){try{VT_CUR.skipTransition();}catch(e){}}
+  if(!vtOK()){swap(false);return;}
+  const de=document.documentElement,pairs=(o.pairs||[]).filter(p=>p[0]&&p[0].getClientRects().length),named=new Set();let done=false;
+  const nm=(el,v)=>{if(!el)return;el.style.viewTransitionName=v;if(v)named.add(el);};
+  const run=()=>{if(done)return;done=true;if(VT_PEND===run)VT_PEND=null;pairs.forEach(p=>nm(p[0],''));swap(true);pairs.forEach(p=>nm(document.querySelector(p[1]),p[2]));};
+  pairs.forEach(p=>nm(p[0],p[2]));de.classList.add('vt',o.back?'vt-back':'vt-fwd');VT_N++;VT_PEND=run;
+  let t;try{t=document.startViewTransition(run);}catch(e){pairs.forEach(p=>nm(p[0],''));de.classList.remove('vt','vt-back','vt-fwd');VT_PEND=null;run();return;}
+  VT_CUR=t;const end=()=>{named.forEach(el=>{el.style.viewTransitionName='';});de.classList.remove('vt','vt-back','vt-fwd');if(VT_CUR===t)VT_CUR=null;};
+  t.ready.catch(()=>{});t.updateCallbackDone.catch(()=>{});t.finished.then(end,end);}
+// draft entry: empty slots appear GK to forwards (28 ms apart), the spin button last
+function draftWave(){if(matchMedia('(prefers-reduced-motion: reduce)').matches||!S.slots)return;const s2=document.getElementById('s2'),ord={GK:0,DF:1,MF:2,FW:3};
+  const idx=S.slots.map((x,i)=>i).sort((a,b)=>ord[GROUP_OF[S.slots[a].slot]]-ord[GROUP_OF[S.slots[b].slot]]||a-b);
+  [...document.querySelectorAll('#pitch .slot')].forEach((el,i)=>el.style.setProperty('--wi',idx.indexOf(i)));
+  s2.classList.remove('wave');void s2.offsetWidth;s2.classList.add('wave');setTimeout(()=>s2.classList.remove('wave'),1400);}
+function go(n,pop,link){if(VT_PEND)VT_PEND();if(n===2)PITCH_VIS=true;if(!pop&&n!==CUR_SEC)navPush(n);const prev=CUR_SEC,back=!!pop||(n===1&&prev!==1);screenTag(SEC_NAME[n]);if(n!==6&&prev===6)ppUrl(null);if(n!==7&&prev===7)flUrl(null);if(n===8)renderOc();else if(n===4&&S.format==='oneclub')setFmt('oneclub');
+  CUR_SEC=n;
+  vtRun(vt=>{[1,2,3,4,5,6,7,8].forEach(i=>{const el=document.getElementById('s'+i);const was=el.hidden;el.hidden=(i!==n);if(i===n&&(was||prev!==n)){el.classList.remove('enter','back');if(!vt){void el.offsetWidth;el.classList.add(back?'back':'enter');}}});navUi();miniSync();window.scrollTo({top:0});if(n===2&&link)draftWave();},
+    {back,pairs:link&&n===2&&prev!==2?[[document.querySelector(link),'#s2 .dtop .bar','vt-play']]:[]});}
 // Back button + home icon. Every screen change is a browser history entry,
 // so swipe, browser back and Telegram BackButton go to the previous screen. Season summary replaces the draft (back goes to settings).
 let NAV_I=0,NAV_FREE=false;   // NAV_I: history entry index of this tab (0 = first screen); NAV_FREE: leaving the draft already confirmed
@@ -1253,9 +1300,9 @@ addEventListener('popstate',e=>{const sd=e.state&&e.state.sheet||0;
 try{history.replaceState({sec:1,i:0},'',location.href);}catch(e){}
 screenTag('home');   // start screen (others via go())
 document.getElementById('dailyBtn').onclick=()=>{S.league=null;S.daily={practice:!!lsGet("upl30_daily_"+DAY)};S.chal=null;S.challenge=null;setFmt('classic');DAILY.ptr=0;S.formation=DAILY.formation;S.mode="daily";S.result=null;
-  S.slots=newSlots(S.formation);S.taken=new Set();S.wheel=null;S.rerolls=MODES.daily.rerolls;S.showR=false;S.moveMode=false;document.getElementById('modeLabel').textContent=`Драфт дня · ${S.formation}`;renderDraft();go(2);};
+  S.slots=newSlots(S.formation);S.taken=new Set();S.wheel=null;S.rerolls=MODES.daily.rerolls;S.showR=false;S.moveMode=false;document.getElementById('modeLabel').textContent=`Драфт дня · ${S.formation}`;renderDraft();go(2,false,'#dailyBtn');};
 renderDailyCard();
-document.getElementById('startBtn').onclick=()=>{if(S.format==='oneclub'&&!S.club){openOc();return;}S.league=null;S.daily=null;S.result=null;S.challenge=null;S.chal=S.format==='classic'&&S.era==='all'&&!S.pickMode?chalNewGame():null;S.mode=S.pickMode?'pick':S.freeMode||'normal';if(S.format==='anti')S.mode='hardcore';S.slots=newSlots(S.formation);S.taken=new Set();S.wheel=null;S.rerolls=MODES[S.mode].rerolls;S.showR=false;S.moveMode=false;document.getElementById('modeLabel').textContent=fmtLabel()+S.formation+" · "+modeName();renderDraft();go(2);};
+document.getElementById('startBtn').onclick=()=>{if(S.format==='oneclub'&&!S.club){openOc();return;}S.league=null;S.daily=null;S.result=null;S.challenge=null;S.chal=S.format==='classic'&&S.era==='all'&&!S.pickMode?chalNewGame():null;S.mode=S.pickMode?'pick':S.freeMode||'normal';if(S.format==='anti')S.mode='hardcore';S.slots=newSlots(S.formation);S.taken=new Set();S.wheel=null;S.rerolls=MODES[S.mode].rerolls;S.showR=false;S.moveMode=false;document.getElementById('modeLabel').textContent=fmtLabel()+S.formation+" · "+modeName();renderDraft();go(2,false,'#startBtn');};
 document.getElementById('restartBtn').onclick=()=>{if(S.league){openLeague(S.league.id);return;}go(S.daily||S.challenge?1:4);};
 document.getElementById('homeBtn').onclick=()=>askLeave(()=>go(1));document.getElementById('backBtn').onclick=navBack;
 document.getElementById('freeOpen').onclick=()=>{setFmt(S.format==='oneclub'||S.pickMode?'classic':S.format);go(4);};   // resync the setup screen with S (challenge sets S.format directly); season pick and one club have their own entries
@@ -2151,8 +2198,11 @@ function tickReveal(){
 }
 // final result: success for the top places, warning for relegation, nothing in between
 function seasonHaptic(r){if(S.format==='anti')return;haptic(r.place<=ZONES.co?'success':r.place>16-ZONES.rel?'warning':null);}
-function finishReveal(){clearInterval(REV.t);renderNewTro(REV.r);renderOcRes(REV.r);acctNudge(REV.r);document.getElementById('live').hidden=true;document.getElementById('final').hidden=false;window.scrollTo({top:0});
-  if(!REV.done){REV.done=true;seasonHaptic(REV.r);countUp(document.querySelectorAll('#recTiles i, #recTiles b.hot'));champModal(REV.r);if(ONLINE)setTimeout(()=>cardPrep(REV.r),600);}}
+function finishReveal(){const R=REV;clearInterval(R.t);if(R.fin)return;R.fin=true;const $=id=>document.getElementById(id);
+  // W-D-L and points glide from the live header to the summary tiles
+  vtRun(()=>{renderNewTro(R.r);renderOcRes(R.r);acctNudge(R.r);$('live').hidden=true;$('final').hidden=false;window.scrollTo({top:0});
+    if(!R.done){R.done=true;const fin=$('final');fin.classList.add('fin-in');setTimeout(()=>fin.classList.remove('fin-in'),1600);seasonHaptic(R.r);countUp(document.querySelectorAll('#placeBig, #recTiles i, #recTiles b.hot'));champModal(R.r);if(ONLINE)setTimeout(()=>cardPrep(R.r),600);}},
+    {pairs:[[$('lvRec'),'#recTiles>div:first-child>b','vt-rec'],[$('lvPts'),'#recTiles b.hot','vt-pts']]});}
 document.getElementById('skipBtn').onclick=()=>finishReveal();
 document.querySelectorAll('#tabs .tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('#tabs .tab').forEach(x=>x.classList.toggle('on',x===b));['t1','t2'].forEach(id=>document.getElementById(id).hidden=id!==b.dataset.tab);});
 document.getElementById('againBtn').onclick=()=>{S.result=null;if(S.league){openLeague(S.league.id);return;}go(S.daily||S.challenge?1:4);};
@@ -3427,9 +3477,9 @@ function drawCard(r){   // card in site style: UPL navy background, UPL.TV gradi
 document.getElementById('chalOpen').onclick=()=>{const b=document.getElementById('chalBox'),t=document.getElementById('chalOpen');b.hidden=!b.hidden;t.classList.toggle('on',!b.hidden);if(!b.hidden){b.scrollIntoView({behavior:'smooth',block:'center'});const n=document.getElementById('chalName');if(n&&!n.hidden&&!n.value)n.focus();}};
 // ---------- What's new: short player-friendly notes on the latest version (technical log: CHANGELOG.md)
 const WHATSNEW={v:'0.76',date:'07.10.2026',items:[
-  ['arrow-down-bold','Вікна — шторки знизу','Акаунт, новини, ліги й зміна імені виїжджають знизу з розмитим фоном. Закрити можна свайпом вниз, тапом поза вікном або «назад».'],
+  ['arrow-down-bold','Вікна — шторки знизу','Акаунт, новини, ліги й зміна імені виїжджають знизу з розмитим фоном. Закрити можна свайпом вниз, тапом поза вікном або «назад». На iPad — картка посередині.'],
   ['timer-sand','Заглушки замість очікування','Поки таблиці, ліги й сторінки гравців вантажаться, на їхньому місці — м’які заглушки тієї ж форми, тож нічого не стрибає.'],
-  ['check-decagram','Для iPad і з «Зменшити рух»','На широкому екрані вікно — картка посередині. Якщо в системі ввімкнено «Зменшити рух», вікна з’являються без анімації.']]};
+  ['swap-horizontal','Екрани перетікають','Старий екран м’яко відходить, новий виїжджає, а кнопка драфту перетікає в смугу прогресу. З «Зменшити рух» усе без анімації.']]};
 function openNews(){screenTag('news');const box=document.getElementById('viewBox');document.getElementById('viewTitle').textContent=`Що нового · версія ${WHATSNEW.v}`;
   document.getElementById('viewBody').innerHTML=`<div class="news">${WHATSNEW.items.map(([e,h,d])=>`<div class="ni">${ic(e,'lg')}<div><b>${esc(h)}</b><p>${esc(d)}</p></div></div>`).join('')}</div>`;
   box.hidden=false;lsSet('upl30_news_seen',WHATSNEW.v);document.getElementById('newsDot').hidden=true;}
@@ -3679,7 +3729,7 @@ function f5Render(){
 
 document.getElementById('f5Open').onclick=f5Start;
 // audit P2-5: only what tests use; drawCard for card checks, simulate/rerun for fast determinism
-window.__dbg={loadLb,haptic,seasonHaptic,renderNewTro,TROPHIES,CLUB_REC,ocMine,ocAfter,renderOc,renderOcRes,openOc,acctMerge,get BEST(){return BEST;},ic,seasonLabel,boardPrefetch,boardStale,BOARD_FROM,setFmt,leagueLoad,boardHtml,oppYear,champModal,drawCard,chalNewGame,DAILY,LEAGUE_CULT,LEAGUE_LEGENDS,openTrophies,renderNewTro,bestPerPlayer,renderWheel,posOpts,eraOf,ptsWord,viewHtml,renderPitch,pitchHtml,f5Pitch,F5_FORMS,cardName,clubShort,simulate,shareTextOf,trCtxNow,trAward,trStore,FORMATIONS,GROUP_OF,DATA,TROPHIES,trEval,PERSON,effRating,get S(){return S;},rerun(seed,year,xi){rnd=mulberry32(seed);const r=simulate(xi||S.slots.map(s=>s.player),MODES[S.mode],year);rnd=Math.random;return {W:r.W,D:r.D,L:r.L,gf:r.gf,ga:r.ga,place:r.place};}};
+window.__dbg={loadLb,haptic,seasonHaptic,renderNewTro,TROPHIES,CLUB_REC,ocMine,ocAfter,renderOc,renderOcRes,openOc,acctMerge,get BEST(){return BEST;},get VT_N(){return VT_N;},ic,seasonLabel,boardPrefetch,boardStale,BOARD_FROM,setFmt,leagueLoad,boardHtml,oppYear,champModal,drawCard,chalNewGame,DAILY,LEAGUE_CULT,LEAGUE_LEGENDS,openTrophies,renderNewTro,bestPerPlayer,renderWheel,posOpts,eraOf,ptsWord,viewHtml,renderPitch,pitchHtml,f5Pitch,F5_FORMS,cardName,clubShort,simulate,shareTextOf,trCtxNow,trAward,trStore,FORMATIONS,GROUP_OF,DATA,TROPHIES,trEval,PERSON,effRating,get S(){return S;},rerun(seed,year,xi){rnd=mulberry32(seed);const r=simulate(xi||S.slots.map(s=>s.player),MODES[S.mode],year);rnd=Math.random;return {W:r.W,D:r.D,L:r.L,gf:r.gf,ga:r.ga,place:r.place};}};
 })();
 </script>
 
