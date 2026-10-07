@@ -255,6 +255,14 @@ function honestXi(formation) {
   ok('seed: без секрету в перехідний період (сайт 0.52) — видається', (await call(seedH, { device_id: crypto.randomUUID(), ...dayArgs })).c === 200);
   LEGACY_OPEN = false;
   ok('seed: без секрету після кроку 2 — 401', (await call(seedH, { device_id: victim, ...dayArgs })).c === 401 && !DB.season_seeds.some(x => x.device_id === victim && x.daily));
+  // client timed out and retried: same squad, attempt not played -> the same official seed; another squad -> a regular attempt
+  {const rd = crypto.randomUUID(), rsec = 'retry-secret-0123456789ab';
+   const r1 = await call(seedH, { device_id: rd, secret: rsec, ...dayArgs }), r2 = await call(seedH, { device_id: rd, secret: rsec, ...dayArgs });
+   const n1 = DB.season_seeds.filter(x => x.device_id === rd).length;
+   const other = { ...dayArgs, xi: [...dayArgs.xi.slice(1), dayArgs.xi[0]] };
+   const r3 = await call(seedH, { device_id: rd, secret: rsec, ...other });
+   ok('seed: повтор після таймауту — той самий офіційний seed', r1.j.official && r2.j.official && r2.j.seed === r1.j.seed && r2.j.seed_id === r1.j.seed_id && n1 === 1, `${r1.j.seed}/${r2.j.seed}`);
+   ok('seed: інший склад після офіційного — звичайна спроба', r3.c === 200 && !r3.j.official && r3.j.seed_id !== r1.j.seed_id);}
   // two concurrent requests - only one official attempt
   const racer = crypto.randomUUID(), rs = 'racer-secret-0123456789ab';
   const both = await Promise.all([call(seedH, { device_id: racer, secret: rs, ...dayArgs }), call(seedH, { device_id: racer, secret: rs, ...dayArgs })]);

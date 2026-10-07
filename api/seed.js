@@ -27,8 +27,12 @@ module.exports = async (req, res) => {
     stage = 'daily';
     if (daily) {
       // only the first attempt of the day from this device is official
-      const prev = await sb(`season_seeds?device_id=eq.${b.device_id}&day=eq.${day}&daily=is.true&official=is.true&select=id&limit=1`) || [];
+      const prev = await sb(`season_seeds?device_id=eq.${b.device_id}&day=eq.${day}&daily=is.true&official=is.true&select=id,seed,xi_hash,year,used_by&limit=1`) || [];
       official = prev.length === 0;
+      // retry after a client timeout: same squad, attempt not played yet -> the same official seed again
+      const p = prev[0];
+      if (p && p.used_by == null && p.xi_hash === xiHash(b.xi) && (p.year == null || p.year === (+b.year || null)))
+        return res.status(200).json({ seed_id: p.id, seed: p.seed, official: true });
     }
     stage = 'insert';
     const seed = crypto.randomInt(1, 2147483647);

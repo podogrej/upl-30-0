@@ -2111,13 +2111,14 @@ function renderNewTro(r){
 // season seed comes from the server (after the squad is locked) so results cannot be brute-forced; offline uses a local seed
 // 429 (rate limited per minute): season plays with a local seed, with a soft note under the result (RATE_NOTE)
 let RATE_NOTE='';
-async function fetchSeed(year){
+// a cold server can answer late: wait up to 6 s, retry once after a timeout (the server returns the same daily seed)
+async function fetchSeed(year,retry=1){
   if(!ONLINE)return null;
-  const ctl=typeof AbortController!=='undefined'?new AbortController():null;const tm=setTimeout(()=>ctl&&ctl.abort(),3500);
+  const ctl=typeof AbortController!=='undefined'?new AbortController():null;const tm=setTimeout(()=>ctl&&ctl.abort(),6000);
   try{const r=await _fetch('/api/seed',{method:'POST',headers:{'Content-Type':'application/json'},signal:ctl&&ctl.signal,
       body:JSON.stringify({device_id:deviceId(),secret:devSecret(),xi:S.slots.map(s=>({id:s.player.id,slot:s.slot,c:s.player.club,y:s.player.y})),formation:S.formation,mode:S.mode,format:S.format,year,daily:!!(S.daily&&!S.daily.practice)})});
     if(r.status===429){const j=await r.json().catch(()=>({}));RATE_NOTE=j.error||'Забагато запитів за хвилину. Зачекай трохи й спробуй ще раз.';}
-    if(!r.ok)return null;const j=await r.json();return j&&j.seed?j:null;}catch(e){return null;}finally{clearTimeout(tm);}
+    if(!r.ok)return null;const j=await r.json();return j&&j.seed?j:null;}catch(e){clearTimeout(tm);return e&&e.name==='AbortError'&&retry>0?fetchSeed(year,retry-1):null;}finally{clearTimeout(tm);}
 }
 let SIM_BUSY=false;
 async function playSeason(year){
