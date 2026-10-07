@@ -245,7 +245,7 @@ const sk=(pg,sel)=>pg.evaluate(s=>{const n=[...document.querySelectorAll(s+' .sk
   await pg.waitForSelector('#simBtn:not([hidden])');await pg.click('#simBtn');
   const rows=new Set(),hs=new Set();
   for(let k=0;k<70;k++){const v=await pg.evaluate(()=>{const t=document.getElementById('lvTable');return document.getElementById('live').hidden?null:[t.querySelectorAll('tr').length,Math.round(t.getBoundingClientRect().height)];});
-    if(!v)break;if(v[0]>1){   // ±3 px: web font may finish loading mid-season
+    if(!v)break;if(v[0]>1&&v[1]>0){   // ±3 px: web font may finish loading mid-season
      rows.add(v[0]);hs.add(v[1]);}await wait(300);}
   T.check(rows.size===1&&rows.has(7)&&Math.max(...hs)-Math.min(...hs)<=3,`живий сезон: завжди 6 рядків і та сама висота (рядків ${[...rows]}, висота ${[...hs]})`);
   await bg.close();}

@@ -41,7 +41,7 @@ const clear=pg=>pg.evaluate(()=>{window.__hap.length=0;});
  // ---- game flow with stubbed Telegram haptics
  await pg.context().addInitScript(STUB);await pg.reload();await pg.waitForTimeout(700);
  T.check(await pg.evaluate(()=>typeof __dbg.haptic==='function'&&Array.isArray(window.__hap)),'haptic() є, Telegram-заглушка підключена');
- await pg.click('#freeOpen');await pg.waitForTimeout(300);await pg.click('#startBtn');await pg.waitForTimeout(200);await clear(pg);
+ await pg.click('#freeOpen');await pg.waitForTimeout(300);await pg.click('#startBtn');await pg.waitForTimeout(600);await clear(pg);   // let the screen transition finish before timing the reels
  await pg.evaluate(()=>{window.__mv=new Promise(r=>{const c=document.querySelector('#reelClub .strip'),y=document.querySelector('#reelYear .strip'),t0=performance.now();let a=null,b2=null,bl=0;
    const tick=()=>{const t=performance.now()-t0,f=getComputedStyle(c).filter;if(a==null&&c.classList.contains('go'))a=t;if(b2==null&&y.classList.contains('go'))b2=t;const m=/blur\(([\d.]+)px\)/.exec(f);if(m)bl=Math.max(bl,parseFloat(m[1]));
      if(t<1500)requestAnimationFrame(tick);else r({a,b:b2,bl});};tick();});});
