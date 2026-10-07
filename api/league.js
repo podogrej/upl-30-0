@@ -2,7 +2,7 @@
 // POST {initData, result?}: verifies the Telegram signature, adds the player to the group league (if the game was opened from the group button)
 //   and records the official daily draft result in all their leagues, updating boards in chats.
 //   Joining only if the bot sees the player as a group member (getChatMember); boards show only verified seasons.
-// GET ?chat=ID: league data for the in-game card.
+// GET ?chat=ID[&card=1]: league data for the full table; card=1: home card only (today and counters, no standings).
 const L = require('./_league.js');   // shared group league helpers
 // whether the user is a group member (bot must be in the group). Telegram error -> "no" (fail closed)
 const MEMBER = new Set(['member', 'administrator', 'creator']);
@@ -41,16 +41,18 @@ module.exports = async (req, res) => {
       const chat = String(req.query.chat || '').replace(/[^0-9-]/g, '');
       if (!chat) return res.status(400).json({ error: 'chat?' });
       const day = L.kyivDate();
-      // all queries in parallel; response cached by Vercel for 15 s
-      const [[lg], todayRows, memberRows, st] = await Promise.all([
+      // card=1: home card (today + counters, no standings history); otherwise all rows once for both today and standings
+      const card = String(req.query.card || '') === '1';
+      const [[lg], rows, memberRows] = await Promise.all([
         L.sb(`leagues?chat_id=eq.${chat}&select=title`).then(x => x || []),
-        L.sb(`league_results?chat_id=eq.${chat}&day=eq.${day}&select=name,w,d,l,pts,gf,ga,created_at,day,tg_user_id,season_id`).then(x => L.onlyVerified(x || [])),
-        L.sb(`league_members?chat_id=eq.${chat}&select=tg_user_id`).then(x => x || []),
-        L.standings(chat)]);
+        card ? L.sb(`league_results?chat_id=eq.${chat}&day=eq.${day}&select=${L.RES_COLS}`).then(x => L.onlyVerified(x || [])) : L.leagueRows(chat),
+        L.sb(`league_members?chat_id=eq.${chat}&select=tg_user_id`).then(x => x || [])]);
       if (!lg) return res.status(404).json({ error: 'no league' });
-      const today = todayRows.sort(L.sortRes).map(({ name, u, w, d, l, pts, gf, ga, created_at }) => ({ name, u, w, d, l, pts, gf, ga, created_at }));
-      res.setHeader('Cache-Control', 'public, s-maxage=15, stale-while-revalidate=60');
-      return res.status(200).json({ title: lg.title, day, today, members: memberRows.length, standings: st.slice(0, 100) });   // full standings for the "full table" screen (home shows top 3)
+      const today = rows.filter(r => String(r.day).slice(0, 10) === day).sort(L.sortRes).map(({ name, u, w, d, l, pts, gf, ga, created_at }) => ({ name, u, w, d, l, pts, gf, ga, created_at }));
+      res.setHeader('Cache-Control', 'public, s-maxage=30, stale-while-revalidate=300');
+      const out = { title: lg.title, day, today, members: memberRows.length };
+      if (!card) out.standings = L.standingsOf(rows).slice(0, 100);   // full standings for the "full table" sheet
+      return res.status(200).json(out);
     }
     if (req.method !== 'POST') return res.status(405).json({ error: 'GET or POST' });
     let b = req.body || {}; if (typeof b === 'string') b = JSON.parse(b);
@@ -64,10 +66,11 @@ module.exports = async (req, res) => {
     const m = /^g(-?\d+)$/.exec(v.start_param || '');
     if (m) {
       const chat_id = m[1];
-      const [lg] = await L.sb(`leagues?chat_id=eq.${chat_id}&select=chat_id,title`) || [];
       // audit V1: may join only a league of a group where the bot sees the player as a member (getChatMember). Otherwise 403
       // (when the request carries a result, skip joining; the result goes only to leagues the player is already in).
-      const mem = lg ? await isMember(chat_id, u.id) : false;
+      // League lookup and membership check run in parallel; membership is still required to join.
+      const [[lg], mem0] = await Promise.all([L.sb(`leagues?chat_id=eq.${chat_id}&select=chat_id,title`).then(x => x || []), isMember(chat_id, u.id)]);
+      const mem = lg ? mem0 : false;
       let chat_to = chat_id;
       if (mem && mem.moved) { chat_to = mem.moved; }   // league moved to the supergroup id
       if (lg && !(mem && (mem.moved ? mem.ok : mem))) {
@@ -76,10 +79,11 @@ module.exports = async (req, res) => {
       }
       if (lg && !lg.denied) {
         await L.sb('league_members?on_conflict=chat_id,tg_user_id', { method: 'POST', prefer: 'resolution=merge-duplicates,return=minimal', body: { chat_id: chat_to, tg_user_id: u.id, name } });
-        joined.push({ chat_id: chat_to, title: lg.title });
+        const j = { chat_id: chat_to, title: lg.title };
+        joined.push(j);
         // player joined a new group's league after playing the daily draft (and can't replay):
         // copy today's verified daily result into this league too (from another league of theirs or from their season)
-        if (!b.result) { stage = 'backfill'; try { await backfill(chat_to, u, name); } catch (e) { console.error('backfill', chat_to, e.message); } }
+        if (!b.result) { stage = 'backfill'; try { if (await backfill(chat_to, u, name)) j.backfilled = true; } catch (e) { console.error('backfill', chat_to, e.message); } }
       }
     }
     const r = b.result;
@@ -99,14 +103,13 @@ module.exports = async (req, res) => {
     if (!season_id) { const [s] = await L.sb(`seasons?tg_user_id=eq.${u.id}&day=eq.${day}&practice=is.false&select=id&order=created_at.asc&limit=1`) || []; season_id = s ? s.id : null; }
     stage = 'leagues';
     const my = await L.sb(`league_members?tg_user_id=eq.${u.id}&select=chat_id,leagues(title)`) || [];
-    const posted = [];
-    for (const row of my) {
-      // first official attempt of the day only
+    // first official attempt of the day only; leagues are independent, so they are written in parallel
+    const posted = await Promise.all(my.map(async row => {
       await L.sb('league_results?on_conflict=chat_id,day,tg_user_id', { method: 'POST', prefer: 'resolution=ignore-duplicates,return=minimal',
         body: { chat_id: row.chat_id, day, tg_user_id: u.id, name, w, d, l, pts, place, gf, ga, xp: +r.xp || null, formation: String(r.formation || '').slice(0, 8), trophies, season_id } });
       try { await L.upsertBoard(row.chat_id, day); } catch (e) { console.error('board', row.chat_id, e.message); }
-      posted.push(row.leagues ? row.leagues.title : String(row.chat_id));
-    }
+      return row.leagues ? row.leagues.title : String(row.chat_id);
+    }));
     res.status(200).json({ ok: true, joined, posted });
   } catch (e) {
     res.status(500).json({ error: `crash at ${stage}: ${String(e && e.message || e).slice(0, 180)}` });

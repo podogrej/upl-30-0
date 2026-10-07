@@ -255,10 +255,22 @@ function honestXi(formation) {
   ok('seed: без секрету в перехідний період (сайт 0.52) — видається', (await call(seedH, { device_id: crypto.randomUUID(), ...dayArgs })).c === 200);
   LEGACY_OPEN = false;
   ok('seed: без секрету після кроку 2 — 401', (await call(seedH, { device_id: victim, ...dayArgs })).c === 401 && !DB.season_seeds.some(x => x.device_id === victim && x.daily));
+  // client timed out and retried: same squad, attempt not played -> the same official seed; another squad -> a regular attempt
+  {const rd = crypto.randomUUID(), rsec = 'retry-secret-0123456789ab';
+   const r1 = await call(seedH, { device_id: rd, secret: rsec, ...dayArgs }), r2 = await call(seedH, { device_id: rd, secret: rsec, ...dayArgs });
+   const n1 = DB.season_seeds.filter(x => x.device_id === rd).length;
+   const other = { ...dayArgs, xi: [...dayArgs.xi.slice(1), dayArgs.xi[0]] };
+   const r3 = await call(seedH, { device_id: rd, secret: rsec, ...other });
+   ok('seed: повтор після таймауту — той самий офіційний seed', r1.j.official && r2.j.official && r2.j.seed === r1.j.seed && r2.j.seed_id === r1.j.seed_id && n1 === 1, `${r1.j.seed}/${r2.j.seed}`);
+   ok('seed: інший склад після офіційного — звичайна спроба', r3.c === 200 && !r3.j.official && r3.j.seed_id !== r1.j.seed_id);}
   // two concurrent requests - only one official attempt
   const racer = crypto.randomUUID(), rs = 'racer-secret-0123456789ab';
   const both = await Promise.all([call(seedH, { device_id: racer, secret: rs, ...dayArgs }), call(seedH, { device_id: racer, secret: rs, ...dayArgs })]);
-  ok('seed: гонка двох запитів — одна офіційна спроба', both.every(x => x.c === 200) && both.filter(x => x.j.official).length === 1, both.map(x => x.j.official).join('/'));
+  ok('seed: гонка двох запитів — одна офіційна спроба (той самий seed обом)', both.every(x => x.c === 200) && both[0].j.seed_id === both[1].j.seed_id && DB.season_seeds.filter(x => x.device_id === racer && x.official).length === 1, both.map(x => x.j.official + ':' + x.j.seed).join('/'));
+  // race with a different squad: the second one is a regular attempt
+  const racer2 = crypto.randomUUID(), rs2 = 'racer2-secret-0123456789ab', alt = { ...dayArgs, xi: [...dayArgs.xi.slice(1), dayArgs.xi[0]] };
+  const both2 = await Promise.all([call(seedH, { device_id: racer2, secret: rs2, ...dayArgs }), call(seedH, { device_id: racer2, secret: rs2, ...alt })]);
+  ok('seed: гонка з різними складами — офіційна лише одна', both2.every(x => x.c === 200) && both2.filter(x => x.j.official).length === 1);
   // device-secret SQL not applied yet: server says 'write the old way', seed still works
   SQL053 = false;
   const fb = await call(saveH, { kind: 'season', device_id: me, secret: mySecret, row: season });

@@ -24,35 +24,42 @@ const sortRes = (a, b) => b.pts - a.pts || (b.gf - b.ga) - (a.gf - a.ga) || b.gf
 
 // board name comes from the player profile (players.name, else anonymous; lowercase Latin since 0.59), not a copy of the Telegram name in the row.
 // Player is found via Telegram link (player_links, kind = 'tg'); no link or SQL 0.59 not applied -> name from the row.
-async function withNames(rows) {
+// tg_user_id -> player profile (batches of 100 keys run in parallel)
+async function nameMap(rows) {
   const keys = [...new Set(rows.map(r => r.tg_user_id).filter(x => x != null && /^\d+$/.test(String(x))).map(String))];
   const pl = {};
-  for (let i = 0; i < keys.length; i += 100) {
-    const q = `player_links?kind=eq.tg&key=in.(${keys.slice(i, i + 100).join(',')})&select=key,players(name,anon_name,public_id)`;
+  const batches = [];
+  for (let i = 0; i < keys.length; i += 100) batches.push(keys.slice(i, i + 100));
+  await Promise.all(batches.map(async b => {
+    const q = `player_links?kind=eq.tg&key=in.(${b.join(',')})&select=key,players(name,anon_name,public_id)`;
     let ls = []; try { ls = await sb(q) || []; } catch (e) { try { ls = await sb(q.replace(',public_id', '')) || []; } catch (e2) { console.warn('names', e2.message); } }
     for (const l of ls) if (l.players) pl[l.key] = l.players;
-  }
-  return rows.map(r => { const p = pl[String(r.tg_user_id)]; const n = p && (p.name || p.anon_name);
-    return n ? { ...r, name: String(n), u: p.public_id || undefined } : r; });
+  }));
+  return pl;
 }
+const applyNames = (rows, pl) => rows.map(r => { const p = pl[String(r.tg_user_id)]; const n = p && (p.name || p.anon_name);
+  return n ? { ...r, name: String(n), u: p.public_id || undefined } : r; });
 // league boards and summaries count only server-verified seasons (numbers taken from the season, not the browser).
 // Days before VERIFIED_FROM are shown as they were, to keep league history intact.
 const VERIFIED_FROM = '2026-10-01';
 async function onlyVerified(rows) {
   const ids = [...new Set(rows.filter(r => String(r.day) >= VERIFIED_FROM).map(r => +r.season_id).filter(Boolean))];
   const ok = {};
-  for (let i = 0; i < ids.length; i += 100)
-    for (const s of await sb(`seasons?id=in.(${ids.slice(i, i + 100).join(',')})&verified=is.true&practice=is.false&select=id,day,tg_user_id,w,d,l,gf,ga,place`) || []) ok[s.id] = s;
-  return withNames(rows.filter(r => {
+  const batches = [];
+  for (let i = 0; i < ids.length; i += 100) batches.push(ids.slice(i, i + 100));
+  // season checks and name lookup are independent: run all batches at once (names for all rows; unverified ones are dropped below)
+  const [, pl] = await Promise.all([
+    Promise.all(batches.map(async b => { for (const s of await sb(`seasons?id=in.(${b.join(',')})&verified=is.true&practice=is.false&select=id,day,tg_user_id,w,d,l,gf,ga,place`) || []) ok[s.id] = s; })),
+    nameMap(rows)]);
+  return applyNames(rows.filter(r => {
     if (String(r.day) < VERIFIED_FROM) return true;
     const s = ok[+r.season_id];
     return !!s && String(s.day).slice(0, 10) === String(r.day).slice(0, 10) && (s.tg_user_id == null || String(s.tg_user_id) === String(r.tg_user_id));
-  }).map(r => { const s = ok[+r.season_id]; return s ? { ...r, w: s.w, d: s.d, l: s.l, pts: s.w * 3 + s.d, gf: s.gf, ga: s.ga, place: s.place } : r; }));
+  }).map(r => { const s = ok[+r.season_id]; return s ? { ...r, w: s.w, d: s.d, l: s.l, pts: s.w * 3 + s.d, gf: s.gf, ga: s.ga, place: s.place } : r; }), pl);
 }
 
-// overall league standings: day wins (past days + today)
-async function standings(chat_id) {
-  const rows = await onlyVerified(await sb(`league_results?chat_id=eq.${chat_id}&select=day,tg_user_id,name,pts,gf,ga,created_at,season_id&order=day.desc&limit=3000`) || []);
+// overall league standings: day wins (past days + today) from verified rows
+function standingsOf(rows) {
   const byDay = {}; for (const r of rows) (byDay[r.day] = byDay[r.day] || []).push(r);
   const st = {};
   for (const [day, list] of Object.entries(byDay)) {
@@ -62,6 +69,10 @@ async function standings(chat_id) {
   }
   return Object.values(st).sort((a, b) => b.wins - a.wins || b.pts / b.days - a.pts / a.days);
 }
+const RES_COLS = 'day,tg_user_id,name,w,d,l,pts,gf,ga,created_at,season_id';
+// all league rows (newest days first) for standings; today's rows are part of it
+const leagueRows = chat_id => sb(`league_results?chat_id=eq.${chat_id}&select=${RES_COLS}&order=day.desc&limit=3000`).then(x => onlyVerified(x || []));
+async function standings(chat_id) { return standingsOf(await leagueRows(chat_id)); }
 
 async function boardText(chat_id, day) {
   const [lg] = await sb(`leagues?chat_id=eq.${chat_id}&select=title`) || [];
@@ -114,7 +125,7 @@ async function migrateLeague(from, to) {
   return true;
 }
 
-return { SB_URL, env, esc, tg, sb, kyivDate, migrateLeague, dayNo, dayShort, checkMiniApp, nameOf, playUrl, playKb, sortRes, onlyVerified, standings, boardText, upsertBoard };
+return { SB_URL, env, esc, tg, sb, kyivDate, migrateLeague, dayNo, dayShort, checkMiniApp, nameOf, playUrl, playKb, sortRes, onlyVerified, standings, standingsOf, leagueRows, RES_COLS, boardText, upsertBoard };
 })();
 
 module.exports = L;

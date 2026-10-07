@@ -17,7 +17,10 @@
   addEventListener('error',function(e){if(e&&e.message)add(e.message,e.filename,e.lineno,e.colno,e.error&&e.error.stack);});
   addEventListener('unhandledrejection',function(e){var r=e&&e.reason;add('promise: '+(r&&r.message||r),'',0,0,r&&r.stack);});
   addEventListener('pagehide',flush);})();</script>
-<script>(function(){try{localStorage.removeItem('upl30_skin');localStorage.removeItem('upl30_pitch');localStorage.removeItem('upl30_league_title');}catch(e){}/* skins and turf variants were removed; clear old selections */try{var t=/[?&]theme=(light|dark)/.exec(location.search);var th=t?t[1]:(localStorage.getItem('upl30_theme')||'dark');if(t)localStorage.setItem('upl30_theme',th);document.documentElement.setAttribute('data-theme',th);}catch(e){document.documentElement.setAttribute('data-theme','dark');}})();</script>
+<script>(function(){try{localStorage.removeItem('upl30_skin');localStorage.removeItem('upl30_pitch');localStorage.removeItem('upl30_league_title');}catch(e){}/* skins and turf variants were removed; clear old selections */try{var t=/[?&]theme=(light|dark)/.exec(location.search);var th=t?t[1]:(localStorage.getItem('upl30_theme')||'dark');if(t)localStorage.setItem('upl30_theme',th);document.documentElement.setAttribute('data-theme',th);}catch(e){document.documentElement.setAttribute('data-theme','dark');}})();
+/* Telegram Mini App: start loading telegram-web-app.js now, in parallel with the page; the main script runs tgInit when both are ready */
+(function(){if(!__ONLINE__||!/tgWebApp/.test(location.hash+location.search))return;var s=document.createElement('script');s.src='https://telegram.org/js/telegram-web-app.js';s.async=true;
+  s.onload=function(){window.__tgOk=1;if(window.__tgCb)window.__tgCb();};document.head.appendChild(s);})();</script>
 <style>
 :root{
   --bg:#f4f5fa; --bg2:#eceef6; --surface:#ffffff; --line:#dfe3ef; --ink:#132346; --ink2:#4a5578; --muted:#5e6888; --pitch:#2a4fa8; --pitch2:#1d3a80; --chalk:#ffffff; --amber:#6d2abb; --amber2:#d8177b; --win:#0b7a3a; --draw:#c98a00; --loss:#e0263b; --grad:linear-gradient(90deg,#7e24b0,#d41e6f,#ff831e); --gk:#FFCC00; --df:#0062d1; --mf:#34C759; --fw:#FF3B30;
@@ -229,19 +232,20 @@ select.need{border-color:var(--loss);box-shadow:0 0 0 2px color-mix(in srgb,var(
 .chem0{display:flex;flex-wrap:wrap;align-items:baseline;gap:var(--sp-1) var(--sp-2);padding:var(--sp-3) var(--sp-3);border-radius:var(--r-md);background:color-mix(in srgb,var(--z-co) 12%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--z-co) 35%,transparent);font-size:var(--fs-body)}.chem0 span{color:var(--ink2);font-size:var(--fs-footnote)}.prow{display:grid;grid-template-columns:8.6em minmax(0,1fr) 3em;align-items:center;gap:var(--sp-2);font-size:var(--fs-body)}.prow b{text-align:right;font-variant-numeric:tabular-nums}
 td.avgc{font-family:var(--font-display);font-weight:var(--wt-bold);font-size:var(--fs-body);color:var(--amber)}
 .foot a{color:var(--amber);text-decoration:none;font-weight:var(--wt-bold);position:relative}.foot a b{position:absolute;top:-2px;right:-8px;width:6px;height:6px;border-radius:50%;background:var(--amber)}
-.news{display:grid;gap:var(--sp-3)}.news .ni{display:grid;grid-template-columns:34px 1fr;gap:var(--sp-2);align-items:start}.news .ni b{display:block}.news .ni span.e{font-size:var(--fs-title3);line-height:var(--lh-snug)}.news .ni p{margin:var(--sp-0h) 0 0;color:var(--ink2);font-size:var(--fs-body)}
-.ic{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:var(--r-xs);background:color-mix(in srgb,var(--amber) 16%,transparent);color:var(--amber2);flex:none;vertical-align:middle;font-style:normal}
-.ico{width:16px;height:16px;fill:currentColor;display:block}
+.news{display:grid;gap:var(--sp-3)}.news .ni{display:grid;grid-template-columns:34px 1fr;gap:var(--sp-2);align-items:start}.news .ni b{display:block}.news .ni .ic.lg{color:var(--ink2)}.news .ni span.e{font-size:var(--fs-title3);line-height:var(--lh-snug)}.news .ni p{margin:var(--sp-0h) 0 0;color:var(--ink2);font-size:var(--fs-body)}
+.ic{display:inline-grid;place-items:center;width:24px;height:24px;color:inherit;flex:none;vertical-align:middle;font-style:normal}   /* UI icon: outline SVG in the text color */
+.ico{width:16px;height:16px;fill:currentColor;display:block}.ic .ico{width:20px;height:20px}
 :root{--font-emoji:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif}
-.ic.em,.tre,.champ0 .cup,.ico.em{font-family:var(--font-emoji)}.ico.em{display:inline-grid;place-items:center;width:auto;height:auto;font-size:1.05em;line-height:1;fill:none;font-style:normal}   /* emoji: system Apple font first in the list (iPhone/iPad) */
+.ic.em,.tre,.champ0 .cup{font-family:var(--font-emoji)}   /* reward emoji: system Apple font first in the list (iPhone/iPad) */
 .ic.em{background:none;box-shadow:none;font-style:normal;font-size:var(--fs-headline);line-height:1;display:inline-grid;place-items:center}.ic.em.sm{font-size:var(--fs-body)}.ic.em.lg{font-size:var(--fs-title2);letter-spacing:var(--ls-tight)}.row0>.ic.em:first-child{font-size:var(--fs-title2);letter-spacing:var(--ls-tight)}
 .tre{display:inline-grid;place-items:center;width:42px;height:42px;border-radius:50%;background:var(--bg2);font-size:var(--fs-title2);line-height:1;letter-spacing:var(--ls-tight)}.tre.off{filter:grayscale(1);opacity:.45}.chip .tre,.trchip .tre{width:22px;height:22px;font-size:var(--fs-body);background:none}.tro0 .tre{width:26px;height:26px;font-size:var(--fs-headline)}   /* trophy icons are emoji */
-.ic.sm{width:20px;height:20px;border-radius:var(--r-xs);margin-right:var(--sp-2)}.ic.sm .ico{width:13px;height:13px}
-.ic.lg{width:34px;height:34px;border-radius:var(--r-sm)}.ic.lg .ico{width:20px;height:20px}
+.ic.sm{width:20px;height:20px;margin-right:var(--sp-2)}.ic.sm .ico{width:16px;height:16px}
+.ic.lg{width:34px;height:34px}.ic.lg .ico{width:26px;height:26px}
 button:has(.ic),a.btnlink:has(.ic){display:inline-flex;align-items:center;justify-content:center;gap:var(--sp-2)}
 button:has(.ic) .ic{margin-left:calc(var(--sp-1) * -1)}
-.primary .ic,a.btnlink .ic{background:color-mix(in srgb,var(--bg) 18%,transparent);color:var(--bg)}
-.chip:has(.ic),.chip.ms{display:inline-flex;align-items:center;gap:var(--sp-2)}.chip .ic{width:18px;height:18px;border-radius:var(--r-xs);margin-left:calc(var(--sp-1) * -1)}.chip .ic .ico{width:12px;height:12px}
+.primary .ic,a.btnlink .ic{color:var(--bg);width:22px;height:22px}.primary .ic .ico,a.btnlink .ic .ico{width:22px;height:22px}
+.ghost .ic{width:18px;height:18px;margin-right:0}.ghost .ic .ico{width:18px;height:18px}
+.chip:has(.ic),.chip.ms{display:inline-flex;align-items:center;gap:var(--sp-2)}.chip .ic{width:18px;height:18px;margin-left:calc(var(--sp-1) * -1)}.chip .ic .ico{width:14px;height:14px}
 .kicker .ic{margin-right:var(--sp-2)}
 .trsec .ico{display:inline-block;width:15px;height:15px;vertical-align:-3px;fill:currentColor}
 .plc{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:var(--r-xs);font-family:var(--font-mono);font-weight:var(--wt-bold);font-size:var(--fs-caption);color:#161514}.plc.p1{background:#f2c14e}.plc.p2{background:#c9c6bf}.plc.p3{background:#d08a4e}
@@ -258,8 +262,8 @@ button.ghost.big0{padding:var(--sp-3) var(--sp-card);font-size:var(--fs-body);fo
 .sec0{font-family:var(--font-mono);font-size:var(--fs-caption);letter-spacing:var(--ls-caps);text-transform:uppercase;color:var(--amber);margin:var(--sp-5) 0 calc(var(--sp-2) * -1)}
 .row0{display:flex;align-items:center;gap:var(--sp-3);width:100%;text-align:left;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:var(--sp-4) var(--sp-card);border-radius:var(--r-lg);margin-top:var(--sp-3)}
 .row0>span{flex:1;display:grid;gap:var(--sp-0h);min-width:0}.row0 small{color:var(--ink2);font-weight:var(--wt-regular);font-size:var(--fs-footnote)}.row0 em{font-style:normal;color:var(--amber)}
-.row0>.ic:first-child{width:34px;height:34px;border-radius:var(--r-sm);margin:0}.row0>.ic:first-child .ico{width:20px;height:20px}
-.row0>.ic:last-child{background:none;color:var(--muted);margin:0}
+.row0>.ic:first-child{width:34px;height:34px;margin:0}.row0>.ic:first-child .ico{width:24px;height:24px}
+.row0>.ic:last-child{color:var(--muted);margin:0}
 .hero0 h1{font-size:clamp(var(--fs-title2),5.5vw,var(--fs-large));line-height:var(--lh-tight);letter-spacing:var(--ls-tight)}
 .lead0{font-size:var(--fs-headline);color:var(--ink2);margin:0;max-width:60ch}
 .pl.in{animation:plin var(--dur-3) var(--ease-out) both}@keyframes plin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
@@ -372,7 +376,7 @@ td .sub{font-size:var(--fs-caption2);color:var(--muted);margin-top:var(--sp-0h);
 .overlay.login .box{max-width:440px;background:var(--surface)}
 .overlay.login .sheet-head{padding-bottom:0}
 .overlay.login .vhead{justify-content:flex-end}.overlay.login #viewTitle{display:none}
-.overlay.login #viewClose{border:0;background:none;color:var(--muted);font-size:var(--fs-title2);line-height:1;padding:var(--sp-1) var(--sp-2);letter-spacing:var(--ls-tight)}
+.overlay.login #viewClose{border:0;background:none;color:var(--muted);line-height:1;min-width:44px;min-height:44px;padding:var(--sp-1) var(--sp-2)}.overlay.login #viewClose .ico{width:22px;height:22px;margin:auto}
 /* skeletons: shimmer blocks with the final layout (no text while loading) */
 .sk{position:relative;display:inline-block;vertical-align:middle;width:100%;height:1em;border-radius:var(--r-xs);background:color-mix(in srgb,var(--ink) 7%,transparent);overflow:hidden}
 .sk::after{content:"";position:absolute;inset:0;transform:translateX(-100%);background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--ink) 11%,transparent),transparent);animation:skim 1.4s linear infinite}
@@ -515,7 +519,7 @@ input.sw:checked{background:var(--win)}input.sw:checked::after{transform:transla
 button.danger{background:var(--loss);border-color:var(--loss);color:#fff}
 .pp-warn{display:grid;gap:var(--sp-2);margin-top:var(--sp-4);padding:var(--sp-3);border:1px solid color-mix(in srgb,var(--amber) 55%,var(--line));border-radius:var(--r-md);background:color-mix(in srgb,var(--amber) 9%,var(--surface))}
 .pp-warn .h{display:flex;align-items:flex-start;gap:var(--sp-2);line-height:var(--lh-normal);font-weight:var(--wt-bold);font-size:var(--fs-body)}.pp-warn .h .ico{width:20px;height:20px;fill:var(--amber);flex:none;margin-top:0}   /* icon aligned with the first line of the title */
-#verLine{display:flex;align-items:center}#verLine .ic{flex:none}   /* emoji sat below the text on iPhone */
+#verLine{display:flex;align-items:center}#verLine .ic{flex:none}
 .pp-warn p{margin:0;font-size:var(--fs-footnote);color:var(--ink2);line-height:var(--lh-body)}
 .pp-lock{display:flex;align-items:center;gap:var(--sp-2);font-size:var(--fs-footnote);color:var(--muted);padding:var(--sp-3);border:1px dashed var(--line);border-radius:var(--r-md)}
 .pp-lock .ico{width:16px;height:16px;fill:currentColor}
@@ -524,8 +528,29 @@ a.plink{color:inherit;text-decoration:underline;text-decoration-color:color-mix(
    spacing 8/12/16/24; borderless cards on translucent background; one primary button per screen; explanations collapsed */
 :root{--card:color-mix(in srgb,var(--surface) 72%,transparent);--line2:color-mix(in srgb,var(--line) 55%,transparent)}
 button.link0{border:0;background:none;min-height:44px;padding:var(--sp-1) var(--sp-3);color:var(--ink2);font:var(--wt-medium) var(--fs-body) var(--font-body);text-decoration:underline;text-underline-offset:3px}
-/* chat league on Home: top 3, ellipsis, own row; full table as a link */
-tr.gap td{padding:0 var(--sp-2);line-height:var(--lh-snug);color:var(--muted);text-align:center;border:0}#leagueCard .lgall{align-self:flex-start;padding-left:0}#viewBody tr.th td{font-size:var(--fs-caption);color:var(--muted);font-weight:var(--wt-bold)}
+/* chat league on Home: header with counter pill, top 3 with medals, gap, own row, full-table button; same table in the sheet */
+tr.gap td{padding:0 var(--sp-2);line-height:var(--lh-snug);color:var(--muted);text-align:center;border:0}
+#leagueCard{gap:var(--sp-2)}#leagueCard>*{width:100%;max-width:560px;justify-self:center}   /* wide screens: one readable column */
+.lg-hd{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--sp-3)}.lg-ht{flex:1;min-width:0}.lg-ht .ttl{margin-top:var(--sp-0h);overflow-wrap:anywhere}
+.lg-pill{flex:none;white-space:nowrap;padding:var(--sp-1) var(--sp-3);border-radius:var(--r-pill);background:color-mix(in srgb,var(--line) 60%,transparent);font-size:var(--fs-footnote);line-height:20px;font-weight:var(--wt-bold);color:var(--ink2)}
+.sk.lg-pill{width:110px;height:28px;padding:0}.sk.lg-sq{width:24px;height:24px}
+.lg-t th{height:28px;padding:0 var(--sp-2);border:0;font-size:var(--fs-caption);letter-spacing:0;text-transform:none;color:var(--muted);font-weight:var(--wt-bold);text-align:left}
+.lg-t td{height:44px;padding:0 var(--sp-2);border:0;border-top:1px solid color-mix(in srgb,var(--line) 70%,transparent);font-size:var(--fs-body)}
+.lg-t tbody tr:first-child td,.lg-t tr.gap td,.lg-t tr.gap+tr td,.lg-t tr.me+tr td{border-top-color:transparent}
+.lg-t th.num,.lg-t td.num{text-align:right;font-family:inherit}.lg-t td:first-child{width:32px}.lg-t td.nm{font-weight:var(--wt-bold)}
+.lg-t td.s{font-size:var(--fs-footnote);color:var(--muted)}.lg-t td.p{width:56px;font-size:var(--fs-headline);font-weight:var(--wt-black)}
+.lg-t .plc{width:24px;height:24px;font-size:var(--fs-footnote)}
+.lg-t tr.gap td{height:14px;line-height:14px;padding:0}
+.lg-t tr.me td,.lg-t tr.me td:first-child,.lg-t tr.me td:last-child{border:0;border-top:1px solid transparent;background:color-mix(in srgb,var(--amber) 12%,transparent);font-weight:inherit}.lg-t tr.me td.nm,.lg-t tr.me td.p{font-weight:var(--wt-black)}.lg-t tbody tr:nth-child(2) td.nm .sk{width:45%}.lg-t tbody tr:nth-child(3) td.nm .sk{width:52%}
+.lg-t tr.me td:first-child{box-shadow:inset 3px 0 var(--amber2);border-radius:var(--r-sm) 0 0 var(--r-sm)}.lg-t tr.me td:last-child{border-radius:0 var(--r-sm) var(--r-sm) 0}
+.nmw{display:flex;align-items:baseline;gap:var(--sp-1);min-width:0}.nmw .nmt{min-width:0}.nmw .you{flex:none;color:var(--ink2);white-space:nowrap}
+button.lg-all{display:flex;align-items:center;justify-content:space-between;min-height:48px;margin-top:var(--sp-1);padding:var(--sp-2) var(--sp-4);border:1px solid var(--line);border-radius:var(--r-md);background:transparent;color:var(--ink);font:var(--wt-bold) var(--fs-body) var(--font-body);text-align:left}
+button.lg-all i{font-style:normal;font-size:var(--fs-title3);line-height:1;color:var(--muted)}button.lg-all:disabled{opacity:.5}
+@media (hover:hover) and (pointer:fine){button.lg-all:not(:disabled):hover{background:color-mix(in srgb,var(--ink) 4%,transparent)}}
+.lg-note{margin:0;font-size:var(--fs-footnote);color:var(--ink2);text-align:center}.lg-empty{margin:0;color:var(--ink2)}
+.lg-err{margin:0;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;color:var(--ink2);font-size:var(--fs-footnote)}.lg-err button.link0{padding:0 var(--sp-2);font-size:inherit}
+.overlay.lgs #viewTitle{font:var(--wt-black) var(--fs-title2)/var(--lh-snug) var(--font-display);letter-spacing:var(--ls-tight);text-transform:none;color:var(--ink)}
+.lg-sub{margin:0 0 var(--sp-3);color:var(--ink2);font-size:var(--fs-footnote)}.lg-foot{font-size:var(--fs-footnote)}
 .opt,.row0,.daily,.wheel,.lb{border-color:transparent;background:var(--card);box-shadow:var(--sh-1)}   /* resting cards: depth level 1 */
 .opt.on{border-color:transparent;box-shadow:inset 0 0 0 1.5px var(--amber),var(--sh-1)}
 /* header: avatar + name */
@@ -541,9 +566,9 @@ header.top{border-bottom-color:var(--line2)}
 /* home */
 .hero0{padding-block:var(--sp-6) var(--sp-1);gap:var(--sp-4)}
 .sec0{color:var(--muted);margin:var(--sp-6) 0 calc(var(--sp-0h) * -1)}
-.daily .meta{display:block;font-size:var(--fs-body);color:var(--ink2)}.daily .meta .hot0{color:var(--amber);font-weight:var(--wt-bold);white-space:nowrap}.daily .meta .hot0 .ic{width:auto;min-width:1.2em;height:auto;background:none;vertical-align:-2px;margin-right:var(--sp-1)}   /* fire emoji is wider than 18 px; the streak label overlapped (emoji_layout test) */
+.daily .meta{display:block;font-size:var(--fs-body);color:var(--ink2)}.daily .meta .hot0{color:var(--amber);font-weight:var(--wt-bold);white-space:nowrap}.daily .meta .hot0 .ic{width:auto;height:auto;vertical-align:-3px;margin-right:var(--sp-1)}.daily .meta .hot0 .ico{display:inline-block;width:16px;height:16px}
 .row0 b{font-weight:var(--wt-bold);font-size:var(--fs-headline)}
-.row0>.ic:first-child{width:30px;height:30px;background:none}
+.row0>.ic:first-child{width:30px;height:30px}
 .tag0{font:var(--wt-bold) var(--fs-caption2) var(--font-mono);color:var(--amber);letter-spacing:var(--ls-caps);text-transform:uppercase;margin-left:var(--sp-2)}
 .faq0 details{margin:0;border:0;border-bottom:1px solid var(--line2);border-radius:0;background:none;padding:0 var(--sp-0h)}.faq0 details[open]{padding-bottom:var(--sp-4)}
 .faq0 summary{font-size:var(--fs-body);padding-block:var(--sp-4)}
@@ -616,8 +641,8 @@ button.go0{max-width:none;margin-top:var(--sp-5)}
 .hero0{gap:0}.hero0 .logo0{margin-bottom:var(--sp-3)}.hero0 .lead0{max-width:30ch;margin:0 0 var(--sp-5)}
 .btns0{display:grid;gap:var(--sp-2);width:min(100%,420px)}.btns0 .big0{max-width:none;min-height:54px;margin:0}
 button.daily0{display:grid;grid-auto-flow:column;justify-content:center;align-content:center;align-items:baseline;column-gap:var(--sp-2);min-height:54px;padding:var(--sp-2) var(--sp-4);border-radius:var(--r-md);border:1.5px solid color-mix(in srgb,var(--amber) 65%,transparent);background:none;color:var(--ink);font:var(--wt-bold) var(--fs-headline) var(--font-display);cursor:pointer}
-.daily0>*{display:block;line-height:1;margin:0}.daily0>.ic.em{width:auto;min-width:1.2em;height:20px;display:grid;place-items:center;font-size:var(--fs-headline);align-self:center}   /* text on one baseline, emoji centered on the row */
-.daily0 small{font:var(--wt-medium) var(--fs-footnote) var(--font-body);color:var(--ink2);white-space:nowrap}.daily0 small .hot0{color:var(--amber);font-weight:var(--wt-bold)}.daily0 small .hot0 .ic{width:auto;min-width:1.2em;height:auto;background:none;margin-right:var(--sp-0h);vertical-align:-1px}
+.daily0>*{display:block;line-height:1;margin:0}.daily0>.ic{width:22px;height:22px;align-self:center;color:var(--amber2)}.daily0>.ic .ico{width:22px;height:22px}   /* text on one baseline, icon centered on the row, accent color */
+.daily0 small{font:var(--wt-medium) var(--fs-footnote) var(--font-body);color:var(--ink2);white-space:nowrap}.daily0 small .hot0{color:var(--amber);font-weight:var(--wt-bold)}.daily0 small .hot0 .ic{width:auto;height:auto;margin:0 var(--sp-0h) 0 0;vertical-align:-3px}.daily0 small .hot0 .ico{display:inline-block;width:16px;height:16px}
 button.daily0:disabled{opacity:1;border-color:var(--line);cursor:default}.daily0:disabled span{color:var(--ink2)}
 .dstat0{margin:var(--sp-3) 0 0;font-size:var(--fs-body);color:var(--ink2);max-width:36ch}.dstat0:empty{display:none}
 .links0{display:flex;gap:var(--sp-4);justify-content:center;margin-top:var(--sp-3)}
@@ -629,7 +654,7 @@ button.daily0:disabled{opacity:1;border-color:var(--line);cursor:default}.daily0
 .tile1[data-k="fl"]{--tc:var(--t-fl)}.tile1[data-k="pick"]{--tc:var(--t-pick)}.tile1[data-k="club"]{--tc:var(--t-club)}.tile1[data-k="board"]{--tc:var(--t-board)}.tile1[data-k="tr"]{--tc:var(--t-tr)}
 .tiles0{display:grid;grid-template-columns:1fr;gap:var(--sp-2)}
 button.tile1{display:grid;grid-template-columns:44px minmax(0,1fr) auto;align-items:center;column-gap:var(--sp-4);min-height:72px;margin:0;padding:var(--sp-3) var(--sp-4) var(--sp-3) var(--sp-3);border:0;border-radius:var(--r-lg);background:var(--card);color:var(--ink);text-align:left;font-family:var(--font-body);cursor:pointer}
-button.tile1>.ic{width:44px;height:44px;margin:0;border-radius:50%;background:color-mix(in srgb,var(--tc) 18%,transparent);box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--tc) 45%,transparent);font-size:var(--fs-title3)}
+button.tile1>.ic{width:44px;height:44px;margin:0;border-radius:var(--r-md);background:color-mix(in srgb,var(--tc) 16%,transparent);color:var(--ink)}button.tile1>.ic .ico{width:26px;height:26px}   /* soft tinted plate, icon in text color for contrast */
 .tile1>span{display:grid;gap:var(--sp-1);min-width:0}.tile1 b{font-size:var(--fs-headline);font-weight:var(--wt-bold);line-height:var(--lh-snug)}
 .tile1 small{font-size:var(--fs-footnote);font-weight:var(--wt-medium);color:var(--ink2);line-height:var(--lh-normal)}
 .tile1 .chev{font-style:normal;color:var(--muted);font-size:var(--fs-title3)}
@@ -680,7 +705,8 @@ details.faqbox0 .faq0{padding:0 var(--sp-4) var(--sp-2)}
 .ft{display:grid;gap:var(--sp-4);justify-items:center;margin:var(--sp-6) auto var(--sp-6);padding:var(--sp-card) var(--sp-4) 0;border-top:1px solid var(--line2);max-width:760px;text-align:center;font-family:var(--font-body)}   /* footer (variant A) */
 .foot0{display:flex;flex-wrap:wrap;justify-content:center;gap:0 var(--sp-3);font-size:var(--fs-footnote);font-weight:var(--wt-bold)}.foot0 a{display:inline-flex;align-items:center;min-height:44px;padding-inline:var(--sp-1);color:var(--ink2);text-decoration:none}@media (hover:hover) and (pointer:fine){.foot0 a:hover{color:var(--amber)}}
 .ft .foot{margin:0;font-family:var(--font-body);font-size:var(--fs-caption)}.ft-small{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:var(--sp-2) var(--sp-2)}.ft .ft-small a{display:inline-flex;align-items:center;min-height:44px;color:var(--muted);font-weight:var(--wt-medium)}.ft .ft-small #newsBtn{color:var(--ink2)}.ft .ft-small a b{position:static;align-self:center;margin-left:var(--sp-1);transform:translateY(-6px)}
-.ft-pills{display:flex;flex-wrap:wrap;justify-content:center;gap:var(--sp-2)}.ft-pill{display:inline-flex;align-items:center;gap:var(--sp-2);min-height:44px;padding:0 var(--sp-4);border-radius:var(--r-pill);border:1px solid var(--line);background:none;color:var(--ink2);font:var(--wt-medium) var(--fs-footnote) var(--font-body);cursor:pointer;white-space:nowrap;text-decoration:none}.ft-pill[hidden]{display:none}.ft-pill .ico{width:15px;height:15px}
+.ft-pills{display:flex;flex-wrap:wrap;justify-content:center;gap:var(--sp-2)}.ft-pill{display:inline-flex;align-items:center;gap:var(--sp-2);min-height:44px;padding:0 var(--sp-4);border-radius:var(--r-pill);border:1px solid var(--line);background:none;color:var(--ink2);font:var(--wt-medium) var(--fs-footnote) var(--font-body);cursor:pointer;white-space:nowrap;text-decoration:none}.ft-pill[hidden]{display:none}.ft-pill .ico{width:15px;height:15px}.ft-pill .ic{width:20px;height:20px}.ft-pill .ic .ico{width:18px;height:18px}
+body:has(#s1[hidden]) .foot0,body:has(#s1[hidden]) .ft-cred{display:none}   /* short footer on inner screens: full one only on home */
 .ft-cred{font-size:var(--fs-caption2);line-height:var(--lh-body);color:var(--muted);opacity:.8;max-width:64ch;text-wrap:balance}
 .ft-form{width:min(100%,380px);text-align:left;display:grid;gap:var(--sp-2)}.ft-form[hidden]{display:none}.ft-form .ttl{font-size:var(--fs-body);font-weight:var(--wt-bold);color:var(--ink2)}
 .ft-form textarea,.ft-form input{width:100%;box-sizing:border-box;font:var(--wt-regular) var(--fs-headline)/var(--lh-body) var(--font-body);color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);padding:var(--sp-3) var(--sp-3)}.ft-form textarea{min-height:84px;resize:vertical}.ft-form textarea::placeholder{color:var(--muted)}
@@ -779,17 +805,33 @@ button.primary.solid,.big0.primary.solid{background:var(--ink);background-image:
 .pz0{display:grid;gap:var(--sp-2);justify-items:start;min-width:0}.pz0 .tier{text-wrap:balance;overflow-wrap:anywhere}
 .verd0{display:flex}.verd0 .vc{display:inline-block;padding:var(--sp-1) var(--sp-3);border-radius:var(--r-pill);font:var(--wt-bold) var(--fs-footnote)/var(--lh-snug) var(--font-body);background:color-mix(in srgb,var(--c) 16%,transparent);color:var(--c)}
 .verd0 .vc.good{--c:var(--win)}.verd0 .vc.mid{--c:var(--draw)}.verd0 .vc.bad{--c:var(--loss)}
-.lines0{margin-top:var(--sp-3);text-align:center}.lines0 .lw{display:flex;flex-wrap:wrap;justify-content:center;gap:var(--sp-1) var(--sp-4);font-size:var(--fs-footnote);color:var(--muted)}.lines0 b{color:var(--ink)}.lines0 p{margin:var(--sp-2) auto 0;font-size:var(--fs-footnote);color:var(--ink2)}
-.x0.c2{grid-template-columns:repeat(2,minmax(0,1fr))}
 .awd0{display:grid;gap:var(--sp-2);margin-top:var(--sp-3)}.awd0 p{margin:0}
 /* Share is the gradient primary (button.primary); challenge and new draft side by side */
 .shr2{display:flex;gap:var(--sp-2);width:100%;max-width:420px;justify-self:center}.shr2 .sharebtn{flex:1 1 0;min-width:0;max-width:none;padding-inline:var(--sp-2);font-size:var(--fs-body);text-align:center;line-height:var(--lh-snug)}.shr2 .sharebtn .ic{display:none}   /* two text buttons per row, no icon */
-#final>.hero{max-width:640px;width:100%;margin-inline:auto}
-.x0{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--sp-2);margin-top:var(--sp-2)}
-.x0>div{border-radius:var(--r-lg);padding:var(--sp-3) var(--sp-2);background:color-mix(in srgb,var(--bg) 70%,transparent);display:grid;justify-items:center;gap:var(--sp-0h);text-align:center}
-.x0 b{font:var(--wt-bold) var(--fs-title3) var(--font-display);color:var(--ink);font-variant-numeric:tabular-nums}.x0 span{font-size:var(--fs-caption2);color:var(--muted)}
+#final>.hero{width:100%;max-width:760px;margin-inline:auto}   /* same column as the tabs below; two-column layout (wide screens) keeps it narrower */
+@media (min-width:1000px){#final>.hero{max-width:640px}}
 details.tip.pop0{position:relative}details.tip.pop0>p{position:absolute;z-index:6;left:0;right:0;top:100%;margin:var(--sp-2) 0 0!important;padding:var(--sp-3) var(--sp-4);border-radius:var(--r-md);background:var(--card);box-shadow:var(--sh-3)}
-details.x0q{margin-top:0}details.x0q summary{font-size:var(--fs-footnote);color:var(--muted)}
+/* season stats: strength card, result-vs-expected card, tips under the player list */
+.card0{background:var(--surface);border-radius:var(--r-lg);box-shadow:var(--sh-1);padding:var(--sp-card);display:grid;gap:var(--sp-4)}
+.mtrs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--sp-5)}
+.mtr .k{font-size:var(--fs-footnote);color:var(--muted);font-weight:var(--wt-bold)}
+.mtr .v{display:flex;flex-wrap:wrap;align-items:baseline;gap:0 var(--sp-2);margin:var(--sp-1) 0 var(--sp-2)}
+.mtr .v b{font:var(--wt-black) var(--fs-large)/var(--lh-tight) var(--font-display);font-variant-numeric:tabular-nums}
+.mtr .v i{font-style:normal;font-size:var(--fs-footnote);font-weight:var(--wt-bold);color:var(--ink2)}
+.mbar{height:6px;border-radius:var(--r-pill);background:color-mix(in srgb,var(--line) 70%,transparent);overflow:hidden}.mbar u{display:block;height:100%;border-radius:inherit;background:var(--grad)}
+.lns4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:var(--sp-3) var(--sp-2);padding-top:var(--sp-4);border-top:1px solid var(--line)}
+.lns4>div{display:grid;gap:var(--sp-0h);align-content:start}.lns4 span{display:flex;align-items:center;gap:var(--sp-2);font-size:var(--fs-footnote);color:var(--muted)}.lns4 span::before{content:"";flex:none;width:8px;height:8px;border-radius:50%;background:var(--c)}.lns4 b{font-size:var(--fs-body)}
+.nw{white-space:nowrap}.say0{margin:0;font-size:var(--fs-body);color:var(--ink2)}.say0 b{color:var(--ink)}
+.res0{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0}.res0>div{padding:0 var(--sp-3);display:grid;gap:var(--sp-0h);align-content:start;justify-items:start}.res0>div+div{border-left:1px solid var(--line)}.res0>div:first-child{padding-left:0}
+.res0 .k{font-size:var(--fs-footnote);color:var(--muted);font-weight:var(--wt-bold)}.res0 b{font:var(--wt-black) var(--fs-title1)/var(--lh-snug) var(--font-display);font-variant-numeric:tabular-nums}.res0 small{font-size:var(--fs-footnote);color:var(--ink2)}
+.delta0{display:inline-block;padding:var(--sp-0h) var(--sp-2);border-radius:var(--r-pill);font-size:var(--fs-footnote);font-weight:var(--wt-bold);background:color-mix(in srgb,var(--c) 16%,transparent);color:var(--c);--c:var(--loss)}.delta0.up{--c:var(--win)}
+#t2 details.tip>summary{min-height:44px}
+#t2 .tipgrp{display:grid;justify-items:start;gap:var(--sp-1);margin-top:var(--sp-2)}
+#t2 .tipgrp p,#xCap p{margin:0 0 var(--sp-2);max-width:62ch;font-size:var(--fs-footnote);color:var(--ink2)}#xCap p:last-child{margin-bottom:0}
+/* scroll hint: fade on the right edge while the table has more columns */
+.tblw{position:relative}.tblw::after{content:"";position:absolute;top:0;right:0;bottom:0;width:32px;background:linear-gradient(to right,transparent,var(--bg));pointer-events:none;opacity:0;transition:opacity var(--dur-2) var(--ease-out)}.tblw.more::after{opacity:1}
+@media(max-width:480px){.lns4{grid-template-columns:repeat(2,minmax(0,1fr))}.mtr .v b{font-size:var(--fs-title1)}.res0 b{font-size:var(--fs-title2)}.res0>div{padding:0 var(--sp-2)}.delta0{border-radius:var(--r-md);line-height:var(--lh-snug);padding:var(--sp-1) var(--sp-2)}}
+@media (prefers-reduced-motion:reduce){.tblw::after{transition:none}}
 /* W-D-L in summary: single color, no green/yellow/red */
 #recTiles i{color:inherit!important}
 /* ===== unified spacing: section title 36 px above, 12 below;
@@ -811,6 +853,28 @@ section>h3:first-child,.box h3:first-of-type,#viewBody>h3:first-child,#viewBody>
 /* summary: trophy titles in white, calm borders, no pink glow; only Share uses the gradient */
 #newTro .tro.on .trt b{background:none;color:var(--ink)}
 #newTro .tro,#newTro .tro.new,#newTro .tro.rarein{box-shadow:inset 0 0 0 1px var(--line)}#newTro .tro.rarein{animation:rarein .9s cubic-bezier(.2,.9,.25,1.2) both}
+/* new trophy opening: card in, sealed token flips (face swaps at the half-turn), rarity glow, shine for rare; --od = stagger delay */
+#newTro .tro.open{position:relative;--gs:38%}#newTro .tro.open.rarein{--gs:70%}#newTro .tro.open:not(.rarein){--rc:var(--amber)}
+#newTro .tro.open,#newTro .tro.open.rarein{animation:openin var(--dur-3) var(--ease-out) var(--od,0ms) backwards,openglow 2.2s ease-out calc(var(--od,0ms) + 560ms) forwards}
+#newTro .tro.open.rarein::after{animation-delay:calc(var(--od,0ms) + 700ms)}
+#newTro .tro.open .tri{position:relative;animation:openflip 520ms ease-in-out calc(var(--od,0ms) + 120ms) backwards,opensettle var(--dur-3) var(--spring) calc(var(--od,0ms) + 380ms) backwards}
+#newTro .tro.open .tri>.tre{animation:openface 520ms steps(1,end) calc(var(--od,0ms) + 120ms) backwards}
+.tseal{position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle at 35% 30%,color-mix(in srgb,var(--rc) 55%,#fff),var(--rc) 62%,color-mix(in srgb,var(--rc) 65%,#000));box-shadow:inset 0 0 0 2px color-mix(in srgb,#fff 35%,transparent);animation:openseal 520ms steps(1,end) calc(var(--od,0ms) + 120ms) both}
+#newTro.wait .tro,#newTro.wait .tro *,#newTro.wait .tro::after{animation-play-state:paused!important}
+@keyframes openin{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes openflip{from{transform:perspective(420px) rotateY(180deg)}to{transform:perspective(420px) rotateY(0)}}
+@keyframes opensettle{from{scale:.86}to{scale:1}}
+@keyframes openface{0%,49.99%{opacity:0}50%,100%{opacity:1}}
+@keyframes openseal{0%,49.99%{opacity:1}50%,100%{opacity:0}}
+@keyframes openglow{0%,25%{box-shadow:0 0 0 2px var(--rc),0 0 28px color-mix(in srgb,var(--rc) var(--gs),transparent),inset 0 0 0 1px var(--line)}100%{box-shadow:0 0 0 0 transparent,0 0 0 0 transparent,inset 0 0 0 1px var(--line)}}
+.trk{display:flex;align-items:baseline;justify-content:space-between;gap:var(--sp-2)}.trk .trtot{font-variant-numeric:tabular-nums;color:var(--ink2)}
+@media (prefers-reduced-motion:reduce){#newTro .tro.rarein,#newTro .tro.open,#newTro .tro.open.rarein,#newTro .tro.open .tri,#newTro .tro.open .tri>.tre,#newTro .tro.open.rarein::after{animation:none}.tseal{display:none}}
+/* odometer cell (custom tags dodge generic span rules): old digit rolls out, new one rolls in; width stays (tabular-nums) */
+.od{display:inline-block;position:relative;clip-path:inset(0 -2px)}.od-n,.od-o{display:inline-block}.od-o{position:absolute;left:0;top:0}
+/* picked player flies from the list to its slot; the ghost never takes taps; the slot content waits (.fw) until it lands */
+.flyg{position:fixed;left:0;top:0;z-index:39;pointer-events:none;will-change:transform,opacity}
+.flyg span{display:block;padding:var(--sp-1) var(--sp-2);border-radius:var(--r-pill);background:var(--surface);color:var(--ink);box-shadow:var(--sh-2);font-weight:var(--wt-bold);white-space:nowrap;line-height:var(--lh-snug)}
+.slot.fw>*{opacity:0}
 .tro:not(.on) .trt b{color:var(--muted)}.tro:not(.on) .trt>span{color:var(--muted)}
 .tro .trt>span{font-size:var(--fs-footnote);line-height:var(--lh-body)}
 #newTro .tro{padding:var(--sp-4) var(--sp-4)}
@@ -835,7 +899,7 @@ h3,.sec0,#s1 .sec0,.pgh,.trleg .h{font-size:var(--fs-footnote);font-weight:var(-
       <p class="lead0">Збери найсильнішу 11-ку УПЛ і пройди сезон без поразок.</p>
       <div class="btns0">
         <button class="primary big0" id="freeOpen">Грати</button>
-        <button class="daily0" id="dailyBtn"><i class="ic em" aria-hidden="true">🎯</i><span id="dLabel">Драфт дня</span><small id="dMeta"></small></button>
+        <button class="daily0" id="dailyBtn"><!--i:calendar-star--><span id="dLabel">Драфт дня</span><small id="dMeta"></small></button>
       </div>
       <p class="dstat0" id="dStatus"></p>
       <div class="links0"><button id="lbOpenBtn" hidden>Таблиця дня</button><button id="howGo">Як грати?</button></div>
@@ -843,6 +907,44 @@ h3,.sec0,#s1 .sec0,.pgh,.trleg .h{font-size:var(--fs-footnote);font-weight:var(-
     </div>
     <div class="daily" id="chalCard" hidden></div>
     <div class="daily" id="leagueCard" hidden></div>
+    <script>/* Chat league card markup (shared with account.js). In the Telegram Mini App opened from a group the first frame already
+   shows the cached board or a skeleton of the same size, before the player pool, the main script and telegram-web-app.js load. */
+(()=>{const E=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const J=k=>{try{return JSON.parse(localStorage.getItem(k)||'null');}catch(e){return null;}};
+  const COLS_T=['В-Н-П','Очки'],COLS_S=['Днів','Перемог'],NEXT='Наступний — завтра о 00:00 за Києвом.';
+  const head=c=>`<thead><tr><th>#</th><th>Гравець</th><th class="num">${c[0]}</th><th class="num">${c[1]}</th></tr></thead>`;
+  const tbl=(c,rows,busy)=>`<div class="tbl"${busy?' role="status" aria-busy="true" aria-label="Завантаження"':''}><table class="lg-t">${head(c)}<tbody>${rows}</tbody></table></div>`;
+  const place=i=>i<3?`<span class="plc p${i+1}">${i+1}</span>`:i+1;
+  const name=r=>{const n=E(String(r.name||'анонім').toLowerCase());return r.u&&/^[a-z2-9]{8}$/.test(r.u)?`<a class="plink" href="?u=${r.u}" data-u="${r.u}">${n}</a>`:n;};
+  const row=(r,i,me,a,b)=>`<tr${me?' class="me"':''}><td>${place(i)}</td><td class="nm"><span class="nmw"><span class="nmt">${name(r)}</span>${me?'<span class="you">· ти</span>':''}</span></td><td class="num s">${a}</td><td class="num p">${b}</td></tr>`;
+  const today=(r,i,me)=>row(r,i,me,`${r.w}-${r.d}-${r.l}`,r.pts);
+  const skRows=n=>'<tr><td><i class="sk lg-sq"></i></td><td class="nm"><i class="sk w60"></i></td><td class="num"><i class="sk num"></i></td><td class="num"><i class="sk num"></i></td></tr>'.repeat(n);
+  const hd=(t,pill)=>`<div class="lg-hd"><div class="lg-ht"><div class="kicker">Ліга чату</div>${t===null?'':`<div class="ttl">${t?E(t):'<i class="sk w60"></i>'}</div>`}</div>${pill||''}</div>`;
+  const allBtn=m=>`<button class="lg-all" id="leagueAll">Уся таблиця${m?' · '+m:''} <i aria-hidden="true">›</i></button>`;
+  // o: {me(row) -> bool, played: today's daily done on this device, denied: server refused to join}
+  const card=(L,o)=>{const t=L.today||[],n=t.length,m=Math.max(L.members||0,n),me=t.findIndex(o.me);
+    const rows=t.slice(0,3).map((r,i)=>today(r,i,i===me)).join('')+(me>=3?`<tr class="gap" aria-hidden="true"><td colspan="4">⋮</td></tr>${today(t[me],me,true)}`:'');
+    return hd(L.title,`<span class="lg-pill">${n} з ${m} зіграли</span>`)
+      +(n?tbl(COLS_T,rows):`<p class="lg-empty">${o.played?'Сьогодні з групи ще ніхто не зіграв.':'Ще ніхто не зіграв — будь першим!'}</p>`)
+      +(o.denied&&me<0?'<p class="lg-note">Ти ще не в цій лізі: відкрий гру кнопкою бота в групі.</p>':'')
+      +allBtn(m)+(o.played?`<p class="lg-note">${me>=0?'Твій результат уже в табло.':'Драфт дня ти вже зіграв.'} ${NEXT}</p>`:'');};
+  const skel=(t,played)=>hd(t,'<i class="sk lg-pill"></i>')+tbl(COLS_T,skRows(3),1)+'<button class="lg-all" disabled>Уся таблиця <i aria-hidden="true">›</i></button>'
+    +(played?`<p class="lg-note">Драфт дня ти вже зіграв. ${NEXT}</p>`:'');
+  const G=window.__lg0={E,COLS_T,COLS_S,tbl,row,today,skRows,hd,card,skel,chat:null};
+  if(!__ONLINE__)return;
+  try{   // Telegram passes launch data in the hash (tgWebAppData, includes start_param); on reload telegram-web-app.js keeps it in sessionStorage
+    const h=new URLSearchParams(location.hash.slice(1)),q=new URLSearchParams(location.search);
+    let d=h.get('tgWebAppData'),sp=h.get('tgWebAppStartParam')||q.get('tgWebAppStartParam')||'';
+    if(!d){const s=JSON.parse(sessionStorage.getItem('__telegram__initParams')||'null');if(s){d=s.tgWebAppData;sp=sp||s.tgWebAppStartParam||'';}}
+    if(!d)return;
+    const p=new URLSearchParams(d);sp=p.get('start_param')||sp;let u=null;try{u=JSON.parse(p.get('user'));}catch(e){}
+    const m=/^g(-?\d+)$/.exec(sp),j=m&&J('upl30_joined_'+m[1]);const chat=String(j&&j.chat||(m?m[1]:J('upl30_league'))||'');
+    if(!chat)return;G.chat=chat;G.req=fetch('/api/league?chat='+encodeURIComponent(chat)+'&card=1');G.req.catch(()=>{});   // public board; account.js picks up the response
+    const day=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Kyiv',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+    const el=document.getElementById('leagueCard'),played=!!J('upl30_daily_'+day),snap=J('upl30_league_snap'),pl=J('upl30_player');
+    const tn=u?[u.first_name,u.last_name].filter(Boolean).join(' '):'',mine=snap&&String(snap.chat)===chat;
+    el.innerHTML=mine&&snap.day===day?card(snap,{played,me:r=>!!((r.u&&pl&&r.u===pl.public_id)||(!r.u&&tn&&r.name===tn))}):skel(mine?snap.title:'',played);el.hidden=false;
+  }catch(e){}})();</script>
     <div class="sec0">Інші режими</div>
     <div class="tiles0 m3">
       <button class="tile1" id="flOpen" data-k="fl"><!--i:account-group--><span><b>Ліга з друзями</b><small>Посилання в чат</small></span><i class="chev" aria-hidden="true">›</i></button>
@@ -868,7 +970,7 @@ h3,.sec0,#s1 .sec0,.pgh,.trleg .h{font-size:var(--fs-footnote);font-weight:var(-
       <details><summary>Що таке «хімія»?</summary><p>Троє й більше гравців одного клубу грають разом краще, а якщо вони ще й з одного сезону — ще трохи краще. Бонус видно перед сезоном у рядку «Хімія».</p></details>
       <details><summary>Що таке xP, шанси й «везіння»?</summary><p>xP — скільки очок твій склад у середньому набирає проти цих суперників за 300 симуляцій сезону. Шанси (чемпіон, Ліга чемпіонів, єврокубки, виліт) — як часто він так фінішує в цих симуляціях. Навіть у скромного складу є шанс на «сезон-диво», а в сильного — рідкісний «золотий сезон», коли все йде в ворота й 30 перемог із 30 стають реальними. Суперники теж щоразу грають по-різному: буває, що фаворити провалюють сезон. xG — очікувані голи. Везіння — різниця між набраними очками й xP. Після сезону поруч із результатом — прогноз місця й вердикт: «Усе за сценарієм», «Краще за прогноз» чи «Провал сезону».</p></details>
       <details><summary>Як визначаються місця при рівності очок?</summary><p>За регламентом УПЛ: очки в особистих зустрічах → різниця м'ячів в особистих → забиті в особистих → загальна різниця м'ячів → загальна кількість забитих. За 1-ше місце — «золотий матч», за інші — жереб.</p></details>
-      <details><summary>Що таке «Драфт дня»?</summary><p>Одна схема, одні суперники й одне колесо на день для всіх. Офіційна спроба — одна, результат іде в таблицю дня. Грай щодня, щоб тримати серію: один пропущений день на тиждень прощається (❄️ заморозка).</p></details>
+      <details><summary>Що таке «Драфт дня»?</summary><p>Одна схема, одні суперники й одне колесо на день для всіх. Офіційна спроба — одна, результат іде в таблицю дня. Грай щодня, щоб тримати серію: один пропущений день на тиждень прощається (заморозка).</p></details>
       <details><summary>Що таке «Вибір сезону»?</summary><p>Колесо дає лише клуб, а сезон обираєш сам — з трьох випадкових сезонів цього клубу. Перекручувань немає, назад не повернешся. Результат іде в загальну таблицю з позначкою режиму.</p></details>
       <details><summary>Що таке «Один клуб»?</summary><p>Обираєш клуб — і збираєш найкращу 11-ку з усіх його сезонів в УПЛ. Колесо дає лише сезони цього клубу. У кожного клубу свої рекорди: набери більше очок, ніж клуб у найкращому сезоні, і менше, ніж у найгіршому, — і клуб пройдено. Складність дуже залежить від клубу, тому таблиця окрема.</p></details>
       <details><summary>Як грати з друзями?</summary><p>«Ліга з друзями» на головній: створи лігу й надішли посилання в чат. 11×11 — ліга на кілька днів: щодня спроба, очки сумуються. 5×5 — турнір: кожен збирає п'ятірку, а коли збір закінчиться, п'ятірки грають одна з одною. У Telegram-чаті бот @upl30_bot з командою /league веде табло драфту дня для всього чату. А ще — однаковий «Драфт дня» для всіх і кнопка «Кинути виклик другу» після сезону. «Поділитися» надсилає картку з результатом прямо в чат.</p></details>
@@ -899,10 +1001,10 @@ h3,.sec0,#s1 .sec0,.pgh,.trleg .h{font-size:var(--fs-footnote);font-weight:var(-
       <div class="bar"><i id="draftBar"></i></div>
     </div>
     <div class="pitch" id="pitch"></div>
-    <div class="row" id="moveRow"><button class="ghost" id="moveBtn" hidden><!--i:arrow-left-right-->Переставити гравців</button><small id="moveSub">Зміни позицію гравця, щоб звільнити місце</small></div>
+    <div class="row" id="moveRow"><button class="ghost" id="moveBtn" hidden><!--i:arrow-left-right-->Переставити гравців</button></div>
     <p class="muted" id="moveHint" hidden style="margin:var(--sp-2) 0 0;font-size:var(--fs-footnote)"></p>
     <div style="margin-top:var(--sp-3)" class="grid">
-      <div class="spin0" id="spinZone"><button class="spin" id="spinBtn">Крутити колесо</button><span>або торкнись будь-де тут</span></div>
+      <div class="spin0" id="spinZone"><button class="spin" id="spinBtn">Крутити колесо</button></div>
       <div class="wheel" id="wheel" hidden>
         <div class="reels"><div class="reel" id="reelClub"><div class="strip"><div class="club" id="wClub"></div></div></div><div class="reel" id="reelYear"><div class="strip"><div class="season" id="wSeason"></div></div></div></div>
         <p class="why0" id="wHint"></p>
@@ -960,13 +1062,13 @@ h3,.sec0,#s1 .sec0,.pgh,.trleg .h{font-size:var(--fs-footnote);font-weight:var(-
       <textarea id="shareText" hidden readonly aria-label="Текст для поширення"></textarea>
       <!-- single Share button: card + preview link (/r/<id>, api/r.js); without system share menu: card and Copy -->
       <button class="sharebtn primary" id="tgShareBtn"><!--i:share-variant-->Поділитися</button>
-      <div class="shr2"><button class="sharebtn alt" id="chalOpen" hidden><!--i:sword-cross-->Кинути виклик другу</button>
+      <div class="shr2"><button class="sharebtn alt" id="chalOpen" hidden>Кинути виклик другу</button>
       <button class="sharebtn alt" id="againBtn">Новий драфт</button></div>   <!-- Share is the primary button; the other two sit in one row -->
       <span class="best" id="copyMsg"></span>
       <img id="shareImg" alt="Картка результату" hidden>
       <div class="row" id="cardActs" hidden><button class="primary" id="cardTgBtn" hidden><!--i:telegram-->Надіслати картку мені в Telegram</button><button class="primary" id="cardShareBtn" hidden><!--i:share-variant-->Поділитися карткою</button><button class="ghost" id="copyBtn"><!--i:content-copy-->Копіювати текст і посилання</button><span class="best" id="cardMsg"></span></div>
       <div class="hint" id="shareHint" hidden>Натисни й утримуй картку, щоб зберегти її або поділитися в Telegram чи Instagram.</div>
-      <div class="grid chalbox" id="chalBox" hidden style="gap:var(--sp-2)"><b>Кинути виклик другу</b><input id="chalName" maxlength="24" placeholder="Твоє ім'я у виклику" style="max-width:260px;font:inherit;font-size:var(--fs-headline);padding:var(--sp-2) var(--sp-3);border:1px solid var(--line);border-radius:var(--r-md);background:var(--surface);color:var(--ink)"><div class="row"><button class="primary" id="chalBtn"><!--i:sword-cross-->Кинути виклик другу</button><button class="ghost" id="chalCopyBtn"><!--i:content-copy-->Скопіювати посилання</button></div><span class="muted" style="font-size:var(--fs-footnote)">Друг зіграє з тим самим колесом, схемою й суперниками — побачимо, хто сильніший.</span><div class="muted" id="chalMsg" style="font-size:var(--fs-footnote);word-break:break-all"></div></div>
+      <div class="grid chalbox" id="chalBox" hidden style="gap:var(--sp-2)"><b>Кинути виклик другу</b><input id="chalName" maxlength="24" placeholder="Твоє ім'я у виклику" style="max-width:260px;font:inherit;font-size:var(--fs-headline);padding:var(--sp-2) var(--sp-3);border:1px solid var(--line);border-radius:var(--r-md);background:var(--surface);color:var(--ink)"><div class="row"><button class="primary" id="chalBtn"><!--i:sword-cross-->Кинути виклик другу</button><button class="ghost" id="chalCopyBtn"><!--i:content-copy-->Скопіювати посилання</button></div><div class="muted" id="chalMsg" style="font-size:var(--fs-footnote);word-break:break-all"></div></div>
     </div>
     <div class="tabs" role="tablist" id="tabs"><button class="tab on" data-tab="t1" role="tab">Огляд</button><button class="tab" data-tab="t2" role="tab">Статистика сезону</button></div>
     <div id="t1" class="tabpane">
@@ -979,21 +1081,23 @@ h3,.sec0,#s1 .sec0,.pgh,.trleg .h{font-size:var(--fs-footnote);font-weight:var(-
     </div>
     <div id="t2" class="tabpane" hidden>
       <h3>Сила команди</h3>
-      <div class="x0" id="xRow"></div><div class="x0 c2" id="idxRow"></div>
-      <div class="lines0" id="linesRow"></div>
-      <details class="tip x0q"><summary>Що таке xG і везіння?</summary><p class="muted cap" id="xCap"></p></details>
+      <div class="card0" id="strCard"><div class="mtrs" id="idxRow"></div><div class="lns4" id="linesRow"></div><p class="say0" id="sayRow"></p></div>
+      <h3>Результат проти очікувань</h3>
+      <div class="card0 res0" id="xRow"></div>
+      <details class="tip" style="margin-top:var(--sp-2)"><summary>Як це читати</summary><div id="xCap"></div></details>
       <h3>Турнірна таблиця</h3>
-      <div class="tbl"><table id="table"></table></div>
+      <div class="tblw"><div class="tbl"><table id="table"></table></div></div>
       <div class="zlg" id="zoneLegend"><span class="z-cl">Ліга чемпіонів</span><span class="z-el">Ліга Європи</span><span class="z-co">Ліга конференцій</span><span class="z-rl">Виліт</span></div>
-      <details class="tip"><summary>Що означають xG і Г−xG</summary><p class="muted cap" style="margin-top:var(--sp-2)">xG — очікувані голи, xGA — очікувані пропущені, Г−xG — наскільки команда забила більше (везіння, реалізація) чи менше, ніж «мала б».</p></details>
       <p class="note" id="tieNote" style="margin-top:var(--sp-3)"></p>
       <h3>Твої гравці</h3>
       <p id="mvpLine" style="margin:0 0 var(--sp-2)"></p>
-      <div class="tbl"><table id="playerStats"></table></div>
+      <div class="tblw"><div class="tbl"><table id="playerStats"></table></div></div>
       <p class="muted cap lnkey"><span><i class="ln GK"></i>Воротар</span><span><i class="ln DF"></i>Захист</span><span><i class="ln MF"></i>Півзахист</span><span><i class="ln FW"></i>Напад</span><span class="lnform">Г — голи, А — асисти, 8+ — матчі з оцінкою від 8. Форма — на скільки рейтинг гравця в цьому сезоні вищий чи нижчий за рейтинг у картці: у кожного свій рік.</span></p>
-      <details class="tip"><summary>Як читати оцінки</summary><p class="muted" style="font-size:var(--fs-caption);margin-top:var(--sp-2)">Оцінка — середня за 30 матчів, шкала як на SofaScore: 6.0 — слабко, 6.5–6.9 — нормально, 7.0–7.4 — добре, 7.5+ — відмінно. «8.0+» — скільки матчів гравець зіграв на 8 і вище.</p></details>
+      <div class="tipgrp">
+        <details class="tip"><summary>Як читати оцінки</summary><p class="muted">Оцінка — середня за 30 матчів, шкала як на SofaScore: 6.0 — слабко, 6.5–6.9 — нормально, 7.0–7.4 — добре, 7.5+ — відмінно. «8.0+» — скільки матчів гравець зіграв на 8 і вище.</p></details>
+        <details class="tip"><summary>Як рахувався сезон</summary><p class="note" id="modelNote"></p></details>
+      </div>
     </div>
-    <details class="tip"><summary>Як рахувався сезон</summary><p class="note" id="modelNote" style="margin-top:var(--sp-4)"></p></details>
     </div>
   </section>
 </div>
@@ -1008,8 +1112,8 @@ h3,.sec0,#s1 .sec0,.pgh,.trleg .h{font-size:var(--fs-footnote);font-weight:var(-
   <p class="hint">Скріншот? Надішли його боту <a href="#" id="fbBot">@upl30_bot</a></p><p class="err" id="fbErr" hidden></p>
   <div class="acts"><button class="ft-send" id="fbSend" type="submit">Надіслати</button><button class="ft-cancel" id="fbCancel" type="button">Скасувати</button></div></form>
 <div class="ft-done" id="fbDone" hidden><b>✓</b><span>Дякуємо! Прочитаємо найближчим часом</span></div>
-<div class="ft-pills"><button class="ft-pill" id="fbBtn" type="button">✉️ Відгук і баги</button><a class="ft-pill" id="ftBot" href="https://t.me/upl30_bot" target="_blank" rel="noopener"><!--i:telegram-->Telegram-бот</a></div>
-<div class="foot ft-small"><a href="#" id="newsBtn">Що нового у версії 0.76<b id="newsDot" hidden></b></a><span>·</span><a href="privacy.html">Конфіденційність</a></div>
+<div class="ft-pills"><button class="ft-pill" id="fbBtn" type="button"><!--i:mail-->Відгук і баги</button><a class="ft-pill" id="ftBot" href="https://t.me/upl30_bot" target="_blank" rel="noopener"><!--i:telegram-->Telegram-бот</a></div>
+<div class="foot ft-small"><a href="#" id="newsBtn">Що нового у версії 0.77<b id="newsDot" hidden></b></a><span>·</span><a href="privacy.html">Конфіденційність</a></div>
 <div class="foot ft-copy">© 2026 30-0 УПЛ · неофіційний фан-проєкт <a href="#" id="themeBtn" class="thm" role="switch" aria-checked="false" aria-label="Світла тема"></a></div>
 <div class="ft-cred">Шрифт KyivType Sans © Дмитро Растворцев (айдентика Києва)<br>Іконки: Material Design Icons (Apache 2.0), логотип Telegram — Font Awesome Free (CC BY 4.0)</div>
 </footer>
@@ -1183,7 +1287,7 @@ function renderDailyCard(){
   const done=lsGet("upl30_daily_"+DAY);const si=streakInfo();
   const fire=si.count>1?` · <b class="hot0" title="${si.freeze?'Один пропущений день на тиждень не обнуляє серію':'Заморозку цього тижня використано'}">${ic('fire')}${si.count} дн.</b>`:'';
   document.getElementById('dMeta').innerHTML=(done?'новий завтра':`${DAY.slice(8,10)}.${DAY.slice(5,7)} · ${DAILY.formation}`)+fire;   // icon, title and date on one line
-  document.getElementById('dStatus').textContent=done?`Сьогодні: ${done.W}-${done.D}-${done.L}, ${done.pts} ${ptsWord(done.pts)}, ${done.place} місце`:(si.rescue&&si.count>1?`Вчора пропустив — зіграй сьогодні, і ❄️ заморозка збереже серію ${si.count} дн.`:'');
+  document.getElementById('dStatus').textContent=done?`Сьогодні: ${done.W}-${done.D}-${done.L}, ${done.pts} ${ptsWord(done.pts)}, ${done.place} місце`:(si.rescue&&si.count>1?`Вчора пропустив — зіграй сьогодні, і заморозка збереже серію ${si.count} дн.`:'');
   document.getElementById('dLabel').textContent=done?'Зіграно':'Драфт дня';document.getElementById('dailyBtn').disabled=!!done;
 }
 
@@ -1332,7 +1436,7 @@ function renderPitch(el,slots,withClub){
   slots.forEach((s,idx)=>{const d=document.createElement('div');const mv=S.move;const pt=G.pts[idx]||{x:50,y:50};
       const pend=S.pending&&!withClub&&!s.player&&effRating(S.pending,s.slot)!=null;
       const tgt=pend||(mv!=null&&!withClub&&idx!==mv&&canMove(mv,idx));
-      d.className='slot '+GROUP_OF[s.slot]+(s.player?' filled':' empty')+(mv===idx?' moving':'')+(tgt?' target':'');d.title=POSFULL[s.slot];d.style.left=pt.x+'%';d.style.top=pt.y+'%';
+      d.className='slot '+GROUP_OF[s.slot]+(s.player?' filled':' empty')+(mv===idx?' moving':'')+(tgt?' target':'')+(!withClub&&FLY_WAIT.has(idx)&&s.player?' fw':'');d.title=POSFULL[s.slot];d.style.left=pt.x+'%';d.style.top=pt.y+'%';
       const p=s.player;let body={};
       if(p){const res=withClub&&S.result&&S.result.players;const open=ratingsOpen();
         if(res){const pl=S.result.players.find(x=>x.id===p.id);body={pill:pl?avgPill(pl.rt.toFixed(2)):'',r0:open?baseR(p):null};}
@@ -1397,7 +1501,7 @@ function renderDraft(){
   const filled=S.slots.filter(s=>s.player).length;
   document.getElementById('draftCount').textContent=filled+"/11";
   {const tot=(MODES[S.mode]||{}).rerolls||0,left=Math.max(0,S.rerolls||0);document.getElementById('rrDots').innerHTML=tot?Array.from({length:tot},(_,i)=>`<i class="${i<left?'on':''}"></i>`).join(''):'';}document.getElementById('draftBar').style.width=Math.round(filled/11*100)+'%';renderMini();
-  {const mb=document.getElementById('moveBtn');mb.hidden=filled<2;mb.classList.toggle('on',!!S.moveMode);mb.lastChild.textContent=S.moveMode?'Готово':'Переставити гравців';document.getElementById('moveSub').hidden=!!S.moveMode;}
+  {const mb=document.getElementById('moveBtn');mb.hidden=filled<2;mb.classList.toggle('on',!!S.moveMode);mb.lastChild.textContent=S.moveMode?'Готово':'Переставити гравців';}
   renderPitch(document.getElementById('pitch'),S.slots,false);
   const done=filled===11;
   document.getElementById('spinBtn').hidden=done||!!S.wheel||!!S.pickOpts;
@@ -1516,9 +1620,9 @@ function posBox(p,row){const opts=posOpts(p),box=document.createElement('div');b
 function keepScroll(fn){fn();const z=document.getElementById('spinZone');if(!z||!z.offsetParent)return;const r=z.getBoundingClientRect();
   if(r.bottom>innerHeight-8||r.top<0)window.scrollTo({top:Math.max(0,scrollY+r.bottom-innerHeight+16),behavior:'instant'});}
 function place(p,s){
-  const r=effRating(p,s.slot);
+  const r=effRating(p,s.slot),fly0=flySrc(p);
   s.player={name:p[0],pos:GROUP_OF[s.slot],slot:s.slot,main:p[6],alts:p[7],r,r0:p[2],apps:p[3],goals:p[4],ast:p[8],cs:p[9],nat:p[10],by:p[11],cc:S.wheel.c,id:p[5],club:S.wheel.n,y:S.wheel.y};S.taken.add(canon(p[5]));S.wheel=null;S.move=null;S.pending=null;keepScroll(renderDraft);haptic('light');
-  {const sl=document.querySelectorAll('#pitch .slot')[S.slots.indexOf(s)],disc=sl&&sl.querySelector('.disc');if(disc&&!LESS_MOTION())restartAnim(disc,'land0');}   // no flying player animation, only short feedback on the pitch
+  {const ix=S.slots.indexOf(s),sl=document.querySelectorAll('#pitch .slot')[ix],disc=sl&&sl.querySelector('.disc');if(disc&&!LESS_MOTION()&&!flyTo(fly0,ix))restartAnim(disc,'land0');}   // name chip flies to the slot, else short landing only
   {const n=S.slots.filter(x=>x.player).length,seen=lsGet('upl30_hint_move')||0;if(n===2&&seen<2){const h=document.getElementById('moveHint');h.hidden=false;h.textContent='Порада: кнопка «Переставити гравців» під полем дозволяє поміняти позиції.';lsSet('upl30_hint_move',seen+1);}}
   if(S.slots.every(x=>x.player))setTimeout(lockDraft,0);   // squad complete: ratings, forecast and Play season immediately; progress bar in preBox while computing
 }
@@ -1735,13 +1839,14 @@ function tierOf(r){
 // season seed comes from the server (after the squad is locked) so results cannot be brute-forced; offline uses a local seed
 // 429 (rate limited per minute): season plays with a local seed, with a soft note under the result (RATE_NOTE)
 let RATE_NOTE='';
-async function fetchSeed(year){
+// a cold server can answer late: wait up to 6 s, retry once after a timeout (the server returns the same daily seed)
+async function fetchSeed(year,retry=1){
   if(!ONLINE)return null;
-  const ctl=typeof AbortController!=='undefined'?new AbortController():null;const tm=setTimeout(()=>ctl&&ctl.abort(),3500);
+  const ctl=typeof AbortController!=='undefined'?new AbortController():null;const tm=setTimeout(()=>ctl&&ctl.abort(),6000);
   try{const r=await _fetch('/api/seed',{method:'POST',headers:{'Content-Type':'application/json'},signal:ctl&&ctl.signal,
       body:JSON.stringify({device_id:deviceId(),secret:devSecret(),xi:S.slots.map(s=>({id:s.player.id,slot:s.slot,c:s.player.club,y:s.player.y})),formation:S.formation,mode:S.mode,format:S.format,year,daily:!!(S.daily&&!S.daily.practice)})});
     if(r.status===429){const j=await r.json().catch(()=>({}));RATE_NOTE=j.error||'Забагато запитів за хвилину. Зачекай трохи й спробуй ще раз.';}
-    if(!r.ok)return null;const j=await r.json();return j&&j.seed?j:null;}catch(e){return null;}finally{clearTimeout(tm);}
+    if(!r.ok)return null;const j=await r.json();return j&&j.seed?j:null;}catch(e){clearTimeout(tm);return e&&e.name==='AbortError'&&retry>0?fetchSeed(year,retry-1):null;}finally{clearTimeout(tm);}
 }
 let SIM_BUSY=false;
 async function playSeason(year){
@@ -1763,11 +1868,11 @@ async function playSeason(year){
   document.getElementById('recTiles').innerHTML=`<div><b><i class="W">${r.W}</i>-<i class="D">${r.D}</i>-<i class="L">${r.L}</i></b><span>в · н · п</span></div><div><b class="hot">${r.pts}</b><span>${ptsWord(r.pts)}</span></div>`;
   const luck=r.pts-r.xp;
   // xG, xGA, luck and strength indices live in the Season stats tab
-  document.getElementById('xRow').innerHTML=`<div><b>${r.xgf.toFixed(1)}</b><span>xG · забили ${r.gf}</span></div><div><b>${r.xga.toFixed(1)}</b><span>xGA · пропустили ${r.ga}</span></div><div><b>${luck>=0?'+':'−'}${Math.abs(luck).toFixed(1)}</b><span>${luck>=0?'везіння':'невезіння'}, очк.</span></div>`;
-  document.getElementById('idxRow').innerHTML=`<div><b>${r.t.att.toFixed(1)}</b><span>індекс атаки</span></div><div><b>${r.t.def.toFixed(1)}</b><span>індекс оборони</span></div>`;
-  document.getElementById('xCap').textContent=`xG — очікувані голи: скільки команда мала б забити за силою атаки й суперників. xGA — очікувані пропущені. Везіння — різниця між набраними очками й прогнозом перед сезоном (xP ${r.xp.toFixed(1)}).`;
+  document.getElementById('xRow').innerHTML=`<div><span class="k">Забили</span><b>${r.gf}</b><small>очікувано ${r.xgf.toFixed(1)} xG</small></div><div><span class="k">Пропустили</span><b>${r.ga}</b><small>очікувано ${r.xga.toFixed(1)} xGA</small></div><div><span class="k">Очки</span><b>${r.pts}</b><span class="delta0${luck>=0?' up':''}">${luck>=0?'+':'−'}${Math.abs(luck).toFixed(1)} до прогнозу</span></div>`;
+  document.getElementById('idxRow').innerHTML=[['Атака',r.t.att],['Оборона',r.t.def]].map(([n,v])=>`<div class="mtr"><div class="k">${n}</div><div class="v"><b>${v.toFixed(1)}</b><i>${LINE_WORD(v)}</i></div><div class="mbar" role="meter" aria-label="${n}" aria-valuemin="${IDX_LO}" aria-valuemax="${IDX_HI}" aria-valuenow="${v.toFixed(1)}"><u style="width:${idxPct(v).toFixed(0)}%"></u></div></div>`).join('');
+  document.getElementById('xCap').innerHTML=`<p><b>xG</b> — очікувані голи: скільки команда мала б забити за силою атаки й суперників. <b>xGA</b> — очікувані пропущені. <b>Г−xG</b> у таблиці — наскільки команда забила більше (везіння, реалізація) чи менше, ніж «мала б».</p><p><b>До прогнозу</b> — різниця між набраними очками й прогнозом перед сезоном (xP ${r.xp.toFixed(1)}).</p><p>Атака й оборона — сила команди за рейтингами гравців: смужка йде від ${IDX_LO} до ${IDX_HI}. Слова біля ліній — середній рейтинг гравців лінії.</p>`;
   renderPitch(document.getElementById('pitch2'),S.slots,true);
-  {const ts=r.scorers[0],te2=document.getElementById('topScorer');te2.hidden=!ts;if(ts)te2.innerHTML=`${ic('soccer','sm')}Найкращий бомбардир: <b>${esc(ts.name)}</b> · ${ts.g} ${plUk(ts.g,'гол','голи','голів')}`;}
+  {const ts=r.scorers[0],te2=document.getElementById('topScorer');te2.hidden=!ts;if(ts)te2.innerHTML=`${em('soccer','sm')}Найкращий бомбардир: <b>${esc(ts.name)}</b> · ${ts.g} ${plUk(ts.g,'гол','голи','голів')}`;}
   document.getElementById('mDet').open=matchMedia('(min-width:1000px)').matches;   // large screen has room next to the pitch: matches expanded
   document.getElementById('matches').innerHTML=r.log.map(m=>`<div class="m" title="${esc(whoMin(m))} · xG ${m.xg.toFixed(1)}:${m.xga.toFixed(1)}"><span class="res ${m.res}"></span><span class="op">${esc(shortTeam(m.opp))}</span><span class="sc">${m.ug}:${m.og}</span></div>`).join('');
   const f1=v=>v.toFixed(1),sg=v=>(v>0?'+':'')+v;
@@ -1780,13 +1885,14 @@ async function playSeason(year){
   document.getElementById('zoneLegend').hidden=S.format==='anti';
   const mvp=[...r.players].sort((a,b)=>b.rt-a.rt)[0];
   document.getElementById('playerStats').innerHTML=`<tr><th>Гравець</th><th class="num">Оцінка</th><th class="num" title="Голи">Г</th><th class="num" title="Асисти">А</th><th class="num" title="Матчі з оцінкою 8.0+">8+</th>${ratingsOpen()?'<th class="num">Рейт.</th>':''}<th class="num">Форма</th></tr>`+[...r.players].sort((a,b)=>b.rt-a.rt).map(p=>`<tr${p===mvp?' class="me"':''}><td class="pn"><div class="pnr">${lineDot(p.slot||p.pos)}<span>${esc(p.name)}</span></div></td><td class="num avgc">${p.rt.toFixed(2)}</td><td class="num">${p.g}</td><td class="num">${p.a}</td><td class="num">${p.m8}</td>${ratingsOpen()?`<td class="num">${slotBase(p.id)??p.r}</td>`:''}<td class="num" style="color:${p.form>=3?'var(--win)':p.form<=-3?'var(--loss)':'inherit'}">${p.form>0?'+':''}${p.form}</td></tr>`).join('');
-  document.getElementById('mvpLine2').innerHTML=`${ic('star','sm')}Гравець сезону: <b>${esc(mvp.name)}</b> · ${mvp.rt.toFixed(2)}`;
+  document.getElementById('mvpLine2').innerHTML=`${em('star','sm')}Гравець сезону: <b>${esc(mvp.name)}</b> · ${mvp.rt.toFixed(2)}`;
   const fp=[...r.players].sort((a,b)=>b.form-a.form);const fmtF=p=>`${esc(p.name)} ${p.form>0?'+':''}${p.form}`;
-  document.getElementById('mvpLine').innerHTML=`${ic('star','sm')}Гравець сезону: <b>${esc(mvp.name)}</b> — середня оцінка ${mvp.rt.toFixed(2)}, ${mvp.g} г, ${mvp.a} ас.`+(fp[0].form>0||fp[fp.length-1].form<0?`<br><span class="muted">Форма сезону: ${fp[0].form>0?'вистрілив '+fmtF(fp[0]):''}${fp[0].form>0&&fp[fp.length-1].form<0?', ':''}${fp[fp.length-1].form<0?'провалив '+fmtF(fp[fp.length-1]):''}</span>`:'');
+  document.getElementById('mvpLine').innerHTML=`${em('star','sm')}Гравець сезону: <b>${esc(mvp.name)}</b> — середня оцінка ${mvp.rt.toFixed(2)}, ${mvp.g} г, ${mvp.a} ас.`+(fp[0].form>0||fp[fp.length-1].form<0?`<br><span class="muted">Форма сезону: ${fp[0].form>0?'вистрілив '+fmtF(fp[0]):''}${fp[0].form>0&&fp[fp.length-1].form<0?', ':''}${fp[fp.length-1].form<0?'провалив '+fmtF(fp[fp.length-1]):''}</span>`:'');
   document.querySelectorAll('#tabs .tab').forEach((b,i)=>b.classList.toggle('on',i===0));['t1','t2'].forEach((id,i)=>document.getElementById(id).hidden=i!==0);
   const avg=(xi.reduce((s,x)=>s+baseR(x),0)/11).toFixed(1);
   document.getElementById('myXiTitle').textContent=S.teamName||'Твоя 11-ка';
-  document.getElementById('modelNote').textContent=(ratingsOpen()?`Середній рейтинг XI ${avg}`:`Лише пам'ять: рейтинги не розкриваються`)+` · індекс атаки ${r.t.att.toFixed(1)} · індекс оборони ${r.t.def.toFixed(1)}` + (r.t.gap>12?` · лінії розбалансовані (розрив ${r.t.gap.toFixed(0)}), штраф`:'') + `. Очікувані голи проти середньої команди: ${(seasonOf(r.year).base*r.u.att).toFixed(2)} за матч, пропущені ${(seasonOf(r.year).base*r.u.def).toFixed(2)}.`;
+  document.getElementById('modelNote').textContent=(ratingsOpen()?`Середній рейтинг XI ${avg}`:`Лише пам'ять: рейтинги не розкриваються`)+(r.t.gap>12?` · лінії розбалансовані (розрив ${r.t.gap.toFixed(0)}), штраф`:'')+`. Очікувані голи проти середньої команди: ${(seasonOf(r.year).base*r.u.att).toFixed(2)} за матч, пропущені ${(seasonOf(r.year).base*r.u.def).toFixed(2)}.`;
+  tblHint();
   if(S.daily){
     if(!S.daily.practice){lsSet("upl30_daily_"+DAY,{W:r.W,D:r.D,L:r.L,pts:r.pts,place:r.place,gf:r.gf,ga:r.ga,xp:Math.round(r.xp*10)/10});
       const su=streakUpdate();r.streak=su;renderDailyCard();}
@@ -1825,8 +1931,7 @@ function flipRows(t,was){if(LESS_MOTION()||!was.size||!t.animate)return;t.queryS
 function tickReveal(){
   const {r}=REV;if(REV.i>=r.log.length){finishReveal();return;}
   const m=r.log[REV.i],k=REV.i+1;let w=0,d=0,l=0;for(let q=0;q<k;q++){const x=r.log[q].res;if(x==='W')w++;else if(x==='D')d++;else l++;}
-  document.getElementById('lvRound').textContent=`Тур ${k} / ${r.log.length}`;
-  document.getElementById('lvRec').textContent=`${w}-${d}-${l}`;document.getElementById('lvPts').textContent=w*3+d;
+  {const f=REV.i===0;odoSet(document.getElementById('lvRound'),`Тур ${k} / ${r.log.length}`,f);odoSet(document.getElementById('lvRec'),`${w}-${d}-${l}`,f);odoSet(document.getElementById('lvPts'),w*3+d,f);}
   // one match: result as square color, no letters or '@'; round is shown above, card lists scorers only
   document.getElementById('lvMatch').innerHTML=`<div class="lvMatch"><span class="lvRes ${m.res}"></span><div><b>${esc(shortTeam(m.opp))}</b>${m.who.length?`<div class="who">${esc(whoMin(m))}</div>`:''}</div><span class="sc">${m.ug}:${m.og}</span></div>`;
   document.getElementById('lvGrid').children[REV.i].className=m.res+' nw';
@@ -1842,13 +1947,14 @@ function tickReveal(){
 // final result: success for the top places, warning for relegation, nothing in between
 function seasonHaptic(r){if(S.format==='anti')return;haptic(r.place<=ZONES.co?'success':r.place>16-ZONES.rel?'warning':null);}
 function finishReveal(){const R=REV;clearInterval(R.t);if(R.fin)return;R.fin=true;const $=id=>document.getElementById(id);
+  ['lvRound','lvRec','lvPts'].forEach(id=>odoSettle($(id)));   // no mid-roll digits in the morph snapshot
   // W-D-L and points glide from the live header to the summary tiles
   const swap=()=>{renderNewTro(R.r);renderOcRes(R.r);acctNudge(R.r);$('live').hidden=true;$('final').hidden=false;window.scrollTo({top:0});
     if(!R.done){R.done=true;const fin=$('final');fin.classList.add('fin-in');setTimeout(()=>fin.classList.remove('fin-in'),1600);seasonHaptic(R.r);countUp(document.querySelectorAll('#placeBig, #recTiles i, #recTiles b.hot'));champModal(R.r);if(ONLINE)setTimeout(()=>cardPrep(R.r),600);}};
   if(CUR_SEC!==3){swap();return;}   // season ended in the background: no full-screen transition on another screen
   vtRun(swap,{pairs:[[$('lvRec'),'#recTiles>div:first-child>b','vt-rec'],[$('lvPts'),'#recTiles b.hot','vt-pts']]});}
 document.getElementById('skipBtn').onclick=()=>finishReveal();
-document.querySelectorAll('#tabs .tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('#tabs .tab').forEach(x=>x.classList.toggle('on',x===b));['t1','t2'].forEach(id=>document.getElementById(id).hidden=id!==b.dataset.tab);});
+document.querySelectorAll('#tabs .tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('#tabs .tab').forEach(x=>x.classList.toggle('on',x===b));['t1','t2'].forEach(id=>document.getElementById(id).hidden=id!==b.dataset.tab);tblHint();});
 document.getElementById('againBtn').onclick=()=>{S.result=null;if(S.league){openLeague(S.league.id);return;}go(S.daily||S.challenge?1:4);};
 // ---------- online leaderboard (only on the real site)
 const ONLINE=__ONLINE__;
@@ -1899,7 +2005,6 @@ function tgInit(){
   if(typeof acctTgAuto==='function')acctTgAuto();if(typeof chalLoad==='function')chalLoad();
   }catch(e){TG=null;}
 }
-if(ONLINE&&/tgWebApp/.test(location.hash+location.search)){const sc=document.createElement('script');sc.src='https://telegram.org/js/telegram-web-app.js';sc.onload=tgInit;document.head.appendChild(sc);}
 // share card: in Telegram the bot prepares a message with the card (api/card, share) and the chat picker opens;
 // outside Telegram: system share sheet with the card file; fallback: text via t.me/share
 function shareTextLink(){const text=S.result?shareTextOf(S.result,true,true):document.getElementById('shareText').value;   // no squares: those are for the card
@@ -1960,21 +2065,61 @@ const LESS_MOTION=()=>matchMedia('(prefers-reduced-motion: reduce)').matches;
 // ---------- animations. All disabled by the system Reduce Motion setting (LESS_MOTION)
 function restartAnim(el,cls){if(!el||LESS_MOTION())return;el.classList.remove(cls);void el.offsetWidth;el.classList.add(cls);}
 // summary numbers count up from zero
+// odometer: changed digits roll up in a clipped cell (tabular-nums keeps the width); the cell unwraps when the roll ends. now: no animation
+function odoSettle(el){if(!el||el.dataset.odo===undefined)return;el.getAnimations({subtree:true}).forEach(a=>a.cancel());if(el.querySelector('.od'))el.textContent=el.dataset.odo;}
+function odoSet(el,v,now){if(!el)return;const str=String(v),prev=el.dataset.odo!==undefined?el.dataset.odo:el.textContent;odoSettle(el);el.dataset.odo=str;
+  if(now||prev===str||LESS_MOTION()||!el.animate||!el.getClientRects().length){el.textContent=str;return;}
+  const P=prev.split(/(\d+)/),N=str.split(/(\d+)/),fr=document.createDocumentFragment(),an=[],o={duration:200,easing:'cubic-bezier(.23,1,.32,1)',fill:'forwards'};
+  N.forEach((tok,j)=>{if(j%2===0||P[j]===undefined){fr.append(tok);return;}
+    for(let i=0;i<tok.length;i++){const k=P[j].length-(tok.length-i),pc=k>=0?P[j][k]:'';if(pc===''||pc===tok[i]){fr.append(tok[i]);continue;}
+      const c=document.createElement('od-c');c.className='od';c.innerHTML=`<od-c class="od-o" aria-hidden="true">${pc}</od-c><od-c class="od-n">${tok[i]}</od-c>`;fr.append(c);
+      an.push(c.firstChild.animate([{transform:'none',opacity:1},{transform:'translateY(-70%)',opacity:0}],o),c.lastChild.animate([{transform:'translateY(70%)',opacity:0},{transform:'none',opacity:1}],o));}});
+  el.textContent='';el.appendChild(fr);
+  Promise.all(an.map(a=>a.finished)).then(()=>{if(el.dataset.odo===str&&el.querySelector('.od'))el.textContent=str;}).catch(()=>{});}
+// picked player: the name chip flies along a gentle arc from its list row to the slot (transform/opacity only); offscreen slot or reduced motion: no flight
+const FLY_WAIT=new Set();   // slot indexes whose content waits for the landing
+function flySrc(p){if(LESS_MOTION())return null;const b=[...document.querySelectorAll('#squad .pl')].find(x=>x.dataset.id===p[5]),nm=b&&b.querySelector('.nm');
+  if(!nm||!nm.getClientRects().length)return null;return {r:nm.getBoundingClientRect(),txt:p[0],fs:parseFloat(getComputedStyle(nm).fontSize)||14};}
+function flyLand(idx){FLY_WAIT.delete(idx);const sl=document.querySelectorAll('#pitch .slot')[idx];if(!sl||!sl.classList.contains('fw'))return;sl.classList.remove('fw');restartAnim(sl.querySelector('.disc'),'land0');}
+function flyTo(src,idx){const sl=document.querySelectorAll('#pitch .slot')[idx];if(!src||!sl||!document.body.animate)return false;
+  const d=sl.querySelector('.disc');if(!d)return false;const dr=d.getBoundingClientRect();
+  if(dr.top>innerHeight||dr.left<0||dr.right>innerWidth)return false;   // a slot under the header or above the screen still gets the flight: the chip slides up under the header
+  FLY_WAIT.add(idx);sl.classList.add('fw');
+  requestAnimationFrame(()=>{const cur=document.querySelectorAll('#pitch .slot')[idx];if(!cur||!cur.classList.contains('fw')){flyLand(idx);return;}
+    const tr=(cur.querySelector('.nm')||cur.querySelector('.disc')).getBoundingClientRect();
+    const g=document.createElement('div');g.className='flyg';g.setAttribute('aria-hidden','true');const sp=document.createElement('span');sp.textContent=src.txt;sp.style.fontSize=src.fs+'px';g.appendChild(sp);document.body.appendChild(g);
+    const w=g.offsetWidth,h=g.offsetHeight,x0=src.r.left,y0=src.r.top+src.r.height/2-h/2,dx=tr.left+tr.width/2-(x0+w/2),dy=tr.top+tr.height/2-(y0+h/2),k=Math.max(.5,Math.min(1,(tr.width||w)/w)),T=420;
+    const ease=getComputedStyle(document.documentElement).getPropertyValue('--spring-sheet').trim()||'ease-out';let done=false;
+    const fin=()=>{if(done)return;done=true;g.remove();flyLand(idx);};
+    try{const mv=[{transform:`translate(${x0}px,${y0}px) scale(1)`},{transform:`translate(${x0+dx}px,${y0+dy}px) scale(${k})`}];let a;
+      try{a=g.animate(mv,{duration:T,easing:ease,fill:'forwards'});}catch(e){a=g.animate(mv,{duration:T,easing:'cubic-bezier(.23,1,.32,1)',fill:'forwards'});}
+      g.animate([{opacity:1,offset:0},{opacity:1,offset:.8},{opacity:0,offset:1}],{duration:T,fill:'forwards'});
+      sp.animate([{transform:'none'},{transform:`translateY(${-Math.min(56,Math.hypot(dx,dy)*.2)}px)`,offset:.45},{transform:'none'}],{duration:T,easing:'ease-in-out'});
+      setTimeout(()=>{flyLand(idx);},Math.round(T*.8));a.finished.then(fin,fin);setTimeout(fin,T+600);}catch(e){fin();}});
+  return true;}
 function countUp(els){if(LESS_MOTION())return;const t0=performance.now(),D=900;const xs=[...els].map(el=>({el,v:parseInt(el.textContent,10)})).filter(x=>Number.isFinite(x.v)&&x.v>0&&String(x.v)===x.el.textContent.trim());
   if(!xs.length)return;const step=t=>{const k=Math.min(1,(t-t0)/D),e=1-Math.pow(1-k,4);for(const x of xs)x.el.textContent=String(Math.round(x.v*e));if(k<1)requestAnimationFrame(step);};xs.forEach(x=>x.el.textContent='0');requestAnimationFrame(step);}
 // champion dialog: dim, cup, confetti (title, 30-0, 0-30 in anti-season). Hidden from Playwright (navigator.webdriver) except the test that sets window.__champTest
 // finish / forecast / verdict, and line ratings in words with a single phrase
 const VERDICTS=[[d=>d>=3,'Перевершили себе','good'],[d=>d>=1,'Краще за прогноз','good'],[d=>d===0,'Усе за сценарієм','mid'],[d=>d>=-2,'Трохи не дотягнули','bad'],[d=>true,'Провал сезону','bad']];
+// strength bar scale: team att/def index is a weighted mean rating (+ chemistry up to 5); the same 60..99 scale as the pre-season line bars.
+// Sampled drafts (all formats, casual to expert): classic 69..97, derby up to 99.5, anti-season 53..84; values outside are clamped
+const IDX_LO=60,IDX_HI=99,idxPct=v=>Math.max(4,Math.min(100,(v-IDX_LO)/(IDX_HI-IDX_LO)*100));
+// neuter ordinal suffix for places 1..18 (Ukrainian)
+const ORD_SFX={1:'ше',2:'ге',3:'тє',7:'ме',8:'ме'};const placeOrd=n=>n+'-'+(ORD_SFX[n]||'те')+' місце';
+// fade on the right edge of wide tables while there is more to scroll
+function tblHint(){document.querySelectorAll('.tblw').forEach(w=>{const s=w.firstElementChild,u=()=>w.classList.toggle('more',s.scrollLeft+s.clientWidth<s.scrollWidth-2);if(!w._h){w._h=1;s.addEventListener('scroll',u,{passive:true});addEventListener('resize',u);}u();});}
 const LINE_WORD=v=>v>=90?'еліта':v>=86?'відмінно':v>=82?'сильно':v>=78?'добре':v>=74?'середньо':'слабко';
 const LINE_OF={FW:['Атака','атака'],MF:['Півзахист','півзахист'],DF:['Захист','захист'],GK:['Воротар','воротар']};
-function renderVerdict(r,xi){const el=document.getElementById('verdRow'),ln=document.getElementById('linesRow');if(S.format==='anti'||!r.projPlace){el.hidden=true;ln.hidden=true;return;}
+function renderVerdict(r,xi){const el=document.getElementById('verdRow'),ln=document.getElementById('linesRow'),sy=document.getElementById('sayRow');if(S.format==='anti'||!r.projPlace){el.hidden=true;ln.hidden=true;sy.hidden=true;return;}
   const d=r.projPlace-r.place;let v=VERDICTS.find(x=>x[0](d));
   if(r.place===1&&r.projPlace>1)v=[0,'Зірвали банк','good'];else if(r.place>=15&&r.projPlace<=10)v=[0,'Катастрофа','bad'];
   const ls=PRE_LINES.map(([g])=>{const a=xi.filter(x=>x.pos===g);return a.length?{g,v:a.reduce((s,x)=>s+x.r,0)/a.length}:null;}).filter(Boolean);
   const top=ls.reduce((a,b)=>b.v>a.v?b:a),low=ls.reduce((a,b)=>b.v<a.v?b:a);
-  const phrase=top.v-low.v<3?'Рівна команда по всьому полю.':`Сильна сторона — ${LINE_OF[top.g][1]}; найслабше місце — ${LINE_OF[low.g][1]}.`;
-  el.hidden=false;el.innerHTML=`<span class="vc ${v[2]}" title="Прогноз перед сезоном: ${r.projPlace} місце">${v[1]}</span>`;
-  ln.hidden=false;ln.innerHTML=`<div class="lw">${ls.map(l=>`<span>${LINE_OF[l.g][0]} <b>${LINE_WORD(l.v)}</b></span>`).join('')}</div><p>${phrase} Прогноз перед сезоном — ${r.projPlace} місце.</p>`;}
+  const phrase=top.v-low.v<3?'<b>Рівна команда по всьому полю.</b>':`<b>Сильна сторона — ${LINE_OF[top.g][1]},</b> найслабше місце — ${LINE_OF[low.g][1]}.`;
+  el.hidden=false;el.innerHTML=`<span class="vc ${v[2]}" title="Прогноз перед сезоном: ${placeOrd(r.projPlace)}">${v[1]}</span>`;
+  ln.hidden=false;ln.innerHTML=ls.map(l=>`<div style="--c:var(--${l.g.toLowerCase()})"><span>${LINE_OF[l.g][0]}</span><b>${LINE_WORD(l.v)}</b></div>`).join('');
+  sy.hidden=false;sy.innerHTML=`${phrase} Прогноз перед сезоном — <span class="nw">${placeOrd(r.projPlace)}</span>.`;}
 function champModal(r){if(!r||S.mode==='practice'||(navigator.webdriver&&!window.__champTest))return;const anti=S.format==='anti';
   const kind=anti?(r.L===r.log.length?'zero':null):r.W===r.log.length?'perfect':r.place===1?'champ':null;if(!kind)return;
   const T={perfect:['30-0!','Ідеальний сезон: 30 перемог з 30. Ти легенда!'],champ:['Чемпіон!','Твоя 11-ка виграла чемпіонат. Ти молодець!'],zero:['0-30!','Ідеальний антисезон: 30 поразок з 30. Це теж треба вміти.']}[kind];
@@ -2081,7 +2226,7 @@ function viewHtml(s){
     <div class="big"><div><div class="n">${s.w}-${s.d}-${s.l}</div><div class="l">П – Н – Пр</div></div><div><div class="n">${s.pts}</div><div class="l">очок</div></div><div><div class="n">${s.place}</div><div class="l">місце</div></div><div><div class="n">${s.gf}:${s.ga}</div><div class="l">голи</div></div></div>
     <div class="xrow"><span class="chip">xP <b>${s.xp!=null?Number(s.xp).toFixed(1):'—'}</b></span><span class="chip">xG <b>${s.xg!=null?Number(s.xg).toFixed(1):'—'}</b></span><span class="chip">xGA <b>${s.xga!=null?Number(s.xga).toFixed(1):'—'}</b></span></div></div>
     <h3>Склад</h3>${pitchHtml(s.formation,xi)}
-    ${mvp?`<p style="margin:var(--sp-2) 0 0">${ic('star','sm')}Гравець сезону: <b>${esc(mvp.n)}</b> · ${Number(mvp.rt).toFixed(2)}</p>`:''}
+    ${mvp?`<p style="margin:var(--sp-2) 0 0">${em('star','sm')}Гравець сезону: <b>${esc(mvp.n)}</b> · ${Number(mvp.rt).toFixed(2)}</p>`:''}
     <div class="tbl"><table><tr><th>Гравець</th><th class="num">Оцінка</th><th class="num" title="Голи">Г</th><th class="num" title="Асисти">А</th><th class="num">Рейт.</th><th class="num">Форма</th></tr>${[...xi].sort((a,b)=>(b.rt||0)-(a.rt||0)).map(p=>`<tr><td class="pn"><div class="pnr">${lineDot(p.slot)}<span>${esc(p.n)}</span></div></td><td class="num"><b style="color:${rc(p.rt||0)}">${p.rt!=null?Number(p.rt).toFixed(2):'—'}</b></td><td class="num">${p.g||0}</td><td class="num">${p.a||0}</td><td class="num">${numOr0(baseR(p))}</td><td class="num" style="color:${p.f>=3?'var(--win)':p.f<=-3?'var(--loss)':'inherit'}">${p.f>0?'+':''}${p.f||0}</td></tr>`).join('')}</table></div>${LINE_KEY}
     ${tb.length?`<h3>Турнірна таблиця</h3><div class="tbl"><table><tr><th>#</th><th>Команда</th><th class="num">В</th><th class="num">Н</th><th class="num">П</th><th class="num">Г</th><th class="num">О</th></tr>${tb.map((t,i)=>`<tr${t.me?' class="me"':''}><td class="num">${i+1}</td><td>${esc(t.n)}</td><td class="num">${t.w}</td><td class="num">${t.d}</td><td class="num">${t.l}</td><td class="num">${t.gf}:${t.ga}</td><td class="num"><b>${t.pts}</b></td></tr>`).join('')}</table></div>`:''}`;
 }
@@ -2290,10 +2435,10 @@ function drawCard(r){   // card in site style: UPL navy background, UPL.TV gradi
 }
 document.getElementById('chalOpen').onclick=()=>{const b=document.getElementById('chalBox'),t=document.getElementById('chalOpen');b.hidden=!b.hidden;t.classList.toggle('on',!b.hidden);if(!b.hidden){b.scrollIntoView({behavior:'smooth',block:'center'});const n=document.getElementById('chalName');if(n&&!n.hidden&&!n.value)n.focus();}};
 // ---------- What's new: short player-friendly notes on the latest version (technical log: CHANGELOG.md)
-const WHATSNEW={v:'0.76',date:'07.10.2026',items:[
-  ['arrow-down-bold','Вікна — шторки знизу','Акаунт, новини, ліги й зміна імені виїжджають знизу з розмитим фоном. Закрити можна свайпом вниз, тапом поза вікном або «назад». На iPad — картка посередині.'],
-  ['timer-sand','Заглушки замість очікування','Поки таблиці, ліги й сторінки гравців вантажаться, на їхньому місці — м’які заглушки тієї ж форми, тож нічого не стрибає. Таблиця під час сезону тепер завжди з шести рядків, а рейтинги в драфті не блимають.'],
-  ['swap-horizontal','Екрани перетікають','Старий екран м’яко відходить, новий виїжджає, а кнопка драфту перетікає в смугу прогресу. З «Зменшити рух» усе без анімації.']]};
+const WHATSNEW={v:'0.77',date:'07.10.2026',items:[
+  ['format-list-numbered','Статистика сезону','Сила команди — дві картки зі шкалами: атака, оборона, лінії й чи вийшло краще за прогноз. Пояснення стоять поруч і стали коротшими.'],
+  ['lightning-bolt','Ліга чату — швидше й чистіше','Таблиця ліги з’являється одразу, нова картка: колонки, твій рядок, кнопка «Уся таблиця».'],
+  ['trophy','Іконки й рух','Одні контурні іконки замість емодзі — емодзі лишились тільки в нагородах. Трофей перевертається, гравець перелітає на поле, цифри сезону прокручуються.']]};
 function openNews(){screenTag('news');const box=document.getElementById('viewBox');document.getElementById('viewTitle').textContent=`Що нового · версія ${WHATSNEW.v}`;
   document.getElementById('viewBody').innerHTML=`<div class="news">${WHATSNEW.items.map(([e,h,d])=>`<div class="ni">${ic(e,'lg')}<div><b>${esc(h)}</b><p>${esc(d)}</p></div></div>`).join('')}</div>`;
   box.hidden=false;lsSet('upl30_news_seen',WHATSNEW.v);document.getElementById('newsDot').hidden=true;}
@@ -2307,6 +2452,8 @@ document.getElementById('newsDot').hidden=lsGet('upl30_news_seen')===WHATSNEW.v;
 /*__FIVE__*/
 document.getElementById('f5Open').onclick=f5Start;
 // audit P2-5: only what tests use; drawCard for card checks, simulate/rerun for fast determinism
-window.__dbg={loadLb,haptic,seasonHaptic,renderNewTro,TROPHIES,CLUB_REC,ocMine,ocAfter,renderOc,renderOcRes,openOc,acctMerge,get BEST(){return BEST;},get VT_N(){return VT_N;},ic,seasonLabel,boardPrefetch,boardStale,BOARD_FROM,setFmt,leagueLoad,boardHtml,oppYear,champModal,drawCard,chalNewGame,DAILY,LEAGUE_CULT,LEAGUE_LEGENDS,openTrophies,renderNewTro,bestPerPlayer,renderWheel,posOpts,eraOf,ptsWord,viewHtml,renderPitch,pitchHtml,f5Pitch,F5_FORMS,cardName,clubShort,simulate,shareTextOf,trCtxNow,trAward,trStore,FORMATIONS,GROUP_OF,DATA,TROPHIES,trEval,PERSON,effRating,get S(){return S;},rerun(seed,year,xi){rnd=mulberry32(seed);const r=simulate(xi||S.slots.map(s=>s.player),MODES[S.mode],year);rnd=Math.random;return {W:r.W,D:r.D,L:r.L,gf:r.gf,ga:r.ga,place:r.place};}};
+window.__dbg={place,em,loadLb,haptic,seasonHaptic,renderNewTro,TROPHIES,CLUB_REC,ocMine,ocAfter,renderOc,renderOcRes,openOc,acctMerge,get BEST(){return BEST;},get VT_N(){return VT_N;},ic,seasonLabel,boardPrefetch,boardStale,BOARD_FROM,setFmt,leagueLoad,boardHtml,oppYear,champModal,drawCard,chalNewGame,DAILY,LEAGUE_CULT,LEAGUE_LEGENDS,openTrophies,renderNewTro,bestPerPlayer,renderWheel,posOpts,eraOf,ptsWord,viewHtml,renderPitch,pitchHtml,f5Pitch,F5_FORMS,cardName,clubShort,simulate,shareTextOf,trCtxNow,trAward,trStore,FORMATIONS,GROUP_OF,DATA,TROPHIES,trEval,PERSON,effRating,get S(){return S;},rerun(seed,year,xi){rnd=mulberry32(seed);const r=simulate(xi||S.slots.map(s=>s.player),MODES[S.mode],year);rnd=Math.random;return {W:r.W,D:r.D,L:r.L,gf:r.gf,ga:r.ga,place:r.place};}};
+// Telegram script was requested by the first inline script: init now if it already loaded, otherwise on its load
+if(ONLINE){window.__tgCb=tgInit;if(window.__tgOk)tgInit();}
 })();
 </script>
