@@ -795,17 +795,33 @@ button.primary.solid,.big0.primary.solid{background:var(--ink);background-image:
 .pz0{display:grid;gap:var(--sp-2);justify-items:start;min-width:0}.pz0 .tier{text-wrap:balance;overflow-wrap:anywhere}
 .verd0{display:flex}.verd0 .vc{display:inline-block;padding:var(--sp-1) var(--sp-3);border-radius:var(--r-pill);font:var(--wt-bold) var(--fs-footnote)/var(--lh-snug) var(--font-body);background:color-mix(in srgb,var(--c) 16%,transparent);color:var(--c)}
 .verd0 .vc.good{--c:var(--win)}.verd0 .vc.mid{--c:var(--draw)}.verd0 .vc.bad{--c:var(--loss)}
-.lines0{margin-top:var(--sp-3);text-align:center}.lines0 .lw{display:flex;flex-wrap:wrap;justify-content:center;gap:var(--sp-1) var(--sp-4);font-size:var(--fs-footnote);color:var(--muted)}.lines0 b{color:var(--ink)}.lines0 p{margin:var(--sp-2) auto 0;font-size:var(--fs-footnote);color:var(--ink2)}
-.x0.c2{grid-template-columns:repeat(2,minmax(0,1fr))}
 .awd0{display:grid;gap:var(--sp-2);margin-top:var(--sp-3)}.awd0 p{margin:0}
 /* Share is the gradient primary (button.primary); challenge and new draft side by side */
 .shr2{display:flex;gap:var(--sp-2);width:100%;max-width:420px;justify-self:center}.shr2 .sharebtn{flex:1 1 0;min-width:0;max-width:none;padding-inline:var(--sp-2);font-size:var(--fs-body);text-align:center;line-height:var(--lh-snug)}.shr2 .sharebtn .ic{display:none}   /* two text buttons per row, no icon */
-#final>.hero{max-width:640px;width:100%;margin-inline:auto}
-.x0{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--sp-2);margin-top:var(--sp-2)}
-.x0>div{border-radius:var(--r-lg);padding:var(--sp-3) var(--sp-2);background:color-mix(in srgb,var(--bg) 70%,transparent);display:grid;justify-items:center;gap:var(--sp-0h);text-align:center}
-.x0 b{font:var(--wt-bold) var(--fs-title3) var(--font-display);color:var(--ink);font-variant-numeric:tabular-nums}.x0 span{font-size:var(--fs-caption2);color:var(--muted)}
+#final>.hero{width:100%;max-width:760px;margin-inline:auto}   /* same column as the tabs below; two-column layout (wide screens) keeps it narrower */
+@media (min-width:1000px){#final>.hero{max-width:640px}}
 details.tip.pop0{position:relative}details.tip.pop0>p{position:absolute;z-index:6;left:0;right:0;top:100%;margin:var(--sp-2) 0 0!important;padding:var(--sp-3) var(--sp-4);border-radius:var(--r-md);background:var(--card);box-shadow:var(--sh-3)}
-details.x0q{margin-top:0}details.x0q summary{font-size:var(--fs-footnote);color:var(--muted)}
+/* season stats: strength card, result-vs-expected card, tips under the player list */
+.card0{background:var(--surface);border-radius:var(--r-lg);box-shadow:var(--sh-1);padding:var(--sp-card);display:grid;gap:var(--sp-4)}
+.mtrs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--sp-5)}
+.mtr .k{font-size:var(--fs-footnote);color:var(--muted);font-weight:var(--wt-bold)}
+.mtr .v{display:flex;flex-wrap:wrap;align-items:baseline;gap:0 var(--sp-2);margin:var(--sp-1) 0 var(--sp-2)}
+.mtr .v b{font:var(--wt-black) var(--fs-large)/var(--lh-tight) var(--font-display);font-variant-numeric:tabular-nums}
+.mtr .v i{font-style:normal;font-size:var(--fs-footnote);font-weight:var(--wt-bold);color:var(--ink2)}
+.mbar{height:6px;border-radius:var(--r-pill);background:color-mix(in srgb,var(--line) 70%,transparent);overflow:hidden}.mbar u{display:block;height:100%;border-radius:inherit;background:var(--grad)}
+.lns4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:var(--sp-3) var(--sp-2);padding-top:var(--sp-4);border-top:1px solid var(--line)}
+.lns4>div{display:grid;gap:var(--sp-0h);align-content:start}.lns4 span{display:flex;align-items:center;gap:var(--sp-2);font-size:var(--fs-footnote);color:var(--muted)}.lns4 span::before{content:"";flex:none;width:8px;height:8px;border-radius:50%;background:var(--c)}.lns4 b{font-size:var(--fs-body)}
+.nw{white-space:nowrap}.say0{margin:0;font-size:var(--fs-body);color:var(--ink2)}.say0 b{color:var(--ink)}
+.res0{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0}.res0>div{padding:0 var(--sp-3);display:grid;gap:var(--sp-0h);align-content:start;justify-items:start}.res0>div+div{border-left:1px solid var(--line)}.res0>div:first-child{padding-left:0}
+.res0 .k{font-size:var(--fs-footnote);color:var(--muted);font-weight:var(--wt-bold)}.res0 b{font:var(--wt-black) var(--fs-title1)/var(--lh-snug) var(--font-display);font-variant-numeric:tabular-nums}.res0 small{font-size:var(--fs-footnote);color:var(--ink2)}
+.delta0{display:inline-block;padding:var(--sp-0h) var(--sp-2);border-radius:var(--r-pill);font-size:var(--fs-footnote);font-weight:var(--wt-bold);background:color-mix(in srgb,var(--c) 16%,transparent);color:var(--c);--c:var(--loss)}.delta0.up{--c:var(--win)}
+#t2 details.tip>summary{min-height:44px}
+#t2 .tipgrp{display:grid;justify-items:start;gap:var(--sp-1);margin-top:var(--sp-2)}
+#t2 .tipgrp p,#xCap p{margin:0 0 var(--sp-2);max-width:62ch;font-size:var(--fs-footnote);color:var(--ink2)}#xCap p:last-child{margin-bottom:0}
+/* scroll hint: fade on the right edge while the table has more columns */
+.tblw{position:relative}.tblw::after{content:"";position:absolute;top:0;right:0;bottom:0;width:32px;background:linear-gradient(to right,transparent,var(--bg));pointer-events:none;opacity:0;transition:opacity var(--dur-2) var(--ease-out)}.tblw.more::after{opacity:1}
+@media(max-width:480px){.lns4{grid-template-columns:repeat(2,minmax(0,1fr))}.mtr .v b{font-size:var(--fs-title1)}.res0 b{font-size:var(--fs-title2)}.res0>div{padding:0 var(--sp-2)}.delta0{border-radius:var(--r-md);line-height:var(--lh-snug);padding:var(--sp-1) var(--sp-2)}}
+@media (prefers-reduced-motion:reduce){.tblw::after{transition:none}}
 /* W-D-L in summary: single color, no green/yellow/red */
 #recTiles i{color:inherit!important}
 /* ===== unified spacing: section title 36 px above, 12 below;
@@ -995,21 +1011,23 @@ h3,.sec0,#s1 .sec0,.pgh,.trleg .h{font-size:var(--fs-footnote);font-weight:var(-
     </div>
     <div id="t2" class="tabpane" hidden>
       <h3>Сила команди</h3>
-      <div class="x0" id="xRow"></div><div class="x0 c2" id="idxRow"></div>
-      <div class="lines0" id="linesRow"></div>
-      <details class="tip x0q"><summary>Що таке xG і везіння?</summary><p class="muted cap" id="xCap"></p></details>
+      <div class="card0" id="strCard"><div class="mtrs" id="idxRow"></div><div class="lns4" id="linesRow"></div><p class="say0" id="sayRow"></p></div>
+      <h3>Результат проти очікувань</h3>
+      <div class="card0 res0" id="xRow"></div>
+      <details class="tip" style="margin-top:var(--sp-2)"><summary>Як це читати</summary><div id="xCap"></div></details>
       <h3>Турнірна таблиця</h3>
-      <div class="tbl"><table id="table"></table></div>
+      <div class="tblw"><div class="tbl"><table id="table"></table></div></div>
       <div class="zlg" id="zoneLegend"><span class="z-cl">Ліга чемпіонів</span><span class="z-el">Ліга Європи</span><span class="z-co">Ліга конференцій</span><span class="z-rl">Виліт</span></div>
-      <details class="tip"><summary>Що означають xG і Г−xG</summary><p class="muted cap" style="margin-top:var(--sp-2)">xG — очікувані голи, xGA — очікувані пропущені, Г−xG — наскільки команда забила більше (везіння, реалізація) чи менше, ніж «мала б».</p></details>
       <p class="note" id="tieNote" style="margin-top:var(--sp-3)"></p>
       <h3>Твої гравці</h3>
       <p id="mvpLine" style="margin:0 0 var(--sp-2)"></p>
-      <div class="tbl"><table id="playerStats"></table></div>
+      <div class="tblw"><div class="tbl"><table id="playerStats"></table></div></div>
       <p class="muted cap lnkey"><span><i class="ln GK"></i>Воротар</span><span><i class="ln DF"></i>Захист</span><span><i class="ln MF"></i>Півзахист</span><span><i class="ln FW"></i>Напад</span><span class="lnform">Г — голи, А — асисти, 8+ — матчі з оцінкою від 8. Форма — на скільки рейтинг гравця в цьому сезоні вищий чи нижчий за рейтинг у картці: у кожного свій рік.</span></p>
-      <details class="tip"><summary>Як читати оцінки</summary><p class="muted" style="font-size:var(--fs-caption);margin-top:var(--sp-2)">Оцінка — середня за 30 матчів, шкала як на SofaScore: 6.0 — слабко, 6.5–6.9 — нормально, 7.0–7.4 — добре, 7.5+ — відмінно. «8.0+» — скільки матчів гравець зіграв на 8 і вище.</p></details>
+      <div class="tipgrp">
+        <details class="tip"><summary>Як читати оцінки</summary><p class="muted">Оцінка — середня за 30 матчів, шкала як на SofaScore: 6.0 — слабко, 6.5–6.9 — нормально, 7.0–7.4 — добре, 7.5+ — відмінно. «8.0+» — скільки матчів гравець зіграв на 8 і вище.</p></details>
+        <details class="tip"><summary>Як рахувався сезон</summary><p class="note" id="modelNote"></p></details>
+      </div>
     </div>
-    <details class="tip"><summary>Як рахувався сезон</summary><p class="note" id="modelNote" style="margin-top:var(--sp-4)"></p></details>
     </div>
   </section>
 </div>
@@ -2121,9 +2139,9 @@ async function playSeason(year){
   document.getElementById('recTiles').innerHTML=`<div><b><i class="W">${r.W}</i>-<i class="D">${r.D}</i>-<i class="L">${r.L}</i></b><span>в · н · п</span></div><div><b class="hot">${r.pts}</b><span>${ptsWord(r.pts)}</span></div>`;
   const luck=r.pts-r.xp;
   // xG, xGA, luck and strength indices live in the Season stats tab
-  document.getElementById('xRow').innerHTML=`<div><b>${r.xgf.toFixed(1)}</b><span>xG · забили ${r.gf}</span></div><div><b>${r.xga.toFixed(1)}</b><span>xGA · пропустили ${r.ga}</span></div><div><b>${luck>=0?'+':'−'}${Math.abs(luck).toFixed(1)}</b><span>${luck>=0?'везіння':'невезіння'}, очк.</span></div>`;
-  document.getElementById('idxRow').innerHTML=`<div><b>${r.t.att.toFixed(1)}</b><span>індекс атаки</span></div><div><b>${r.t.def.toFixed(1)}</b><span>індекс оборони</span></div>`;
-  document.getElementById('xCap').textContent=`xG — очікувані голи: скільки команда мала б забити за силою атаки й суперників. xGA — очікувані пропущені. Везіння — різниця між набраними очками й прогнозом перед сезоном (xP ${r.xp.toFixed(1)}).`;
+  document.getElementById('xRow').innerHTML=`<div><span class="k">Забили</span><b>${r.gf}</b><small>очікувано ${r.xgf.toFixed(1)} xG</small></div><div><span class="k">Пропустили</span><b>${r.ga}</b><small>очікувано ${r.xga.toFixed(1)} xGA</small></div><div><span class="k">Очки</span><b>${r.pts}</b><span class="delta0${luck>=0?' up':''}">${luck>=0?'+':'−'}${Math.abs(luck).toFixed(1)} до прогнозу</span></div>`;
+  document.getElementById('idxRow').innerHTML=[['Атака',r.t.att],['Оборона',r.t.def]].map(([n,v])=>`<div class="mtr"><div class="k">${n}</div><div class="v"><b>${v.toFixed(1)}</b><i>${LINE_WORD(v)}</i></div><div class="mbar" role="meter" aria-label="${n}" aria-valuemin="${IDX_LO}" aria-valuemax="${IDX_HI}" aria-valuenow="${v.toFixed(1)}"><u style="width:${idxPct(v).toFixed(0)}%"></u></div></div>`).join('');
+  document.getElementById('xCap').innerHTML=`<p><b>xG</b> — очікувані голи: скільки команда мала б забити за силою атаки й суперників. <b>xGA</b> — очікувані пропущені. <b>Г−xG</b> у таблиці — наскільки команда забила більше (везіння, реалізація) чи менше, ніж «мала б».</p><p><b>До прогнозу</b> — різниця між набраними очками й прогнозом перед сезоном (xP ${r.xp.toFixed(1)}).</p><p>Атака й оборона — сила команди за рейтингами гравців: смужка йде від ${IDX_LO} до ${IDX_HI}. Слова біля ліній — середній рейтинг гравців лінії.</p>`;
   renderPitch(document.getElementById('pitch2'),S.slots,true);
   {const ts=r.scorers[0],te2=document.getElementById('topScorer');te2.hidden=!ts;if(ts)te2.innerHTML=`${ic('soccer','sm')}Найкращий бомбардир: <b>${esc(ts.name)}</b> · ${ts.g} ${plUk(ts.g,'гол','голи','голів')}`;}
   document.getElementById('mDet').open=matchMedia('(min-width:1000px)').matches;   // large screen has room next to the pitch: matches expanded
@@ -2144,7 +2162,8 @@ async function playSeason(year){
   document.querySelectorAll('#tabs .tab').forEach((b,i)=>b.classList.toggle('on',i===0));['t1','t2'].forEach((id,i)=>document.getElementById(id).hidden=i!==0);
   const avg=(xi.reduce((s,x)=>s+baseR(x),0)/11).toFixed(1);
   document.getElementById('myXiTitle').textContent=S.teamName||'Твоя 11-ка';
-  document.getElementById('modelNote').textContent=(ratingsOpen()?`Середній рейтинг XI ${avg}`:`Лише пам'ять: рейтинги не розкриваються`)+` · індекс атаки ${r.t.att.toFixed(1)} · індекс оборони ${r.t.def.toFixed(1)}` + (r.t.gap>12?` · лінії розбалансовані (розрив ${r.t.gap.toFixed(0)}), штраф`:'') + `. Очікувані голи проти середньої команди: ${(seasonOf(r.year).base*r.u.att).toFixed(2)} за матч, пропущені ${(seasonOf(r.year).base*r.u.def).toFixed(2)}.`;
+  document.getElementById('modelNote').textContent=(ratingsOpen()?`Середній рейтинг XI ${avg}`:`Лише пам'ять: рейтинги не розкриваються`)+(r.t.gap>12?` · лінії розбалансовані (розрив ${r.t.gap.toFixed(0)}), штраф`:'')+`. Очікувані голи проти середньої команди: ${(seasonOf(r.year).base*r.u.att).toFixed(2)} за матч, пропущені ${(seasonOf(r.year).base*r.u.def).toFixed(2)}.`;
+  tblHint();
   if(S.daily){
     if(!S.daily.practice){lsSet("upl30_daily_"+DAY,{W:r.W,D:r.D,L:r.L,pts:r.pts,place:r.place,gf:r.gf,ga:r.ga,xp:Math.round(r.xp*10)/10});
       const su=streakUpdate();r.streak=su;renderDailyCard();}
@@ -2206,7 +2225,7 @@ function finishReveal(){const R=REV;clearInterval(R.t);if(R.fin)return;R.fin=tru
   if(CUR_SEC!==3){swap();return;}   // season ended in the background: no full-screen transition on another screen
   vtRun(swap,{pairs:[[$('lvRec'),'#recTiles>div:first-child>b','vt-rec'],[$('lvPts'),'#recTiles b.hot','vt-pts']]});}
 document.getElementById('skipBtn').onclick=()=>finishReveal();
-document.querySelectorAll('#tabs .tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('#tabs .tab').forEach(x=>x.classList.toggle('on',x===b));['t1','t2'].forEach(id=>document.getElementById(id).hidden=id!==b.dataset.tab);});
+document.querySelectorAll('#tabs .tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('#tabs .tab').forEach(x=>x.classList.toggle('on',x===b));['t1','t2'].forEach(id=>document.getElementById(id).hidden=id!==b.dataset.tab);tblHint();});
 document.getElementById('againBtn').onclick=()=>{S.result=null;if(S.league){openLeague(S.league.id);return;}go(S.daily||S.challenge?1:4);};
 // ---------- online leaderboard (only on the real site)
 const ONLINE=true;
@@ -2323,16 +2342,24 @@ function countUp(els){if(LESS_MOTION())return;const t0=performance.now(),D=900;c
 // champion dialog: dim, cup, confetti (title, 30-0, 0-30 in anti-season). Hidden from Playwright (navigator.webdriver) except the test that sets window.__champTest
 // finish / forecast / verdict, and line ratings in words with a single phrase
 const VERDICTS=[[d=>d>=3,'Перевершили себе','good'],[d=>d>=1,'Краще за прогноз','good'],[d=>d===0,'Усе за сценарієм','mid'],[d=>d>=-2,'Трохи не дотягнули','bad'],[d=>true,'Провал сезону','bad']];
+// strength bar scale: team att/def index is a weighted mean rating (+ chemistry up to 5); the same 60..99 scale as the pre-season line bars.
+// Sampled drafts (all formats, casual to expert): classic 69..97, derby up to 99.5, anti-season 53..84; values outside are clamped
+const IDX_LO=60,IDX_HI=99,idxPct=v=>Math.max(4,Math.min(100,(v-IDX_LO)/(IDX_HI-IDX_LO)*100));
+// neuter ordinal suffix for places 1..18 (Ukrainian)
+const ORD_SFX={1:'ше',2:'ге',3:'тє',7:'ме',8:'ме'};const placeOrd=n=>n+'-'+(ORD_SFX[n]||'те')+' місце';
+// fade on the right edge of wide tables while there is more to scroll
+function tblHint(){document.querySelectorAll('.tblw').forEach(w=>{const s=w.firstElementChild,u=()=>w.classList.toggle('more',s.scrollLeft+s.clientWidth<s.scrollWidth-2);if(!w._h){w._h=1;s.addEventListener('scroll',u,{passive:true});addEventListener('resize',u);}u();});}
 const LINE_WORD=v=>v>=90?'еліта':v>=86?'відмінно':v>=82?'сильно':v>=78?'добре':v>=74?'середньо':'слабко';
 const LINE_OF={FW:['Атака','атака'],MF:['Півзахист','півзахист'],DF:['Захист','захист'],GK:['Воротар','воротар']};
-function renderVerdict(r,xi){const el=document.getElementById('verdRow'),ln=document.getElementById('linesRow');if(S.format==='anti'||!r.projPlace){el.hidden=true;ln.hidden=true;return;}
+function renderVerdict(r,xi){const el=document.getElementById('verdRow'),ln=document.getElementById('linesRow'),sy=document.getElementById('sayRow');if(S.format==='anti'||!r.projPlace){el.hidden=true;ln.hidden=true;sy.hidden=true;return;}
   const d=r.projPlace-r.place;let v=VERDICTS.find(x=>x[0](d));
   if(r.place===1&&r.projPlace>1)v=[0,'Зірвали банк','good'];else if(r.place>=15&&r.projPlace<=10)v=[0,'Катастрофа','bad'];
   const ls=PRE_LINES.map(([g])=>{const a=xi.filter(x=>x.pos===g);return a.length?{g,v:a.reduce((s,x)=>s+x.r,0)/a.length}:null;}).filter(Boolean);
   const top=ls.reduce((a,b)=>b.v>a.v?b:a),low=ls.reduce((a,b)=>b.v<a.v?b:a);
-  const phrase=top.v-low.v<3?'Рівна команда по всьому полю.':`Сильна сторона — ${LINE_OF[top.g][1]}; найслабше місце — ${LINE_OF[low.g][1]}.`;
-  el.hidden=false;el.innerHTML=`<span class="vc ${v[2]}" title="Прогноз перед сезоном: ${r.projPlace} місце">${v[1]}</span>`;
-  ln.hidden=false;ln.innerHTML=`<div class="lw">${ls.map(l=>`<span>${LINE_OF[l.g][0]} <b>${LINE_WORD(l.v)}</b></span>`).join('')}</div><p>${phrase} Прогноз перед сезоном — ${r.projPlace} місце.</p>`;}
+  const phrase=top.v-low.v<3?'<b>Рівна команда по всьому полю.</b>':`<b>Сильна сторона — ${LINE_OF[top.g][1]},</b> найслабше місце — ${LINE_OF[low.g][1]}.`;
+  el.hidden=false;el.innerHTML=`<span class="vc ${v[2]}" title="Прогноз перед сезоном: ${placeOrd(r.projPlace)}">${v[1]}</span>`;
+  ln.hidden=false;ln.innerHTML=ls.map(l=>`<div style="--c:var(--${l.g.toLowerCase()})"><span>${LINE_OF[l.g][0]}</span><b>${LINE_WORD(l.v)}</b></div>`).join('');
+  sy.hidden=false;sy.innerHTML=`${phrase} Прогноз перед сезоном — <span class="nw">${placeOrd(r.projPlace)}</span>.`;}
 function champModal(r){if(!r||S.mode==='practice'||(navigator.webdriver&&!window.__champTest))return;const anti=S.format==='anti';
   const kind=anti?(r.L===r.log.length?'zero':null):r.W===r.log.length?'perfect':r.place===1?'champ':null;if(!kind)return;
   const T={perfect:['30-0!','Ідеальний сезон: 30 перемог з 30. Ти легенда!'],champ:['Чемпіон!','Твоя 11-ка виграла чемпіонат. Ти молодець!'],zero:['0-30!','Ідеальний антисезон: 30 поразок з 30. Це теж треба вміти.']}[kind];
