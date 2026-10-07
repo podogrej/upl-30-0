@@ -238,6 +238,7 @@ async function openTrophies(){screenTag('trophies');
   draw();if(ONLINE&&!TR_PCT){await trLoadPct();if(!box.hidden)draw();}
 }
 const trQ=t=>t.q?`<span class="trq">${icon('format-quote-open')}${esc(t.q)}</span>`:'';   // quote trophy: "❝ author" under the title
+let NT_TOK=0;   // render token: stale timers of a previous summary do nothing
 function renderNewTro(r){
   const el=document.getElementById('newTro');if(!el)return;const a=r.tro;
   if(!a||!a.got.length){el.hidden=true;return;}
@@ -249,8 +250,18 @@ function renderNewTro(r){
   const rareTag=t=>{const x=tierOf(t);return x?`<em class="rtag rt-${x[1]}">${x[2]}</em>`:'';};
   // first 6 as big cards (new first, then repeats), 7th onward smaller in a row; repeats without the xN note
   const list=[...nw,...rep],big=list.slice(0,6),small=list.slice(6),isNew=t=>fresh.has(t.id);
-  if(nw.length){const rare=nw.some(t=>tierOf(t)||t.sec);setTimeout(()=>{if(rare)haptic('heavy');setTimeout(()=>haptic('success'),rare?140:0);},600);}   // after the result haptic; rare is heavier
-  el.hidden=false;el.innerHTML=`<div class="kicker" style="margin-bottom:var(--sp-2)">${nw.length&&!rep.length?(nw.length>1?'Нові трофеї':'Новий трофей'):'Трофеї сезону'}</div><div class="trg">`
-    +big.map((t,k)=>`<div class="tro k-${trKind(t)} on pop${isNew(t)?' new':''}${t.sec?' sec':''}${isNew(t)?rareCls(t):''}" style="animation-delay:${k*120+(isNew(t)&&rareCls(t)?250:0)}ms"><span class="tri">${trBadge(t,true)}</span><div class="trt"><b>${esc(t.n)}</b>${trQ(t)}<span>${esc(t.d)}</span>${isNew(t)?(t.sec?'<em class="trsx">секретний!</em>':'')+rareTag(t):''}</div></div>`).join('')+`</div>`
+  // opening: new cards get the sealed-token flip (stagger STEP); haptic at the half-turn, success after the last one; the counter ticks as each token lands
+  const tok=++NT_TOK,n1=trCountAll(),n0=Math.max(0,n1-nw.length),STEP=180,HALF=380,LAND=640,anim=nw.length>0&&!LESS_MOTION();
+  if(nw.length&&!anim){const rare=nw.some(t=>tierOf(t)||t.sec);setTimeout(()=>{if(rare)haptic('heavy');setTimeout(()=>haptic('success'),rare?140:0);},600);}   // reduced motion: haptics only
+  el.hidden=false;el.innerHTML=`<div class="kicker${nw.length?' trk':''}" style="margin-bottom:var(--sp-2)"><span>${nw.length&&!rep.length?(nw.length>1?'Нові трофеї':'Новий трофей'):'Трофеї сезону'}</span>${nw.length?`<span class="trtot">Зібрано <b id="trTotN">${anim?n0:n1}</b></span>`:''}</div><div class="trg">`
+    +big.map((t,k)=>`<div class="tro k-${trKind(t)} on${isNew(t)?(anim?' open':' pop')+' new'+rareCls(t):' pop'}${t.sec?' sec':''}" style="${isNew(t)?`--od:${k*STEP}ms`:`animation-delay:${(anim?nw.length*STEP:0)+k*80}ms`}"><span class="tri">${trBadge(t,true)}${isNew(t)&&anim?'<span class="tseal" aria-hidden="true"></span>':''}</span><div class="trt"><b>${esc(t.n)}</b>${trQ(t)}<span>${esc(t.d)}</span>${isNew(t)?(t.sec?'<em class="trsx">секретний!</em>':'')+rareTag(t):''}</div></div>`).join('')+`</div>`
     +(small.length?`<div class="trrep" style="margin-top:var(--sp-2)">`+small.map(t=>`<span class="trchip${t.sec?' sec':''}" title="${esc(t.d)}">${trBadge(t,true)}<b>${esc(t.n)}</b></span>`).join('')+`</div>`:'');
+  if(anim){el.classList.add('wait');const go=()=>{if(tok!==NT_TOK)return;el.classList.remove('wait');
+      nw.forEach((t,j)=>{const rare=!!(tierOf(t)||t.sec),d=Math.min(j,5)*STEP;setTimeout(()=>{if(tok===NT_TOK)haptic(rare?'heavy':'medium');},d+HALF);
+        setTimeout(()=>{if(tok===NT_TOK)odoSet(document.getElementById('trTotN'),Math.min(n1,n0+j+1));},d+LAND);});
+      setTimeout(()=>{if(tok===NT_TOK)haptic('success');},Math.min(nw.length-1,5)*STEP+LAND+60);
+      el.querySelectorAll('.tseal').forEach(x=>x.addEventListener('animationend',()=>x.remove()));};   // sealed face is dropped after the flip
+    const first=el.querySelector('.tro.open');
+    if(typeof IntersectionObserver==='function'&&first){const io=new IntersectionObserver(es=>{if(es.some(x=>x.isIntersecting)){io.disconnect();go();}},{threshold:.5});io.observe(first);}else go();}
+  else el.classList.remove('wait');
 }
