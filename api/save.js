@@ -6,7 +6,7 @@
 //   kind 'challenge'   {row}           -> friend challenge -> {id}
 //   kind 'chal_result' {row}           -> accepted challenge result -> {ok}
 // Daily challenge result is not written here: the server writes it from the verified season (api/verify.js, syncDaily).
-// 503 {fallback:true}: DB has no device_ok yet (SQL 0.53 not applied); the browser then writes directly (legacy path).
+// 503 {fallback:true}: DB has no device_ok yet (SQL 0.53 not applied). Clients 0.73.1+ do not write directly any more (sql/v054_close_writes.sql).
 const { sb, deviceOk, tgUser, body, rateLimit } = require('./_device.js');
 const { verifyById } = require('./verify.js');
 

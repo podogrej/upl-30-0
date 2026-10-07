@@ -14,9 +14,7 @@ function chalLinkWeb(id){return `${SITE}?c=${id}`;}
 function chalLinkTg(id){return `https://t.me/${TG_BOT}?startapp=c${id}`;}
 async function chalCreate(r){
   const id=chalId();const row={id,device_id:deviceId(),name:chalName().slice(0,40),seed:S.chal.seed,formation:S.formation,year:r.year,mode:S.mode,w:r.W,d:r.D,l:r.L,pts:r.pts,place:r.place,gf:r.gf,ga:r.ga};
-  try{await saveApi('challenge',{row});return id;}catch(e){if(!e.legacy)throw e;}   // server writes; fallback: direct insert for legacy API
-  const res=await fetch(`${SB_URL}/rest/v1/challenges?apikey=${SB_KEY}`,{method:'POST',headers:{apikey:SB_KEY,'Content-Type':'application/json',Prefer:'return=minimal'},body:JSON.stringify(row)});
-  if(!res.ok)throw new Error('HTTP '+res.status);return id;
+  await saveApi('challenge',{row});return id;   // server writes only
 }
 async function chalShare(){
   const r=S.result;const msg=document.getElementById('chalMsg');if(!r||!S.chal)return;
@@ -68,5 +66,5 @@ function chalAfterSeason(r){
   const diff=r.pts-c.pts;line.hidden=false;
   line.innerHTML=`${ic('sword-cross','sm')}Ти <b>${r.pts}</b> : <b>${c.pts}</b> ${esc(chalWho(c))} — ${diff>0?`<b>виклик прийнято й виграно</b> (+${diff})`:diff===0?'нічия за очками':`не вистачило ${-diff} ${ptsWord(-diff)}`}`;
   if(!ONLINE)return;const row={challenge_id:c.id,device_id:deviceId(),name:chalName().slice(0,40),w:r.W,d:r.D,l:r.L,pts:r.pts,place:r.place,gf:r.gf,ga:r.ga};
-  saveApi('chal_result',{row}).then(()=>chalLoad(true)).catch(e=>{if(e.legacy)fetch(`${SB_URL}/rest/v1/challenge_results?apikey=${SB_KEY}`,{method:'POST',headers:{apikey:SB_KEY,'Content-Type':'application/json',Prefer:'return=minimal'},body:JSON.stringify(row)}).then(()=>chalLoad(true)).catch(()=>{});});
+  saveApi('chal_result',{row}).then(()=>chalLoad(true)).catch(e=>console.warn('chal',e));
 }
