@@ -111,4 +111,21 @@ async function draftAll(pg){for(let i=0;i<11;i++){await pg.click('#spinBtn');awa
   const g=await o.pg.evaluate(()=>{const h=document.querySelector('header.top').getBoundingClientRect(),bar=document.querySelector('#s2 .dtop .bar').getBoundingClientRect();return {sw:document.documentElement.scrollWidth<=innerWidth+1,hTop:h.top,bar:bar.width>20,names:[...document.querySelectorAll('*')].filter(e=>e.style.viewTransitionName).length};});
   T.check(g.sw&&g.hTop===0&&g.bar&&g.names===0,`${tag}: без горизонтальної прокрутки, шапка на місці, імена зняті`);
   T.check(o.errs.length===0,`${tag}: помилок JS немає`+(o.errs.length?': '+o.errs[0]:''));await shot(o.pg,`${tag}_draft`);await o.b.close();}
+ // ---- regressions: footer FAQ link from another screen, season ending in the background
+ {const {b,pg,errs}=await openPage();
+  await pg.click('#freeOpen');await wait(700);
+  await pg.evaluate(()=>[...document.querySelectorAll('.foot0 a')].find(a=>a.dataset.go==='howQ').click());await wait(1500);
+  const f=await pg.evaluate(()=>({s1:!document.getElementById('s1').hidden,open:document.getElementById('howQ').open,top:Math.round(document.getElementById('howQ').getBoundingClientRect().top)}));
+  T.check(f.s1&&f.open&&f.top>=0&&f.top<200,`посилання в підвалі з іншого екрана: головна, відповідь розкрита й прокручена (top ${f.top})`);
+  await pg.click('#freeOpen');await wait(700);await pg.click('#startBtn');await wait(800);
+  await wait(800);
+  // live season -> home; the season ends there without a full-screen transition
+  for(let i=0;i<11;i++){await pg.click('#spinBtn');await pg.waitForSelector('#squad .pl:not([disabled])',{timeout:8000});const bt=await pg.$('.pl:not([disabled])');await bt.click();await wait(80);const pk=await pg.$('#pitch .slot.target');if(pk){await pk.click();await wait(60);}}
+  await pg.waitForSelector('#simBtn:not([hidden])');await pg.click('#simBtn');await wait(1500);
+  await pg.evaluate(()=>document.getElementById('homeBtn').click());await wait(800);
+  const n0=await pg.evaluate(()=>window.__dbg.VT_N);let seen=false;
+  for(let k=0;k<90&&!seen;k++){seen=await pg.evaluate(()=>/\bvt\b/.test(document.documentElement.className));if(await pg.evaluate(()=>!document.getElementById('final').hidden))break;await wait(300);}
+  const e=await pg.evaluate(()=>({n:window.__dbg.VT_N,s1:!document.getElementById('s1').hidden,fin:!document.getElementById('final').hidden}));
+  T.check(e.fin&&e.s1&&e.n===n0&&!seen,`кінець сезону у фоні: без переходу на головній (VT ${n0}→${e.n})`);
+  T.check(!errs.length,'регресії: помилок JS немає '+errs.join(' | '));await b.close();}
  process.exit(T.done());})();

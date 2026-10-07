@@ -170,6 +170,7 @@ const sk=(pg,sel)=>pg.evaluate(s=>{const n=[...document.querySelectorAll(s+' .sk
   const A=await openSite({b:bb,db,signed:true,route,viewport:{width:390,height:844},wait:1500});const p=A.pg;
   // all-time table
   H.hold(/\/rest\/v1\/seasons/);await p.click('#boardOpen');await wait(300);
+  await p.waitForFunction(()=>document.getAnimations().every(a=>a.playState!=='running'||a.effect.getTiming().iterations===Infinity),null,{timeout:3000});   // sheet settled (skeleton shimmer is infinite)
   const s1=await sk(p,'#viewBody'),skRow=await p.evaluate(()=>{const r=document.querySelectorAll('#boardBody tr');return {n:r.length,h:r[2].getBoundingClientRect().height,top:document.querySelector('#boardBody table').getBoundingClientRect().top};});
   T.check(s1.n>=20&&s1.anim==='skim'&&s1.box,`таблиця: скелетон (${s1.n} блоків, мерехтіння ${s1.anim}, role=status)`);await noText(p,'#viewBody',T,'таблиця');await shot(p,'skeleton_board_phone_dark');
   await theme(p,'light');await wait(900);await shot(p,'skeleton_board_phone_light');await theme(p,'dark');

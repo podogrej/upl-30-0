@@ -1275,9 +1275,9 @@ function draftWave(){if(matchMedia('(prefers-reduced-motion: reduce)').matches||
   const idx=S.slots.map((x,i)=>i).sort((a,b)=>ord[GROUP_OF[S.slots[a].slot]]-ord[GROUP_OF[S.slots[b].slot]]||a-b);
   [...document.querySelectorAll('#pitch .slot')].forEach((el,i)=>el.style.setProperty('--wi',idx.indexOf(i)));
   s2.classList.remove('wave');void s2.offsetWidth;s2.classList.add('wave');setTimeout(()=>s2.classList.remove('wave'),1400);}
-function go(n,pop,link){if(VT_PEND)VT_PEND();if(n===2)PITCH_VIS=true;if(!pop&&n!==CUR_SEC)navPush(n);const prev=CUR_SEC,back=!!pop||(n===1&&prev!==1);screenTag(SEC_NAME[n]);if(n!==6&&prev===6)ppUrl(null);if(n!==7&&prev===7)flUrl(null);if(n===8)renderOc();else if(n===4&&S.format==='oneclub')setFmt('oneclub');
+function go(n,pop,link,after){if(VT_PEND)VT_PEND();if(n===2)PITCH_VIS=true;if(!pop&&n!==CUR_SEC)navPush(n);const prev=CUR_SEC,back=!!pop||(n===1&&prev!==1);screenTag(SEC_NAME[n]);if(n!==6&&prev===6)ppUrl(null);if(n!==7&&prev===7)flUrl(null);if(n===8)renderOc();else if(n===4&&S.format==='oneclub')setFmt('oneclub');
   CUR_SEC=n;
-  vtRun(vt=>{[1,2,3,4,5,6,7,8].forEach(i=>{const el=document.getElementById('s'+i);const was=el.hidden;el.hidden=(i!==n);if(i===n&&(was||prev!==n)){el.classList.remove('enter','back');if(!vt){void el.offsetWidth;el.classList.add(back?'back':'enter');}}});navUi();miniSync();window.scrollTo({top:0});if(n===2&&link)draftWave();},
+  vtRun(vt=>{[1,2,3,4,5,6,7,8].forEach(i=>{const el=document.getElementById('s'+i);const was=el.hidden;el.hidden=(i!==n);if(i===n&&(was||prev!==n)){el.classList.remove('enter','back');if(!vt){void el.offsetWidth;el.classList.add(back?'back':'enter');}}});navUi();miniSync();window.scrollTo({top:0});if(n===2&&link)draftWave();if(after)after();},
     {back,pairs:link&&n===2&&prev!==2?[[document.querySelector(link),'#s2 .dtop .bar','vt-play']]:[]});}
 // Back button + home icon. Every screen change is a browser history entry,
 // so swipe, browser back and Telegram BackButton go to the previous screen. Season summary replaces the draft (back goes to settings).
@@ -1641,7 +1641,7 @@ document.getElementById('miniUp').onclick=()=>document.getElementById('pitch').s
 addEventListener('resize',miniSync);
 document.getElementById('spinBtn').onclick=e=>{e.stopPropagation();spin();};
 document.querySelectorAll('.foot0 a').forEach(a=>a.onclick=e=>{e.preventDefault();const id=a.dataset.go,el=document.getElementById(id);if(!el)return;   // footer with section links
-  if(el.tagName==='DETAILS'||el.tagName==='DIV'){if(CUR_SEC!==1)go(1);const box=el.closest('#faqBox');if(box)box.open=true;el.open=true;el.scrollIntoView({behavior:'smooth',block:'start'});}else{if(CUR_SEC!==1)go(1);el.click();}});
+  if(el.tagName==='DETAILS'||el.tagName==='DIV'){const box=el.closest('#faqBox');if(box)box.open=true;el.open=true;const to=()=>el.scrollIntoView({behavior:'smooth',block:'start'});if(CUR_SEC!==1)go(1,false,null,to);else to();}else{if(CUR_SEC!==1)go(1);el.click();}});
 document.getElementById('spinZone').onclick=()=>{const b=document.getElementById('spinBtn');if(!b.hidden&&!b.disabled)spin();};   // the whole highlighted area spins the wheel
 document.getElementById('rerollBtn').onclick=()=>{if(S.rerolls>0){S.rerolls--;spin('both');}};
 document.getElementById('rerollClub').onclick=()=>{if(S.rerolls>0){S.rerolls--;spin('club');}};
@@ -2201,9 +2201,10 @@ function tickReveal(){
 function seasonHaptic(r){if(S.format==='anti')return;haptic(r.place<=ZONES.co?'success':r.place>16-ZONES.rel?'warning':null);}
 function finishReveal(){const R=REV;clearInterval(R.t);if(R.fin)return;R.fin=true;const $=id=>document.getElementById(id);
   // W-D-L and points glide from the live header to the summary tiles
-  vtRun(()=>{renderNewTro(R.r);renderOcRes(R.r);acctNudge(R.r);$('live').hidden=true;$('final').hidden=false;window.scrollTo({top:0});
-    if(!R.done){R.done=true;const fin=$('final');fin.classList.add('fin-in');setTimeout(()=>fin.classList.remove('fin-in'),1600);seasonHaptic(R.r);countUp(document.querySelectorAll('#placeBig, #recTiles i, #recTiles b.hot'));champModal(R.r);if(ONLINE)setTimeout(()=>cardPrep(R.r),600);}},
-    {pairs:[[$('lvRec'),'#recTiles>div:first-child>b','vt-rec'],[$('lvPts'),'#recTiles b.hot','vt-pts']]});}
+  const swap=()=>{renderNewTro(R.r);renderOcRes(R.r);acctNudge(R.r);$('live').hidden=true;$('final').hidden=false;window.scrollTo({top:0});
+    if(!R.done){R.done=true;const fin=$('final');fin.classList.add('fin-in');setTimeout(()=>fin.classList.remove('fin-in'),1600);seasonHaptic(R.r);countUp(document.querySelectorAll('#placeBig, #recTiles i, #recTiles b.hot'));champModal(R.r);if(ONLINE)setTimeout(()=>cardPrep(R.r),600);}};
+  if(CUR_SEC!==3){swap();return;}   // season ended in the background: no full-screen transition on another screen
+  vtRun(swap,{pairs:[[$('lvRec'),'#recTiles>div:first-child>b','vt-rec'],[$('lvPts'),'#recTiles b.hot','vt-pts']]});}
 document.getElementById('skipBtn').onclick=()=>finishReveal();
 document.querySelectorAll('#tabs .tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('#tabs .tab').forEach(x=>x.classList.toggle('on',x===b));['t1','t2'].forEach(id=>document.getElementById(id).hidden=id!==b.dataset.tab);});
 document.getElementById('againBtn').onclick=()=>{S.result=null;if(S.league){openLeague(S.league.id);return;}go(S.daily||S.challenge?1:4);};
