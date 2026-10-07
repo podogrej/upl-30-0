@@ -115,8 +115,8 @@ const sk=(pg,sel)=>pg.evaluate(s=>{const n=[...document.querySelectorAll(s+' .sk
  {const db=mkDB();
   const A=await openSite({b:bb,db,viewport:{width:390,height:844},wait:1500});const p=A.pg;   // no sign-in: login sheet
   await p.click('#acctBtn');await wait(300);await p.click('#ppLogin');await wait(650);
-  const lg=await geo(p,'#viewBox .box'),ls=await p.evaluate(()=>({login:document.getElementById('viewBox').classList.contains('login'),x:document.getElementById('viewClose').textContent.trim(),focus:document.activeElement.className}));
-  T.check(ls.login&&Math.abs(lg.bottom-lg.vh)<=.5&&ls.x==='✕','вхід: шторка знизу з хрестиком ✕');await shot(p,'login_phone_dark');
+  const lg=await geo(p,'#viewBox .box'),ls=await p.evaluate(()=>({login:document.getElementById('viewBox').classList.contains('login'),x:!!document.querySelector('#viewClose svg.ico')&&document.getElementById('viewClose').getAttribute('aria-label')==='Закрити',focus:document.activeElement.className}));
+  T.check(ls.login&&Math.abs(lg.bottom-lg.vh)<=.5&&ls.x,'вхід: шторка знизу з хрестиком (SVG)');await shot(p,'login_phone_dark');
   await p.click('#acctSkip');await wait(500);T.check((await st(p)).hidden&&(await st(p)).focus==='ppLogin','«Грати без входу» закриває шторку, фокус повертається на «Увійти»');
   await p.click('#ppLogin');await wait(650);rel=await drag(p,'#viewHead',160,{steps:8,pause:20});await rel();await wait(600);
   T.check((await st(p)).hidden,'вхід: закривається свайпом вниз');

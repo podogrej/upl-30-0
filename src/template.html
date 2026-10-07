@@ -232,19 +232,20 @@ select.need{border-color:var(--loss);box-shadow:0 0 0 2px color-mix(in srgb,var(
 .chem0{display:flex;flex-wrap:wrap;align-items:baseline;gap:var(--sp-1) var(--sp-2);padding:var(--sp-3) var(--sp-3);border-radius:var(--r-md);background:color-mix(in srgb,var(--z-co) 12%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--z-co) 35%,transparent);font-size:var(--fs-body)}.chem0 span{color:var(--ink2);font-size:var(--fs-footnote)}.prow{display:grid;grid-template-columns:8.6em minmax(0,1fr) 3em;align-items:center;gap:var(--sp-2);font-size:var(--fs-body)}.prow b{text-align:right;font-variant-numeric:tabular-nums}
 td.avgc{font-family:var(--font-display);font-weight:var(--wt-bold);font-size:var(--fs-body);color:var(--amber)}
 .foot a{color:var(--amber);text-decoration:none;font-weight:var(--wt-bold);position:relative}.foot a b{position:absolute;top:-2px;right:-8px;width:6px;height:6px;border-radius:50%;background:var(--amber)}
-.news{display:grid;gap:var(--sp-3)}.news .ni{display:grid;grid-template-columns:34px 1fr;gap:var(--sp-2);align-items:start}.news .ni b{display:block}.news .ni span.e{font-size:var(--fs-title3);line-height:var(--lh-snug)}.news .ni p{margin:var(--sp-0h) 0 0;color:var(--ink2);font-size:var(--fs-body)}
-.ic{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:var(--r-xs);background:color-mix(in srgb,var(--amber) 16%,transparent);color:var(--amber2);flex:none;vertical-align:middle;font-style:normal}
-.ico{width:16px;height:16px;fill:currentColor;display:block}
+.news{display:grid;gap:var(--sp-3)}.news .ni{display:grid;grid-template-columns:34px 1fr;gap:var(--sp-2);align-items:start}.news .ni b{display:block}.news .ni .ic.lg{color:var(--ink2)}.news .ni span.e{font-size:var(--fs-title3);line-height:var(--lh-snug)}.news .ni p{margin:var(--sp-0h) 0 0;color:var(--ink2);font-size:var(--fs-body)}
+.ic{display:inline-grid;place-items:center;width:24px;height:24px;color:inherit;flex:none;vertical-align:middle;font-style:normal}   /* UI icon: outline SVG in the text color */
+.ico{width:16px;height:16px;fill:currentColor;display:block}.ic .ico{width:20px;height:20px}
 :root{--font-emoji:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif}
-.ic.em,.tre,.champ0 .cup,.ico.em{font-family:var(--font-emoji)}.ico.em{display:inline-grid;place-items:center;width:auto;height:auto;font-size:1.05em;line-height:1;fill:none;font-style:normal}   /* emoji: system Apple font first in the list (iPhone/iPad) */
+.ic.em,.tre,.champ0 .cup{font-family:var(--font-emoji)}   /* reward emoji: system Apple font first in the list (iPhone/iPad) */
 .ic.em{background:none;box-shadow:none;font-style:normal;font-size:var(--fs-headline);line-height:1;display:inline-grid;place-items:center}.ic.em.sm{font-size:var(--fs-body)}.ic.em.lg{font-size:var(--fs-title2);letter-spacing:var(--ls-tight)}.row0>.ic.em:first-child{font-size:var(--fs-title2);letter-spacing:var(--ls-tight)}
 .tre{display:inline-grid;place-items:center;width:42px;height:42px;border-radius:50%;background:var(--bg2);font-size:var(--fs-title2);line-height:1;letter-spacing:var(--ls-tight)}.tre.off{filter:grayscale(1);opacity:.45}.chip .tre,.trchip .tre{width:22px;height:22px;font-size:var(--fs-body);background:none}.tro0 .tre{width:26px;height:26px;font-size:var(--fs-headline)}   /* trophy icons are emoji */
-.ic.sm{width:20px;height:20px;border-radius:var(--r-xs);margin-right:var(--sp-2)}.ic.sm .ico{width:13px;height:13px}
-.ic.lg{width:34px;height:34px;border-radius:var(--r-sm)}.ic.lg .ico{width:20px;height:20px}
+.ic.sm{width:20px;height:20px;margin-right:var(--sp-2)}.ic.sm .ico{width:16px;height:16px}
+.ic.lg{width:34px;height:34px}.ic.lg .ico{width:26px;height:26px}
 button:has(.ic),a.btnlink:has(.ic){display:inline-flex;align-items:center;justify-content:center;gap:var(--sp-2)}
 button:has(.ic) .ic{margin-left:calc(var(--sp-1) * -1)}
-.primary .ic,a.btnlink .ic{background:color-mix(in srgb,var(--bg) 18%,transparent);color:var(--bg)}
-.chip:has(.ic),.chip.ms{display:inline-flex;align-items:center;gap:var(--sp-2)}.chip .ic{width:18px;height:18px;border-radius:var(--r-xs);margin-left:calc(var(--sp-1) * -1)}.chip .ic .ico{width:12px;height:12px}
+.primary .ic,a.btnlink .ic{color:var(--bg);width:22px;height:22px}.primary .ic .ico,a.btnlink .ic .ico{width:22px;height:22px}
+.ghost .ic{width:18px;height:18px;margin-right:0}.ghost .ic .ico{width:18px;height:18px}
+.chip:has(.ic),.chip.ms{display:inline-flex;align-items:center;gap:var(--sp-2)}.chip .ic{width:18px;height:18px;margin-left:calc(var(--sp-1) * -1)}.chip .ic .ico{width:14px;height:14px}
 .kicker .ic{margin-right:var(--sp-2)}
 .trsec .ico{display:inline-block;width:15px;height:15px;vertical-align:-3px;fill:currentColor}
 .plc{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:var(--r-xs);font-family:var(--font-mono);font-weight:var(--wt-bold);font-size:var(--fs-caption);color:#161514}.plc.p1{background:#f2c14e}.plc.p2{background:#c9c6bf}.plc.p3{background:#d08a4e}
@@ -261,8 +262,8 @@ button.ghost.big0{padding:var(--sp-3) var(--sp-card);font-size:var(--fs-body);fo
 .sec0{font-family:var(--font-mono);font-size:var(--fs-caption);letter-spacing:var(--ls-caps);text-transform:uppercase;color:var(--amber);margin:var(--sp-5) 0 calc(var(--sp-2) * -1)}
 .row0{display:flex;align-items:center;gap:var(--sp-3);width:100%;text-align:left;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:var(--sp-4) var(--sp-card);border-radius:var(--r-lg);margin-top:var(--sp-3)}
 .row0>span{flex:1;display:grid;gap:var(--sp-0h);min-width:0}.row0 small{color:var(--ink2);font-weight:var(--wt-regular);font-size:var(--fs-footnote)}.row0 em{font-style:normal;color:var(--amber)}
-.row0>.ic:first-child{width:34px;height:34px;border-radius:var(--r-sm);margin:0}.row0>.ic:first-child .ico{width:20px;height:20px}
-.row0>.ic:last-child{background:none;color:var(--muted);margin:0}
+.row0>.ic:first-child{width:34px;height:34px;margin:0}.row0>.ic:first-child .ico{width:24px;height:24px}
+.row0>.ic:last-child{color:var(--muted);margin:0}
 .hero0 h1{font-size:clamp(var(--fs-title2),5.5vw,var(--fs-large));line-height:var(--lh-tight);letter-spacing:var(--ls-tight)}
 .lead0{font-size:var(--fs-headline);color:var(--ink2);margin:0;max-width:60ch}
 .pl.in{animation:plin var(--dur-3) var(--ease-out) both}@keyframes plin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
@@ -375,7 +376,7 @@ td .sub{font-size:var(--fs-caption2);color:var(--muted);margin-top:var(--sp-0h);
 .overlay.login .box{max-width:440px;background:var(--surface)}
 .overlay.login .sheet-head{padding-bottom:0}
 .overlay.login .vhead{justify-content:flex-end}.overlay.login #viewTitle{display:none}
-.overlay.login #viewClose{border:0;background:none;color:var(--muted);font-size:var(--fs-title2);line-height:1;padding:var(--sp-1) var(--sp-2);letter-spacing:var(--ls-tight)}
+.overlay.login #viewClose{border:0;background:none;color:var(--muted);line-height:1;min-width:44px;min-height:44px;padding:var(--sp-1) var(--sp-2)}.overlay.login #viewClose .ico{width:22px;height:22px;margin:auto}
 /* skeletons: shimmer blocks with the final layout (no text while loading) */
 .sk{position:relative;display:inline-block;vertical-align:middle;width:100%;height:1em;border-radius:var(--r-xs);background:color-mix(in srgb,var(--ink) 7%,transparent);overflow:hidden}
 .sk::after{content:"";position:absolute;inset:0;transform:translateX(-100%);background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--ink) 11%,transparent),transparent);animation:skim 1.4s linear infinite}
@@ -518,7 +519,7 @@ input.sw:checked{background:var(--win)}input.sw:checked::after{transform:transla
 button.danger{background:var(--loss);border-color:var(--loss);color:#fff}
 .pp-warn{display:grid;gap:var(--sp-2);margin-top:var(--sp-4);padding:var(--sp-3);border:1px solid color-mix(in srgb,var(--amber) 55%,var(--line));border-radius:var(--r-md);background:color-mix(in srgb,var(--amber) 9%,var(--surface))}
 .pp-warn .h{display:flex;align-items:flex-start;gap:var(--sp-2);line-height:var(--lh-normal);font-weight:var(--wt-bold);font-size:var(--fs-body)}.pp-warn .h .ico{width:20px;height:20px;fill:var(--amber);flex:none;margin-top:0}   /* icon aligned with the first line of the title */
-#verLine{display:flex;align-items:center}#verLine .ic{flex:none}   /* emoji sat below the text on iPhone */
+#verLine{display:flex;align-items:center}#verLine .ic{flex:none}
 .pp-warn p{margin:0;font-size:var(--fs-footnote);color:var(--ink2);line-height:var(--lh-body)}
 .pp-lock{display:flex;align-items:center;gap:var(--sp-2);font-size:var(--fs-footnote);color:var(--muted);padding:var(--sp-3);border:1px dashed var(--line);border-radius:var(--r-md)}
 .pp-lock .ico{width:16px;height:16px;fill:currentColor}
@@ -565,9 +566,9 @@ header.top{border-bottom-color:var(--line2)}
 /* home */
 .hero0{padding-block:var(--sp-6) var(--sp-1);gap:var(--sp-4)}
 .sec0{color:var(--muted);margin:var(--sp-6) 0 calc(var(--sp-0h) * -1)}
-.daily .meta{display:block;font-size:var(--fs-body);color:var(--ink2)}.daily .meta .hot0{color:var(--amber);font-weight:var(--wt-bold);white-space:nowrap}.daily .meta .hot0 .ic{width:auto;min-width:1.2em;height:auto;background:none;vertical-align:-2px;margin-right:var(--sp-1)}   /* fire emoji is wider than 18 px; the streak label overlapped (emoji_layout test) */
+.daily .meta{display:block;font-size:var(--fs-body);color:var(--ink2)}.daily .meta .hot0{color:var(--amber);font-weight:var(--wt-bold);white-space:nowrap}.daily .meta .hot0 .ic{width:auto;height:auto;vertical-align:-3px;margin-right:var(--sp-1)}.daily .meta .hot0 .ico{display:inline-block;width:16px;height:16px}
 .row0 b{font-weight:var(--wt-bold);font-size:var(--fs-headline)}
-.row0>.ic:first-child{width:30px;height:30px;background:none}
+.row0>.ic:first-child{width:30px;height:30px}
 .tag0{font:var(--wt-bold) var(--fs-caption2) var(--font-mono);color:var(--amber);letter-spacing:var(--ls-caps);text-transform:uppercase;margin-left:var(--sp-2)}
 .faq0 details{margin:0;border:0;border-bottom:1px solid var(--line2);border-radius:0;background:none;padding:0 var(--sp-0h)}.faq0 details[open]{padding-bottom:var(--sp-4)}
 .faq0 summary{font-size:var(--fs-body);padding-block:var(--sp-4)}
@@ -640,8 +641,8 @@ button.go0{max-width:none;margin-top:var(--sp-5)}
 .hero0{gap:0}.hero0 .logo0{margin-bottom:var(--sp-3)}.hero0 .lead0{max-width:30ch;margin:0 0 var(--sp-5)}
 .btns0{display:grid;gap:var(--sp-2);width:min(100%,420px)}.btns0 .big0{max-width:none;min-height:54px;margin:0}
 button.daily0{display:grid;grid-auto-flow:column;justify-content:center;align-content:center;align-items:baseline;column-gap:var(--sp-2);min-height:54px;padding:var(--sp-2) var(--sp-4);border-radius:var(--r-md);border:1.5px solid color-mix(in srgb,var(--amber) 65%,transparent);background:none;color:var(--ink);font:var(--wt-bold) var(--fs-headline) var(--font-display);cursor:pointer}
-.daily0>*{display:block;line-height:1;margin:0}.daily0>.ic.em{width:auto;min-width:1.2em;height:20px;display:grid;place-items:center;font-size:var(--fs-headline);align-self:center}   /* text on one baseline, emoji centered on the row */
-.daily0 small{font:var(--wt-medium) var(--fs-footnote) var(--font-body);color:var(--ink2);white-space:nowrap}.daily0 small .hot0{color:var(--amber);font-weight:var(--wt-bold)}.daily0 small .hot0 .ic{width:auto;min-width:1.2em;height:auto;background:none;margin-right:var(--sp-0h);vertical-align:-1px}
+.daily0>*{display:block;line-height:1;margin:0}.daily0>.ic{width:22px;height:22px;align-self:center;color:var(--amber2)}.daily0>.ic .ico{width:22px;height:22px}   /* text on one baseline, icon centered on the row, accent color */
+.daily0 small{font:var(--wt-medium) var(--fs-footnote) var(--font-body);color:var(--ink2);white-space:nowrap}.daily0 small .hot0{color:var(--amber);font-weight:var(--wt-bold)}.daily0 small .hot0 .ic{width:auto;height:auto;margin:0 var(--sp-0h) 0 0;vertical-align:-3px}.daily0 small .hot0 .ico{display:inline-block;width:16px;height:16px}
 button.daily0:disabled{opacity:1;border-color:var(--line);cursor:default}.daily0:disabled span{color:var(--ink2)}
 .dstat0{margin:var(--sp-3) 0 0;font-size:var(--fs-body);color:var(--ink2);max-width:36ch}.dstat0:empty{display:none}
 .links0{display:flex;gap:var(--sp-4);justify-content:center;margin-top:var(--sp-3)}
@@ -653,7 +654,7 @@ button.daily0:disabled{opacity:1;border-color:var(--line);cursor:default}.daily0
 .tile1[data-k="fl"]{--tc:var(--t-fl)}.tile1[data-k="pick"]{--tc:var(--t-pick)}.tile1[data-k="club"]{--tc:var(--t-club)}.tile1[data-k="board"]{--tc:var(--t-board)}.tile1[data-k="tr"]{--tc:var(--t-tr)}
 .tiles0{display:grid;grid-template-columns:1fr;gap:var(--sp-2)}
 button.tile1{display:grid;grid-template-columns:44px minmax(0,1fr) auto;align-items:center;column-gap:var(--sp-4);min-height:72px;margin:0;padding:var(--sp-3) var(--sp-4) var(--sp-3) var(--sp-3);border:0;border-radius:var(--r-lg);background:var(--card);color:var(--ink);text-align:left;font-family:var(--font-body);cursor:pointer}
-button.tile1>.ic{width:44px;height:44px;margin:0;border-radius:50%;background:color-mix(in srgb,var(--tc) 18%,transparent);box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--tc) 45%,transparent);font-size:var(--fs-title3)}
+button.tile1>.ic{width:44px;height:44px;margin:0;border-radius:var(--r-md);background:color-mix(in srgb,var(--tc) 16%,transparent);color:var(--ink)}button.tile1>.ic .ico{width:26px;height:26px}   /* soft tinted plate, icon in text color for contrast */
 .tile1>span{display:grid;gap:var(--sp-1);min-width:0}.tile1 b{font-size:var(--fs-headline);font-weight:var(--wt-bold);line-height:var(--lh-snug)}
 .tile1 small{font-size:var(--fs-footnote);font-weight:var(--wt-medium);color:var(--ink2);line-height:var(--lh-normal)}
 .tile1 .chev{font-style:normal;color:var(--muted);font-size:var(--fs-title3)}
@@ -704,7 +705,8 @@ details.faqbox0 .faq0{padding:0 var(--sp-4) var(--sp-2)}
 .ft{display:grid;gap:var(--sp-4);justify-items:center;margin:var(--sp-6) auto var(--sp-6);padding:var(--sp-card) var(--sp-4) 0;border-top:1px solid var(--line2);max-width:760px;text-align:center;font-family:var(--font-body)}   /* footer (variant A) */
 .foot0{display:flex;flex-wrap:wrap;justify-content:center;gap:0 var(--sp-3);font-size:var(--fs-footnote);font-weight:var(--wt-bold)}.foot0 a{display:inline-flex;align-items:center;min-height:44px;padding-inline:var(--sp-1);color:var(--ink2);text-decoration:none}@media (hover:hover) and (pointer:fine){.foot0 a:hover{color:var(--amber)}}
 .ft .foot{margin:0;font-family:var(--font-body);font-size:var(--fs-caption)}.ft-small{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:var(--sp-2) var(--sp-2)}.ft .ft-small a{display:inline-flex;align-items:center;min-height:44px;color:var(--muted);font-weight:var(--wt-medium)}.ft .ft-small #newsBtn{color:var(--ink2)}.ft .ft-small a b{position:static;align-self:center;margin-left:var(--sp-1);transform:translateY(-6px)}
-.ft-pills{display:flex;flex-wrap:wrap;justify-content:center;gap:var(--sp-2)}.ft-pill{display:inline-flex;align-items:center;gap:var(--sp-2);min-height:44px;padding:0 var(--sp-4);border-radius:var(--r-pill);border:1px solid var(--line);background:none;color:var(--ink2);font:var(--wt-medium) var(--fs-footnote) var(--font-body);cursor:pointer;white-space:nowrap;text-decoration:none}.ft-pill[hidden]{display:none}.ft-pill .ico{width:15px;height:15px}
+.ft-pills{display:flex;flex-wrap:wrap;justify-content:center;gap:var(--sp-2)}.ft-pill{display:inline-flex;align-items:center;gap:var(--sp-2);min-height:44px;padding:0 var(--sp-4);border-radius:var(--r-pill);border:1px solid var(--line);background:none;color:var(--ink2);font:var(--wt-medium) var(--fs-footnote) var(--font-body);cursor:pointer;white-space:nowrap;text-decoration:none}.ft-pill[hidden]{display:none}.ft-pill .ico{width:15px;height:15px}.ft-pill .ic{width:20px;height:20px}.ft-pill .ic .ico{width:18px;height:18px}
+body:has(#s1[hidden]) .foot0,body:has(#s1[hidden]) .ft-cred{display:none}   /* short footer on inner screens: full one only on home */
 .ft-cred{font-size:var(--fs-caption2);line-height:var(--lh-body);color:var(--muted);opacity:.8;max-width:64ch;text-wrap:balance}
 .ft-form{width:min(100%,380px);text-align:left;display:grid;gap:var(--sp-2)}.ft-form[hidden]{display:none}.ft-form .ttl{font-size:var(--fs-body);font-weight:var(--wt-bold);color:var(--ink2)}
 .ft-form textarea,.ft-form input{width:100%;box-sizing:border-box;font:var(--wt-regular) var(--fs-headline)/var(--lh-body) var(--font-body);color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);padding:var(--sp-3) var(--sp-3)}.ft-form textarea{min-height:84px;resize:vertical}.ft-form textarea::placeholder{color:var(--muted)}
@@ -897,7 +899,7 @@ h3,.sec0,#s1 .sec0,.pgh,.trleg .h{font-size:var(--fs-footnote);font-weight:var(-
       <p class="lead0">Збери найсильнішу 11-ку УПЛ і пройди сезон без поразок.</p>
       <div class="btns0">
         <button class="primary big0" id="freeOpen">Грати</button>
-        <button class="daily0" id="dailyBtn"><i class="ic em" aria-hidden="true">🎯</i><span id="dLabel">Драфт дня</span><small id="dMeta"></small></button>
+        <button class="daily0" id="dailyBtn"><!--i:calendar-star--><span id="dLabel">Драфт дня</span><small id="dMeta"></small></button>
       </div>
       <p class="dstat0" id="dStatus"></p>
       <div class="links0"><button id="lbOpenBtn" hidden>Таблиця дня</button><button id="howGo">Як грати?</button></div>
@@ -968,7 +970,7 @@ h3,.sec0,#s1 .sec0,.pgh,.trleg .h{font-size:var(--fs-footnote);font-weight:var(-
       <details><summary>Що таке «хімія»?</summary><p>Троє й більше гравців одного клубу грають разом краще, а якщо вони ще й з одного сезону — ще трохи краще. Бонус видно перед сезоном у рядку «Хімія».</p></details>
       <details><summary>Що таке xP, шанси й «везіння»?</summary><p>xP — скільки очок твій склад у середньому набирає проти цих суперників за 300 симуляцій сезону. Шанси (чемпіон, Ліга чемпіонів, єврокубки, виліт) — як часто він так фінішує в цих симуляціях. Навіть у скромного складу є шанс на «сезон-диво», а в сильного — рідкісний «золотий сезон», коли все йде в ворота й 30 перемог із 30 стають реальними. Суперники теж щоразу грають по-різному: буває, що фаворити провалюють сезон. xG — очікувані голи. Везіння — різниця між набраними очками й xP. Після сезону поруч із результатом — прогноз місця й вердикт: «Усе за сценарієм», «Краще за прогноз» чи «Провал сезону».</p></details>
       <details><summary>Як визначаються місця при рівності очок?</summary><p>За регламентом УПЛ: очки в особистих зустрічах → різниця м'ячів в особистих → забиті в особистих → загальна різниця м'ячів → загальна кількість забитих. За 1-ше місце — «золотий матч», за інші — жереб.</p></details>
-      <details><summary>Що таке «Драфт дня»?</summary><p>Одна схема, одні суперники й одне колесо на день для всіх. Офіційна спроба — одна, результат іде в таблицю дня. Грай щодня, щоб тримати серію: один пропущений день на тиждень прощається (❄️ заморозка).</p></details>
+      <details><summary>Що таке «Драфт дня»?</summary><p>Одна схема, одні суперники й одне колесо на день для всіх. Офіційна спроба — одна, результат іде в таблицю дня. Грай щодня, щоб тримати серію: один пропущений день на тиждень прощається (заморозка).</p></details>
       <details><summary>Що таке «Вибір сезону»?</summary><p>Колесо дає лише клуб, а сезон обираєш сам — з трьох випадкових сезонів цього клубу. Перекручувань немає, назад не повернешся. Результат іде в загальну таблицю з позначкою режиму.</p></details>
       <details><summary>Що таке «Один клуб»?</summary><p>Обираєш клуб — і збираєш найкращу 11-ку з усіх його сезонів в УПЛ. Колесо дає лише сезони цього клубу. У кожного клубу свої рекорди: набери більше очок, ніж клуб у найкращому сезоні, і менше, ніж у найгіршому, — і клуб пройдено. Складність дуже залежить від клубу, тому таблиця окрема.</p></details>
       <details><summary>Як грати з друзями?</summary><p>«Ліга з друзями» на головній: створи лігу й надішли посилання в чат. 11×11 — ліга на кілька днів: щодня спроба, очки сумуються. 5×5 — турнір: кожен збирає п'ятірку, а коли збір закінчиться, п'ятірки грають одна з одною. У Telegram-чаті бот @upl30_bot з командою /league веде табло драфту дня для всього чату. А ще — однаковий «Драфт дня» для всіх і кнопка «Кинути виклик другу» після сезону. «Поділитися» надсилає картку з результатом прямо в чат.</p></details>
@@ -999,10 +1001,10 @@ h3,.sec0,#s1 .sec0,.pgh,.trleg .h{font-size:var(--fs-footnote);font-weight:var(-
       <div class="bar"><i id="draftBar"></i></div>
     </div>
     <div class="pitch" id="pitch"></div>
-    <div class="row" id="moveRow"><button class="ghost" id="moveBtn" hidden><!--i:arrow-left-right-->Переставити гравців</button><small id="moveSub">Зміни позицію гравця, щоб звільнити місце</small></div>
+    <div class="row" id="moveRow"><button class="ghost" id="moveBtn" hidden><!--i:arrow-left-right-->Переставити гравців</button></div>
     <p class="muted" id="moveHint" hidden style="margin:var(--sp-2) 0 0;font-size:var(--fs-footnote)"></p>
     <div style="margin-top:var(--sp-3)" class="grid">
-      <div class="spin0" id="spinZone"><button class="spin" id="spinBtn">Крутити колесо</button><span>або торкнись будь-де тут</span></div>
+      <div class="spin0" id="spinZone"><button class="spin" id="spinBtn">Крутити колесо</button></div>
       <div class="wheel" id="wheel" hidden>
         <div class="reels"><div class="reel" id="reelClub"><div class="strip"><div class="club" id="wClub"></div></div></div><div class="reel" id="reelYear"><div class="strip"><div class="season" id="wSeason"></div></div></div></div>
         <p class="why0" id="wHint"></p>
@@ -1060,13 +1062,13 @@ h3,.sec0,#s1 .sec0,.pgh,.trleg .h{font-size:var(--fs-footnote);font-weight:var(-
       <textarea id="shareText" hidden readonly aria-label="Текст для поширення"></textarea>
       <!-- single Share button: card + preview link (/r/<id>, api/r.js); without system share menu: card and Copy -->
       <button class="sharebtn primary" id="tgShareBtn"><!--i:share-variant-->Поділитися</button>
-      <div class="shr2"><button class="sharebtn alt" id="chalOpen" hidden><!--i:sword-cross-->Кинути виклик другу</button>
+      <div class="shr2"><button class="sharebtn alt" id="chalOpen" hidden>Кинути виклик другу</button>
       <button class="sharebtn alt" id="againBtn">Новий драфт</button></div>   <!-- Share is the primary button; the other two sit in one row -->
       <span class="best" id="copyMsg"></span>
       <img id="shareImg" alt="Картка результату" hidden>
       <div class="row" id="cardActs" hidden><button class="primary" id="cardTgBtn" hidden><!--i:telegram-->Надіслати картку мені в Telegram</button><button class="primary" id="cardShareBtn" hidden><!--i:share-variant-->Поділитися карткою</button><button class="ghost" id="copyBtn"><!--i:content-copy-->Копіювати текст і посилання</button><span class="best" id="cardMsg"></span></div>
       <div class="hint" id="shareHint" hidden>Натисни й утримуй картку, щоб зберегти її або поділитися в Telegram чи Instagram.</div>
-      <div class="grid chalbox" id="chalBox" hidden style="gap:var(--sp-2)"><b>Кинути виклик другу</b><input id="chalName" maxlength="24" placeholder="Твоє ім'я у виклику" style="max-width:260px;font:inherit;font-size:var(--fs-headline);padding:var(--sp-2) var(--sp-3);border:1px solid var(--line);border-radius:var(--r-md);background:var(--surface);color:var(--ink)"><div class="row"><button class="primary" id="chalBtn"><!--i:sword-cross-->Кинути виклик другу</button><button class="ghost" id="chalCopyBtn"><!--i:content-copy-->Скопіювати посилання</button></div><span class="muted" style="font-size:var(--fs-footnote)">Друг зіграє з тим самим колесом, схемою й суперниками — побачимо, хто сильніший.</span><div class="muted" id="chalMsg" style="font-size:var(--fs-footnote);word-break:break-all"></div></div>
+      <div class="grid chalbox" id="chalBox" hidden style="gap:var(--sp-2)"><b>Кинути виклик другу</b><input id="chalName" maxlength="24" placeholder="Твоє ім'я у виклику" style="max-width:260px;font:inherit;font-size:var(--fs-headline);padding:var(--sp-2) var(--sp-3);border:1px solid var(--line);border-radius:var(--r-md);background:var(--surface);color:var(--ink)"><div class="row"><button class="primary" id="chalBtn"><!--i:sword-cross-->Кинути виклик другу</button><button class="ghost" id="chalCopyBtn"><!--i:content-copy-->Скопіювати посилання</button></div><div class="muted" id="chalMsg" style="font-size:var(--fs-footnote);word-break:break-all"></div></div>
     </div>
     <div class="tabs" role="tablist" id="tabs"><button class="tab on" data-tab="t1" role="tab">Огляд</button><button class="tab" data-tab="t2" role="tab">Статистика сезону</button></div>
     <div id="t1" class="tabpane">
@@ -1110,7 +1112,7 @@ h3,.sec0,#s1 .sec0,.pgh,.trleg .h{font-size:var(--fs-footnote);font-weight:var(-
   <p class="hint">Скріншот? Надішли його боту <a href="#" id="fbBot">@upl30_bot</a></p><p class="err" id="fbErr" hidden></p>
   <div class="acts"><button class="ft-send" id="fbSend" type="submit">Надіслати</button><button class="ft-cancel" id="fbCancel" type="button">Скасувати</button></div></form>
 <div class="ft-done" id="fbDone" hidden><b>✓</b><span>Дякуємо! Прочитаємо найближчим часом</span></div>
-<div class="ft-pills"><button class="ft-pill" id="fbBtn" type="button">✉️ Відгук і баги</button><a class="ft-pill" id="ftBot" href="https://t.me/upl30_bot" target="_blank" rel="noopener"><!--i:telegram-->Telegram-бот</a></div>
+<div class="ft-pills"><button class="ft-pill" id="fbBtn" type="button"><!--i:mail-->Відгук і баги</button><a class="ft-pill" id="ftBot" href="https://t.me/upl30_bot" target="_blank" rel="noopener"><!--i:telegram-->Telegram-бот</a></div>
 <div class="foot ft-small"><a href="#" id="newsBtn">Що нового у версії 0.76<b id="newsDot" hidden></b></a><span>·</span><a href="privacy.html">Конфіденційність</a></div>
 <div class="foot ft-copy">© 2026 30-0 УПЛ · неофіційний фан-проєкт <a href="#" id="themeBtn" class="thm" role="switch" aria-checked="false" aria-label="Світла тема"></a></div>
 <div class="ft-cred">Шрифт KyivType Sans © Дмитро Растворцев (айдентика Києва)<br>Іконки: Material Design Icons (Apache 2.0), логотип Telegram — Font Awesome Free (CC BY 4.0)</div>
@@ -1285,7 +1287,7 @@ function renderDailyCard(){
   const done=lsGet("upl30_daily_"+DAY);const si=streakInfo();
   const fire=si.count>1?` · <b class="hot0" title="${si.freeze?'Один пропущений день на тиждень не обнуляє серію':'Заморозку цього тижня використано'}">${ic('fire')}${si.count} дн.</b>`:'';
   document.getElementById('dMeta').innerHTML=(done?'новий завтра':`${DAY.slice(8,10)}.${DAY.slice(5,7)} · ${DAILY.formation}`)+fire;   // icon, title and date on one line
-  document.getElementById('dStatus').textContent=done?`Сьогодні: ${done.W}-${done.D}-${done.L}, ${done.pts} ${ptsWord(done.pts)}, ${done.place} місце`:(si.rescue&&si.count>1?`Вчора пропустив — зіграй сьогодні, і ❄️ заморозка збереже серію ${si.count} дн.`:'');
+  document.getElementById('dStatus').textContent=done?`Сьогодні: ${done.W}-${done.D}-${done.L}, ${done.pts} ${ptsWord(done.pts)}, ${done.place} місце`:(si.rescue&&si.count>1?`Вчора пропустив — зіграй сьогодні, і заморозка збереже серію ${si.count} дн.`:'');
   document.getElementById('dLabel').textContent=done?'Зіграно':'Драфт дня';document.getElementById('dailyBtn').disabled=!!done;
 }
 
@@ -1499,7 +1501,7 @@ function renderDraft(){
   const filled=S.slots.filter(s=>s.player).length;
   document.getElementById('draftCount').textContent=filled+"/11";
   {const tot=(MODES[S.mode]||{}).rerolls||0,left=Math.max(0,S.rerolls||0);document.getElementById('rrDots').innerHTML=tot?Array.from({length:tot},(_,i)=>`<i class="${i<left?'on':''}"></i>`).join(''):'';}document.getElementById('draftBar').style.width=Math.round(filled/11*100)+'%';renderMini();
-  {const mb=document.getElementById('moveBtn');mb.hidden=filled<2;mb.classList.toggle('on',!!S.moveMode);mb.lastChild.textContent=S.moveMode?'Готово':'Переставити гравців';document.getElementById('moveSub').hidden=!!S.moveMode;}
+  {const mb=document.getElementById('moveBtn');mb.hidden=filled<2;mb.classList.toggle('on',!!S.moveMode);mb.lastChild.textContent=S.moveMode?'Готово':'Переставити гравців';}
   renderPitch(document.getElementById('pitch'),S.slots,false);
   const done=filled===11;
   document.getElementById('spinBtn').hidden=done||!!S.wheel||!!S.pickOpts;
@@ -1870,7 +1872,7 @@ async function playSeason(year){
   document.getElementById('idxRow').innerHTML=[['Атака',r.t.att],['Оборона',r.t.def]].map(([n,v])=>`<div class="mtr"><div class="k">${n}</div><div class="v"><b>${v.toFixed(1)}</b><i>${LINE_WORD(v)}</i></div><div class="mbar" role="meter" aria-label="${n}" aria-valuemin="${IDX_LO}" aria-valuemax="${IDX_HI}" aria-valuenow="${v.toFixed(1)}"><u style="width:${idxPct(v).toFixed(0)}%"></u></div></div>`).join('');
   document.getElementById('xCap').innerHTML=`<p><b>xG</b> — очікувані голи: скільки команда мала б забити за силою атаки й суперників. <b>xGA</b> — очікувані пропущені. <b>Г−xG</b> у таблиці — наскільки команда забила більше (везіння, реалізація) чи менше, ніж «мала б».</p><p><b>До прогнозу</b> — різниця між набраними очками й прогнозом перед сезоном (xP ${r.xp.toFixed(1)}).</p><p>Атака й оборона — сила команди за рейтингами гравців: смужка йде від ${IDX_LO} до ${IDX_HI}. Слова біля ліній — середній рейтинг гравців лінії.</p>`;
   renderPitch(document.getElementById('pitch2'),S.slots,true);
-  {const ts=r.scorers[0],te2=document.getElementById('topScorer');te2.hidden=!ts;if(ts)te2.innerHTML=`${ic('soccer','sm')}Найкращий бомбардир: <b>${esc(ts.name)}</b> · ${ts.g} ${plUk(ts.g,'гол','голи','голів')}`;}
+  {const ts=r.scorers[0],te2=document.getElementById('topScorer');te2.hidden=!ts;if(ts)te2.innerHTML=`${em('soccer','sm')}Найкращий бомбардир: <b>${esc(ts.name)}</b> · ${ts.g} ${plUk(ts.g,'гол','голи','голів')}`;}
   document.getElementById('mDet').open=matchMedia('(min-width:1000px)').matches;   // large screen has room next to the pitch: matches expanded
   document.getElementById('matches').innerHTML=r.log.map(m=>`<div class="m" title="${esc(whoMin(m))} · xG ${m.xg.toFixed(1)}:${m.xga.toFixed(1)}"><span class="res ${m.res}"></span><span class="op">${esc(shortTeam(m.opp))}</span><span class="sc">${m.ug}:${m.og}</span></div>`).join('');
   const f1=v=>v.toFixed(1),sg=v=>(v>0?'+':'')+v;
@@ -1883,9 +1885,9 @@ async function playSeason(year){
   document.getElementById('zoneLegend').hidden=S.format==='anti';
   const mvp=[...r.players].sort((a,b)=>b.rt-a.rt)[0];
   document.getElementById('playerStats').innerHTML=`<tr><th>Гравець</th><th class="num">Оцінка</th><th class="num" title="Голи">Г</th><th class="num" title="Асисти">А</th><th class="num" title="Матчі з оцінкою 8.0+">8+</th>${ratingsOpen()?'<th class="num">Рейт.</th>':''}<th class="num">Форма</th></tr>`+[...r.players].sort((a,b)=>b.rt-a.rt).map(p=>`<tr${p===mvp?' class="me"':''}><td class="pn"><div class="pnr">${lineDot(p.slot||p.pos)}<span>${esc(p.name)}</span></div></td><td class="num avgc">${p.rt.toFixed(2)}</td><td class="num">${p.g}</td><td class="num">${p.a}</td><td class="num">${p.m8}</td>${ratingsOpen()?`<td class="num">${slotBase(p.id)??p.r}</td>`:''}<td class="num" style="color:${p.form>=3?'var(--win)':p.form<=-3?'var(--loss)':'inherit'}">${p.form>0?'+':''}${p.form}</td></tr>`).join('');
-  document.getElementById('mvpLine2').innerHTML=`${ic('star','sm')}Гравець сезону: <b>${esc(mvp.name)}</b> · ${mvp.rt.toFixed(2)}`;
+  document.getElementById('mvpLine2').innerHTML=`${em('star','sm')}Гравець сезону: <b>${esc(mvp.name)}</b> · ${mvp.rt.toFixed(2)}`;
   const fp=[...r.players].sort((a,b)=>b.form-a.form);const fmtF=p=>`${esc(p.name)} ${p.form>0?'+':''}${p.form}`;
-  document.getElementById('mvpLine').innerHTML=`${ic('star','sm')}Гравець сезону: <b>${esc(mvp.name)}</b> — середня оцінка ${mvp.rt.toFixed(2)}, ${mvp.g} г, ${mvp.a} ас.`+(fp[0].form>0||fp[fp.length-1].form<0?`<br><span class="muted">Форма сезону: ${fp[0].form>0?'вистрілив '+fmtF(fp[0]):''}${fp[0].form>0&&fp[fp.length-1].form<0?', ':''}${fp[fp.length-1].form<0?'провалив '+fmtF(fp[fp.length-1]):''}</span>`:'');
+  document.getElementById('mvpLine').innerHTML=`${em('star','sm')}Гравець сезону: <b>${esc(mvp.name)}</b> — середня оцінка ${mvp.rt.toFixed(2)}, ${mvp.g} г, ${mvp.a} ас.`+(fp[0].form>0||fp[fp.length-1].form<0?`<br><span class="muted">Форма сезону: ${fp[0].form>0?'вистрілив '+fmtF(fp[0]):''}${fp[0].form>0&&fp[fp.length-1].form<0?', ':''}${fp[fp.length-1].form<0?'провалив '+fmtF(fp[fp.length-1]):''}</span>`:'');
   document.querySelectorAll('#tabs .tab').forEach((b,i)=>b.classList.toggle('on',i===0));['t1','t2'].forEach((id,i)=>document.getElementById(id).hidden=i!==0);
   const avg=(xi.reduce((s,x)=>s+baseR(x),0)/11).toFixed(1);
   document.getElementById('myXiTitle').textContent=S.teamName||'Твоя 11-ка';
@@ -2224,7 +2226,7 @@ function viewHtml(s){
     <div class="big"><div><div class="n">${s.w}-${s.d}-${s.l}</div><div class="l">П – Н – Пр</div></div><div><div class="n">${s.pts}</div><div class="l">очок</div></div><div><div class="n">${s.place}</div><div class="l">місце</div></div><div><div class="n">${s.gf}:${s.ga}</div><div class="l">голи</div></div></div>
     <div class="xrow"><span class="chip">xP <b>${s.xp!=null?Number(s.xp).toFixed(1):'—'}</b></span><span class="chip">xG <b>${s.xg!=null?Number(s.xg).toFixed(1):'—'}</b></span><span class="chip">xGA <b>${s.xga!=null?Number(s.xga).toFixed(1):'—'}</b></span></div></div>
     <h3>Склад</h3>${pitchHtml(s.formation,xi)}
-    ${mvp?`<p style="margin:var(--sp-2) 0 0">${ic('star','sm')}Гравець сезону: <b>${esc(mvp.n)}</b> · ${Number(mvp.rt).toFixed(2)}</p>`:''}
+    ${mvp?`<p style="margin:var(--sp-2) 0 0">${em('star','sm')}Гравець сезону: <b>${esc(mvp.n)}</b> · ${Number(mvp.rt).toFixed(2)}</p>`:''}
     <div class="tbl"><table><tr><th>Гравець</th><th class="num">Оцінка</th><th class="num" title="Голи">Г</th><th class="num" title="Асисти">А</th><th class="num">Рейт.</th><th class="num">Форма</th></tr>${[...xi].sort((a,b)=>(b.rt||0)-(a.rt||0)).map(p=>`<tr><td class="pn"><div class="pnr">${lineDot(p.slot)}<span>${esc(p.n)}</span></div></td><td class="num"><b style="color:${rc(p.rt||0)}">${p.rt!=null?Number(p.rt).toFixed(2):'—'}</b></td><td class="num">${p.g||0}</td><td class="num">${p.a||0}</td><td class="num">${numOr0(baseR(p))}</td><td class="num" style="color:${p.f>=3?'var(--win)':p.f<=-3?'var(--loss)':'inherit'}">${p.f>0?'+':''}${p.f||0}</td></tr>`).join('')}</table></div>${LINE_KEY}
     ${tb.length?`<h3>Турнірна таблиця</h3><div class="tbl"><table><tr><th>#</th><th>Команда</th><th class="num">В</th><th class="num">Н</th><th class="num">П</th><th class="num">Г</th><th class="num">О</th></tr>${tb.map((t,i)=>`<tr${t.me?' class="me"':''}><td class="num">${i+1}</td><td>${esc(t.n)}</td><td class="num">${t.w}</td><td class="num">${t.d}</td><td class="num">${t.l}</td><td class="num">${t.gf}:${t.ga}</td><td class="num"><b>${t.pts}</b></td></tr>`).join('')}</table></div>`:''}`;
 }
@@ -2450,7 +2452,7 @@ document.getElementById('newsDot').hidden=lsGet('upl30_news_seen')===WHATSNEW.v;
 /*__FIVE__*/
 document.getElementById('f5Open').onclick=f5Start;
 // audit P2-5: only what tests use; drawCard for card checks, simulate/rerun for fast determinism
-window.__dbg={place,loadLb,haptic,seasonHaptic,renderNewTro,TROPHIES,CLUB_REC,ocMine,ocAfter,renderOc,renderOcRes,openOc,acctMerge,get BEST(){return BEST;},get VT_N(){return VT_N;},ic,seasonLabel,boardPrefetch,boardStale,BOARD_FROM,setFmt,leagueLoad,boardHtml,oppYear,champModal,drawCard,chalNewGame,DAILY,LEAGUE_CULT,LEAGUE_LEGENDS,openTrophies,renderNewTro,bestPerPlayer,renderWheel,posOpts,eraOf,ptsWord,viewHtml,renderPitch,pitchHtml,f5Pitch,F5_FORMS,cardName,clubShort,simulate,shareTextOf,trCtxNow,trAward,trStore,FORMATIONS,GROUP_OF,DATA,TROPHIES,trEval,PERSON,effRating,get S(){return S;},rerun(seed,year,xi){rnd=mulberry32(seed);const r=simulate(xi||S.slots.map(s=>s.player),MODES[S.mode],year);rnd=Math.random;return {W:r.W,D:r.D,L:r.L,gf:r.gf,ga:r.ga,place:r.place};}};
+window.__dbg={place,em,loadLb,haptic,seasonHaptic,renderNewTro,TROPHIES,CLUB_REC,ocMine,ocAfter,renderOc,renderOcRes,openOc,acctMerge,get BEST(){return BEST;},get VT_N(){return VT_N;},ic,seasonLabel,boardPrefetch,boardStale,BOARD_FROM,setFmt,leagueLoad,boardHtml,oppYear,champModal,drawCard,chalNewGame,DAILY,LEAGUE_CULT,LEAGUE_LEGENDS,openTrophies,renderNewTro,bestPerPlayer,renderWheel,posOpts,eraOf,ptsWord,viewHtml,renderPitch,pitchHtml,f5Pitch,F5_FORMS,cardName,clubShort,simulate,shareTextOf,trCtxNow,trAward,trStore,FORMATIONS,GROUP_OF,DATA,TROPHIES,trEval,PERSON,effRating,get S(){return S;},rerun(seed,year,xi){rnd=mulberry32(seed);const r=simulate(xi||S.slots.map(s=>s.player),MODES[S.mode],year);rnd=Math.random;return {W:r.W,D:r.D,L:r.L,gf:r.gf,ga:r.ga,place:r.place};}};
 // Telegram script was requested by the first inline script: init now if it already loaded, otherwise on its load
 if(ONLINE){window.__tgCb=tgInit;if(window.__tgOk)tgInit();}
 })();

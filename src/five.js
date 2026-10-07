@@ -134,9 +134,9 @@ function f5Render(){
     const score=m=>`${m.ga}:${m.gb}${m.pens?` <span class="muted f5pen">(пен. ${m.pens[0]}:${m.pens[1]})</span>`:''}`;
     const evl=m=>m.ev.length?m.ev.map(e=>`<div class="f5ev s${e.side}"><span class="mono">${e.min}'</span><b>${esc(e.sc.name)}</b>${e.as?`<span class="muted"> · ${esc(e.as.name)}</span>`:''}</div>`).join(''):'<p class="muted" style="margin:0">Голів не було.</p>';
     const all=[...m0.ra.map(x=>({...x,t:f5Label(m0.A)})),...m0.rb.map(x=>({...x,t:f5Label(m0.B)}))].sort((a,b)=>b.rt-a.rt);const mvp=all[0];
-    el.innerHTML=`<div class="hero" style="margin-top:var(--sp-4)"><div class="tier gold">${ic('trophy','lg')} ${esc(f5Label(champ))}${r.table?' — чемпіон':' перемагає'}</div>
+    el.innerHTML=`<div class="hero" style="margin-top:var(--sp-4)"><div class="tier gold">${em('trophy','lg')} ${esc(f5Label(champ))}${r.table?' — чемпіон':' перемагає'}</div>
       <div class="f5score"><span>${esc(f5Label(m0.A))}</span><b>${score(m0)}</b><span>${esc(f5Label(m0.B))}</span></div>
-      <p class="muted" style="margin:0">${r.table?'Фінал':'Матч'} · xG ${m0.la.toFixed(1)} : ${m0.lb.toFixed(1)} · ${ic('star','sm')}гравець матчу: <b>${esc(mvp.name)}</b> (${esc(mvp.t)}) ${mvp.rt.toFixed(1)}</p>
+      <p class="muted" style="margin:0">${r.table?'Фінал':'Матч'} · xG ${m0.la.toFixed(1)} : ${m0.lb.toFixed(1)} · ${em('star','sm')}гравець матчу: <b>${esc(mvp.name)}</b> (${esc(mvp.t)}) ${mvp.rt.toFixed(1)}</p>
       <div class="f5evs">${evl(m0)}</div>
       <div class="row"><button class="primary" id="f5Again">${ic('fire')}Реванш тими ж складами</button><button class="ghost" id="f5New">Новий драфт</button><button class="ghost" id="f5Copy">${ic('content-copy')}Скопіювати результат</button><span class="best" id="f5Msg"></span></div></div>
       ${r.table?`<h3>Група</h3><div class="tbl"><table><tr><th>#</th><th>Команда</th><th class="num">В</th><th class="num">Н</th><th class="num">П</th><th class="num">Г</th><th class="num">О</th></tr>${r.table.map((s,i)=>`<tr${i<2?' class="z-cl"':''}><td class="num">${i+1}</td><td>${esc(f5Label(s.t))}</td><td class="num">${s.w}</td><td class="num">${s.d}</td><td class="num">${s.l}</td><td class="num">${s.gf}:${s.ga}</td><td class="num"><b>${s.p}</b></td></tr>`).join('')}</table></div>
