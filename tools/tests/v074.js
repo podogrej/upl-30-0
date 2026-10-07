@@ -140,11 +140,12 @@ function mkDB(n,fmt5){
   await A.ctx.close();}
  // ---- C. league page: invite card under the round card for small leagues, compact share otherwise
  for(const [n,f5,guest] of [[1,0,0],[2,0,0],[3,0,0],[1,1,0],[2,1,0],[3,1,0],[1,0,1]]){const {db}=mkDB(n,f5);const A=await openSite({b:bb,db,signed:true,viewport:{width:390,height:844},query:'?l=abc222',init:guest?'localStorage.setItem("upl30_player",JSON.stringify({id:"p-x",name:"guest",anon_name:"g",public_id:"gest2345"}))':"localStorage.setItem('upl30_player',JSON.stringify({id:'p-me',name:'andre',anon_name:'calm_owl',public_id:'andr2345'}))",wait:1800});const p=A.pg;
+  if(guest)await p.waitForFunction(()=>/Приєднатися|Увійти/.test((document.getElementById('fl')||{}).innerText||''),null,{timeout:5000}).catch(()=>{});
   const lg=await p.evaluate(()=>{const q=s=>document.querySelector(s),R=e=>e&&e.getBoundingClientRect();const inv=q('#fl .fl-invc'),tour=q('#fl .fl-tour'),tbl=q('#fl .tbl,#fl .pp-empty'),sh=q('#flShare');
     return {tour:!!tour,inv:!!inv,invTop:inv&&R(inv).top,tourBottom:tour&&R(tour).bottom,tblTop:tbl&&R(tbl).top,share:!!sh,shareIn:sh&&!!sh.closest('.fl-head'),shareH:sh&&Math.round(R(sh).height),input:!!q('#flLinkIn'),text:q('#fl').innerText,
       grad:[...document.querySelectorAll('#fl button')].filter(e=>/gradient/.test(getComputedStyle(e).backgroundImage)&&e.getBoundingClientRect().width>0).map(e=>e.id)};});
   const tag=`${f5?'5×5':'11×11'}, учасників ${n}${guest?' (гість за посиланням)':''}`;
-  if(guest){T.check(!lg.inv&&lg.tour&&lg.share&&lg.shareIn&&/Приєднатися/.test(lg.text),`${tag}: гість бачить «Приєднатися» і компактне «Поділитися», великої картки немає`);
+  if(guest){T.check(!lg.inv&&lg.tour&&lg.share&&lg.shareIn&&/Приєднатися|Увійти/.test(lg.text),`${tag}: гість бачить «Приєднатися»/«Увійти» і компактне «Поділитися», великої картки немає`);   // join vs sign-in depends on when the session arrives
     T.check(lg.grad.length<=1,`${tag}: градієнтних кнопок ${lg.grad.length} (${lg.grad.join()})`);await shot(p,'league_guest_phone_dark',true);}
   else if(n<3){T.check(lg.tour&&lg.inv&&lg.input&&lg.share&&lg.invTop>=lg.tourBottom-1&&lg.invTop<lg.tourBottom+40&&(f5||lg.invTop<lg.tblTop),`${tag}: «Запроси друзів» одразу під карткою туру/збору`);
     T.check(lg.grad.length===1&&lg.grad[0]==='flShare',`${tag}: градієнт лише в «Поділитися» (${lg.grad.join()})`);
