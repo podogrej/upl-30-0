@@ -18,9 +18,9 @@ const fail=[];let n=0;const check=(ok,msg)=>{n++;console.log((ok?'✓ ':'✗ ')+
  // season pick from home goes straight to the draft; settings via Play -> season pick tile
  await pg.click('#pickOpen');await pg.waitForTimeout(300);
  check(await pg.evaluate(()=>!document.getElementById('s2').hidden&&window.__dbg.S.pickMode&&window.__dbg.S.format==='classic'),'«Вибір сезону» з головної — одразу драфт');
- await pg.evaluate(()=>document.getElementById('homeBtn').click());await pg.click('#freeOpen');await pg.click('#formats .opt[data-fmt="pick"]');await pg.waitForTimeout(200);
- const setup=await pg.evaluate(()=>({on:(document.querySelector('#formats .opt.on')||{}).dataset.fmt,modes:document.getElementById('modesBox').hidden,S:{f:window.__dbg.S.format,p:window.__dbg.S.pickMode}}));
- check(setup.on==='pick'&&setup.modes&&setup.S.f==='classic'&&setup.S.p,'налаштування: плитка «Вибір сезону», вибору складності немає, у базі — класика');
+ await pg.evaluate(()=>document.getElementById('homeBtn').click());await pg.click('#freeOpen');await pg.evaluate(()=>window.__dbg.setFmt('pick'));await pg.waitForTimeout(200);
+ const setup=await pg.evaluate(()=>({on:document.getElementById('setTitle').textContent,modes:document.getElementById('modesBox').hidden,S:{f:window.__dbg.S.format,p:window.__dbg.S.pickMode}}));
+ check(setup.on==='Вибір сезону'&&setup.modes&&setup.S.f==='classic'&&setup.S.p,'налаштування: заголовок «Вибір сезону», вибору складності немає, у базі — класика');
  await pg.screenshot({path:path.join(OUT,'v060_setup.png'),fullPage:true});
  await pg.click('#formations .opt:nth-child(1)');await pg.click('#startBtn');
  check(/Вибір сезону/.test(await pg.textContent('#modeLabel')),'підпис драфту: «'+(await pg.textContent('#modeLabel')).trim()+'»');
@@ -38,7 +38,7 @@ const fail=[];let n=0;const check=(ok,msg)=>{n++;console.log((ok?'✓ ':'✗ ')+
    const btn=await pg.$('.pl:not([disabled])');await btn.click();await pg.waitForTimeout(60);const t=await pg.$('#pitch .slot.target');if(t){await t.click();await pg.waitForTimeout(60);}}
  await pg.waitForSelector('#simBtn:not([hidden])');await pg.click('#simBtn');await pg.click('#skipBtn');await pg.waitForTimeout(1200);
  const res=await pg.evaluate(()=>({mode:window.__dbg.S.mode,share:document.getElementById('shareText').value,
-   tiles:[...document.querySelectorAll('#shareBox > button')].map(b=>b.id+(b.hidden?':h':'')).join(','),big:!document.getElementById('tgShareBtn').hidden,chal:document.getElementById('chalBox').hidden}));
+   tiles:[...document.querySelectorAll('#shareBox > button, #shareBox > .shr2 > button')].map(b=>b.id+(b.hidden?':h':'')).join(','),big:!document.getElementById('tgShareBtn').hidden,chal:document.getElementById('chalBox').hidden}));
  check(res.mode==='pick'&&/Вибір сезону/.test(res.share),'сезон: режим pick, у тексті «Вибір сезону»');
  for(let k=0;k<40&&!saves.find(x=>x.kind==='season');k++)await pg.waitForTimeout(200);   // save happens after the summary animations; slower on CI (GitHub Actions) than 1.2 s
  const sv=saves.find(x=>x.kind==='season');

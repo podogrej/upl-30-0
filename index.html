@@ -91,7 +91,7 @@ button.ghost{border-color:var(--line);background:transparent;color:var(--ink2);p
 .pitch svg.mk{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 .pitch svg.mk *{fill:none;stroke:var(--chalkline);stroke-width:.45}.pitch svg.mk .dot{fill:var(--chalkline);stroke:none}
 /* chip: circle centered exactly on the slot point, labels below; sizes are variables, narrower pitch (container query) = smaller */
-.slot{--cs:36px;--bw:4px;--pf:9.5px;--nf:11px;--nf10:10px;--nf12:9.2px;--cf:8.7px;--rf:10.5px;--rr:-15px;--rp:3px 5px;
+.slot{--cs:36px;--bw:4px;--pf:9.5px;--nf:13px;--nf10:12px;--nf12:11px;--cf:8.7px;--rf:10.5px;--rr:-15px;--rp:3px 5px;
   position:absolute;transform:translate(-50%,calc(var(--cs)/-2));width:max-content;display:flex;flex-direction:column;align-items:center;text-align:center;white-space:nowrap;z-index:1;pointer-events:none;outline:none}
 .slot>*{pointer-events:auto}.slot[tabindex]{cursor:pointer}
 .slot .disc{position:relative;width:var(--cs);height:var(--cs);border-radius:50%;display:grid;place-items:center;background:var(--c1,#2b3a33);border:var(--bw) solid var(--c2,#9fb3a8);
@@ -105,7 +105,7 @@ button.ghost{border-color:var(--line);background:transparent;color:var(--ink2);p
 .slot .nm{margin-top:3px;font-weight:800;font-size:var(--nf);line-height:1.2;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.6)}
 .slot .nm.long{font-size:var(--nf10)}.slot .nm.xl{font-size:var(--nf12);letter-spacing:-.02em}
 .slot .nick{color:var(--amber2)}
-.slot .club{font-weight:600;font-size:var(--cf);line-height:1.2;color:rgba(225,240,230,.72)}
+.slot .club{display:none;font-weight:600;font-size:var(--cf);line-height:1.2;color:rgba(225,240,230,.72)}   /* club line only on a wide pitch */
 .slot.empty .disc{background:rgba(255,255,255,.06);border:1.5px dashed rgba(255,255,255,.45);box-shadow:none}
 .slot.empty .pos{color:rgba(255,255,255,.8)}
 .slot.target .disc{border:2px solid #7df0a8;animation:glow 1.1s ease-in-out infinite}.slot.target .pos{color:#7df0a8}
@@ -113,8 +113,9 @@ button.ghost{border-color:var(--line);background:transparent;color:var(--ink2);p
 @keyframes glow{0%,100%{box-shadow:0 0 0 1.5px rgba(125,240,168,.9)}50%{box-shadow:0 0 0 6px rgba(125,240,168,.3)}}
 .slot.moving .disc{outline:3px solid var(--amber2);outline-offset:2px}
 .slot:focus-visible .disc{outline:2px solid #fff;outline-offset:3px}
-@container (max-width:339.98px){.slot{--cs:32px;--bw:3.5px;--pf:9px;--nf:10px;--nf10:9.3px;--nf12:8.6px;--cf:8.3px;--rf:9.5px;--rr:-13px}}
-@container (max-width:299.98px){.slot{--cs:30px;--bw:3px;--pf:8.5px;--nf:9.2px;--nf10:8.6px;--nf12:8px;--cf:7.6px;--rf:9px;--rr:-12px;--rp:2px 4px}}
+@container (min-width:400px){.slot{--cs:42px;--bw:4.5px;--pf:11px;--nf:14px;--nf10:13px;--nf12:12px;--cf:10.5px;--rf:11.5px;--rr:-17px}.slot .club{display:block}}
+@container (max-width:339.98px){.slot{--cs:32px;--bw:3.5px;--pf:9px;--nf:11.5px;--nf10:10.8px;--nf12:10px;--cf:8.3px;--rf:9.5px;--rr:-13px}}
+@container (max-width:299.98px){.slot{--cs:30px;--bw:3px;--pf:8.5px;--nf:10.5px;--nf10:10px;--nf12:9.4px;--cf:7.6px;--rf:9px;--rr:-12px;--rp:2px 4px}}
 .pl .alts{display:block;font-family:var(--font-mono);font-size:var(--fs-caption2);color:var(--muted);letter-spacing:var(--ls-0);line-height:var(--lh-normal)}.pl .alts i{font-style:normal;font-weight:var(--wt-bold)}.alts i.DF{color:var(--df)}.alts i.MF{color:var(--mf)}.alts i.FW{color:var(--fw)}
 .pl .rt s{color:var(--muted);font-weight:var(--wt-medium);font-size:var(--fs-caption)}
 .pos.DF,.pos.CB,.pos.RB,.pos.LB,.pos.RWB,.pos.LWB{background:var(--df)} .pos.MF,.pos.CDM,.pos.CM,.pos.CAM,.pos.RM,.pos.LM{background:var(--mf)} .pos.FW,.pos.RW,.pos.LW,.pos.ST{background:var(--fw)}
@@ -487,7 +488,8 @@ ol.how0{margin:var(--sp-2) 0 0;padding-left:var(--sp-card);color:var(--ink2);dis
 .opt b{font-family:var(--font-body);font-weight:var(--wt-bold)}
 .formations{grid-template-columns:repeat(3,1fr);gap:var(--sp-2)}.formations .opt{padding:var(--sp-3) var(--sp-2);text-align:center}.formations .opt small{display:none}
 .modes{gap:var(--sp-2)}
-button.stick0{position:sticky;bottom:12px;z-index:5;max-width:none;margin-top:var(--sp-5);box-shadow:var(--sh-3)}
+button.go0{max-width:none;margin-top:var(--sp-5)}
+.modes.dif{grid-template-columns:1fr 1fr}.modes.dif .opt{text-align:center;justify-items:center;align-content:center;min-height:var(--sp-7)}.dsc0{margin:var(--sp-2) 0 0;font-size:var(--fs-footnote)}
 /* draft */
 .dtop{display:grid;grid-template-columns:minmax(0,1fr);gap:var(--sp-2);margin:var(--sp-4) 0 var(--sp-3)}   /* formation/mode line shrinks with ellipsis instead of overflowing a 320 px screen */
 .dtop .l1{display:flex;align-items:center;gap:var(--sp-2)}
@@ -514,7 +516,7 @@ button.stick0{position:sticky;bottom:12px;z-index:5;max-width:none;margin-top:va
 /* summary */
 .hero{gap:var(--sp-2)}
 .hero .tier{font-size:var(--fs-title1);letter-spacing:var(--ls-tight)}
-.score0{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--sp-2);text-align:center;margin:var(--sp-1) 0}
+.score0{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--sp-2);text-align:center;margin:var(--sp-1) 0}
 .score0 b{display:block;font:var(--wt-black) var(--fs-title1)/var(--lh-tight) var(--font-display);font-variant-numeric:tabular-nums;white-space:nowrap;letter-spacing:var(--ls-tight)}.score0 b.hot{color:var(--amber)}
 @media (max-width:400px){.score0 b{font-size:var(--fs-title2);letter-spacing:var(--ls-tight)}}
 .score0 i{font-style:normal}.score0 span{font-size:var(--fs-caption);color:var(--muted)}
@@ -534,6 +536,17 @@ button.stick0{position:sticky;bottom:12px;z-index:5;max-width:none;margin-top:va
   #s2>#moveRow{grid-column:1;grid-row:3}#s2>#moveHint{grid-column:1;grid-row:4}
   #s2>.grid{grid-column:2;grid-row:2/span 3;margin-top:0!important}
 }
+/* phone draft: slim bar with progress, shown once the pitch has scrolled away; two-column layout does not need it */
+.mini{position:fixed;left:0;right:0;top:var(--hh,57px);z-index:35;display:flex;align-items:center;gap:var(--sp-3);height:44px;padding:0 var(--sp-4);background:color-mix(in srgb,var(--bg) 92%,transparent);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);transform:translateY(-100%);opacity:0;visibility:hidden;transition:transform .22s cubic-bezier(.23,1,.32,1),opacity .22s,visibility 0s .22s}
+.mini.on{transform:none;opacity:1;visibility:visible;transition-delay:0s}
+.mini b{font:var(--wt-bold) var(--fs-body) var(--font-display);font-variant-numeric:tabular-nums;min-width:4ch}
+.mini .md{flex:1;display:flex;gap:var(--sp-1);align-items:center;min-width:0}
+.mini .md i{--c:var(--muted);width:10px;height:10px;border-radius:50%;box-sizing:border-box;border:1.5px solid color-mix(in srgb,var(--c) 70%,transparent)}
+.mini .md i.GK{--c:var(--gk)}.mini .md i.DF{--c:var(--df)}.mini .md i.MF{--c:var(--mf)}.mini .md i.FW{--c:var(--fw)}.mini .md i.f{background:var(--c);border-color:var(--c)}
+.mini button{min-height:44px;padding:0 var(--sp-3);font-size:var(--fs-footnote);white-space:nowrap}
+@media (prefers-reduced-motion:reduce){.mini{transition:none}}
+#s2>#pitch{scroll-margin-top:calc(var(--hh,57px) + var(--sp-2))}
+@media (min-width:1000px),(min-width:760px) and (min-height:700px){.mini{display:none}}
 /* ===== design fixes on top of the clean design */
 /* home */
 .hero0{gap:0}.hero0 .logo0{margin-bottom:var(--sp-3)}.hero0 .lead0{max-width:30ch;margin:0 0 var(--sp-5)}
@@ -614,12 +627,6 @@ details.faqbox0 .faq0{padding:0 var(--sp-4) var(--sp-2)}
 .ft-done{width:min(100%,380px);display:flex;gap:var(--sp-2);align-items:center;justify-content:center;text-align:left;padding:var(--sp-3) var(--sp-4);border-radius:var(--r-md);font-size:var(--fs-body);color:var(--ink);background:color-mix(in srgb,var(--win) 12%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--win) 45%,transparent)}.ft-done[hidden]{display:none}.ft-done b{color:var(--win);font-size:var(--fs-headline)}
 table.lbt th.n,table.lbt td.n{width:28px;padding-left:var(--sp-0h);padding-right:var(--sp-0h);text-align:center}
 .lbfoot{margin-top:var(--sp-2);font-size:var(--fs-footnote)}
-/* free play: mode cards with icon, title, description (always visible, no layout jumps) */
-#formats{gap:var(--sp-2)}
-#formats .opt{grid-template-columns:auto 1fr;align-items:start;column-gap:var(--sp-3);padding:var(--sp-4);transition:box-shadow .2s,background .2s}
-#formats .opt>.ic{width:34px;height:34px;border-radius:var(--r-md);margin:var(--sp-0h) 0 0}#formats .opt>.ic .ico{width:20px;height:20px}
-#formats .opt>span{display:grid;gap:var(--sp-0h)}#formats .opt b{font-size:var(--fs-headline)}#formats .opt small{font-size:var(--fs-footnote);line-height:var(--lh-body)}
-#formats .opt.on{background:color-mix(in srgb,var(--amber) 9%,var(--card))}
 /* wheel */
 .cdot{display:inline-block;width:14px;height:14px;border-radius:50%;margin-right:10px;vertical-align:-1px;background:var(--c1,var(--line));box-shadow:inset 0 0 0 3px var(--c2,transparent),0 0 0 1px rgba(255,255,255,.18)}
 .reel .strip>div.club{display:flex;align-items:center}@media (max-width:600px){.reel .cdot{display:none}}   /* phone: club circle was only visible for short names; removed */
@@ -700,11 +707,17 @@ button.primary,.big0.primary{background:var(--grad);background-size:var(--gw,100
 .tro{border:0;border-radius:var(--r-lg);padding:var(--sp-3) var(--sp-4);background:var(--surface)}
 .tro.on,.tro.on.sec{border:0;background:linear-gradient(135deg,color-mix(in srgb,var(--amber) 11%,var(--surface)),var(--surface) 62%);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--amber) 32%,transparent)}
 .tro .trn{color:var(--amber)}
-.verd0{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--sp-2);margin-top:var(--sp-2)}
-.verd0 .vt{border-radius:var(--r-lg);padding:var(--sp-3) var(--sp-2);background:color-mix(in srgb,var(--bg) 70%,transparent);display:grid;justify-items:center;align-content:center;gap:var(--sp-0h);text-align:center;min-height:62px}
-.verd0 .vt span{font-size:var(--fs-caption2);color:var(--muted);text-transform:uppercase;letter-spacing:var(--ls-caps)}.verd0 .vt b{font:var(--wt-black) var(--fs-title2)/var(--lh-tight) var(--font-display);letter-spacing:var(--ls-tight)}.verd0 .vt b.dim{color:var(--ink2)}
-.verd0 .vv{grid-column:span 2}.verd0 .vv b{font:var(--wt-black) var(--fs-body)/var(--lh-snug) var(--font-display);text-transform:uppercase;letter-spacing:var(--ls-0)}.verd0 .vv.good b{color:var(--win)}.verd0 .vv.mid b{color:var(--draw)}.verd0 .vv.bad b{color:var(--loss)}
-.verd0 .vl{grid-column:1/-1;display:flex;flex-wrap:wrap;justify-content:center;gap:var(--sp-1) var(--sp-4);font-size:var(--fs-caption);color:var(--muted);text-transform:uppercase;letter-spacing:var(--ls-caps);padding:var(--sp-1) 0 0}.verd0 .vl b{color:var(--ink);letter-spacing:var(--ls-0)}.verd0 .vl p{flex-basis:100%;margin:var(--sp-0h) 0 0;text-align:center;text-transform:none;letter-spacing:var(--ls-0);font-size:var(--fs-footnote);color:var(--ink2)}
+.plc0{display:grid;grid-template-columns:auto minmax(0,1fr);gap:var(--sp-4);align-items:center}
+.pn0{display:grid;justify-items:center;gap:var(--sp-0h);min-width:64px}.pn0 b{font:var(--wt-black) var(--fs-display)/var(--lh-tight) var(--font-display);letter-spacing:var(--ls-display);font-variant-numeric:tabular-nums}.pn0 span{font-size:var(--fs-caption);color:var(--muted)}
+.pz0{display:grid;gap:var(--sp-2);justify-items:start;min-width:0}.pz0 .tier{text-wrap:balance;overflow-wrap:anywhere}
+.verd0{display:flex}.verd0 .vc{display:inline-block;padding:var(--sp-1) var(--sp-3);border-radius:var(--r-pill);font:var(--wt-bold) var(--fs-footnote)/var(--lh-snug) var(--font-body);background:color-mix(in srgb,var(--c) 16%,transparent);color:var(--c)}
+.verd0 .vc.good{--c:var(--win)}.verd0 .vc.mid{--c:var(--draw)}.verd0 .vc.bad{--c:var(--loss)}
+.lines0{margin-top:var(--sp-3);text-align:center}.lines0 .lw{display:flex;flex-wrap:wrap;justify-content:center;gap:var(--sp-1) var(--sp-4);font-size:var(--fs-footnote);color:var(--muted)}.lines0 b{color:var(--ink)}.lines0 p{margin:var(--sp-2) auto 0;font-size:var(--fs-footnote);color:var(--ink2)}
+.x0.c2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.awd0{display:grid;gap:var(--sp-2);margin-top:var(--sp-3)}.awd0 p{margin:0}
+/* Share is the gradient primary (button.primary); challenge and new draft side by side */
+.shr2{display:flex;gap:var(--sp-2);width:100%;max-width:420px;justify-self:center}.shr2 .sharebtn{flex:1 1 0;min-width:0;max-width:none;padding-inline:var(--sp-2);font-size:var(--fs-body);text-align:center;line-height:var(--lh-snug)}.shr2 .sharebtn .ic{display:none}   /* two text buttons per row, no icon */
+#final>.hero{max-width:640px;width:100%;margin-inline:auto}
 .x0{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--sp-2);margin-top:var(--sp-2)}
 .x0>div{border-radius:var(--r-lg);padding:var(--sp-3) var(--sp-2);background:color-mix(in srgb,var(--bg) 70%,transparent);display:grid;justify-items:center;gap:var(--sp-0h);text-align:center}
 .x0 b{font:var(--wt-bold) var(--fs-title3) var(--font-display);color:var(--ink);font-variant-numeric:tabular-nums}.x0 span{font-size:var(--fs-caption2);color:var(--muted)}
@@ -741,6 +754,7 @@ section>h3:first-child,.box h3:first-of-type,#viewBody>h3:first-child,#viewBody>
     <div class="navl"><button class="nav" id="backBtn" hidden><!--i:chevron-right-->Назад</button><button class="nav" id="homeBtn" title="На головну"><!--i:home-outline--><span class="hl">Головна</span></button></div>
     <div class="hdr-r"><button class="nav" id="acctBtn" hidden>Увійти</button></div>
   </header>
+  <div class="mini" id="miniBar" role="group" aria-label="Склад"><b id="miniCnt">0/11</b><span class="md" id="miniDots" aria-hidden="true"></span><button type="button" class="ghost" id="miniUp">Поле ▴</button></div>   <!-- outside sections: their enter animation would make it scroll with the page -->
 
   <!-- HOME -->
   <section id="s1">
@@ -800,16 +814,14 @@ section>h3:first-child,.box h3:first-of-type,#viewBody>h3:first-child,#viewBody>
 
   <!-- FREE PLAY: settings -->
   <section id="s4" hidden>
-    <div id="fmtBox"><h2 style="margin-top:var(--sp-4)">Вільна гра · 11×11</h2>
-    <h3>Режими</h3>
-    <div class="grid modes" id="formats"></div></div>
+    <div id="fmtBox"><h2 id="setTitle" style="margin-top:var(--sp-4)">Класика</h2></div>
     <div class="och" id="ocCard" hidden></div>
     <div id="eraBox"><h3 id="eraH">Роки</h3><div class="seg era" id="eras" role="radiogroup" aria-labelledby="eraH"></div></div>
     <h3>Схема</h3>
     <div class="grid formations" id="formations"></div>
     <div id="modesBox"><h3>Складність</h3>
-    <div class="grid modes" id="modes"></div></div>
-    <button class="primary big0 stick0" id="startBtn">Почати драфт</button><div class="best" id="bestLine" style="margin-top:var(--sp-2)"></div>
+    <div class="grid modes dif" id="modes" role="radiogroup" aria-label="Складність"></div><p class="muted dsc0" id="modeDesc"></p></div>
+    <button class="primary big0 go0" id="startBtn">Почати драфт</button><div class="best" id="bestLine" style="margin-top:var(--sp-2)"></div>
   </section>
 
   <!-- STEP 2 -->
@@ -820,7 +832,7 @@ section>h3:first-child,.box h3:first-of-type,#viewBody>h3:first-child,#viewBody>
       <div class="bar"><i id="draftBar"></i></div>
     </div>
     <div class="pitch" id="pitch"></div>
-    <div class="row" id="moveRow"><button class="ghost" id="moveBtn" hidden><!--i:swap-horizontal-->Переставити гравців</button><small id="moveSub">Зміни позицію гравця, щоб звільнити місце</small></div>
+    <div class="row" id="moveRow"><button class="ghost" id="moveBtn" hidden><!--i:arrow-left-right-->Переставити гравців</button><small id="moveSub">Зміни позицію гравця, щоб звільнити місце</small></div>
     <p class="muted" id="moveHint" hidden style="margin:var(--sp-2) 0 0;font-size:var(--fs-footnote)"></p>
     <div style="margin-top:var(--sp-3)" class="grid">
       <div class="spin0" id="spinZone"><button class="spin" id="spinBtn">Крутити колесо</button><span>або торкнись будь-де тут</span></div>
@@ -860,10 +872,9 @@ section>h3:first-child,.box h3:first-of-type,#viewBody>h3:first-child,#viewBody>
     </div>
     <div id="final">
     <div class="hero" style="margin-top:var(--sp-4)">
-      <div class="tier" id="tier"></div>
+      <div class="plc0"><div class="pn0"><b id="placeBig">0</b><span>місце</span></div><div class="pz0"><div class="tier" id="tier"></div><div class="verd0" id="verdRow" hidden></div></div></div>
       <div class="score0" id="recTiles"></div>
-      <div class="verd0" id="verdRow" hidden></div>
-      <div class="x0" id="xRow"></div><p class="muted" id="verLine" hidden style="margin:0;font-size:var(--fs-footnote)"></p><details class="tip x0q"><summary>Що таке xG і везіння?</summary><p class="muted cap" id="xCap"></p></details>
+      <p class="muted" id="verLine" hidden style="margin:0;font-size:var(--fs-footnote)"></p>
       <div id="newTro" hidden></div>
       <div id="ocRes" hidden></div>
       <div class="nudge" id="acctNudge" hidden></div>
@@ -881,9 +892,9 @@ section>h3:first-child,.box h3:first-of-type,#viewBody>h3:first-child,#viewBody>
       <span class="flag" id="practiceFlag" hidden>Тренування: офіційний результат дня вже записано</span>
       <textarea id="shareText" hidden readonly aria-label="Текст для поширення"></textarea>
       <!-- single Share button: card + preview link (/r/<id>, api/r.js); without system share menu: card and Copy -->
-      <button class="sharebtn" id="tgShareBtn"><!--i:share-variant-->Поділитися</button>
-      <button class="sharebtn alt" id="chalOpen" hidden><!--i:sword-cross-->Кинути виклик другу</button>
-      <button class="sharebtn alt" id="againBtn">Новий драфт</button>   <!-- all three buttons under the card, equal width -->
+      <button class="sharebtn primary" id="tgShareBtn"><!--i:share-variant-->Поділитися</button>
+      <div class="shr2"><button class="sharebtn alt" id="chalOpen" hidden><!--i:sword-cross-->Кинути виклик другу</button>
+      <button class="sharebtn alt" id="againBtn">Новий драфт</button></div>   <!-- Share is the primary button; the other two sit in one row -->
       <span class="best" id="copyMsg"></span>
       <img id="shareImg" alt="Картка результату" hidden>
       <div class="row" id="cardActs" hidden><button class="primary" id="cardTgBtn" hidden><!--i:telegram-->Надіслати картку мені в Telegram</button><button class="primary" id="cardShareBtn" hidden><!--i:share-variant-->Поділитися карткою</button><button class="ghost" id="copyBtn"><!--i:content-copy-->Копіювати текст і посилання</button><span class="best" id="cardMsg"></span></div>
@@ -895,13 +906,15 @@ section>h3:first-child,.box h3:first-of-type,#viewBody>h3:first-child,#viewBody>
       <h3 id="myXiTitle">Твоя 11-ка</h3>
       <details class="tip pop0"><summary>Що означають цифри</summary><p class="muted cap">Цифра в рамці біля гравця — середня оцінка за матчі сезону, під іменем — загальний рейтинг.</p></details>
       <div class="pitch" id="pitch2"></div>
-      <h3>Бомбардири</h3>
-      <div id="scorers" class="muted"></div>
-      <p id="mvpLine2" style="margin-top:var(--sp-2)"></p>
+      <div class="awd0"><p id="topScorer" hidden></p><p id="mvpLine2"></p></div>
       <h3>Матчі</h3>
       <details class="tip" id="mDet"><summary>Усі матчі</summary><div class="matches" id="matches"></div></details>
     </div>
     <div id="t2" class="tabpane" hidden>
+      <h3>Сила команди</h3>
+      <div class="x0" id="xRow"></div><div class="x0 c2" id="idxRow"></div>
+      <div class="lines0" id="linesRow"></div>
+      <details class="tip x0q"><summary>Що таке xG і везіння?</summary><p class="muted cap" id="xCap"></p></details>
       <h3>Турнірна таблиця</h3>
       <div class="tbl"><table id="table"></table></div>
       <div class="zlg" id="zoneLegend"><span class="z-cl">Ліга чемпіонів</span><span class="z-el">Ліга Європи</span><span class="z-co">Ліга конференцій</span><span class="z-rl">Виліт</span></div>
@@ -929,7 +942,7 @@ section>h3:first-child,.box h3:first-of-type,#viewBody>h3:first-child,#viewBody>
   <div class="acts"><button class="ft-send" id="fbSend" type="submit">Надіслати</button><button class="ft-cancel" id="fbCancel" type="button">Скасувати</button></div></form>
 <div class="ft-done" id="fbDone" hidden><b>✓</b><span>Дякуємо! Прочитаємо найближчим часом</span></div>
 <div class="ft-pills"><button class="ft-pill" id="fbBtn" type="button">✉️ Відгук і баги</button><a class="ft-pill" id="ftBot" href="https://t.me/upl30_bot" target="_blank" rel="noopener"><!--i:telegram-->Telegram-бот</a></div>
-<div class="foot ft-small"><a href="#" id="newsBtn">Що нового у версії 0.72<b id="newsDot" hidden></b></a><span>·</span><a href="privacy.html">Конфіденційність</a></div>
+<div class="foot ft-small"><a href="#" id="newsBtn">Що нового у версії 0.73<b id="newsDot" hidden></b></a><span>·</span><a href="privacy.html">Конфіденційність</a></div>
 <div class="foot ft-copy">© 2026 30-0 УПЛ · неофіційний фан-проєкт <a href="#" id="themeBtn" class="thm" role="switch" aria-checked="false" aria-label="Світла тема"></a></div>
 <div class="ft-cred">Шрифт KyivType Sans © Дмитро Растворцев (айдентика Києва)<br>Іконки: Material Design Icons (Apache 2.0), логотип Telegram — Font Awesome Free (CC BY 4.0)</div>
 </footer>
@@ -1071,7 +1084,7 @@ function icon(n){const x=ICO[n];return x?`<svg class="ico" viewBox="${x[0]}" ari
 const EMOJI={trophy:'🏆',fire:'🔥','sword-cross':'⚔️','calendar-star':'📅','ferris-wheel':'🎡','soccer-field':'🏟️','format-list-numbered':'📊','share-variant':'📤',send:'📨',
   'account-circle':'👤','lock-open-variant':'🔓','chart-bar':'📊',eye:'👁️','eye-off':'🙈','check-circle':'✅','check-decagram':'✅',handshake:'🤝','content-copy':'📋',image:'🖼️',
   star:'⭐',lock:'🔒','account-group':'👥',medal:'🏅',crown:'👑','format-quote-open':'❝',history:'🕘',pencil:'✏️',logout:'🚪','alert-outline':'⚠️','calendar-check':'📅',
-  'account-multiple-check':'👥',bookshelf:'📚','timer-sand':'⏳',restart:'🔄','swap-horizontal':'🔁',soccer:'⚽','shield-star':'🛡️','trending-down':'📉',heart:'❤️','lightning-bolt':'⚡','arrow-down-bold':'⬇️'};
+  'account-multiple-check':'👥',bookshelf:'📚','timer-sand':'⏳',restart:'🔄','arrow-left-right':'↔️','swap-horizontal':'🔁',soccer:'⚽','shield-star':'🛡️','trending-down':'📉',heart:'❤️','lightning-bolt':'⚡','arrow-down-bold':'⬇️'};
 function ic(n,cls){const e=EMOJI[n];return e?`<i class="ic em${cls?' '+cls:''}" aria-hidden="true">${e}</i>`:`<i class="ic${cls?' '+cls:''}">${icon(n)}</i>`;}   // tile icon: emoji or SVG
 function trBadge(t,got){const ms=/^ms(\d+)$/.exec(t.id||''),m=ms&&MILESTONES.find(x=>String(x[0])===ms[1]);
   const e=t.id==='secret'?'✨':t.i||(m&&m[1])||'🏆';return `<span class="tre${got?'':' off'}" aria-hidden="true">${got||!t.sec?e:'❔'}</span>`;}
@@ -1141,17 +1154,14 @@ const DSTAT=(()=>{const ids=new Set(),cl=new Set(),ys=new Set(),dy=new Set();let
   FORMATS.derby.desc=`Лише «Динамо» і «Шахтар» за ${DSTAT.derbyS} ${plUk(DSTAT.derbyS,'сезон','сезони','сезонів')}.`;}
 // ---------- step 1
 const fEl=document.getElementById('formations'), mEl=document.getElementById('modes');
-const fmEl=document.getElementById('formats');
 // season pick: separate format tile, but stored as classic with mode 'pick' (DECISIONS items 4, 5); no difficulty levels
 // classic derby, one-club and standalone legends league are hidden (legends are classic opponents now). Formats stay in the engine so old seasons and tables still read
-const FMT_TILES=['classic','pick','oneclub'];   // anti-season hidden for now; code is kept
-const FMT_ICON={classic:'soccer',pick:'calendar-check',derby:'sword-cross',oneclub:'shield-star',anti:'trending-down',legends:'crown'};   // mode cards with icon
-function fmtTile(k){return k==='pick'?{name:MODES.pick.name,desc:MODES.pick.desc}:FORMATS[k];}
-function setFmt(k){S.pickMode=k==='pick';S.format=S.pickMode?'classic':k;[...fmEl.children].forEach(c=>c.classList.toggle('on',c.dataset.fmt===k));const one=k==="oneclub";document.getElementById('fmtBox').hidden=one;document.getElementById('ocCard').hidden=!one;document.getElementById('eraBox').hidden=one;if(one)renderOcCard();
+function setFmt(k){S.pickMode=k==='pick';S.format=S.pickMode?'classic':k;document.getElementById('setTitle').textContent=S.pickMode?MODES.pick.name:(FORMATS[S.format]||FORMATS.classic).name;const one=k==="oneclub";document.getElementById('fmtBox').hidden=one;document.getElementById('ocCard').hidden=!one;document.getElementById('eraBox').hidden=one;if(one)renderOcCard();
   const sk=one&&ocClubs().find(x=>x.c===S.club);document.getElementById('startBtn').textContent='Почати драфт'+(sk?' · '+clubShort(sk.n):'');document.getElementById('modesBox').hidden=S.pickMode;showBest();}
-for(const k of FMT_TILES){const d=document.createElement('div');d.className='opt'+(k===S.format?' on':'');d.dataset.fmt=k;d.tabIndex=0;d.innerHTML=ic(FMT_ICON[k]||'soccer')+`<span><b>${fmtTile(k).name}${k==='pick'?'<em class="tag0">новий</em>':''}</b><small>${fmtTile(k).desc}</small></span>`;d.onclick=()=>k==='oneclub'?openOc():setFmt(k);d.onkeydown=e=>{if(e.key==='Enter'||e.key===' ')d.click();};fmEl.appendChild(d);}
 for(const f in FORMATIONS){const d=document.createElement('div');d.className='opt'+(f===S.formation?' on':'');d.tabIndex=0;d.innerHTML=`<b>${f}</b><small>${FORMATIONS[f].tag}</small>`;d.onclick=()=>{S.formation=f;[...fEl.children].forEach(c=>c.classList.remove('on'));d.classList.add('on');};d.onkeydown=e=>{if(e.key==='Enter'||e.key===' ')d.click();};fEl.appendChild(d);}
-for(const m in MODES){if(m==='daily'||m==='practice'||m==='hardcore'||m==='pick')continue;const d=document.createElement('div');d.className='opt'+(m===S.mode?' on':'');d.tabIndex=0;d.innerHTML=`<b>${MODES[m].name}</b><small>${MODES[m].desc}</small>`;d.onclick=()=>{S.mode=S.freeMode=m;[...mEl.children].forEach(c=>c.classList.remove('on'));d.classList.add('on');};d.onkeydown=e=>{if(e.key==='Enter'||e.key===' ')d.click();};mEl.appendChild(d);}
+for(const m in MODES){if(m==='daily'||m==='practice'||m==='hardcore'||m==='pick')continue;const d=document.createElement('div');d.className='opt'+(m===S.mode?' on':'');d.tabIndex=0;d.setAttribute('role','radio');d.setAttribute('aria-checked',String(m===S.mode));d.dataset.m=m;d.innerHTML=`<b>${MODES[m].name}</b>`;d.onclick=()=>{S.mode=S.freeMode=m;[...mEl.children].forEach(c=>{c.classList.remove('on');c.setAttribute('aria-checked','false');});d.classList.add('on');d.setAttribute('aria-checked','true');modeDesc();};d.onkeydown=e=>{if(e.key==='Enter'||e.key===' ')d.click();};mEl.appendChild(d);}
+function modeDesc(){document.getElementById('modeDesc').textContent=MODES[(mEl.querySelector('.on')||{dataset:{}}).dataset.m||'normal'].desc;}
+modeDesc();
 {const el=document.getElementById('eras');   // era: remember the choice
   const mark=()=>[...el.children].forEach(x=>{const on=x.dataset.era===S.era;x.classList.toggle('on',on);x.setAttribute('aria-checked',String(on));});
   for(const k of ERA_KEYS){const b=document.createElement('button');b.type='button';b.setAttribute('role','radio');b.dataset.era=k;b.textContent=ERAS[k].name;b.onclick=()=>{S.era=k;lsSet('upl30_era',k);mark();};el.appendChild(b);}
@@ -1163,7 +1173,7 @@ let CUR_SEC=1;
 // Clarity (production host only, build.py): current screen tag so recordings and heatmaps can be filtered by screen (Filters -> Custom tags -> screen)
 const SEC_NAME={1:'home',2:'draft',3:'result',4:'setup',5:'five',6:'player',7:'friends',8:'oneclub'};
 function screenTag(name){try{if(window.clarity)window.clarity('set','screen',name);}catch(e){}}
-function go(n,pop){if(!pop&&n!==CUR_SEC)navPush(n);const back=n===1&&CUR_SEC!==1;screenTag(SEC_NAME[n]);if(n!==6&&CUR_SEC===6)ppUrl(null);if(n!==7&&CUR_SEC===7)flUrl(null);if(n===8)renderOc();else if(n===4&&S.format==='oneclub')setFmt('oneclub');[1,2,3,4,5,6,7,8].forEach(i=>{const el=document.getElementById('s'+i);const was=el.hidden;el.hidden=(i!==n);if(i===n&&(was||CUR_SEC!==n)){el.classList.remove('enter','back');void el.offsetWidth;el.classList.add(back?'back':'enter');}});CUR_SEC=n;navUi();window.scrollTo({top:0});}
+function go(n,pop){if(!pop&&n!==CUR_SEC)navPush(n);const back=n===1&&CUR_SEC!==1;screenTag(SEC_NAME[n]);if(n!==6&&CUR_SEC===6)ppUrl(null);if(n!==7&&CUR_SEC===7)flUrl(null);if(n===8)renderOc();else if(n===4&&S.format==='oneclub')setFmt('oneclub');[1,2,3,4,5,6,7,8].forEach(i=>{const el=document.getElementById('s'+i);const was=el.hidden;el.hidden=(i!==n);if(i===n&&(was||CUR_SEC!==n)){el.classList.remove('enter','back');void el.offsetWidth;el.classList.add(back?'back':'enter');}});CUR_SEC=n;navUi();miniSync();window.scrollTo({top:0});}
 // Back button + home icon. Every screen change is a browser history entry,
 // so swipe, browser back and Telegram BackButton go to the previous screen. Season summary replaces the draft (back goes to settings).
 let NAV_I=0,NAV_FREE=false;   // NAV_I: history entry index of this tab (0 = first screen); NAV_FREE: leaving the draft already confirmed
@@ -1186,7 +1196,7 @@ renderDailyCard();
 document.getElementById('startBtn').onclick=()=>{if(S.format==='oneclub'&&!S.club){openOc();return;}S.league=null;S.daily=null;S.result=null;S.challenge=null;S.chal=S.format==='classic'&&S.era==='all'&&!S.pickMode?chalNewGame():null;S.mode=S.pickMode?'pick':S.freeMode||'normal';if(S.format==='anti')S.mode='hardcore';S.slots=newSlots(S.formation);S.taken=new Set();S.wheel=null;S.rerolls=MODES[S.mode].rerolls;S.showR=false;S.moveMode=false;document.getElementById('modeLabel').textContent=fmtLabel()+S.formation+" · "+modeName();renderDraft();go(2);};
 document.getElementById('restartBtn').onclick=()=>{if(S.league){openLeague(S.league.id);return;}go(S.daily||S.challenge?1:4);};
 document.getElementById('homeBtn').onclick=()=>askLeave(()=>go(1));document.getElementById('backBtn').onclick=navBack;
-document.getElementById('freeOpen').onclick=()=>{setFmt(S.format==='oneclub'?'classic':S.pickMode?'pick':S.format);go(4);};   // resync the setup screen with S (challenge sets S.format directly)
+document.getElementById('freeOpen').onclick=()=>{setFmt(S.format==='oneclub'||S.pickMode?'classic':S.format);go(4);};   // resync the setup screen with S (challenge sets S.format directly); season pick and one club have their own entries
 document.getElementById('flOpen').onclick=()=>openFriends();
 document.getElementById('pickOpen').onclick=()=>{setFmt('pick');document.getElementById('startBtn').click();};document.getElementById('clubOpen').onclick=openOc;   /* club list page, then setup screen with the club card *//* straight into the game, no mode screen */document.getElementById('moveBtn').onclick=()=>{S.moveMode=!S.moveMode;S.move=null;const h=document.getElementById('moveHint');h.hidden=!S.moveMode;h.textContent='Тапни гравця, потім місце, куди його поставити. Підсвічуються лише позиції, де він реально грав.';renderDraft();};
 document.getElementById('showR').onchange=e=>{S.showR=e.target.checked;if(S.showR)S.showREver=true;if(S.wheel)renderWheel();renderDraft();document.getElementById('squad').classList.toggle('rin',S.showR);};document.getElementById('howGo').onclick=()=>{const q=document.getElementById('howQ');document.getElementById('faqBox').open=true;q.open=true;q.scrollIntoView({behavior:'smooth',block:'center'});};
@@ -1331,8 +1341,8 @@ function fitPitch(pe){if(!pe.clientWidth)return;const P=pe.getBoundingClientRect
   const fixed=[],labs=[];
   pe.querySelectorAll('.slot').forEach((sl,ci)=>{const d=sl.querySelector('.disc');if(!d)return;const r=d.getBoundingClientRect();fixed.push({ci,l:r.left,r:r.right,t:r.top,b:r.bottom});
     const pl=d.querySelector('.pill');if(pl){pl.classList.remove('flip');const l=r.left+d.clientLeft+pl.offsetLeft,t=r.top+d.clientTop+pl.offsetTop;fixed.push({ci,pl,cx:(r.left+r.right)/2,l,r:l+pl.offsetWidth,t,b:t+pl.offsetHeight});}   // offset*: without the pop animation
-    const g={dx:0,m:[]};   // surname and club line of one chip shift together
-    sl.querySelectorAll('.nm,.club').forEach(e=>{e.style.transform='';e.style.fontSize='';const L={ci,e,g,k:1,fs:parseFloat(getComputedStyle(e).fontSize),get dx(){return this.g.dx;},set dx(v){this.g.dx=v;}};g.m.push(L);labs.push(L);});});
+    const g={dx:0,m:[]};   // surname and club line of one chip shift together; a hidden club line (phone) has no box and is skipped
+    sl.querySelectorAll('.nm,.club').forEach(e=>{e.style.transform='';e.style.fontSize='';if(!e.getClientRects().length)return;const L={ci,e,g,k:1,fs:parseFloat(getComputedStyle(e).fontSize),get dx(){return this.g.dx;},set dx(v){this.g.dx=v;}};g.m.push(L);labs.push(L);});});
   const meas=()=>labs.forEach(L=>{rg.selectNodeContents(L.e);const r=rg.getBoundingClientRect();Object.assign(L,{l:r.left,r:r.right,t:r.top,b:r.bottom,dx:0});});
   const all=fixed.concat(labs),gap=(A,B)=>A.e&&B.e?3:1,   // 3px between neighbouring labels, 1px to a circle/pill
     ov=(A,B,g=0)=>Math.min(A.r+(A.dx||0),B.r+(B.dx||0))-Math.max(A.l+(A.dx||0),B.l+(B.dx||0))>-g&&Math.min(A.b,B.b)-Math.max(A.t,B.t)>0;
@@ -1378,7 +1388,7 @@ function setSlot(p,s){return {...p,slot:s.slot,pos:GROUP_OF[s.slot],r:effRating(
 function renderDraft(){
   const filled=S.slots.filter(s=>s.player).length;
   document.getElementById('draftCount').textContent=filled+"/11";
-  {const tot=(MODES[S.mode]||{}).rerolls||0,left=Math.max(0,S.rerolls||0);document.getElementById('rrDots').innerHTML=tot?Array.from({length:tot},(_,i)=>`<i class="${i<left?'on':''}"></i>`).join(''):'';}document.getElementById('draftBar').style.width=Math.round(filled/11*100)+'%';
+  {const tot=(MODES[S.mode]||{}).rerolls||0,left=Math.max(0,S.rerolls||0);document.getElementById('rrDots').innerHTML=tot?Array.from({length:tot},(_,i)=>`<i class="${i<left?'on':''}"></i>`).join(''):'';}document.getElementById('draftBar').style.width=Math.round(filled/11*100)+'%';renderMini();
   {const mb=document.getElementById('moveBtn');mb.hidden=filled<2;mb.classList.toggle('on',!!S.moveMode);mb.lastChild.textContent=S.moveMode?'Готово':'Переставити гравців';document.getElementById('moveSub').hidden=!!S.moveMode;}
   renderPitch(document.getElementById('pitch'),S.slots,false);
   const done=filled===11;
@@ -1422,7 +1432,7 @@ function spinPick(){
 function renderPickOpts(){const box=document.getElementById('seaPick'),o=S.pickOpts||[];box.hidden=false;
   document.getElementById('wHint').textContent=o.length>1?'Обери сезон — назад не повернешся':'У цього клубу лише один сезон, де є кого взяти';
   box.innerHTML=o.map((c,i)=>`<button type="button" data-i="${i}"><b>${SEA_SHORT(c.y)}</b><small>${c.pos} місце</small></button>`).join('');
-  box.querySelectorAll('button').forEach(b=>b.onclick=()=>{const c=o[+b.dataset.i];S.pickOpts=null;box.hidden=true;S.wheel=c;S.wheelFresh=true;renderWheel();});
+  box.querySelectorAll('button').forEach(b=>b.onclick=()=>{const c=o[+b.dataset.i];S.pickOpts=null;box.hidden=true;S.wheel=c;S.wheelFresh=true;renderWheel();revealList();});
   const f=box.querySelector('button');if(f)f.focus({preventScroll:true});}
 function spin(mode){
   if(S.mode==='pick'&&!mode){spinPick();return;}
@@ -1437,7 +1447,7 @@ function spin(mode){
   document.getElementById('squad').innerHTML='';document.getElementById('rerollRow').style.visibility='hidden';
   const one=S.format==='oneclub'&&!S.daily&&!S.league,spinClub=mode!=='year'&&!one,spinYear=mode!=='club';   // one-club: club does not spin, seasons only of that club
   const e=eraOf(),WP=DATA.clubs.filter(c=>inEra(e,c.y)&&(!one||c.c===S.club)),names=[...new Set(WP.map(c=>shortTeam(c.n)))],years=[...new Set(WP.map(c=>c.y))].sort();   // reels show only clubs and seasons of the selected era
-  Promise.all([reelRoll('reelClub','club',names,shortTeam(cs.n),spinClub?14:0),reelRoll('reelYear','season',years.map(seasonLabel),seasonLabel(cs.y),spinYear?16:0)]).then(()=>{if(S.wheel===cs){S.wheelFresh=true;renderWheel();}});
+  Promise.all([reelRoll('reelClub','club',names,shortTeam(cs.n),spinClub?14:0),reelRoll('reelYear','season',years.map(seasonLabel),seasonLabel(cs.y),spinYear?16:0)]).then(()=>{if(S.wheel===cs){S.wheelFresh=true;renderWheel();revealList();}});
 }
 function alertNoCands(){document.getElementById('wheel').hidden=false;document.querySelector('#reelClub .strip').innerHTML='<div class="club">Гравців більше немає</div>';document.querySelector('#reelYear .strip').innerHTML='<div class="season"></div>';document.getElementById('squad').innerHTML='<p class="muted">У цьому клубі закінчились гравці на вільні позиції. Спробуй іншу схему.</p>';}
 function renderWheel(){
@@ -1499,6 +1509,21 @@ function place(p,s){
   {const n=S.slots.filter(x=>x.player).length,seen=lsGet('upl30_hint_move')||0;if(n===2&&seen<2){const h=document.getElementById('moveHint');h.hidden=false;h.textContent='Порада: кнопка «Переставити гравців» під полем дозволяє поміняти позиції.';lsSet('upl30_hint_move',seen+1);}}
   if(S.slots.every(x=>x.player))setTimeout(lockDraft,0);   // squad complete: ratings, forecast and Play season immediately; progress bar in preBox while computing
 }
+// phone draft: progress bar over the list + scroll to the list once the wheel stops
+const TWOCOL=()=>matchMedia('(min-width:1000px),(min-width:760px) and (min-height:700px)').matches;
+let PITCH_VIS=true;
+function miniSync(){const el=document.getElementById('miniBar');if(!el)return;
+  document.documentElement.style.setProperty('--hh',document.querySelector('header.top').offsetHeight+'px');
+  el.classList.toggle('on',CUR_SEC===2&&!PITCH_VIS&&!TWOCOL());}
+function renderMini(){const ord={GK:0,DF:1,MF:2,FW:3},sl=[...S.slots].sort((a,b)=>ord[GROUP_OF[a.slot]]-ord[GROUP_OF[b.slot]]),n=sl.filter(x=>x.player).length;
+  document.getElementById('miniCnt').textContent=n+'/11';document.getElementById('miniBar').setAttribute('aria-label',`Склад: ${n} з 11`);
+  document.getElementById('miniDots').innerHTML=sl.map(x=>`<i class="${GROUP_OF[x.slot]}${x.player?' f':''}"></i>`).join('');miniSync();}
+function revealList(){if(TWOCOL())return;requestAnimationFrame(()=>{const w=document.getElementById('wheel');if(w.hidden)return;
+  const top=w.getBoundingClientRect().top+scrollY-(document.querySelector('header.top').offsetHeight+44+8);if(Math.abs(top-scrollY)<8)return;
+  window.scrollTo({top:Math.max(0,top),behavior:LESS_MOTION()?'instant':'smooth'});});}
+if(typeof IntersectionObserver!=='undefined')new IntersectionObserver(([e])=>{PITCH_VIS=e.isIntersecting;miniSync();},{rootMargin:'-120px 0px 0px 0px'}).observe(document.getElementById('pitch'));
+document.getElementById('miniUp').onclick=()=>document.getElementById('pitch').scrollIntoView({behavior:LESS_MOTION()?'instant':'smooth',block:'start'});
+addEventListener('resize',miniSync);
 document.getElementById('spinBtn').onclick=e=>{e.stopPropagation();spin();};
 document.querySelectorAll('.foot0 a').forEach(a=>a.onclick=e=>{e.preventDefault();const id=a.dataset.go,el=document.getElementById(id);if(!el)return;   // footer with section links
   if(el.tagName==='DETAILS'||el.tagName==='DIV'){if(CUR_SEC!==1)go(1);const box=el.closest('#faqBox');if(box)box.open=true;el.open=true;el.scrollIntoView({behavior:'smooth',block:'start'});}else{if(CUR_SEC!==1)go(1);el.click();}});
@@ -1976,15 +2001,17 @@ async function playSeason(year){
   const pre=S.pre&&year===S.year?S.pre:await xpRun(xi,mode,year);r.xp=pre.xp;r.egf=pre.egf;r.ega=pre.ega;const pl=pre.pl;
   if(pl&&pl.length){const q=pl.slice().sort((a,b)=>a-b);r.projPlace=q[Math.floor(q.length/2)];}   // place forecast for the summary verdict
   renderVerdict(r,xi);
-  const [tier,gold]=tierOf(r);const te=document.getElementById('tier');te.textContent=tier;te.classList.toggle('gold',gold);
-  // three big numbers instead of six tiles
-  document.getElementById('recTiles').innerHTML=`<div><b><i class="W">${r.W}</i>-<i class="D">${r.D}</i>-<i class="L">${r.L}</i></b><span>в · н · п</span></div><div><b class="hot">${r.pts}</b><span>${ptsWord(r.pts)}</span></div><div><b>${r.place}</b><span>місце</span></div>`;
+  const [tier,gold]=tierOf(r);const te=document.getElementById('tier');te.textContent=tier.replace(/^\d+ місце · /,'');te.classList.toggle('gold',gold);   // place is the big number next to it
+  document.getElementById('placeBig').textContent=r.place;
+  // record and points; place is the hero number above
+  document.getElementById('recTiles').innerHTML=`<div><b><i class="W">${r.W}</i>-<i class="D">${r.D}</i>-<i class="L">${r.L}</i></b><span>в · н · п</span></div><div><b class="hot">${r.pts}</b><span>${ptsWord(r.pts)}</span></div>`;
   const luck=r.pts-r.xp;
-  // xG, xGA and luck shown immediately as three icon tiles (opponents/formation/mode/goals line lives in Season stats)
+  // xG, xGA, luck and strength indices live in the Season stats tab
   document.getElementById('xRow').innerHTML=`<div><b>${r.xgf.toFixed(1)}</b><span>xG · забили ${r.gf}</span></div><div><b>${r.xga.toFixed(1)}</b><span>xGA · пропустили ${r.ga}</span></div><div><b>${luck>=0?'+':'−'}${Math.abs(luck).toFixed(1)}</b><span>${luck>=0?'везіння':'невезіння'}, очк.</span></div>`;
+  document.getElementById('idxRow').innerHTML=`<div><b>${r.t.att.toFixed(1)}</b><span>індекс атаки</span></div><div><b>${r.t.def.toFixed(1)}</b><span>індекс оборони</span></div>`;
   document.getElementById('xCap').textContent=`xG — очікувані голи: скільки команда мала б забити за силою атаки й суперників. xGA — очікувані пропущені. Везіння — різниця між набраними очками й прогнозом перед сезоном (xP ${r.xp.toFixed(1)}).`;
   renderPitch(document.getElementById('pitch2'),S.slots,true);
-  document.getElementById('scorers').innerHTML=r.scorers.slice(0,6).map(s=>`<span class="mono">${s.g}</span> ${esc(s.name)}`).join(' · ')||'—';
+  {const ts=r.scorers[0],te2=document.getElementById('topScorer');te2.hidden=!ts;if(ts)te2.innerHTML=`${ic('soccer','sm')}Найкращий бомбардир: <b>${esc(ts.name)}</b> · ${ts.g} ${plUk(ts.g,'гол','голи','голів')}`;}
   document.getElementById('mDet').open=matchMedia('(min-width:1000px)').matches;   // large screen has room next to the pitch: matches expanded
   document.getElementById('matches').innerHTML=r.log.map(m=>`<div class="m" title="${esc(whoMin(m))} · xG ${m.xg.toFixed(1)}:${m.xga.toFixed(1)}"><span class="res ${m.res}"></span><span class="op">${esc(shortTeam(m.opp))}</span><span class="sc">${m.ug}:${m.og}</span></div>`).join('');
   const f1=v=>v.toFixed(1),sg=v=>(v>0?'+':'')+v;
@@ -2174,14 +2201,14 @@ function countUp(els){if(LESS_MOTION())return;const t0=performance.now(),D=750;c
 const VERDICTS=[[d=>d>=3,'Перевершили себе','good'],[d=>d>=1,'Краще за прогноз','good'],[d=>d===0,'Усе за сценарієм','mid'],[d=>d>=-2,'Трохи не дотягнули','bad'],[d=>true,'Провал сезону','bad']];
 const LINE_WORD=v=>v>=90?'еліта':v>=86?'відмінно':v>=82?'сильно':v>=78?'добре':v>=74?'середньо':'слабко';
 const LINE_OF={FW:['Атака','атака'],MF:['Півзахист','півзахист'],DF:['Захист','захист'],GK:['Воротар','воротар']};
-function renderVerdict(r,xi){const el=document.getElementById('verdRow');if(S.format==='anti'||!r.projPlace){el.hidden=true;return;}
+function renderVerdict(r,xi){const el=document.getElementById('verdRow'),ln=document.getElementById('linesRow');if(S.format==='anti'||!r.projPlace){el.hidden=true;ln.hidden=true;return;}
   const d=r.projPlace-r.place;let v=VERDICTS.find(x=>x[0](d));
   if(r.place===1&&r.projPlace>1)v=[0,'Зірвали банк','good'];else if(r.place>=15&&r.projPlace<=10)v=[0,'Катастрофа','bad'];
   const ls=PRE_LINES.map(([g])=>{const a=xi.filter(x=>x.pos===g);return a.length?{g,v:a.reduce((s,x)=>s+x.r,0)/a.length}:null;}).filter(Boolean);
   const top=ls.reduce((a,b)=>b.v>a.v?b:a),low=ls.reduce((a,b)=>b.v<a.v?b:a);
   const phrase=top.v-low.v<3?'Рівна команда по всьому полю.':`Сильна сторона — ${LINE_OF[top.g][1]}; найслабше місце — ${LINE_OF[low.g][1]}.`;
-  el.hidden=false;el.innerHTML=`<div class="vt"><span>Прогноз</span><b class="dim">${r.projPlace}</b></div><div class="vt vv ${v[2]}"><b>${v[1]}</b></div>`+   // place is already in the tile above
-    `<div class="vl">${ls.map(l=>`<span>${LINE_OF[l.g][0]} <b>${LINE_WORD(l.v)}</b></span>`).join('')}<p>${phrase}</p></div>`;}
+  el.hidden=false;el.innerHTML=`<span class="vc ${v[2]}" title="Прогноз перед сезоном: ${r.projPlace} місце">${v[1]}</span>`;
+  ln.hidden=false;ln.innerHTML=`<div class="lw">${ls.map(l=>`<span>${LINE_OF[l.g][0]} <b>${LINE_WORD(l.v)}</b></span>`).join('')}</div><p>${phrase} Прогноз перед сезоном — ${r.projPlace} місце.</p>`;}
 function champModal(r){if(!r||S.mode==='practice'||(navigator.webdriver&&!window.__champTest))return;const anti=S.format==='anti';
   const kind=anti?(r.L===r.log.length?'zero':null):r.W===r.log.length?'perfect':r.place===1?'champ':null;if(!kind)return;
   const T={perfect:['30-0!','Ідеальний сезон: 30 перемог з 30. Ти легенда!'],champ:['Чемпіон!','Твоя 11-ка виграла чемпіонат. Ти молодець!'],zero:['0-30!','Ідеальний антисезон: 30 поразок з 30. Це теж треба вміти.']}[kind];
@@ -3252,10 +3279,11 @@ function drawCard(r){   // card in site style: UPL navy background, UPL.TV gradi
 }
 document.getElementById('chalOpen').onclick=()=>{const b=document.getElementById('chalBox'),t=document.getElementById('chalOpen');b.hidden=!b.hidden;t.classList.toggle('on',!b.hidden);if(!b.hidden){b.scrollIntoView({behavior:'smooth',block:'center'});const n=document.getElementById('chalName');if(n&&!n.hidden&&!n.value)n.focus();}};
 // ---------- What's new: short player-friendly notes on the latest version (technical log: CHANGELOG.md)
-const WHATSNEW={v:'0.72',date:'07.10.2026',items:[
-  ['shield-star','Один клуб: усі 51 клуб','Окрема сторінка з усіма клубами УПЛ у їхніх кольорах — від «Динамо» до новачків. Фільтри «Не почато», «Почато», «Пройдено».'],
-  ['medal','Рекорди клубів','У кожного клубу є найкращий і найгірший сезон в УПЛ. Набери більше — «Кращий сезон в історії клубу» 🏅, менше — «Гірший сезон в історії клубу» 🪦. Побий обидва — клуб пройдено.'],
-  ['account-circle','Твій рекорд за клуб','На картці клубу — твій найкращий і найгірший сезон за нього та скільки сезонів зіграно.']]};
+const WHATSNEW={v:'0.73',date:'07.10.2026',items:[
+  ['soccer-field','Драфт на телефоні','Після колеса екран сам прокручується до списку гравців. Угорі з\'являється смужка зі складом: скільки з 11 набрано й які позиції ще вільні. «Поле ▴» повертає до поля.'],
+  ['trophy','Простіший підсумок сезону','Велике місце в таблиці, вердикт і підказка поруч — без накладань. Атака, оборона, xG і везіння тепер у «Статистика сезону».'],
+  ['soccer','Найкращий бомбардир','Замість довгого списку — найкращий бомбардир сезону та «Гравець сезону». Це можуть бути різні люди.'],
+  ['ferris-wheel','Налаштування гри','Без зайвого вибору режиму: режим уже обрано на головній. Складність — дві кнопки, «Почати драфт» нічого не закриває. На широкому полі видно клуб гравця.']]};
 function openNews(){screenTag('news');const box=document.getElementById('viewBox');document.getElementById('viewTitle').textContent=`Що нового · версія ${WHATSNEW.v}`;
   document.getElementById('viewBody').innerHTML=`<div class="news">${WHATSNEW.items.map(([e,h,d])=>`<div class="ni">${ic(e,'lg')}<div><b>${esc(h)}</b><p>${esc(d)}</p></div></div>`).join('')}</div>`;
   box.hidden=false;lsSet('upl30_news_seen',WHATSNEW.v);document.getElementById('newsDot').hidden=true;}

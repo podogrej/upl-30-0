@@ -9,7 +9,7 @@ process.env.SUPABASE_SERVICE_KEY='svc';const saveH=require(path.join(ROOT,'api',
  const spins=pg=>{const seen=[];return [seen,async()=>seen.push(await pg.evaluate(()=>{const w=window.__dbg.S.wheel;return w.n+' '+w.y;}))];};
  // A: free classic, formation 3
  const A=await openSite({b,db,api});await A.pg.evaluate(()=>localStorage.setItem('upl30_nick','"Андрій"'));
- await A.pg.click('#freeOpen');await A.pg.click('#formats .opt[data-fmt="classic"]');await A.pg.click('#formations .opt:nth-child(3)');await A.pg.click('#startBtn');
+ await A.pg.click('#freeOpen');await A.pg.evaluate(()=>window.__dbg.setFmt('classic'));await A.pg.click('#formations .opt:nth-child(3)');await A.pg.click('#startBtn');
  const [seenA,onA]=spins(A.pg);await draftSeason(A.pg,onA);
  T.check(await A.pg.$eval('#chalOpen',e=>!e.hidden)&&await A.pg.$eval('#chalBox',e=>e.hidden),'A: після класики є плитка «Виклик» (блок згорнуто)');
  await A.pg.click('#chalOpen');T.check(await A.pg.$eval('#chalBox',e=>!e.hidden),'A: плитка «Виклик» відкриває блок «Кинути виклик другу»');

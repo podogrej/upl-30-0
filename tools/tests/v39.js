@@ -44,7 +44,7 @@ async function run(MODE,b){const T=checker('v39 '+MODE);const v39=MODE==='new';c
  // free play, Hard
  await pg.click('#freeOpen');const hdrName=await pg.$eval('#acctBtn',e=>e.hidden?'':(e.querySelector('.me-n')||{}).textContent||'');
  T.check(v39?hdrName==='andrii':!hdrName,'шапка (0.62, замість рядка імені в налаштуваннях): '+(v39?'«andrii» поруч з аватаркою':'без імені')+' — «'+hdrName+'»');
- await pg.click('#formats .opt[data-fmt="classic"]');await pg.click('#modes .opt:nth-child(2)');await pg.click('#startBtn');await draftSeason(pg);await pg.waitForTimeout(1500);
+ await pg.evaluate(()=>window.__dbg.setFmt('classic'));await pg.click('#modes .opt:nth-child(2)');await pg.click('#startBtn');await draftSeason(pg);await pg.waitForTimeout(1500);
  const ver=await pg.$eval('#verLine',e=>e.hidden?'':e.textContent);T.check(/перевірено сервером/.test(ver),'«Результат перевірено сервером»');
  const row=DB.seasons[DB.seasons.length-1]||{};
  T.check(v39?log.includes('POST /api/save')&&!log.includes('POST /api/verify'):log.includes('POST /api/save')&&log.includes('POST /api/verify'),v39?'сезон записав сервер (/api/save), не браузер':'SQL 0.53 немає — /api/save відповів 503, сезон записано напряму, як 0.52');
