@@ -142,7 +142,7 @@ async function site(b){
    const {ctx}=await openSite({b,db:makeDB({}),api:A.api,tg:tgObj('g-100555'),hash:'#tgWebAppData=x',viewport:{width:390,height:844},wait:1500});
    const get=A.reqs.find(r=>r.m==='GET'),post=A.reqs.find(r=>r.m==='POST');
    T.check(get&&post&&Math.abs(get.s-post.s)<100,`без даних у URL: GET і POST стартують разом (${get&&get.s} / ${post&&post.s} мс)`);await ctx.close();}
-  // 4. error -> «Не вдалося завантажити · Спробувати ще» -> retry
+  // 4. error -> load-failed message with a retry button -> retry
   {const A=leagueApi({});A.fail=1;
    const {ctx,pg,errs}=await openSite({b,db:makeDB({}),api:A.api,tg:tgObj('g-100555'),hash:tgHash('g-100555'),viewport:{width:390,height:844},wait:1500});
    const e=await pg.evaluate(()=>{const c=document.getElementById('leagueCard'),r=document.getElementById('leagueRetry');return {hidden:c.hidden,txt:c.innerText.replace(/\s+/g,' '),h:r?r.getBoundingClientRect().height:0,alert:!!c.querySelector('[role=alert]')};});
