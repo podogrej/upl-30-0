@@ -32,8 +32,8 @@ async function pickOne(pg){await pg.click('#spinBtn');await pg.waitForSelector('
  T.check(dr.listTop>0&&dr.listTop<dr.vh-60&&dr.club>0,`після колеса список у кадрі (верх списку ${Math.round(dr.listTop)} з ${dr.vh}, клуб ${Math.round(dr.club)}, scrollY ${Math.round(dr.sy)})`);
  T.check(dr.mini&&dr.mTop>=0&&dr.mTop<120&&dr.mText==='2/11'&&dr.dots===11&&dr.full===2&&dr.up>=44,`мініполоса на телефоні: «${dr.mText}», крапок ${dr.dots}, заповнених ${dr.full}, кнопка ${dr.up}px`);
  await shot(pg,'draft_phone_dark');await theme(pg,'light');await shot(pg,'draft_phone_light');await theme(pg,'dark');
- const ic=await pg.evaluate(()=>({a:document.querySelector('#restartBtn .ic').textContent,b:document.querySelector('#moveBtn .ic').textContent}));
- T.check(ic.a&&ic.b&&ic.a!==ic.b,`«Спочатку» і «Переставити гравців»: різні іконки (${ic.a} / ${ic.b})`);
+ const ic=await pg.evaluate(()=>({a:document.querySelector('#restartBtn .ic path').getAttribute('d'),b:document.querySelector('#moveBtn .ic path').getAttribute('d')}));
+ T.check(ic.a&&ic.b&&ic.a!==ic.b,`«Спочатку» і «Переставити гравців»: різні SVG-іконки`);
  await pg.click('#miniUp');await pg.waitForTimeout(900);
  const up=await pg.evaluate(()=>({t:document.getElementById('pitch').getBoundingClientRect().top,m:document.getElementById('miniBar').classList.contains('on')}));
  T.check(up.t>=0&&up.t<200,`«Поле ▴» повертає до поля (верх поля ${Math.round(up.t)})`);

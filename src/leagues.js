@@ -75,7 +75,7 @@ function flLeagueHtml(){const d=FL.data;
   const rules=`${d.board.length} ${plUk(d.board.length,'гравець','гравці','гравців')} · ${d.scoring==='place'?'очки за місце':'сума очок'} · ${d.tries>1?`${d.take==='best'?'найкраща':'остання'} з ${d.tries} спроб`:'1 спроба на день'} · перекрути ${d.rerolls}${d.ratings==='memory'?' · на пам\'ять':''}${d.era!=='all'&&ERAS[d.era]?' · '+ERAS[d.era].name.toLowerCase():''}`;
   const bars=Array.from({length:d.days},(_,i)=>`<i class="${i+1<d.day_n?'done':i+1===d.day_n&&!d.over?'now':''}"></i>`).join('');
   let card;
-  if(d.over){const w=d.board[0];card=`<div class="fl-tour"><div class="fl-th"><b>Ліга завершена</b></div><div class="fl-bars">${bars}</div>${w?`<p style="margin:0">${ic('trophy','sm')}Переможець — <b>${esc(w.name)}</b>, ${numOr0(w.total)} ${ptsWord(numOr0(w.total))}</p>`:''}</div>`;}
+  if(d.over){const w=d.board[0];card=`<div class="fl-tour"><div class="fl-th"><b>Ліга завершена</b></div><div class="fl-bars">${bars}</div>${w?`<p style="margin:0">${em('trophy','sm')}Переможець — <b>${esc(w.name)}</b>, ${numOr0(w.total)} ${ptsWord(numOr0(w.total))}</p>`:''}</div>`;}
   else{const chips=Array.from({length:d.tries},(_,i)=>`<span class="fl-try${i<used?' on':''}">${i<used&&mine&&d.tries===1?numOr0(mine.pts):i+1}</span>`).join('');
     const btn=!member?(SESSION?`<button class="primary big0" id="flJoin">Приєднатися й грати</button>`:`<button class="primary big0" id="flLogin">Увійти, щоб приєднатися</button>`)
       :left?`<div class="fl-forms">${Object.keys(FORMATIONS).map(f=>`<button class="chip${FL.formation===f?' onc':''}" data-form="${f}">${f}</button>`).join('')}</div><button class="primary big0${few?' solid':''}" id="flPlay">Зіграти спробу ${used+1} з ${d.tries}</button>`
@@ -172,7 +172,7 @@ function fl5LeagueHtml(){const d=FL.data,me=PLAYER&&PLAYER.public_id,member=flMe
   let card;
   if(res&&res.cancelled)card=`<div class="fl-tour"><b>Ліга скасована</b><p class="muted" style="margin:0">До кінця збору склад зібрали менше двох гравців.</p></div>`;
   else if(res){const fin=[...res.matches].reverse().find(m=>m.stage==='final')||res.matches[res.matches.length-1];fl5Award(d);
-    card=`<div class="fl-tour fl5champ"><div class="kicker">${ic('trophy','sm')}Турнір зіграно</div><div class="ttl">${esc(nm(res.champ))}</div><p class="muted" style="margin:0">${res.n===2?`Серія ${res.wins[0]}:${res.wins[1]} · ${esc(nm(0))} — ${esc(nm(1))}`:`Фінал: ${esc(nm(fin.i))} ${score(fin)} ${esc(nm(fin.j))}`}</p>${member?`<button class="primary big0" id="fl5Rev">Реванш</button><p class="muted" style="margin:0;font-size:var(--fs-footnote)">Нова ліга з тими самими правилами — надішли посилання тій самій компанії.</p>`:''}</div>`;}
+    card=`<div class="fl-tour fl5champ"><div class="kicker">${em('trophy','sm')}Турнір зіграно</div><div class="ttl">${esc(nm(res.champ))}</div><p class="muted" style="margin:0">${res.n===2?`Серія ${res.wins[0]}:${res.wins[1]} · ${esc(nm(0))} — ${esc(nm(1))}`:`Фінал: ${esc(nm(fin.i))} ${score(fin)} ${esc(nm(fin.j))}`}</p>${member?`<button class="primary big0" id="fl5Rev">Реванш</button><p class="muted" style="margin:0;font-size:var(--fs-footnote)">Нова ліга з тими самими правилами — надішли посилання тій самій компанії.</p>`:''}</div>`;}
   else if(fl5Due(d))card=`<div class="fl-tour"><b>Збір закінчився — розігруємо турнір…</b></div>`;
   else{const btn=!member?(SESSION?`<button class="primary big0" id="flJoin">Приєднатися й зібрати п'ятірку</button>`:`<button class="primary big0" id="flLogin">Увійти, щоб приєднатися</button>`)
       :my?`<p style="margin:0">${ic('check-circle','sm')}Твій склад відправлено. Чекаємо на інших.</p>`:`<button class="primary big0${few?' solid':''}" id="fl5Go">Зібрати п'ятірку</button>`;
@@ -198,7 +198,7 @@ function fl5LeagueHtml(){const d=FL.data,me=PLAYER&&PLAYER.public_id,member=flMe
 // match: score, events by minute (goals, penalties, VAR), shootout; "watch live" reveals events one by one
 function fl5Feed(m,nm){const it=[];
   for(const e of m.ev)if(!e.pen)it.push({min:e.min,side:e.side,g:1,h:`${ic('soccer','sm')}<b>${esc(e.sc.name)}</b>${e.as?`<span class="muted"> · пас ${esc(e.as.name)}</span>`:''}`});
-  for(const e of m.ep)it.push({min:e.min,side:e.side,h:e.k==='var'?`📺 <b>VAR:</b> суддя йде до монітора — ${e.ok?'пенальті підтверджено':'<b>рішення скасовано</b>'}`
+  for(const e of m.ep)it.push({min:e.min,side:e.side,h:e.k==='var'?`${ic('tv','sm')}<b>VAR:</b> суддя йде до монітора — ${e.ok?'пенальті підтверджено':'<b>рішення скасовано</b>'}`
     :`Суддя призначив пенальті. ${esc(e.by.name)} — ${e.res==='goal'?'<b>забив</b>':e.res==='save'?`<b>сейв</b> ${esc(e.gk.name)}`:'<b>мимо</b>'}`,pen:1,g:e.k==='pen'&&e.res==='goal'?1:0});
   it.sort((a,b)=>a.min-b.min||(a.pen&&!b.pen?-1:0));
   return it.map(x=>({...x,html:`<div class="f5ev s${x.side}"><span class="mono">${x.min}'</span><span>${x.h}</span><span class="muted fl5who">${esc(nm(x.side))}</span></div>`}));}
@@ -209,7 +209,7 @@ function fl5MatchHtml(){const d=FL.data,res=d.result,m=res.matches[FL.mi],nm=s=>
   return `<div class="hero f5live" style="margin-top:var(--sp-4)"><div class="kicker">${FL5_STAGE[m.stage]||''} · 2×20 хвилин</div>
     <div class="f5score"><span>${esc(nm(0))}</span><b>${sc[0]}:${sc[1]}</b><span>${esc(nm(1))}</span></div>
     ${m.pens?`<p class="muted" style="margin:0;text-align:center">Серія пенальті ${m.pens[0]}:${m.pens[1]}</p>`:''}
-    <p class="muted" style="margin:0;text-align:center">xG ${m.xg[0].toFixed(1)} : ${m.xg[1].toFixed(1)} · ${ic('star','sm')}гравець матчу: <b>${esc(mvp.name)}</b> ${mvp.rt.toFixed(1)}</p></div>
+    <p class="muted" style="margin:0;text-align:center">xG ${m.xg[0].toFixed(1)} : ${m.xg[1].toFixed(1)} · ${em('star','sm')}гравець матчу: <b>${esc(mvp.name)}</b> ${mvp.rt.toFixed(1)}</p></div>
     <div class="row" style="margin-top:var(--sp-3)"><button class="ghost" id="fl5Live">${FL.live==null?'Дивитися наживо':'Одразу підсумок'}</button></div>
     <div class="f5evs" id="fl5Feed" style="margin-top:var(--sp-2)">${seen.map(x=>x.html).join('')||(shown>=feed.length?'<p class="muted" style="margin:0">Голів не було.</p>':'')}</div>
     ${m.so&&shown>=feed.length?`<div class="sec0">Серія пенальті</div><div class="fl5so">${m.so.map(k=>`<span class="s${k.side}${k.ok?' ok':''}">${k.ok?'✓':'✗'} ${esc(k.by.name)}</span>`).join('')}</div>`:''}
