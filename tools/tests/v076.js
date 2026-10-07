@@ -130,6 +130,8 @@ const sk=(pg,sel)=>pg.evaluate(s=>{const n=[...document.querySelectorAll(s+' .sk
   await p.keyboard.press('Escape');await wait(500);
   const s2=await p.evaluate(()=>({gone:!document.getElementById('ppSheet'),st:history.state&&history.state.sheet||0,foc:document.activeElement.id,sec:document.getElementById('s6').hidden}));
   T.check(s2.gone&&s2.st===0&&s2.foc==='ppRowName'&&!s2.sec,'ім’я: Escape закриває, запис знято, фокус на рядку «Ім’я», сторінка гравця на місці');
+  {await p.click('#ppRowName');await wait(700);const fit=await p.evaluate(()=>{const b=document.querySelector('#ppSheet .sheet0-box');return {sh:b.scrollHeight,ch:b.clientHeight,bottom:Math.round(b.getBoundingClientRect().bottom),vh:innerHeight};});
+   T.check(fit.sh<=fit.ch+1&&fit.bottom>=fit.vh-1,`ім’я на 390×844: без зайвої прокрутки (${fit.sh}/${fit.ch}), лист до низу екрана`);await p.keyboard.press('Escape');await wait(500);}
   // low screen (keyboard up): the name sheet scrolls inside, the save button is reachable
   await p.setViewportSize({width:320,height:300});await wait(200);await p.click('#ppRowName');await wait(700);
   const lo=await p.evaluate(()=>{const b=document.querySelector('#ppSheet .sheet0-box');b.scrollTop=b.scrollHeight;const sv=[...b.querySelectorAll('button')].pop().getBoundingClientRect();return {ov:getComputedStyle(b).overflowY,bot:sv.bottom,vh:innerHeight};});

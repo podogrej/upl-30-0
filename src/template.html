@@ -273,6 +273,7 @@ section.enter{animation:secin var(--dur-3) var(--ease-out) both}section.back{ani
 html.tgfs .overlay.full .sheet-head{padding-top:calc(var(--sp-3) + var(--tg-safe-area-inset-top,0px) + var(--tg-content-safe-area-inset-top,0px))}
 html.tgfs header.top{padding-top:calc(var(--sp-3) + var(--tg-safe-area-inset-top,0px) + var(--tg-content-safe-area-inset-top,0px))}
 html.tgfs .overlay:not(.full),html.tgfs .sheet0{padding-top:calc(var(--tg-safe-area-inset-top,0px) + var(--tg-content-safe-area-inset-top,0px))}html.tgfs .overlay:not(.full) .box,html.tgfs .sheet0-box{max-height:calc(100dvh - var(--tg-safe-area-inset-top,0px) - var(--tg-content-safe-area-inset-top,0px) - var(--sp-4))}   /* Telegram fullscreen: sheets stay below Telegram's top buttons */
+@media (min-width:600px){html.tgfs .overlay:not(.full) .box,html.tgfs .sheet0-box{max-height:min(88vh,880px,calc(100dvh - var(--tg-safe-area-inset-top,0px) - var(--tg-content-safe-area-inset-top,0px) - var(--sp-4)))}}
 .nick{font-weight:var(--wt-medium);color:var(--amber);font-size:.85em}
 details.tip{border:0;background:none;padding:0;margin:0}details.tip>summary{display:inline-flex;align-items:center;gap:var(--sp-2);padding-block:0;font-size:var(--fs-footnote);font-weight:var(--wt-medium);color:var(--ink2);list-style:none}
 details.tip>summary::-webkit-details-marker{display:none}details.tip>summary::before{content:'';width:0;height:0;border-left:5px solid currentColor;border-top:4px solid transparent;border-bottom:4px solid transparent;transition:transform var(--dur-2) var(--ease-out)}
@@ -317,7 +318,8 @@ td .sub{font-size:var(--fs-caption2);color:var(--muted);margin-top:var(--sp-0h);
 @media (prefers-reduced-transparency:reduce){.sheet-bd{-webkit-backdrop-filter:none;backdrop-filter:none;background:rgba(5,10,25,.8)}}
 .overlay .box,.sheet0-box{position:relative;box-sizing:border-box;width:100%;max-height:92vh;max-height:92dvh;margin:0;padding:0 var(--sx);border:0;border-radius:var(--r-xl) var(--r-xl) 0 0;box-shadow:0 -1px 0 var(--line),var(--sh-3);outline:none}
 .overlay .box{display:flex;flex-direction:column;max-width:640px;background:var(--bg)}
-.overlay .box::after,.sheet0-box::after{content:"";position:absolute;left:0;right:0;top:100%;height:96px;background:inherit}   /* fills the gap while the spring overshoots */
+.overlay .box::after{content:"";position:absolute;left:0;right:0;top:100%;height:96px;background:inherit}   /* fills the gap while the spring overshoots */
+.sheet0-box{box-shadow:0 -1px 0 var(--line),0 96px 0 0 var(--surface),var(--sh-3)}   /* scrolling sheet: the gap filler is a shadow so it adds no scroll area */
 .overlay .box>*{min-width:0}
 .sheet-head{flex:none;margin:0 calc(var(--sx) * -1);padding:0 var(--sx) var(--sp-3);touch-action:none;-webkit-user-select:none;user-select:none}
 .grab{height:28px;display:grid;place-items:center;cursor:grab}.grab::before{content:"";width:36px;height:5px;border-radius:var(--r-pill);background:color-mix(in srgb,var(--ink) 22%,transparent)}
@@ -327,7 +329,7 @@ td .sub{font-size:var(--fs-caption2);color:var(--muted);margin-top:var(--sp-0h);
 @media (min-width:600px){
   .overlay:not(.full),.sheet0{align-items:center;padding:var(--sp-4)}
   .overlay:not(.full) .box,.sheet0-box{border-radius:var(--r-xl);max-height:min(88vh,880px)}
-  .overlay .box::after,.sheet0-box::after{display:none}
+  .overlay .box::after{display:none}.sheet0-box{box-shadow:0 -1px 0 var(--line),var(--sh-3)}
   .overlay:not(.full) .grab,.sheet0 .grab{display:none}
   .sheet-head{padding-top:var(--sp-4)}
 }
