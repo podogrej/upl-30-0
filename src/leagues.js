@@ -50,7 +50,7 @@ function flListHtml(){const mine=FL.mine||[];const on=mine.filter(x=>!x.over),of
   return `<div class="fl-hero"><h1>Грати з друзями</h1><p>Кожен збирає свою команду за однаковими правилами. Чия виявиться кращою?</p>
     ${SESSION?`<button class="primary big0" id="flNew">Створити лігу</button>`:`<button class="primary big0" id="flLogin">Увійти, щоб створити лігу</button><p class="muted" style="font-size:var(--fs-footnote)">Ліги — лише з акаунтом (Google чи Telegram): так результати не загубляться.</p>`}
     <p class="muted" style="font-size:var(--fs-footnote);margin-top:var(--sp-2)">Отримав посилання від друга? Просто відкрий його.</p></div>
-    ${FL.mine==null?'<p class="muted">Завантаження…</p>':FL.mineErr?flMineErrHtml('flRetry'):''}
+    ${FL.mine==null?skBox(skN(3,()=>'<div class="fl-row sk-row"><i class="sk dot"></i><span class="t"><b><i class="sk w60"></i></b><small><i class="sk w40"></i></small></span></div>')):FL.mineErr?flMineErrHtml('flRetry'):''}
     ${on.length?`<div class="sec0">Грають зараз <span>${on.length}</span></div>${on.map(row).join('')}`:''}
     ${off.length?`<div class="sec0">Завершені <span>${off.length}</span></div>${off.map(row).join('')}`:''}
     <div class="sec0">Як це працює</div>
@@ -70,7 +70,7 @@ function flCreateHtml(){const f=FL.form;
     <div class="sec0">Епоха</div><div class="fl-opts c2">${ERA_KEYS.map(k=>{const e=ERAS[k];return `<button class="opt${f.era===k?' on':''}" data-k="era" data-v="${k}"><b>${esc(e.name)}</b><small>${seasonLabel(e.y0||DSTAT.y0)+' – '+seasonLabel(e.y1==null?DSTAT.y1:e.y1)}</small></button>`;}).join('')}</div>
     <button class="primary big0" id="flCreate" style="margin-top:var(--sp-4)">${f.fmt==='5'?'Створити й зібрати п\'ятірку':'Створити й грати'}</button><p class="muted" id="flMsg" style="font-size:var(--fs-footnote);text-align:center">${f.fmt==='5'?'Далі — посилання для друзів (до 10) і твоя п\'ятірка. Коли збір закінчиться, турнір зіграє сервер.':'Далі — посилання для друзів і твоя перша спроба.'}</p>`;}
 function flLeagueHtml(){const d=FL.data;
-  if(!d)return `<div class="fl-hero"><p class="muted">${esc(FL.err||'Завантаження…')}</p>${FL.err?'<button class="ghost" id="flBack">До ліг</button>':''}</div>`;
+  if(!d)return FL.err?`<div class="fl-hero"><p class="muted">${esc(FL.err)}</p><button class="ghost" id="flBack">До ліг</button></div>`:skBox(`<div class="fl-head"><div class="fl-top"><i class="sk blk sk-h1"></i></div></div><div class="fl-tour"><i class="sk w40"></i><i class="sk blk sk-bar"></i><i class="sk blk sk-btn"></i></div>${skN(3,()=>'<div class="fl-row sk-row"><i class="sk dot"></i><span class="t"><b><i class="sk w60"></i></b></span></div>')}`);
   const me=PLAYER&&PLAYER.public_id,member=flMe(d),few=!d.over&&d.board.length<3&&member,mine=d.tour.find(r=>r.u===me),used=mine?numOr0(mine.tries):0,left=Math.max(0,d.tries-used);
   const rules=`${d.board.length} ${plUk(d.board.length,'гравець','гравці','гравців')} · ${d.scoring==='place'?'очки за місце':'сума очок'} · ${d.tries>1?`${d.take==='best'?'найкраща':'остання'} з ${d.tries} спроб`:'1 спроба на день'} · перекрути ${d.rerolls}${d.ratings==='memory'?' · на пам\'ять':''}${d.era!=='all'&&ERAS[d.era]?' · '+ERAS[d.era].name.toLowerCase():''}`;
   const bars=Array.from({length:d.days},(_,i)=>`<i class="${i+1<d.day_n?'done':i+1===d.day_n&&!d.over?'now':''}"></i>`).join('');

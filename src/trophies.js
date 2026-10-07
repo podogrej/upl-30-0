@@ -195,8 +195,9 @@ const trDef=id=>{if(id.startsWith('ms')){const m=MILESTONES.find(x=>'ms'+x[0]===
 // online: first unlock -> trophies table (for "X% of players")
 // server writes (/api/save, device secret)
 function trSync(ids){if(!ONLINE)return;saveApi('trophies',{ids}).catch(e=>console.warn('trophies',e));}
-let TR_PCT=null;
-async function trLoadPct(){if(!ONLINE)return null;try{const r=await fetch(`${SB_URL}/rest/v1/rpc/trophy_stats?apikey=${SB_KEY}`,{method:'POST',headers:{apikey:SB_KEY,'Content-Type':'application/json'},body:'{}'});if(!r.ok)return null;TR_PCT=await r.json();return TR_PCT;}catch(e){return null;}}
+let TR_PCT=null,TR_FAIL=false;   // TR_FAIL: the stats request failed (skeleton line stops)
+const trBusy=()=>ONLINE&&!TR_PCT&&!TR_FAIL;
+async function trLoadPct(){if(!ONLINE)return null;try{const r=await fetch(`${SB_URL}/rest/v1/rpc/trophy_stats?apikey=${SB_KEY}`,{method:'POST',headers:{apikey:SB_KEY,'Content-Type':'application/json'},body:'{}'});if(!r.ok){TR_FAIL=true;return null;}TR_PCT=await r.json();return TR_PCT;}catch(e){TR_FAIL=true;return null;}}
 // one-off retroactive awarding from this device's log
 async function trRetro(){
   if(!ONLINE||lsGet("upl30_tr_retro"))return;

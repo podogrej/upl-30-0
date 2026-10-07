@@ -57,7 +57,7 @@ const ppTile=(n,l,hot)=>`<div class="tile${hot?' hot':''}"><b>${n==null||n===''?
 function ppRender(){
   const el=document.getElementById('pp');if(!el||!PP)return;const st=PP,p=st.prof||{},own=st.own;
   if(!own&&!st.loading&&!st.prof){el.innerHTML=`<div class="pp-sec"><h3>Гравець</h3></div><p class="muted">${st.err?'Сторінка зараз недоступна. Спробуй пізніше.':'Такого гравця немає.'}</p><div class="row"><button class="primary" id="ppHome">На головну</button></div>`;document.getElementById('ppHome').onclick=()=>go(1);return;}
-  const name=own?(myName()||'гравець'):(p.name||'…');const seed=own?mySeed():(p.public_id||st.u);
+  const wait=st.loading&&!own,name=own?(myName()||'гравець'):(p.name||'');const seed=own?mySeed():(p.public_id||st.u);
   const guest=own&&ONLINE&&!SESSION;
   const loc=trStore(),si=streakInfo();
   const seasons=own?Math.max(p.seasons||0,loc.seasons||0):p.seasons;   // own page also counts seasons not yet saved to DB (offline, before sign-in)
@@ -65,16 +65,17 @@ function ppRender(){
   const streak=own?Math.max(si.best||0,p.streak_best||0):p.streak_best;
   let h='';
   if(guest)h+=`<div class="pp-warn"><div class="h">${icon('alert-outline')}Усе зберігається лише на цьому пристрої</div><p>Очистиш кеш браузера чи Telegram, зміниш телефон, браузер або пристрій — і трофеї, рекорди та серія драфту дня зникнуть. Результати в таблицях залишаться, але не будуть пов’язані з тобою.</p><div class="row"><button class="primary" id="ppLogin">Увійти</button></div></div>`;
-  h+=`<div class="pp-head">${avatarSvg(seed,64)}<div style="min-width:0"><div class="pp-name"><h1 id="ppName">${esc(name)}</h1>${own&&ONLINE&&PLAYER?`<button id="ppEdit" title="Змінити ім'я" aria-label="Змінити ім'я">${icon('pencil')}</button>`:''}</div><div class="pp-since">${p.since?'грає з '+fmtLong(p.since):st.loading?'…':''}</div></div></div>`;
+  h+=`<div class="pp-head">${avatarSvg(seed,64)}<div style="min-width:0"><div class="pp-name"><h1 id="ppName">${wait&&!name?'<i class="sk w60"></i>':esc(name)}</h1>${own&&ONLINE&&PLAYER?`<button id="ppEdit" title="Змінити ім'я" aria-label="Змінити ім'я">${icon('pencil')}</button>`:''}</div><div class="pp-since">${p.since?'грає з '+fmtLong(p.since):st.loading?'<i class="sk w40"></i>':''}</div></div></div>`;
   if(p.deleted)h+=`<p class="muted" style="margin-top:var(--sp-4)">Гравець видалив акаунт. Його результати лишились у таблицях під анонімним іменем.</p>`;
   else{
     const rest=[p.win_pct!=null?`${p.win_pct}% перемог у матчах`:'',`сезонів 30-0: ${numOr0(p.perfect)}`,streak||own?`серія драфту дня: ${numOr0(streak)}`:''].filter(Boolean).join(' · ');
-    h+=`<div class="pp-big3 pp-tiles">${ppTile(seasons,plUk(numOr0(seasons),'сезон','сезони','сезонів'))}${ppTile(p.champions,'чемпіонств')}${ppTile(best,'рекорд, очок',true)}</div><p class="pp-rest">${rest}</p>`;
+    const tile=(n,l,hot)=>wait?`<div class="tile${hot?' hot':''}"><b><i class="sk num"></i></b><span>${l}</span></div>`:ppTile(n,l,hot);
+    h+=`<div class="pp-big3 pp-tiles">${tile(seasons,plUk(numOr0(seasons),'сезон','сезони','сезонів'))}${tile(p.champions,'чемпіонств')}${tile(best,'рекорд, очок',true)}</div><p class="pp-rest">${wait?'<i class="sk w80"></i>':rest}</p>`;
     const fc=p.fav_club&&p.fav_club.pct>=15?p.fav_club:null,fp=p.fav_player&&p.fav_player.k>1?p.fav_player:null;
     if(fc||fp)h+=`<div class="pp-fav">${fc?`<div>${ic('heart')}<div><span class="k">Улюблений клуб</span><b>${esc(fc.c)}</b></div><span class="v">${numOr0(fc.pct)}% вибору</span></div>`:''}${fp?`<div>${ic('account-circle')}<div><span class="k">Найчастіший гравець</span><b>${esc(fp.n)}</b></div><span class="v">×${numOr0(fp.k)}</span></div>`:''}</div>`;
     h+=`<div id="ppCab"></div>`;
     if(own)h+=ppXiHtml(p);
-    if(own)h+=`<details class="pp-hist" id="ppHist"><summary>Останні сезони${p.seasons?` (${Math.min(10,p.seasons)} з ${p.seasons})`:''}</summary><div id="ppHistList"><p class="muted">Завантаження…</p></div></details>`;
+    if(own)h+=`<details class="pp-hist" id="ppHist"><summary>Останні сезони${p.seasons?` (${Math.min(10,p.seasons)} з ${p.seasons})`:''}</summary><div id="ppHistList">${skBox(`<div class="pp-list">${skN(3,()=>'<div class="pp-row h"><span class="d"><i class="sk"></i></span><div class="t"><b><i class="sk w60"></i></b><span><i class="sk w40"></i></span></div><span class="n"><i class="sk num"></i></span><i class="sk w20"></i></div>')}</div>`)}</div></details>`;
     else h+=`<div class="pp-sec"><h3>Історія</h3></div><div class="pp-lock">${icon('eye-off')}Історію сезонів бачить лише ${esc(name)}</div>`;
   }
   if(own&&ONLINE&&!p.deleted)h+=`<div id="ppLeagues"></div>`;   // "My leagues" (src/leagues.js)
@@ -109,7 +110,7 @@ function ppRenderCab(){
     const tier=trTier(t),p=trPct(t.id);
     const gem=e&&tier&&tier[1]!=='common';   // rarity from "rare" up: badge on the right, not inline
     const meta=[t.sec?'секретний':tier&&!gem?tier[2]:'',p!=null&&!t.sec?(p===0?'ще ніхто не відкрив':`є в ${p<1?'<1':Math.round(p)}% гравців`):'',e&&e.at?fmtShort(e.at):''].filter(Boolean).join(' · ');
-    return `<div class="tro k-${trKind(t)}${e?' on':''}${t.sec?' sec':''}${tier&&e?' rt-'+tier[1]:''}" data-tr="${esc(t.id)}"><span class="tri">${trBadge(t,!!e)}</span><div class="trt"><b>${esc(t.n)}</b>${trQ(t)}<span>${esc(t.d)}</span>${meta?`<span class="trp">${meta}</span>`:''}</div>${gem?`<em class="gem rt-${tier[1]}">${tier[2]}</em>`:''}${e&&e.n>1?`<span class="trn">×${e.n}</span>`:''}</div>`;};
+    return `<div class="tro k-${trKind(t)}${e?' on':''}${t.sec?' sec':''}${tier&&e?' rt-'+tier[1]:''}" data-tr="${esc(t.id)}"><span class="tri">${trBadge(t,!!e)}</span><div class="trt"><b>${esc(t.n)}</b>${trQ(t)}<span>${esc(t.d)}</span>${meta||trBusy()&&!t.sec?`<span class="trp">${meta}${trBusy()&&!t.sec?(meta?' · ':'')+'<i class="sk"></i>':''}</span>`:''}</div>${gem?`<em class="gem rt-${tier[1]}">${tier[2]}</em>`:''}${e&&e.n>1?`<span class="trn">×${e.n}</span>`:''}</div>`;};
   const cnt=c=>{const l=LIVE.filter(t=>inCat(t,c));return `${l.filter(got).length}/${l.length}`;};
   // order: cards -> "+N secret" -> milestones -> collapse; secret row centered, badge aligned with text
   el.innerHTML=`<div class="pp-sec"><h3>Трофеї</h3><span class="best">Відкрито ${n} з ${total}</span></div><div class="pp-bar"><i style="width:${total?Math.round(100*n/total):0}%"></i></div>
@@ -194,16 +195,21 @@ function ppSettingsHtml(){
   return h+`</div>`;}
 // bottom sheet (iPad: centered): title, field, hint, Save; save(value) -> '' (done, close) or error text
 function ppSheet({title,id,value,placeholder,hint,type,max,disabled,save,input,msgId,saveId}){msgId=msgId||id+'Msg';saveId=saveId||id+'Save';
-  const old=document.getElementById('ppSheet');if(old)old.remove();
+  let pushed=false;const old=document.getElementById('ppSheet');if(old){pushed=!!(PPS&&PPS.pushed);PPS=null;old.remove();}
   const o=document.createElement('div');o.className='sheet0';o.id='ppSheet';
-  o.innerHTML=`<div class="sheet0-box" role="dialog" aria-modal="true" aria-label="${esc(title)}"><div class="sheet0-bar"><h3>${esc(title)}</h3><button class="link0" id="ppSheetX">Скасувати</button></div>
+  o.innerHTML=`<div class="sheet-bd"></div><div class="sheet0-box" role="dialog" aria-modal="true" aria-label="${esc(title)}" tabindex="-1"><div class="sheet-head"><div class="grab" aria-hidden="true"></div><div class="sheet0-bar"><h3>${esc(title)}</h3><button class="link0" id="ppSheetX">Скасувати</button></div></div>
     <input id="${id}" type="${type||'text'}" maxlength="${max||40}" value="${esc(value||'')}" placeholder="${esc(placeholder||'')}" autocapitalize="none" autocorrect="off" spellcheck="false"${disabled?' disabled':''}>
     <p class="pp-hint" id="${msgId}">${hint||''}</p><button class="primary big0" id="${saveId}"${disabled?' disabled':''}>Зберегти</button></div>`;
   document.body.appendChild(o);const f=o.querySelector('#'+id),b=o.querySelector('#'+saveId),m=o.querySelector('#'+msgId);
-  const close=()=>{o.remove();document.removeEventListener('keydown',key);};const key=e=>{if(e.key==='Escape')close();};document.addEventListener('keydown',key);
-  o.onclick=e=>{if(e.target===o)close();};o.querySelector('#ppSheetX').onclick=close;if(input)f.oninput=()=>input(f);
+  // closes at once, then drops its history entry (popstate finds nothing left to close)
+  const c=sheetCtl(o,{panel:o.querySelector('.sheet0-box'),bd:o.querySelector('.sheet-bd'),request:()=>close()});
+  c.dismiss=()=>{if(PPS!==c)return;PPS=null;sheetClose(c,()=>o.remove(),c.vy);};
+  const close=()=>{if(PPS!==c)return;const pop=c.pushed;c.dismiss();if(pop&&SHEET)history.back();};
+  PPS=c;c.pushed=pushed;if(!pushed&&!SHEET){sheetOpen();c.pushed=true;}
+  sheetDrag(c,o.querySelector('.sheet-head'));sheetEnter(c);
+  o.onclick=e=>{if(e.target===o||e.target.classList.contains('sheet-bd'))close();};o.querySelector('#ppSheetX').onclick=close;if(input)f.oninput=()=>input(f);
   b.onclick=async()=>{b.disabled=true;const err=await save(f.value);b.disabled=false;if(err){m.innerHTML=err;m.classList.add('bad');return;}close();ppRender();};
-  f.onkeydown=e=>{if(e.key==='Enter')b.click();};if(!disabled)setTimeout(()=>f.focus(),60);}
+  f.onkeydown=e=>{if(e.key==='Enter')b.click();};if(!disabled)setTimeout(()=>{if(PPS===c)f.focus();},60);}
 function ppNameSheet(){if(!PLAYER)return;const nx=PLAYER.name_next&&PLAYER.name_next>new Date().toISOString()?PLAYER.name_next:null;
   ppSheet({title:"Ім'я",id:'ppNameIn',msgId:'ppNameMsg',saveId:'ppNameSave',value:PLAYER.name||'',placeholder:PLAYER.anon_name||'',max:20,disabled:!!nx,
     hint:nx?`Змінити знову можна з ${fmtLong(nx)}.`:`3–20 символів: латинські літери a–z, цифри, «_» і «.». Змінювати можна раз на 30 днів. Це ім'я бачать усі в таблицях і лігах.${PLAYER.name?'':` Поки ти в таблицях як <b>${esc(PLAYER.anon_name||'')}</b>.`}`,
