@@ -62,9 +62,9 @@ const clear=pg=>pg.evaluate(()=>{window.__hap.length=0;});
  await clear(pg);await pg.evaluate(()=>__dbg.seasonHaptic({place:1}));await pg.waitForTimeout(80);
  await pg.evaluate(()=>__dbg.seasonHaptic({place:16}));await pg.waitForTimeout(80);await pg.evaluate(()=>__dbg.seasonHaptic({place:8}));
  h=await hap(pg);T.check(h.join()==='n:success,n:warning',`підсумок: чемпіон — success, вильот — warning, середина — тиша (${h})`);
- await clear(pg);await pg.evaluate(()=>{__dbg.renderNewTro({tro:{got:['hardchamp'],fresh:['hardchamp']}});});await pg.waitForTimeout(900);
- h=await hap(pg);T.check(h.join()==='n:success'||h.join()==='i:heavy,n:success',`новий трофей: ${h}`);
- await clear(pg);await pg.evaluate(()=>{const sec=__dbg.TROPHIES.find(x=>x.sec).id;__dbg.renderNewTro({tro:{got:[sec],fresh:[sec]}});});await pg.waitForTimeout(1000);
+ await clear(pg);await pg.evaluate(()=>{document.getElementById('s3').hidden=false;__dbg.renderNewTro({tro:{got:['hardchamp'],fresh:['hardchamp']}});document.getElementById('newTro').scrollIntoView({block:'center'});});await pg.waitForTimeout(1400);   // the opening starts once the block is on screen
+ h=await hap(pg);T.check(['i:medium,n:success','i:heavy,n:success'].includes(h.join()),`новий трофей: удар на півоберті жетона, success після посадки (${h})`);
+ await clear(pg);await pg.evaluate(()=>{const sec=__dbg.TROPHIES.find(x=>x.sec).id;__dbg.renderNewTro({tro:{got:[sec],fresh:[sec]}});document.getElementById('newTro').scrollIntoView({block:'center'});});await pg.waitForTimeout(1400);
  h=await hap(pg);T.check(h.join()==='i:heavy,n:success',`секретний трофей: важчий відгук (${h})`);
  await clear(pg);await pg.evaluate(()=>{__dbg.haptic('error');__dbg.haptic('error');});h=await hap(pg);T.check(h.join()==='n:error','помилка: n:error, повтор у межах 60 мс відсічено');
  await clear(pg);await pg.evaluate(()=>__dbg.haptic('light',500));await pg.waitForTimeout(100);await pg.evaluate(()=>__dbg.haptic('light',500));h=await hap(pg);T.check(h.length===1,`гол: тротлінг працює (${h.length})`);

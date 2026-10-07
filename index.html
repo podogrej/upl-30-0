@@ -827,6 +827,28 @@ section>h3:first-child,.box h3:first-of-type,#viewBody>h3:first-child,#viewBody>
 /* summary: trophy titles in white, calm borders, no pink glow; only Share uses the gradient */
 #newTro .tro.on .trt b{background:none;color:var(--ink)}
 #newTro .tro,#newTro .tro.new,#newTro .tro.rarein{box-shadow:inset 0 0 0 1px var(--line)}#newTro .tro.rarein{animation:rarein .9s cubic-bezier(.2,.9,.25,1.2) both}
+/* new trophy opening: card in, sealed token flips (face swaps at the half-turn), rarity glow, shine for rare; --od = stagger delay */
+#newTro .tro.open{position:relative;--gs:38%}#newTro .tro.open.rarein{--gs:70%}#newTro .tro.open:not(.rarein){--rc:var(--amber)}
+#newTro .tro.open,#newTro .tro.open.rarein{animation:openin var(--dur-3) var(--ease-out) var(--od,0ms) backwards,openglow 2.2s ease-out calc(var(--od,0ms) + 560ms) forwards}
+#newTro .tro.open.rarein::after{animation-delay:calc(var(--od,0ms) + 700ms)}
+#newTro .tro.open .tri{position:relative;animation:openflip 520ms ease-in-out calc(var(--od,0ms) + 120ms) backwards,opensettle var(--dur-3) var(--spring) calc(var(--od,0ms) + 380ms) backwards}
+#newTro .tro.open .tri>.tre{animation:openface 520ms steps(1,end) calc(var(--od,0ms) + 120ms) backwards}
+.tseal{position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle at 35% 30%,color-mix(in srgb,var(--rc) 55%,#fff),var(--rc) 62%,color-mix(in srgb,var(--rc) 65%,#000));box-shadow:inset 0 0 0 2px color-mix(in srgb,#fff 35%,transparent);animation:openseal 520ms steps(1,end) calc(var(--od,0ms) + 120ms) both}
+#newTro.wait .tro,#newTro.wait .tro *,#newTro.wait .tro::after{animation-play-state:paused!important}
+@keyframes openin{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes openflip{from{transform:perspective(420px) rotateY(180deg)}to{transform:perspective(420px) rotateY(0)}}
+@keyframes opensettle{from{scale:.86}to{scale:1}}
+@keyframes openface{0%,49.99%{opacity:0}50%,100%{opacity:1}}
+@keyframes openseal{0%,49.99%{opacity:1}50%,100%{opacity:0}}
+@keyframes openglow{0%,25%{box-shadow:0 0 0 2px var(--rc),0 0 28px color-mix(in srgb,var(--rc) var(--gs),transparent),inset 0 0 0 1px var(--line)}100%{box-shadow:0 0 0 0 transparent,0 0 0 0 transparent,inset 0 0 0 1px var(--line)}}
+.trk{display:flex;align-items:baseline;justify-content:space-between;gap:var(--sp-2)}.trk .trtot{font-variant-numeric:tabular-nums;color:var(--ink2)}
+@media (prefers-reduced-motion:reduce){#newTro .tro.rarein,#newTro .tro.open,#newTro .tro.open.rarein,#newTro .tro.open .tri,#newTro .tro.open .tri>.tre,#newTro .tro.open.rarein::after{animation:none}.tseal{display:none}}
+/* odometer cell (custom tags dodge generic span rules): old digit rolls out, new one rolls in; width stays (tabular-nums) */
+.od{display:inline-block;position:relative;clip-path:inset(0 -2px)}.od-n,.od-o{display:inline-block}.od-o{position:absolute;left:0;top:0}
+/* picked player flies from the list to its slot; the ghost never takes taps; the slot content waits (.fw) until it lands */
+.flyg{position:fixed;left:0;top:0;z-index:45;pointer-events:none;will-change:transform,opacity}
+.flyg span{display:block;padding:var(--sp-1) var(--sp-2);border-radius:var(--r-pill);background:var(--surface);color:var(--ink);box-shadow:var(--sh-2);font-weight:var(--wt-bold);white-space:nowrap;line-height:var(--lh-snug)}
+.slot.fw>*{opacity:0}
 .tro:not(.on) .trt b{color:var(--muted)}.tro:not(.on) .trt>span{color:var(--muted)}
 .tro .trt>span{font-size:var(--fs-footnote);line-height:var(--lh-body)}
 #newTro .tro{padding:var(--sp-4) var(--sp-4)}
@@ -1434,7 +1456,7 @@ function renderPitch(el,slots,withClub){
   slots.forEach((s,idx)=>{const d=document.createElement('div');const mv=S.move;const pt=G.pts[idx]||{x:50,y:50};
       const pend=S.pending&&!withClub&&!s.player&&effRating(S.pending,s.slot)!=null;
       const tgt=pend||(mv!=null&&!withClub&&idx!==mv&&canMove(mv,idx));
-      d.className='slot '+GROUP_OF[s.slot]+(s.player?' filled':' empty')+(mv===idx?' moving':'')+(tgt?' target':'');d.title=POSFULL[s.slot];d.style.left=pt.x+'%';d.style.top=pt.y+'%';
+      d.className='slot '+GROUP_OF[s.slot]+(s.player?' filled':' empty')+(mv===idx?' moving':'')+(tgt?' target':'')+(!withClub&&FLY_WAIT.has(idx)&&s.player?' fw':'');d.title=POSFULL[s.slot];d.style.left=pt.x+'%';d.style.top=pt.y+'%';
       const p=s.player;let body={};
       if(p){const res=withClub&&S.result&&S.result.players;const open=ratingsOpen();
         if(res){const pl=S.result.players.find(x=>x.id===p.id);body={pill:pl?avgPill(pl.rt.toFixed(2)):'',r0:open?baseR(p):null};}
@@ -1618,9 +1640,9 @@ function posBox(p,row){const opts=posOpts(p),box=document.createElement('div');b
 function keepScroll(fn){fn();const z=document.getElementById('spinZone');if(!z||!z.offsetParent)return;const r=z.getBoundingClientRect();
   if(r.bottom>innerHeight-8||r.top<0)window.scrollTo({top:Math.max(0,scrollY+r.bottom-innerHeight+16),behavior:'instant'});}
 function place(p,s){
-  const r=effRating(p,s.slot);
+  const r=effRating(p,s.slot),fly0=flySrc(p);
   s.player={name:p[0],pos:GROUP_OF[s.slot],slot:s.slot,main:p[6],alts:p[7],r,r0:p[2],apps:p[3],goals:p[4],ast:p[8],cs:p[9],nat:p[10],by:p[11],cc:S.wheel.c,id:p[5],club:S.wheel.n,y:S.wheel.y};S.taken.add(canon(p[5]));S.wheel=null;S.move=null;S.pending=null;keepScroll(renderDraft);haptic('light');
-  {const sl=document.querySelectorAll('#pitch .slot')[S.slots.indexOf(s)],disc=sl&&sl.querySelector('.disc');if(disc&&!LESS_MOTION())restartAnim(disc,'land0');}   // no flying player animation, only short feedback on the pitch
+  {const ix=S.slots.indexOf(s),sl=document.querySelectorAll('#pitch .slot')[ix],disc=sl&&sl.querySelector('.disc');if(disc&&!LESS_MOTION()&&!flyTo(fly0,ix))restartAnim(disc,'land0');}   // name chip flies to the slot, else short landing only
   {const n=S.slots.filter(x=>x.player).length,seen=lsGet('upl30_hint_move')||0;if(n===2&&seen<2){const h=document.getElementById('moveHint');h.hidden=false;h.textContent='Порада: кнопка «Переставити гравців» під полем дозволяє поміняти позиції.';lsSet('upl30_hint_move',seen+1);}}
   if(S.slots.every(x=>x.player))setTimeout(lockDraft,0);   // squad complete: ratings, forecast and Play season immediately; progress bar in preBox while computing
 }
@@ -2073,6 +2095,7 @@ async function openTrophies(){screenTag('trophies');
   draw();if(ONLINE&&!TR_PCT){await trLoadPct();if(!box.hidden)draw();}
 }
 const trQ=t=>t.q?`<span class="trq">${icon('format-quote-open')}${esc(t.q)}</span>`:'';   // quote trophy: "❝ author" under the title
+let NT_TOK=0;   // render token: stale timers of a previous summary do nothing
 function renderNewTro(r){
   const el=document.getElementById('newTro');if(!el)return;const a=r.tro;
   if(!a||!a.got.length){el.hidden=true;return;}
@@ -2084,10 +2107,20 @@ function renderNewTro(r){
   const rareTag=t=>{const x=tierOf(t);return x?`<em class="rtag rt-${x[1]}">${x[2]}</em>`:'';};
   // first 6 as big cards (new first, then repeats), 7th onward smaller in a row; repeats without the xN note
   const list=[...nw,...rep],big=list.slice(0,6),small=list.slice(6),isNew=t=>fresh.has(t.id);
-  if(nw.length){const rare=nw.some(t=>tierOf(t)||t.sec);setTimeout(()=>{if(rare)haptic('heavy');setTimeout(()=>haptic('success'),rare?140:0);},600);}   // after the result haptic; rare is heavier
-  el.hidden=false;el.innerHTML=`<div class="kicker" style="margin-bottom:var(--sp-2)">${nw.length&&!rep.length?(nw.length>1?'Нові трофеї':'Новий трофей'):'Трофеї сезону'}</div><div class="trg">`
-    +big.map((t,k)=>`<div class="tro k-${trKind(t)} on pop${isNew(t)?' new':''}${t.sec?' sec':''}${isNew(t)?rareCls(t):''}" style="animation-delay:${k*120+(isNew(t)&&rareCls(t)?250:0)}ms"><span class="tri">${trBadge(t,true)}</span><div class="trt"><b>${esc(t.n)}</b>${trQ(t)}<span>${esc(t.d)}</span>${isNew(t)?(t.sec?'<em class="trsx">секретний!</em>':'')+rareTag(t):''}</div></div>`).join('')+`</div>`
+  // opening: new cards get the sealed-token flip (stagger STEP); haptic at the half-turn, success after the last one; the counter ticks as each token lands
+  const tok=++NT_TOK,n1=trCountAll(),n0=Math.max(0,n1-nw.length),STEP=180,HALF=380,LAND=640,anim=nw.length>0&&!LESS_MOTION();
+  if(nw.length&&!anim){const rare=nw.some(t=>tierOf(t)||t.sec);setTimeout(()=>{if(rare)haptic('heavy');setTimeout(()=>haptic('success'),rare?140:0);},600);}   // reduced motion: haptics only
+  el.hidden=false;el.innerHTML=`<div class="kicker${nw.length?' trk':''}" style="margin-bottom:var(--sp-2)"><span>${nw.length&&!rep.length?(nw.length>1?'Нові трофеї':'Новий трофей'):'Трофеї сезону'}</span>${nw.length?`<span class="trtot">Зібрано <b id="trTotN">${anim?n0:n1}</b></span>`:''}</div><div class="trg">`
+    +big.map((t,k)=>`<div class="tro k-${trKind(t)} on${isNew(t)?(anim?' open':' pop')+' new'+rareCls(t):' pop'}${t.sec?' sec':''}" style="${isNew(t)?`--od:${k*STEP}ms`:`animation-delay:${(anim?nw.length*STEP:0)+k*80}ms`}"><span class="tri">${trBadge(t,true)}${isNew(t)&&anim?'<span class="tseal" aria-hidden="true"></span>':''}</span><div class="trt"><b>${esc(t.n)}</b>${trQ(t)}<span>${esc(t.d)}</span>${isNew(t)?(t.sec?'<em class="trsx">секретний!</em>':'')+rareTag(t):''}</div></div>`).join('')+`</div>`
     +(small.length?`<div class="trrep" style="margin-top:var(--sp-2)">`+small.map(t=>`<span class="trchip${t.sec?' sec':''}" title="${esc(t.d)}">${trBadge(t,true)}<b>${esc(t.n)}</b></span>`).join('')+`</div>`:'');
+  if(anim){el.classList.add('wait');const go=()=>{if(tok!==NT_TOK)return;el.classList.remove('wait');
+      nw.forEach((t,j)=>{const rare=!!(tierOf(t)||t.sec),d=Math.min(j,5)*STEP;setTimeout(()=>{if(tok===NT_TOK)haptic(rare?'heavy':'medium');},d+HALF);
+        setTimeout(()=>{if(tok===NT_TOK)odoSet(document.getElementById('trTotN'),Math.min(n1,n0+j+1));},d+LAND);});
+      setTimeout(()=>{if(tok===NT_TOK)haptic('success');},Math.min(nw.length-1,5)*STEP+LAND+60);
+      el.querySelectorAll('.tseal').forEach(x=>x.addEventListener('animationend',()=>x.remove()));};   // sealed face is dropped after the flip
+    const first=el.querySelector('.tro.open');
+    if(typeof IntersectionObserver==='function'&&first){const io=new IntersectionObserver(es=>{if(es.some(x=>x.isIntersecting)){io.disconnect();go();}},{threshold:.5});io.observe(first);}else go();}
+  else el.classList.remove('wait');
 }
 
 // season seed comes from the server (after the squad is locked) so results cannot be brute-forced; offline uses a local seed
@@ -2183,8 +2216,7 @@ function flipRows(t,was){if(LESS_MOTION()||!was.size||!t.animate)return;t.queryS
 function tickReveal(){
   const {r}=REV;if(REV.i>=r.log.length){finishReveal();return;}
   const m=r.log[REV.i],k=REV.i+1;let w=0,d=0,l=0;for(let q=0;q<k;q++){const x=r.log[q].res;if(x==='W')w++;else if(x==='D')d++;else l++;}
-  document.getElementById('lvRound').textContent=`Тур ${k} / ${r.log.length}`;
-  document.getElementById('lvRec').textContent=`${w}-${d}-${l}`;document.getElementById('lvPts').textContent=w*3+d;
+  {const f=REV.i===0;odoSet(document.getElementById('lvRound'),`Тур ${k} / ${r.log.length}`,f);odoSet(document.getElementById('lvRec'),`${w}-${d}-${l}`,f);odoSet(document.getElementById('lvPts'),w*3+d,f);}
   // one match: result as square color, no letters or '@'; round is shown above, card lists scorers only
   document.getElementById('lvMatch').innerHTML=`<div class="lvMatch"><span class="lvRes ${m.res}"></span><div><b>${esc(shortTeam(m.opp))}</b>${m.who.length?`<div class="who">${esc(whoMin(m))}</div>`:''}</div><span class="sc">${m.ug}:${m.og}</span></div>`;
   document.getElementById('lvGrid').children[REV.i].className=m.res+' nw';
@@ -2200,6 +2232,7 @@ function tickReveal(){
 // final result: success for the top places, warning for relegation, nothing in between
 function seasonHaptic(r){if(S.format==='anti')return;haptic(r.place<=ZONES.co?'success':r.place>16-ZONES.rel?'warning':null);}
 function finishReveal(){const R=REV;clearInterval(R.t);if(R.fin)return;R.fin=true;const $=id=>document.getElementById(id);
+  ['lvRound','lvRec','lvPts'].forEach(id=>odoSettle($(id)));   // no mid-roll digits in the morph snapshot
   // W-D-L and points glide from the live header to the summary tiles
   const swap=()=>{renderNewTro(R.r);renderOcRes(R.r);acctNudge(R.r);$('live').hidden=true;$('final').hidden=false;window.scrollTo({top:0});
     if(!R.done){R.done=true;const fin=$('final');fin.classList.add('fin-in');setTimeout(()=>fin.classList.remove('fin-in'),1600);seasonHaptic(R.r);countUp(document.querySelectorAll('#placeBig, #recTiles i, #recTiles b.hot'));champModal(R.r);if(ONLINE)setTimeout(()=>cardPrep(R.r),600);}};
@@ -2318,6 +2351,38 @@ const LESS_MOTION=()=>matchMedia('(prefers-reduced-motion: reduce)').matches;
 // ---------- animations. All disabled by the system Reduce Motion setting (LESS_MOTION)
 function restartAnim(el,cls){if(!el||LESS_MOTION())return;el.classList.remove(cls);void el.offsetWidth;el.classList.add(cls);}
 // summary numbers count up from zero
+// odometer: changed digits roll up in a clipped cell (tabular-nums keeps the width); the cell unwraps when the roll ends. now: no animation
+function odoSettle(el){if(!el||el.dataset.odo===undefined)return;el.getAnimations({subtree:true}).forEach(a=>a.cancel());if(el.querySelector('.od'))el.textContent=el.dataset.odo;}
+function odoSet(el,v,now){if(!el)return;const str=String(v),prev=el.dataset.odo!==undefined?el.dataset.odo:el.textContent;odoSettle(el);el.dataset.odo=str;
+  if(now||prev===str||LESS_MOTION()||!el.animate||!el.getClientRects().length){el.textContent=str;return;}
+  const P=prev.split(/(\d+)/),N=str.split(/(\d+)/),fr=document.createDocumentFragment(),an=[],o={duration:200,easing:'cubic-bezier(.23,1,.32,1)',fill:'forwards'};
+  N.forEach((tok,j)=>{if(j%2===0||P[j]===undefined){fr.append(tok);return;}
+    for(let i=0;i<tok.length;i++){const k=P[j].length-(tok.length-i),pc=k>=0?P[j][k]:'';if(pc===''||pc===tok[i]){fr.append(tok[i]);continue;}
+      const c=document.createElement('od-c');c.className='od';c.innerHTML=`<od-c class="od-o" aria-hidden="true">${pc}</od-c><od-c class="od-n">${tok[i]}</od-c>`;fr.append(c);
+      an.push(c.firstChild.animate([{transform:'none',opacity:1},{transform:'translateY(-70%)',opacity:0}],o),c.lastChild.animate([{transform:'translateY(70%)',opacity:0},{transform:'none',opacity:1}],o));}});
+  el.textContent='';el.appendChild(fr);
+  Promise.all(an.map(a=>a.finished)).then(()=>{if(el.dataset.odo===str&&el.querySelector('.od'))el.textContent=str;}).catch(()=>{});}
+// picked player: the name chip flies along a gentle arc from its list row to the slot (transform/opacity only); offscreen slot or reduced motion: no flight
+const FLY_WAIT=new Set();   // slot indexes whose content waits for the landing
+function flySrc(p){if(LESS_MOTION())return null;const b=[...document.querySelectorAll('#squad .pl')].find(x=>x.dataset.id===p[5]),nm=b&&b.querySelector('.nm');
+  if(!nm||!nm.getClientRects().length)return null;return {r:nm.getBoundingClientRect(),txt:p[0],fs:parseFloat(getComputedStyle(nm).fontSize)||14};}
+function flyLand(idx){FLY_WAIT.delete(idx);const sl=document.querySelectorAll('#pitch .slot')[idx];if(!sl||!sl.classList.contains('fw'))return;sl.classList.remove('fw');restartAnim(sl.querySelector('.disc'),'land0');}
+function flyTo(src,idx){const sl=document.querySelectorAll('#pitch .slot')[idx];if(!src||!sl||!document.body.animate)return false;
+  const d=sl.querySelector('.disc');if(!d)return false;const dr=d.getBoundingClientRect(),hh=document.querySelector('header.top').offsetHeight;
+  if(dr.top<hh||dr.bottom>innerHeight||dr.left<0||dr.right>innerWidth)return false;
+  FLY_WAIT.add(idx);sl.classList.add('fw');
+  requestAnimationFrame(()=>{const cur=document.querySelectorAll('#pitch .slot')[idx];if(!cur||!cur.classList.contains('fw')){flyLand(idx);return;}
+    const tr=(cur.querySelector('.nm')||cur.querySelector('.disc')).getBoundingClientRect();
+    const g=document.createElement('div');g.className='flyg';g.setAttribute('aria-hidden','true');const sp=document.createElement('span');sp.textContent=src.txt;sp.style.fontSize=src.fs+'px';g.appendChild(sp);document.body.appendChild(g);
+    const w=g.offsetWidth,h=g.offsetHeight,x0=src.r.left,y0=src.r.top+src.r.height/2-h/2,dx=tr.left+tr.width/2-(x0+w/2),dy=tr.top+tr.height/2-(y0+h/2),k=Math.max(.5,Math.min(1,(tr.width||w)/w)),T=420;
+    const ease=getComputedStyle(document.documentElement).getPropertyValue('--spring-sheet').trim()||'ease-out';let done=false;
+    const fin=()=>{if(done)return;done=true;g.remove();flyLand(idx);};
+    try{const mv=[{transform:`translate(${x0}px,${y0}px) scale(1)`},{transform:`translate(${x0+dx}px,${y0+dy}px) scale(${k})`}];let a;
+      try{a=g.animate(mv,{duration:T,easing:ease,fill:'forwards'});}catch(e){a=g.animate(mv,{duration:T,easing:'cubic-bezier(.23,1,.32,1)',fill:'forwards'});}
+      g.animate([{opacity:1,offset:0},{opacity:1,offset:.8},{opacity:0,offset:1}],{duration:T,fill:'forwards'});
+      sp.animate([{transform:'none'},{transform:`translateY(${-Math.min(56,Math.hypot(dx,dy)*.2)}px)`,offset:.45},{transform:'none'}],{duration:T,easing:'ease-in-out'});
+      setTimeout(()=>{flyLand(idx);},Math.round(T*.8));a.finished.then(fin,fin);setTimeout(fin,T+600);}catch(e){fin();}});
+  return true;}
 function countUp(els){if(LESS_MOTION())return;const t0=performance.now(),D=900;const xs=[...els].map(el=>({el,v:parseInt(el.textContent,10)})).filter(x=>Number.isFinite(x.v)&&x.v>0&&String(x.v)===x.el.textContent.trim());
   if(!xs.length)return;const step=t=>{const k=Math.min(1,(t-t0)/D),e=1-Math.pow(1-k,4);for(const x of xs)x.el.textContent=String(Math.round(x.v*e));if(k<1)requestAnimationFrame(step);};xs.forEach(x=>x.el.textContent='0');requestAnimationFrame(step);}
 // champion dialog: dim, cup, confetti (title, 30-0, 0-30 in anti-season). Hidden from Playwright (navigator.webdriver) except the test that sets window.__champTest
@@ -3731,7 +3796,7 @@ function f5Render(){
 
 document.getElementById('f5Open').onclick=f5Start;
 // audit P2-5: only what tests use; drawCard for card checks, simulate/rerun for fast determinism
-window.__dbg={loadLb,haptic,seasonHaptic,renderNewTro,TROPHIES,CLUB_REC,ocMine,ocAfter,renderOc,renderOcRes,openOc,acctMerge,get BEST(){return BEST;},get VT_N(){return VT_N;},ic,seasonLabel,boardPrefetch,boardStale,BOARD_FROM,setFmt,leagueLoad,boardHtml,oppYear,champModal,drawCard,chalNewGame,DAILY,LEAGUE_CULT,LEAGUE_LEGENDS,openTrophies,renderNewTro,bestPerPlayer,renderWheel,posOpts,eraOf,ptsWord,viewHtml,renderPitch,pitchHtml,f5Pitch,F5_FORMS,cardName,clubShort,simulate,shareTextOf,trCtxNow,trAward,trStore,FORMATIONS,GROUP_OF,DATA,TROPHIES,trEval,PERSON,effRating,get S(){return S;},rerun(seed,year,xi){rnd=mulberry32(seed);const r=simulate(xi||S.slots.map(s=>s.player),MODES[S.mode],year);rnd=Math.random;return {W:r.W,D:r.D,L:r.L,gf:r.gf,ga:r.ga,place:r.place};}};
+window.__dbg={place,loadLb,haptic,seasonHaptic,renderNewTro,TROPHIES,CLUB_REC,ocMine,ocAfter,renderOc,renderOcRes,openOc,acctMerge,get BEST(){return BEST;},get VT_N(){return VT_N;},ic,seasonLabel,boardPrefetch,boardStale,BOARD_FROM,setFmt,leagueLoad,boardHtml,oppYear,champModal,drawCard,chalNewGame,DAILY,LEAGUE_CULT,LEAGUE_LEGENDS,openTrophies,renderNewTro,bestPerPlayer,renderWheel,posOpts,eraOf,ptsWord,viewHtml,renderPitch,pitchHtml,f5Pitch,F5_FORMS,cardName,clubShort,simulate,shareTextOf,trCtxNow,trAward,trStore,FORMATIONS,GROUP_OF,DATA,TROPHIES,trEval,PERSON,effRating,get S(){return S;},rerun(seed,year,xi){rnd=mulberry32(seed);const r=simulate(xi||S.slots.map(s=>s.player),MODES[S.mode],year);rnd=Math.random;return {W:r.W,D:r.D,L:r.L,gf:r.gf,ga:r.ga,place:r.place};}};
 })();
 </script>
 
