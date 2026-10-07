@@ -248,6 +248,7 @@ function renderNewTro(r){
   const rareTag=t=>{const x=tierOf(t);return x?`<em class="rtag rt-${x[1]}">${x[2]}</em>`:'';};
   // first 6 as big cards (new first, then repeats), 7th onward smaller in a row; repeats without the xN note
   const list=[...nw,...rep],big=list.slice(0,6),small=list.slice(6),isNew=t=>fresh.has(t.id);
+  if(nw.length){const rare=nw.some(t=>tierOf(t)||t.sec);setTimeout(()=>{if(rare)haptic('heavy');setTimeout(()=>haptic('success'),rare?140:0);},600);}   // after the result haptic; rare is heavier
   el.hidden=false;el.innerHTML=`<div class="kicker" style="margin-bottom:var(--sp-2)">${nw.length&&!rep.length?(nw.length>1?'Нові трофеї':'Новий трофей'):'Трофеї сезону'}</div><div class="trg">`
     +big.map((t,k)=>`<div class="tro k-${trKind(t)} on pop${isNew(t)?' new':''}${t.sec?' sec':''}${isNew(t)?rareCls(t):''}" style="animation-delay:${k*120+(isNew(t)&&rareCls(t)?250:0)}ms"><span class="tri">${trBadge(t,true)}</span><div class="trt"><b>${esc(t.n)}</b>${trQ(t)}<span>${esc(t.d)}</span>${isNew(t)?(t.sec?'<em class="trsx">секретний!</em>':'')+rareTag(t):''}</div></div>`).join('')+`</div>`
     +(small.length?`<div class="trrep" style="margin-top:var(--sp-2)">`+small.map(t=>`<span class="trchip${t.sec?' sec':''}" title="${esc(t.d)}">${trBadge(t,true)}<b>${esc(t.n)}</b></span>`).join('')+`</div>`:'');

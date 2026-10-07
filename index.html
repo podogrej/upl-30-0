@@ -47,6 +47,9 @@ if(/^(upl30\.com\.ua|upl-30-0\.vercel\.app)$/.test(location.hostname)){(function
   --r-xs:6px; --r-sm:8px; --r-md:12px; --r-lg:16px; --r-xl:22px; --r-pill:999px;
   --sh-1:0 1px 2px rgba(19,35,70,.06),0 1px 3px rgba(19,35,70,.05); --sh-2:0 2px 6px rgba(19,35,70,.06),0 10px 28px rgba(19,35,70,.10); --sh-3:0 4px 12px rgba(19,35,70,.08),0 18px 48px rgba(19,35,70,.18);
 }
+/* motion tokens: spring (linear() with cubic-bezier fallback), strong ease-out, four durations */
+:root{--spring:cubic-bezier(.2,1.2,.3,1);--ease-out:cubic-bezier(.23,1,.32,1);--dur-1:120ms;--dur-2:240ms;--dur-3:360ms;--dur-4:500ms}
+@supports (transition-timing-function:linear(0,1)){:root{--spring:linear(0,.065,.218,.406,.593,.757,.887,.981,1.041,1.072,1.083,1.08,1.068,1.053,1.037,1.023,1.011,1.003,.997,.994,.993,.993,.994,.995,1)}}
 @media (min-width:700px){:root{--sp-card:var(--sp-5)}}   /* card inset: 16 compact, 24 regular width */
 /* UPL palette: dark = navy (mockup A), light = mockup B; pink accents and UPL.TV gradient (--grad). Mockups: docs/mockups/design_upl/v63 */
 /* theme: data-theme is always set by the script above (light/dark, default dark), so no @media (prefers-color-scheme) needed */
@@ -100,8 +103,8 @@ button.ghost{border-color:var(--line);background:transparent;color:var(--ink2);p
 .slot .pill{position:absolute;top:-8px;right:var(--rr);font-weight:800;font-size:var(--rf);line-height:1;color:#fff;padding:var(--rp);border-radius:6px;background:var(--pc,#6b7280);box-shadow:0 1px 3px rgba(0,0,0,.45);font-variant-numeric:tabular-nums}
 .slot .pill.flip{right:auto;left:var(--rr)}
 .slot .pill.avg{background:#0e2c20;color:var(--amber2);box-shadow:inset 0 0 0 1.5px var(--amber2),0 1px 3px rgba(0,0,0,.45)}   /* border via box-shadow so the pill does not grow and cover the position */
-.slot .r.reveal{animation:pop .5s ease-out both}
-@keyframes pop{0%{transform:scale(.4);opacity:0}70%{transform:scale(1.2)}100%{transform:scale(1);opacity:1}}
+.slot .r.reveal{animation:pop var(--dur-4) var(--spring) both}
+@keyframes pop{from{transform:scale(.6);opacity:0}to{transform:none;opacity:1}}
 .slot .nm{margin-top:3px;font-weight:800;font-size:var(--nf);line-height:1.2;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.6)}
 .slot .nm.long{font-size:var(--nf10)}.slot .nm.xl{font-size:var(--nf12);letter-spacing:-.02em}
 .slot .nick{color:var(--amber2)}
@@ -124,12 +127,14 @@ button.ghost{border-color:var(--line);background:transparent;color:var(--ink2);p
 .wheel .club{font-family:var(--font-display);font-size:var(--fs-headline);font-weight:var(--wt-bold);line-height:var(--lh-snug)}
 .wheel .season{font-family:var(--font-mono);color:var(--ink2)}
 .reels{display:grid;grid-template-columns:1fr 104px;gap:var(--sp-2);align-items:center}
-.reel{padding:0 var(--sp-3);border:1px solid var(--line);border-radius:var(--r-md);background:var(--bg);height:64px;overflow:hidden;position:relative;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--amber) 0%,transparent);transition:box-shadow .3s}
+.reel{padding:0 var(--sp-3);border:1px solid var(--line);border-radius:var(--r-md);background:var(--bg);height:64px;overflow:hidden;position:relative;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--amber) 0%,transparent);transition:box-shadow var(--dur-2)}
 .reel .strip{display:grid;will-change:transform}.reel .strip>div{height:64px;display:grid;align-content:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .reels.one{grid-template-columns:minmax(0,1fr)}.reels.one #reelYear{display:none}
-.reel .strip.go{transition:transform 2.1s cubic-bezier(.15,.75,.2,1)}#reelYear .strip.go{transition-duration:2.25s}
+.reel .strip.go{transition:transform 1.85s cubic-bezier(.15,.75,.2,1);animation:reelblur 1.85s linear both}   /* travels 6px past the target, then settles with .settle */
+.reel .strip.go.settle{transition:transform var(--dur-3) var(--spring);animation:none}
+@keyframes reelblur{0%{filter:blur(0)}12%,62%{filter:blur(1.4px)}100%{filter:blur(0)}}
 .reel .season{font-size:var(--fs-headline);font-weight:var(--wt-bold);color:var(--ink)}
-@media (prefers-reduced-motion:reduce){.reel .strip.go{transition:none}.pl.in,.plpos,section.enter,section.back{animation:none!important}}
+@media (prefers-reduced-motion:reduce){.reel .strip.go,.reel .strip.go.settle{transition:none;animation:none}.pl.in,.plpos,section.enter,section.back{animation:none!important}}
 .pl.on{border-color:var(--amber2);box-shadow:0 0 0 2px var(--amber2)}
 /* selected player: border around the whole row, position buttons inside it */
 .plrow.on{background:var(--card);border-radius:var(--r-md);box-shadow:0 0 0 1.5px var(--amber2);border-bottom-color:transparent;margin:var(--sp-1) 0}.plrow.on .pl.on{box-shadow:none;border-color:transparent;background:none}
@@ -140,7 +145,7 @@ button.ghost{border-color:var(--line);background:transparent;color:var(--ink2);p
 #squad .pl .pos{--gc:var(--line);font:var(--wt-black) var(--fs-caption2) var(--font-body);padding:var(--sp-1) 0;border-radius:var(--r-xs);background:color-mix(in srgb,var(--gc) 18%,transparent)!important;color:color-mix(in srgb,var(--gc) 72%,var(--ink))!important;box-shadow:inset 0 0 0 1.5px var(--gc)}
 #squad .pl .pos.GK{--gc:var(--gk)}#squad .pl .pos.DF{--gc:var(--df)}#squad .pl .pos.MF{--gc:var(--mf)}#squad .pl .pos.FW{--gc:var(--fw)}
 /* position buttons under the player in the wheel: only free positions he can take */
-.plpos{display:flex;flex-wrap:wrap;gap:var(--sp-2);padding:var(--sp-0h) 0 var(--sp-2) 42px;animation:plin .2s ease-out both}
+.plpos{display:flex;flex-wrap:wrap;gap:var(--sp-2);padding:var(--sp-0h) 0 var(--sp-2) 42px;animation:plin var(--dur-2) var(--ease-out) both}
 .plpos button{--gc:var(--line);min-width:56px;min-height:40px;padding:var(--sp-2) var(--sp-3);border-radius:var(--r-sm);font-family:var(--font-mono);font-size:var(--fs-footnote);font-weight:var(--wt-bold);border:1.5px solid var(--gc);background:color-mix(in srgb,var(--gc) 16%,var(--surface));color:var(--ink)}
 @media (hover:hover) and (pointer:fine){.plpos button:hover{background:color-mix(in srgb,var(--gc) 30%,var(--surface))}}
 .plpos .GK{--gc:var(--gk)}.plpos .DF{--gc:var(--df)}.plpos .MF{--gc:var(--mf)}.plpos .FW{--gc:var(--fw)}
@@ -187,11 +192,11 @@ tr.z-cl td:first-child{box-shadow:inset 3px 0 var(--z-cl)}tr.z-el td:first-child
 .m .op{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .note{border-left:3px solid var(--amber);padding:var(--sp-2) var(--sp-3);color:var(--ink2);font-size:var(--fs-footnote);background:var(--surface);border-radius:0 var(--r-sm) var(--r-sm) 0}
 details{border:1px solid var(--line);border-radius:var(--r-md);padding:0 var(--sp-4);background:var(--surface);margin-top:var(--sp-4)}details[open]{padding-bottom:var(--sp-3)}
-details[open]>*:not(summary){animation:dopen .45s cubic-bezier(.2,.7,.2,1)}@keyframes dopen{from{opacity:0;transform:translateY(-2px)}to{opacity:1;transform:none}}
-summary{transition:color .15s}@media (hover:hover) and (pointer:fine){details>summary:hover{color:var(--amber)}}
+details[open]>*:not(summary){animation:dopen var(--dur-3) var(--ease-out)}@keyframes dopen{from{opacity:0;transform:translateY(-2px)}to{opacity:1;transform:none}}
+summary{transition:color var(--dur-1)}@media (hover:hover) and (pointer:fine){details>summary:hover{color:var(--amber)}}
 @media (prefers-reduced-motion:reduce){details[open]>*:not(summary){animation:none}}
 .foot .thm{position:relative;display:inline-flex;align-items:center;justify-content:space-between;width:46px;height:24px;padding:0 var(--sp-1);margin:0 var(--sp-0h);border-radius:var(--r-md);border:1px solid var(--line);background:var(--surface);vertical-align:middle;cursor:pointer;color:var(--muted);box-sizing:border-box}.foot .thm .ico{width:13px;height:13px;fill:currentColor;position:relative;z-index:1}.foot .thm::before{content:'';position:absolute;inset:-11px -2px}   /* 44px touch area around the 24px switch */
-.foot .thm::after{content:'';position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:var(--amber);transition:transform .2s ease}[data-theme="light"] .foot .thm::after{transform:translateX(22px)}.foot .thm .ico:first-child{color:var(--ink)}[data-theme="light"] .foot .thm .ico:first-child{color:var(--muted)}[data-theme="light"] .foot .thm .ico:last-child{color:var(--ink)}@media (prefers-reduced-motion:reduce){.foot .thm::after{transition:none}}
+.foot .thm::after{content:'';position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:var(--amber);transition:transform var(--dur-2) var(--spring)}[data-theme="light"] .foot .thm::after{transform:translateX(22px)}.foot .thm .ico:first-child{color:var(--ink)}[data-theme="light"] .foot .thm .ico:first-child{color:var(--muted)}[data-theme="light"] .foot .thm .ico:last-child{color:var(--ink)}@media (prefers-reduced-motion:reduce){.foot .thm::after{transition:none}}
 summary{cursor:pointer;font-weight:var(--wt-bold);padding-block:var(--sp-3);min-height:44px;box-sizing:border-box}
 .best{font-size:var(--fs-footnote);color:var(--ink2);font-family:var(--font-mono)}
 /* daily */
@@ -232,7 +237,7 @@ select.need{border-color:var(--loss);box-shadow:0 0 0 2px color-mix(in srgb,var(
 .pre{border:0;box-shadow:var(--sh-2);border-radius:var(--r-lg);background:var(--surface);padding:var(--sp-4);display:grid;gap:var(--sp-2)}
 .pre .kicker{font-family:var(--font-mono);font-size:var(--fs-caption);letter-spacing:var(--ls-caps);text-transform:uppercase;color:var(--amber)}
 .tiles.t3{grid-template-columns:repeat(3,minmax(0,1fr))}.pre p{margin:0}
-.pre .bar{height:6px;border-radius:var(--r-sm);background:var(--line2);overflow:hidden}.pre .bar i{display:block;height:100%;width:0;background:var(--amber);border-radius:var(--r-sm);transition:width .3s}
+.pre .bar{height:6px;border-radius:var(--r-sm);background:var(--line2);overflow:hidden}.pre .bar i{display:block;height:100%;width:0;background:var(--amber);border-radius:var(--r-sm);transition:width var(--dur-3) var(--ease-out)}
 .pgrid{display:grid;gap:var(--sp-2)}.pgh{font-family:var(--font-mono);font-size:var(--fs-caption2);letter-spacing:var(--ls-caps);text-transform:uppercase;color:var(--muted);margin:var(--sp-2) 0 calc(var(--sp-0h) * -1)}
 .chem0{display:flex;flex-wrap:wrap;align-items:baseline;gap:var(--sp-1) var(--sp-2);padding:var(--sp-3) var(--sp-3);border-radius:var(--r-md);background:color-mix(in srgb,var(--z-co) 12%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--z-co) 35%,transparent);font-size:var(--fs-body)}.chem0 span{color:var(--ink2);font-size:var(--fs-footnote)}.prow{display:grid;grid-template-columns:8.6em minmax(0,1fr) 3em;align-items:center;gap:var(--sp-2);font-size:var(--fs-body)}.prow b{text-align:right;font-variant-numeric:tabular-nums}
 td.avgc{font-family:var(--font-display);font-weight:var(--wt-bold);font-size:var(--fs-body);color:var(--amber)}
@@ -270,20 +275,20 @@ button.ghost.big0{padding:var(--sp-3) var(--sp-card);font-size:var(--fs-body);fo
 .row0>.ic:last-child{background:none;color:var(--muted);margin:0}
 .hero0 h1{font-size:clamp(var(--fs-title2),5.5vw,var(--fs-large));line-height:var(--lh-tight);letter-spacing:var(--ls-tight)}
 .lead0{font-size:var(--fs-headline);color:var(--ink2);margin:0;max-width:60ch}
-.pl.in{animation:plin .32s ease-out both}@keyframes plin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.pl.in{animation:plin var(--dur-3) var(--ease-out) both}@keyframes plin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 .seg{display:inline-flex;border:1px solid var(--line);border-radius:var(--r-md);overflow:hidden}.seg button{border:0;border-radius:0;background:transparent;color:var(--ink2);padding:var(--sp-2) var(--sp-3);font-size:var(--fs-footnote);font-weight:var(--wt-bold)}.seg button+button{border-left:1px solid var(--line)}@media (hover:hover) and (pointer:fine){.seg button:hover{color:var(--ink);background:var(--bg2)}}
 .seg.era{display:flex;width:100%;max-width:520px}.seg.era button{flex:1 1 auto;padding:var(--sp-3) var(--sp-1);font-size:var(--fs-footnote);white-space:nowrap}
 @media (max-width:359px){.seg.era button{padding-inline:var(--sp-0h);font-size:var(--fs-caption)}}.seg.era button.on{background:var(--ink);color:var(--bg)}@media (hover:hover) and (pointer:fine){.seg.era button.on:hover{background:var(--ink);color:var(--bg)}}
-#squad.rin .pl .rt{animation:rtin .25s ease-out both}@keyframes rtin{from{opacity:0}to{opacity:1}}   /* ratings fade in softly, no jump */
-section.enter{animation:secin .26s cubic-bezier(.2,.8,.2,1) both}section.back{animation:secback .26s cubic-bezier(.2,.8,.2,1) both}
-@keyframes secin{from{opacity:0;transform:translateX(28px)}to{opacity:1;transform:none}}@keyframes secback{from{opacity:0;transform:translateX(-28px)}to{opacity:1;transform:none}}
+#squad.rin .pl .rt{animation:rtin var(--dur-2) var(--ease-out) both}@keyframes rtin{from{opacity:0}to{opacity:1}}   /* ratings fade in softly, no jump */
+section.enter{animation:secin var(--dur-3) var(--ease-out) both}section.back{animation:secback var(--dur-3) var(--ease-out) both}
+@keyframes secin{from{opacity:0;transform:translateX(24px) scale(.992)}to{opacity:1;transform:none}}@keyframes secback{from{opacity:0;transform:translateX(-24px) scale(.992)}to{opacity:1;transform:none}}
 
 #moveBtn.on{border-color:var(--amber);color:var(--amber)}
 html.tgfs .overlay.full .vhead{padding-top:calc(var(--sp-3) + var(--tg-safe-area-inset-top,0px) + var(--tg-content-safe-area-inset-top,0px))}
 html.tgfs header.top{padding-top:calc(var(--sp-3) + var(--tg-safe-area-inset-top,0px) + var(--tg-content-safe-area-inset-top,0px))}
 .nick{font-weight:var(--wt-medium);color:var(--amber);font-size:.85em}
 details.tip{border:0;background:none;padding:0;margin:0}details.tip>summary{display:inline-flex;align-items:center;gap:var(--sp-2);padding-block:0;font-size:var(--fs-footnote);font-weight:var(--wt-medium);color:var(--ink2);list-style:none}
-details.tip>summary::-webkit-details-marker{display:none}details.tip>summary::before{content:'';width:0;height:0;border-left:5px solid currentColor;border-top:4px solid transparent;border-bottom:4px solid transparent;transition:transform .15s}
+details.tip>summary::-webkit-details-marker{display:none}details.tip>summary::before{content:'';width:0;height:0;border-left:5px solid currentColor;border-top:4px solid transparent;border-bottom:4px solid transparent;transition:transform var(--dur-2) var(--ease-out)}
 details.tip[open]>summary::before{transform:rotate(90deg)}details.tip>p,details.tip>.note{margin:var(--sp-2) 0 0!important}
 .faq0 p{margin:var(--sp-2) 0 0;color:var(--ink2)}
 .f5cnt{gap:var(--sp-2)}.f5cnt button{min-width:44px;font-size:var(--fs-title3);padding:var(--sp-2) var(--sp-3)}.f5num{font-family:var(--font-display);font-size:var(--fs-title1);min-width:34px;text-align:center;letter-spacing:var(--ls-tight)}
@@ -296,7 +301,7 @@ details.tip[open]>summary::before{transform:rotate(90deg)}details.tip>p,details.
 .f5track{position:relative;height:10px;border-radius:var(--r-pill);background:var(--bg2);border:1px solid var(--line);margin-top:var(--sp-2)}.f5track i{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--line)}
 .f5bar{position:absolute;left:0;top:0;bottom:0;width:0;border-radius:var(--r-pill);background:color-mix(in srgb,var(--amber) 55%,transparent)}
 .f5dot{position:absolute;top:50%;left:0;width:18px;height:18px;border-radius:50%;background:var(--ink);border:3px solid var(--amber);transform:translate(-50%,-50%)}
-.f5goal{padding:var(--sp-3) var(--sp-3);border-radius:var(--r-md);background:color-mix(in srgb,var(--amber) 14%,var(--surface));border:1px solid var(--amber);animation:pop .35s ease-out both}.f5goal.s1{text-align:right}
+.f5goal{padding:var(--sp-3) var(--sp-3);border-radius:var(--r-md);background:color-mix(in srgb,var(--amber) 14%,var(--surface));border:1px solid var(--amber);animation:pop var(--dur-3) var(--spring) both}.f5goal.s1{text-align:right}
 .f5pen{font-size:.45em}
 .f5wholist{display:grid;gap:var(--sp-2)}.f5who{display:flex;flex-wrap:wrap;gap:var(--sp-2) var(--sp-2);align-items:center;padding:var(--sp-2) var(--sp-3);border:1px solid var(--line);border-radius:var(--r-sm);background:var(--bg)}
 a.btnlink{display:block;text-align:center;text-decoration:none;background:var(--ink);color:var(--bg);border:1px solid var(--ink);border-radius:var(--r-md);padding:var(--sp-3) var(--sp-4);font-weight:var(--wt-bold)}
@@ -444,8 +449,8 @@ a.set-r{text-decoration:none}
 .set-r .v{color:var(--ink2);max-width:46%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.set-r .v.mu{color:var(--muted)}
 .set-r>.ico{width:20px;height:20px;color:var(--muted);flex:none}.set-r.who{cursor:default}@media (hover:hover) and (pointer:fine){.set-r.who:hover{background:none}}
 .set-ic{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;flex:none;background:#fff}.set-ic .ico{width:18px;height:18px}.set-ic.g .ico{color:#4285f4}.set-ic.t{background:#2aabee}.set-ic.t .ico{color:#fff}
-input.sw{appearance:none;-webkit-appearance:none;flex:none;width:46px;height:28px;border-radius:var(--r-lg);background:var(--line);position:relative;cursor:pointer;margin:0;transition:background .2s}
-input.sw::after{content:"";position:absolute;left:3px;top:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:transform .2s}
+input.sw{appearance:none;-webkit-appearance:none;flex:none;width:46px;height:28px;border-radius:var(--r-lg);background:var(--line);position:relative;cursor:pointer;margin:0;transition:background var(--dur-2) var(--ease-out)}
+input.sw::after{content:"";position:absolute;left:3px;top:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:transform var(--dur-2) var(--spring)}
 input.sw:checked{background:var(--win)}input.sw:checked::after{transform:translateX(18px)}
 #ppSet .pp-sec{margin-top:var(--sp-5)}#ppSetMsg{margin:var(--sp-2) var(--sp-0h) 0}#ppSet .pp-del{display:block;margin:var(--sp-4) auto 0}
 .sheet0{position:fixed;inset:0;z-index:60;background:rgba(5,10,25,.6);display:flex;align-items:flex-end;justify-content:center}
@@ -506,7 +511,7 @@ button.go0{max-width:none;margin-top:var(--sp-5)}
 .dtop .l1 .rd{display:inline-flex;gap:var(--sp-1)}.dtop .l1 .rd i{width:8px;height:8px;border-radius:50%;background:var(--line)}.dtop .l1 .rd i.on{background:var(--amber)}
 .dtop .l1>b{font:var(--wt-bold) var(--fs-body) var(--font-display);white-space:nowrap;font-variant-numeric:tabular-nums}
 .dtop #restartBtn{padding:var(--sp-2) var(--sp-3);font-size:var(--fs-footnote);min-height:0}
-.dtop .bar{height:4px;border-radius:var(--r-sm);background:var(--line2);overflow:hidden}.dtop .bar i{display:block;height:100%;width:0;background:var(--amber);border-radius:var(--r-sm);transition:width .3s}
+.dtop .bar{height:4px;border-radius:var(--r-sm);background:var(--line2);overflow:hidden}.dtop .bar i{display:block;height:100%;width:0;background:var(--amber);border-radius:var(--r-sm);transition:width var(--dur-3) var(--ease-out)}
 #moveRow{display:grid;justify-items:stretch;gap:var(--sp-2);margin-top:var(--sp-3)}#moveBtn{width:100%;justify-content:center;border:1px solid color-mix(in srgb,var(--pitch) 70%,var(--line));background:color-mix(in srgb,var(--pitch) 22%,transparent);color:var(--ink);font-size:var(--fs-body);font-weight:var(--wt-bold);padding:var(--sp-3);border-radius:var(--r-md)}#moveRow>small{text-align:center;font-size:var(--fs-caption);color:var(--muted)}#moveRow>small:empty,#moveBtn[hidden]+small{display:none}   /* full-width button under the pitch with a caption */
 .wheel{padding:var(--sp-4);gap:var(--sp-3)}
 .reels{grid-template-columns:minmax(0,1fr) auto;gap:0;border-radius:var(--r-md);background:var(--bg)}
@@ -516,8 +521,8 @@ button.go0{max-width:none;margin-top:var(--sp-5)}
 .why0{margin:0;font-size:var(--fs-body);color:var(--ink2)}
 .lh0{display:flex;justify-content:space-between;align-items:center;margin-top:var(--sp-1);font-size:var(--fs-body);font-weight:var(--wt-bold)}
 .rtog{display:inline-flex;align-items:center;gap:var(--sp-2);min-height:44px;padding-left:var(--sp-3);font-size:var(--fs-body);font-weight:var(--wt-medium);color:var(--ink2);cursor:pointer}
-.rtog input{appearance:none;-webkit-appearance:none;width:36px;height:22px;margin:0;border-radius:var(--r-pill);background:var(--line);position:relative;cursor:pointer;transition:background .2s}
-.rtog input::after{content:'';position:absolute;left:3px;top:3px;width:16px;height:16px;border-radius:var(--r-pill);background:var(--ink2);transition:transform .2s,background .2s}
+.rtog input{appearance:none;-webkit-appearance:none;width:36px;height:22px;margin:0;border-radius:var(--r-pill);background:var(--line);position:relative;cursor:pointer;transition:background var(--dur-2) var(--ease-out)}
+.rtog input::after{content:'';position:absolute;left:3px;top:3px;width:16px;height:16px;border-radius:var(--r-pill);background:var(--ink2);transition:transform var(--dur-2) var(--spring),background var(--dur-2) var(--ease-out)}
 .rtog input:checked{background:var(--amber)}.rtog input:checked::after{transform:translateX(14px);background:#fff}
 .squad{gap:0}
 .pl .nm{font-size:var(--fs-body)}
@@ -546,7 +551,7 @@ button.go0{max-width:none;margin-top:var(--sp-5)}
   #s2>.grid{grid-column:2;grid-row:2/span 3;margin-top:0!important}
 }
 /* phone draft: slim bar with progress, shown once the pitch has scrolled away; two-column layout does not need it */
-.mini{position:fixed;left:0;right:0;top:var(--hh,57px);z-index:35;display:flex;align-items:center;gap:var(--sp-3);height:44px;padding:0 var(--sp-4);background:color-mix(in srgb,var(--bg) 92%,transparent);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);transform:translateY(-100%);opacity:0;visibility:hidden;transition:transform .22s cubic-bezier(.23,1,.32,1),opacity .22s,visibility 0s .22s}
+.mini{position:fixed;left:0;right:0;top:var(--hh,57px);z-index:35;display:flex;align-items:center;gap:var(--sp-3);height:44px;padding:0 var(--sp-4);background:color-mix(in srgb,var(--bg) 92%,transparent);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);transform:translateY(-100%);opacity:0;visibility:hidden;transition:transform var(--dur-3) var(--ease-out),opacity var(--dur-2) var(--ease-out),visibility 0s var(--dur-3)}
 .mini.on{transform:none;opacity:1;visibility:visible;transition-delay:0s}
 .mini b{font:var(--wt-bold) var(--fs-body) var(--font-display);font-variant-numeric:tabular-nums;min-width:4ch}
 .mini .md{flex:1;display:flex;gap:var(--sp-1);align-items:center;min-width:0}
@@ -656,8 +661,8 @@ table.lbt th.n,table.lbt td.n{width:28px;padding-left:var(--sp-0h);padding-right
 .plrow{display:grid;grid-template-columns:minmax(0,1fr) auto 46px;column-gap:0;justify-self:stretch;width:100%}.plrow>.pl{grid-column:1/-1;grid-row:1;width:100%}
 .plrow>.plpos{grid-column:2;grid-row:1;z-index:1;flex-wrap:nowrap}
 .plrow.wrap>.plpos{grid-column:1/-1;grid-row:2;justify-self:start;flex-wrap:wrap;padding:0 var(--sp-1) var(--sp-3) 46px}
-.plrow .plpos{flex:none;padding:0 var(--sp-2) 0 0;animation:plin .2s ease-out both}.plrow .plpos button{min-width:48px;min-height:38px;padding:var(--sp-2) var(--sp-3)}
-.plrow.in{animation:plin .32s ease-out both}
+.plrow .plpos{flex:none;padding:0 var(--sp-2) 0 0;animation:plin var(--dur-2) var(--ease-out) both}.plrow .plpos button{min-width:48px;min-height:38px;padding:var(--sp-2) var(--sp-3)}
+.plrow.in{animation:plin var(--dur-3) var(--ease-out) both}
 /* summary */
 .sharebtn{width:100%;max-width:420px;justify-self:center;padding:var(--sp-4) var(--sp-card);font:var(--wt-bold) var(--fs-headline) var(--font-display);border:0;background:var(--ink);color:var(--bg)}   /* Share: solid light button with emoji, no gradient */
 .sharebtn{display:flex;align-items:center;justify-content:center;gap:var(--sp-2);min-height:calc(var(--sp-7) + var(--sp-2))}.sharebtn .ic{background:none;margin:0 var(--sp-0h) 0 calc(var(--sp-1) * -1)}.sharebtn.alt{background:var(--card);color:var(--ink)}
@@ -683,13 +688,16 @@ table.lbt th.n,table.lbt td.n{width:28px;padding-left:var(--sp-0h);padding-right
 .f5ev .fl5who{margin-left:auto;font-size:var(--fs-caption)}
 .fl5so{display:flex;flex-wrap:wrap;gap:var(--sp-2)}.fl5so span{padding:var(--sp-1) var(--sp-3);border-radius:var(--r-pill);background:var(--card);font-size:var(--fs-footnote);color:var(--loss)}.fl5so span.ok{color:var(--win)}
 /* ===== animations: button feedback, player flies onto the pitch, goal flash, counting summary numbers, champion dialog with cup and confetti */
-.primary,.ghost,.row0,.tile1,.opt,.plpos button,.tab{transition:transform .09s ease,filter .09s ease}
-.primary:active:not(:disabled),.ghost:active:not(:disabled),.row0:active,.tile1:active,.opt:active,.plpos button:active,.tab:active{transform:scale(.965);filter:brightness(1.08)}
-.slot .disc.land0{animation:land0 .42s cubic-bezier(.2,1.5,.4,1)}@keyframes land0{0%{transform:scale(.55)}100%{transform:none}}
-.lvMatch.goal0{animation:goal0 .75s ease-out}@keyframes goal0{0%{box-shadow:0 0 0 0 var(--win);background:color-mix(in srgb,var(--win) 22%,var(--bg))}100%{box-shadow:0 0 0 14px transparent;background:var(--bg)}}
-.lvMatch.goal0 .sc{animation:pop .5s ease-out}
-.lvGrid i.nw{animation:pop .35s ease-out}
-.champ0{position:fixed;inset:0;z-index:80;display:grid;place-items:center;padding:var(--sp-4);background:rgba(5,8,20,.72);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);animation:fadein .25s ease-out}
+/* press feedback: scale (own property, never fights transform animations) in 100ms, spring release; layout is unaffected */
+button,.opt,.slot[tabindex],.pp-row,.set-r,.fl-row{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+button:not(:disabled),.opt,.slot[tabindex],.pp-row,.set-r,.fl-row{transition:scale var(--dur-3) var(--spring),filter var(--dur-1) var(--ease-out),background-color var(--dur-1) var(--ease-out),border-color var(--dur-1) var(--ease-out),color var(--dur-1) var(--ease-out)}
+button:not(:disabled):active,.opt:active,.slot[tabindex]:active,.pp-row:active,.set-r:active,.fl-row:active,.spin0:active .spin{scale:.97;transition-duration:100ms;transition-timing-function:var(--ease-out)}
+.primary:active:not(:disabled),.ghost:active:not(:disabled),.row0:active,.tile1:active,.opt:active,.plpos button:active,.tab:active{filter:brightness(1.08)}
+.slot .disc.land0{animation:land0 var(--dur-3) var(--spring)}@keyframes land0{0%{transform:scale(.55)}100%{transform:none}}
+.lvMatch.goal0{animation:goal0 var(--dur-4) var(--ease-out)}@keyframes goal0{0%{box-shadow:0 0 0 0 var(--win);background:color-mix(in srgb,var(--win) 22%,var(--bg))}100%{box-shadow:0 0 0 14px transparent;background:var(--bg)}}
+.lvMatch.goal0 .sc{animation:pop var(--dur-4) var(--spring)}
+.lvGrid i.nw{animation:pop var(--dur-3) var(--spring)}
+.champ0{position:fixed;inset:0;z-index:80;display:grid;place-items:center;padding:var(--sp-4);background:rgba(5,8,20,.72);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);animation:fadein var(--dur-2) var(--ease-out)}
 .champ0 canvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none}
 .champ0 .cbox{position:relative;z-index:1;width:min(340px,100%);text-align:center;padding:var(--sp-5) var(--sp-card) var(--sp-card);border-radius:var(--r-xl);background:var(--surface);color:var(--ink);box-shadow:var(--sh-3);animation:cboxin .5s cubic-bezier(.2,1.3,.4,1)}
 .champ0 .cup{margin:0 auto var(--sp-1);font-size:72px;line-height:var(--lh-tight);animation:cupin .7s .15s cubic-bezier(.2,1.6,.4,1) both}   /* cup is an emoji */
@@ -698,7 +706,7 @@ table.lbt th.n,table.lbt td.n{width:28px;padding-left:var(--sp-0h);padding-right
 .champ0 .cl{font:var(--wt-bold) var(--fs-headline) var(--font-mono);color:var(--ink);margin-bottom:var(--sp-4)}
 .champ0 button{width:100%}.champ0 button.cshare{background:var(--ink);color:var(--bg);border:0}.champ0 button.cclose{margin-top:var(--sp-2);border:0;background:none;color:var(--ink2);text-decoration:underline;text-underline-offset:3px}
 @keyframes fadein{from{opacity:0}to{opacity:1}}@keyframes cboxin{from{opacity:0;transform:translateY(24px) scale(.9)}to{opacity:1;transform:none}}@keyframes cupin{0%{transform:scale(.2) rotate(-25deg);opacity:0}100%{transform:none;opacity:1}}
-@media (prefers-reduced-motion:reduce){.primary,.ghost,.row0,.tile1,.opt,.plpos button,.tab{transition:none}.slot .disc.land0,.lvMatch.goal0,.lvMatch.goal0 .sc,.lvGrid i.nw,.champ0,.champ0 .cbox,.champ0 .cup{animation:none}}
+@media (prefers-reduced-motion:reduce){button:not(:disabled),.opt,.slot[tabindex],.pp-row,.set-r,.fl-row{transition:none}button:not(:disabled):active,.opt:active,.slot[tabindex]:active,.pp-row:active,.set-r:active,.fl-row:active,.spin0:active .spin{scale:none}.slot .disc.land0,.slot .r.reveal,.f5goal,.plrow.in,.plrow .plpos,#squad.rin .pl .rt,.lvMatch.goal0,.lvMatch.goal0 .sc,.lvGrid i.nw,.champ0,.champ0 .cbox,.champ0 .cup{animation:none}}
 /* 5x5 leagues: how many slots remain until the roster is complete */
 .fl5left{display:flex;align-items:center;gap:var(--sp-2);margin:0;font-size:var(--fs-body);color:var(--ink2)}.fl5left.soon{color:var(--amber);font-weight:var(--wt-bold)}
 #fl5Rev{margin-top:var(--sp-3)}
@@ -951,7 +959,7 @@ h3,.sec0,#s1 .sec0,.pgh,.trleg .h{font-size:var(--fs-footnote);font-weight:var(-
   <div class="acts"><button class="ft-send" id="fbSend" type="submit">Надіслати</button><button class="ft-cancel" id="fbCancel" type="button">Скасувати</button></div></form>
 <div class="ft-done" id="fbDone" hidden><b>✓</b><span>Дякуємо! Прочитаємо найближчим часом</span></div>
 <div class="ft-pills"><button class="ft-pill" id="fbBtn" type="button">✉️ Відгук і баги</button><a class="ft-pill" id="ftBot" href="https://t.me/upl30_bot" target="_blank" rel="noopener"><!--i:telegram-->Telegram-бот</a></div>
-<div class="foot ft-small"><a href="#" id="newsBtn">Що нового у версії 0.74<b id="newsDot" hidden></b></a><span>·</span><a href="privacy.html">Конфіденційність</a></div>
+<div class="foot ft-small"><a href="#" id="newsBtn">Що нового у версії 0.75<b id="newsDot" hidden></b></a><span>·</span><a href="privacy.html">Конфіденційність</a></div>
 <div class="foot ft-copy">© 2026 30-0 УПЛ · неофіційний фан-проєкт <a href="#" id="themeBtn" class="thm" role="switch" aria-checked="false" aria-label="Світла тема"></a></div>
 <div class="ft-cred">Шрифт KyivType Sans © Дмитро Растворцев (айдентика Києва)<br>Іконки: Material Design Icons (Apache 2.0), логотип Telegram — Font Awesome Free (CC BY 4.0)</div>
 </footer>
@@ -1420,16 +1428,19 @@ function pickSeason(keepClub,keepYear){
   if(!cands.length)return null;return pickWeighted(cands,rnd);
 }
 // reel: vertical strip of random values that eases to a stop on the target (n=0: show value immediately)
-function reelRoll(id,cls,items,final,n){return new Promise(res=>{const reel=document.getElementById(id);const strip=reel.querySelector('.strip');
+function reelRoll(id,cls,items,final,n,delay){return new Promise(res=>{const reel=document.getElementById(id);const strip=reel.querySelector('.strip');
   if(!n||LESS_MOTION()){strip.className='strip';strip.style.transform='';strip.innerHTML=`<div class="${cls}">${esc(final)}</div>`;res();return;}
   const seq=[];for(let i=0;i<n;i++)seq.push(items[Math.floor(Math.random()*items.length)]);seq.push(final);
   // both reels scroll bottom to top (new name enters from below), ~2 s, smooth easing without bounce
   strip.className='strip';strip.innerHTML=seq.map(v=>`<div class="${cls}">${esc(v)}</div>`).join('');
   const ih=strip.firstElementChild.offsetHeight||56;   // row height from CSS (a hardcoded 64 px made the reel skip and jitter)
   strip.style.transform='translateY(0)';
-  requestAnimationFrame(()=>requestAnimationFrame(()=>{strip.classList.add('go');strip.style.transform=`translateY(-${n*ih}px)`;}));
   let done=false;const fin=()=>{if(done)return;done=true;strip.className='strip';strip.style.transform='';strip.innerHTML=`<div class="${cls}">${esc(final)}</div>`;res();};
-  strip.addEventListener('transitionend',fin,{once:true});setTimeout(fin,2700);});}
+  // visual only: run past the target by REEL_OVER px, then settle back with a spring; the final value is fixed before the spin
+  setTimeout(()=>{if(done)return;requestAnimationFrame(()=>requestAnimationFrame(()=>{if(done)return;strip.classList.add('go');strip.style.transform=`translateY(-${n*ih+REEL_OVER}px)`;}));
+    strip.addEventListener('transitionend',e=>{if(e.propertyName!=='transform'||done)return;strip.classList.add('settle');strip.style.transform=`translateY(-${n*ih}px)`;strip.addEventListener('transitionend',fin,{once:true});},{once:true});},delay||0);
+  setTimeout(fin,3200+(delay||0));});}
+const REEL_OVER=6,REEL_LAG=150;
 // season pick: the wheel gives a club, the player picks one of its three seasons (random, with available players); no rerolls
 function pickOpts(club){const all=wheelPool().filter(c=>c.c===club&&eligible(c).length>0);const n=MODES.pick.pick,out=[];
   while(out.length<n&&all.length)out.push(all.splice(Math.floor(rnd()*all.length),1)[0]);return out.sort((a,b)=>a.y-b.y);}
@@ -1441,7 +1452,8 @@ function spinPick(){
   document.getElementById('wHint').textContent='';document.getElementById('seaPick').hidden=true;
   const e=eraOf(),names=[...new Set(DATA.clubs.filter(c=>inEra(e,c.y)).map(c=>shortTeam(c.n)))];
   document.querySelector('.reels').classList.add('one');   // season pick: club only, no '?' placeholder for the season
-  reelRoll('reelClub','club',names,shortTeam(cs0.n),14).then(()=>{if(S.pickOpts===opts){renderPickOpts();revealList();}});
+  haptic('light');
+  reelRoll('reelClub','club',names,shortTeam(cs0.n),14).then(()=>{if(S.pickOpts===opts){haptic('medium');renderPickOpts();revealList();}});
 }
 function renderPickOpts(){const box=document.getElementById('seaPick'),o=S.pickOpts||[];box.hidden=false;
   document.getElementById('wHint').textContent=o.length>1?'Обери сезон — назад не повернешся':'У цього клубу лише один сезон, де є кого взяти';
@@ -1461,7 +1473,8 @@ function spin(mode){
   document.getElementById('squad').innerHTML='';document.getElementById('rerollRow').style.visibility='hidden';
   const one=S.format==='oneclub'&&!S.daily&&!S.league,spinClub=mode!=='year'&&!one,spinYear=mode!=='club';   // one-club: club does not spin, seasons only of that club
   const e=eraOf(),WP=DATA.clubs.filter(c=>inEra(e,c.y)&&(!one||c.c===S.club)),names=[...new Set(WP.map(c=>shortTeam(c.n)))],years=[...new Set(WP.map(c=>c.y))].sort();   // reels show only clubs and seasons of the selected era
-  Promise.all([reelRoll('reelClub','club',names,shortTeam(cs.n),spinClub?14:0),reelRoll('reelYear','season',years.map(seasonLabel),seasonLabel(cs.y),spinYear?16:0)]).then(()=>{if(S.wheel===cs){S.wheelFresh=true;renderWheel();revealList();}});
+  haptic('light');
+  Promise.all([reelRoll('reelClub','club',names,shortTeam(cs.n),spinClub?14:0),reelRoll('reelYear','season',years.map(seasonLabel),seasonLabel(cs.y),spinYear?16:0,spinClub?REEL_LAG:0)]).then(()=>{if(S.wheel===cs){haptic('medium');S.wheelFresh=true;renderWheel();revealList();}});
 }
 function alertNoCands(){document.getElementById('wheel').hidden=false;document.querySelector('#reelClub .strip').innerHTML='<div class="club">Гравців більше немає</div>';document.querySelector('#reelYear .strip').innerHTML='<div class="season"></div>';document.getElementById('squad').innerHTML='<p class="muted">У цьому клубі закінчились гравці на вільні позиції. Спробуй іншу схему.</p>';}
 function renderWheel(){
@@ -1503,7 +1516,7 @@ function posOpts(p){const m=new Map();for(const s of openSlots())if(effRating(p,
 function choose(p){
   const opts=posOpts(p);if(!opts.length)return;
   // two-tap selection: position buttons always under the player (even a single one); same positions highlighted on the pitch
-  S.pending=S.pending===p?null:p;S.move=null;renderDraft();
+  S.pending=S.pending===p?null:p;S.move=null;renderDraft();haptic('select');
   if(S.pending){const hint=document.getElementById('moveHint');const seen=lsGet('upl30_hint_place')||0;
     if(seen<3){hint.hidden=false;hint.textContent=`Обери позицію для ${p[0]}: кнопкою позиції або тапом по підсвіченому місцю на полі.`;lsSet('upl30_hint_place',seen+1);}
     const f=document.querySelector('#squad .plpos button');if(f)f.focus({preventScroll:true});}
@@ -1518,7 +1531,7 @@ function keepScroll(fn){fn();const z=document.getElementById('spinZone');if(!z||
   if(r.bottom>innerHeight-8||r.top<0)window.scrollTo({top:Math.max(0,scrollY+r.bottom-innerHeight+16),behavior:'instant'});}
 function place(p,s){
   const r=effRating(p,s.slot);
-  s.player={name:p[0],pos:GROUP_OF[s.slot],slot:s.slot,main:p[6],alts:p[7],r,r0:p[2],apps:p[3],goals:p[4],ast:p[8],cs:p[9],nat:p[10],by:p[11],cc:S.wheel.c,id:p[5],club:S.wheel.n,y:S.wheel.y};S.taken.add(canon(p[5]));S.wheel=null;S.move=null;S.pending=null;keepScroll(renderDraft);
+  s.player={name:p[0],pos:GROUP_OF[s.slot],slot:s.slot,main:p[6],alts:p[7],r,r0:p[2],apps:p[3],goals:p[4],ast:p[8],cs:p[9],nat:p[10],by:p[11],cc:S.wheel.c,id:p[5],club:S.wheel.n,y:S.wheel.y};S.taken.add(canon(p[5]));S.wheel=null;S.move=null;S.pending=null;keepScroll(renderDraft);haptic('light');
   {const sl=document.querySelectorAll('#pitch .slot')[S.slots.indexOf(s)],disc=sl&&sl.querySelector('.disc');if(disc&&!LESS_MOTION())restartAnim(disc,'land0');}   // no flying player animation, only short feedback on the pitch
   {const n=S.slots.filter(x=>x.player).length,seen=lsGet('upl30_hint_move')||0;if(n===2&&seen<2){const h=document.getElementById('moveHint');h.hidden=false;h.textContent='Порада: кнопка «Переставити гравців» під полем дозволяє поміняти позиції.';lsSet('upl30_hint_move',seen+1);}}
   if(S.slots.every(x=>x.player))setTimeout(lockDraft,0);   // squad complete: ratings, forecast and Play season immediately; progress bar in preBox while computing
@@ -1982,6 +1995,7 @@ function renderNewTro(r){
   const rareTag=t=>{const x=tierOf(t);return x?`<em class="rtag rt-${x[1]}">${x[2]}</em>`:'';};
   // first 6 as big cards (new first, then repeats), 7th onward smaller in a row; repeats without the xN note
   const list=[...nw,...rep],big=list.slice(0,6),small=list.slice(6),isNew=t=>fresh.has(t.id);
+  if(nw.length){const rare=nw.some(t=>tierOf(t)||t.sec);setTimeout(()=>{if(rare)haptic('heavy');setTimeout(()=>haptic('success'),rare?140:0);},600);}   // after the result haptic; rare is heavier
   el.hidden=false;el.innerHTML=`<div class="kicker" style="margin-bottom:var(--sp-2)">${nw.length&&!rep.length?(nw.length>1?'Нові трофеї':'Новий трофей'):'Трофеї сезону'}</div><div class="trg">`
     +big.map((t,k)=>`<div class="tro k-${trKind(t)} on pop${isNew(t)?' new':''}${t.sec?' sec':''}${isNew(t)?rareCls(t):''}" style="animation-delay:${k*120+(isNew(t)&&rareCls(t)?250:0)}ms"><span class="tri">${trBadge(t,true)}</span><div class="trt"><b>${esc(t.n)}</b>${trQ(t)}<span>${esc(t.d)}</span>${isNew(t)?(t.sec?'<em class="trsx">секретний!</em>':'')+rareTag(t):''}</div></div>`).join('')+`</div>`
     +(small.length?`<div class="trrep" style="margin-top:var(--sp-2)">`+small.map(t=>`<span class="trchip${t.sec?' sec':''}" title="${esc(t.d)}">${trBadge(t,true)}<b>${esc(t.n)}</b></span>`).join('')+`</div>`:'');
@@ -2071,6 +2085,11 @@ function goalMins(m){const n=m.who.length;if(!n)return [];const R=mulberry32(has
   const mins=Array.from({length:n},()=>1+Math.floor(R()*90)).sort((a,b)=>a-b);
   return m.who.map((nm,i)=>{const t=nm.split(' ');const sur=t.length>1?t.slice(1).join(' '):nm;const mi=mins[i];return (mi===90&&R()<0.6?`90+${1+Math.floor(R()*5)}`:mi)+`' ${sur}`;});}
 function whoMin(m){return goalMins(m).join(', ');}
+// live table: rows keep their identity (team name) and glide to the new place; new rows fade in
+function rowTops(t){const m=new Map();t.querySelectorAll('tr').forEach(tr=>{const k=tr.children[1]&&tr.children[1].textContent;if(k&&tr.children[1].tagName==='TD')m.set(k,tr.getBoundingClientRect().top);});return m;}
+function flipRows(t,was){if(LESS_MOTION()||!was.size||!t.animate)return;t.querySelectorAll('tr').forEach(tr=>{const c=tr.children[1];if(!c||c.tagName!=='TD')return;const y=was.get(c.textContent);
+  const o={duration:360,easing:'cubic-bezier(.23,1,.32,1)'};
+  if(y==null)tr.animate([{opacity:0},{opacity:1}],o);else{const d=y-tr.getBoundingClientRect().top;if(Math.abs(d)>1)tr.animate([{transform:`translateY(${d}px)`},{transform:'none'}],o);}});}
 function tickReveal(){
   const {r}=REV;if(REV.i>=r.log.length){finishReveal();return;}
   const m=r.log[REV.i],k=REV.i+1;let w=0,d=0,l=0;for(let q=0;q<k;q++){const x=r.log[q].res;if(x==='W')w++;else if(x==='D')d++;else l++;}
@@ -2079,14 +2098,19 @@ function tickReveal(){
   // one match: result as square color, no letters or '@'; round is shown above, card lists scorers only
   document.getElementById('lvMatch').innerHTML=`<div class="lvMatch"><span class="lvRes ${m.res}"></span><div><b>${esc(shortTeam(m.opp))}</b>${m.who.length?`<div class="who">${esc(whoMin(m))}</div>`:''}</div><span class="sc">${m.ug}:${m.og}</span></div>`;
   document.getElementById('lvGrid').children[REV.i].className=m.res+' nw';
+  if(m.ug>0)haptic('light',500);   // own goals only, throttled
   if(m.res==='W')restartAnim(document.getElementById('lvMatch').firstChild,'goal0');   // flash on win only, green
   const snap=r.snaps[k-1];const ui=snap.findIndex(t=>t.id==='USER');const rows=snap.map((t,i)=>({...t,i})).filter(t=>t.i<4||t.i===ui||t.i===snap.length-1);
   // live table: no zone colors during the season, zones only in the final table
-  document.getElementById('lvTable').innerHTML=`<colgroup><col class="n"><col><col class="s"><col class="d"><col class="p"></colgroup><tr><th></th><th>Команда</th><th class="num">І</th><th class="num">РМ</th><th class="num">О</th></tr>`+rows.map(t=>`<tr${t.id==='USER'?' class="me"':''}><td class="num">${t.i+1}</td><td>${esc(shortTeam(t.n))}</td><td class="num">${t.p}</td><td class="num">${t.gd>0?'+':''}${t.gd}</td><td class="num"><b>${t.pts}</b></td></tr>`).join('');
+  const lt=document.getElementById('lvTable'),was=rowTops(lt);
+  lt.innerHTML=`<colgroup><col class="n"><col><col class="s"><col class="d"><col class="p"></colgroup><tr><th></th><th>Команда</th><th class="num">І</th><th class="num">РМ</th><th class="num">О</th></tr>`+rows.map(t=>`<tr${t.id==='USER'?' class="me"':''}><td class="num">${t.i+1}</td><td>${esc(shortTeam(t.n))}</td><td class="num">${t.p}</td><td class="num">${t.gd>0?'+':''}${t.gd}</td><td class="num"><b>${t.pts}</b></td></tr>`).join('');
+  flipRows(lt,was);
   REV.i++;
 }
+// final result: success for the top places, warning for relegation, nothing in between
+function seasonHaptic(r){if(S.format==='anti')return;haptic(r.place<=ZONES.co?'success':r.place>16-ZONES.rel?'warning':null);}
 function finishReveal(){clearInterval(REV.t);renderNewTro(REV.r);renderOcRes(REV.r);acctNudge(REV.r);document.getElementById('live').hidden=true;document.getElementById('final').hidden=false;window.scrollTo({top:0});
-  if(!REV.done){REV.done=true;countUp(document.querySelectorAll('#recTiles i, #recTiles b.hot'));champModal(REV.r);if(ONLINE)setTimeout(()=>cardPrep(REV.r),600);}}
+  if(!REV.done){REV.done=true;seasonHaptic(REV.r);countUp(document.querySelectorAll('#recTiles i, #recTiles b.hot'));champModal(REV.r);if(ONLINE)setTimeout(()=>cardPrep(REV.r),600);}}
 document.getElementById('skipBtn').onclick=()=>finishReveal();
 document.querySelectorAll('#tabs .tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('#tabs .tab').forEach(x=>x.classList.toggle('on',x===b));['t1','t2'].forEach(id=>document.getElementById(id).hidden=id!==b.dataset.tab);});
 document.getElementById('againBtn').onclick=()=>{S.result=null;if(S.league){openLeague(S.league.id);return;}go(S.daily||S.challenge?1:4);};
@@ -2124,7 +2148,7 @@ function tgOpen(u){try{if(TG&&TG.openTelegramLink){TG.openTelegramLink(u);return
     try{const c=window.__errCtx(),r=await fetch('/api/err',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({version:c.version,screen:c.screen,player:c.player,initData:TG&&TG.initData||null,feedback:{text,contact:$('fbContact').value.trim()}})});
       const j=await r.json().catch(()=>({}));if(!r.ok||!j.ok)throw new Error(j.error||('HTTP '+r.status));
       $('fbTxt').value='';show(false);done.hidden=false;}
-    catch(x){err.textContent=/^HTTP|fetch/i.test(x.message)?'Не вдалося надіслати. Спробуй ще раз або напиши боту @'+TG_BOT+'.':x.message;err.hidden=false;}
+    catch(x){haptic('error');err.textContent=/^HTTP|fetch/i.test(x.message)?'Не вдалося надіслати. Спробуй ще раз або напиши боту @'+TG_BOT+'.':x.message;err.hidden=false;}
     finally{send.disabled=false;}};}
 function tgLink(){return TG_BOT?`https://t.me/${TG_BOT}?startapp`:SITE;}
 function tgInit(){
@@ -2200,8 +2224,8 @@ const LESS_MOTION=()=>matchMedia('(prefers-reduced-motion: reduce)').matches;
 // ---------- animations. All disabled by the system Reduce Motion setting (LESS_MOTION)
 function restartAnim(el,cls){if(!el||LESS_MOTION())return;el.classList.remove(cls);void el.offsetWidth;el.classList.add(cls);}
 // summary numbers count up from zero
-function countUp(els){if(LESS_MOTION())return;const t0=performance.now(),D=750;const xs=[...els].map(el=>({el,v:parseInt(el.textContent,10)})).filter(x=>Number.isFinite(x.v)&&x.v>0&&String(x.v)===x.el.textContent.trim());
-  if(!xs.length)return;const step=t=>{const k=Math.min(1,(t-t0)/D),e=1-Math.pow(1-k,3);for(const x of xs)x.el.textContent=String(Math.round(x.v*e));if(k<1)requestAnimationFrame(step);};xs.forEach(x=>x.el.textContent='0');requestAnimationFrame(step);}
+function countUp(els){if(LESS_MOTION())return;const t0=performance.now(),D=900;const xs=[...els].map(el=>({el,v:parseInt(el.textContent,10)})).filter(x=>Number.isFinite(x.v)&&x.v>0&&String(x.v)===x.el.textContent.trim());
+  if(!xs.length)return;const step=t=>{const k=Math.min(1,(t-t0)/D),e=1-Math.pow(1-k,4);for(const x of xs)x.el.textContent=String(Math.round(x.v*e));if(k<1)requestAnimationFrame(step);};xs.forEach(x=>x.el.textContent='0');requestAnimationFrame(step);}
 // champion dialog: dim, cup, confetti (title, 30-0, 0-30 in anti-season). Hidden from Playwright (navigator.webdriver) except the test that sets window.__champTest
 // finish / forecast / verdict, and line ratings in words with a single phrase
 const VERDICTS=[[d=>d>=3,'Перевершили себе','good'],[d=>d>=1,'Краще за прогноз','good'],[d=>d===0,'Усе за сценарієм','mid'],[d=>d>=-2,'Трохи не дотягнули','bad'],[d=>true,'Провал сезону','bad']];
@@ -2223,7 +2247,7 @@ function champModal(r){if(!r||S.mode==='practice'||(navigator.webdriver&&!window
   document.body.appendChild(o);const btn=o.querySelector('.cclose');let stop=null;   // primary action: share the title
   const close=()=>{if(stop)stop();o.remove();document.removeEventListener('keydown',key);};const key=e=>{if(e.key==='Escape')close();};
   btn.onclick=close;o.querySelector('.cshare').onclick=()=>{close();document.getElementById('tgShareBtn').click();};o.onclick=e=>{if(e.target===o)close();};document.addEventListener('keydown',key);btn.focus({preventScroll:true});
-  if(TG&&TG.HapticFeedback)try{TG.HapticFeedback.notificationOccurred('success');}catch(e){}
+  haptic('success');
   if(!LESS_MOTION())stop=confetti(o.querySelector('canvas'),kind==='champ'?140:220);}
 // canvas confetti: ~3 s, UPL colors (pink, amber, blue, white)
 function confetti(cv,n){const dpr=Math.min(2,window.devicePixelRatio||1),W=innerWidth,H=innerHeight;cv.width=W*dpr;cv.height=H*dpr;const g=cv.getContext('2d');if(!g)return null;g.scale(dpr,dpr);
@@ -2238,17 +2262,25 @@ function gradFit(){for(const b of document.querySelectorAll('button.primary')){c
   b.style.setProperty('--gw',Math.round(w)+'px');b.style.setProperty('--gx',Math.round(l-q.left)+'px');}}
 {let pend=0;const run=()=>{if(pend)return;pend=requestAnimationFrame(()=>{pend=0;gradFit();});};
   new MutationObserver(run).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['hidden','class']});addEventListener('resize',run);run();}
-// light Telegram haptic feedback on primary buttons
-document.addEventListener('pointerdown',e=>{if(!TG||!TG.HapticFeedback||!e.target.closest('.primary,.row0,.tile1,.opt,.plpos button'))return;try{TG.HapticFeedback.impactOccurred('light');}catch(x){}},{passive:true});
+// haptics: Telegram HapticFeedback when available, else navigator.vibrate (Android), else nothing. kinds: light medium heavy select success warning error
+const VIB={light:8,medium:14,heavy:24,select:5,success:[12,40,12],warning:[18,50,18],error:[24,40,24,40,24]},HAP_AT={};
+function hapticTG(){const w=window.Telegram&&window.Telegram.WebApp,t=TG||(w&&w.initData?w:null);return t&&t.HapticFeedback||null;}
+function haptic(kind,gap){if(!kind)return;const now=performance.now();if(now-(HAP_AT[kind]||-1e9)<(gap||60))return;HAP_AT[kind]=now;
+  try{const H=hapticTG();
+    if(H){if(kind==='success'||kind==='warning'||kind==='error')H.notificationOccurred(kind);else if(kind==='select')H.selectionChanged();else H.impactOccurred(kind);return;}
+    if(navigator.vibrate)navigator.vibrate(VIB[kind]||8);}catch(e){}}
+// light impact on main buttons (Telegram only; no vibration on every tap elsewhere)
+document.addEventListener('pointerdown',e=>{if(hapticTG()&&e.target.closest('.primary,.row0,.tile1,.opt'))haptic('light');},{passive:true});
+document.addEventListener('touchstart',()=>{},{passive:true});   // iOS: enables :active press feedback
 function slide(el,open){if(LESS_MOTION()){el.hidden=!open;return;}el.style.overflow='hidden';
-  if(open){el.hidden=false;const h=el.scrollHeight;el.animate([{height:'0px',opacity:0},{height:h+'px',opacity:1}],{duration:260,easing:'cubic-bezier(.2,.8,.2,1)'}).onfinish=()=>{el.style.overflow='';};}
-  else{const h=el.scrollHeight;el.animate([{height:h+'px',opacity:1},{height:'0px',opacity:0}],{duration:200,easing:'ease-in'}).onfinish=()=>{el.hidden=true;el.style.overflow='';};}}
+  if(open){el.hidden=false;const h=el.scrollHeight;el.animate([{height:'0px',opacity:0},{height:h+'px',opacity:1}],{duration:360,easing:'cubic-bezier(.23,1,.32,1)'}).onfinish=()=>{el.style.overflow='';};}
+  else{const h=el.scrollHeight;el.animate([{height:h+'px',opacity:1},{height:'0px',opacity:0}],{duration:240,easing:'cubic-bezier(.23,1,.32,1)'}).onfinish=()=>{el.hidden=true;el.style.overflow='';};}}
 document.addEventListener('click',e=>{const sm=e.target.closest('summary');const d=sm&&sm.parentElement;if(!d||d.tagName!=='DETAILS'||sm!==d.firstElementChild||LESS_MOTION()||d.dataset.anim)return;
   e.preventDefault();d.dataset.anim=1;const h0=d.offsetHeight;d.style.overflow='hidden';
   const done=()=>{delete d.dataset.anim;d.style.overflow='';};
-  if(!d.open){d.open=true;const h1=d.offsetHeight;d.animate([{height:h0+'px'},{height:h1+'px'}],{duration:260,easing:'cubic-bezier(.2,.8,.2,1)'}).onfinish=done;}
+  if(!d.open){d.open=true;const h1=d.offsetHeight;d.animate([{height:h0+'px'},{height:h1+'px'}],{duration:360,easing:'cubic-bezier(.23,1,.32,1)'}).onfinish=done;}
   else{const hs=sm.offsetHeight+(parseFloat(getComputedStyle(d).paddingTop)||0)+(parseFloat(getComputedStyle(d).paddingBottom)||0);
-    d.animate([{height:h0+'px'},{height:hs+'px'}],{duration:200,easing:'ease-in'}).onfinish=()=>{d.open=false;done();};}});
+    d.animate([{height:h0+'px'},{height:hs+'px'}],{duration:240,easing:'cubic-bezier(.23,1,.32,1)'}).onfinish=()=>{d.open=false;done();};}});
 // ---------- 11x11 LEADERBOARDS: each verified season is a separate row; name from the player profile
 const LEVEL={normal:['Звичайний','lv-n'],hard:['Складний','lv-h'],hardcore:['Хардкор','lv-x'],daily:['Драфт дня','lv-d'],pick:['Вибір сезону','lv-s'],practice:['Тренування','lv-n']};
 const lvChip=m=>{const l=LEVEL[m];return l&&m!=='normal'&&m!=='practice'?`<b class="lvt ${l[1]}">${l[0]}</b>`:'';};   // plain word, only for non-default modes
@@ -3174,7 +3206,7 @@ function renderLb(r){
 if(ONLINE){const b=document.getElementById('lbOpenBtn');b.hidden=false;b.onclick=async()=>{const h=document.getElementById('lbHome');if(!h.hidden){slide(h,false);return;}b.disabled=true;await loadLb(h);b.disabled=false;slide(h,true);};}   // slides in smoothly
 document.getElementById('lbSend').onclick=async()=>{
   const nick=document.getElementById('nick').value.trim();const msg=document.getElementById('lbMsg');
-  {const c=nameCheck(nick);if(c.err||!c.name){msg.textContent=NAME_MSG[c.err||'len'];return;}}
+  {const c=nameCheck(nick);if(c.err||!c.name){haptic('error');msg.textContent=NAME_MSG[c.err||'len'];return;}}
   const res=lsGet("upl30_daily_"+DAY);if(!res){msg.textContent='Спершу зіграй офіційну спробу.';return;}
   const r=S.result;const btn=document.getElementById('lbSend');btn.disabled=true;msg.textContent='Надсилаю…';
   const done=t=>{nickSet(nick);lsSet("upl30_sent_"+DAY,true);document.getElementById('lbForm').hidden=true;msg.textContent=t;loadLb(document.getElementById('lbTable'));};
@@ -3223,7 +3255,7 @@ document.getElementById('cardTgBtn').onclick=async()=>{const msg=document.getEle
   try{const r=await _fetch('/api/card',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({initData:TG.initData,image:CARD_CANVAS.toDataURL('image/jpeg',0.9),caption:S.result?shareTextOf(S.result,false,true):''})});
     const j=await r.json().catch(()=>({}));
     if(j.need_start){msg.innerHTML='Спочатку відкрий чат з ботом і натисни «Start», потім спробуй ще раз. <button class="ghost" id="openBotBtn2" style="padding:var(--sp-1) var(--sp-3)">Відкрити @'+TG_BOT+'</button>';document.getElementById('openBotBtn2').onclick=()=>TG.openTelegramLink('https://t.me/'+TG_BOT+'?start=card');}else msg.textContent=j.ok?'Готово — картка в чаті з @'+TG_BOT+'.':r.status===429?String(j.error):'Не вдалося надіслати ('+String(j.error||r.status).slice(0,80)+').';}
-  catch(e){msg.textContent='Не вдалося надіслати: немає зв’язку.';}
+  catch(e){haptic('error');msg.textContent='Не вдалося надіслати: немає зв’язку.';}
   b.disabled=false;};
 document.getElementById('cardShareBtn').onclick=()=>{const msg=document.getElementById('cardMsg');if(!CARD_CANVAS)return;
   CARD_CANVAS.toBlob(bl=>{const f=new File([bl],'30-0-upl.png',{type:'image/png'});navigator.share({files:[f],text:S.result?shareTextOf(S.result,false,true):''}).catch(e=>{if(e&&e.name!=='AbortError')msg.textContent='Не вдалося відкрити меню «Поділитися».';});},'image/png');};
@@ -3274,11 +3306,10 @@ function drawCard(r){   // card in site style: UPL navy background, UPL.TV gradi
 }
 document.getElementById('chalOpen').onclick=()=>{const b=document.getElementById('chalBox'),t=document.getElementById('chalOpen');b.hidden=!b.hidden;t.classList.toggle('on',!b.hidden);if(!b.hidden){b.scrollIntoView({behavior:'smooth',block:'center'});const n=document.getElementById('chalName');if(n&&!n.hidden&&!n.value)n.focus();}};
 // ---------- What's new: short player-friendly notes on the latest version (technical log: CHANGELOG.md)
-const WHATSNEW={v:'0.74',date:'07.10.2026',items:[
-  ['format-list-numbered','Таблиця на весь екран','«Таблиця за весь час» відкривається на весь екран з кнопкою «Закрити». Позначка режиму — лише у «Складний», без зайвих рамок.'],
-  ['account-group','Запрошення в лігу','Коли в лізі менше трьох гравців, «Запроси друзів» стоїть одразу під туром. Далі кнопка «Поділитися» — угорі сторінки ліги.'],
-  ['home-outline','Чистіший вигляд','На головній зліва логотип, а не «Головна». Зручніші великі зони натискання, світла тема читається краще, підсвітка при наведенні більше не липне на iPad. Менше градієнтів і великих літер.'],
-  ['chart-bar','«Як рахується гра» у питаннях','Опис рейтингів і симуляції переїхав із головної в «Питання та відповіді».']]};
+const WHATSNEW={v:'0.75',date:'07.10.2026',items:[
+  ['ferris-wheel','Плавніше колесо','Барабани крутяться з легким розмиттям, другий стартує трохи пізніше й зупиняється з пружним доворотом. Екрани, таблиця сезону й списки рухаються м’якше.'],
+  ['lightning-bolt','Відгук на дотик','Кнопки та рядки трохи западають під пальцем і пружно повертаються.'],
+  ['check-decagram','Вібрація','Легкий відгук на старті й зупинці колеса, виборі гравця, голі твоєї команди, підсумку сезону та новому трофеї. Вимикається системним «Зменшити рух».']]};
 function openNews(){screenTag('news');const box=document.getElementById('viewBox');document.getElementById('viewTitle').textContent=`Що нового · версія ${WHATSNEW.v}`;
   document.getElementById('viewBody').innerHTML=`<div class="news">${WHATSNEW.items.map(([e,h,d])=>`<div class="ni">${ic(e,'lg')}<div><b>${esc(h)}</b><p>${esc(d)}</p></div></div>`).join('')}</div>`;
   box.hidden=false;lsSet('upl30_news_seen',WHATSNEW.v);document.getElementById('newsDot').hidden=true;}
@@ -3528,7 +3559,7 @@ function f5Render(){
 
 document.getElementById('f5Open').onclick=f5Start;
 // audit P2-5: only what tests use; drawCard for card checks, simulate/rerun for fast determinism
-window.__dbg={CLUB_REC,ocMine,ocAfter,renderOc,renderOcRes,openOc,acctMerge,get BEST(){return BEST;},ic,seasonLabel,boardPrefetch,boardStale,BOARD_FROM,setFmt,leagueLoad,boardHtml,oppYear,champModal,drawCard,chalNewGame,DAILY,LEAGUE_CULT,LEAGUE_LEGENDS,openTrophies,renderNewTro,bestPerPlayer,renderWheel,posOpts,eraOf,ptsWord,viewHtml,renderPitch,pitchHtml,f5Pitch,F5_FORMS,cardName,clubShort,simulate,shareTextOf,trCtxNow,trAward,trStore,FORMATIONS,GROUP_OF,DATA,TROPHIES,trEval,PERSON,effRating,get S(){return S;},rerun(seed,year,xi){rnd=mulberry32(seed);const r=simulate(xi||S.slots.map(s=>s.player),MODES[S.mode],year);rnd=Math.random;return {W:r.W,D:r.D,L:r.L,gf:r.gf,ga:r.ga,place:r.place};}};
+window.__dbg={haptic,seasonHaptic,renderNewTro,TROPHIES,CLUB_REC,ocMine,ocAfter,renderOc,renderOcRes,openOc,acctMerge,get BEST(){return BEST;},ic,seasonLabel,boardPrefetch,boardStale,BOARD_FROM,setFmt,leagueLoad,boardHtml,oppYear,champModal,drawCard,chalNewGame,DAILY,LEAGUE_CULT,LEAGUE_LEGENDS,openTrophies,renderNewTro,bestPerPlayer,renderWheel,posOpts,eraOf,ptsWord,viewHtml,renderPitch,pitchHtml,f5Pitch,F5_FORMS,cardName,clubShort,simulate,shareTextOf,trCtxNow,trAward,trStore,FORMATIONS,GROUP_OF,DATA,TROPHIES,trEval,PERSON,effRating,get S(){return S;},rerun(seed,year,xi){rnd=mulberry32(seed);const r=simulate(xi||S.slots.map(s=>s.player),MODES[S.mode],year);rnd=Math.random;return {W:r.W,D:r.D,L:r.L,gf:r.gf,ga:r.ga,place:r.place};}};
 })();
 </script>
 
