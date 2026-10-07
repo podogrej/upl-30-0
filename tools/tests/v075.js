@@ -72,5 +72,11 @@ const clear=pg=>pg.evaluate(()=>{window.__hap.length=0;});
  const vb=await pg.evaluate(()=>{window.Telegram=undefined;let n=0;navigator.vibrate=()=>{n++;return true;};__dbg.haptic('success');return n;});
  T.check(vb===1,'без Telegram — navigator.vibrate');
  const none=await pg.evaluate(()=>{navigator.vibrate=undefined;try{__dbg.haptic('heavy');return true;}catch(e){return false;}});T.check(none,'без Telegram і vibrate — нічого не ламається');
+ // tester findings: goal haptic at most one per ~5 rounds (round is 650 ms), live table starts empty, no false reduced-motion note, no stale one-reel layout
+ const src=require('fs').readFileSync(require('path').join(__dirname,'..','..','index.html'),'utf8');
+ T.check(/m\.ug>0\)haptic\('light',3000\)/.test(src),'гол: вібрація не частіше ніж раз на ~5 турів');
+ T.check(/fin\.hidden=true;document\.getElementById\('lvTable'\)\.innerHTML=''/.test(src),'живий сезон: таблиця минулого сезону очищається (без хибного FLIP)');
+ T.check(!/Вимикається системним/.test(src),'«Що нового»: без неправди про «Зменшити рух»');
+ {const one=await pg.evaluate(()=>{const r=document.querySelector('.reels');r.classList.add('one');__dbg.S.mode='normal';try{document.getElementById('spinBtn').click();}catch(e){}return r.classList.contains('one');});T.check(!one,'колесо: залишок «одного барабана» знімається на старті');}
  T.check(errs.length===0,'помилок JS немає'+(errs.length?': '+errs[0]:''));
  await b.close();process.exit(T.done());})();

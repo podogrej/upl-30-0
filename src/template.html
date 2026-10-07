@@ -1358,7 +1358,7 @@ function renderPickOpts(){const box=document.getElementById('seaPick'),o=S.pickO
   box.innerHTML=o.map((c,i)=>`<button type="button" data-i="${i}"><b>${SEA_SHORT(c.y)}</b><small>${c.pos} місце</small></button>`).join('');
   box.querySelectorAll('button').forEach(b=>b.onclick=()=>{const c=o[+b.dataset.i];S.pickOpts=null;box.hidden=true;S.wheel=c;S.wheelFresh=true;renderWheel();revealList();});
   const f=box.querySelector('button');if(f)f.focus({preventScroll:true});}
-function spin(mode){
+function spin(mode){if(S.mode!=='pick')document.querySelector('.reels').classList.remove('one');   // leftover from an abandoned season pick
   if(S.mode==='pick'&&!mode){spinPick();return;}
   let cs;
   if(S.daily&&!mode){while(DAILY.ptr<DAILY.seq.length){const c=DATA.clubs[DAILY.seq[DAILY.ptr++]];if(eligible(c).length>0){cs=c;break;}}}
@@ -1718,7 +1718,8 @@ async function playSeason(year){
 let REV=null;
 function startReveal(r){
   clearInterval(REV&&REV.t);const live=document.getElementById('live'),fin=document.getElementById('final');
-  live.hidden=false;fin.hidden=true;document.getElementById('lvSeason').textContent=`Суперники — ${oppLabel(r.year)} · ${S.formation}`;
+  live.hidden=false;fin.hidden=true;document.getElementById('lvTable').innerHTML='';   // no FLIP from the previous season's rows
+  document.getElementById('lvSeason').textContent=`Суперники — ${oppLabel(r.year)} · ${S.formation}`;
   document.getElementById('lvGrid').innerHTML=r.log.map(()=>'<i></i>').join('');
   REV={r,i:0,ms:650,t:null};tickReveal();REV.t=setInterval(tickReveal,REV.ms);
 }
@@ -1741,7 +1742,7 @@ function tickReveal(){
   // one match: result as square color, no letters or '@'; round is shown above, card lists scorers only
   document.getElementById('lvMatch').innerHTML=`<div class="lvMatch"><span class="lvRes ${m.res}"></span><div><b>${esc(shortTeam(m.opp))}</b>${m.who.length?`<div class="who">${esc(whoMin(m))}</div>`:''}</div><span class="sc">${m.ug}:${m.og}</span></div>`;
   document.getElementById('lvGrid').children[REV.i].className=m.res+' nw';
-  if(m.ug>0)haptic('light',500);   // own goals only, throttled
+  if(m.ug>0)haptic('light',3000);   // own goals only, at most one per ~5 rounds
   if(m.res==='W')restartAnim(document.getElementById('lvMatch').firstChild,'goal0');   // flash on win only, green
   const snap=r.snaps[k-1];const ui=snap.findIndex(t=>t.id==='USER');const rows=snap.map((t,i)=>({...t,i})).filter(t=>t.i<4||t.i===ui||t.i===snap.length-1);
   // live table: no zone colors during the season, zones only in the final table
@@ -2128,7 +2129,7 @@ document.getElementById('chalOpen').onclick=()=>{const b=document.getElementById
 const WHATSNEW={v:'0.75',date:'07.10.2026',items:[
   ['ferris-wheel','Плавніше колесо','Барабани крутяться з легким розмиттям, другий стартує трохи пізніше й зупиняється з пружним доворотом. Екрани, таблиця сезону й списки рухаються м’якше.'],
   ['lightning-bolt','Відгук на дотик','Кнопки та рядки трохи западають під пальцем і пружно повертаються.'],
-  ['check-decagram','Вібрація','Легкий відгук на старті й зупинці колеса, виборі гравця, голі твоєї команди, підсумку сезону та новому трофеї. Вимикається системним «Зменшити рух».']]};
+  ['check-decagram','Вібрація','Легкий відгук на старті й зупинці колеса, виборі гравця, голі твоєї команди, підсумку сезону та новому трофеї.']]};
 function openNews(){screenTag('news');const box=document.getElementById('viewBox');document.getElementById('viewTitle').textContent=`Що нового · версія ${WHATSNEW.v}`;
   document.getElementById('viewBody').innerHTML=`<div class="news">${WHATSNEW.items.map(([e,h,d])=>`<div class="ni">${ic(e,'lg')}<div><b>${esc(h)}</b><p>${esc(d)}</p></div></div>`).join('')}</div>`;
   box.hidden=false;lsSet('upl30_news_seen',WHATSNEW.v);document.getElementById('newsDot').hidden=true;}
