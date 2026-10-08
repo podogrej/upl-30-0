@@ -5,7 +5,7 @@ const BAD=/(\b0\.\d{2}\b|\bверсі[їяю] \d|сховано в|прибра�
 const OK=[/Що нового у версії/,/попередній склад сховано/,/SQL 0\.53 ще не виконано/];   // footer; 5×5 on one phone; server error (not player-facing)
 const CYR=/[а-яіїєґ]/i;let n=0;const bad=[];
 const strip=l=>l.replace(/\/\*.*?\*\//g,'').replace(/<!--.*?-->/g,'').replace(/(^|[^:\\"'`])\/\/.*$/,'$1');
-const files=[...fs.readdirSync(path.join(ROOT,'src')).filter(f=>/\.(js|html)$/.test(f)&&!/^(pen_skill|five_core)\.js$/.test(f)).map(f=>'src/'+f),...fs.readdirSync(path.join(ROOT,'api')).filter(f=>f.endsWith('.js')).map(f=>'api/'+f)];
+const files=[...fs.readdirSync(path.join(ROOT,'src')).filter(f=>/\.(js|html)$/.test(f)&&!/^(pen_skill|five_core)\.js$/.test(f)).map(f=>'src/'+f),'privacy.html','terms.html',...fs.readdirSync(path.join(ROOT,'api')).filter(f=>f.endsWith('.js')).map(f=>'api/'+f)];
 let inBlock=false;
 for(const f of files)fs.readFileSync(path.join(ROOT,f),'utf8').split('\n').forEach((line,i)=>{
   let l=line;if(inBlock){const e=l.indexOf('*/');if(e<0)return;l=l.slice(e+2);inBlock=false;}
