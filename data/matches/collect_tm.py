@@ -32,19 +32,20 @@ def parse(t, season):
         rnd = int(m.group(1)) if m else head
         date = ''
         for row in ROW.findall(blk.split('</table>')[0]):
-            if 'ergebnis-link' not in row:
+            if 'spielbericht' not in row:
                 continue
             d = re.search(r'datum/(\d{4}-\d\d-\d\d)', row)
             if d:
                 date = d.group(1)
             teams = re.findall(r'<a title="([^"]*)" href="/[^"]*spielplan/verein', row)
-            sc = re.search(r'class="ergebnis-link"[^>]*>([^<]*)<', row)
+            sc = re.search(r'class="zentriert hauptlink">&nbsp;<a[^>]*>([^<]*)<', row)
+            tm = re.search(r'zentriert hide-for-small">\s*(\d+:\d\d [AP]M)', row)
             score = html.unescape(sc.group(1)).strip() if sc else ''
             s = re.match(r'(\d+):(\d+)', score)
             hg, ag = (s.group(1), s.group(2)) if s else ('', '')
             if len(teams) < 2:
                 continue
-            out.append((season, rnd, date, html.unescape(teams[0]), html.unescape(teams[-1]), hg, ag, score if not s else 'played'))
+            out.append((season, rnd, date, html.unescape(teams[0]), html.unescape(teams[-1]), hg, ag, 'played' if s else (score or 'unknown'), tm.group(1) if tm else ''))
     return out
 
 rows = []
@@ -56,5 +57,5 @@ for season in range(1991, 2027):
     time.sleep(1.5)
 with open(os.path.join(os.path.dirname(__file__), 'raw_tm.csv'), 'w', newline='', encoding='utf-8') as f:
     w = csv.writer(f)
-    w.writerow(['tm_season', 'round', 'date', 'home', 'away', 'hg', 'ag', 'status'])
+    w.writerow(['tm_season', 'round', 'date', 'home', 'away', 'hg', 'ag', 'status', 'time'])
     w.writerows(rows)
