@@ -1136,8 +1136,8 @@ const YEARS16 = Object.keys(DATA.seasons).map(Number).filter(y=>DATA.seasons[y].
 // Ids 9001/9002 are pseudo-seasons (stored in seasons.year; real seasons are years 1992-2025).
 const CULT_CLUBS=['dynamo-kyiv','shakhtar-donetsk','dnipro','metalist-kharkiv','chornomorets-odesa','karpaty-lviv','metalurh-donetsk','metalurh-zaporizhzhia','mariupol','zorya-luhansk','tavriya-simferopol','vorskla-poltava','kryvbas','arsenal-kyiv','sevastopol'];
 const LEAGUE_CULT=9001, LEAGUE_LEGENDS=9002;
-const LEG_SOFT=0.8;   // <1: legends strength pulled toward average, so leaders are beatable (champion ~66 of 90 on average)
-const LEG_K=1.2;   // legends play stronger against your XI (attack x LEG_K, conceded / LEG_K); keeps your match win rate after LEG_SOFT; classic-family only, refA/refD untouched
+const LEG_SOFT=1.0;   // 1: legends at their own strength (1.4 before made leaders unbeatable; champion now ~69 of 90 on average)
+const LEG_K=1.13;   // legends play stronger against your XI (attack x LEG_K, conceded / LEG_K); keeps your match win rate after LEG_SOFT; classic-family only, refA/refD untouched
 function buildLeague(best){const hist={};for(const y of YEARS16)for(const t of DATA.seasons[y].teams)(hist[t[0]]=hist[t[0]]||[]).push({y,t});
   const base=YEARS16.reduce((a,y)=>a+DATA.seasons[y].base,0)/YEARS16.length;
   // legends league: the club's season with the strongest squad = average rating of the best 11 players (Shakhtar 12/13, Dynamo 97/98, Chornomorets 13/14...);
@@ -1180,7 +1180,7 @@ const REF_A=5.6, REF_D=7.3, FE=0.5;
 // lowered by another 2.3 (78.26/77.18 -> 75.96/74.88) for ratings v2 (compression above 82 + class): bot squad average -2.5, same points
 // target: an 85-rated squad without chemistry wins the title in ~10-15% of seasons; refA/refD +2.89 (was 75.96/74.88); anti-season keeps old refs (antiRefA/D)
 // refA/refD -1 (71.6/70.6 -> 70.6/69.6): 85-rated squad ~15% titles
-const P={betaA:0.048,betaD:0.062,refA:70.6,refD:69.6,goldP:0.006,goldA:3,antiRefA:73.66,antiRefD:72.58,classFloorA:0.85,classCapD:1.35,capA:4.0,floorD:0.25,floorA:0.33,capD:3.0,home:0.12,formSd:0.15,balPen:0.01,seasonTeamSd:2.5,seasonPlayerSd:2.5,seasonFormCap:10,miracleP:0.10,miracleTo:91,midP:0.08,oppSd:0.06,collapseP:0.10,collapseK:0.8,legSd:0.10,flopP:0.15,flopK:0.4,boomP:0.08,boomK:0.3};
+const P={betaA:0.048,betaD:0.062,refA:70.6,refD:69.6,goldP:0.006,goldA:3,antiRefA:73.66,antiRefD:72.58,classFloorA:0.85,classCapD:1.35,capA:4.0,floorD:0.25,floorA:0.33,capD:3.0,home:0.12,formSd:0.15,balPen:0.01,seasonTeamSd:2.5,seasonPlayerSd:2.5,seasonFormCap:10,miracleP:0.10,miracleTo:91,midP:0.08,oppSd:0.06,collapseP:0.10,collapseK:0.8,legSd:0.09,flopP:0.10,flopK:0.4,boomP:0.06,boomK:0.3};
 // season form: each player has his own year (sigma seasonPlayerSd) plus shared team form (sigma seasonTeamSd; not club chemistry, see chemOf); a star can flop and an average squad can overperform
 // 'miracle season': with probability miracleP the whole team plays closer to miracleTo so any squad has some chance
 // (weak squad +15..+19, strong at least +4x0.6); no miracles in anti-season. Upper bound of player form widens by the miracle amount.
