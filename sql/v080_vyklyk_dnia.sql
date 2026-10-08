@@ -1,4 +1,4 @@
--- 0.80: «Виклик дня» attempts (table vd_results; challenge_results is taken by «Виклик другу»). Additive only and idempotent; written by the server only.
+-- 0.80: daily challenge attempts (table vd_results; challenge_results is taken by the friend challenge). Additive only and idempotent; written by the server only.
 create table if not exists public.vd_results (
   id bigserial primary key,
   day date not null,                    -- challenge day (Kyiv)

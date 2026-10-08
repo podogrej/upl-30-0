@@ -25,7 +25,7 @@ function yearOk(row, E, chalYearOk, prev) {
 
 // The previous site version stays open for players (browser cache, Mini App): if simulation didn't change between versions, add it here
 // so its seasons are verified by the new engine. History for 0.57-0.64 is in CHANGELOG.
-const PREV_VERSIONS = [];   // only versions with identical simulation; others get null ("not verified"). Keeping it short also blocks forged version (audit P1-2)
+const PREV_VERSIONS = ['0.79.2'];   // only versions with identical simulation; others get null ("not verified"). Keeping it short also blocks forged version (audit P1-2)
 
 // main check: returns [true|false|null, reason]; null = cannot verify (old version etc.)
 function check(row, seedRow, opts = {}) {
@@ -47,6 +47,8 @@ function checkCore(row, seedRow, { chalYearOk = false, prev = false } = {}) {
   // a daily draft season needs a daily seed (practice tries use ordinary seeds); a daily seed is never spent on another season
   if (row.day && !row.practice && seedRow.daily !== true) return [false, 'seed не для драфту дня'];
   if (!row.day && seedRow.daily === true) return [false, 'seed драфту дня для іншого сезону'];
+  // a daily challenge seed (vd_day) carries only the classic season of that attempt's squad (xi_hash is set when the attempt is finished)
+  if (seedRow.vd_day && (row.day || row.practice || row.fl_id || (row.era != null && row.era !== 'all'))) return [false, 'seed виклику дня для іншого сезону'];
   if (!E.FORMATS[row.format]) return [false, 'невідомий формат'];
   if (!E.MODES[row.mode]) return [false, 'невідомий режим'];
   if (!yearOk(row, E, chalYearOk, prev)) return [false, `суперники ${row.year} не для формату ${row.format}`];
@@ -111,6 +113,11 @@ async function syncDaily(row, seedRow, fresh) {
   return true;
 }
 
+// daily challenge: the attempt's result row gets the verified season (vd_results.season_id)
+async function vdLink(row, seedRow, id) {
+  const day = String(seedRow.vd_day).slice(0, 10);
+  await sb(`vd_results?device_id=eq.${encodeURIComponent(String(row.device_id))}&day=eq.${day}&attempt=eq.${+seedRow.vd_attempt}&season_id=is.null`, { method: 'PATCH', prefer: 'return=minimal', body: { season_id: id } });
+}
 // season played as a friends league attempt (seasons.fl_id): credit it after verification (fl_record in DB: league rules, attempt limit).
 // SQL 0.61 not applied or attempt not credited: season is still verified, return fl = null
 async function flRecord(row, id) {
@@ -141,6 +148,7 @@ async function verifyById(id, row) {
     sb(`seasons?id=eq.${id}`, { method: 'PATCH', prefer: 'return=minimal', body: { verified: v, verify_note: String(note).slice(0, 200) } }),
     v === true && seedRow ? sb(`season_seeds?id=eq.${seedRow.id}`, { method: 'PATCH', prefer: 'return=minimal', body: { used_by: id } }) : null]);
   if (v === true && seedRow) await syncDaily({ ...row, verified: true }, { ...seedRow, used_by: id }, true);
+  if (v === true && seedRow && seedRow.vd_day) await vdLink(row, seedRow, id).catch(e => console.error('vd', e.message));
   // friends league attempt and chat leagues are independent; a chat league failure never fails the verification
   const [fl] = v === true ? await Promise.all([flRecord(row, id), L.creditSeason({ ...row, verified: true }, seedRow).catch(e => console.error('chat leagues', e.message))]) : [];
   return { verified: v, note, fl };

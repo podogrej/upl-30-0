@@ -73,6 +73,7 @@ async function openSite(opts={}){
       if(/fonts\.(googleapis|gstatic)\.com/.test(u.host))return r.continue();
       return r.abort();
     }catch(e){console.log('route error',u.href,e.message);return r.abort();}});
+  const vdToday=opts.vdToday===undefined?'2026-10-12':opts.vdToday;if(vdToday)await ctx.addInitScript(d=>{window.__vdToday=d;},vdToday);   // daily challenge "today" fixed to a day with content (as in _page.js)
   if(opts.init)await ctx.addInitScript(opts.init);   // e.g. seed localStorage before the game loads
   const pg=await ctx.newPage();const errs=[];pg.on('pageerror',e=>errs.push(e.message));pg.on('dialog',d=>/Склад не збережеться/.test(d.message())?d.accept():d.dismiss());   // auto-accept the leave-unfinished-draft confirm
   await pg.goto(SITE+(opts.query||'')+(opts.hash||''));await pg.waitForTimeout(opts.wait||1000);

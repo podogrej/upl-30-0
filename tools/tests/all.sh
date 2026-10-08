@@ -9,8 +9,8 @@ LOG=$(mktemp -d); FAIL=(); PASS=0
 step(){ local name="$1"; shift; local t=$SECONDS
   if "$@" >"$LOG/$PASS.log" 2>&1; then echo "✓ $name ($((SECONDS-t)) с)"; else echo "✗ $name ($((SECONDS-t)) с)"; tail -25 "$LOG/$PASS.log" | sed 's/^/    /'; FAIL+=("$name"); fi
   PASS=$((PASS+1)); }
-# 1. index.html, lib/engine.js, lib/five_core.js are generated: rebuild and verify the committed copies are up to date
-GEN="index.html lib/engine.js lib/five_core.js pool.*.js"; BEFORE=$(md5sum $GEN)
+# 1. index.html, lib/engine.js, lib/five_core.js, lib/vd_core.js are generated: rebuild and verify the committed copies are up to date
+GEN="index.html lib/engine.js lib/five_core.js lib/vd_core.js pool.*.js"; BEFORE=$(md5sum $GEN)
 step "збірка" bash -c 'python3 src/build.py && node tools/make_engine.js'
 gen_same(){ [ "$(md5sum $GEN)" = "$BEFORE" ] || { echo 'index.html / lib/* застаріли: python3 src/build.py && node tools/make_engine.js — і закомітити'; return 1; }; }
 step "згенеровані файли свіжі (збірка нічого не змінила)" gen_same
@@ -21,7 +21,7 @@ step "vercel.json (ignoreCommand ≤ 256)" node -e 'const c=require("./vercel.js
 # fast non-browser tests: always run
 for t in cheat card_api err_digest player_texts feedback board_pin cron_summary channel notify code_comments; do step "тест $t" node "tools/tests/$t.js"; done
 # browser tests are independent, so JOBS run in parallel (default 3), longest first; QUICK=1 runs only a short set
-UI="determinism scenarios v079 fl63 modes chal tro v064 fl61 leagueui v060 player_page v39 news draft58 pitch_layout f5test2 emoji_layout nav_back err_report long_names tg_swipes font_tour icon_align live_height oneclub72 v073 v074 v075 v076 v076b v077a v077b v077c v077d v078 xp_stable line_height faq_anim"
+UI="determinism scenarios v080 v079 fl63 modes chal tro v064 fl61 leagueui v060 player_page v39 news draft58 pitch_layout f5test2 emoji_layout nav_back err_report long_names tg_swipes font_tour icon_align live_height oneclub72 v073 v074 v075 v076 v076b v077a v077b v077c v077d v078 xp_stable line_height faq_anim"
 [ -n "$QUICK" ] && UI="draft58 v064 emoji_layout nav_back"
 [ -n "$FAST" ] && UI="determinism scenarios $(echo " $ONLY " | sed 's/ sql / /g')"
 JOBS=${JOBS:-3}; declare -A T0

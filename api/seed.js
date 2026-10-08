@@ -3,6 +3,7 @@
 // So the result can't be tuned by brute-forcing seeds locally, and the server later recomputes the season (/api/verify, /api/save).
 // The browser also sends the device secret: another device can't burn the official daily attempt (audit K5).
 // Without a secret (legacy clients): only until step 2 (sql/v054_close_writes.sql -> legacy_writes_open() = false).
+// Body with `vd`: daily challenge attempts, handled by api/_vd.js.
 const crypto = require('crypto');
 const { sb, deviceOk, legacyOpen, body, kyivDate, uuidRe, rateLimit } = require('./_device.js');
 // retry of an official daily attempt: same squad and year, not played yet
@@ -15,6 +16,12 @@ module.exports = async (req, res) => {
   try {
     const b = body(req);
     if (!uuidRe.test(String(b.device_id || ''))) return res.status(400).json({ error: 'device_id?' });
+    if (b.vd) {   // daily challenge attempts (api/_vd.js): start, finish (squad -> score and season seed), own results
+      stage = 'vd';
+      if (await rateLimit(req, res, 'seed', b.device_id)) return;
+      const [code, j] = await require('./_vd.js').handle(b);
+      return res.status(code).json(j);
+    }
     if (!Array.isArray(b.xi) || b.xi.length !== 11) return res.status(400).json({ error: 'xi?' });
     stage = 'rate';
     if (await rateLimit(req, res, 'seed', b.device_id)) return;

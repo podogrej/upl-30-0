@@ -28,7 +28,6 @@ function mkDB(){
     player_profile:()=>prof(players[0]),player_profile_pub:a=>prof(players.find(p=>p.public_id===a.p_public)||players[1])};
   const db=makeDB({seasons:{auto:'id'},season_seeds:{auto:'id'},daily_results:{auto:'id'},player_links:{},user_state:{}},rpc);
   db.DB.players=players;db.DB.seasons.push(...seasons);
-  db.DB.daily_results.push(...[...Array(8).keys()].map(i=>({id:i+1,day:TODAY,verified:true,practice:false,device_id:'dev'+i,nickname:'гравець'+i,w:20-i,d:5,l:5+i,gf:50,ga:30,pts:65-3*i,formation:'4-4-2',mode:'normal'})));
   return db;}
 // holds matching Supabase / API requests until release() (loading states stay on screen)
 const H={p:null,res:null,pat:/$^/};
@@ -183,15 +182,6 @@ const sk=(pg,sel)=>pg.evaluate(s=>{const n=[...document.querySelectorAll(s+' .sk
   const v2=await p.evaluate(()=>{const h=document.querySelector('#viewBody .hero'),pt=document.querySelector('#viewBody .pitch');return {hero:h&&h.getBoundingClientRect().height,pw:pt&&pt.getBoundingClientRect().width,ph:pt&&pt.getBoundingClientRect().height,pt:pt&&pt.getBoundingClientRect().top,sk:document.querySelectorAll('#viewBody .sk').length};});
   T.check(v2.sk===0&&Math.abs(v2.hero-v1.hero)<=6&&Math.abs(v2.pw-v1.pw)<=1&&Math.abs(v2.ph-v1.ph)<=1&&Math.abs(v2.pt-v1.pt)<=10,`склад: картка ${Math.round(v1.hero)} → ${Math.round(v2.hero)}px, поле ${Math.round(v1.pw)}×${Math.round(v1.ph)} → ${Math.round(v2.pw)}×${Math.round(v2.ph)}, верх поля ${Math.round(v1.pt)} → ${Math.round(v2.pt)}`);
   await p.click('#viewClose');await wait(500);
-  // day leaderboard
-  await p.evaluate(()=>{const d=document.createElement('div');d.className='tbl';d.id='lbT';d.style.cssText='position:fixed;left:0;top:0;width:390px;background:var(--bg);z-index:9';document.body.appendChild(d);});
-  H.hold(/daily_results/);const pr=p.evaluate(()=>window.__dbg.loadLb(document.getElementById('lbT')));await wait(300);
-  const l1=await p.evaluate(()=>{const r=document.querySelectorAll('#lbT tr');return {n:r.length,h:r[2].getBoundingClientRect().height,sk:document.querySelectorAll('#lbT .sk').length,txt:document.getElementById('lbT').innerText};});
-  T.check(l1.sk>=10&&!/Завантаж|…/.test(l1.txt),'табло дня: скелетон замість «Завантаження…»');
-  H.release();await pr;await wait(200);
-  const l2=await p.evaluate(()=>{const r=document.querySelectorAll('#lbT tr');return {n:r.length,h:r[2].getBoundingClientRect().height,sk:document.querySelectorAll('#lbT .sk').length};});
-  T.check(l2.sk===0&&l2.n>=8&&Math.abs(l2.h-l1.h)<=4,`табло дня: рядок ${Math.round(l1.h)} → ${Math.round(l2.h)}px`);
-  await p.evaluate(()=>document.getElementById('lbT').remove());
   // league list (home -> friends) and league page
   H.hold(/rpc\/fl_mine/);await p.click('#homeBtn').catch(()=>{});await p.evaluate(()=>document.getElementById('flOpen').click());await wait(300);
   const f1=await p.evaluate(()=>({sk:document.querySelectorAll('#fl .sk-row').length,h:document.querySelector('#fl .sk-row').getBoundingClientRect().height,txt:document.getElementById('fl').innerText}));

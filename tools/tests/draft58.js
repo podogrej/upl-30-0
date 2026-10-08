@@ -12,12 +12,12 @@ const findPl=(pg,multi)=>pg.evaluate(multi=>{const D=window.__dbg,S=D.S;const bs
 (async()=>{const {b,pg,errs}=await openPage();
  // ---- localStorage cleanup: daily keys older than 14 days and legacy upl30_best (migrated to upl30_best_v2)
  await pg.evaluate(()=>{const d3=new Date(Date.now()-3*864e5).toISOString().slice(0,10);
-   localStorage.setItem('upl30_daily_2020-01-01','{"W":1}');localStorage.setItem('upl30_sent_2020-01-01','true');localStorage.setItem('upl30_daily_'+d3,'{"W":2}');
+   localStorage.setItem('upl30_daily_2020-01-01','{"W":1}');localStorage.setItem('upl30_sent_2020-01-01','true');localStorage.setItem('upl30_daily_'+d3,'{"W":2}');localStorage.setItem('upl30_vd_2020-01-01','{"used":1}');localStorage.setItem('upl30_vd_'+d3,'{"used":2}');
    localStorage.setItem('upl30_best',JSON.stringify({W:20,D:5,L:5,pts:65,place:2,formation:'4-4-2',mode:'normal'}));localStorage.removeItem('upl30_best_v2');});
  await pg.reload();await pg.waitForTimeout(700);
- const ls=await pg.evaluate(()=>({old:localStorage.getItem('upl30_daily_2020-01-01'),sent:localStorage.getItem('upl30_sent_2020-01-01'),n:Object.keys(localStorage).filter(k=>/^upl30_daily_/.test(k)).length,
+ const ls=await pg.evaluate(()=>({vd:localStorage.getItem('upl30_vd_2020-01-01')===null&&Object.keys(localStorage).some(k=>/^upl30_vd_20[2-9][1-9]/.test(k)),old:localStorage.getItem('upl30_daily_2020-01-01'),sent:localStorage.getItem('upl30_sent_2020-01-01'),n:Object.keys(localStorage).filter(k=>/^upl30_daily_/.test(k)).length,
    best:localStorage.getItem('upl30_best'),v2:JSON.parse(localStorage.getItem('upl30_best_v2')||'{}')}));
- check(ls.old===null&&ls.sent===null,'localStorage: ключі виклику дня старші за 14 днів стерто');
+ check(ls.old===null&&ls.sent===null&&ls.vd,'localStorage: денні ключі (виклик дня, старий драфт дня) старші за 14 днів стерто, свіжі лишились');
  check(ls.n===1,'localStorage: свіжий ключ виклику дня лишився');
  check(ls.best===null&&ls.v2.classic&&ls.v2.classic.pts===65,'localStorage: upl30_best перенесено в upl30_best_v2 і стерто');
  // ---- noun forms: single plUk
@@ -58,8 +58,8 @@ const findPl=(pg,multi)=>pg.evaluate(multi=>{const D=window.__dbg,S=D.S;const bs
  const dy=[];for(let i=0;i<4;i++){await spin(pg);dy.push(await pg.evaluate(()=>{const w=window.__dbg.S.wheel;return w.c+' '+w.y;}));await (await pg.$('#squad .pl:not([disabled])')).click();await pg.waitForTimeout(60);const pb=await pg.$('#squad .plpos button');if(pb)await pb.click();}
  check(dy.every(s=>/^(dynamo-kyiv|shakhtar-donetsk) 201\d$/.test(s)),'епохи: дербі «2010-ті» — лише Динамо/Шахтар 2010/11–2019/20 ('+dy.join(', ')+')');
  // daily challenge always uses all years
- await home(pg);await pg.click('#dailyBtn');
- const dd=[];for(let i=0;i<11;i++){await spin(pg);dd.push(await pg.evaluate(()=>window.__dbg.S.wheel.y));await (await pg.$('#squad .pl:not([disabled])')).click();await pg.waitForTimeout(60);const pb=await pg.$('#squad .plpos button');if(pb)await pb.click();}
+ await home(pg);await pg.evaluate(()=>window.__dbg.vdOpen('2026-10-12'));await pg.waitForTimeout(300);
+ const dd=[];for(let i=0;i<10;i++){await spin(pg);dd.push(await pg.evaluate(()=>window.__dbg.S.wheel.y));await (await pg.$('#squad .pl:not([disabled])')).click();await pg.waitForTimeout(60);const pb=await pg.$('#squad .plpos button');if(pb)await pb.click();}
  check(await pg.evaluate(()=>window.__dbg.eraOf()==='all')&&dd.some(y=>y<2010),'епохи: виклик дня без епохи ('+dd.join(',')+')');
  // ---- position buttons: classic, all years, 4-4-2
  await home(pg);await pg.click('#freeOpen');await pg.click('#eras button[data-era="all"]');await pg.evaluate(()=>window.__dbg.setFmt('classic'));await pg.click('#formations .opt:nth-child(1)');await pg.click('#startBtn');
@@ -103,8 +103,8 @@ const findPl=(pg,multi)=>pg.evaluate(multi=>{const D=window.__dbg,S=D.S;const bs
    await pg.click('#pitch .slot.target');await pg.waitForTimeout(100);check(await pg.evaluate(n0=>window.__dbg.S.slots.filter(s=>s.player).length===n0+1,n0),'позиції: тап по підсвіченому місцю на полі теж ставить');done=true;}
   if(!done)console.log('(тап по полю: не випало гравця з кількома позиціями — пропущено)');}
  // daily challenge also has the buttons
- await home(pg);await pg.evaluate(()=>{localStorage.clear();});await pg.reload();await pg.waitForTimeout(500);await pg.click('#dailyBtn');
- {let seen=false;for(let k=0;k<11&&!seen;k++){await spin(pg);const mi=await findPl(pg,true);if(mi>=0){await (await pg.$$('#squad .pl'))[mi].click();await pg.waitForTimeout(100);seen=await pg.evaluate(()=>document.querySelectorAll('#squad .plpos button').length>=2);break;}
+ await home(pg);await pg.evaluate(()=>{localStorage.clear();});await pg.reload();await pg.waitForTimeout(500);await pg.evaluate(()=>window.__dbg.vdOpen('2026-10-12'));await pg.waitForTimeout(300);
+ {let seen=false;for(let k=0;k<10&&!seen;k++){await spin(pg);const mi=await findPl(pg,true);if(mi>=0){await (await pg.$$('#squad .pl'))[mi].click();await pg.waitForTimeout(100);seen=await pg.evaluate(()=>document.querySelectorAll('#squad .plpos button').length>=2);break;}
    await (await pg.$('#squad .pl:not([disabled])')).click();await pg.waitForTimeout(60);}
   check(seen,'позиції: у виклику дня кнопки теж є');}
  // ---- Georgian trophy: 6+ Georgian players

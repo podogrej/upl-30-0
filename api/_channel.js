@@ -9,7 +9,7 @@ const L = require('./_league.js');
 const SITE = 'https://upl30.com.ua/';
 const BOT = () => L.env('TG_BOT') || 'upl30_bot';
 const DAILY_LINK = () => `https://t.me/${BOT()}?start=ch_daily`;
-const DAILY_AT = [9, 0], WEEKLY_AT = [12, 0];   // when the auto draft is sent to the admin (Kyiv): daily draft announcement 9:00, weekly summary Monday 12:00
+const DAILY_AT = [9, 0], WEEKLY_AT = [12, 0];   // when the auto draft is sent to the admin (Kyiv): daily challenge announcement 9:00, weekly summary Monday 12:00
 const DAILY_PREP_H = 18, WEEKLY_PREP_H = 8;   // when auto drafts are created (Kyiv): announcement the evening before, summary Monday morning
 
 // ---------- DBs: p = main, t = test. Each environment knows its own DB from VERCEL_ENV
@@ -160,7 +160,7 @@ async function handleUpdate(u) {
   const cmd = text.startsWith('/') ? text.split(/[\s@]/)[0].toLowerCase() : '', args = text.split(/\s+/).slice(1);
   if (cmd === '/whoami') { await say(m.chat.id, `Твій Telegram ID: ${m.from && m.from.id}`); return true; }
   if (cmd === '/start' && isPrivate && args[0] === 'ch_daily') {
-    await say(m.chat.id, '🎯 Драфт дня — однакове колесо для всіх, одна офіційна спроба. Тисни «Грати»!', { reply_markup: { inline_keyboard: [[{ text: '▶️ Грати', web_app: { url: SITE } }]] } });
+    await say(m.chat.id, '🎯 Виклик дня — збери склад під умову дня: 5 спроб, рахується краща. Тисни «Грати»!', { reply_markup: { inline_keyboard: [[{ text: '▶️ Грати', web_app: { url: SITE } }]] } });
     return true;
   }
   if (!['/post', '/queue', '/auto'].includes(cmd)) return false;
@@ -173,7 +173,7 @@ async function handleUpdate(u) {
     if (opt === 'off') await q('app_marks?on_conflict=key', { method: 'POST', prefer: 'resolution=ignore-duplicates,return=minimal', body: { key: 'ch_auto_off' } });
     if (opt === 'on') await q('app_marks?key=eq.ch_auto_off', { method: 'DELETE', prefer: 'return=minimal' });
     const isOff = (await q('app_marks?key=eq.ch_auto_off&select=key') || []).length > 0;
-    await say(m.chat.id, `${label(tag)}Автопости (анонс драфту дня, підсумки тижня): ${isOff ? 'вимкнено' : 'увімкнено'}. Вони приходять тобі чернетками на схвалення.`);
+    await say(m.chat.id, `${label(tag)}Автопости (анонс виклику дня, підсумки тижня): ${isOff ? 'вимкнено' : 'увімкнено'}. Вони приходять тобі чернетками на схвалення.`);
     return true;
   }
   // /post [test] <text>: the post body is everything after the command (and "test"), with its formatting converted to HTML
@@ -202,11 +202,9 @@ async function autoPosts(now = new Date()) {
   if ((await L.sb('app_marks?key=eq.ch_auto_off&select=key') || []).length) return made;
   const k = kyivParts(now), day = `${k.y}-${pad(k.m)}-${pad(k.d)}`;
   const tk = kyivParts(new Date(+kyivToUtc(k.y, k.m, k.d, 12, 0) + 864e5)), tday = `${tk.y}-${pad(tk.m)}-${pad(tk.d)}`;   // tomorrow in Kyiv
-  if (k.H >= DAILY_PREP_H && await once(`ch_daily:${tday}`)) {
-    const E = require('../lib/engine.js'), ds = E.dailySetupFor(tday), rr = (E.MODES.daily || {}).rerolls || 0;
-    const text = `<b>🎯 Драфт дня №${L.dayNo(tday)} · ${L.dayShort(tday)}</b>\n` +
-      `Схема <b>${esc(ds.formation)}</b>, суперники — «Ліга легенд», ${rr === 1 ? 'одне перекручування' : rr + ' перекручування'} колеса.\n` +
-      `Колесо однакове для всіх — хто збере найкращий сезон?\n\n<a href="${DAILY_LINK()}">Зіграти драфт дня →</a>`;
+  const vd = (require('../lib/challenges.json') || []).find(x => x.day === tday);   // announcement only for a day with a challenge
+  if (vd && k.H >= DAILY_PREP_H && await once(`ch_daily:${tday}`)) {
+    const text = `<b>🎯 Виклик дня · ${L.dayShort(tday)}</b>\n<b>${esc(vd.title)}</b>\n${esc(vd.story)}\n\n${esc(vd.task)} 5 спроб, рахується краща.\n\n<a href="${DAILY_LINK()}">Зіграти виклик дня →</a>`;
     const p = await insertAuto(`ch_daily:${tday}`, { text, publish_at: laterOf(kyivToUtc(tk.y, tk.m, tk.d, ...DAILY_AT), now).toISOString(), status: 'draft', source: 'auto' });
     if (p) made.push(p.id);
   }

@@ -37,10 +37,10 @@ async function draftAll(pg){for(let i=0;i<11;i++){await pg.click('#spinBtn');awa
  await shot(pg,'back_mid');await wait(600);
  T.check(await pg.evaluate(()=>!document.getElementById('s1').hidden&&document.getElementById('s4').hidden)&&(await hasVt(pg))==='','назад: головна на місці, класи зняті');
  // ---- 3. home -> draft: the tapped button morphs into the progress bar, slot wave, spin button last
- const t0=await pg.evaluate(()=>{document.getElementById('dailyBtn').click();return document.getElementById('dailyBtn').style.viewTransitionName;});
- T.check(t0==='vt-play','«Драфт дня» отримала ім’я vt-play на час переходу');
+ const t0=await pg.evaluate(()=>{document.getElementById('vdCard').click();return document.getElementById('vdCard').style.viewTransitionName;});
+ T.check(t0==='vt-play','картка «Виклик дня» отримала ім’я vt-play на час переходу');
  await pg.waitForFunction(()=>!document.getElementById('s2').hidden,null,{polling:'raf'});
- const mid=await pg.evaluate(()=>({from:document.getElementById('dailyBtn').style.viewTransitionName,to:document.querySelector('#s2 .dtop .bar').style.viewTransitionName,
+ const mid=await pg.evaluate(()=>({from:document.getElementById('vdCard').style.viewTransitionName,to:document.querySelector('#s2 .dtop .bar').style.viewTransitionName,
    s2:!document.getElementById('s2').hidden,wave:document.getElementById('s2').classList.contains('wave'),
    dl:[...document.querySelectorAll('#pitch .slot')].map(e=>({g:e.className.match(/GK|DF|MF|FW/)[0],d:parseFloat(getComputedStyle(e).animationDelay)*1000})),
    sp:parseFloat(getComputedStyle(document.getElementById('spinZone')).animationDelay)*1000}));
@@ -57,6 +57,7 @@ async function draftAll(pg){for(let i=0;i<11;i++){await pg.click('#spinBtn');awa
  T.check(await noScroll(pg),'драфт 390: без горизонтальної прокрутки');
  await shot(pg,'draft_end');
  // ---- 4. live season -> summary
+ await pg.evaluate(()=>{window.__dbg.setFmt('classic');document.getElementById('startBtn').click();});await wait(700);   // classic game: the challenge draft above may not meet its condition
  await draftAll(pg);await pg.click('#simBtn');await pg.waitForSelector('#live:not([hidden])');await wait(900);await shot(pg,'live');
  const f0=await pg.evaluate(()=>{document.getElementById('skipBtn').click();return [document.getElementById('lvRec').style.viewTransitionName,document.getElementById('lvPts').style.viewTransitionName];});
  T.check(f0.join()==='vt-rec,vt-pts','В-Н-П і очки живого сезону отримали спільні імена');
@@ -86,8 +87,8 @@ async function draftAll(pg){for(let i=0;i<11;i++){await pg.click('#spinBtn');awa
  {const o=await openPage();await o.pg.evaluate(()=>{delete Document.prototype.startViewTransition;});
   const r=await o.pg.evaluate(()=>{document.getElementById('freeOpen').click();const s=document.getElementById('s4');return {vis:!s.hidden,home:document.getElementById('s1').hidden,enter:s.classList.contains('enter'),n:__dbg.VT_N,cls:document.documentElement.className};});
   T.check(r.vis&&r.home&&r.enter&&r.n===0&&!/vt/.test(r.cls),'без API: перемикання синхронне, secin, без класів vt');
-  const d=await o.pg.evaluate(()=>{document.getElementById('dailyBtn')&&0;history.back();return 0;});await wait(400);
-  await o.pg.evaluate(()=>document.getElementById('dailyBtn').click());await wait(100);
+  const d=await o.pg.evaluate(()=>{document.getElementById('vdCard')&&0;history.back();return 0;});await wait(400);
+  await o.pg.evaluate(()=>document.getElementById('vdCard').click());await wait(100);
   T.check(await o.pg.evaluate(()=>!document.getElementById('s2').hidden&&document.getElementById('s2').classList.contains('wave')),'без API: драфт відкривається, хвиля слотів працює');
   T.check((await names(o.pg)).length===0,'без API: імен немає');
   T.check(o.errs.length===0,'без API: помилок JS немає'+(o.errs.length?': '+o.errs[0]:''));await o.b.close();}
@@ -96,7 +97,7 @@ async function draftAll(pg){for(let i=0;i<11;i++){await pg.click('#spinBtn');awa
  {const o=await openPage({reducedMotion:'reduce'});
   const r=await o.pg.evaluate(()=>{document.getElementById('freeOpen').click();const s=document.getElementById('s4');return {vis:!s.hidden,n:__dbg.VT_N,cls:document.documentElement.className,enter:getComputedStyle(s).animationName};});
   T.check(r.vis&&r.n===0&&!/vt/.test(r.cls)&&r.enter==='none','reduce: без переходу, без secin');
-  await o.pg.evaluate(()=>history.back());await wait(300);await o.pg.evaluate(()=>document.getElementById('dailyBtn').click());await wait(100);
+  await o.pg.evaluate(()=>history.back());await wait(300);await o.pg.evaluate(()=>document.getElementById('vdCard').click());await wait(100);
   const w=await o.pg.evaluate(()=>({draft:!document.getElementById('s2').hidden,wave:document.getElementById('s2').classList.contains('wave'),n:__dbg.VT_N,an:document.getAnimations().length}));
   T.check(w.draft&&!w.wave&&w.n===0,'reduce: драфт без хвилі і без переходу');
   const css=await o.pg.evaluate(()=>{const e=document.getElementById('spinZone');return getComputedStyle(e).animationName;});
@@ -106,7 +107,7 @@ async function draftAll(pg){for(let i=0;i<11;i++){await pg.click('#spinBtn');awa
  // ---- 8. layouts: 320 phone, iPad 1024, Telegram fullscreen
  for(const [vw,vh,tg,tag] of [[320,640,0,'320'],[1024,768,0,'ipad'],[390,844,1,'tgfs']]){
   const o=await openPage({viewport:{width:vw,height:vh}});if(tg)await o.pg.evaluate(()=>document.documentElement.classList.add('tgfs'));
-  await o.pg.evaluate(()=>document.getElementById('dailyBtn').click());await wait(110);
+  await o.pg.evaluate(()=>document.getElementById('vdCard').click());await wait(110);
   T.check((await vtAnims(o.pg)).length>0,`${tag}: переход іде`);await shot(o.pg,`${tag}_mid`);await wait(1200);
   const g=await o.pg.evaluate(()=>{const h=document.querySelector('header.top').getBoundingClientRect(),bar=document.querySelector('#s2 .dtop .bar').getBoundingClientRect();return {sw:document.documentElement.scrollWidth<=innerWidth+1,hTop:h.top,bar:bar.width>20,names:[...document.querySelectorAll('*')].filter(e=>e.style.viewTransitionName).length};});
   T.check(g.sw&&g.hTop===0&&g.bar&&g.names===0,`${tag}: без горизонтальної прокрутки, шапка на місці, імена зняті`);

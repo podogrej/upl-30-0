@@ -10,10 +10,10 @@ const fail=[];let n=0;const check=(ok,msg)=>{n++;console.log((ok?'✓ ':'✗ ')+
  const {b,pg,errs}=await openSite({db,api:{'/api/save':async req=>{saves.push(req.body||{});return {json:{id:7,verified:true}};},'/api/seed':async()=>({json:{seed:12345,seed_id:'s1'}})}});
  // ---- home: new-mode badge, 5x5 hidden, FAQ up to date
  const home=await pg.evaluate(()=>({pick:!document.getElementById('pickOpen').hidden,f5:document.getElementById('f5Open').hidden,
-   faq:document.querySelector('.faq0').textContent.replace(/\s+/g,' '),daily:document.getElementById('dailyBtn').textContent}));   // daily draft button: icon, title, date and formation on one line
+   faq:document.querySelector('.faq0').textContent.replace(/\s+/g,' '),old:!!document.getElementById('dailyBtn')}));
  check(home.pick&&home.f5,'головна: «Вибір сезону» є, 5×5 на одному телефоні сховано');
- check(/Що таке «Драфт дня»/.test(home.faq)&&/Що таке «Вибір сезону»/.test(home.faq)&&!/5×5 на одному пристрої/.test(home.faq)&&/Це ти\?/.test(home.faq),'FAQ: драфт дня, вибір сезону, «Це ти?», без 5×5 на одному пристрої');
- check(/^Драфт дня\d\d\.\d\d · [\d-]+/.test(home.daily.trim())&&!/виклик дня/i.test(home.daily),'кнопка дня: «'+home.daily.trim()+'»');
+ check(/Що таке «Виклик дня»/.test(home.faq)&&!/Драфт дня/.test(home.faq)&&/Що таке «Вибір сезону»/.test(home.faq)&&!/5×5 на одному пристрої/.test(home.faq)&&/Це ти\?/.test(home.faq),'FAQ: виклик дня (драфту дня немає), вибір сезону, «Це ти?», без 5×5 на одному пристрої');
+ check(!home.old,'кнопки «Драфт дня» немає');
  // ---- season pick: format tile, no modes
  // season pick from home goes straight to the draft; settings via Play -> season pick tile
  await pg.click('#pickOpen');await pg.waitForTimeout(300);
@@ -51,8 +51,5 @@ const fail=[];let n=0;const check=(ok,msg)=>{n++;console.log((ok?'✓ ':'✗ ')+
  check(sec.rare&&sec.cnt===1,'новий секретний трофей «'+sec.id+'» — з ефектом, звичайний «champ» — без');
  await pg.evaluate(()=>document.getElementById('newTro').scrollIntoView({block:'center'}));await pg.waitForTimeout(1600);
  await pg.locator('#newTro').screenshot({path:path.join(OUT,'v060_rare_trophy.png')});
- // ---- daily board: several results per player -> only the best (rows are pre-sorted)
- const bp=await pg.evaluate(()=>window.__dbg.bestPerPlayer([{player_id:'a',pts:80},{player_id:'b',pts:70},{player_id:'a',pts:60},{player_id:null,pts:50},{player_id:null,pts:40}]).map(r=>(r.player_id||'-')+r.pts).join(','));
- check(bp==='a80,b70,-50,-40','таблиця дня: кращий результат гравця ('+bp+')');
  check(!errs.length,'помилок на сторінці немає '+errs.join(' | '));
  await b.close();console.log(fail.length?`v060: ПРОБЛЕМИ ${fail.length}/${n}`:`v060: УСЕ ГАРАЗД (${n} перевірок)`);process.exit(fail.length?1:0);})();

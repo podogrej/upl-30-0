@@ -22,7 +22,7 @@ async function pickOne(pg){await pg.click('#spinBtn');await pg.waitForSelector('
     const pg=await ctx.newPage();const errs=[];pg.on('pageerror',e=>errs.push(e.message));
     const scan=async name=>{await pg.waitForTimeout(300);const bad=await pg.evaluate(CHECK);T.check(!bad.length,`${tag} · ${name}: емодзі на місці`+(bad.length?' — '+bad.slice(0,4).join('; '):''));};
     await pg.goto('file://'+path.join(ROOT,'index.html'));await pg.waitForTimeout(800);
-    T.check(await pg.evaluate(()=>!!document.querySelector('#dMeta .hot0')),`${tag} · головна: є «серія» з вогником`);
+    T.check(await pg.evaluate(()=>!document.getElementById('stkChip').hidden&&!!document.querySelector('#stkChip .ic')&&/4 дні/.test(document.getElementById('stkChip').textContent)),`${tag} · шапка: є «серія» з вогником`);
     await scan('головна');
     await pg.click('#freeOpen');await scan('режими');
     await pg.click('#startBtn');for(let i=0;i<3;i++)await pickOne(pg);await scan('драфт');

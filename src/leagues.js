@@ -126,7 +126,7 @@ function flWire(){const $=id=>document.getElementById(id),el=$('fl');
 // league attempt: regular classic draft under league rules (rerolls, ratings, era); formation is the player's own
 function flPlay(){const d=FL&&FL.data;if(!d)return;
   S.league={id:d.id,name:d.name,rerolls:d.rerolls,memory:d.ratings==='memory',era:ERAS[d.era]?d.era:'all'};
-  S.daily=null;S.challenge=null;S.chal=null;S.result=null;setFmt('classic');S.mode='normal';
+  S.vd=null;S.challenge=null;S.chal=null;S.result=null;setFmt('classic');S.mode='normal';
   S.formation=FORMATIONS[FL.formation]?FL.formation:'4-4-2';S.slots=newSlots(S.formation);S.taken=new Set();S.wheel=null;S.rerolls=d.rerolls;S.showR=false;S.moveMode=false;
   document.getElementById('modeLabel').textContent=`Ліга «${d.name}» · ${S.formation}`;renderDraft();go(2);}
 // after a league season: line under the result (credited or not)

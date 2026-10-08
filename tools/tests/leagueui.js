@@ -24,10 +24,8 @@ const OUT=process.argv[2]||path.join(ROOT,'tools','tests','out');fs.mkdirSync(OU
  T.check(getChat==='-100555','таблицю взято для чату з start_param ('+getChat+')');
  await pg.screenshot({path:path.join(OUT,'league_home.png')});
  await pg.click('#homeBtn');
- await pg.click('#dailyBtn');T.check(/Драфт дня/.test(await pg.textContent('#modeLabel')),'«Драфт дня» з головної відкриває драфт дня');
- await draftSeason(pg);await pg.waitForTimeout(2000);
- T.check(!posts.some(p=>p.result),'драфт дня: у ліги чатів нічого не надсилається');
- await pg.click('#againBtn');await pg.waitForTimeout(400);await pg.click('#homeBtn').catch(()=>{});
+ await pg.evaluate(()=>window.__dbg.vdOpen('2026-10-12'));await pg.waitForTimeout(300);T.check(/Виклик дня/.test(await pg.textContent('#modeLabel')),'виклик дня відкриває збір складу');
+ await pg.evaluate(()=>window.__dbg.go(1));await pg.waitForTimeout(300);
  await pg.click('#freeOpen');await pg.evaluate(()=>window.__dbg.setFmt('classic'));await pg.click('#startBtn');await draftSeason(pg);await pg.waitForTimeout(2000);
  T.check(!posts.some(p=>p.result),'«Грати»: браузер теж нічого не надсилає — сезон зараховує сервер після перевірки');
  // large chat: full list with own row; standings tab

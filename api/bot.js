@@ -4,7 +4,6 @@ const L = require('./_league.js');   // shared group league helpers
 const C = require('./_channel.js');   // Telegram channel: admin commands, approval buttons, /whoami
 const N = require('./_notify.js');   // opt-in evening notifications: /notify, nt:on|off buttons
 const SITE = 'https://upl30.com.ua/';   // must stay code (not commented out): /start, /play, /top in private chat depend on it
-const SB_KEY = (process.env.SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_pEszTOPsCHLgpiPpwB4JKg_SS-X07hY').trim(); // publishable key, same as on the site
 
 function playButton(isPrivate) {
   // private chat: Mini App button; groups don't allow such buttons, so link to the bot's main Mini App
@@ -12,23 +11,9 @@ function playButton(isPrivate) {
   return { text: '▶️ Грати', url: `https://t.me/${L.env('TG_BOT') || 'upl30_bot'}?startapp` };
 }
 
-async function topToday() {
-  const day = L.kyivDate();
-  // name from player profile (players); nickname copy only if no profile (audit V5)
-  const q = sel => fetch(`${L.SB_URL}/rest/v1/daily_results?apikey=${SB_KEY}&day=eq.${day}&verified=is.true&select=${sel}&order=pts.desc,ga.asc,gf.desc&limit=30`);
-  let r = await q('nickname,w,d,l,pts,gf,ga,player_id,players(name,anon_name)'); if (!r.ok) r = await q('nickname,w,d,l,pts,gf,ga');
-  // a player may have two day results (merged logins from two devices): keep the best
-  const seen = new Set();
-  const rows = (r.ok ? await r.json() : []).filter(x => !x.player_id || (!seen.has(x.player_id) && seen.add(x.player_id))).slice(0, 10);
-  if (!rows.length) return `<b>Драфт дня ${day}</b>\nПоки що ніхто не зіграв. Будь першим!`;
-  const medal = ['🥇', '🥈', '🥉'];
-  return `<b>Драфт дня ${day} — топ ${rows.length}</b>\n` + rows.map((x, i) =>
-    `${medal[i] || (i + 1) + '.'} ${L.esc(x.players && (x.players.name || x.players.anon_name) ? String(x.players.name || x.players.anon_name) : (x.nickname || 'Анонім'))} — <b>${x.pts}</b> (${x.w}-${x.d}-${x.l}, ${x.gf}:${x.ga})`).join('\n');
-}
-
 const HELLO = 'Збери XI з усієї історії Прем\'єр-ліги України і пройди сезон 30-0.\n\n' +
   'Колесо видає клуб і сезон, з кожного береш одного гравця. Одинадцять обертів — і 30 турів чемпіонату.\n\n' +
-  '/play — грати\n/top — таблиця драфту дня\n/notify — вечірні сповіщення (за замовчуванням вимкнені)\n\nДодай мене в групу з друзями, зроби адміністратором і напиши там /league — буде ліга вашої групи.';
+  '/play — грати\n/notify — вечірні сповіщення (за замовчуванням вимкнені)\n\nДодай мене в групу з друзями, зроби адміністратором і напиши там /league — буде ліга вашої групи.';
 // make the bot admin before /league: otherwise Telegram upgrades the group to a supergroup with a new id and a league created earlier stays in the old chat
 const GROUP_ABOUT = 'Грайте у «Грати»: у лігу йде найкращий сезон із перших трьох спроб дня кожного. Табло оновлюється саме, а ввечері — підсумок: хто виграв день.';
 const GROUP_HELLO = 'Привіт! Я — 30-0 УПЛ ⚽️\n\nДва кроки:\n1. Зробіть мене адміністратором (досить одного права — «Закріплення повідомлень»), щоб я закріплював табло.\n' +
@@ -132,7 +117,7 @@ module.exports = async (req, res) => {
       } else if (cmd === '/top' || cmd === '/table') {
         const hasLeague = !isPrivate && (await L.sb(`leagues?chat_id=eq.${chat.id}&select=chat_id`) || []).length > 0;
         if (hasLeague) await L.upsertBoard(chat.id, L.kyivDate(), { copy: true });   // pinned board is updated; an unpinned copy goes to the chat
-        else await L.tg('sendMessage', { chat_id: chat.id, text: await topToday(), parse_mode: 'HTML', reply_markup: { inline_keyboard: [[playButton(isPrivate)]] } });
+        else await L.tg('sendMessage', { chat_id: chat.id, text: 'Таблиці — у грі: «Таблиці» → «За весь час» і «Мої чати». У групі /top показує табло ліги чату.', reply_markup: { inline_keyboard: [[playButton(isPrivate)]] } });
       }
     }
     // any private non-command message is feedback

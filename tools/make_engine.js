@@ -121,4 +121,6 @@ fs.mkdirSync(ROOT + '/lib', { recursive: true });
 fs.writeFileSync(ROOT + '/lib/engine.js', mod);
 // 5×5 engine: copy of src/five_core.js for the server (api/fl5.js); src/ is not deployed to Vercel (.vercelignore)
 fs.writeFileSync(ROOT + '/lib/five_core.js', '// GENERATED from src/pen_skill.js + src/five_core.js (node tools/make_engine.js), do not edit\n' + fs.readFileSync(ROOT + '/src/pen_skill.js', 'utf8') + fs.readFileSync(ROOT + '/src/five_core.js', 'utf8'));
+// daily challenge rules: copy of src/vd_core.js for the server (api/_vd.js)
+fs.writeFileSync(ROOT + '/lib/vd_core.js', '// GENERATED from src/vd_core.js (node tools/make_engine.js), do not edit\n' + fs.readFileSync(ROOT + '/src/vd_core.js', 'utf8'));
 console.log('engine: ' + need.size + ' declarations, ' + (mod.length / 1024).toFixed(0) + ' KB');

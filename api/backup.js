@@ -36,6 +36,7 @@ const TABLES = [
   { t: 'feedback', order: 'id', key: 'id' },   // sql/v0695_feedback.sql
   { t: 'channel_posts', order: 'id', key: 'id' },   // sql/v06997_channel_posts.sql
   { t: 'tg_notify', order: 'tg_user_id', key: 'tg_user_id' },   // sql/v070.sql
+  { t: 'vd_results', order: 'id', key: 'id' },   // sql/v080_vyklyk_dnia.sql: daily challenge attempts
 ];
 const safeEq = (a, b) => { const x = Buffer.from(String(a)), y = Buffer.from(String(b)); return x.length === y.length && crypto.timingSafeEqual(x, y); };
 const q = v => encodeURIComponent(typeof v === 'string' && /[,.()"]/.test(v) ? `"${v.replace(/"/g, '\\"')}"` : String(v));

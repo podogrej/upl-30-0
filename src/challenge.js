@@ -50,7 +50,7 @@ function renderChal(){
   document.getElementById('chalGo').onclick=chalStart;
 }
 function chalStart(){
-  const c=CHAL;if(!c)return;S.league=null;S.daily=null;S.result=null;S.format='classic';S.pickMode=false;S.mode=MODES[c.mode]&&c.mode!=='daily'?c.mode:'normal';S.formation=FORMATIONS[c.formation]?c.formation:'4-4-2';
+  const c=CHAL;if(!c)return;S.league=null;S.vd=null;S.result=null;S.format='classic';S.pickMode=false;S.mode=MODES[c.mode]&&c.mode!=='daily'?c.mode:'normal';S.formation=FORMATIONS[c.formation]?c.formation:'4-4-2';
   S.chal=chalNewGame(+c.seed,+c.year);S.challenge=c;
   S.slots=newSlots(S.formation);S.taken=new Set();S.wheel=null;S.rerolls=MODES[S.mode].rerolls;
   document.getElementById('modeLabel').textContent=`Виклик · ${S.formation} · ${MODES[S.mode].name}`;renderDraft();go(2);
@@ -58,7 +58,7 @@ function chalStart(){
 // after the season: compare with the challenge and save the result
 function chalAfterSeason(r){
   const line=document.getElementById('chalLine'),box=document.getElementById('chalBox');
-  const can=ONLINE&&S.chal&&!S.daily&&S.format==='classic';   // the Challenge tile opens this block
+  const can=ONLINE&&S.chal&&!S.vd&&S.format==='classic';   // the Challenge tile opens this block
   if(box)box.hidden=true;const tile=document.getElementById('chalOpen');if(tile)tile.hidden=!can;
   const ni=document.getElementById('chalName');if(ni){ni.hidden=!!TGU;if(!ni.value)ni.value=myName();}
   document.getElementById('chalMsg').textContent='';
