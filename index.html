@@ -61,9 +61,9 @@ if(/^(upl30\.com\.ua|upl-30-0\.vercel\.app)$/.test(location.hostname)){(function
 :root[data-theme="dark"]{--bg:#0b1430; --bg2:#0f1b3d; --surface:#132346; --line:#26396b; --ink:#ffffff; --ink2:#b9c2de; --muted:#7f8aad; --pitch:#2a4fa8; --pitch2:#1d3a80; --chalk:#f0f3fb; --amber:#e0287a; --amber2:#ff5aa0; --win:#2fd07a; --draw:#f5b83d; --loss:#ff4d5e; --gk:#FFD60A; --df:#0A84FF; --mf:#30D158; --fw:#FF453A; --sh-1:0 1px 2px rgba(0,0,0,.35); --sh-2:inset 0 1px 0 rgba(255,255,255,.06),0 10px 28px rgba(0,0,0,.45); --sh-3:inset 0 1px 0 rgba(255,255,255,.08),0 18px 48px rgba(0,0,0,.6); color-scheme:dark;}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
-body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:var(--fs-body);line-height:var(--lh-body);padding-inline:var(--sp-4);padding-block:0 var(--sp-6);margin:0}
-/* secondary text (captions, hints, subtitles, grey text under titles and buttons): tight leading; --lh-body only for long reading paragraphs (FAQ, news) */
-.muted,small,.lead0,.dsc0,.dstat0,.lg-sub,.lg-note,.lg-empty,.lg-none,.lbfoot,.pp-empty,.sub,.lg-foot,.nudge,.best{line-height:var(--lh-sub)}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:var(--fs-body);line-height:var(--lh-sub);padding-inline:var(--sp-4);padding-block:0 var(--sp-6);margin:0}
+/* tight leading is the default for all UI text; --lh-body only for long reading text (FAQ answers, news, one-club notes, text fields). tools/tests/line_height.js guards it */
+.faq0 p,.faq0 li,.news .ni p,#oc details p,#oc details li{line-height:var(--lh-body)}
 html,body{overflow-x:clip;overscroll-behavior-x:none}   /* page never pans sideways (Android WebView) */
 .fl-opts.c2>[data-k="era"][data-v="all"]{grid-column:1/-1}
 .wrap{max-width:760px;margin:0 auto}
@@ -179,7 +179,7 @@ table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
 th,td{padding:var(--sp-2) var(--sp-2);border-bottom:1px solid var(--line);text-align:left;font-size:var(--fs-footnote)}
 th{font-size:var(--fs-caption2);letter-spacing:var(--ls-caps);text-transform:uppercase;color:var(--ink2);font-weight:var(--wt-bold)}
 td.num,th.num{text-align:center;font-family:var(--font-mono)}
-td.pn{min-width:7.5em}.pnr{display:flex;align-items:center;gap:var(--sp-2);min-width:0}.ln{flex:none;width:8px;height:8px;border-radius:50%;background:var(--muted)}.ln.GK{background:var(--gk)}.ln.DF{background:var(--df)}.ln.MF{background:var(--mf)}.ln.FW{background:var(--fw)}.lnkey{display:flex;flex-wrap:wrap;gap:var(--sp-1) var(--sp-3);align-items:center;margin-top:var(--sp-2);line-height:var(--lh-body)}.lnkey span{display:inline-flex;align-items:center;gap:var(--sp-1)}.lnkey .lnform{flex-basis:100%}td.pn .pnr>span{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:var(--lh-normal)}td{vertical-align:middle}
+td.pn{min-width:7.5em}.pnr{display:flex;align-items:center;gap:var(--sp-2);min-width:0}.ln{flex:none;width:8px;height:8px;border-radius:50%;background:var(--muted)}.ln.GK{background:var(--gk)}.ln.DF{background:var(--df)}.ln.MF{background:var(--mf)}.ln.FW{background:var(--fw)}.lnkey{display:flex;flex-wrap:wrap;gap:var(--sp-1) var(--sp-3);align-items:center;margin-top:var(--sp-2)}.lnkey span{display:inline-flex;align-items:center;gap:var(--sp-1)}.lnkey .lnform{flex-basis:100%}td.pn .pnr>span{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:var(--lh-normal)}td{vertical-align:middle}
 tr.me td{background:transparent}
 :root{--z-cl:#0A84FF;--z-el:#FF9F0A;--z-co:#30D158;--z-rl:#FF453A}
 tr.z-cl td{background:color-mix(in srgb,var(--z-cl) 16%,transparent)}tr.z-el td{background:color-mix(in srgb,var(--z-el) 22%,transparent)}tr.z-co td{background:color-mix(in srgb,var(--z-co) 14%,transparent)}tr.z-rl td{background:color-mix(in srgb,var(--z-rl) 14%,transparent)}
@@ -389,7 +389,7 @@ td .sub{font-size:var(--fs-caption2);color:var(--muted);margin-top:var(--sp-0h);
 .sk::after{content:"";position:absolute;inset:0;transform:translateX(-100%);background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--ink) 11%,transparent),transparent);animation:skim 1.4s linear infinite}
 @keyframes skim{to{transform:translateX(100%)}}
 .sk.w20{width:20px}.sk.w40{width:40%}.sk.w60{width:60%}.sk.w80{width:80%}.sk.num{width:2.2em}.sk.blk{display:block}.sk.dot{width:32px;height:32px;border-radius:50%;flex:none}
-.sk.sk-pitch{height:auto;aspect-ratio:68/105;max-width:460px;margin-inline:auto;border-radius:14px}.sk-hero{height:148px;border-radius:var(--r-lg)}.sk-h3{height:18px;width:30%;margin:var(--sp-5) 0 var(--sp-3)}
+.sk.sk-pitch{height:auto;aspect-ratio:68/105;max-width:460px;margin-inline:auto;border-radius:14px}.sk-hero{height:138px;border-radius:var(--r-lg)}.sk-h3{height:18px;width:30%;margin:var(--sp-5) 0 var(--sp-3)}
 
 .sk-row .sk.dot{width:20px;height:20px}.sk-row b,.sk-row small{display:block}
 .sk-h1{width:55%;height:var(--fs-title1);border-radius:var(--r-sm)}.sk-bar{height:8px;border-radius:var(--r-pill)}.sk-btn{height:48px;border-radius:var(--r-md)}
@@ -527,7 +527,7 @@ button.danger{background:var(--loss);border-color:var(--loss);color:#fff}
 .pp-warn{display:grid;gap:var(--sp-2);margin-top:var(--sp-4);padding:var(--sp-3);border:1px solid color-mix(in srgb,var(--amber) 55%,var(--line));border-radius:var(--r-md);background:color-mix(in srgb,var(--amber) 9%,var(--surface))}
 .pp-warn .h{display:flex;align-items:flex-start;gap:var(--sp-2);line-height:var(--lh-normal);font-weight:var(--wt-bold);font-size:var(--fs-body)}.pp-warn .h .ico{width:20px;height:20px;fill:var(--amber);flex:none;margin-top:0}   /* icon aligned with the first line of the title */
 #verLine{display:flex;align-items:center}#verLine .ic{flex:none}
-.pp-warn p{margin:0;font-size:var(--fs-footnote);color:var(--ink2);line-height:var(--lh-sub)}
+.pp-warn p{margin:0;font-size:var(--fs-footnote);color:var(--ink2)}
 .pp-lock{display:flex;align-items:center;gap:var(--sp-2);font-size:var(--fs-footnote);color:var(--muted);padding:var(--sp-3);border:1px dashed var(--line);border-radius:var(--r-md)}
 .pp-lock .ico{width:16px;height:16px;fill:currentColor}
 a.plink{color:inherit;text-decoration:underline;text-decoration-color:color-mix(in srgb,var(--ink) 30%,transparent);text-underline-offset:3px}
@@ -542,7 +542,7 @@ button.link0{border:0;background:none;min-height:44px;padding:var(--sp-1) var(--
 .lg-none{display:grid;gap:var(--sp-2);justify-items:center;text-align:center;padding:var(--sp-5) var(--sp-4);border:1px dashed var(--line);border-radius:var(--r-md);color:var(--ink2)}.lg-none p{margin:0}
 tr.gap td{padding:0 var(--sp-2);line-height:var(--lh-snug);color:var(--muted);text-align:center;border:0}
 .lg-hd{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--sp-3)}.lg-ht{flex:1;min-width:0}.lg-ht .ttl{margin-top:var(--sp-0h);overflow-wrap:anywhere}
-.lg-pill{flex:none;white-space:nowrap;padding:var(--sp-1) var(--sp-3);border-radius:var(--r-pill);background:color-mix(in srgb,var(--line) 60%,transparent);font-size:var(--fs-footnote);line-height:20px;font-weight:var(--wt-bold);color:var(--ink2)}
+.lg-pill{flex:none;white-space:nowrap;display:inline-flex;align-items:center;min-height:28px;padding:0 var(--sp-3);border-radius:var(--r-pill);background:color-mix(in srgb,var(--line) 60%,transparent);font-size:var(--fs-footnote);line-height:var(--lh-snug);font-weight:var(--wt-bold);color:var(--ink2)}
 .sk.lg-pill{width:110px;height:28px;padding:0}.sk.lg-sq{width:24px;height:24px}
 .lg-t th{height:28px;padding:0 var(--sp-2);border:0;font-size:var(--fs-caption);letter-spacing:0;text-transform:none;color:var(--muted);font-weight:var(--wt-bold);text-align:left}
 .lg-t td{height:44px;padding:0 var(--sp-2);border:0;border-top:1px solid color-mix(in srgb,var(--line) 70%,transparent);font-size:var(--fs-body)}
@@ -661,14 +661,14 @@ button.daily0:disabled{opacity:1;border-color:var(--line);cursor:default}.daily0
 button.tile1{display:grid;grid-template-columns:44px minmax(0,1fr) auto;align-items:center;column-gap:var(--sp-4);min-height:72px;margin:0;padding:var(--sp-3) var(--sp-4) var(--sp-3) var(--sp-3);border:0;border-radius:var(--r-lg);background:var(--card);color:var(--ink);text-align:left;font-family:var(--font-body);cursor:pointer}
 button.tile1>.ic{width:44px;height:44px;margin:0;border-radius:var(--r-md);background:color-mix(in srgb,var(--tc) 16%,transparent);color:var(--ink)}button.tile1>.ic .ico{width:26px;height:26px}   /* soft tinted plate, icon in text color for contrast */
 .tile1>span{display:grid;gap:var(--sp-1);min-width:0}.tile1 b{font-size:var(--fs-headline);font-weight:var(--wt-bold);line-height:var(--lh-snug)}
-.tile1 small{font-size:var(--fs-footnote);font-weight:var(--wt-medium);color:var(--ink2);line-height:var(--lh-sub)}
+.tile1 small{font-size:var(--fs-footnote);font-weight:var(--wt-medium);color:var(--ink2)}
 .tile1 .chev{font-style:normal;color:var(--muted);font-size:var(--fs-title3)}
 /* One club: list page (s8), club card (setup), record block (summary) */
 #oc h1{font:var(--wt-black) var(--fs-title1)/var(--lh-tight) var(--font-display);margin:var(--sp-4) 0 var(--sp-1);letter-spacing:var(--ls-tight)}
-#oc .lead{color:var(--ink2);margin:0 0 var(--sp-3);line-height:var(--lh-sub)}
+#oc .lead{color:var(--ink2);margin:0 0 var(--sp-3)}
 #oc details{background:var(--surface);border-radius:var(--r-lg);box-shadow:var(--sh-1);padding:var(--sp-3) var(--sp-4);margin-bottom:var(--sp-2)}
 #oc details summary{font-weight:var(--wt-bold);cursor:pointer}
-#oc details p,#oc details li{color:var(--ink2);line-height:var(--lh-body);margin:var(--sp-2) 0 0}
+#oc details p,#oc details li{color:var(--ink2);margin:var(--sp-2) 0 0}
 #oc details ul{list-style:none;padding:0;margin:0}
 .occ{display:flex;flex-wrap:wrap;gap:var(--sp-2);margin:var(--sp-4) 0 var(--sp-3)}
 .occ span{display:inline-flex;align-items:center;gap:var(--sp-1);padding:var(--sp-1) var(--sp-3);border-radius:var(--r-pill);background:var(--surface);box-shadow:var(--sh-1);font-size:var(--fs-footnote);font-weight:var(--wt-bold);font-variant-numeric:tabular-nums}
@@ -687,7 +687,7 @@ button.tile1>.ic{width:44px;height:44px;margin:0;border-radius:var(--r-md);backg
 .och{border-radius:var(--r-xl);padding:var(--sp-5) var(--sp-4);text-align:center;box-shadow:var(--sh-2);margin:var(--sp-4) 0 var(--sp-2);background:var(--surface);color:var(--ink)}
 .och small{display:block;font-size:var(--fs-caption);letter-spacing:var(--ls-caps);text-transform:uppercase;opacity:.75;font-weight:var(--wt-bold)}
 .och h2{margin:var(--sp-1) 0;font-size:var(--fs-title2);color:inherit}
-.och p{margin:0;opacity:.85;font-size:var(--fs-footnote);line-height:var(--lh-sub)}
+.och p{margin:0;opacity:.85;font-size:var(--fs-footnote)}
 .och .pills{display:flex;flex-wrap:wrap;justify-content:center;gap:var(--sp-2);margin:var(--sp-3) 0 var(--sp-1)}
 .och .pills span{background:rgba(0,0,0,.28);padding:var(--sp-1) var(--sp-3);border-radius:var(--r-pill);font-weight:var(--wt-bold);font-size:var(--fs-footnote)}
 .och .pills span.lt{background:rgba(255,255,255,.18)}
@@ -699,27 +699,32 @@ button.tile1>.ic{width:44px;height:44px;margin:0;border-radius:var(--r-md);backg
 .ocr .big{font-size:var(--fs-display);line-height:1;font-family:var(--font-emoji)}
 .ocr small{display:block;margin-top:var(--sp-2);font-size:var(--fs-caption);letter-spacing:var(--ls-caps);text-transform:uppercase;color:var(--muted);font-weight:var(--wt-bold)}
 .ocr h3{margin:var(--sp-1) 0;font-size:var(--fs-title3)}
-.ocr p{margin:0;color:var(--ink2);line-height:var(--lh-sub)}.ocr .ft{margin-top:var(--sp-2);font-size:var(--fs-footnote)}
-.ocnote{margin:0;color:var(--ink2);font-size:var(--fs-footnote);line-height:var(--lh-sub)}
+.ocr p{margin:0;color:var(--ink2)}.ocr .ft{margin-top:var(--sp-2);font-size:var(--fs-footnote)}
+.ocnote{margin:0;color:var(--ink2);font-size:var(--fs-footnote)}
 @media (min-width:700px){.tiles0.m3{grid-template-columns:repeat(3,1fr)}.tiles0.m2{grid-template-columns:1fr 1fr}button.tile1{grid-template-columns:44px minmax(0,1fr);min-height:80px}.tile1 .chev{display:none}}
 #s1 .sec0{margin:var(--sp-6) var(--sp-0h) var(--sp-3);font:var(--wt-bold) var(--fs-caption)/1 var(--font-body);letter-spacing:var(--ls-caps)}
 /* FAQ: one collapsed card */
 details.faqbox0,details.faqbox0[open]{margin:var(--sp-6) 0 0;border:0;border-radius:var(--r-lg);background:var(--card);padding:0;box-shadow:var(--sh-1)}
 details.faqbox0>summary{padding:var(--sp-4);font-size:var(--fs-body);font-weight:var(--wt-bold)}
 details.faqbox0 .faq0{padding:0 var(--sp-4) var(--sp-2)}
+#faqBox summary{display:flex;align-items:center;justify-content:space-between;gap:var(--sp-3);list-style:none;cursor:pointer}#faqBox summary::-webkit-details-marker{display:none}
+#faqBox summary::after{content:'';flex:none;width:8px;height:8px;margin-right:var(--sp-1);border:solid currentColor;border-width:0 2px 2px 0;transform:translateY(-2px) rotate(45deg);transition:transform var(--dur-3) var(--ease-out)}#faqBox details[open]>summary::after,details#faqBox[open]>summary::after{transform:translateY(2px) rotate(-135deg)}
+@media (prefers-reduced-motion:reduce){#faqBox summary::after{transition:none}}
 .ft{display:grid;gap:var(--sp-4);justify-items:center;margin:var(--sp-6) auto var(--sp-6);padding:var(--sp-card) var(--sp-4) 0;border-top:1px solid var(--line2);max-width:760px;text-align:center;font-family:var(--font-body)}   /* footer (variant A) */
 .foot0{display:flex;flex-wrap:wrap;justify-content:center;gap:0 var(--sp-3);font-size:var(--fs-footnote);font-weight:var(--wt-bold)}.foot0 a{display:inline-flex;align-items:center;min-height:44px;padding-inline:var(--sp-1);color:var(--ink2);text-decoration:none}@media (hover:hover) and (pointer:fine){.foot0 a:hover{color:var(--amber)}}
-.ft .foot{margin:0;font-family:var(--font-body);font-size:var(--fs-caption)}.ft-small{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:var(--sp-2) var(--sp-2)}.ft .ft-small a{display:inline-flex;align-items:center;min-height:44px;color:var(--muted);font-weight:var(--wt-medium)}.ft .ft-small #newsBtn{color:var(--ink2)}.ft .ft-small a b{position:static;align-self:center;margin-left:var(--sp-1);transform:translateY(-6px)}
+.ft .foot{margin:0;font-family:var(--font-body);font-size:var(--fs-caption)}.ft-small{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:0 var(--sp-4)}.ft .ft-small a{display:inline-flex;align-items:center;min-height:44px;color:var(--muted);font-weight:var(--wt-medium)}.ft .ft-small #newsBtn{color:var(--ink2)}.ft .ft-small a b{position:static;align-self:center;margin-left:var(--sp-1);transform:translateY(-6px)}
 .ft-pills{display:flex;flex-wrap:wrap;justify-content:center;gap:var(--sp-2)}.ft-pill{display:inline-flex;align-items:center;gap:var(--sp-2);min-height:44px;padding:0 var(--sp-4);border-radius:var(--r-pill);border:1px solid var(--line);background:none;color:var(--ink2);font:var(--wt-medium) var(--fs-footnote) var(--font-body);cursor:pointer;white-space:nowrap;text-decoration:none}.ft-pill[hidden]{display:none}.ft-pill .ico{width:15px;height:15px}.ft-pill .ic{width:20px;height:20px}.ft-pill .ic .ico{width:18px;height:18px}
-body:has(#s1[hidden]) .foot0,body:has(#s1[hidden]) .ft-cred{display:none}   /* short footer on inner screens: full one only on home */
-.ft-cred{font-size:var(--fs-caption2);line-height:var(--lh-sub);color:var(--muted);opacity:.8;max-width:64ch;text-wrap:balance}
+body:has(#s1[hidden]) .foot0,body:has(#s1[hidden]) .ft-cred,body:has(#s1[hidden]) .ft-legal{display:none}   /* short footer on inner screens: full one only on home */
+.ft-legal{margin:0 auto;max-width:60ch;font-size:var(--fs-caption2);color:var(--muted);opacity:.8;text-wrap:pretty}
+.ft-cred{font-size:var(--fs-caption2);color:var(--muted);opacity:.8;max-width:64ch;text-wrap:balance}
 .ft-form{width:min(100%,380px);text-align:left;display:grid;gap:var(--sp-2)}.ft-form[hidden]{display:none}.ft-form .ttl{font-size:var(--fs-body);font-weight:var(--wt-bold);color:var(--ink2)}
 .ft-form textarea,.ft-form input{width:100%;box-sizing:border-box;font:var(--wt-regular) var(--fs-headline)/var(--lh-body) var(--font-body);color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);padding:var(--sp-3) var(--sp-3)}.ft-form textarea{min-height:84px;resize:vertical}.ft-form textarea::placeholder{color:var(--muted)}
-.ft-form label{font-size:var(--fs-footnote);color:var(--muted);margin-top:var(--sp-1)}.ft-form small{font-size:var(--fs-caption);color:var(--muted);line-height:var(--lh-sub);margin-top:calc(var(--sp-0h) * -1)}.ft-form small[hidden],.ft-form .err[hidden]{display:none}
+.ft-form label{font-size:var(--fs-footnote);color:var(--muted);margin-top:var(--sp-1)}.ft-form small{font-size:var(--fs-caption);color:var(--muted);margin-top:calc(var(--sp-0h) * -1)}.ft-form small[hidden],.ft-form .err[hidden]{display:none}
 .ft-form .hint{margin:var(--sp-0h) 0 0;font-size:var(--fs-caption);color:var(--muted)}.ft-form .hint a{color:var(--ink2);font-weight:var(--wt-bold);text-decoration:underline;text-underline-offset:2px}.ft-form .err{margin:0;font-size:var(--fs-footnote);color:var(--loss)}
 .ft-form .acts{display:flex;align-items:center;gap:var(--sp-3);margin-top:var(--sp-1)}.ft-send{border:0;border-radius:var(--r-sm);padding:var(--sp-2) var(--sp-4);font:var(--wt-bold) var(--fs-footnote) var(--font-body);background:var(--ink);color:var(--bg);cursor:pointer}.ft-send:disabled{opacity:.5}.ft-cancel{border:0;background:none;padding:var(--sp-2) var(--sp-0h);font:var(--wt-medium) var(--fs-footnote) var(--font-body);color:var(--muted);cursor:pointer}
 .ft-done{width:min(100%,380px);display:flex;gap:var(--sp-2);align-items:center;justify-content:center;text-align:left;padding:var(--sp-3) var(--sp-4);border-radius:var(--r-md);font-size:var(--fs-body);color:var(--ink);background:color-mix(in srgb,var(--win) 12%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--win) 45%,transparent)}.ft-done[hidden]{display:none}.ft-done b{color:var(--win);font-size:var(--fs-headline)}
 table.lbt th.n,table.lbt td.n{width:28px;padding-left:var(--sp-0h);padding-right:var(--sp-0h);text-align:center}
+table.lbt td.n .sk{height:22px;vertical-align:baseline}   /* same height as the place chip in real rows */
 .lbfoot{margin-top:var(--sp-2);font-size:var(--fs-footnote)}
 /* wheel */
 .cdot{display:inline-block;width:14px;height:14px;border-radius:50%;margin-right:10px;vertical-align:-1px;background:var(--c1,var(--line));box-shadow:inset 0 0 0 3px var(--c2,transparent),0 0 0 1px rgba(255,255,255,.18)}
@@ -881,7 +886,7 @@ section>h3:first-child,.box h3:first-of-type,#viewBody>h3:first-child,#viewBody>
 .flyg span{display:block;padding:var(--sp-1) var(--sp-2);border-radius:var(--r-pill);background:var(--surface);color:var(--ink);box-shadow:var(--sh-2);font-weight:var(--wt-bold);white-space:nowrap;line-height:var(--lh-snug)}
 .slot.fw>*{opacity:0}
 .tro:not(.on) .trt b{color:var(--muted)}.tro:not(.on) .trt>span{color:var(--muted)}
-.tro .trt>span{font-size:var(--fs-footnote);line-height:var(--lh-sub)}
+.tro .trt>span{font-size:var(--fs-footnote)}
 #newTro .tro{padding:var(--sp-4) var(--sp-4)}
 /* less template look: gradient only on the logo and one primary button per screen; section labels in sentence case (caps stay on tiny tags and column heads) */
 .fl5champ .ttl,.score0 b.hot{color:var(--amber)}
@@ -1084,8 +1089,9 @@ h3,.sec0,#s1 .sec0,.pgh,.trleg .h{font-size:var(--fs-footnote);font-weight:var(-
   <div class="acts"><button class="ft-send" id="fbSend" type="submit">Надіслати</button><button class="ft-cancel" id="fbCancel" type="button">Скасувати</button></div></form>
 <div class="ft-done" id="fbDone" hidden><b>✓</b><span>Дякуємо! Прочитаємо найближчим часом</span></div>
 <div class="ft-pills"><button class="ft-pill" id="fbBtn" type="button"><!--i:mail-->Відгук і баги</button><a class="ft-pill" id="ftBot" href="https://t.me/upl30_bot" target="_blank" rel="noopener"><!--i:telegram-->Telegram-бот</a></div>
-<div class="foot ft-small"><a href="#" id="newsBtn">Що нового у версії 0.79<b id="newsDot" hidden></b></a><span>·</span><a href="privacy.html">Конфіденційність</a></div>
+<div class="foot ft-small"><a href="#" id="newsBtn">Що нового у версії 0.79.1<b id="newsDot" hidden></b></a><a href="privacy.html">Конфіденційність</a><a href="terms.html">Умови використання</a></div>
 <div class="foot ft-copy">© 2026 30-0 УПЛ · неофіційний фан-проєкт <a href="#" id="themeBtn" class="thm" role="switch" aria-checked="false" aria-label="Світла тема"></a></div>
+<p class="ft-legal">30-0 УПЛ — незалежний фан-проєкт: футбольний драфт і симулятор сезону. Він не пов'язаний з Українською Прем'єр-лігою, Українською асоціацією футболу, клубами, футболістами, їхніми об'єднаннями чи іншими організаціями й не схвалений ними. Назви клубів, імена футболістів, рейтинги, статистику й дані сезонів використано лише з інформаційною та довідковою метою. Офіційні логотипи, емблеми та фото футболістів не використовуються. Усі торговельні марки належать їхнім власникам.</p>
 <div class="ft-cred">Шрифт KyivType Sans © Дмитро Растворцев (айдентика Києва)<br>Іконки: Material Design Icons (Apache 2.0), логотип Telegram — Font Awesome Free (CC BY 4.0)</div>
 </footer>
 <script src="pool.d63f138d2.js"></script>
@@ -2494,12 +2500,18 @@ document.addEventListener('touchstart',()=>{},{passive:true});   // iOS: enables
 function slide(el,open){if(LESS_MOTION()){el.hidden=!open;return;}el.style.overflow='hidden';
   if(open){el.hidden=false;const h=el.scrollHeight;el.animate([{height:'0px',opacity:0},{height:h+'px',opacity:1}],{duration:360,easing:'cubic-bezier(.23,1,.32,1)'}).onfinish=()=>{el.style.overflow='';};}
   else{const h=el.scrollHeight;el.animate([{height:h+'px',opacity:1},{height:'0px',opacity:0}],{duration:240,easing:'cubic-bezier(.23,1,.32,1)'}).onfinish=()=>{el.hidden=true;el.style.overflow='';};}}
-document.addEventListener('click',e=>{const sm=e.target.closest('summary');const d=sm&&sm.parentElement;if(!d||d.tagName!=='DETAILS'||sm!==d.firstElementChild||LESS_MOTION()||d.dataset.anim)return;
-  e.preventDefault();d.dataset.anim=1;const h0=d.offsetHeight;d.style.overflow='hidden';
-  const done=()=>{delete d.dataset.anim;d.style.overflow='';};
-  if(!d.open){d.open=true;const h1=d.offsetHeight;d.animate([{height:h0+'px'},{height:h1+'px'}],{duration:360,easing:'cubic-bezier(.23,1,.32,1)'}).onfinish=done;}
-  else{const hs=sm.offsetHeight+(parseFloat(getComputedStyle(d).paddingTop)||0)+(parseFloat(getComputedStyle(d).paddingBottom)||0);
-    d.animate([{height:h0+'px'},{height:hs+'px'}],{duration:240,easing:'cubic-bezier(.23,1,.32,1)'}).onfinish=()=>{d.open=false;done();};}});
+// details/summary accordion: height + fade, interruptible (a second tap reverses from the current height); same path in Safari and Chrome
+const ACC_EASE='cubic-bezier(.23,1,.32,1)';
+document.addEventListener('click',e=>{const sm=e.target.closest('summary');const d=sm&&sm.parentElement;if(!d||d.tagName!=='DETAILS'||sm!==d.firstElementChild||LESS_MOTION()||!d.animate)return;
+  e.preventDefault();const run=d._acc,opening=run?!run.opening:!d.open,cur=d.offsetHeight;
+  if(run){run.a.cancel();run.fades.forEach(f=>f.cancel());}
+  d.style.overflow='';d.open=true;const full=d.offsetHeight;d.open=false;const shut=d.offsetHeight;d.open=true;   // measure both ends synchronously, no paint
+  d.style.overflow='hidden';
+  const kids=[...d.children].filter(c=>c!==sm),ms=opening?360:240;
+  const a=d.animate([{height:cur+'px'},{height:(opening?full:shut)+'px'}],{duration:ms,easing:ACC_EASE,fill:'forwards'});
+  const fades=kids.map(k=>k.animate(opening?[{opacity:0},{opacity:1}]:[{opacity:1},{opacity:0}],{duration:opening?ms:160,easing:ACC_EASE,fill:'forwards'}));
+  d._acc={a,fades,opening};
+  a.onfinish=()=>{if(!opening)d.open=false;a.cancel();fades.forEach(f=>f.cancel());d.style.overflow='';d._acc=null;};});
 // ---------- 11x11 LEADERBOARDS: each verified season is a separate row; name from the player profile
 const LEVEL={normal:['Звичайний','lv-n'],hard:['Складний','lv-h'],hardcore:['Хардкор','lv-x'],daily:['Драфт дня','lv-d'],pick:['Вибір сезону','lv-s'],practice:['Тренування','lv-n']};
 const lvChip=m=>{const l=LEVEL[m];return l&&m!=='normal'&&m!=='practice'?`<b class="lvt ${l[1]}">${l[0]}</b>`:'';};   // plain word, only for non-default modes
@@ -3643,7 +3655,7 @@ function drawCard(r){   // card in site style: UPL navy background, UPL.TV gradi
 }
 document.getElementById('chalOpen').onclick=()=>{const b=document.getElementById('chalBox'),t=document.getElementById('chalOpen');b.hidden=!b.hidden;t.classList.toggle('on',!b.hidden);if(!b.hidden){b.scrollIntoView({behavior:'smooth',block:'center'});const n=document.getElementById('chalName');if(n&&!n.hidden&&!n.value)n.focus();}};
 // ---------- What's new: short player-friendly notes on the latest version (technical log: CHANGELOG.md)
-const WHATSNEW={v:'0.79',news:'0.79',date:'09.10.2026',items:[   // news: edition of the items; a release without new items keeps it, so the news dot does not light up again
+const WHATSNEW={v:'0.79.1',news:'0.79',date:'09.10.2026',items:[   // news: edition of the items; a release without new items keeps it, so the news dot does not light up again
   ['account-group','Ліги чатів — на звичайній грі','У лігу чату тепер іде звичайна гра «Грати»: найкращий сезон із перших трьох спроб дня. Драфт дня в ліги більше не йде.'],
   ['format-list-numbered','Екран «Таблиці»','Дві вкладки: «За весь час» і «Мої чати» — таблиці всіх твоїх чатів в одному місці. На головній замість кількох таблиць — один рядок.'],
   ['eye','Щільніші підписи','Підписи й підказки під заголовками та кнопками стали компактнішими — менше порожнечі між рядками.']]};
@@ -3896,7 +3908,7 @@ function f5Render(){
 
 document.getElementById('f5Open').onclick=f5Start;
 // audit P2-5: only what tests use; drawCard for card checks, simulate/rerun for fast determinism
-window.__dbg={place,em,loadLb,haptic,seasonHaptic,renderNewTro,TROPHIES,CLUB_REC,ocMine,ocAfter,renderOc,renderOcRes,openOc,acctMerge,get BEST(){return BEST;},get VT_N(){return VT_N;},ic,seasonLabel,boardFetch,boardStale,BOARD_FROM,setFmt,lgRender,lgStale,openTables,boardHtml,oppYear,champModal,drawCard,chalNewGame,DAILY,LEAGUE_CULT,LEAGUE_LEGENDS,openTrophies,renderNewTro,bestPerPlayer,renderWheel,posOpts,eraOf,ptsWord,viewHtml,renderPitch,pitchHtml,f5Pitch,F5_FORMS,cardName,clubShort,simulate,shareTextOf,trCtxNow,trAward,trStore,FORMATIONS,GROUP_OF,DATA,TROPHIES,trEval,PERSON,effRating,get S(){return S;},rerun(seed,year,xi){rnd=mulberry32(seed);const r=simulate(xi||S.slots.map(s=>s.player),MODES[S.mode],year);rnd=Math.random;return {W:r.W,D:r.D,L:r.L,gf:r.gf,ga:r.ga,place:r.place};}};
+window.__dbg={go,place,em,loadLb,haptic,seasonHaptic,renderNewTro,TROPHIES,CLUB_REC,ocMine,ocAfter,renderOc,renderOcRes,openOc,acctMerge,get BEST(){return BEST;},get VT_N(){return VT_N;},ic,seasonLabel,boardFetch,boardStale,BOARD_FROM,setFmt,lgRender,lgStale,openTables,boardHtml,oppYear,champModal,drawCard,chalNewGame,DAILY,LEAGUE_CULT,LEAGUE_LEGENDS,openTrophies,renderNewTro,bestPerPlayer,renderWheel,posOpts,eraOf,ptsWord,viewHtml,renderPitch,pitchHtml,f5Pitch,F5_FORMS,cardName,clubShort,simulate,shareTextOf,trCtxNow,trAward,trStore,FORMATIONS,GROUP_OF,DATA,TROPHIES,trEval,PERSON,effRating,get S(){return S;},rerun(seed,year,xi){rnd=mulberry32(seed);const r=simulate(xi||S.slots.map(s=>s.player),MODES[S.mode],year);rnd=Math.random;return {W:r.W,D:r.D,L:r.L,gf:r.gf,ga:r.ga,place:r.place};}};
 // Telegram script was requested by the first inline script: init now if it already loaded, otherwise on its load
 if(ONLINE){window.__tgCb=tgInit;if(window.__tgOk)tgInit();}
 })();
