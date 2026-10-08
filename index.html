@@ -1754,8 +1754,9 @@ const XP_N=300;   // same number is used in FAQ and explanations
 // the runs use one random stream per set of 11 players (common random numbers): the same squad always gets the same forecast,
 // and moving players between slots changes it only through real strength changes, not through noise
 async function xpRun(xi,mode,year,step){let sp=0,sg=0,sa=0;const pl=[];
-  const R=mulberry32(hashStr(`xp|${year}|${S.mode}|${S.format}|${S.formation}|${xi.map(x=>x.id).sort().join(',')}`));
-  for(let k=0;k<XP_N;k++){const prev=rnd;rnd=R;let q;try{q=simulate(xi,mode,year,true);}finally{rnd=prev;}sp+=q.pts;sg+=q.gf;sa+=q.ga;pl.push(q.place);
+  // players sorted by id (slots travel with the player), one stream per run: a small real strength change does not shift later runs
+  const xs=xi.slice().sort((a,b)=>a.id<b.id?-1:a.id>b.id?1:0),base=`xp|${year}|${S.mode}|${S.format}|${S.formation}|${xs.map(x=>x.id).join(',')}`;
+  for(let k=0;k<XP_N;k++){const prev=rnd;rnd=mulberry32(hashStr(base+'|'+k));let q;try{q=simulate(xs,mode,year,true);}finally{rnd=prev;}sp+=q.pts;sg+=q.gf;sa+=q.ga;pl.push(q.place);
     if(step&&k%25===24&&(await step((k+1)/XP_N))===false)return null;}
   return {xp:sp/XP_N,egf:sg/XP_N,ega:sa/XP_N,pl};}
 async function lockDraft(){
