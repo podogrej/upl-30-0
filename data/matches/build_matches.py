@@ -53,7 +53,7 @@ def label(s):
     return '1992' if s == 1991 else '%d/%02d' % (s, (s + 1) % 100)
 
 rows = list(csv.DictReader(open(os.path.join(D, 'raw_tm.csv'), encoding='utf-8')))
-# manual additions: spring-1992 play-off matches (uk.wikipedia 'Чемпіонат України з футболу 1992')
+# manual additions: spring-1992 play-off matches (uk.wikipedia season 1992 page)
 extra = [('1991', 'final', '1992-06-21', 'Tavriya Simferopol', 'Dynamo Kyiv', '1', '0', 'played', ''),
          ('1991', '3rd place', '1992-06-20', 'Shakhtar Donetsk', 'Dnipro Dnipropetrovsk', '2', '3', 'played', '')]
 for e in extra:

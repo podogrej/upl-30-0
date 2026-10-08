@@ -76,7 +76,7 @@ async function serverChecks(){
    const wrong=await callApi(saveH,{kind:'season',device_id:dev,secret:'other-secret-0123456789',row,trophies:['hack']});
    T.check(wrong.status===401&&!db.DB.trophies.some(x=>x.trophy==='hack'),'чужий секрет: ні сезону, ні трофеїв (401)');
   }
-  // ---- chat league standings ("Залік"): more than 1000 result rows
+  // ---- chat league standings: more than 1000 result rows
   {const S=pgStub(['https://qruhcbwycrnfgzzdbljr.supabase.co']);const base='https://qruhcbwycrnfgzzdbljr.supabase.co';
    const rows=S.tbl(base,'league_results');let n=0;
    for(let d=0;d<60;d++){const day=new Date(Date.UTC(2026,7,1)+d*864e5).toISOString().slice(0,10);   // days before VERIFIED_FROM: counted as stored
