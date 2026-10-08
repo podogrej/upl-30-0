@@ -41,8 +41,7 @@ async function handleUpdate(u) {
 
 const STREAK_DAYS = 400;   // look-back for the streak length in the message (longer streaks show as 400)
 const chunks = (a, n = 100) => { const out = []; for (let i = 0; i < a.length; i += n) out.push(a.slice(i, i + n)); return out; };
-// every row of a query: Supabase returns at most 1000 per request
-async function all(q) { const out = []; for (let off = 0; ; off += 1000) { const pg = await L.sb(`${q}&limit=1000&offset=${off}`) || []; out.push(...pg); if (pg.length < 1000) return out; } }
+const all = q => L.sbAll(q);   // every row: paged by 1000
 const addDay = (d, n) => new Date(Date.UTC(+d.slice(0, 4), +d.slice(5, 7) - 1, +d.slice(8, 10)) + n * 864e5).toISOString().slice(0, 10);
 const weekKey = d => addDay(d, -((new Date(Date.UTC(+d.slice(0, 4), +d.slice(5, 7) - 1, +d.slice(8, 10))).getUTCDay() + 6) % 7));
 // daily-draft streak at risk today: replays the site's streakUpdate/streakInfo (src/template.html) over the played days,
@@ -68,7 +67,7 @@ async function sendEvening(day) {
   if (!subs.length) return out;
   const ids = subs.map(s => s.tg_user_id);
   // group leagues played today
-  const today = await L.onlyVerified(await L.sb(`league_results?day=eq.${day}&select=*`) || []);
+  const today = await L.onlyVerified(await all(`league_results?day=eq.${day}&select=*&order=chat_id.asc,tg_user_id.asc`));
   const byChat = {}; for (const r of today) (byChat[r.chat_id] = byChat[r.chat_id] || []).push(r);
   const titles = {};
   for (const lg of (Object.keys(byChat).length ? await L.sb(`leagues?chat_id=in.(${Object.keys(byChat).join(',')})&select=chat_id,title`) : []) || []) titles[lg.chat_id] = lg.title;

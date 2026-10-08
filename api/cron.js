@@ -22,7 +22,7 @@ module.exports = async (req, res) => {
   if (!okBy(cronSecret)) return res.status(401).json({ error: 'unauthorized' });
   try {
     const day = (req.query && /^\d{4}-\d{2}-\d{2}$/.test(req.query.day || '')) ? req.query.day : L.kyivDate();
-    const rows = await L.sb(`league_results?day=eq.${day}&select=chat_id`) || [];
+    const rows = await L.sbAll(`league_results?day=eq.${day}&select=chat_id&order=chat_id.asc,tg_user_id.asc`);
     const chats = [...new Set(rows.map(r => r.chat_id))];
     const done = [];
     for (const chat_id of chats) {
@@ -49,7 +49,7 @@ module.exports = async (req, res) => {
     if (wd === 6 || (req.query && req.query.week === '1')) {
       const add = (d, n) => new Date(Date.UTC(+d.slice(0, 4), +d.slice(5, 7) - 1, +d.slice(8, 10)) + n * 864e5).toISOString().slice(0, 10);
       const from = add(day, -wd);
-      const wrows = await L.onlyVerified(await L.sb(`league_results?day=gte.${from}&day=lte.${day}&select=chat_id,day,tg_user_id,name,pts,gf,ga,created_at,season_id`) || []);
+      const wrows = await L.onlyVerified(await L.sbAll(`league_results?day=gte.${from}&day=lte.${day}&select=chat_id,day,tg_user_id,name,pts,gf,ga,created_at,season_id&order=day.asc,chat_id.asc,tg_user_id.asc`));
       const byChat = {}; for (const r of wrows) (byChat[r.chat_id] = byChat[r.chat_id] || []).push(r);
       for (const [chat_id, rows] of Object.entries(byChat)) {
         const [b] = await L.sb(`league_boards?chat_id=eq.${chat_id}&day=eq.${day}&select=weekly_sent`) || [];

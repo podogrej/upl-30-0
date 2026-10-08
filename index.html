@@ -1129,7 +1129,7 @@ h3,.sec0,#s1 .sec0,.pgh,.trleg .h{font-size:var(--fs-footnote);font-weight:var(-
   <div class="acts"><button class="ft-send" id="fbSend" type="submit">Надіслати</button><button class="ft-cancel" id="fbCancel" type="button">Скасувати</button></div></form>
 <div class="ft-done" id="fbDone" hidden><b>✓</b><span>Дякуємо! Прочитаємо найближчим часом</span></div>
 <div class="ft-pills"><button class="ft-pill" id="fbBtn" type="button"><!--i:mail-->Відгук і баги</button><a class="ft-pill" id="ftBot" href="https://t.me/upl30_bot" target="_blank" rel="noopener"><!--i:telegram-->Telegram-бот</a></div>
-<div class="foot ft-small"><a href="#" id="newsBtn">Що нового у версії 0.77.1<b id="newsDot" hidden></b></a><span>·</span><a href="privacy.html">Конфіденційність</a></div>
+<div class="foot ft-small"><a href="#" id="newsBtn">Що нового у версії 0.78<b id="newsDot" hidden></b></a><span>·</span><a href="privacy.html">Конфіденційність</a></div>
 <div class="foot ft-copy">© 2026 30-0 УПЛ · неофіційний фан-проєкт <a href="#" id="themeBtn" class="thm" role="switch" aria-checked="false" aria-label="Світла тема"></a></div>
 <div class="ft-cred">Шрифт KyivType Sans © Дмитро Растворцев (айдентика Києва)<br>Іконки: Material Design Icons (Apache 2.0), логотип Telegram — Font Awesome Free (CC BY 4.0)</div>
 </footer>
@@ -1298,7 +1298,6 @@ const DAILY=dailySetup();
 // cleanup: daily draft result and sent flag (upl30_daily_<day>, upl30_sent_<day>) are needed only today; delete those older than 14 days
 try{const old=dayAdd(DAY,-14);for(let i=localStorage.length-1;i>=0;i--){const k=localStorage.key(i),m=/^upl30_(?:daily|sent)_(\d{4}-\d{2}-\d{2})$/.exec(k||'');if(m&&m[1]<old)localStorage.removeItem(k);}}catch(e){}
 setTimeout(()=>{try{renderTrBtn();trRetro();}catch(e){}try{chalLoad();}catch(e){}},0);
-setTimeout(()=>{try{boardPrefetch();}catch(e){}},2500);   // prefetch the leaderboard in the background
 MODES.daily={name:"Драфт дня",desc:"",damp:1,star:0,rerolls:1,showRatings:false,reveal:true};
 function dayAdd(day,n){return new Date(Date.UTC(+day.slice(0,4),+day.slice(5,7)-1,+day.slice(8,10))+n*864e5).toISOString().slice(0,10);}
 function weekKey(day){const wd=(new Date(Date.UTC(+day.slice(0,4),+day.slice(5,7)-1,+day.slice(8,10))).getUTCDay()+6)%7;return dayAdd(day,-wd);}
@@ -2106,8 +2105,8 @@ function trCtxRow(row){   // from a seasons log row (for retroactive awarding)
   const r={W:row.w,D:row.d,L:row.l,pts:row.pts,place:row.place,gf:row.gf,ga:row.ga,xp:row.xp??row.pts,golden:!!row.golden};
   const m=MODES[row.mode]||{};return {r,xi,pl,mode:row.mode,format:row.format,reveal:!!(m.reveal||m.showRatings),dailyOfficial:!!(row.day&&!row.practice)};
 }
-// record a season into the collection; returns {got:[ids], fresh:[new ids]}
-function trAward(c,{daily}={}){
+// record a season into the collection; returns {got:[ids], fresh:[new ids]}; sync:false - the caller sends fresh ids itself (with the season)
+function trAward(c,{daily,sync=true}={}){
   const s=trStore();const got=trEval(c);const fresh=[];const today=kyivDate();
   s.seasons++;if(daily)s.dailies++;
   const add=id=>{const e=s.t[id]||(s.t[id]={n:0,at:today});if(!e.n)fresh.push(id);e.n++;};
@@ -2115,7 +2114,7 @@ function trAward(c,{daily}={}){
   const ctxS={streak:trStreak(),dailies:s.dailies};
   for(const t of TROPHIES)if(t.st&&t.st(ctxS)&&!(s.t[t.id]&&s.t[t.id].n)){add(t.id);got.push(t.id);}
   for(const [k] of MILESTONES)if(s.seasons===k){add('ms'+k);got.push('ms'+k);}
-  lsSet("upl30_tr",s);if(fresh.length)trSync(fresh);
+  lsSet("upl30_tr",s);if(fresh.length&&sync)trSync(fresh);
   return {got,fresh};
 }
 // 5x5 league trophies from the tournament result (res from fl_get); team = player's team index. Returns ids (no write)
@@ -2137,10 +2136,13 @@ const trDef=id=>{if(id.startsWith('ms')){const m=MILESTONES.find(x=>'ms'+x[0]===
 function trSync(ids){if(!ONLINE)return;saveApi('trophies',{ids}).catch(e=>console.warn('trophies',e));}
 let TR_PCT=null,TR_FAIL=false;   // TR_FAIL: the stats request failed (skeleton line stops)
 const trBusy=()=>ONLINE&&!TR_PCT&&!TR_FAIL;
-async function trLoadPct(){if(!ONLINE)return null;try{const r=await fetch(`${SB_URL}/rest/v1/rpc/trophy_stats?apikey=${SB_KEY}`,{method:'POST',headers:{apikey:SB_KEY,'Content-Type':'application/json'},body:'{}'});if(!r.ok){TR_FAIL=true;return null;}TR_PCT=await r.json();return TR_PCT;}catch(e){TR_FAIL=true;return null;}}
+// trophy_stats is the same for everyone: cached for TR_PCT_TTL (upl30_tr_pct {at, v})
+const TR_PCT_TTL=36e5;
+async function trLoadPct(){if(!ONLINE)return null;const c=lsGet('upl30_tr_pct');if(c&&c.v&&Date.now()-c.at<TR_PCT_TTL){TR_PCT=c.v;return TR_PCT;}
+  try{const r=await fetch(`${SB_URL}/rest/v1/rpc/trophy_stats?apikey=${SB_KEY}`,{method:'POST',headers:{apikey:SB_KEY,'Content-Type':'application/json'},body:'{}'});if(!r.ok){TR_FAIL=true;return null;}TR_PCT=await r.json();lsSet('upl30_tr_pct',{at:Date.now(),v:TR_PCT});return TR_PCT;}catch(e){TR_FAIL=true;return null;}}
 // one-off retroactive awarding from this device's log
 async function trRetro(){
-  if(!ONLINE||lsGet("upl30_tr_retro"))return;
+  if(!ONLINE)return;deviceId();if(lsGet("upl30_tr_retro"))return;   // a device created just now has no seasons: deviceId() sets the flag
   try{const rows=await sbGet(`seasons?device_id=eq.${deviceId()}&select=*&order=id.asc&limit=1000`);
     const s=trStore();const fresh=[];const today=kyivDate();
     for(const row of rows){if(row.practice||row.mode==='practice')continue;s.seasons++;if(row.day)s.dailies++;
@@ -2273,7 +2275,7 @@ async function playSeason(year){
     const sc=x=>anti?-(x.pts*100-x.place):x.pts*100+(30-x.place);
     if(!best||sc(r)>sc(best)){BEST[key]={W:r.W,D:r.D,L:r.L,pts:r.pts,place:r.place,formation:S.formation,mode:S.mode};lsSet("upl30_best_v2",BEST);showBest();}
   }
-  r.tro=(S.mode==='practice'||(S.daily&&S.daily.practice))?null:trAward(trCtxNow(r),{daily:!!S.daily});renderTrBtn();if(typeof SESSION!=='undefined'&&SESSION)acctPush();
+  r.tro=(S.mode==='practice'||(S.daily&&S.daily.practice))?null:trAward(trCtxNow(r),{daily:!!S.daily,sync:false});renderTrBtn();if(typeof SESSION!=='undefined'&&SESSION)acctPush();
   document.getElementById('leagueMsg').hidden=true;if(S.league){const lm=document.getElementById('leagueMsg');lm.hidden=false;lm.textContent=`Спроба ліги «${S.league.name}» — зарахуємо після перевірки сервером.`;}if(S.daily&&!S.daily.practice)setTimeout(()=>leagueSubmit(r),1500);
   document.getElementById('againBtn').textContent=S.league?'До ліги':'Новий драфт';
   document.getElementById('practiceFlag').hidden=!(S.daily&&S.daily.practice);
@@ -2338,9 +2340,10 @@ const SB_ENV=(ONLINE&&SB_ENVS.test.url&&(/-git-test-/.test(location.hostname)||/
 const SB_URL=SB_ENVS[SB_ENV].url, SB_KEY=SB_ENVS[SB_ENV].key;
 const DATA_VERSION="d63f138d2";   // player pool fingerprint (ratings): stored with every season
 if(SB_ENV==='test'){for(const id of ['homeBtn','hLogo']){const b=document.getElementById(id);if(b)b.insertAdjacentHTML('beforeend','<span class="testbadge">ТЕСТ</span>');}}
-function deviceId(){let id=lsGet("upl30_device");if(!id){try{id=crypto.randomUUID();}catch(e){const h=[...crypto.getRandomValues(new Uint8Array(16))].map(b=>b.toString(16).padStart(2,'0')).join('');id=`${h.slice(0,8)}-${h.slice(8,12)}-4${h.slice(13,16)}-a${h.slice(17,20)}-${h.slice(20,32)}`;}lsSet("upl30_device",id);}return id;}
+function deviceId(){let id=lsGet("upl30_device");if(!id){lsSet("upl30_tr_retro",1);try{id=crypto.randomUUID();}catch(e){const h=[...crypto.getRandomValues(new Uint8Array(16))].map(b=>b.toString(16).padStart(2,'0')).join('');id=`${h.slice(0,8)}-${h.slice(8,12)}-4${h.slice(13,16)}-a${h.slice(17,20)}-${h.slice(20,32)}`;}lsSet("upl30_device",id);}return id;}
+const LB_COLS='device_id,player_id,nickname,w,d,l,pts,gf,ga';   // what lbHtml shows (no xi)
 async function sbTop(day){const q=sel=>`${SB_URL}/rest/v1/daily_results?apikey=${SB_KEY}&day=eq.${day}&verified=is.true&select=${sel}&order=pts.desc,ga.asc,gf.desc&limit=500`;   // only results the server recorded from a verified season
-  let r=await fetch(q('*,'+PL_SEL[0]));if(!r.ok)r=await fetch(q('*,'+PL_SEL[1]));if(!r.ok)r=await fetch(q('*'));if(!r.ok){throw new Error('GET '+r.status+' '+(await r.text()).slice(0,200));}return r.json();}
+  let r=await fetch(q(LB_COLS+','+PL_SEL[0]));if(!r.ok)r=await fetch(q(LB_COLS+','+PL_SEL[1]));if(!r.ok)r=await fetch(q('*'));if(!r.ok){throw new Error('GET '+r.status+' '+(await r.text()).slice(0,200));}return r.json();}
 const VERSION=(document.getElementById('newsBtn').textContent.match(/версі[яї] ([\d.]+)/)||[])[1]||'?';
 window.__errCtx=()=>({version:VERSION,screen:SEC_NAME[CUR_SEC],tg:TG&&TG.initData?`${TG.platform||'?'} ${TG.version||''}`:null,player:PLAYER&&PLAYER.public_id||null});   // for error reports (first <script>)
 // ---------- Telegram Mini App: when opened inside Telegram take the profile name, theme and the Send to chat button
@@ -2418,17 +2421,20 @@ function logSeason(r){
   if(eraOf()!=='all')row.era=eraOf();   // era only when not All years (seasons.era)
   if(S.showREver)row.show_r=true;   // ratings were enabled during the draft: tables show a badge (seasons.show_r)
   if(S.league)row.fl_id=S.league.id;   // friend league attempt is credited by the server after verification
-  // season is saved and verified by the server (/api/save, device secret)
-  saveApi('season',{row}).then(j=>{r.rowId=j.id;verifiedUi(r,j);flAfterSave(r,j);}).catch(e=>{if(e.status===429){r.slow=e.message;verifiedUi(r,{});}console.warn('save',e);});
+  // season is saved and verified by the server (/api/save, device secret); this season's new trophies travel in the same request
+  const tro=r.tro&&r.tro.fresh.length?r.tro.fresh:null;
+  saveApi('season',{row,trophies:tro||undefined}).then(j=>{r.rowId=j.id;verifiedUi(r,j);flAfterSave(r,j);if(tro){if(j.tr!==true)trSync(tro);trSrvStale();}})
+    .catch(e=>{if(e.status===429){r.slow=e.message;verifiedUi(r,{});}lbRelease(r);if(tro)trSync(tro);console.warn('save',e);});
 }
 // server recomputes the season and marks it verified
 async function verifySeason(r){
   try{const res=await _fetch('/api/verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({season_id:r.rowId})});const j=await res.json();if(res.status===429)r.slow=j.error;verifiedUi(r,j);}catch(e){}
 }
 function verifiedUi(r,j){r.verified=j.verified;
-    const el=document.getElementById('verLine');if(el&&S.result===r){el.hidden=j.verified!==true&&!r.slow;if(j.verified===true){el.innerHTML=ic('check-decagram','sm')+'Результат перевірено сервером';boardStale();setTimeout(boardPrefetch,1500);}else if(r.slow)el.textContent=r.slow;}
+    const el=document.getElementById('verLine');if(el&&S.result===r){el.hidden=j.verified!==true&&!r.slow;if(j.verified===true){el.innerHTML=ic('check-decagram','sm')+'Результат перевірено сервером';boardStale();}else if(r.slow)el.textContent=r.slow;}
     // daily result is written to the table by the server (from the verified season); no manual submit needed
-    if(j.verified===true&&S.result===r&&S.daily&&!S.daily.practice){lsSet("upl30_sent_"+DAY,true);const f=document.getElementById('lbForm'),m=document.getElementById('lbMsg');if(f&&!f.hidden){f.hidden=true;m.textContent='Твій результат уже в таблиці дня.';document.getElementById('lbAcct').hidden=true;loadLb(document.getElementById('lbTable'));}}
+    if(j.verified===true&&S.result===r&&S.daily&&!S.daily.practice){lsSet("upl30_sent_"+DAY,true);const f=document.getElementById('lbForm'),m=document.getElementById('lbMsg');if(f&&!f.hidden){f.hidden=true;m.textContent='Твій результат уже в таблиці дня.';document.getElementById('lbAcct').hidden=true;}}
+    lbRelease(r);
 }
 const fmtN=n=>Number(n||0).toLocaleString('uk-UA');
 // smooth expand: block via slide(el, open); all <details> the same (no animation with reduced motion)
@@ -2571,17 +2577,21 @@ function openBoard(b){BOARD=b||BOARD;screenTag('table');const box=document.getEl
   body.innerHTML=`<div class="tabs" style="margin-top:0" role="tablist"${bt.length<2?' hidden':''}>${bt.map(([k,v])=>`<button class="tab${k===BOARD?' on':''}" data-board="${k}" role="tab">${v.name}</button>`).join('')}</div><p class="muted" style="font-size:var(--fs-caption);margin:var(--sp-3) 0 var(--sp-2)">${BOARDS[BOARD].note}</p><div id="boardBody">${BOARD_CACHE[BOARD]&&BOARD_CACHE[BOARD].rows?boardHtml(BOARD_CACHE[BOARD].rows,BOARD):skBoard()}</div>`;
   body.querySelectorAll('[data-board]').forEach(t=>t.onclick=()=>openBoard(t.dataset.board));
   loadBoard(BOARD);}
-// leaderboard tabs: prefetched in the background (boardPrefetch after start) and cached in memory;
-// open from cache instantly, fresh data replaces it silently
-const BOARD_CACHE={};   // cached table shows immediately, fresh data loads in the background and silently replaces it
+// leaderboard tabs: loaded when opened (the request starts on pointerdown of the opener, BOARD_PRE) and cached in memory;
+// reopening shows the cached rows at once, fresh data replaces them silently
+const BOARD_CACHE={};
+let BOARD_PRE=null;   // {b, p, at}: request started on touch, used once by the open that follows
+const PRE_MS=5e3;
 function boardFetch(b){const c=BOARD_CACHE[b];if(c&&c.p)return c.p;
   const p=sbGetFallback([boardQ(b,true,PL_SEL[0],true,true),boardQ(b,true,PL_SEL[0],true),boardQ(b,true,PL_SEL[0]),boardQ(b,true,PL_SEL[1]),boardQ(b,false)])
     .then(rows=>{BOARD_CACHE[b]={rows,at:Date.now()};return rows;}).catch(e=>{if(BOARD_CACHE[b])delete BOARD_CACHE[b].p;throw e;});
   BOARD_CACHE[b]={...(c||{}),p};return p;}
-function boardPrefetch(){if(!ONLINE)return;for(const [k,v] of Object.entries(BOARDS))if(!v.hidden)boardFetch(k).catch(()=>{});}
 function boardStale(){for(const k in BOARD_CACHE)delete BOARD_CACHE[k];}   // own new season: next open fetches fresh data
-async function loadBoard(b){const el=document.getElementById('boardBody'),c=BOARD_CACHE[b];
-  try{const rows=await boardFetch(b);if(BOARD===b&&el.isConnected)el.innerHTML=boardHtml(rows,b);}catch(e){if(el.isConnected&&!(c&&c.rows))el.innerHTML='<p class="muted">Таблиця зараз недоступна.</p>';}}
+async function loadBoard(b){const el=document.getElementById('boardBody'),c=BOARD_CACHE[b],pre=BOARD_PRE&&BOARD_PRE.b===b&&Date.now()-BOARD_PRE.at<PRE_MS?BOARD_PRE.p:null;BOARD_PRE=null;
+  try{const rows=await (pre||boardFetch(b));if(BOARD===b&&el.isConnected)el.innerHTML=boardHtml(rows,b);}catch(e){if(el.isConnected&&!(c&&c.rows))el.innerHTML='<p class="muted">Таблиця зараз недоступна.</p>';}}
+// head start: the request begins on touch, before the click fires
+const preTouch=(el,f)=>{if(ONLINE&&el)el.addEventListener('pointerdown',()=>{try{f();}catch(e){}},{passive:true});};
+preTouch(document.getElementById('boardOpen'),()=>{const p=boardFetch('main');p.catch(()=>{});BOARD_PRE={b:'main',p,at:Date.now()};});
 document.getElementById('boardOpen').onclick=()=>{if(!ONLINE){screenTag('table');document.getElementById('viewTitle').textContent='Таблиця за весь час';document.getElementById('viewBox').classList.add('full');sheetOpen();document.getElementById('viewBody').innerHTML='<p class="muted">Таблиця працює на сайті '+SITE_HOST+' і в Telegram-боті @upl30_bot.</p>';document.getElementById('viewBox').hidden=false;return;}openBoard('main');};
 function pitchHtml(formation,xi){const G=pitchGeo(formation);const F=FORMATIONS[formation]||FORMATIONS['4-4-2'];let h=PITCH_MK;F.slots.forEach((sl,i)=>{const p=xi[i];if(!p)return;const pt=G.pts[i];h+=`<div class="slot filled ${GROUP_OF[p.slot]||''}" style="left:${pt.x}%;top:${pt.y}%">${slotInner(p.slot,p,{pill:rPill(numOr0(baseR(p)))})}</div>`;});return `<div class="pitch">${h}</div>`;}
 // season data from the DB (xi, tbl are jsonb written by the browser): numbers only via Number, text only via esc
@@ -2713,7 +2723,7 @@ function openPlayer(u){
   u=u&&/^[a-z2-9]{8}$/.test(u)?u:null;
   const own=!u||!!(PLAYER&&PLAYER.public_id===u);
   document.getElementById('viewBox').hidden=true;
-  PP={u:own?(PLAYER&&PLAYER.public_id)||null:u,own,prof:null,f:'all',s:'rare',all:false,hist:null,loading:true};
+  PP={u:own?(PLAYER&&PLAYER.public_id)||null:u,own,prof:null,f:'all',s:'rare',all:false,hist:null,loading:true,lg:null};   // lg: "My leagues" request, once per open
   go(6);ppUrl(own?null:u);ppRender();ppLoad(PP);
   if(ONLINE&&!TR_PCT)trLoadPct().then(()=>{if(PP&&CUR_SEC===6)ppRenderCab();});
 }
@@ -2728,10 +2738,13 @@ async function ppLoad(st){
   if(prof&&!prof.public_id&&!prof.name)prof=null;   // no such player
   if(PP!==st)return;st.prof=prof;st.loading=false;st.err=err;ppRender();}
 // own page: trophies from this device (with counters) plus those unlocked on the player's other devices (from DB)
-// account trophies from server go to cache for the home counter (renderTrBtn); once per page load
+// account trophies from server go to cache for the home counter (renderTrBtn): upl30_tr_srv (ids) + upl30_tr_srv_at (when).
+// Without a profile at hand, player_profile is called only when the cache is older than TR_SRV_TTL (or marked stale)
 let TR_SRV_AT=0;
-async function trSrvRefresh(prof){if(!prof){if(!ONLINE||!PLAYER||!PLAYER.id||Date.now()-TR_SRV_AT<6e4)return;TR_SRV_AT=Date.now();try{prof=await ppRpc('player_profile',{p_player:PLAYER.id});}catch(e){return;}}
-  if(prof&&Array.isArray(prof.trophies)){lsSet('upl30_tr_srv',prof.trophies.map(t=>t.id));renderTrBtn();}}
+const TR_SRV_TTL=6*36e5;
+const trSrvStale=()=>lsSet('upl30_tr_srv_at',0);   // sign-in, merge, new trophies: next refresh goes to the server
+async function trSrvRefresh(prof){if(!prof){if(!ONLINE||!PLAYER||!PLAYER.id||Date.now()-TR_SRV_AT<6e4||Date.now()-(+lsGet('upl30_tr_srv_at')||0)<TR_SRV_TTL)return;TR_SRV_AT=Date.now();try{prof=await ppRpc('player_profile',{p_player:PLAYER.id});}catch(e){return;}}
+  if(prof&&Array.isArray(prof.trophies)){lsSet('upl30_tr_srv',prof.trophies.map(t=>t.id));lsSet('upl30_tr_srv_at',Date.now());renderTrBtn();}}
 function ppHave(){const st=PP;const h={};
   if(st.own){const s=trStore();for(const [id,e] of Object.entries(s.t))if(e&&e.n)h[id]={n:e.n,at:e.at};}
   for(const t of (st.prof&&st.prof.trophies)||[])if(!h[t.id])h[t.id]={n:1,at:t.at};
@@ -3177,12 +3190,14 @@ function fl5Wire($,el){
 // "My leagues" on the player's own page
 // group leagues (Telegram chats with the bot): tg_leagues_mine, sql/v070.sql; before that SQL runs the call fails and the list is just empty
 const tgLeagueRow=x=>`<a class="fl-row" href="https://t.me/${TG_BOT}?startapp=g${encodeURIComponent(x.chat_id)}" target="_blank" rel="noopener">${ic('telegram')}<span class="t"><b>${esc(x.title||'Група')}</b><small>група в Telegram · ${numOr0(x.members)} ${plUk(x.members,'гравець','гравці','гравців')}${x.played_today?` · сьогодні зіграли ${numOr0(x.played_today)}`:''}</small></span></a>`;
-async function ppLeagues(){if(!document.getElementById('ppLeagues'))return;let mine=[],groups=[],err=false;
-  await Promise.all([playerRpc('fl_mine').then(r=>{mine=r||[];},e=>{err=flMineFail(e);}),playerRpc('tg_leagues_mine').then(r=>{groups=Array.isArray(r)?r:[];},()=>{})]);
+async function ppLeagues(){if(!document.getElementById('ppLeagues')||!PP)return;
+  // the page re-renders 2-3 times per open (profile, account): request the lists once per open (PP.lg)
+  const st=PP;if(!st.lg){const o={mine:[],groups:[],err:false};st.lg=Promise.all([playerRpc('fl_mine').then(r=>{o.mine=r||[];},e=>{o.err=flMineFail(e);}),playerRpc('tg_leagues_mine').then(r=>{o.groups=Array.isArray(r)?r:[];},()=>{})]).then(()=>o);}
+  const {mine,groups,err}=await st.lg;if(PP!==st)return;
   const el=document.getElementById('ppLeagues');if(!el)return;   // page may have re-rendered while awaiting the response; take the fresh element
   el.innerHTML=`<div class="pp-sec"><h3>Мої ліги</h3><button class="ghost" id="ppFl">${mine.length?'Усі':'Створити'}</button></div>`+(mine.length?mine.slice(0,5).map(x=>`<button class="fl-row" data-l="${esc(x.id)}">${ic(x.over?'trophy':'account-group')}<span class="t"><b>${esc(x.name)} ${flBadge(x.fmt)}</b><small>${x.fmt==='5'?fl5Sub(x):`${x.over?'завершена':`день ${numOr0(x.day_n)} з ${numOr0(x.days)}`} · ${numOr0(x.members)} ${plUk(x.members,'гравець','гравці','гравців')}`}</small></span>${x.place?`<span class="fl-place"><b>${numOr0(x.place)}</b><small>місце</small></span>`:''}</button>`).join(''):(err?flMineErrHtml('ppFlRetry'):groups.length?'':`<p class="pp-empty">Ти ще не граєш у лігах з друзями.</p>`))+groups.slice(0,5).map(tgLeagueRow).join('');
   el.querySelectorAll('[data-l]').forEach(b=>b.onclick=()=>openLeague(b.dataset.l));el.querySelector('#ppFl').onclick=openFriends;
-  const r=el.querySelector('#ppFlRetry');if(r)r.onclick=()=>{r.disabled=true;ppLeagues();};}
+  const r=el.querySelector('#ppFlRetry');if(r)r.onclick=()=>{r.disabled=true;st.lg=null;ppLeagues();};}
 // ?l=... link opened: league page
 if(ONLINE){const m=/[?&]l=([a-z2-9]{6})(?:&|$)/.exec(location.search);if(m)setTimeout(()=>openLeague(m[1]),0);}
 
@@ -3236,13 +3251,17 @@ async function acctPull(){
     const server=rows[0]&&rows[0].data||{};const merged=acctMerge(acctLocal(),server);
     for(const [k,v] of Object.entries(merged))lsSet(k,v);
     if(merged.upl30_best_v2)BEST=merged.upl30_best_v2;
-    await acctPush();renderTrBtn();showBest();renderDailyCard();return {server,merged};
+    if(!jsonEq(acctLocal(),server))await acctPush();   // nothing new on this device: no write
+    renderTrBtn();showBest();renderDailyCard();return {server,merged};
   }catch(e){return null;}
 }
+// deep equality regardless of key order (jsonb reorders keys)
+const jsonKey=v=>Array.isArray(v)?'['+v.map(jsonKey).join(',')+']':v&&typeof v==='object'?'{'+Object.keys(v).sort().map(k=>JSON.stringify(k)+':'+jsonKey(v[k])).join(',')+'}':JSON.stringify(v);
+const jsonEq=(a,b)=>jsonKey(a)===jsonKey(b);
 async function acctPush(){if(!SESSION)return;try{await fetch(`${SB_URL}/rest/v1/user_state?apikey=${SB_KEY}&on_conflict=user_id`,{method:'POST',headers:{apikey:SB_KEY,'Content-Type':'application/json',Prefer:'resolution=merge-duplicates,return=minimal'},body:JSON.stringify({user_id:SESSION.user.id,data:acctLocal(),updated_at:new Date().toISOString()})});}catch(e){}}
 async function acctOnLogin(){
   // attach everything played on this device to the account and merge progress
-  await playerSync();
+  trSrvStale();await playerSync();
   const res=await acctPull();const s=trStore();
   ACCT_MSG=`Готово! Прогрес збережено в акаунті: ${s.seasons} ${plUk(s.seasons,'сезон','сезони','сезонів')}, трофеїв — ${Object.values(s.t).filter(e=>e.n).length}.`;
   if(!lsGet("upl30_nick")){const n=acctName();if(n)lsSet("upl30_nick",n.slice(0,24));}
@@ -3290,7 +3309,7 @@ function myName(){return String((PLAYER&&(PLAYER.name||PLAYER.anon_name))||lsGet
 async function playerRpc(fn,extra){
   const r=await fetch(`${SB_URL}/rest/v1/rpc/${fn}?apikey=${SB_KEY}`,{method:'POST',headers:{apikey:SB_KEY,'Content-Type':'application/json'},body:JSON.stringify({p_device:deviceId(),p_secret:devSecret(),...(extra||{})})});
   const t=await r.text();if(!r.ok)throw new Error(`${fn} ${r.status}: ${t.slice(0,120)}`);return JSON.parse(t);}
-function playerSet(p){if(!p||!p.id)return;const was=PLAYER&&PLAYER.id;PLAYER=p;lsSet("upl30_player",p);if(p.name)lsSet("upl30_nick",p.name);renderAcct();if(was&&was!==p.id)lsSet('upl30_tr_srv',null);trSrvRefresh();
+function playerSet(p){if(!p||!p.id)return;const was=PLAYER&&PLAYER.id;PLAYER=p;lsSet("upl30_player",p);if(p.name)lsSet("upl30_nick",p.name);renderAcct();if(was&&was!==p.id){lsSet('upl30_tr_srv',null);trSrvStale();}trSrvRefresh();
   if(PP&&PP.own&&CUR_SEC===6){if(was!==p.id){PP.prof=null;ppLoad(PP);}ppRender();}}
 async function playerSync(){
   if(!ONLINE)return;
@@ -3373,7 +3392,7 @@ function mergeAsk(o){if(!SESSION||!o||mergeAsk.shown===o.id)return;mergeAsk.show
     <p class="muted" style="margin:0">Якщо це ти — об'єднаємо: сезони, трофеї, серія й ім'я стануть одним гравцем, і обидва входи відкриватимуть його. Якщо це хтось інший — нічого не зміниться.</p>
     <div class="grid" style="gap:var(--sp-2)"><button class="primary" id="mergeYes">${ic('account-multiple-check')}Так, це я — об'єднати</button><button class="ghost" id="mergeNo">Ні, це інший гравець</button></div><p class="note" id="mergeMsg" hidden style="margin:0"></p>`;
   const ans=async yes=>{const m=document.getElementById('mergeMsg');['mergeYes','mergeNo'].forEach(id=>document.getElementById(id).disabled=true);
-    try{const p=await playerRpc('merge_answer',{p_offer:o.id,p_yes:yes});const prev=p&&p.prev_state;if(p)delete p.prev_state;if(PP)PP.prof=null;playerSet(p);
+    try{const p=await playerRpc('merge_answer',{p_offer:o.id,p_yes:yes});const prev=p&&p.prev_state;if(p)delete p.prev_state;if(PP)PP.prof=null;if(yes)trSrvStale();playerSet(p);
       if(yes){try{if(prev&&typeof prev==='object'){const m=acctMerge(acctLocal(),prev);for(const [k,v] of Object.entries(m))lsSet(k,v);if(m.upl30_best_v2)BEST=m.upl30_best_v2;}await acctPull();}catch(e){}}   // also bring over trophies, streak and records of the previous sign-in
       m.hidden=false;m.textContent=yes?`Готово — тепер ти один гравець: ${myName()}.`:'Добре, лишаємо окремо.';setTimeout(()=>{if(!box.hidden&&document.getElementById('mergeMsg'))viewHide();},1800);}
     catch(e){m.hidden=false;m.textContent='Не вдалося. Спробуй ще раз пізніше.';['mergeYes','mergeNo'].forEach(id=>{const b=document.getElementById(id);if(b)b.disabled=false;});}};
@@ -3556,16 +3575,22 @@ function lbHtml(rows){
   if(!rows.length)return '<p class="muted">Поки що ніхто не зіграв. Будь першим!</p>';
   return `<div class="clickable"><table class="lbt"><tr><th class="n">#</th><th>Гравець</th><th class="num">В-Н-П</th><th class="num">Голи</th><th class="num">Очки</th></tr>`+show.map(r=>`<tr data-q="day=eq.${DAY}&device_id=eq.${esc(encodeURIComponent(r.device_id))}&practice=is.false"${r.i===mi?' class="me"':''}><td class="n">${r.i<3?`<span class="plc p${r.i+1}">${r.i+1}</span>`:r.i+1}</td><td>${plink(r)}</td><td class="num">${numOr0(r.w)}-${numOr0(r.d)}-${numOr0(r.l)}</td><td class="num">${numOr0(r.gf)}:${numOr0(r.ga)}</td><td class="num"><b>${numOr0(r.pts)}</b></td></tr>`).join('')+`</table></div><p class="muted lbfoot">Зіграли сьогодні: ${rows.length} · лише перевірені сервером · тап по рядку — склад</p>`;
 }
-async function loadLb(el){el.innerHTML=skLb();try{el.innerHTML=lbHtml(await sbTop(DAY));}catch(e){el.innerHTML='<p class="muted">Таблиця зараз недоступна.</p><p class="muted mono" style="font-size:var(--fs-caption2)">'+esc(String(e&&e.message||e))+'</p>';}}
+async function loadLb(el,p){el.innerHTML=skLb();try{el.innerHTML=lbHtml(await (p||sbTop(DAY)));}catch(e){el.innerHTML='<p class="muted">Таблиця зараз недоступна.</p><p class="muted mono" style="font-size:var(--fs-caption2)">'+esc(String(e&&e.message||e))+'</p>';}}
 function renderLb(r){
   const box=document.getElementById('lbBox');box.hidden=!(ONLINE&&S.daily);if(box.hidden)return;
   const sent=lsGet("upl30_sent_"+DAY);const form=document.getElementById('lbForm');const msg=document.getElementById('lbMsg');
   document.getElementById('nick').value=myName();
   form.hidden=!!sent||S.daily.practice;msg.textContent=S.daily.practice&&!sent?'Тренувальні спроби в таблицю не потрапляють.':(sent?'Твій результат уже в таблиці.':'');
   document.getElementById('lbAcct').hidden=!(ONLINE&&!SESSION&&!(TG&&TG.initData)&&!form.hidden);
-  loadLb(document.getElementById('lbTable'));
+  // official attempt: the server adds it to the table while verifying, so load the table once, after the verdict (lbRelease)
+  r.lbWait=!form.hidden;if(r.lbWait){document.getElementById('lbTable').innerHTML=skLb();setTimeout(()=>lbRelease(r),LB_WAIT_MS);}
+  else loadLb(document.getElementById('lbTable'));
 }
-if(ONLINE){const b=document.getElementById('lbOpenBtn');b.hidden=false;b.onclick=async()=>{const h=document.getElementById('lbHome');if(!h.hidden){slide(h,false);return;}b.disabled=true;await loadLb(h);b.disabled=false;slide(h,true);};}   // slides in smoothly
+const LB_WAIT_MS=12e3;   // no verdict by then (slow or lost save): load the table anyway
+function lbRelease(r){if(!r||!r.lbWait)return;r.lbWait=false;if(S.result===r)loadLb(document.getElementById('lbTable'));}
+if(ONLINE){const b=document.getElementById('lbOpenBtn');b.hidden=false;let pre=null;   // pre: request started on touch
+  preTouch(b,()=>{if(document.getElementById('lbHome').hidden&&!(pre&&Date.now()-pre.at<PRE_MS))pre={p:sbTop(DAY),at:Date.now()};});
+  b.onclick=async()=>{const h=document.getElementById('lbHome');if(!h.hidden){slide(h,false);return;}const p=pre&&Date.now()-pre.at<PRE_MS?pre.p:null;pre=null;if(p)p.catch(()=>{});b.disabled=true;await loadLb(h,p);b.disabled=false;slide(h,true);};}   // slides in smoothly
 document.getElementById('lbSend').onclick=async()=>{
   const nick=document.getElementById('nick').value.trim();const msg=document.getElementById('lbMsg');
   {const c=nameCheck(nick);if(c.err||!c.name){haptic('error');msg.textContent=NAME_MSG[c.err||'len'];return;}}
@@ -3668,7 +3693,7 @@ function drawCard(r){   // card in site style: UPL navy background, UPL.TV gradi
 }
 document.getElementById('chalOpen').onclick=()=>{const b=document.getElementById('chalBox'),t=document.getElementById('chalOpen');b.hidden=!b.hidden;t.classList.toggle('on',!b.hidden);if(!b.hidden){b.scrollIntoView({behavior:'smooth',block:'center'});const n=document.getElementById('chalName');if(n&&!n.hidden&&!n.value)n.focus();}};
 // ---------- What's new: short player-friendly notes on the latest version (technical log: CHANGELOG.md)
-const WHATSNEW={v:'0.77.1',news:'0.77',date:'07.10.2026',items:[   // news: edition of the items; a release without new items keeps it, so the news dot does not light up again
+const WHATSNEW={v:'0.78',news:'0.77',date:'07.10.2026',items:[   // news: edition of the items; a release without new items keeps it, so the news dot does not light up again
   ['format-list-numbered','Статистика сезону','Сила команди — дві картки зі шкалами: атака, оборона, лінії й чи вийшло краще за прогноз. Пояснення стоять поруч і стали коротшими.'],
   ['lightning-bolt','Ліга чату — швидше й чистіше','Таблиця ліги з’являється одразу, нова картка: колонки, твій рядок, кнопка «Уся таблиця».'],
   ['trophy','Іконки й рух','Одні контурні іконки замість емодзі — емодзі лишились тільки в нагородах. Трофей перевертається, гравець перелітає на поле, цифри сезону прокручуються.']]};
@@ -3921,7 +3946,7 @@ function f5Render(){
 
 document.getElementById('f5Open').onclick=f5Start;
 // audit P2-5: only what tests use; drawCard for card checks, simulate/rerun for fast determinism
-window.__dbg={place,em,loadLb,haptic,seasonHaptic,renderNewTro,TROPHIES,CLUB_REC,ocMine,ocAfter,renderOc,renderOcRes,openOc,acctMerge,get BEST(){return BEST;},get VT_N(){return VT_N;},ic,seasonLabel,boardPrefetch,boardStale,BOARD_FROM,setFmt,leagueLoad,boardHtml,oppYear,champModal,drawCard,chalNewGame,DAILY,LEAGUE_CULT,LEAGUE_LEGENDS,openTrophies,renderNewTro,bestPerPlayer,renderWheel,posOpts,eraOf,ptsWord,viewHtml,renderPitch,pitchHtml,f5Pitch,F5_FORMS,cardName,clubShort,simulate,shareTextOf,trCtxNow,trAward,trStore,FORMATIONS,GROUP_OF,DATA,TROPHIES,trEval,PERSON,effRating,get S(){return S;},rerun(seed,year,xi){rnd=mulberry32(seed);const r=simulate(xi||S.slots.map(s=>s.player),MODES[S.mode],year);rnd=Math.random;return {W:r.W,D:r.D,L:r.L,gf:r.gf,ga:r.ga,place:r.place};}};
+window.__dbg={place,em,loadLb,haptic,seasonHaptic,renderNewTro,TROPHIES,CLUB_REC,ocMine,ocAfter,renderOc,renderOcRes,openOc,acctMerge,get BEST(){return BEST;},get VT_N(){return VT_N;},ic,seasonLabel,boardFetch,boardStale,BOARD_FROM,setFmt,leagueLoad,boardHtml,oppYear,champModal,drawCard,chalNewGame,DAILY,LEAGUE_CULT,LEAGUE_LEGENDS,openTrophies,renderNewTro,bestPerPlayer,renderWheel,posOpts,eraOf,ptsWord,viewHtml,renderPitch,pitchHtml,f5Pitch,F5_FORMS,cardName,clubShort,simulate,shareTextOf,trCtxNow,trAward,trStore,FORMATIONS,GROUP_OF,DATA,TROPHIES,trEval,PERSON,effRating,get S(){return S;},rerun(seed,year,xi){rnd=mulberry32(seed);const r=simulate(xi||S.slots.map(s=>s.player),MODES[S.mode],year);rnd=Math.random;return {W:r.W,D:r.D,L:r.L,gf:r.gf,ga:r.ga,place:r.place};}};
 // Telegram script was requested by the first inline script: init now if it already loaded, otherwise on its load
 if(ONLINE){window.__tgCb=tgInit;if(window.__tgOk)tgInit();}
 })();

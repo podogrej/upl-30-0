@@ -166,8 +166,8 @@ function trCtxRow(row){   // from a seasons log row (for retroactive awarding)
   const r={W:row.w,D:row.d,L:row.l,pts:row.pts,place:row.place,gf:row.gf,ga:row.ga,xp:row.xp??row.pts,golden:!!row.golden};
   const m=MODES[row.mode]||{};return {r,xi,pl,mode:row.mode,format:row.format,reveal:!!(m.reveal||m.showRatings),dailyOfficial:!!(row.day&&!row.practice)};
 }
-// record a season into the collection; returns {got:[ids], fresh:[new ids]}
-function trAward(c,{daily}={}){
+// record a season into the collection; returns {got:[ids], fresh:[new ids]}; sync:false - the caller sends fresh ids itself (with the season)
+function trAward(c,{daily,sync=true}={}){
   const s=trStore();const got=trEval(c);const fresh=[];const today=kyivDate();
   s.seasons++;if(daily)s.dailies++;
   const add=id=>{const e=s.t[id]||(s.t[id]={n:0,at:today});if(!e.n)fresh.push(id);e.n++;};
@@ -175,7 +175,7 @@ function trAward(c,{daily}={}){
   const ctxS={streak:trStreak(),dailies:s.dailies};
   for(const t of TROPHIES)if(t.st&&t.st(ctxS)&&!(s.t[t.id]&&s.t[t.id].n)){add(t.id);got.push(t.id);}
   for(const [k] of MILESTONES)if(s.seasons===k){add('ms'+k);got.push('ms'+k);}
-  lsSet("upl30_tr",s);if(fresh.length)trSync(fresh);
+  lsSet("upl30_tr",s);if(fresh.length&&sync)trSync(fresh);
   return {got,fresh};
 }
 // 5x5 league trophies from the tournament result (res from fl_get); team = player's team index. Returns ids (no write)
@@ -197,10 +197,13 @@ const trDef=id=>{if(id.startsWith('ms')){const m=MILESTONES.find(x=>'ms'+x[0]===
 function trSync(ids){if(!ONLINE)return;saveApi('trophies',{ids}).catch(e=>console.warn('trophies',e));}
 let TR_PCT=null,TR_FAIL=false;   // TR_FAIL: the stats request failed (skeleton line stops)
 const trBusy=()=>ONLINE&&!TR_PCT&&!TR_FAIL;
-async function trLoadPct(){if(!ONLINE)return null;try{const r=await fetch(`${SB_URL}/rest/v1/rpc/trophy_stats?apikey=${SB_KEY}`,{method:'POST',headers:{apikey:SB_KEY,'Content-Type':'application/json'},body:'{}'});if(!r.ok){TR_FAIL=true;return null;}TR_PCT=await r.json();return TR_PCT;}catch(e){TR_FAIL=true;return null;}}
+// trophy_stats is the same for everyone: cached for TR_PCT_TTL (upl30_tr_pct {at, v})
+const TR_PCT_TTL=36e5;
+async function trLoadPct(){if(!ONLINE)return null;const c=lsGet('upl30_tr_pct');if(c&&c.v&&Date.now()-c.at<TR_PCT_TTL){TR_PCT=c.v;return TR_PCT;}
+  try{const r=await fetch(`${SB_URL}/rest/v1/rpc/trophy_stats?apikey=${SB_KEY}`,{method:'POST',headers:{apikey:SB_KEY,'Content-Type':'application/json'},body:'{}'});if(!r.ok){TR_FAIL=true;return null;}TR_PCT=await r.json();lsSet('upl30_tr_pct',{at:Date.now(),v:TR_PCT});return TR_PCT;}catch(e){TR_FAIL=true;return null;}}
 // one-off retroactive awarding from this device's log
 async function trRetro(){
-  if(!ONLINE||lsGet("upl30_tr_retro"))return;
+  if(!ONLINE)return;deviceId();if(lsGet("upl30_tr_retro"))return;   // a device created just now has no seasons: deviceId() sets the flag
   try{const rows=await sbGet(`seasons?device_id=eq.${deviceId()}&select=*&order=id.asc&limit=1000`);
     const s=trStore();const fresh=[];const today=kyivDate();
     for(const row of rows){if(row.practice||row.mode==='practice')continue;s.seasons++;if(row.day)s.dailies++;

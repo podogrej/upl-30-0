@@ -16,10 +16,12 @@ gen_same(){ [ "$(md5sum $GEN)" = "$BEFORE" ] || { echo 'index.html / lib/* за�
 step "згенеровані файли свіжі (збірка нічого не змінила)" gen_same
 step "пул гравців (check_pool)" python3 data/check_pool.py
 step "сервер завантажується (як на Vercel)" node tools/tests/server_load.js
+# vercel.json: Vercel rejects ignoreCommand longer than 256 chars (deploy fails before build)
+step "vercel.json (ignoreCommand ≤ 256)" node -e 'const c=require("./vercel.json").ignoreCommand||"";if(c.length>256){console.log("ignoreCommand: "+c.length+" > 256");process.exit(1)}'
 # fast non-browser tests: always run
 for t in cheat card_api err_digest player_texts feedback board_pin cron_summary channel notify code_comments; do step "тест $t" node "tools/tests/$t.js"; done
 # browser tests are independent, so JOBS run in parallel (default 3), longest first; QUICK=1 runs only a short set
-UI="determinism scenarios fl63 modes chal tro v064 fl61 leagueui v060 player_page v39 news draft58 pitch_layout f5test2 emoji_layout nav_back err_report long_names tg_swipes font_tour icon_align live_height oneclub72 v073 v074 v075 v076 v076b v077a v077b v077c v077d xp_stable"
+UI="determinism scenarios fl63 modes chal tro v064 fl61 leagueui v060 player_page v39 news draft58 pitch_layout f5test2 emoji_layout nav_back err_report long_names tg_swipes font_tour icon_align live_height oneclub72 v073 v074 v075 v076 v076b v077a v077b v077c v077d v078 xp_stable"
 [ -n "$QUICK" ] && UI="draft58 v064 emoji_layout nav_back"
 [ -n "$FAST" ] && UI="determinism scenarios $(echo " $ONLY " | sed 's/ sql / /g')"
 JOBS=${JOBS:-3}; declare -A T0

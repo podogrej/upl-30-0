@@ -1,6 +1,6 @@
 // 30-0 UPL: shared Telegram group league helpers for api/bot.js, api/cron.js, api/league.js ("_" prefix: not a route).
 const L = (() => {
-const { SB_URL, env, sb, kyivDate, miniApp } = require('./_lib.js');
+const { SB_URL, env, sb, sbAll, kyivDate, miniApp } = require('./_lib.js');
 const esc = s => String(s == null ? '' : s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
 
 async function tg(method, body) {
@@ -70,8 +70,8 @@ function standingsOf(rows) {
   return Object.values(st).sort((a, b) => b.wins - a.wins || b.pts / b.days - a.pts / a.days);
 }
 const RES_COLS = 'day,tg_user_id,name,w,d,l,pts,gf,ga,created_at,season_id';
-// all league rows (newest days first) for standings; today's rows are part of it
-const leagueRows = chat_id => sb(`league_results?chat_id=eq.${chat_id}&select=${RES_COLS}&order=day.desc&limit=3000`).then(x => onlyVerified(x || []));
+// all league rows (newest days first) for standings; today's rows are part of it. Paged: one request returns at most 1000 rows
+const leagueRows = chat_id => sbAll(`league_results?chat_id=eq.${chat_id}&select=${RES_COLS}&order=day.desc,tg_user_id.asc`).then(onlyVerified);
 async function standings(chat_id) { return standingsOf(await leagueRows(chat_id)); }
 
 async function boardText(chat_id, day) {
@@ -125,7 +125,7 @@ async function migrateLeague(from, to) {
   return true;
 }
 
-return { SB_URL, env, esc, tg, sb, kyivDate, migrateLeague, dayNo, dayShort, checkMiniApp, nameOf, playUrl, playKb, sortRes, onlyVerified, standings, standingsOf, leagueRows, RES_COLS, boardText, upsertBoard };
+return { SB_URL, env, esc, tg, sb, sbAll, kyivDate, migrateLeague, dayNo, dayShort, checkMiniApp, nameOf, playUrl, playKb, sortRes, onlyVerified, standings, standingsOf, leagueRows, RES_COLS, boardText, upsertBoard };
 })();
 
 module.exports = L;

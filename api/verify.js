@@ -24,7 +24,7 @@ function yearOk(row, E, chalYearOk, prev) {
 
 // The previous site version stays open for players (browser cache, Mini App): if simulation didn't change between versions, add it here
 // so its seasons are verified by the new engine. History for 0.57-0.64 is in CHANGELOG.
-const PREV_VERSIONS = ['0.77', '0.76'];   // only versions with identical simulation; others get null ("not verified"). Keeping it short also blocks forged version (audit P1-2)
+const PREV_VERSIONS = ['0.77.1', '0.77'];   // only versions with identical simulation; others get null ("not verified"). Keeping it short also blocks forged version (audit P1-2)
 
 // main check: returns [true|false|null, reason]; null = cannot verify (old version etc.)
 function check(row, seedRow, opts = {}) {
@@ -90,15 +90,18 @@ function checkCore(row, seedRow, { chalYearOk = false, prev = false } = {}) {
 // daily challenge result is written by the server from the verified season (browser numbers in daily_results are not trusted).
 // Only the first official attempt of the day (seed official) and only the season that seed was assigned to (used_by).
 // Row exists (browser inserted it via the submit button): overwrite numbers and set verified; otherwise insert it.
-async function syncDaily(row, seedRow) {
+// fresh: first verification of the season -> one upsert (no row can exist for this official attempt except a legacy browser row)
+async function syncDaily(row, seedRow, fresh) {
   if (!row.day || row.verified !== true || row.practice || !seedRow || !seedRow.official || +seedRow.used_by !== +row.id) return false;
   const day = String(row.day).slice(0, 10), dev = encodeURIComponent(String(row.device_id));
   const res = { w: row.w, d: row.d, l: row.l, pts: row.w * 3 + row.d, gf: row.gf, ga: row.ga, place: row.place, formation: row.formation, xp: row.xp == null ? null : +row.xp,
     xi: (row.xi || []).map(x => [x.n, x.slot, x.r, x.c, x.y]), verified: true };
   // group league boards: bind a result submitted before the browser knew the season id to this season
   if (row.tg_user_id) await sb(`league_results?day=eq.${day}&tg_user_id=eq.${+row.tg_user_id}&season_id=is.null`, { method: 'PATCH', prefer: 'return=minimal', body: { season_id: row.id } });
-  const upd = await sb(`daily_results?day=eq.${day}&device_id=eq.${dev}`, { method: 'PATCH', prefer: 'return=representation', body: res });
-  if (upd && upd.length) return true;
+  if (!fresh) {   // repeated verify: only the numbers are rewritten, the name in the row stays (e.g. anonymised after account deletion)
+    const upd = await sb(`daily_results?day=eq.${day}&device_id=eq.${dev}`, { method: 'PATCH', prefer: 'return=representation', body: res });
+    if (upd && upd.length) return true;
+  }
   let nick = Array.from(String(row.nickname || row.tg_name || '').trim()).slice(0, 24).join('').trim();   if (Array.from(nick).length < 2) nick = 'Гравець';   // main DB: char_length 2-24
   const ins = { day, device_id: row.device_id, nickname: nick, ...res };
   if (row.tg_user_id) { ins.tg_user_id = row.tg_user_id; ins.tg_name = row.tg_name || null; }
@@ -113,8 +116,9 @@ async function flRecord(row, id) {
   try { const n = await sb('rpc/fl_record', { method: 'POST', body: { p_season: id } }); return n == null ? null : +n; } catch (e) { return null; }
 }
 // verify season by id (shared by /api/verify and /api/save): {verified, note, cached?, fl?}
-async function verifyById(id) {
-  const [row] = await sb(`seasons?id=eq.${id}&select=*`) || [];
+// row: the full row just inserted by /api/save (insert returned select=*), saves re-reading it
+async function verifyById(id, row) {
+  if (!row || +row.id !== +id) [row] = await sb(`seasons?id=eq.${id}&select=*`) || [];
   if (!row) return { status: 404, error: 'no season' };
   const [seedRow] = row.seed_id ? (await sb(`season_seeds?id=eq.${encodeURIComponent(row.seed_id)}&select=*`) || []) : [];
   if (row.verified !== null && row.verified !== undefined) {
@@ -130,11 +134,11 @@ async function verifyById(id) {
   }
   let v, note;
   try { [v, note] = check(row, seedRow, { chalYearOk }); } catch (e) { v = null; note = 'рушій недоступний: ' + String(e.message || e).slice(0, 80); }
-  await sb(`seasons?id=eq.${id}`, { method: 'PATCH', prefer: 'return=minimal', body: { verified: v, verify_note: String(note).slice(0, 200) } });
-  if (v === true && seedRow) {
-    await sb(`season_seeds?id=eq.${seedRow.id}`, { method: 'PATCH', prefer: 'return=minimal', body: { used_by: id } });
-    await syncDaily({ ...row, verified: true }, { ...seedRow, used_by: id });
-  }
+  // verdict and "seed used" are independent writes: in parallel; the daily result only after both succeeded
+  await Promise.all([
+    sb(`seasons?id=eq.${id}`, { method: 'PATCH', prefer: 'return=minimal', body: { verified: v, verify_note: String(note).slice(0, 200) } }),
+    v === true && seedRow ? sb(`season_seeds?id=eq.${seedRow.id}`, { method: 'PATCH', prefer: 'return=minimal', body: { used_by: id } }) : null]);
+  if (v === true && seedRow) await syncDaily({ ...row, verified: true }, { ...seedRow, used_by: id }, true);
   const fl = v === true ? await flRecord(row, id) : undefined;
   return { verified: v, note, fl };
 }

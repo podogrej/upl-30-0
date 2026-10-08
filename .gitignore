@@ -11,3 +11,6 @@ tools/results_*.json
 # Claude Code ralph-loop state
 .claude/ralph-loop.local.md
 .claude/.ralph-loop.local.md
+data/birthdays/.cache/
+data/birthdays/.tm.log
+data/matches/raw_*.csv

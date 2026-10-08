@@ -48,13 +48,17 @@ async function acctPull(){
     const server=rows[0]&&rows[0].data||{};const merged=acctMerge(acctLocal(),server);
     for(const [k,v] of Object.entries(merged))lsSet(k,v);
     if(merged.upl30_best_v2)BEST=merged.upl30_best_v2;
-    await acctPush();renderTrBtn();showBest();renderDailyCard();return {server,merged};
+    if(!jsonEq(acctLocal(),server))await acctPush();   // nothing new on this device: no write
+    renderTrBtn();showBest();renderDailyCard();return {server,merged};
   }catch(e){return null;}
 }
+// deep equality regardless of key order (jsonb reorders keys)
+const jsonKey=v=>Array.isArray(v)?'['+v.map(jsonKey).join(',')+']':v&&typeof v==='object'?'{'+Object.keys(v).sort().map(k=>JSON.stringify(k)+':'+jsonKey(v[k])).join(',')+'}':JSON.stringify(v);
+const jsonEq=(a,b)=>jsonKey(a)===jsonKey(b);
 async function acctPush(){if(!SESSION)return;try{await fetch(`${SB_URL}/rest/v1/user_state?apikey=${SB_KEY}&on_conflict=user_id`,{method:'POST',headers:{apikey:SB_KEY,'Content-Type':'application/json',Prefer:'resolution=merge-duplicates,return=minimal'},body:JSON.stringify({user_id:SESSION.user.id,data:acctLocal(),updated_at:new Date().toISOString()})});}catch(e){}}
 async function acctOnLogin(){
   // attach everything played on this device to the account and merge progress
-  await playerSync();
+  trSrvStale();await playerSync();
   const res=await acctPull();const s=trStore();
   ACCT_MSG=`Готово! Прогрес збережено в акаунті: ${s.seasons} ${plUk(s.seasons,'сезон','сезони','сезонів')}, трофеїв — ${Object.values(s.t).filter(e=>e.n).length}.`;
   if(!lsGet("upl30_nick")){const n=acctName();if(n)lsSet("upl30_nick",n.slice(0,24));}
@@ -102,7 +106,7 @@ function myName(){return String((PLAYER&&(PLAYER.name||PLAYER.anon_name))||lsGet
 async function playerRpc(fn,extra){
   const r=await fetch(`${SB_URL}/rest/v1/rpc/${fn}?apikey=${SB_KEY}`,{method:'POST',headers:{apikey:SB_KEY,'Content-Type':'application/json'},body:JSON.stringify({p_device:deviceId(),p_secret:devSecret(),...(extra||{})})});
   const t=await r.text();if(!r.ok)throw new Error(`${fn} ${r.status}: ${t.slice(0,120)}`);return JSON.parse(t);}
-function playerSet(p){if(!p||!p.id)return;const was=PLAYER&&PLAYER.id;PLAYER=p;lsSet("upl30_player",p);if(p.name)lsSet("upl30_nick",p.name);renderAcct();if(was&&was!==p.id)lsSet('upl30_tr_srv',null);trSrvRefresh();
+function playerSet(p){if(!p||!p.id)return;const was=PLAYER&&PLAYER.id;PLAYER=p;lsSet("upl30_player",p);if(p.name)lsSet("upl30_nick",p.name);renderAcct();if(was&&was!==p.id){lsSet('upl30_tr_srv',null);trSrvStale();}trSrvRefresh();
   if(PP&&PP.own&&CUR_SEC===6){if(was!==p.id){PP.prof=null;ppLoad(PP);}ppRender();}}
 async function playerSync(){
   if(!ONLINE)return;
@@ -185,7 +189,7 @@ function mergeAsk(o){if(!SESSION||!o||mergeAsk.shown===o.id)return;mergeAsk.show
     <p class="muted" style="margin:0">Якщо це ти — об'єднаємо: сезони, трофеї, серія й ім'я стануть одним гравцем, і обидва входи відкриватимуть його. Якщо це хтось інший — нічого не зміниться.</p>
     <div class="grid" style="gap:var(--sp-2)"><button class="primary" id="mergeYes">${ic('account-multiple-check')}Так, це я — об'єднати</button><button class="ghost" id="mergeNo">Ні, це інший гравець</button></div><p class="note" id="mergeMsg" hidden style="margin:0"></p>`;
   const ans=async yes=>{const m=document.getElementById('mergeMsg');['mergeYes','mergeNo'].forEach(id=>document.getElementById(id).disabled=true);
-    try{const p=await playerRpc('merge_answer',{p_offer:o.id,p_yes:yes});const prev=p&&p.prev_state;if(p)delete p.prev_state;if(PP)PP.prof=null;playerSet(p);
+    try{const p=await playerRpc('merge_answer',{p_offer:o.id,p_yes:yes});const prev=p&&p.prev_state;if(p)delete p.prev_state;if(PP)PP.prof=null;if(yes)trSrvStale();playerSet(p);
       if(yes){try{if(prev&&typeof prev==='object'){const m=acctMerge(acctLocal(),prev);for(const [k,v] of Object.entries(m))lsSet(k,v);if(m.upl30_best_v2)BEST=m.upl30_best_v2;}await acctPull();}catch(e){}}   // also bring over trophies, streak and records of the previous sign-in
       m.hidden=false;m.textContent=yes?`Готово — тепер ти один гравець: ${myName()}.`:'Добре, лишаємо окремо.';setTimeout(()=>{if(!box.hidden&&document.getElementById('mergeMsg'))viewHide();},1800);}
     catch(e){m.hidden=false;m.textContent='Не вдалося. Спробуй ще раз пізніше.';['mergeYes','mergeNo'].forEach(id=>{const b=document.getElementById(id);if(b)b.disabled=false;});}};
