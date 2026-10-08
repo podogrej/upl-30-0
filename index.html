@@ -858,7 +858,7 @@ section>h3:first-child,.box h3:first-of-type,#viewBody>h3:first-child,#viewBody>
 /* trophies as tiles: one per row, small icon next to the title, title in gradient, description below; locked ones dimmed */
 .tro{grid-template-columns:40px 1fr auto;column-gap:var(--sp-2);row-gap:var(--sp-1);align-items:start;padding:var(--sp-4) var(--sp-4)}
 .tro .tri{grid-row:1;align-self:center;margin:0;display:grid;place-items:center}
-.tro .trt{gap:var(--sp-1)}.tro .trt b{font-size:var(--fs-body);line-height:var(--lh-snug)}
+.tro .trt{gap:var(--sp-1);align-self:center}.tro .trt b{font-size:var(--fs-body);line-height:var(--lh-snug)}
 .tro.on .trt b{color:var(--ink);justify-self:start}
 .tro:not(.on){opacity:1;background:var(--surface);box-shadow:inset 0 0 0 1px var(--line)}
 /* summary: trophy titles in white, calm borders, no pink glow; only Share uses the gradient */
@@ -1091,7 +1091,7 @@ h3,.sec0,#s1 .sec0,.pgh,.trleg .h{font-size:var(--fs-footnote);font-weight:var(-
   <div class="acts"><button class="ft-send" id="fbSend" type="submit">Надіслати</button><button class="ft-cancel" id="fbCancel" type="button">Скасувати</button></div></form>
 <div class="ft-done" id="fbDone" hidden><b>✓</b><span>Дякуємо! Прочитаємо найближчим часом</span></div>
 <div class="ft-pills"><button class="ft-pill" id="fbBtn" type="button"><!--i:mail-->Відгук і баги</button><a class="ft-pill" id="ftBot" href="https://t.me/upl30_bot" target="_blank" rel="noopener"><!--i:telegram-->Telegram-бот</a></div>
-<div class="foot ft-small"><a href="#" id="newsBtn">Що нового у версії 0.79.2<b id="newsDot" hidden></b></a><a href="privacy.html">Конфіденційність</a><a href="terms.html">Умови використання</a></div>
+<div class="foot ft-small"><a href="#" id="newsBtn">Що нового у версії 0.79.3<b id="newsDot" hidden></b></a><a href="privacy.html">Конфіденційність</a><a href="terms.html">Умови використання</a></div>
 <div class="foot ft-copy">© 2026 30-0 УПЛ · неофіційний фан-проєкт <a href="#" id="themeBtn" class="thm" role="switch" aria-checked="false" aria-label="Світла тема"></a></div>
 <p class="ft-legal">30-0 УПЛ — незалежний фан-проєкт: футбольний драфт і симулятор сезону. Він не пов'язаний з Українською Прем'єр-лігою, Українською асоціацією футболу, клубами, футболістами, їхніми об'єднаннями чи іншими організаціями й не схвалений ними. Назви клубів, імена футболістів, рейтинги, статистику й дані сезонів використано лише з інформаційною та довідковою метою. Офіційні логотипи, емблеми та фото футболістів не використовуються. Усі торговельні марки належать їхнім власникам.</p>
 <div class="ft-cred">Шрифт KyivType Sans © Дмитро Растворцев (айдентика Києва)<br>Іконки: Material Design Icons (Apache 2.0), логотип Telegram — Font Awesome Free (CC BY 4.0)</div>
@@ -3670,7 +3670,7 @@ function drawCard(r){   // card in site style: UPL navy background, UPL.TV gradi
 }
 document.getElementById('chalOpen').onclick=()=>{const b=document.getElementById('chalBox'),t=document.getElementById('chalOpen');b.hidden=!b.hidden;t.classList.toggle('on',!b.hidden);if(!b.hidden){b.scrollIntoView({behavior:'smooth',block:'center'});const n=document.getElementById('chalName');if(n&&!n.hidden&&!n.value)n.focus();}};
 // ---------- What's new: short player-friendly notes on the latest version (technical log: CHANGELOG.md)
-const WHATSNEW={v:'0.79.2',news:'0.79.2',date:'09.10.2026',items:[   // news: edition of the items; a release without new items keeps it, so the news dot does not light up again
+const WHATSNEW={v:'0.79.3',news:'0.79.2',date:'09.10.2026',items:[   // news: edition of the items; a release without new items keeps it, so the news dot does not light up again
   ['crown','Більше чемпіонств','Сильний склад тепер частіше бере титул: лідери «Ліги легенд» більше не набирають по 74 очки щосезону.'],
   ['lightning-bolt','Везіння суперників','Шахтар чи Динамо можуть провалити сезон, а середняк — вистрілити. У підсумковій таблиці видно, хто набрав набагато більше чи менше за очікуване.'],
   ['account-group','Ліги чатів — на звичайній грі','У лігу чату йде найкращий сезон із перших трьох спроб дня у «Грати».']]};
