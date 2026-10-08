@@ -16,6 +16,8 @@ gen_same(){ [ "$(md5sum $GEN)" = "$BEFORE" ] || { echo 'index.html / lib/* за�
 step "згенеровані файли свіжі (збірка нічого не змінила)" gen_same
 step "пул гравців (check_pool)" python3 data/check_pool.py
 step "сервер завантажується (як на Vercel)" node tools/tests/server_load.js
+# vercel.json: Vercel rejects ignoreCommand longer than 256 chars (deploy fails before build)
+step "vercel.json (ignoreCommand ≤ 256)" node -e 'const c=require("./vercel.json").ignoreCommand||"";if(c.length>256){console.log("ignoreCommand: "+c.length+" > 256");process.exit(1)}'
 # fast non-browser tests: always run
 for t in cheat card_api err_digest player_texts feedback board_pin cron_summary channel notify code_comments; do step "тест $t" node "tools/tests/$t.js"; done
 # browser tests are independent, so JOBS run in parallel (default 3), longest first; QUICK=1 runs only a short set

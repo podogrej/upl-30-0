@@ -1,5 +1,5 @@
 {
-  "ignoreCommand": "git cat-file -e ${VERCEL_GIT_PREVIOUS_SHA:-HEAD^}^{commit} 2>/dev/null || exit 1; git diff --quiet ${VERCEL_GIT_PREVIOUS_SHA:-HEAD^} HEAD -- . ':(exclude)*.md' ':(exclude)docs' ':(exclude)tools' ':(exclude)sql' ':(exclude)data' ':(exclude).github' ':(exclude).claude'",
+  "ignoreCommand": "p=${VERCEL_GIT_PREVIOUS_SHA:-HEAD^};git cat-file -e $p^{commit}||exit 1;git diff --quiet $p HEAD -- . ':!*.md' ':!docs' ':!tools' ':!sql' ':!data' ':!.github' ':!.claude'",
   "crons": [
     {
       "path": "/api/cron",
