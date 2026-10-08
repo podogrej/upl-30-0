@@ -2439,8 +2439,8 @@ function drawCard(r){   // card in site style: UPL navy background, UPL.TV gradi
 document.getElementById('chalOpen').onclick=()=>{const b=document.getElementById('chalBox'),t=document.getElementById('chalOpen');b.hidden=!b.hidden;t.classList.toggle('on',!b.hidden);if(!b.hidden){b.scrollIntoView({behavior:'smooth',block:'center'});const n=document.getElementById('chalName');if(n&&!n.hidden&&!n.value)n.focus();}};
 // ---------- What's new: short player-friendly notes on the latest version (technical log: CHANGELOG.md)
 const WHATSNEW={v:'0.77.1',date:'08.10.2026',items:[
-  ['check-decagram','Прогноз не стрибає','Той самий склад тепер завжди має той самий прогноз. Переставив гравців — прогноз зміниться, лише якщо справді змінилась сила.'],
   ['format-list-numbered','Статистика сезону','Сила команди — дві картки зі шкалами: атака, оборона, лінії й чи вийшло краще за прогноз. Пояснення стоять поруч і стали коротшими.'],
+  ['lightning-bolt','Ліга чату — швидше й чистіше','Таблиця ліги з’являється одразу, нова картка: колонки, твій рядок, кнопка «Уся таблиця».'],
   ['trophy','Іконки й рух','Одні контурні іконки замість емодзі — емодзі лишились тільки в нагородах. Трофей перевертається, гравець перелітає на поле, цифри сезону прокручуються.']]};
 function openNews(){screenTag('news');const box=document.getElementById('viewBox');document.getElementById('viewTitle').textContent=`Що нового · версія ${WHATSNEW.v}`;
   document.getElementById('viewBody').innerHTML=`<div class="news">${WHATSNEW.items.map(([e,h,d])=>`<div class="ni">${ic(e,'lg')}<div><b>${esc(h)}</b><p>${esc(d)}</p></div></div>`).join('')}</div>`;
