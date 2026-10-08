@@ -576,6 +576,13 @@ chk "v0711: ліги з десятиліттям (11×11 і 5×5) створюю
   begin j := fl_create('$MX', '$SEC', 'Вісімдесяті', 3, 1, 'best', 'place', 1, 'show', 'd1980'); assert false, 'd1980'; exception when sqlstate '22023' then assert sqlerrm = 'fl_bad', sqlerrm; end;" ',"sub":"'$UG'"'
 chk "v0711: anon не створює лігу" anon "
   begin j := fl_create5('$MX', '$SEC', 'Анон', 3, 1, 'show', 'd2000'); assert false, 'anon створив'; exception when insufficient_privilege then null; end;"
+# ===== v079: chat-league attempt flag on season seeds =====
+for pass in 1 2; do
+  if $P -d t1 -f "$ROOT/sql/v079_league_seeds.sql" >/dev/null 2>"$D/err"; then ok "запуск $pass: v079_league_seeds.sql"; else bad "запуск $pass: v079_league_seeds.sql — $(grep -v NOTICE "$D/err" | head -3)"; fi
+done
+chk "v079: season_seeds.league типово false, індекс спроб є" postgres "
+  assert (select column_default from information_schema.columns where table_name = 'season_seeds' and column_name = 'league') = 'false', 'league default';
+  assert exists (select 1 from pg_indexes where indexname = 'season_seeds_league_day_idx'), 'індекс';"
 # upgrade from the earlier test-DB version: rows with old statuses must not break the re-run
 $P -d t1 -q -c "alter table channel_posts drop constraint channel_posts_status_chk; insert into channel_posts(text, publish_at, status) values ('old-a', now(), 'approved'), ('old-s', now(), 'skipped');" >/dev/null 2>&1
 if $P -d t1 -f "$ROOT/sql/v06997_channel_posts.sql" >/dev/null 2>"$D/err"; then ok "v06997 поверх старої версії (approved/skipped)"; else bad "v06997 поверх старої версії — $(grep -v NOTICE "$D/err" | head -3)"; fi

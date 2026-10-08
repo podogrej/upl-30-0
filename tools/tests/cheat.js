@@ -41,7 +41,7 @@ global.fetch = async (url, o = {}) => {
     }
     return err(404, { code: 'PGRST202' });
   }
-  if (m === 'POST' && t === 'season_seeds') { const b = JSON.parse(o.body); if (b.official && DB.season_seeds.some(x => x.official && x.daily && x.device_id === b.device_id && x.day === b.day)) return err(409, { code: '23505', message: 'duplicate key value violates unique constraint "season_seeds_official_uq"' }); }
+  if (m === 'POST' && t === 'season_seeds') { const b = JSON.parse(o.body); if (b.daily && b.official && DB.season_seeds.some(x => x.official && x.daily && x.device_id === b.device_id && x.day === b.day)) return err(409, { code: '23505', message: 'duplicate key value violates unique constraint "season_seeds_official_uq"' }); }
   if (m === 'POST' && t !== 'season_seeds' && t !== 'daily_results' && !u.searchParams.get('on_conflict')) {   // rows written by /api/save
     const list = [].concat(JSON.parse(o.body));
     if (t === 'seasons' && !ERA_COL && list.some(b => 'era' in b)) return err(400, { code: 'PGRST204', message: "Could not find the 'era' column of 'seasons' in the schema cache" });   // simulate DB without the era column
@@ -210,6 +210,25 @@ function honestXi(formation) {
   const before = ins.pts; const v4 = await call(verH, { season_id: drow4.id });
   const t5 = !ds4.j.official && ins.pts === before && DB.daily_results.filter(x => x.device_id === dev3).length === 1;
   if (!t5) bad++; console.log(`${t5 ? '✓' : '✗'} виклик дня: друга спроба (verified=${v4.j.verified}) не змінює таблицю дня`);
+  // a chat-league attempt seed (or any free-play seed) cannot carry a daily draft season: unlimited daily tries otherwise
+  const dev5 = crypto.randomUUID();
+  const ls = await call(seedH, { device_id: dev5, xi: dxi, formation: D.formation, mode: 'normal', format: 'classic', year: D.year, league: true });
+  const lq = E.run({ xi: SX(dxi), mode: 'normal', format: 'classic', year: D.year, seed: ls.j.seed });
+  const lrow = { ...drow, id: DB.seasons.length + 1, device_id: dev5, mode: 'normal', seed: ls.j.seed, seed_id: ls.j.seed_id, perfect: lq.W === 30, w: lq.W, d: lq.D, l: lq.L, pts: lq.pts, place: lq.place, gf: lq.gf, ga: lq.ga, nickname: 'Обхід', verified: null };
+  DB.seasons.push(lrow);
+  const lv = await call(verH, { season_id: lrow.id });
+  const lseed = DB.season_seeds.find(x => x.id === ls.j.seed_id) || {};
+  const t6 = lseed.league === true && !lseed.official && lv.j.verified === false && !DB.daily_results.some(x => x.device_id === dev5);
+  if (!t6) bad++; console.log(`${t6 ? '✓' : '✗'} виклик дня: сезон дня на seed спроби ліги — відхилено, таблиця дня не змінена (${lv.j.note})`);
+  // and a daily seed is not spent on another (non-daily) season
+  const dev6 = crypto.randomUUID();
+  const ds6 = await call(seedH, { device_id: dev6, xi: dxi, formation: D.formation, mode: 'normal', format: 'classic', year: D.year, daily: true });
+  const dq6 = E.run({ xi: SX(dxi), mode: 'normal', format: 'classic', year: D.year, seed: ds6.j.seed });
+  const row6 = { ...drow, id: DB.seasons.length + 1, device_id: dev6, mode: 'normal', day: null, seed: ds6.j.seed, seed_id: ds6.j.seed_id, perfect: dq6.W === 30, w: dq6.W, d: dq6.D, l: dq6.L, pts: dq6.pts, place: dq6.place, gf: dq6.gf, ga: dq6.ga, verified: null };
+  DB.seasons.push(row6);
+  const v6 = await call(verH, { season_id: row6.id });
+  const t7 = v6.j.verified === false;
+  if (!t7) bad++; console.log(`${t7 ? '✓' : '✗'} seed драфту дня для звичайного сезону — відхилено (${v6.j.note})`);
 
   // ===== writes only via server with device secret (/api/save); seed requires the secret =====
   const saveH = require(path.join(ROOT, 'api', 'save.js'));

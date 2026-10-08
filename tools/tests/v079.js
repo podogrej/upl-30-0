@@ -22,19 +22,19 @@ async function server(){
   D.player_links.push({kind:'tg',key:'11',player_id:'p1'},{kind:'device',key:DEV1,player_id:'p1'},{kind:'device',key:DEV2,player_id:'p1'});
   D.league_members.push({chat_id:-1,tg_user_id:11,name:'Андрій'},{chat_id:-2,tg_user_id:11,name:'Андрій'});
   let n=0,t=Date.now()-3600e3;
-  // seed issued by the server; official = league attempt (classic, normal, all years, marked by the browser)
-  const seed=(o={})=>{const s={id:crypto.randomUUID(),device_id:DEV1,day,daily:false,official:true,format:'classic',mode:'normal',year:LL,formation:'4-4-2',created_at:new Date(t+=60e3).toISOString(),...o};D.season_seeds.push(s);return s;};
+  // seed issued by the server; league = chat-league attempt (classic, normal, all years, marked by the browser)
+  const seed=(o={})=>{const s={id:crypto.randomUUID(),device_id:DEV1,day,daily:false,official:false,league:true,format:'classic',mode:'normal',year:LL,formation:'4-4-2',created_at:new Date(t+=60e3).toISOString(),...o};D.season_seeds.push(s);return s;};
   const season=(sd,o={})=>{const s={id:++n,player_id:'p1',device_id:sd.device_id,seed_id:sd.id,format:sd.format,mode:sd.mode,year:sd.year,practice:false,day:null,fl_id:null,era:null,verified:true,
     w:10,d:5,l:15,place:9,gf:30,ga:40,xp:40,formation:'4-4-2',created_at:new Date(t+=60e3).toISOString(),...o};s.pts=s.w*3+s.d;D.seasons.push(s);return s;};
   const play=async(sd,o)=>{const s=season(sd,o);await L.creditSeason(s,sd);return s;};
   const rowOf=c=>D.league_results.find(r=>String(r.chat_id)===String(c)&&r.day===day&&String(r.tg_user_id)==='11');
   // not attempts: other modes (seed not marked), daily draft, yesterday; their seasons never count
-  for(const o of [{mode:'hardcore',official:false},{mode:'hard',official:false},{mode:'pick',official:false},{mode:'normal',official:false},{daily:true,official:true,mode:'daily'}])await play(seed(o),{w:28});
+  for(const o of [{mode:'hardcore',league:false},{mode:'hard',league:false},{mode:'pick',league:false},{mode:'normal',league:false},{daily:true,official:true,league:false,mode:'daily'}])await play(seed(o),{w:28});
   await play(seed({day:yday}),{w:29,created_at:new Date(Date.now()-864e5).toISOString()});
   T.check(!D.league_results.some(r=>r.day===day),'інші режими, «Виклик другу» / ліга з друзями (seed не позначено як спробу), драфт дня — у ліги не йдуть і спроб не забирають');
   T.check(D.league_results.length===2&&D.league_results.every(r=>r.day===yday),'вчорашня спроба зараховується вчорашньому дню');
   // seed requested as another mode, season saved as classic normal: never counted (verify also rejects the mismatch: cheat.js)
-  const sdHard=seed({mode:'hard',official:false});const sHack=season(sdHard,{mode:'normal',w:30,d:0,l:0});await L.creditSeason(sHack,sdHard);
+  const sdHard=seed({mode:'hard',league:false});const sHack=season(sdHard,{mode:'normal',w:30,d:0,l:0});await L.creditSeason(sHack,sdHard);
   T.check(!D.league_results.some(r=>r.day===day),'seed узято як інший режим, сезон збережено як «Грати» — у лігу не йде');
   // attempt 1: issued, season never saved (dropped) -> burns the attempt
   seed();
@@ -64,7 +64,9 @@ async function server(){
    const xi=[...Array(11)].map((_,i)=>({id:'x'+i,slot:'CB',c:'a',y:2000}));const base={device_id:OTHER,secret:'s'.repeat(32),xi,formation:'4-4-2',year:LL};
    const got=async b=>{const r=await call({...base,...b});return D.season_seeds.find(s=>s.id===r.j.seed_id)||{};};
    const k1=await got({mode:'normal',format:'classic',league:true}),k2=await got({mode:'hard',format:'classic',league:true}),k3=await got({mode:'normal',format:'classic'}),k4=await got({mode:'normal',format:'oneclub',league:true});
-   T.check(k1.official===true&&k2.official===false&&k3.official===false&&k4.official===false,'/api/seed: спроба ліги — лише «Грати» (класика, «Звичайний») з позначкою браузера');}
+   const k1b=await got({mode:'normal',format:'classic',league:true});k1b.used_by=7;const k1c=await got({mode:'normal',format:'classic',league:true});
+   T.check(k1b.id===k1.id&&k1c.id!==k1.id&&D.season_seeds.filter(x=>x.device_id===OTHER&&x.league).length===2,'/api/seed: повтор запиту спроби (той самий склад, сезон ще не зіграно) — той самий seed, друга спроба не згоряє; після гри — новий');
+   T.check(k1.league===true&&!k1.official&&!k2.league&&!k3.league&&!k4.league,'/api/seed: спроба ліги — лише «Грати» (класика, «Звичайний») з позначкою браузера');}
   // Mini App: join a third chat -> today's best of the first 3 attempts is copied in; a browser result is ignored
   const hm=(k,d)=>crypto.createHmac('sha256',k).update(d).digest();
   const initData=(user,sp)=>{const p=new URLSearchParams({auth_date:String(Math.floor(Date.now()/1000)),user:JSON.stringify(user),start_param:sp});

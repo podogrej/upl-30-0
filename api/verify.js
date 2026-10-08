@@ -44,6 +44,9 @@ function checkCore(row, seedRow, { chalYearOk = false, prev = false } = {}) {
   // formation, mode, format and year must match what the seed was issued for (old seeds may lack these fields)
   for (const k of ['formation', 'mode', 'format']) if (seedRow[k] != null && seedRow[k] !== '' && String(seedRow[k]) !== String(row[k])) return [false, `${k}: seed видано для «${seedRow[k]}»`];
   if (seedRow.year != null && +seedRow.year !== +row.year) return [false, `рік: seed видано для ${seedRow.year}`];
+  // a daily draft season needs a daily seed (practice tries use ordinary seeds); a daily seed is never spent on another season
+  if (row.day && !row.practice && seedRow.daily !== true) return [false, 'seed не для драфту дня'];
+  if (!row.day && seedRow.daily === true) return [false, 'seed драфту дня для іншого сезону'];
   if (!E.FORMATS[row.format]) return [false, 'невідомий формат'];
   if (!E.MODES[row.mode]) return [false, 'невідомий режим'];
   if (!yearOk(row, E, chalYearOk, prev)) return [false, `суперники ${row.year} не для формату ${row.format}`];
@@ -93,7 +96,7 @@ function checkCore(row, seedRow, { chalYearOk = false, prev = false } = {}) {
 // Row exists (browser inserted it via the submit button): overwrite numbers and set verified; otherwise insert it.
 // fresh: first verification of the season -> one upsert (no row can exist for this official attempt except a legacy browser row)
 async function syncDaily(row, seedRow, fresh) {
-  if (!row.day || row.verified !== true || row.practice || !seedRow || !seedRow.official || +seedRow.used_by !== +row.id) return false;
+  if (!row.day || row.verified !== true || row.practice || !seedRow || seedRow.daily !== true || !seedRow.official || +seedRow.used_by !== +row.id) return false;
   const day = String(row.day).slice(0, 10), dev = encodeURIComponent(String(row.device_id));
   const res = { w: row.w, d: row.d, l: row.l, pts: row.w * 3 + row.d, gf: row.gf, ga: row.ga, place: row.place, formation: row.formation, xp: row.xp == null ? null : +row.xp,
     xi: (row.xi || []).map(x => [x.n, x.slot, x.r, x.c, x.y]), verified: true };

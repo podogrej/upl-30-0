@@ -118,8 +118,8 @@ async function upsertBoard(chat_id, day, { copy = false } = {}) {
 }
 
 // ---------- Chat leagues count free play (DECISIONS item 11): classic, normal level, all years, not daily / practice / friends league.
-// An attempt is a seed the server issued as a league attempt (season_seeds.official outside the daily draft: classic, normal, all years,
-// marked by the browser for free play; api/seed.js). Each Kyiv day the player's first DAY_N such seeds are the attempts; a season counts only if it was played on one of them, so an issued seed that was never saved burns
+// An attempt is a seed the server issued as a league attempt (season_seeds.league, sql/v079_league_seeds.sql: classic, normal,
+// all years, marked by the browser for free play; api/seed.js). Each Kyiv day the player's first DAY_N such seeds are the attempts; a season counts only if it was played on one of them, so an issued seed that was never saved burns
 // its attempt. The league row holds the best counted season (cmpRes).
 const DAY_N = 3;
 const legends = () => require('../lib/engine.js').LEAGUE_LEGENDS;
@@ -133,7 +133,7 @@ async function devicesOf(pid, device) {
 // best counted season of the day for these devices: first DAY_N attempt seeds, then their verified free-play seasons
 async function dayBest(devices, day) {
   if (!devices.length) return null;
-  const seeds = await sb(`season_seeds?device_id=in.(${devices.join(',')})&day=eq.${day}&daily=is.false&official=is.true&format=eq.classic&mode=eq.normal&year=eq.${legends()}`
+  const seeds = await sb(`season_seeds?device_id=in.(${devices.join(',')})&day=eq.${day}&daily=is.false&league=is.true&format=eq.classic&mode=eq.normal&year=eq.${legends()}`
     + `&select=id&order=created_at.asc,id.asc&limit=${DAY_N}`) || [];
   if (!seeds.length) return null;
   const rows = await sb(`seasons?seed_id=in.(${seeds.map(s => s.id).join(',')})&verified=is.true&format=eq.classic&mode=eq.normal&practice=is.false&day=is.null&fl_id=is.null&era=is.null`
