@@ -834,6 +834,7 @@ details.tip.pop0{position:relative}details.tip.pop0>p{position:absolute;z-index:
 .nw{white-space:nowrap}.say0{margin:0;font-size:var(--fs-body);color:var(--ink2)}.say0 b{color:var(--ink)}
 .res0{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0}.res0>div{padding:0 var(--sp-3);display:grid;gap:var(--sp-0h);align-content:start;justify-items:start}.res0>div+div{border-left:1px solid var(--line)}.res0>div:first-child{padding-left:0}
 .res0 .k{font-size:var(--fs-footnote);color:var(--muted);font-weight:var(--wt-bold)}.res0 b{font:var(--wt-black) var(--fs-title1)/var(--lh-snug) var(--font-display);font-variant-numeric:tabular-nums}.res0 small{font-size:var(--fs-footnote);color:var(--ink2)}
+.lk{margin-left:var(--sp-1);font-size:var(--fs-caption2);font-weight:var(--wt-bold);color:var(--loss)}.lk.up{color:var(--win)}
 .delta0{display:inline-block;padding:var(--sp-0h) var(--sp-2);border-radius:var(--r-pill);font-size:var(--fs-footnote);font-weight:var(--wt-bold);background:color-mix(in srgb,var(--c) 16%,transparent);color:var(--c);--c:var(--loss)}.delta0.up{--c:var(--win)}
 #t2 details.tip>summary{min-height:44px}
 #t2 .tipgrp{display:grid;justify-items:start;gap:var(--sp-1);margin-top:var(--sp-2)}
@@ -1065,6 +1066,7 @@ h3,.sec0,#s1 .sec0,.pgh,.trleg .h{font-size:var(--fs-footnote);font-weight:var(-
       <div class="tblw"><div class="tbl"><table id="table"></table></div></div>
       <div class="zlg" id="zoneLegend"><span class="z-cl">Ліга чемпіонів</span><span class="z-el">Ліга Європи</span><span class="z-co">Ліга конференцій</span><span class="z-rl">Виліт</span></div>
       <p class="note" id="tieNote" style="margin-top:var(--sp-3)"></p>
+      <p class="note" id="luckNote" style="margin-top:var(--sp-3)" hidden></p>
       <h3>Твої гравці</h3>
       <p id="mvpLine" style="margin:0 0 var(--sp-2)"></p>
       <div class="tblw"><div class="tbl"><table id="playerStats"></table></div></div>
@@ -1156,14 +1158,15 @@ const YEARS16 = Object.keys(DATA.seasons).map(Number).filter(y=>DATA.seasons[y].
 // Ids 9001/9002 are pseudo-seasons (stored in seasons.year; real seasons are years 1992-2025).
 const CULT_CLUBS=['dynamo-kyiv','shakhtar-donetsk','dnipro','metalist-kharkiv','chornomorets-odesa','karpaty-lviv','metalurh-donetsk','metalurh-zaporizhzhia','mariupol','zorya-luhansk','tavriya-simferopol','vorskla-poltava','kryvbas','arsenal-kyiv','sevastopol'];
 const LEAGUE_CULT=9001, LEAGUE_LEGENDS=9002;
-const LEG_SOFT=1.4;   // >1: legends league leaders are stronger, top of the table is tighter (champion needs ~2.2 points per match); difficulty is in P.refA/refD
+const LEG_SOFT=1.0;   // 1: legends at their own strength (1.4 before made leaders unbeatable; champion now ~69 of 90 on average)
+const LEG_K=1.13;   // legends play stronger against your XI (attack x LEG_K, conceded / LEG_K); keeps your match win rate after LEG_SOFT; classic-family only, refA/refD untouched
 function buildLeague(best){const hist={};for(const y of YEARS16)for(const t of DATA.seasons[y].teams)(hist[t[0]]=hist[t[0]]||[]).push({y,t});
   const base=YEARS16.reduce((a,y)=>a+DATA.seasons[y].base,0)/YEARS16.length;
   // legends league: the club's season with the strongest squad = average rating of the best 11 players (Shakhtar 12/13, Dynamo 97/98, Chornomorets 13/14...);
   // tie-break: better league position
   const sq=(c,y)=>{const cl=DATA.clubs.find(x=>x.c===c&&x.y===y);if(!cl)return 0;const r=cl.pl.map(p=>p[2]).sort((a,b)=>b-a).slice(0,11);return r.reduce((a,b)=>a+b,0)/r.length;};
-  // legends are the standard classic opponents; their strength is sharpened (LEG_SOFT>1: strong get stronger) (attack and defence raised to LEG_SOFT) so the title stays achievable (measurement in DECISIONS)
-  const teams=CULT_CLUBS.map(c=>{const v=hist[c]||[];if(best){const b=v.map(x=>({...x,s:sq(c,x.y)})).sort((a,b)=>b.s-a.s||a.t[2]-b.t[2])[0];return [c,b.t[1]+' '+seasonLabel(b.y),0,+Math.pow(b.t[3],LEG_SOFT).toFixed(3),+Math.pow(b.t[4],LEG_SOFT).toFixed(3)];}
+  // legends are the standard classic opponents; attack and defence are raised to LEG_SOFT (<1 compresses the table) and scaled by LEG_K so the title stays achievable (measurement in DECISIONS)
+  const teams=CULT_CLUBS.map(c=>{const v=hist[c]||[];if(best){const b=v.map(x=>({...x,s:sq(c,x.y)})).sort((a,b)=>b.s-a.s||a.t[2]-b.t[2])[0];return [c,b.t[1]+' '+seasonLabel(b.y),0,+(Math.pow(b.t[3],LEG_SOFT)*LEG_K).toFixed(3),+(Math.pow(b.t[4],LEG_SOFT)/LEG_K).toFixed(3)];}
     const g=k=>Math.exp(v.reduce((a,x)=>a+Math.log(x.t[k]),0)/v.length);return [c,v[0].t[1],0,+g(3).toFixed(3),+g(4).toFixed(3)];});
   teams.sort((a,b)=>b[3]/b[4]-a[3]/a[4]).forEach((t,i)=>t[2]=i+1);teams.push(['-','—',16,1,1]);   // last slot is reserved for your XI
   return {base:+base.toFixed(3),teams};}
@@ -1199,7 +1202,7 @@ const REF_A=5.6, REF_D=7.3, FE=0.5;
 // lowered by another 2.3 (78.26/77.18 -> 75.96/74.88) for ratings v2 (compression above 82 + class): bot squad average -2.5, same points
 // target: an 85-rated squad without chemistry wins the title in ~10-15% of seasons; refA/refD +2.89 (was 75.96/74.88); anti-season keeps old refs (antiRefA/D)
 // refA/refD -1 (71.6/70.6 -> 70.6/69.6): 85-rated squad ~15% titles
-const P={betaA:0.048,betaD:0.062,refA:70.6,refD:69.6,goldP:0.006,goldA:3,antiRefA:73.66,antiRefD:72.58,classFloorA:0.85,classCapD:1.35,capA:4.0,floorD:0.25,floorA:0.33,capD:3.0,home:0.12,formSd:0.15,balPen:0.01,seasonTeamSd:2.5,seasonPlayerSd:2.5,seasonFormCap:10,miracleP:0.10,miracleTo:91,midP:0.08,oppSd:0.06,collapseP:0.10,collapseK:0.8};
+const P={betaA:0.048,betaD:0.062,refA:70.6,refD:69.6,goldP:0.006,goldA:3,antiRefA:73.66,antiRefD:72.58,classFloorA:0.85,classCapD:1.35,capA:4.0,floorD:0.25,floorA:0.33,capD:3.0,home:0.12,formSd:0.15,balPen:0.01,seasonTeamSd:2.5,seasonPlayerSd:2.5,seasonFormCap:10,miracleP:0.10,miracleTo:91,midP:0.08,oppSd:0.06,collapseP:0.10,collapseK:0.8,legSd:0.09,flopP:0.10,flopK:0.4,boomP:0.06,boomK:0.3};
 // season form: each player has his own year (sigma seasonPlayerSd) plus shared team form (sigma seasonTeamSd; not club chemistry, see chemOf); a star can flop and an average squad can overperform
 // 'miracle season': with probability miracleP the whole team plays closer to miracleTo so any squad has some chance
 // (weak squad +15..+19, strong at least +4x0.6); no miracles in anti-season. Upper bound of player form widens by the miracle amount.
@@ -1710,15 +1713,15 @@ document.getElementById('rerollYear').onclick=()=>{if(S.rerolls>0){S.rerolls--;s
 document.getElementById('simBtn').onclick=()=>playSeason(null);
 // xP and place forecast (audit P2-9: single function): XP_N light runs of the same squad vs the same season (own seeded stream, does not affect the season).
 // step(fraction) is called every 25 runs; returning false cancels the computation (null)
-const XP_N=300;   // same number is used in FAQ and explanations
+const XP_N=300,LUCK_MARK=12;   // LUCK_MARK: rival's points off its xP by this much get a marker in the final table   // same number is used in FAQ and explanations
 // the runs use one random stream per set of 11 players (common random numbers): the same squad always gets the same forecast,
 // and moving players between slots changes it only through real strength changes, not through noise
-async function xpRun(xi,mode,year,step){let sp=0,sg=0,sa=0;const pl=[];
+async function xpRun(xi,mode,year,step){let sp=0,sg=0,sa=0;const pl=[],op={};
   // players sorted by id (slots travel with the player), one stream per run: a small real strength change does not shift later runs
   const xs=xi.slice().sort((a,b)=>a.id<b.id?-1:a.id>b.id?1:0),base=`xp|${year}|${S.mode}|${S.format}|${S.formation}|${xs.map(x=>x.id).join(',')}`;
-  for(let k=0;k<XP_N;k++){const prev=rnd;rnd=mulberry32(hashStr(base+'|'+k));let q;try{q=simulate(xs,mode,year,true);}finally{rnd=prev;}sp+=q.pts;sg+=q.gf;sa+=q.ga;pl.push(q.place);
+  for(let k=0;k<XP_N;k++){const prev=rnd;rnd=mulberry32(hashStr(base+'|'+k));let q;try{q=simulate(xs,mode,year,true);}finally{rnd=prev;}sp+=q.pts;sg+=q.gf;sa+=q.ga;pl.push(q.place);for(const t of q.table)if(t.id!=='USER')op[t.id]=(op[t.id]||0)+t.pts/XP_N;   // rivals' expected points (their xP) from the same runs
     if(step&&k%25===24&&(await step((k+1)/XP_N))===false)return null;}
-  return {xp:sp/XP_N,egf:sg/XP_N,ega:sa/XP_N,pl};}
+  return {xp:sp/XP_N,egf:sg/XP_N,ega:sa/XP_N,pl,opp:op};}
 async function lockDraft(){
   if(S.locked||S.locking||!S.slots.every(s=>s.player))return;S.locking=true;const tok=S.lockTok=(S.lockTok||0)+1;
   const xi=S.slots.map(s=>s.player);const mode=MODES[S.mode];
@@ -1816,7 +1819,13 @@ function simulate(xi0,mode,seasonYear,light){
   const teams=[{id:"USER",n:S.teamName||"Твоя 11-ка",att:u.att,def:u.def}];
   for(const tm of sea.teams){if(tm===last)continue;teams.push({id:tm[0],n:tm[1],att:Math.exp(mode.damp*Math.log(tm[3])),def:Math.exp(mode.damp*Math.log(tm[4]))});}
   // rivals have their own season too: small form spread (oppSd) and, with collapseP, two of the four strongest have a bad year (x collapseK attack, / collapseK conceded)
-  if(S.format!=='anti'){
+  // legends league: each rival gets a season luck factor s (attack x e^s, conceded x e^-s): normal legSd; the two strongest flop with flopP
+  // (s -= flopK x 0.5..1.5), any other club overperforms with boomP (s += boomK x 0.5..1.5)
+  if(S.format!=='anti'&&y===LEAGUE_LEGENDS){
+    teams.filter(x=>x.id!=='USER').sort((a,b)=>b.att/b.def-a.att/a.def).forEach((tm,i)=>{let s=P.legSd*normal();
+      if(i<2){if(rnd()<P.flopP)s-=P.flopK*(0.5+rnd());}else if(rnd()<P.boomP)s+=P.boomK*(0.5+rnd());
+      tm.att*=Math.exp(s);tm.def*=Math.exp(-s);});
+  }else if(S.format!=='anti'){
     for(const tm of teams){if(tm.id==='USER')continue;tm.att*=Math.exp(P.oppSd*normal());tm.def*=Math.exp(P.oppSd*normal());}
     if(rnd()<P.collapseP){const top=teams.filter(x=>x.id!=='USER').sort((a,b)=>b.att/b.def-a.att/a.def).slice(0,4);
       for(let k=0;k<2;k++){const tm=top.splice(Math.floor(rnd()*top.length),1)[0];tm.att*=P.collapseK;tm.def/=P.collapseK;}}
@@ -2210,12 +2219,18 @@ async function playSeason(year){
   document.getElementById('mDet').open=matchMedia('(min-width:1000px)').matches;   // large screen has room next to the pitch: matches expanded
   document.getElementById('matches').innerHTML=r.log.map(m=>`<div class="m" title="${esc(whoMin(m))} · xG ${m.xg.toFixed(1)}:${m.xga.toFixed(1)}"><span class="res ${m.res}"></span><span class="op">${esc(shortTeam(m.opp))}</span><span class="sc">${m.ug}:${m.og}</span></div>`).join('');
   const f1=v=>v.toFixed(1),sg=v=>(v>0?'+':'')+v;
-  document.getElementById('table').innerHTML=`<tr><th></th><th>Команда</th><th class="num">І</th><th class="num">В</th><th class="num">Н</th><th class="num">П</th><th class="num">Голи</th><th class="num">РМ</th><th class="num">О</th><th class="num">xG</th><th class="num">xGA</th><th class="num">Г−xG</th></tr>`+r.table.map((t,i)=>`<tr class="${ZONE(i+1,r.table.length)}${t.id==='USER'?' me':''}"><td class="num">${i+1}</td><td>${esc(shortTeam(t.n))}</td><td class="num">${t.w+t.d+t.l}</td><td class="num">${t.w}</td><td class="num">${t.d}</td><td class="num">${t.l}</td><td class="num">${t.gf}:${t.ga}</td><td class="num">${sg(t.gf-t.ga)}</td><td class="num"><b>${t.pts}</b></td><td class="num">${f1(t.xg)}</td><td class="num">${f1(t.xga)}</td><td class="num">${(t.gf-t.xg>=0?'+':'')+(t.gf-t.xg).toFixed(1)}</td></tr>`).join('');
+  // rivals' luck: points minus their xP from the pre-season runs; marked when off by LUCK_MARK or more (not in anti-season)
+  const oxp=S.format!=='anti'&&pre.opp||{},dOf=t=>t.id!=='USER'&&oxp[t.id]!=null?Math.round(t.pts-oxp[t.id]):0;
+  const lk=t=>{const d=dOf(t);return Math.abs(d)>=LUCK_MARK?`<small class="lk${d>0?' up':''}" title="Різниця з очікуваними очками">${d>0?'+':'−'}${Math.abs(d)}</small>`:'';};
+  document.getElementById('table').innerHTML=`<tr><th></th><th>Команда</th><th class="num">І</th><th class="num">В</th><th class="num">Н</th><th class="num">П</th><th class="num">Голи</th><th class="num">РМ</th><th class="num">О</th><th class="num">xG</th><th class="num">xGA</th><th class="num">Г−xG</th></tr>`+r.table.map((t,i)=>`<tr class="${ZONE(i+1,r.table.length)}${t.id==='USER'?' me':''}"><td class="num">${i+1}</td><td>${esc(shortTeam(t.n))}</td><td class="num">${t.w+t.d+t.l}</td><td class="num">${t.w}</td><td class="num">${t.d}</td><td class="num">${t.l}</td><td class="num">${t.gf}:${t.ga}</td><td class="num">${sg(t.gf-t.ga)}</td><td class="num"><b>${t.pts}</b>${lk(t)}</td><td class="num">${f1(t.xg)}</td><td class="num">${f1(t.xga)}</td><td class="num">${(t.gf-t.xg>=0?'+':'')+(t.gf-t.xg).toFixed(1)}</td></tr>`).join('');
   // general regulations live in FAQ; here only what concerns your season
   let tn='';
   if(r.tie)tn=`Ти ${r.tie.above?'вище':'нижче'} за «${r.tie.opp}» при однаковій кількості очок: вирішив показник «${r.tie.why}». `;
   if(r.golden){const g=r.golden;tn=`Золотий матч: ${g.a} — ${g.b} ${g.ga}:${g.gb}${g.pen?` (пен. ${g.pen[0]}:${g.pen[1]})`:''}, переміг ${g.wu ? 'ти' : '«'+g.winner+'»'} ${g.how}. `+tn;}
   const tnEl=document.getElementById('tieNote');tnEl.textContent=tn;tnEl.hidden=!tn;
+  {const ds=r.table.map(t=>({t,d:dOf(t)})),lo=ds.reduce((a,b)=>b.d<a.d?b:a),hi=ds.reduce((a,b)=>b.d>a.d?b:a),pt=d=>`${Math.abs(d)} ${plUk(Math.abs(d),'очко','очки','очок')}`;
+    const ln=[lo.d<=-LUCK_MARK?`«${shortTeam(lo.t.n)}» провалив сезон: −${pt(lo.d)} від очікуваного.`:'',hi.d>=LUCK_MARK?`«${shortTeam(hi.t.n)}» — сюрприз сезону: +${pt(hi.d)} понад очікуване.`:''].filter(Boolean).join(' ');
+    const el=document.getElementById('luckNote');el.textContent=ln;el.hidden=!ln;}
   document.getElementById('zoneLegend').hidden=S.format==='anti';
   const mvp=[...r.players].sort((a,b)=>b.rt-a.rt)[0];
   document.getElementById('playerStats').innerHTML=`<tr><th>Гравець</th><th class="num">Оцінка</th><th class="num" title="Голи">Г</th><th class="num" title="Асисти">А</th><th class="num" title="Матчі з оцінкою 8.0+">8+</th>${ratingsOpen()?'<th class="num">Рейт.</th>':''}<th class="num">Форма</th></tr>`+[...r.players].sort((a,b)=>b.rt-a.rt).map(p=>`<tr${p===mvp?' class="me"':''}><td class="pn"><div class="pnr">${lineDot(p.slot||p.pos)}<span>${esc(p.name)}</span></div></td><td class="num avgc">${p.rt.toFixed(2)}</td><td class="num">${p.g}</td><td class="num">${p.a}</td><td class="num">${p.m8}</td>${ratingsOpen()?`<td class="num">${slotBase(p.id)??p.r}</td>`:''}<td class="num" style="color:${p.form>=3?'var(--win)':p.form<=-3?'var(--loss)':'inherit'}">${p.form>0?'+':''}${p.form}</td></tr>`).join('');
