@@ -1616,7 +1616,7 @@ function spin(mode){if(S.mode!=='pick')document.querySelector('.reels').classLis
   if(!cs)cs=pickSeason(mode==='year'?S.wheel.c:null,mode==='club'?S.wheel.y:null);
   if(!cs&&mode){cs=pickSeason();}   // nothing found within club/season: spin everything
   if(!cs){alertNoCands();return;}
-  S.wheel=cs;S.move=null;S.pending=null;
+  S.wheel=cs;S.move=null;S.pending=null;if(S.vd)vdSave();
   const w=document.getElementById('wheel');w.hidden=false;document.getElementById('spinBtn').hidden=true;
   document.getElementById('squad').innerHTML='';document.getElementById('rerollRow').style.visibility='hidden';
   const one=S.format==='oneclub'&&!S.league,spinClub=mode!=='year'&&!one,spinYear=mode!=='club';   // one-club: club does not spin, seasons only of that club
@@ -1650,7 +1650,7 @@ function renderWheel(){
     b.onclick=()=>choose(p);row.appendChild(b);
     if(S.pending===p&&ok){const box=posBox(p,b);row.classList.add('wrap');row.appendChild(box);sq.appendChild(row);row.style.setProperty('--pw',box.offsetWidth+8+'px');}   // position buttons always under the player, on phone and iPad
     else sq.appendChild(row);}
-  S.wheelFresh=false;
+  S.wheelFresh=false;if(S.vd)vdSave();   // daily challenge: the open attempt survives leaving the draft
 }
 // alternative player positions: real ones only (from data), up to three
 const ALT_SLOTS=['GK','CB','RB','LB','RWB','LWB','CDM','CM','CAM','RM','LM','RW','LW','ST'];
@@ -2502,7 +2502,7 @@ function drawCard(r){   // card in site style: UPL navy background, UPL.TV gradi
 document.getElementById('chalOpen').onclick=()=>{const b=document.getElementById('chalBox'),t=document.getElementById('chalOpen');b.hidden=!b.hidden;t.classList.toggle('on',!b.hidden);if(!b.hidden){b.scrollIntoView({behavior:'smooth',block:'center'});const n=document.getElementById('chalName');if(n&&!n.hidden&&!n.value)n.focus();}};
 // ---------- What's new: short player-friendly notes on the latest version (technical log: CHANGELOG.md)
 const WHATSNEW={v:'0.80',news:'0.80',date:'09.10.2026',items:[   // news: edition of the items; a release without new items keeps it, so the news dot does not light up again
-  ['calendar-star','Виклик дня','Щодня нова умова на склад, привʼязана до події. 5 спроб, рахується краща: 4 гравці під умову — бронза, 6 — срібло, 9 — золото, 11 — «Ідеально».'],
+  ['calendar-star','Виклик дня','Щодня нова умова на склад, привʼязана до події. 5 спроб, рахується краща. Очки — гравці під умову або бонус: 4 — бронза, 6 — срібло, 9 — золото, 11 — «Ідеально».'],
   ['restart','Замість драфту дня','Драфту дня більше немає: його місце на головній зайняв виклик. Серія й трофеї за дні тепер рахуються за виконаний виклик.'],
   ['bookshelf','Архів викликів','Пропущений день можна зіграти пізніше з архіву, але серію тримає лише виклик у свій день.']]};
 function openNews(){screenTag('news');const box=document.getElementById('viewBox');document.getElementById('viewTitle').textContent=`Що нового · версія ${WHATSNEW.v}`;

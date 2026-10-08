@@ -108,6 +108,8 @@ function dailySetupFor(day){
   const wr=mulberry32(hashStr("upl30|"+day+"|wheel"));const seq=[];for(let i=0;i<600;i++){const c=pickWeighted(DATA.clubs,wr);seq.push(DATA.clubs.indexOf(c));}
   S.format=prev;return {formation,year,seq};
 }
+// daily challenge attempt wheel: same as wheelSeq in src/challenge.js (classic weights)
+function wheelSeq(seed){const prev=S.format;S.format='classic';const r=mulberry32(seed),seq=[];for(let i=0;i<600;i++)seq.push(DATA.clubs.indexOf(pickWeighted(DATA.clubs,r)));S.format=prev;return seq;}
 // replay a season from its seed: xi = [{id, slot, r}] in formation slot order
 function run({ xi, mode, format, year, seed }){
   S.format = format; rnd = mulberry32(seed);
@@ -115,7 +117,7 @@ function run({ xi, mode, format, year, seed }){
   rnd = Math.random; S.format = 'classic';
   return r;
 }
-module.exports = { VERSION: '${VERSION}', DATA, FORMATIONS, FORMATS, GROUP_OF, MODES, YEARS16, LEAGUE_CULT, LEAGUE_LEGENDS, LEAGUES, ERAS, ANTI_MIN_APPS, effRating, mulberry32, hashStr, dailySetupFor, run, setFormat: f => { S.format = f; } };
+module.exports = { VERSION: '${VERSION}', DATA, FORMATIONS, FORMATS, GROUP_OF, MODES, YEARS16, LEAGUE_CULT, LEAGUE_LEGENDS, LEAGUES, ERAS, ANTI_MIN_APPS, effRating, mulberry32, hashStr, dailySetupFor, wheelSeq, run, setFormat: f => { S.format = f; } };
 `;
 fs.mkdirSync(ROOT + '/lib', { recursive: true });
 fs.writeFileSync(ROOT + '/lib/engine.js', mod);

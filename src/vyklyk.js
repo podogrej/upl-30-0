@@ -7,7 +7,7 @@ const VD_DAY=(typeof window.__vdToday==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(win
 let VD_IDX=null;const vdIdx=()=>VD_IDX||(VD_IDX=vdIndex(DATA));
 const vdCh=day=>vdFind(VD_LIST,day);
 const VD_SRV={};   // own results from the server (archive): day -> {used, best}
-function vdSt(day){const s=lsGet('upl30_vd_'+day)||{};return {used:s.used||0,best:s.best??null,tries:s.tries||[]};}
+function vdSt(day){const s=lsGet('upl30_vd_'+day)||{};return {used:s.used||0,best:s.best??null,tries:s.tries||[],open:s.open||null};}
 function vdState(day){const a=vdSt(day),b=VD_SRV[day];if(!b)return a;const bs=[a.best,b.best].filter(x=>x!=null);return {...a,used:Math.max(a.used,b.used||0),best:bs.length?Math.max(...bs):null};}
 const VD_EM=/^(\p{Extended_Pictographic}️?)\s*/u;
 const vdSplit=t=>{const m=VD_EM.exec(t||'');return m?[m[1],t.slice(m[0].length)]:['',String(t||'')];};
@@ -24,7 +24,13 @@ async function vdApi(body){const ctl=typeof AbortController!=='undefined'?new Ab
   try{const r=await _fetch('/api/seed',{method:'POST',headers:{'Content-Type':'application/json'},signal:ctl&&ctl.signal,body:JSON.stringify({device_id:deviceId(),secret:devSecret(),...body})});
     const j=await r.json().catch(()=>({}));return {...j,status:r.status};}finally{clearTimeout(tm);}}
 function vdMerge(day,j){if(!j||j.used==null)return;const st=vdSt(day),bs=[st.best,j.best].filter(x=>x!=null);
-  lsSet('upl30_vd_'+day,{used:Math.max(st.used,j.used),best:bs.length?Math.max(...bs):null,tries:st.tries});}
+  lsSet('upl30_vd_'+day,{used:Math.max(st.used,j.used),best:bs.length?Math.max(...bs):null,tries:st.tries,open:st.open});}
+// open attempt progress (picked players, wheel pointer and seed, rerolls, current wheel): reopening resumes it exactly instead of a fresh draft on a known wheel
+function vdSave(){const v=S.vd;if(!v||v.fin||!v.seq)return;const st=vdSt(v.day);
+  lsSet('upl30_vd_'+v.day,{...st,open:{a:v.attempt,sid:v.seedId||null,ws:v.ws,ptr:v.ptr,rr:S.rerolls,w:S.wheel?DATA.clubs.indexOf(S.wheel):-1,sl:S.slots.map(x=>x.player)}});}
+function vdRestore(v){const o=vdSt(v.day).open;if(!o||o.a!==v.attempt||(o.sid||null)!==(v.seedId||null)||!Array.isArray(o.sl)||o.sl.length!==S.slots.length)return;
+  S.slots.forEach((x,i)=>{x.player=o.sl[i]||null;});S.taken=new Set(S.slots.filter(x=>x.player).map(x=>canon(x.player.id)));
+  v.ws=o.ws;v.seq=wheelSeq(o.ws);v.ptr=o.ptr||0;S.rerolls=o.rr??S.rerolls;S.wheel=o.w>=0?DATA.clubs[o.w]:null;S.wheelFresh=false;}
 
 // ---- header streak
 function stkRender(){const el=document.getElementById('stkChip');if(!el)return;const n=streakInfo().count;el.hidden=n<1;
@@ -53,13 +59,13 @@ function vdOpen(day,from){const ch=vdCh(day);if(!ch)return;const st=vdState(day)
   const ev=vdEventCard(ch,DATA);
   if(ev){const p=ev.p,b=bestSlot(p);if(b){const s=b.s;s.player={name:p[0],pos:GROUP_OF[s.slot],slot:s.slot,main:p[6],alts:p[7],r:effRating(p,s.slot),r0:p[2],apps:p[3],goals:p[4],ast:p[8],cs:p[9],nat:p[10],by:p[11],cc:ev.c.c,id:p[5],club:ev.c.n,y:ev.c.y,ev:vdSplit(ch.title)[0]||'★'};S.taken.add(canon(p[5]));}}
   document.getElementById('modeLabel').textContent=`Виклик дня · ${S.formation}`;
-  v.wait=vdStart(v).then(()=>{v.wait=null;if(S.vd!==v)return;if(v.over){S.vd=null;openVdArchive('Спроби на цей день закінчились.');return;}renderDraft();});
+  v.wait=vdStart(v).then(()=>{v.wait=null;if(S.vd!==v)return;if(v.over){S.vd=null;openVdArchive('Спроби на цей день закінчились.');return;}renderDraft();if(S.slots.every(x=>x.player))setTimeout(vdComplete,0);});
   renderDraft();go(2,false,from);}
-async function vdStart(v){let seed=null;
+async function vdStart(v){let seed=null;   // online: the wheel comes from the attempt (server checks the XI against it)
   if(ONLINE){try{const j=await vdApi({vd:'start',day:v.day});
       if(j.attempt){v.attempt=j.attempt;v.seedId=j.seed_id;seed=hashStr(String(j.seed_id)+'|wheel');vdMerge(v.day,j);}   // same attempt -> same wheel
       else if(j.status===409){vdMerge(v.day,{...j,used:VD_ATTEMPTS});v.over=true;}}catch(e){}}
-  v.seq=wheelSeq(seed||Math.floor(Math.random()*2147483647));}
+  v.ws=seed||Math.floor(Math.random()*2147483647);v.seq=wheelSeq(v.ws);if(!v.over)vdRestore(v);}
 const vdXi=()=>S.slots.filter(s=>s.player).map(s=>({id:s.player.id,line:VD_LINE[s.player.main]||s.player.pos,p:s.player}));
 function vdEvalNow(){const xi=vdXi(),e=vdEval(S.vd.ch,xi,vdIdx(),DATA.alias);e.xi=xi;return e;}
 // XI complete: condition met -> forecast and Play season; missed -> the attempt burns, no season
@@ -69,18 +75,19 @@ function vdComplete(){const v=S.vd;if(!v||S.locked||S.locking||v.fin)return;cons
 // finish once per attempt: server verdict (score computed there) or local one offline; local record, streak, home card
 function vdFinish(v,e){if(v.fin)return v.fin;return v.fin=(async()=>{let j=null;
   if(ONLINE&&v.seedId){try{j=await vdApi({vd:'finish',day:v.day,attempt:v.attempt,formation:S.formation,xi:S.slots.map(s=>({id:s.player.id,slot:s.slot,c:s.player.club,y:s.player.y}))});if(j.status>=300)j=null;}catch(x){j=null;}}
-  const gate=j?!!j.gate:e.gate,score=j?j.score:e.score,st=vdSt(v.day);
-  const first=gate&&!v.late&&!st.tries.some(x=>x.g&&!x.l);   // first counted attempt of today: streak and the trophy counter
-  const tries=[...st.tries.filter(x=>x.a!==v.attempt),{a:v.attempt,g:gate,s:score,l:v.late}];
+  const gate=j?!!j.gate:e.gate,score=j?j.score:e.score,st=vdSt(v.day),late=j&&j.late!=null?!!j.late:v.late;   // late: the server's day decides (midnight)
+  const first=gate&&!late&&!st.tries.some(x=>x.g&&!x.l);   // first counted attempt of today: streak and the trophy counter
+  const tries=[...st.tries.filter(x=>x.a!==v.attempt),{a:v.attempt,g:gate,s:score,l:late}];
   const bs=[st.best,j&&j.best,...tries.filter(x=>x.g).map(x=>x.s)].filter(x=>x!=null);
   const used=Math.max(st.used,v.attempt,j&&j.used||0);
   lsSet('upl30_vd_'+v.day,{used,best:bs.length?Math.max(...bs):null,tries});
   const streak=first?streakUpdate():null;renderVdCard();if(typeof SESSION!=='undefined'&&SESSION)acctPush();
-  return {gate,score,e,attempt:v.attempt,used,late:v.late,first,streak,seed:j&&j.seed?{seed:j.seed,seed_id:j.seed_id}:null};})();}
+  return {gate,score,e,attempt:v.attempt,used,late,first,streak,seed:j&&j.seed?{seed:j.seed,seed_id:j.seed_id}:null};})();}
 
 // ---- brief on the draft screen and the compact sticky bar
 function vdBrief(){const el=document.getElementById('vdBrief'),bar=document.getElementById('vdBar'),v=S.vd;
   if(!v){if(!el.hidden){el.hidden=true;el.innerHTML='';}bar.innerHTML='';return;}
+  vdSave();
   const ch=v.ch,rq=ch.required,e=vdEvalNow(),[em,tt]=vdSplit(ch.title),tot=MODES.normal.rerolls;
   const names=e.parts.flatMap(p=>p.ids).map(id=>{const x=e.xi.find(q=>q.id===id);return x?cardName(x.p.name):'';}).filter(Boolean);
   const pips=Array.from({length:VD_ATTEMPTS},(_,i)=>`<i class="${i+1<v.attempt?'u':i+1===v.attempt?'c':''}"></i>`).join('');

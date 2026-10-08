@@ -17,7 +17,11 @@ const xiHash = xi => crypto.createHash('sha256').update(xi.map(x => `${x.id}|${x
 const dup = e => e && (e.status === 409 || /23505/.test(e.body || ''));
 
 // squad check: formation of the day, slots in order, real cards, playable slots, no person twice, event player on his card
-function checkXi(ch, xi, formation) {
+// attempt wheel: same sequence as the site (wheelSeq of hashStr(seed_id + '|wheel')); picks come from its first VD_WHEEL_WIN entries,
+// at most VD_REROLLS of them from rerolls (off the sequence). The event player is not drafted.
+const VD_WHEEL_WIN = 24, VD_REROLLS = 2;   // honest drafts reach at most ~14 entries (3000 simulated drafts)
+function wheelOf(seedId) { const D = engine(); return new Set(D.wheelSeq(D.hashStr(String(seedId) + '|wheel')).slice(0, VD_WHEEL_WIN)); }
+function checkXi(ch, xi, formation, seedId) {
   const D = engine();
   if (!Array.isArray(xi) || xi.length !== 11) return ['не 11 гравців'];
   if (formation !== (ch.formation || '4-4-2')) return ['не та схема'];
@@ -34,13 +38,18 @@ function checkXi(ch, xi, formation) {
   }
   const ev = V.vdEventCard(ch, D.DATA);
   if (ev && !out.some(x => x.id === ev.p[5] && x.club === ev.c.c && x.y === ev.c.y)) return ['немає гравця події'];
+  if (seedId) {
+    const W = wheelOf(seedId), D2 = engine().DATA, evId = ev && ev.p[5];
+    const off = out.filter(x => x.id !== evId && !W.has(D2.clubs.findIndex(c => c.c === x.club && c.y === x.y))).length;
+    if (off > VD_REROLLS) return [`склад не з колеса спроби (${off} поза колесом)`];
+  }
   return [null, out];
 }
 
 async function state(dev, day) {
   const [seeds, res] = await Promise.all([
     sb(`season_seeds?device_id=eq.${dev}&vd_day=eq.${day}&select=id,seed,vd_attempt,used_by,xi_hash&order=vd_attempt.asc`),
-    sb(`vd_results?device_id=eq.${dev}&day=eq.${day}&select=attempt,gate_ok,score,season_id,seed_id&order=attempt.asc`)]);
+    sb(`vd_results?device_id=eq.${dev}&day=eq.${day}&select=attempt,gate_ok,score,season_id,seed_id,late,xi&order=attempt.asc`)]);
   return { seeds: seeds || [], res: res || [] };
 }
 const summary = st => ({ used: st.res.length, best: st.res.filter(r => r.gate_ok).reduce((a, r) => Math.max(a, r.score), -1) });
@@ -61,30 +70,34 @@ async function start(dev, day, ch) {
   return [409, { error: 'Спробуй ще раз.' }];
 }
 
+// the seed goes only to the XI stored with the counted attempt: xi_hash is set once (while empty) and read back
+async function seedFor(seed, row, b) {
+  const h = xiHash(row.xi || []);
+  if (!row.gate_ok || seed.used_by != null || !Array.isArray(b.xi) || xiHash(b.xi.map(x => ({ id: String(x.id), slot: String(x.slot), c: String(x.c), y: +x.y }))) !== h) return {};
+  if (!seed.xi_hash) await sb(`season_seeds?id=eq.${seed.id}&used_by=is.null&xi_hash=eq.`, { method: 'PATCH', prefer: 'return=minimal', body: { xi_hash: h } });
+  const [cur] = await sb(`season_seeds?id=eq.${seed.id}&select=xi_hash,used_by,seed`) || [];
+  return cur && cur.xi_hash === h && cur.used_by == null ? { seed_id: seed.id, seed: +cur.seed } : {};
+}
 async function finish(dev, pid, day, ch, b, late) {
   const n = +b.attempt;
   let st = await state(dev, day);
   const seed = st.seeds.find(s => +s.vd_attempt === n);
   if (!seed) return [400, { error: 'attempt?' }];
-  const old = st.res.find(r => +r.attempt === n);
-  const [bad, cards] = old ? [null, null] : checkXi(ch, b.xi, String(b.formation || ''));
-  if (bad) return [400, { error: bad }];
-  let gate, score, have = null, need = null;
-  if (old) { gate = old.gate_ok; score = old.score; }
-  else {
+  let row = st.res.find(r => +r.attempt === n), have = null, need = null;
+  if (!row) {
+    const [bad, cards] = checkXi(ch, b.xi, String(b.formation || ''), seed.id);
+    if (bad) return [400, { error: bad }];
     const ev = V.vdEval(ch, cards, index(), engine().DATA.alias);
-    gate = ev.gate; score = ev.score; have = ev.have; need = ev.need;
-    const row = { day, device_id: dev, player_id: pid || null, attempt: n, gate_ok: gate, score, seed_id: seed.id, late,
+    have = ev.have; need = ev.need;
+    const ins = { day, device_id: dev, player_id: pid || null, attempt: n, gate_ok: ev.gate, score: ev.score, seed_id: seed.id, late,
       xi: b.xi.map(x => ({ id: String(x.id), slot: String(x.slot), c: String(x.c), y: +x.y })) };
-    try { await sb('vd_results', { method: 'POST', prefer: 'return=minimal', body: row }); }
-    catch (e) { if (!dup(e)) throw e; st = await state(dev, day); const r = st.res.find(x => +x.attempt === n); if (r) { gate = r.gate_ok; score = r.score; } }
+    try { await sb('vd_results', { method: 'POST', prefer: 'return=minimal', body: ins }); row = ins; }
+    catch (e) { if (!dup(e)) throw e; }   // a parallel finish stored its XI first: that row decides
     st = await state(dev, day);
+    row = st.res.find(r => +r.attempt === n) || row;
   }
-  const out = { attempt: n, gate, score, have, need, late };
-  if (gate && seed.used_by == null && !old) {   // squad is fixed now: the season may only be played with it
-    await sb(`season_seeds?id=eq.${seed.id}&used_by=is.null`, { method: 'PATCH', prefer: 'return=minimal', body: { xi_hash: xiHash(b.xi) } });
-    Object.assign(out, { seed_id: seed.id, seed: +seed.seed });
-  } else if (gate && seed.used_by == null && old && seed.xi_hash && Array.isArray(b.xi) && seed.xi_hash === xiHash(b.xi)) Object.assign(out, { seed_id: seed.id, seed: +seed.seed });   // retry after a timeout
+  const out = { attempt: n, gate: !!row.gate_ok, score: row.score, have, need, late: row.late == null ? late : !!row.late };
+  Object.assign(out, await seedFor(seed, row, b));   // also a retry after a timed-out PATCH
   return [200, reply(out, st)];
 }
 
@@ -106,4 +119,4 @@ async function handle(b) {
   if (b.vd === 'finish') return finish(dev, d.player, day, ch, b, day < today);
   return [400, { error: 'vd?' }];
 }
-module.exports = { handle, checkXi, xiHash };
+module.exports = { handle, checkXi, xiHash, VD_WHEEL_WIN };

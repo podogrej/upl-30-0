@@ -40,7 +40,7 @@ function acctMerge(a,b){   // a: local, b: from server
   if(Object.keys(best).length)o.upl30_best_v2=best;
   const ca=a.upl30_clubrec,cb=b.upl30_clubrec;if(ca&&cb){const c={...cb};for(const [k,v] of Object.entries(ca)){const w=c[k];c[k]=w?{b:Math.max(v.b,w.b),w:Math.min(v.w,w.w),n:Math.max(v.n,w.n)}:v;}o.upl30_clubrec=c;}   // One club records: best of both
   {const k="upl30_vd_"+DAY,va=a[k],vb=b[k];if(va&&vb){const tries=[...(vb.tries||[])];for(const t of va.tries||[])if(!tries.some(x=>x.a===t.a))tries.push(t);   // today's challenge: union of attempts, best of both
-    const bs=[va.best,vb.best].filter(x=>x!=null);o[k]={used:Math.max(va.used||0,vb.used||0),best:bs.length?Math.max(...bs):null,tries};}}
+    const bs=[va.best,vb.best].filter(x=>x!=null);o[k]={used:Math.max(va.used||0,vb.used||0),best:bs.length?Math.max(...bs):null,tries,open:va.open||vb.open||null};}}
   if(b.upl30_nick)o.upl30_nick=b.upl30_nick;
   return o;
 }
