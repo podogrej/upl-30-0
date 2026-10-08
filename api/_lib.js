@@ -11,6 +11,13 @@ async function sb(path, { method = 'GET', body, prefer } = {}) {
   if (!r.ok) { const e = new Error(`db ${r.status}: ${t.slice(0, 150)}`); e.status = r.status; e.body = t; throw e; }
   return j;
 }
+// every row of a query: Supabase returns at most 1000 rows per request, so page with limit/offset (q must have a stable order)
+const PAGE = 1000;
+async function sbAll(q, maxPages = 100) {
+  const out = [];
+  for (let off = 0, n = 0; n < maxPages; off += PAGE, n++) { const pg = await sb(`${q}&limit=${PAGE}&offset=${off}`) || []; out.push(...pg); if (pg.length < PAGE) break; }
+  return out;
+}
 const kyivDate = (d = new Date()) => new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Kyiv', year: 'numeric', month: '2-digit', day: '2-digit' }).format(d);
 
 // Telegram Mini App signature (initData) -> {user, start_param} or null; max age one day
@@ -27,4 +34,4 @@ function miniApp(initData, token = env('TG_TOKEN')) {
 }
 // Ukrainian plural form by count (one / few / many), same as plUk on the site
 const plUk = (n, a, b, c) => { const m = n % 10, h = n % 100; return m === 1 && h !== 11 ? a : m >= 2 && m <= 4 && (h < 12 || h > 14) ? b : c; };
-module.exports = { SB_URL, env, sb, kyivDate, miniApp, plUk };
+module.exports = { SB_URL, env, sb, sbAll, kyivDate, miniApp, plUk };

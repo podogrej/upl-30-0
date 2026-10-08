@@ -25,25 +25,18 @@ module.exports = async (req, res) => {
     } else if (!(await legacyOpen())) return res.status(401).json({ error: 'secret?' });
     const day = kyivDate();
     const daily = !!b.daily;
-    let official = false;
-    stage = 'daily';
-    if (daily) {
-      // only the first attempt of the day from this device is official
-      const prev = await sb(`season_seeds?device_id=eq.${b.device_id}&day=eq.${day}&daily=is.true&official=is.true&select=id,seed,xi_hash,year,used_by&limit=1`) || [];
-      official = prev.length === 0;
-      // retry after a client timeout: same squad, attempt not played yet -> the same official seed again
-      const p = prev[0];
-      if (sameAttempt(p, b)) return res.status(200).json({ seed_id: p.id, seed: p.seed, official: true });
-    }
+    // only the first attempt of the day from this device is official: try to insert it as official straight away,
+    // the unique index season_seeds_official_uq (audit V2) rejects a second one with 409
+    let official = daily;
     stage = 'insert';
     const seed = crypto.randomInt(1, 2147483647);
     const row = { device_id: b.device_id, xi_hash: xiHash(b.xi), seed, day, daily, official, formation: String(b.formation || '').slice(0, 8), mode: String(b.mode || '').slice(0, 12), format: String(b.format || '').slice(0, 12), year: +b.year || null };
     let ins;
     try { [ins] = await sb('season_seeds?select=id', { method: 'POST', prefer: 'return=representation', body: row }) || []; }
     catch (e) {
-      // audit V2: concurrent requests: unique index season_seeds_official_uq lets only one official attempt through; the other is regular
       if (!(official && (e.status === 409 || /23505/.test(e.body || '')))) throw e;
-      // the parallel request (client retry while the first one was still running) won: hand out its seed if it is the same attempt
+      // official attempt already issued (client retry after a timeout, parallel request): same squad, not played yet -> the same seed again
+      stage = 'daily';
       const [p] = await sb(`season_seeds?device_id=eq.${b.device_id}&day=eq.${day}&daily=is.true&official=is.true&select=id,seed,xi_hash,year,used_by&limit=1`) || [];
       if (sameAttempt(p, b)) return res.status(200).json({ seed_id: p.id, seed: p.seed, official: true });
       row.official = official = false;

@@ -237,11 +237,13 @@ function fl5Wire($,el){
 // "My leagues" on the player's own page
 // group leagues (Telegram chats with the bot): tg_leagues_mine, sql/v070.sql; before that SQL runs the call fails and the list is just empty
 const tgLeagueRow=x=>`<a class="fl-row" href="https://t.me/${TG_BOT}?startapp=g${encodeURIComponent(x.chat_id)}" target="_blank" rel="noopener">${ic('telegram')}<span class="t"><b>${esc(x.title||'Група')}</b><small>група в Telegram · ${numOr0(x.members)} ${plUk(x.members,'гравець','гравці','гравців')}${x.played_today?` · сьогодні зіграли ${numOr0(x.played_today)}`:''}</small></span></a>`;
-async function ppLeagues(){if(!document.getElementById('ppLeagues'))return;let mine=[],groups=[],err=false;
-  await Promise.all([playerRpc('fl_mine').then(r=>{mine=r||[];},e=>{err=flMineFail(e);}),playerRpc('tg_leagues_mine').then(r=>{groups=Array.isArray(r)?r:[];},()=>{})]);
+async function ppLeagues(){if(!document.getElementById('ppLeagues')||!PP)return;
+  // the page re-renders 2-3 times per open (profile, account): request the lists once per open (PP.lg)
+  const st=PP;if(!st.lg){const o={mine:[],groups:[],err:false};st.lg=Promise.all([playerRpc('fl_mine').then(r=>{o.mine=r||[];},e=>{o.err=flMineFail(e);}),playerRpc('tg_leagues_mine').then(r=>{o.groups=Array.isArray(r)?r:[];},()=>{})]).then(()=>o);}
+  const {mine,groups,err}=await st.lg;if(PP!==st)return;
   const el=document.getElementById('ppLeagues');if(!el)return;   // page may have re-rendered while awaiting the response; take the fresh element
   el.innerHTML=`<div class="pp-sec"><h3>Мої ліги</h3><button class="ghost" id="ppFl">${mine.length?'Усі':'Створити'}</button></div>`+(mine.length?mine.slice(0,5).map(x=>`<button class="fl-row" data-l="${esc(x.id)}">${ic(x.over?'trophy':'account-group')}<span class="t"><b>${esc(x.name)} ${flBadge(x.fmt)}</b><small>${x.fmt==='5'?fl5Sub(x):`${x.over?'завершена':`день ${numOr0(x.day_n)} з ${numOr0(x.days)}`} · ${numOr0(x.members)} ${plUk(x.members,'гравець','гравці','гравців')}`}</small></span>${x.place?`<span class="fl-place"><b>${numOr0(x.place)}</b><small>місце</small></span>`:''}</button>`).join(''):(err?flMineErrHtml('ppFlRetry'):groups.length?'':`<p class="pp-empty">Ти ще не граєш у лігах з друзями.</p>`))+groups.slice(0,5).map(tgLeagueRow).join('');
   el.querySelectorAll('[data-l]').forEach(b=>b.onclick=()=>openLeague(b.dataset.l));el.querySelector('#ppFl').onclick=openFriends;
-  const r=el.querySelector('#ppFlRetry');if(r)r.onclick=()=>{r.disabled=true;ppLeagues();};}
+  const r=el.querySelector('#ppFlRetry');if(r)r.onclick=()=>{r.disabled=true;st.lg=null;ppLeagues();};}
 // ?l=... link opened: league page
 if(ONLINE){const m=/[?&]l=([a-z2-9]{6})(?:&|$)/.exec(location.search);if(m)setTimeout(()=>openLeague(m[1]),0);}
