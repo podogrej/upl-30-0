@@ -323,19 +323,11 @@ function honestXi(formation) {
     const x = await join(uid); ok(`ліга: ${why} — 403, у лігу не додано`, x.c === 403 && !inLeague(uid), `${x.c}`); }
   const x6 = await call(leagueH, { initData: initData({ id: 599, first_name: 'U599' }, 'g' + CHAT), result: { w: 20, d: 5, l: 5, pts: 65, place: 2, gf: 60, ga: 30, day: today } });
   ok('ліга: чужий із результатом від браузера — 403, нічого не записано (результати пише лише сервер)', x6.c === 403 && !inLeague(599) && !DB.league_results.some(r => String(r.tg_user_id) === '599'), `${x6.c} ${JSON.stringify(x6.j)}`);
-  // joining a new group's league carries today's best verified free-play season over too
-  const CHAT2 = -100777; DB.leagues.push({ chat_id: CHAT2, title: 'Нова група' }); MEMBERS[CHAT2] = { 501: 'member', 502: 'member', 505: 'member' };
-  const base = { practice: false, verified: true, day: null, format: 'classic', mode: 'normal', w: 20, d: 5, l: 5, pts: 65, place: 2, gf: 60, ga: 30, formation: '4-4-2', created_at: new Date().toISOString() };
-  DB.seasons.push({ ...base, id: 9001, tg_user_id: 501 }, { ...base, id: 9002, tg_user_id: 502, w: 22, pts: 71 }, { ...base, id: 9003, tg_user_id: 505, verified: false });
-  const in2 = uid => DB.league_results.find(r => String(r.chat_id) === String(CHAT2) && String(r.tg_user_id) === String(uid) && r.day === today);
+  // joining a second group's league: membership row only; carrying today's best attempt over needs a player link and seeds (tested in v079.js)
+  const CHAT2 = -100777; DB.leagues.push({ chat_id: CHAT2, title: 'Нова група' }); MEMBERS[CHAT2] = { 501: 'member' };
+  DB.seasons.push({ practice: false, verified: true, day: null, format: 'classic', mode: 'normal', w: 20, d: 5, l: 5, pts: 65, place: 2, gf: 60, ga: 30, formation: '4-4-2', created_at: new Date().toISOString(), id: 9001, tg_user_id: 501 });
   const j21 = await call(leagueH, { initData: initData({ id: 501, first_name: 'U501' }, 'g' + CHAT2) });
-  ok('ліга: вступ — найкращий сезон «Грати» за сьогодні перенесено', j21.c === 200 && in2(501) && in2(501).season_id === 9001 && in2(501).pts === 65, `${j21.c} ${JSON.stringify(j21.j)}`);
-  await call(leagueH, { initData: initData({ id: 501, first_name: 'U501' }, 'g' + CHAT2) });
-  ok('ліга: повторний вступ — без дубля', DB.league_results.filter(r => String(r.chat_id) === String(CHAT2) && String(r.tg_user_id) === '501').length === 1);
-  await call(leagueH, { initData: initData({ id: 502, first_name: 'U502' }, 'g' + CHAT2) });
-  ok('ліга: вступ — результат узято з перевіреного сезону дня (інший гравець)', in2(502) && in2(502).season_id === 9002 && in2(502).pts === 71);
-  await call(leagueH, { initData: initData({ id: 505, first_name: 'U505' }, 'g' + CHAT2) });
-  ok('ліга: неперевірений сезон — не переноситься', !in2(505));
+  ok('ліга: вступ у другу лігу; сезон без спроби ліги (seed) і без привʼязки гравця не переноситься', j21.c === 200 && j21.j.joined[0].chat_id === String(CHAT2) && !DB.league_results.some(r => String(r.chat_id) === String(CHAT2)), `${j21.c} ${JSON.stringify(j21.j)}`);
   // group migrated to a supergroup: old button (old chat_id) moves the league to the new id and adds the player there
   const OLD = -5000001, NEW = -1005000001; DB.leagues.push({ chat_id: OLD, title: 'Стара група' });
   DB.league_members.push({ chat_id: OLD, tg_user_id: 501, name: 'U501' }); MIGRATED[OLD] = NEW; MEMBERS[NEW] = { 506: 'member', 501: 'member' };

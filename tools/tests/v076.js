@@ -241,7 +241,7 @@ const sk=(pg,sel)=>pg.evaluate(s=>{const n=[...document.querySelectorAll(s+' .sk
   for(let i=0;i<11;i++){if(i){await pg.click('#spinBtn');await pg.waitForSelector('#squad .pl:not([disabled])',{timeout:8000});}
     const btn=await pg.$('.pl:not([disabled])');await btn.click();await pg.waitForTimeout(80);const pick=await pg.$('#pitch .slot.target');if(pick){await pick.click();await pg.waitForTimeout(60);}
     if(i===0)T.check(await pg.evaluate(()=>[...document.querySelectorAll('#squad .pl .rt')].every(e=>!e.getAnimations().length)),'рейтинги не з\'являються наново після вибору гравця');}
-  await pg.waitForSelector('#simBtn:not([hidden])');await pg.click('#simBtn');
+  await pg.waitForSelector('#simBtn:not([hidden])');await pg.click('#simBtn');await pg.waitForSelector('#live:not([hidden])',{timeout:8000});   // the season starts after the server seed request
   const rows=new Set(),hs=new Set();
   for(let k=0;k<70;k++){const v=await pg.evaluate(()=>{const t=document.getElementById('lvTable');return document.getElementById('live').hidden?null:[t.querySelectorAll('tr').length,Math.round(t.getBoundingClientRect().height)];});
     if(!v)break;if(v[0]>1&&v[1]>0){   // ±3 px: web font may finish loading mid-season

@@ -139,7 +139,7 @@ async function verifyById(id, row) {
     v === true && seedRow ? sb(`season_seeds?id=eq.${seedRow.id}`, { method: 'PATCH', prefer: 'return=minimal', body: { used_by: id } }) : null]);
   if (v === true && seedRow) await syncDaily({ ...row, verified: true }, { ...seedRow, used_by: id }, true);
   // friends league attempt and chat leagues are independent; a chat league failure never fails the verification
-  const [fl] = v === true ? await Promise.all([flRecord(row, id), L.creditSeason({ ...row, verified: true }).catch(e => console.error('chat leagues', e.message))]) : [];
+  const [fl] = v === true ? await Promise.all([flRecord(row, id), L.creditSeason({ ...row, verified: true }, seedRow).catch(e => console.error('chat leagues', e.message))]) : [];
   return { verified: v, note, fl };
 }
 

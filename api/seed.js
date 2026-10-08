@@ -28,13 +28,15 @@ module.exports = async (req, res) => {
     // only the first attempt of the day from this device is official: try to insert it as official straight away,
     // the unique index season_seeds_official_uq (audit V2) rejects a second one with 409
     let official = daily;
+    // free play that chat leagues count (classic, normal, all years; the browser marks it): official = a league attempt (api/_league.js dayBest)
+    const attempt = !daily && b.league === true && b.format === 'classic' && b.mode === 'normal';
     stage = 'insert';
     const seed = crypto.randomInt(1, 2147483647);
-    const row = { device_id: b.device_id, xi_hash: xiHash(b.xi), seed, day, daily, official, formation: String(b.formation || '').slice(0, 8), mode: String(b.mode || '').slice(0, 12), format: String(b.format || '').slice(0, 12), year: +b.year || null };
+    const row = { device_id: b.device_id, xi_hash: xiHash(b.xi), seed, day, daily, official: official || attempt, formation: String(b.formation || '').slice(0, 8), mode: String(b.mode || '').slice(0, 12), format: String(b.format || '').slice(0, 12), year: +b.year || null };
     let ins;
     try { [ins] = await sb('season_seeds?select=id', { method: 'POST', prefer: 'return=representation', body: row }) || []; }
     catch (e) {
-      if (!(official && (e.status === 409 || /23505/.test(e.body || '')))) throw e;
+      if (!(daily && official && (e.status === 409 || /23505/.test(e.body || '')))) throw e;
       // official attempt already issued (client retry after a timeout, parallel request): same squad, not played yet -> the same seed again
       stage = 'daily';
       const [p] = await sb(`season_seeds?device_id=eq.${b.device_id}&day=eq.${day}&daily=is.true&official=is.true&select=id,seed,xi_hash,year,used_by&limit=1`) || [];

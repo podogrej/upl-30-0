@@ -19,7 +19,7 @@ const nameOf = u => ([u.first_name, u.last_name].filter(Boolean).join(' ') || u.
 
 const playUrl = chat_id => `https://t.me/${env('TG_BOT') || 'upl30_bot'}?startapp=g${chat_id}`;
 const playKb = chat_id => ({ inline_keyboard: [[{ text: '▶️ Грати', url: playUrl(chat_id) }]] });
-const RULE = 'У лігу йде найкращий із перших трьох сезонів дня у «Грати».';
+const RULE = 'У лігу йде найкращий сезон із перших трьох спроб дня у «Грати».';
 
 const cmpRes = (a, b) => b.pts - a.pts || (b.gf - b.ga) - (a.gf - a.ga) || b.gf - a.gf;   // < 0: a is better
 const sortRes = (a, b) => cmpRes(a, b) || String(a.created_at).localeCompare(String(b.created_at));
@@ -41,8 +41,9 @@ async function nameMap(rows) {
 }
 const applyNames = (rows, pl) => rows.map(r => { const p = pl[String(r.tg_user_id)]; const n = p && (p.name || p.anon_name);
   return n ? { ...r, name: String(n), u: p.public_id || undefined } : r; });
-// Kyiv day of a season: the daily draft carries it, free play has only created_at
-const seasonDay = s => (s.day ? String(s.day).slice(0, 10) : kyivDate(s.created_at ? new Date(s.created_at) : new Date()));
+// Kyiv day of a season: the daily draft carries it; free play counts on its seed's day, saved that day or (past midnight) the next
+const nextDay = day => new Date(Date.parse(day + 'T00:00:00Z') + 864e5).toISOString().slice(0, 10);
+const dayOk = (s, day) => { day = String(day).slice(0, 10); if (s.day) return String(s.day).slice(0, 10) === day; const c = kyivDate(s.created_at ? new Date(s.created_at) : new Date()); return c === day || c === nextDay(day); };
 // league boards and summaries count only server-verified seasons (numbers taken from the season, not the browser).
 // Days before VERIFIED_FROM are shown as they were, to keep league history intact.
 const VERIFIED_FROM = '2026-10-01';
@@ -58,7 +59,7 @@ async function onlyVerified(rows) {
   return applyNames(rows.filter(r => {
     if (String(r.day) < VERIFIED_FROM) return true;
     const s = ok[+r.season_id];
-    return !!s && seasonDay(s) === String(r.day).slice(0, 10) && (s.tg_user_id == null || String(s.tg_user_id) === String(r.tg_user_id));
+    return !!s && dayOk(s, r.day) && (s.tg_user_id == null || String(s.tg_user_id) === String(r.tg_user_id));
   }).map(r => { const s = ok[+r.season_id]; return s ? { ...r, w: s.w, d: s.d, l: s.l, pts: s.w * 3 + s.d, gf: s.gf, ga: s.ga, place: s.place } : r; }), pl);
 }
 
@@ -117,44 +118,63 @@ async function upsertBoard(chat_id, day, { copy = false } = {}) {
 }
 
 // ---------- Chat leagues count free play (DECISIONS item 11): classic, normal level, all years, not daily / practice / friends league.
-// Each Kyiv day the player's first DAY_N verified such seasons count; the league row holds the best of them (cmpRes).
+// An attempt is a seed the server issued as a league attempt (season_seeds.official outside the daily draft: classic, normal, all years,
+// marked by the browser for free play; api/seed.js). Each Kyiv day the player's first DAY_N such seeds are the attempts; a season counts only if it was played on one of them, so an issued seed that was never saved burns
+// its attempt. The league row holds the best counted season (cmpRes).
 const DAY_N = 3;
-const leagueFree = s => !!s && s.verified === true && s.format === 'classic' && s.mode === 'normal' && !s.practice && !s.day && !s.fl_id && (s.era == null || s.era === 'all');
-// UTC start of a Kyiv day (UTC+3 in summer, UTC+2 in winter)
-const dayStart = day => { const t = Date.parse(day + 'T00:00:00Z'); return new Date(t - (kyivDate(new Date(t - 3 * 36e5)) === day ? 3 : 2) * 36e5).toISOString(); };
-const nextDay = day => new Date(Date.parse(day + 'T00:00:00Z') + 864e5).toISOString().slice(0, 10);
-// best of the first DAY_N qualifying verified seasons of the day; who: PostgREST filter of the player's seasons
-async function dayBest(who, day) {
-  const rows = await sb(`seasons?${who}&created_at=gte.${dayStart(day)}&created_at=lt.${dayStart(nextDay(day))}&format=eq.classic&mode=eq.normal&practice=is.false&day=is.null&fl_id=is.null&era=is.null&verified=is.true`
-    + `&select=id,w,d,l,place,gf,ga,xp,formation,created_at&order=created_at.asc,id.asc&limit=${DAY_N}`) || [];
-  return rows.map(s => ({ ...s, pts: s.w * 3 + s.d })).sort(cmpRes)[0] || null;
+const legends = () => require('../lib/engine.js').LEAGUE_LEGENDS;
+const leagueFree = s => !!s && s.verified === true && s.format === 'classic' && s.mode === 'normal' && !s.practice && !s.day && !s.fl_id && (s.era == null || s.era === 'all') && +s.year === legends();
+// devices of a player (all linked devices); without a player only the given device
+async function devicesOf(pid, device) {
+  const ds = pid ? (await sb(`player_links?kind=eq.device&player_id=eq.${pid}&select=key`) || []).map(l => String(l.key)) : [];
+  if (device && !ds.includes(String(device))) ds.push(String(device));
+  return ds.filter(d => /^[0-9a-f-]{36}$/i.test(d));
 }
-// write best into league_results for members [{chat_id, tg_user_id, name}] when it beats the current row; returns changed chats.
-// Existing rows keep their name (it may be anonymised after account deletion); the season_id filter makes a racing write a no-op.
+// best counted season of the day for these devices: first DAY_N attempt seeds, then their verified free-play seasons
+async function dayBest(devices, day) {
+  if (!devices.length) return null;
+  const seeds = await sb(`season_seeds?device_id=in.(${devices.join(',')})&day=eq.${day}&daily=is.false&official=is.true&format=eq.classic&mode=eq.normal&year=eq.${legends()}`
+    + `&select=id&order=created_at.asc,id.asc&limit=${DAY_N}`) || [];
+  if (!seeds.length) return null;
+  const rows = await sb(`seasons?seed_id=in.(${seeds.map(s => s.id).join(',')})&verified=is.true&format=eq.classic&mode=eq.normal&practice=is.false&day=is.null&fl_id=is.null&era=is.null`
+    + `&select=id,w,d,l,place,gf,ga,xp,formation,year,seed_id,created_at`) || [];
+  return rows.filter(s => +s.year === legends()).map(s => ({ ...s, pts: s.w * 3 + s.d })).sort(cmpRes)[0] || null;
+}
+// write best into one member's row when it beats the stored one. Existing rows keep their name (it may be anonymised after
+// account deletion). Two verifications may race: the PATCH is conditional on the season it read, then the row is read again and
+// the write retried while the stored result is still worse (bounded).
+async function putOne(best, day, m, num) {
+  const key = `chat_id=eq.${m.chat_id}&day=eq.${day}&tg_user_id=eq.${m.tg_user_id}`;
+  let wrote = false;
+  for (let i = 0; i < 4; i++) {
+    const [e] = await sb(`league_results?${key}&select=pts,gf,ga,season_id`) || [];
+    if (e && (+e.season_id === +best.id || cmpRes(best, e) >= 0)) return wrote;
+    if (e) await sb(`league_results?${key}&season_id=${e.season_id == null ? 'is.null' : 'eq.' + e.season_id}`, { method: 'PATCH', prefer: 'return=minimal', body: num });
+    else await sb('league_results?on_conflict=chat_id,day,tg_user_id', { method: 'POST', prefer: 'resolution=ignore-duplicates,return=minimal', body: { chat_id: m.chat_id, day, tg_user_id: m.tg_user_id, name: m.name, trophies: [], ...num } });
+    wrote = true;
+  }
+  return wrote;
+}
+// members [{chat_id, tg_user_id, name}]; returns changed chats
 async function putBest(best, day, members) {
   if (!best || !members.length) return [];
-  const chats = [...new Set(members.map(m => m.chat_id))], ids = [...new Set(members.map(m => m.tg_user_id))];
-  const have = await sb(`league_results?day=eq.${day}&chat_id=in.(${chats.join(',')})&tg_user_id=in.(${ids.join(',')})&select=chat_id,tg_user_id,pts,gf,ga,season_id`) || [];
   const num = { w: best.w, d: best.d, l: best.l, pts: best.pts, place: best.place, gf: best.gf, ga: best.ga, xp: best.xp == null ? null : +best.xp, formation: best.formation, season_id: best.id };
-  const changed = await Promise.all(members.map(async m => {
-    const e = have.find(r => String(r.chat_id) === String(m.chat_id) && String(r.tg_user_id) === String(m.tg_user_id));
-    if (e && (+e.season_id === +best.id || cmpRes(best, e) >= 0)) return null;
-    if (e) await sb(`league_results?chat_id=eq.${m.chat_id}&day=eq.${day}&tg_user_id=eq.${m.tg_user_id}&season_id=${e.season_id == null ? 'is.null' : 'eq.' + e.season_id}`, { method: 'PATCH', prefer: 'return=minimal', body: num });
-    else await sb('league_results?on_conflict=chat_id,day,tg_user_id', { method: 'POST', prefer: 'resolution=ignore-duplicates,return=minimal', body: { chat_id: m.chat_id, day, tg_user_id: m.tg_user_id, name: m.name, trophies: [], ...num } });
-    return m.chat_id;
-  }));
+  const changed = await Promise.all(members.map(async m => (await putOne(best, day, m, num)) ? m.chat_id : null));
   return [...new Set(changed.filter(c => c != null))];
 }
-// a season was just verified: update every chat league of its player, then their pinned boards
-async function creditSeason(row) {
-  if (!leagueFree(row)) return [];
-  const ids = new Set(row.tg_user_id ? [String(row.tg_user_id)] : []);
-  if (row.player_id) for (const l of await sb(`player_links?kind=eq.tg&player_id=eq.${row.player_id}&select=key`) || []) if (/^\d+$/.test(String(l.key))) ids.add(String(l.key));
-  if (!ids.size) return [];
-  const members = await sb(`league_members?tg_user_id=in.(${[...ids].join(',')})&select=chat_id,tg_user_id,name`) || [];
+// Telegram ids of a player (season's own id and Telegram links) -> their league memberships
+async function membersOf(pid, tgId) {
+  const ids = new Set(tgId ? [String(tgId)] : []);
+  if (pid) for (const l of await sb(`player_links?kind=eq.tg&player_id=eq.${pid}&select=key`) || []) if (/^\d+$/.test(String(l.key))) ids.add(String(l.key));
+  return ids.size ? await sb(`league_members?tg_user_id=in.(${[...ids].join(',')})&select=chat_id,tg_user_id,name`) || [] : [];
+}
+// a season was just verified (seedRow: its seed): update every chat league of its player, then their pinned boards
+async function creditSeason(row, seedRow) {
+  if (!leagueFree(row) || !seedRow || !seedRow.day || String(seedRow.id) !== String(row.seed_id)) return [];
+  const members = await membersOf(row.player_id, row.tg_user_id);
   if (!members.length) return [];
-  const day = seasonDay(row);
-  const best = await dayBest(row.player_id ? `player_id=eq.${row.player_id}` : `device_id=eq.${encodeURIComponent(row.device_id)}`, day);
+  const day = String(seedRow.day).slice(0, 10);
+  const best = await dayBest(await devicesOf(row.player_id, row.device_id), day);
   const changed = await putBest(best, day, members);
   await Promise.all(changed.map(c => upsertBoard(c, day).catch(e => console.error('board', c, e.message))));
   return changed;
@@ -173,7 +193,7 @@ async function migrateLeague(from, to) {
   return true;
 }
 
-return { SB_URL, env, esc, tg, sb, sbAll, kyivDate, migrateLeague, dayNo, dayShort, checkMiniApp, nameOf, playUrl, playKb, RULE, sortRes, cmpRes, onlyVerified, DAY_N, leagueFree, dayBest, putBest, creditSeason, standings, standingsOf, leagueRows, RES_COLS, boardText, upsertBoard };
+return { SB_URL, env, esc, tg, sb, sbAll, kyivDate, migrateLeague, dayNo, dayShort, checkMiniApp, nameOf, playUrl, playKb, RULE, sortRes, cmpRes, onlyVerified, DAY_N, leagueFree, devicesOf, dayBest, putBest, creditSeason, standings, standingsOf, leagueRows, RES_COLS, boardText, upsertBoard };
 })();
 
 module.exports = L;

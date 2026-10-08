@@ -938,7 +938,7 @@ h3,.sec0,#s1 .sec0,.pgh,.trleg .h{font-size:var(--fs-footnote);font-weight:var(-
       <details><summary>Що таке «Драфт дня»?</summary><p>Одна схема, одні суперники й одне колесо на день для всіх. Офіційна спроба — одна, результат іде в таблицю дня під сезоном. Грай щодня, щоб тримати серію: один пропущений день на тиждень прощається (заморозка).</p></details>
       <details><summary>Що таке «Вибір сезону»?</summary><p>Колесо дає лише клуб, а сезон обираєш сам — з трьох випадкових сезонів цього клубу. Перекручувань немає, назад не повернешся. Результат іде в загальну таблицю з позначкою режиму.</p></details>
       <details><summary>Що таке «Один клуб»?</summary><p>Обираєш клуб — і збираєш найкращу 11-ку з усіх його сезонів в УПЛ. Колесо дає лише сезони цього клубу. У кожного клубу свої рекорди: набери більше очок, ніж клуб у найкращому сезоні, і менше, ніж у найгіршому, — і клуб пройдено. Складність дуже залежить від клубу, тому таблиця окрема.</p></details>
-      <details><summary>Як грати з друзями?</summary><p>«Ліга з друзями» на головній: створи лігу й надішли посилання в чат. 11×11 — ліга на кілька днів: щодня спроба, очки сумуються. 5×5 — турнір: кожен збирає п'ятірку, а коли збір закінчиться, п'ятірки грають одна з одною. У Telegram-чаті додай бота @upl30_bot, зроби його адміністратором і напиши /league — буде ліга чату. У лігу йде найкращий із перших трьох сезонів дня у «Грати» (класика, звичайна складність, усі роки); таблиці твоїх чатів — у «Таблиці» → «Мої чати». А ще — кнопка «Кинути виклик другу» після сезону. «Поділитися» надсилає картку з результатом прямо в чат.</p></details>
+      <details><summary>Як грати з друзями?</summary><p>«Ліга з друзями» на головній: створи лігу й надішли посилання в чат. 11×11 — ліга на кілька днів: щодня спроба, очки сумуються. 5×5 — турнір: кожен збирає п'ятірку, а коли збір закінчиться, п'ятірки грають одна з одною. У Telegram-чаті додай бота @upl30_bot, зроби його адміністратором і напиши /league — буде ліга чату. Щодня в лігу йде найкращий сезон із перших трьох спроб у «Грати» (класика, звичайна складність, усі роки; спроба зараховується, щойно запущено сезон, навіть якщо його не дограно); таблиці твоїх чатів — у «Таблиці» → «Мої чати». А ще — кнопка «Кинути виклик другу» після сезону. «Поділитися» надсилає картку з результатом прямо в чат.</p></details>
       <details><summary>Чи треба реєструватися?</summary><p>Ні. Вхід через Google або Telegram потрібен, щоб трофеї, серія й рекорди не загубилися й були на всіх пристроях. Ім'я одне на всі таблиці — змінити його можна в «Налаштуваннях» на своїй сторінці (тап по аватарці вгорі). Увійшов і через Google, і через Telegram — гра запитає «Це ти?» і об'єднає історію.</p></details>
       <details><summary>Що ви збираєте?</summary><p>Анонімно дивимося, куди натискають, щоб покращувати гру (Microsoft Clarity). Якщо увійдеш — ім'я та ідентифікатор входу. Пошту — лише якщо сам впишеш її на своїй сторінці для новин. Паролів не бачимо. Усе своє можна стерти кнопкою «Видалити акаунт» на своїй сторінці. <a href="privacy.html">Докладніше</a>.</p></details>
       <details><summary>Звідки дані?</summary><p>Склади, матчі, голи та підсумкові таблиці всіх сезонів Вищої ліги й Прем'єр-ліги 1992–2026 з відкритих джерел. Асисти — з 2012/13 і за 2021/22, сухі матчі до 2012 — оцінка за командною статистикою (≈).</p></details>
@@ -1720,8 +1720,8 @@ async function lockDraft(){
   // server seed and xP runs (xpRun) in parallel; runs in chunks so the UI does not freeze and the progress bar advances
   const pb=document.getElementById('preBox');pb.hidden=false;pb.innerHTML='<div class="kicker">Рахуємо прогноз…</div><div class="bar"><i id="xpBar"></i></div>';
   pb.scrollIntoView({behavior:'smooth',block:'center'});
-  // audit P1-4: daily draft seed is fetched only on Play season, otherwise a swap after the forecast consumed the official attempt
-  const seedP=S.daily&&!S.daily.practice?Promise.resolve(null):fetchSeed(year);
+  // audit P1-4: daily draft and league attempt seeds are fetched only on Play season, otherwise a swap after the forecast consumed the attempt
+  const seedP=(S.daily&&!S.daily.practice)||lgAttempt()?Promise.resolve(null):fetchSeed(year);
   const pre=await xpRun(xi,mode,year,async f=>{const b=document.getElementById('xpBar');if(b)b.style.width=Math.round(f*100)+'%';await new Promise(r=>setTimeout(r,0));return tok===S.lockTok;});
   if(!pre)return;   // squad changed while computing
   S.srv=seedP;S.year=year;S.pre=pre;S.locked=true;S.locking=false;   // forecast immediately; the server seed request is awaited only on Play season
@@ -2172,7 +2172,7 @@ async function fetchSeed(year,retry=1){
   if(!ONLINE)return null;
   const ctl=typeof AbortController!=='undefined'?new AbortController():null;const tm=setTimeout(()=>ctl&&ctl.abort(),6000);
   try{const r=await _fetch('/api/seed',{method:'POST',headers:{'Content-Type':'application/json'},signal:ctl&&ctl.signal,
-      body:JSON.stringify({device_id:deviceId(),secret:devSecret(),xi:S.slots.map(s=>({id:s.player.id,slot:s.slot,c:s.player.club,y:s.player.y})),formation:S.formation,mode:S.mode,format:S.format,year,daily:!!(S.daily&&!S.daily.practice)})});
+      body:JSON.stringify({device_id:deviceId(),secret:devSecret(),xi:S.slots.map(s=>({id:s.player.id,slot:s.slot,c:s.player.club,y:s.player.y})),formation:S.formation,mode:S.mode,format:S.format,year,daily:!!(S.daily&&!S.daily.practice),league:lgAttempt()})});
     if(r.status===429){const j=await r.json().catch(()=>({}));RATE_NOTE=j.error||'Забагато запитів за хвилину. Зачекай трохи й спробуй ще раз.';}
     if(!r.ok)return null;const j=await r.json();return j&&j.seed?j:null;}catch(e){clearTimeout(tm);return e&&e.name==='AbortError'&&retry>0?fetchSeed(year,retry-1):null;}finally{clearTimeout(tm);}
 }
@@ -2182,7 +2182,7 @@ async function playSeason(year){
   if(SIM_BUSY)return;SIM_BUSY=true;const sb=document.getElementById('simBtn');const sbt=sb.textContent;sb.disabled=true;sb.textContent='Готуємо сезон…';
   const xi=S.slots.map(s=>s.player);const mode=MODES[S.mode];
   let srv=null;
-  if(S.locked&&S.year&&!year){year=S.year;srv=await S.srv;S.srv=null;if(!srv&&S.daily&&!S.daily.practice)srv=await fetchSeed(year);}   // year and seed issued when the squad was locked
+  if(S.locked&&S.year&&!year){year=S.year;srv=await S.srv;S.srv=null;if(!srv&&((S.daily&&!S.daily.practice)||lgAttempt()))srv=await fetchSeed(year);}   // year and seed issued when the squad was locked
   else{if(S.daily){year=DAILY.year;}else if(S.chal){year=S.chal.year;}if(!year)year=oppYear();srv=await fetchSeed(year);}
   sb.disabled=false;sb.textContent=sbt;SIM_BUSY=false;
   const seed=srv?srv.seed:Math.floor(Math.random()*2147483647);rnd=mulberry32(seed);const r=simulate(xi,mode,year);rnd=Math.random;r.seed=seed;r.seedId=srv?srv.seed_id:null;r.slow=srv?'':RATE_NOTE;RATE_NOTE='';S.result=r;
@@ -2382,6 +2382,10 @@ function logSeason(r){
     .catch(e=>{if(e.status===429){r.slow=e.message;verifiedUi(r,{});}lbRelease(r);if(tro)trSync(tro);console.warn('save',e);});
 }
 // season that chat leagues count (server rule: api/_league.js leagueFree): classic free play, normal level, all years
+// its seed is requested as a league attempt (api/seed.js); a friend challenge or friends league attempt is not one
+const lgAttempt=()=>!S.daily&&!S.league&&!S.challenge&&!S.pickMode&&S.format==='classic'&&S.mode==='normal'&&eraOf()==='all';
+// play button of the chat tables: always the format chat leagues count
+function openLeaguePlay(){setFmt('classic');const m=document.querySelector('#modes .opt[data-m="normal"]'),e=document.querySelector('#eras [data-era="all"]');if(m)m.click();if(e)e.click();go(4);}
 const lgFree=w=>w.format==='classic'&&w.mode==='normal'&&!w.practice&&!w.day&&!w.era&&!w.fl_id;
 // server recomputes the season and marks it verified
 async function verifySeason(r){
@@ -3382,7 +3386,7 @@ let LEAGUE_DENIED=false;   // Telegram did not confirm group membership for the 
 // list: request for the chats of this player, rows: its result; data[chat]: GET /api/league answer | 'load' | 'err'; bust: bypass CDN cache after own season
 const LG={list:null,rows:null,chat:null,tab:'today',data:{},bust:0};
 const LG_JOIN_TTL=864e5,LG_JOIN_KEEP=30*864e5;   // join is repeated after a day; join records older than a month are removed
-const LG_RULE='У лігу йде найкращий із перших трьох сезонів дня у «Грати».';
+const LG_RULE='У лігу йде найкращий сезон із перших трьох спроб дня у «Грати».';
 const lgStart=()=>{const sp=TG&&TG.initDataUnsafe&&TG.initDataUnsafe.start_param||'';return /^g(-?\d+)$/.exec(sp);};
 function leagueChat(){const m=lgStart();
   if(m){const j=lsGet('upl30_joined_'+m[1]),c=String(j&&j.chat||m[1]);lsSet("upl30_league",c);return c;}return lsGet("upl30_league");}   // j.chat: league moved to the supergroup id
@@ -3443,7 +3447,7 @@ function lgRender(){const el=document.getElementById('tbChats');if(!el||el.hidde
   el.querySelectorAll('[data-chat]').forEach(b=>b.onclick=()=>{LG.chat=b.dataset.chat;lgRender();});
   el.querySelectorAll('#lgTabs button').forEach(b=>b.onclick=()=>{LG.tab=b.dataset.t;lgRender();});
   const rt=document.getElementById('lgRetry');if(rt)rt.onclick=()=>{lgLoad(c.chat);lgRender();};
-  const pl=document.getElementById('lgPlay');if(pl)pl.onclick=()=>{go(1);document.getElementById('freeOpen').click();};}
+  const pl=document.getElementById('lgPlay');if(pl)pl.onclick=openLeaguePlay;}
 
 // ---------- Friend challenge ("beat my result"): same wheel seed, formation, mode and opponents
 // Every free classic game has a wheel seed; after the season a challenge (table challenges) can be created and shared by link.
@@ -3640,7 +3644,7 @@ function drawCard(r){   // card in site style: UPL navy background, UPL.TV gradi
 document.getElementById('chalOpen').onclick=()=>{const b=document.getElementById('chalBox'),t=document.getElementById('chalOpen');b.hidden=!b.hidden;t.classList.toggle('on',!b.hidden);if(!b.hidden){b.scrollIntoView({behavior:'smooth',block:'center'});const n=document.getElementById('chalName');if(n&&!n.hidden&&!n.value)n.focus();}};
 // ---------- What's new: short player-friendly notes on the latest version (technical log: CHANGELOG.md)
 const WHATSNEW={v:'0.79',news:'0.79',date:'09.10.2026',items:[   // news: edition of the items; a release without new items keeps it, so the news dot does not light up again
-  ['account-group','Ліги чатів — на звичайній грі','У лігу чату тепер іде звичайна гра «Грати»: найкращий із перших трьох сезонів дня. Драфт дня в ліги більше не йде.'],
+  ['account-group','Ліги чатів — на звичайній грі','У лігу чату тепер іде звичайна гра «Грати»: найкращий сезон із перших трьох спроб дня. Драфт дня в ліги більше не йде.'],
   ['format-list-numbered','Екран «Таблиці»','Дві вкладки: «За весь час» і «Мої чати» — таблиці всіх твоїх чатів в одному місці. На головній замість кількох таблиць — один рядок.'],
   ['eye','Щільніші підписи','Підписи й підказки під заголовками та кнопками стали компактнішими — менше порожнечі між рядками.']]};
 function openNews(){screenTag('news');const box=document.getElementById('viewBox');document.getElementById('viewTitle').textContent=`Що нового · версія ${WHATSNEW.v}`;

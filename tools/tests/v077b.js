@@ -106,7 +106,7 @@ async function site(b){
      return {title:q('.ttl').textContent,pill:q('.lg-pill').textContent,rule:q('.lg-sub').textContent,th:[...e.querySelectorAll('thead th')].map(x=>x.textContent),
        rowH:Math.min(...rows.map(r=>r.getBoundingClientRect().height)),n:rows.length,medals:e.querySelectorAll('tbody .plc').length,me:q('tr.me')?q('tr.me').innerText.replace(/\s+/g,' ').trim():'',accent:me?getComputedStyle(me).boxShadow:'',
        ptsFs:parseFloat(getComputedStyle(q('td.p')).fontSize),nameFs:parseFloat(getComputedStyle(q('td.nm')).fontSize)};});
-   T.check(c.title==='Футбол по середах'&&c.pill==='13 з 40 зіграли'&&c.rule==='У лігу йде найкращий із перших трьох сезонів дня у «Грати».',`шапка: ${c.title} · «${c.pill}» · правило одним рядком`);
+   T.check(c.title==='Футбол по середах'&&c.pill==='13 з 40 зіграли'&&c.rule==='У лігу йде найкращий сезон із перших трьох спроб дня у «Грати».',`шапка: ${c.title} · «${c.pill}» · правило одним рядком`);
    T.check(c.th.join('|')==='#|Гравець|В-Н-П|Очки','заголовки колонок: '+c.th.join(' · '));
    T.check(c.n===13&&c.rowH>=44&&c.medals===3&&c.ptsFs>c.nameFs,`усі 13 рядків ≥44 px (${c.rowH}), медалі топ-3, очки більші за ім'я (${c.ptsFs}>${c.nameFs})`);
    T.check(/^7 андрій · ти/.test(c.me)&&/inset/.test(c.accent)&&/3px/.test(c.accent),'свій рядок «· ти» з акцентом зліва: '+c.me);

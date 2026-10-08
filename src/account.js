@@ -215,7 +215,7 @@ let LEAGUE_DENIED=false;   // Telegram did not confirm group membership for the 
 // list: request for the chats of this player, rows: its result; data[chat]: GET /api/league answer | 'load' | 'err'; bust: bypass CDN cache after own season
 const LG={list:null,rows:null,chat:null,tab:'today',data:{},bust:0};
 const LG_JOIN_TTL=864e5,LG_JOIN_KEEP=30*864e5;   // join is repeated after a day; join records older than a month are removed
-const LG_RULE='У лігу йде найкращий із перших трьох сезонів дня у «Грати».';
+const LG_RULE='У лігу йде найкращий сезон із перших трьох спроб дня у «Грати».';
 const lgStart=()=>{const sp=TG&&TG.initDataUnsafe&&TG.initDataUnsafe.start_param||'';return /^g(-?\d+)$/.exec(sp);};
 function leagueChat(){const m=lgStart();
   if(m){const j=lsGet('upl30_joined_'+m[1]),c=String(j&&j.chat||m[1]);lsSet("upl30_league",c);return c;}return lsGet("upl30_league");}   // j.chat: league moved to the supergroup id
@@ -276,4 +276,4 @@ function lgRender(){const el=document.getElementById('tbChats');if(!el||el.hidde
   el.querySelectorAll('[data-chat]').forEach(b=>b.onclick=()=>{LG.chat=b.dataset.chat;lgRender();});
   el.querySelectorAll('#lgTabs button').forEach(b=>b.onclick=()=>{LG.tab=b.dataset.t;lgRender();});
   const rt=document.getElementById('lgRetry');if(rt)rt.onclick=()=>{lgLoad(c.chat);lgRender();};
-  const pl=document.getElementById('lgPlay');if(pl)pl.onclick=()=>{go(1);document.getElementById('freeOpen').click();};}
+  const pl=document.getElementById('lgPlay');if(pl)pl.onclick=openLeaguePlay;}

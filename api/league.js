@@ -17,11 +17,12 @@ async function isMember(chat_id, user_id) {
   } catch (e) { return false; }
 }
 
-// player joined a league: today's best of the first free-play seasons goes in (player by Telegram link, else seasons signed by this Telegram id)
+// player joined a league: today's best counted free-play season goes in (devices of the player linked to this Telegram id)
 async function backfill(chat_id, u, name) {
   const day = L.kyivDate();
   const [lk] = await L.sb(`player_links?kind=eq.tg&key=eq.${u.id}&select=player_id`) || [];
-  const best = await L.dayBest(lk && lk.player_id ? `player_id=eq.${lk.player_id}` : `tg_user_id=eq.${u.id}`, day);
+  if (!lk || !lk.player_id) return false;
+  const best = await L.dayBest(await L.devicesOf(lk.player_id), day);
   const changed = await L.putBest(best, day, [{ chat_id, tg_user_id: u.id, name }]);
   if (!changed.length) return false;
   try { await L.upsertBoard(chat_id, day); } catch (e) { console.error('board', chat_id, e.message); }
