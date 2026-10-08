@@ -42,6 +42,8 @@ MAP = {
 }
 NEW = {'ska-odesa'}
 def slug(name, season):
+    if name == 'CSKA Kyiv' and season >= 2001:
+        return 'arsenal-kyiv'  # CSKA renamed Arsenal mid-season 2001/02; TM splits the season in two clubs
     if name == 'PFC Lviv':
         return 'fc-lviv-2008' if season < 2015 else 'pfk-lviv'
     return MAP[name]
@@ -52,19 +54,30 @@ def label(s):
 
 rows = list(csv.DictReader(open(os.path.join(D, 'raw_tm.csv'), encoding='utf-8')))
 # manual additions: spring-1992 play-off matches (uk.wikipedia 'Чемпіонат України з футболу 1992')
-extra = [('1991', 'final', '1992-06-21', 'Tavriya Simferopol', 'Dynamo Kyiv', '1', '0', 'played', '')]
+extra = [('1991', 'final', '1992-06-21', 'Tavriya Simferopol', 'Dynamo Kyiv', '1', '0', 'played', ''),
+         ('1991', '3rd place', '1992-06-20', 'Shakhtar Donetsk', 'Dnipro Dnipropetrovsk', '2', '3', 'played', '')]
 for e in extra:
     rows.append(dict(zip(['tm_season', 'round', 'date', 'home', 'away', 'hg', 'ag', 'status', 'time'], e)))
 
+flags = {}
+fp = os.path.join(D, 'suspect_scores.csv')
+if os.path.exists(fp):
+    for r in csv.DictReader(open(fp, encoding='utf-8')):
+        flags[(r['season'], r['date'], r['home_slug'], r['away_slug'])] = 'forfeit?' if 'forfeit' in r['reason'] or r['home_goals'] + r['away_goals'] in ('30', '03') else 'score_not_in_wiki_table'
 out = []; names = collections.OrderedDict()
 for r in rows:
     s = int(r['tm_season'])
     h, a = slug(r['home'], s), slug(r['away'], s)
     for n, sl in ((r['home'], h), (r['away'], a)):
         names.setdefault((n, sl), set()).add(s)
-    src = 'transfermarkt' if r['status'] != 'played' or r['round'] != 'final' else 'transfermarkt'
-    if r['round'] == 'final':
+    src = 'transfermarkt'
+    if r['round'] in ('final', '3rd place'):
         src = 'wikipedia_uk'
+    fl = flags.get((label(s), r['date'], h, a))
+    if s == 2013 and 'arsenal-kyiv' in (h, a):
+        fl = 'annulled_club_withdrew'
+    if fl:
+        src += ';' + fl
     out.append([label(s), r['round'], r['date'], h, a, r['hg'], r['ag'], src])
 out.sort(key=lambda x: (x[2] or '9999', x[0]))
 with open(os.path.join(D, 'upl_matches.csv'), 'w', newline='', encoding='utf-8') as f:

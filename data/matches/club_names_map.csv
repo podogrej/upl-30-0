@@ -2,7 +2,8 @@ source_name,slug,in_pool,first_tm_season,last_tm_season
 Arsenal Kyiv,arsenal-kyiv,yes,2001,2018
 Borysfen Boryspil,borysfen-boryspil,yes,2003,2004
 Bukovyna Chernivtsi,bukovyna-chernivtsi,yes,1991,2026
-CSKA Kyiv,cska-kyiv,yes,1996,2001
+CSKA Kyiv,arsenal-kyiv,yes,2001,2001
+CSKA Kyiv,cska-kyiv,yes,1996,2000
 CSKA-Borysfen Kyiv,cska-kyiv,yes,1995,1995
 Chornomorets Odesa,chornomorets-odesa,yes,1991,2026
 Desna Chernigiv,desna-chernihiv,yes,2018,2021
