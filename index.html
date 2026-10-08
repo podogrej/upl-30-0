@@ -630,6 +630,7 @@ button.go0{max-width:none;margin-top:var(--sp-5)}
   #s2>#pitch{grid-column:1;grid-row:2;position:sticky;top:72px;max-width:440px}
   #s2>#moveRow{grid-column:1;grid-row:3}#s2>#moveHint{grid-column:1;grid-row:4}
   #s2>.grid{grid-column:2;grid-row:2/span 3;margin-top:0!important}
+  #s2>.grid .spin0{min-height:0;align-content:start;padding:var(--sp-4);border-radius:var(--r-md);background:var(--card);box-shadow:var(--sh-1)}   /* idle state = same card as the wheel, top-aligned with the pitch; the 44px+ tap area is padding, not empty margin */
 }
 /* phone draft: slim bar with progress, shown once the pitch has scrolled away; two-column layout does not need it */
 .mini{position:fixed;left:0;right:0;top:var(--hh,57px);z-index:35;display:flex;align-items:center;gap:var(--sp-3);height:44px;padding:0 var(--sp-4);background:color-mix(in srgb,var(--bg) 92%,transparent);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);transform:translateY(-100%);opacity:0;visibility:hidden;transition:transform var(--dur-3) var(--ease-out),opacity var(--dur-2) var(--ease-out),visibility 0s var(--dur-3)}
