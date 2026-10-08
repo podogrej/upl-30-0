@@ -28,13 +28,22 @@ module.exports = async (req, res) => {
     // only the first attempt of the day from this device is official: try to insert it as official straight away,
     // the unique index season_seeds_official_uq (audit V2) rejects a second one with 409
     let official = daily;
+    // chat-league attempt (free play: classic, normal, all years; marked by the browser): season_seeds.league, counted by api/_league.js dayBest
+    const attempt = !daily && b.league === true && b.format === 'classic' && b.mode === 'normal';
+    if (attempt) {   // retry after a timeout: same squad and year, not played yet -> the same seed, so one season never burns two attempts
+      stage = 'league';
+      const [p] = await sb(`season_seeds?device_id=eq.${b.device_id}&day=eq.${day}&league=is.true&used_by=is.null&xi_hash=eq.${xiHash(b.xi)}&select=id,seed,xi_hash,year,used_by&order=created_at.desc&limit=1`).catch(() => []) || [];
+      if (sameAttempt(p, b)) return res.status(200).json({ seed_id: p.id, seed: p.seed, official: false });
+    }
     stage = 'insert';
     const seed = crypto.randomInt(1, 2147483647);
-    const row = { device_id: b.device_id, xi_hash: xiHash(b.xi), seed, day, daily, official, formation: String(b.formation || '').slice(0, 8), mode: String(b.mode || '').slice(0, 12), format: String(b.format || '').slice(0, 12), year: +b.year || null };
+    const row = { device_id: b.device_id, xi_hash: xiHash(b.xi), seed, day, daily, official, ...(attempt ? { league: true } : {}), formation: String(b.formation || '').slice(0, 8), mode: String(b.mode || '').slice(0, 12), format: String(b.format || '').slice(0, 12), year: +b.year || null };
     let ins;
     try { [ins] = await sb('season_seeds?select=id', { method: 'POST', prefer: 'return=representation', body: row }) || []; }
     catch (e) {
-      if (!(official && (e.status === 409 || /23505/.test(e.body || '')))) throw e;
+      // sql/v079_league_seeds.sql not applied yet: issue the seed without the attempt mark (it does not count for chat leagues)
+      if (row.league && /'league' column/.test(e.body || '')) { delete row.league; [ins] = await sb('season_seeds?select=id', { method: 'POST', prefer: 'return=representation', body: row }) || []; return res.status(200).json({ seed_id: ins && ins.id, seed, official }); }
+      if (!(daily && official && (e.status === 409 || /23505/.test(e.body || '')))) throw e;
       // official attempt already issued (client retry after a timeout, parallel request): same squad, not played yet -> the same seed again
       stage = 'daily';
       const [p] = await sb(`season_seeds?device_id=eq.${b.device_id}&day=eq.${day}&daily=is.true&official=is.true&select=id,seed,xi_hash,year,used_by&limit=1`) || [];

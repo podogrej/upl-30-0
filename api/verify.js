@@ -3,6 +3,7 @@
 // and recomputes the season with the same engine as the game (lib/engine.js). Result: seasons.verified = true/false.
 const crypto = require('crypto');
 const { sb, rateLimit } = require('./_device.js');   // DB requests with the service key
+const L = require('./_league.js');   // chat leagues: credit verified free-play seasons
 const xiHash = xi => crypto.createHash('sha256').update(xi.map(x => `${x.id}|${x.slot}|${x.c}|${x.y}`).join(';')).digest('hex');
 let E = null;
 const CHAL_OLD_BEFORE = '2026-10-01T14:56:00Z';   // since this merge (0.64) challenges are created only against "League of Legends"
@@ -24,7 +25,7 @@ function yearOk(row, E, chalYearOk, prev) {
 
 // The previous site version stays open for players (browser cache, Mini App): if simulation didn't change between versions, add it here
 // so its seasons are verified by the new engine. History for 0.57-0.64 is in CHANGELOG.
-const PREV_VERSIONS = ['0.77.1', '0.77'];   // only versions with identical simulation; others get null ("not verified"). Keeping it short also blocks forged version (audit P1-2)
+const PREV_VERSIONS = ['0.78', '0.77.1'];   // only versions with identical simulation; others get null ("not verified"). Keeping it short also blocks forged version (audit P1-2)
 
 // main check: returns [true|false|null, reason]; null = cannot verify (old version etc.)
 function check(row, seedRow, opts = {}) {
@@ -43,6 +44,9 @@ function checkCore(row, seedRow, { chalYearOk = false, prev = false } = {}) {
   // formation, mode, format and year must match what the seed was issued for (old seeds may lack these fields)
   for (const k of ['formation', 'mode', 'format']) if (seedRow[k] != null && seedRow[k] !== '' && String(seedRow[k]) !== String(row[k])) return [false, `${k}: seed видано для «${seedRow[k]}»`];
   if (seedRow.year != null && +seedRow.year !== +row.year) return [false, `рік: seed видано для ${seedRow.year}`];
+  // a daily draft season needs a daily seed (practice tries use ordinary seeds); a daily seed is never spent on another season
+  if (row.day && !row.practice && seedRow.daily !== true) return [false, 'seed не для драфту дня'];
+  if (!row.day && seedRow.daily === true) return [false, 'seed драфту дня для іншого сезону'];
   if (!E.FORMATS[row.format]) return [false, 'невідомий формат'];
   if (!E.MODES[row.mode]) return [false, 'невідомий режим'];
   if (!yearOk(row, E, chalYearOk, prev)) return [false, `суперники ${row.year} не для формату ${row.format}`];
@@ -92,12 +96,10 @@ function checkCore(row, seedRow, { chalYearOk = false, prev = false } = {}) {
 // Row exists (browser inserted it via the submit button): overwrite numbers and set verified; otherwise insert it.
 // fresh: first verification of the season -> one upsert (no row can exist for this official attempt except a legacy browser row)
 async function syncDaily(row, seedRow, fresh) {
-  if (!row.day || row.verified !== true || row.practice || !seedRow || !seedRow.official || +seedRow.used_by !== +row.id) return false;
+  if (!row.day || row.verified !== true || row.practice || !seedRow || seedRow.daily !== true || !seedRow.official || +seedRow.used_by !== +row.id) return false;
   const day = String(row.day).slice(0, 10), dev = encodeURIComponent(String(row.device_id));
   const res = { w: row.w, d: row.d, l: row.l, pts: row.w * 3 + row.d, gf: row.gf, ga: row.ga, place: row.place, formation: row.formation, xp: row.xp == null ? null : +row.xp,
     xi: (row.xi || []).map(x => [x.n, x.slot, x.r, x.c, x.y]), verified: true };
-  // group league boards: bind a result submitted before the browser knew the season id to this season
-  if (row.tg_user_id) await sb(`league_results?day=eq.${day}&tg_user_id=eq.${+row.tg_user_id}&season_id=is.null`, { method: 'PATCH', prefer: 'return=minimal', body: { season_id: row.id } });
   if (!fresh) {   // repeated verify: only the numbers are rewritten, the name in the row stays (e.g. anonymised after account deletion)
     const upd = await sb(`daily_results?day=eq.${day}&device_id=eq.${dev}`, { method: 'PATCH', prefer: 'return=representation', body: res });
     if (upd && upd.length) return true;
@@ -139,7 +141,8 @@ async function verifyById(id, row) {
     sb(`seasons?id=eq.${id}`, { method: 'PATCH', prefer: 'return=minimal', body: { verified: v, verify_note: String(note).slice(0, 200) } }),
     v === true && seedRow ? sb(`season_seeds?id=eq.${seedRow.id}`, { method: 'PATCH', prefer: 'return=minimal', body: { used_by: id } }) : null]);
   if (v === true && seedRow) await syncDaily({ ...row, verified: true }, { ...seedRow, used_by: id }, true);
-  const fl = v === true ? await flRecord(row, id) : undefined;
+  // friends league attempt and chat leagues are independent; a chat league failure never fails the verification
+  const [fl] = v === true ? await Promise.all([flRecord(row, id), L.creditSeason({ ...row, verified: true }, seedRow).catch(e => console.error('chat leagues', e.message))]) : [];
   return { verified: v, note, fl };
 }
 

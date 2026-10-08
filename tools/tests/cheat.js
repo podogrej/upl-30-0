@@ -41,7 +41,7 @@ global.fetch = async (url, o = {}) => {
     }
     return err(404, { code: 'PGRST202' });
   }
-  if (m === 'POST' && t === 'season_seeds') { const b = JSON.parse(o.body); if (b.official && DB.season_seeds.some(x => x.official && x.daily && x.device_id === b.device_id && x.day === b.day)) return err(409, { code: '23505', message: 'duplicate key value violates unique constraint "season_seeds_official_uq"' }); }
+  if (m === 'POST' && t === 'season_seeds') { const b = JSON.parse(o.body); if (b.daily && b.official && DB.season_seeds.some(x => x.official && x.daily && x.device_id === b.device_id && x.day === b.day)) return err(409, { code: '23505', message: 'duplicate key value violates unique constraint "season_seeds_official_uq"' }); }
   if (m === 'POST' && t !== 'season_seeds' && t !== 'daily_results' && !u.searchParams.get('on_conflict')) {   // rows written by /api/save
     const list = [].concat(JSON.parse(o.body));
     if (t === 'seasons' && !ERA_COL && list.some(b => 'era' in b)) return err(400, { code: 'PGRST204', message: "Could not find the 'era' column of 'seasons' in the schema cache" });   // simulate DB without the era column
@@ -210,6 +210,25 @@ function honestXi(formation) {
   const before = ins.pts; const v4 = await call(verH, { season_id: drow4.id });
   const t5 = !ds4.j.official && ins.pts === before && DB.daily_results.filter(x => x.device_id === dev3).length === 1;
   if (!t5) bad++; console.log(`${t5 ? '✓' : '✗'} виклик дня: друга спроба (verified=${v4.j.verified}) не змінює таблицю дня`);
+  // a chat-league attempt seed (or any free-play seed) cannot carry a daily draft season: unlimited daily tries otherwise
+  const dev5 = crypto.randomUUID();
+  const ls = await call(seedH, { device_id: dev5, xi: dxi, formation: D.formation, mode: 'normal', format: 'classic', year: D.year, league: true });
+  const lq = E.run({ xi: SX(dxi), mode: 'normal', format: 'classic', year: D.year, seed: ls.j.seed });
+  const lrow = { ...drow, id: DB.seasons.length + 1, device_id: dev5, mode: 'normal', seed: ls.j.seed, seed_id: ls.j.seed_id, perfect: lq.W === 30, w: lq.W, d: lq.D, l: lq.L, pts: lq.pts, place: lq.place, gf: lq.gf, ga: lq.ga, nickname: 'Обхід', verified: null };
+  DB.seasons.push(lrow);
+  const lv = await call(verH, { season_id: lrow.id });
+  const lseed = DB.season_seeds.find(x => x.id === ls.j.seed_id) || {};
+  const t6 = lseed.league === true && !lseed.official && lv.j.verified === false && !DB.daily_results.some(x => x.device_id === dev5);
+  if (!t6) bad++; console.log(`${t6 ? '✓' : '✗'} виклик дня: сезон дня на seed спроби ліги — відхилено, таблиця дня не змінена (${lv.j.note})`);
+  // and a daily seed is not spent on another (non-daily) season
+  const dev6 = crypto.randomUUID();
+  const ds6 = await call(seedH, { device_id: dev6, xi: dxi, formation: D.formation, mode: 'normal', format: 'classic', year: D.year, daily: true });
+  const dq6 = E.run({ xi: SX(dxi), mode: 'normal', format: 'classic', year: D.year, seed: ds6.j.seed });
+  const row6 = { ...drow, id: DB.seasons.length + 1, device_id: dev6, mode: 'normal', day: null, seed: ds6.j.seed, seed_id: ds6.j.seed_id, perfect: dq6.W === 30, w: dq6.W, d: dq6.D, l: dq6.L, pts: dq6.pts, place: dq6.place, gf: dq6.gf, ga: dq6.ga, verified: null };
+  DB.seasons.push(row6);
+  const v6 = await call(verH, { season_id: row6.id });
+  const t7 = v6.j.verified === false;
+  if (!t7) bad++; console.log(`${t7 ? '✓' : '✗'} seed драфту дня для звичайного сезону — відхилено (${v6.j.note})`);
 
   // ===== writes only via server with device secret (/api/save); seed requires the secret =====
   const saveH = require(path.join(ROOT, 'api', 'save.js'));
@@ -322,21 +341,12 @@ function honestXi(formation) {
   for (const [uid, why] of [[503, 'вийшов з групи'], [504, 'вигнаний'], [599, 'не з цієї групи']]) {
     const x = await join(uid); ok(`ліга: ${why} — 403, у лігу не додано`, x.c === 403 && !inLeague(uid), `${x.c}`); }
   const x6 = await call(leagueH, { initData: initData({ id: 599, first_name: 'U599' }, 'g' + CHAT), result: { w: 20, d: 5, l: 5, pts: 65, place: 2, gf: 60, ga: 30, day: today } });
-  ok('ліга: чужий із результатом — вступ пропущено (результат лише в його ліги)', x6.c === 200 && !(x6.j.joined || []).length && !inLeague(599) && !DB.league_results.some(r => String(r.tg_user_id) === '599'), `${x6.c} ${JSON.stringify(x6.j)}`);
-  // joining a new group's league after the daily draft carries today's verified result over too
-  const CHAT2 = -100777; DB.leagues.push({ chat_id: CHAT2, title: 'Нова група' }); MEMBERS[CHAT2] = { 501: 'member', 502: 'member', 505: 'member' };
-  const base = { practice: false, verified: true, day: today, w: 20, d: 5, l: 5, pts: 65, place: 2, gf: 60, ga: 30, formation: '4-4-2', created_at: new Date().toISOString() };
-  DB.seasons.push({ ...base, id: 9001, tg_user_id: 501 }, { ...base, id: 9002, tg_user_id: 502, w: 22, pts: 71 }, { ...base, id: 9003, tg_user_id: 505, verified: false });
-  DB.league_results.push({ chat_id: CHAT, day: today, tg_user_id: 501, name: 'U501', w: 20, d: 5, l: 5, pts: 65, place: 2, gf: 60, ga: 30, season_id: 9001, created_at: new Date().toISOString() });
-  const in2 = uid => DB.league_results.find(r => String(r.chat_id) === String(CHAT2) && String(r.tg_user_id) === String(uid) && r.day === today);
+  ok('ліга: чужий із результатом від браузера — 403, нічого не записано (результати пише лише сервер)', x6.c === 403 && !inLeague(599) && !DB.league_results.some(r => String(r.tg_user_id) === '599'), `${x6.c} ${JSON.stringify(x6.j)}`);
+  // joining a second group's league: membership row only; carrying today's best attempt over needs a player link and seeds (tested in v079.js)
+  const CHAT2 = -100777; DB.leagues.push({ chat_id: CHAT2, title: 'Нова група' }); MEMBERS[CHAT2] = { 501: 'member' };
+  DB.seasons.push({ practice: false, verified: true, day: null, format: 'classic', mode: 'normal', w: 20, d: 5, l: 5, pts: 65, place: 2, gf: 60, ga: 30, formation: '4-4-2', created_at: new Date().toISOString(), id: 9001, tg_user_id: 501 });
   const j21 = await call(leagueH, { initData: initData({ id: 501, first_name: 'U501' }, 'g' + CHAT2) });
-  ok('ліга: вступ після драфту дня — результат з іншої ліги перенесено', j21.c === 200 && in2(501) && in2(501).season_id === 9001 && in2(501).pts === 65, `${j21.c} ${JSON.stringify(j21.j)}`);
-  await call(leagueH, { initData: initData({ id: 501, first_name: 'U501' }, 'g' + CHAT2) });
-  ok('ліга: повторний вступ — без дубля', DB.league_results.filter(r => String(r.chat_id) === String(CHAT2) && String(r.tg_user_id) === '501').length === 1);
-  await call(leagueH, { initData: initData({ id: 502, first_name: 'U502' }, 'g' + CHAT2) });
-  ok('ліга: інших ліг немає — результат узято з перевіреного сезону дня', in2(502) && in2(502).season_id === 9002 && in2(502).pts === 71);
-  await call(leagueH, { initData: initData({ id: 505, first_name: 'U505' }, 'g' + CHAT2) });
-  ok('ліга: неперевірений сезон — не переноситься', !in2(505));
+  ok('ліга: вступ у другу лігу; сезон без спроби ліги (seed) і без привʼязки гравця не переноситься', j21.c === 200 && j21.j.joined[0].chat_id === String(CHAT2) && !DB.league_results.some(r => String(r.chat_id) === String(CHAT2)), `${j21.c} ${JSON.stringify(j21.j)}`);
   // group migrated to a supergroup: old button (old chat_id) moves the league to the new id and adds the player there
   const OLD = -5000001, NEW = -1005000001; DB.leagues.push({ chat_id: OLD, title: 'Стара група' });
   DB.league_members.push({ chat_id: OLD, tg_user_id: 501, name: 'U501' }); MIGRATED[OLD] = NEW; MEMBERS[NEW] = { 506: 'member', 501: 'member' };

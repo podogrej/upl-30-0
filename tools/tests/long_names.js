@@ -14,12 +14,12 @@ const OVER=()=>{const W=innerWidth,bad=[];const clip=el=>{for(let p=el.parentEle
   const today=[...Array(12)].map((_,i)=>({name:TGN,u:i===5?'abcdefgh':null,w:20,d:5,l:5,pts:65-i,gf:50,ga:30}));
   const api={'/api/league':async()=>({json:{title:'Хто програв — біжить по мʼяч',day:'2026-10-02',today,members:40,standings:today.map((r,i)=>({name:TGN,u:r.u,wins:12-i,days:14,pts:600}))}})};
   const init=`localStorage.setItem('upl30_player',JSON.stringify({id:'p1',name:'${NICK}',anon_name:'silent_owl',public_id:'abcdefgh'}));localStorage.setItem('upl30_team','${TEAM}');`;
-  const {b,pg,errs}=await openSite({db:makeDB({}),api,init,viewport:{width:w,height:800},wait:1200});
+  const {b,pg,errs}=await openSite({db:makeDB({},{tg_leagues_mine:()=>[{chat_id:-1,title:'Хто програв — біжить по мʼяч'},{chat_id:-2,title:'Ветерани дворового футболу Оболоні'}]}),api,init,viewport:{width:w,height:800},wait:1200});
   const OUT=require('path').join(__dirname,'out');let shot=0;
   const chk=async name=>{await pg.waitForTimeout(250);await pg.screenshot({path:`${OUT}/long_${w}_${++shot}.png`});const o=await pg.evaluate(OVER);T.check(o.sw<=o.W+1&&!o.bad.length,`${w}px · ${name}: нічого не вилазить`+(o.bad.length||o.sw>o.W+1?` — ширина ${o.sw}>${o.W}: ${o.bad.join('; ')}`:''));};
   await chk('головна, шапка з ніком 20 символів');
-  await pg.evaluate(()=>window.__dbg.leagueLoad('-1',true));await chk('ліга чату (імена 24 «Ш»)');
-  await pg.click('#leagueAll');await chk('«Уся таблиця» · Сьогодні');await pg.click('#lgTabs button[data-t=st]');await chk('«Уся таблиця» · Залік');await pg.click('#viewClose');
+  await pg.click('#tablesOpen');await pg.click('#tbTabs .tab[data-tb=chats]');await pg.waitForTimeout(600);await chk('«Мої чати» · Сьогодні (імена 24 «Ш», довгі назви чатів)');
+  await pg.click('#lgTabs button[data-t=st]');await chk('«Мої чати» · Залік');await pg.click('#homeBtn');
   await pg.evaluate(n=>{const rows=[...Array(5)].map((_,i)=>({id:i+1,device_id:'d',nickname:n,w:20,d:5,l:5,pts:65,place:1,gf:60,ga:20,formation:'4-4-2',mode:'normal',club:'dynamo-kyiv',created_at:'2026-10-01T10:00:00Z',players:{name:n,public_id:'abcdefgh'}}));
     document.getElementById('viewBody').innerHTML=`<div id="boardBody">${window.__dbg.boardHtml(rows,'main')}</div>`;document.getElementById('viewBox').hidden=false;},NICK);
   await chk('загальна таблиця (нік 20)');await pg.click('#viewClose');
