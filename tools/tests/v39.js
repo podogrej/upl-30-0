@@ -28,7 +28,7 @@ const api={'/api/seed':async req=>callApi(seedH,req.body),'/api/verify':async re
 async function run(MODE,b){const T=checker('v39 '+MODE);const v39=MODE==='new';const {db,P}=mkDB(v39);const DB=db.DB;
  const {pg,errs,log}=await openSite({b,db,api,viewport:{width:430,height:900},wait:1500});
  const player=await pg.evaluate(()=>JSON.parse(localStorage.getItem('upl30_player')||'null'));
- const board=async()=>{await pg.evaluate(()=>document.getElementById('homeBtn').click());await pg.click('#boardOpen');await pg.waitForTimeout(700);
+ const board=async()=>{await pg.evaluate(()=>document.getElementById('homeBtn').click());await pg.click('#tablesOpen');await pg.waitForTimeout(700);
    return pg.$$eval('#boardBody tr[data-q]',trs=>trs.map(t=>(t.className==='me'?'* ':'  ')+t.children[1].innerText.split('\n')[0]));};
  if(v39){
   T.check(player&&player.id===P.players[0].id&&player.anon_name,'гравець після завантаження: '+JSON.stringify(player));
@@ -55,24 +55,24 @@ async function run(MODE,b){const T=checker('v39 '+MODE);const v39=MODE==='new';c
  let rows=await board();T.check(rows.length===1&&rows[0].startsWith('* ')&&(!v39||rows[0].includes('andrii')),'таблиця: мій рядок '+JSON.stringify(rows));
  await pg.screenshot({path:path.join(OUT,`v39_board_${MODE}.png`)});
  // board opened while still loading in background (cache entry without rows): no error, rows appear later
- {await pg.click('#viewClose');const e0=errs.length;await pg.evaluate(()=>{window.__dbg.boardStale();window.__dbg.boardFetch('main').catch(()=>{});document.getElementById('boardOpen').click();});
+ {await pg.click('#homeBtn');const e0=errs.length;await pg.evaluate(()=>{window.__dbg.boardStale();window.__dbg.boardFetch('main').catch(()=>{});document.getElementById('tablesOpen').click();});
   await pg.waitForTimeout(800);const nr=await pg.$$eval('#boardBody tr[data-q]',e=>e.length);T.check(errs.length===e0&&nr>=1,'таблиця під час фонового завантаження: без помилки, рядки з\'явились ('+nr+(errs.length>e0?'; '+errs.slice(e0).join(' | '):'')+')');}
  // BOARD_FROM (global board reset): enabled -> old season hidden; disabled (current) -> all seasons
- {await pg.click('#viewClose');const old={...DB.seasons[DB.seasons.length-1],id:9999,nickname:'old_one',created_at:'2026-09-01T10:00:00Z',pts:90};DB.seasons.push(old);
+ {await pg.click('#homeBtn');const old={...DB.seasons[DB.seasons.length-1],id:9999,nickname:'old_one',created_at:'2026-09-01T10:00:00Z',pts:90};DB.seasons.push(old);
   const r2=await board(),bf=await pg.evaluate(()=>window.__dbg.BOARD_FROM),bt=await pg.textContent('#boardBody');
   T.check(bf?r2.length===1&&/Сезони з /.test(bt):r2.length===2&&!/Сезони з /.test(bt),'0.69: BOARD_FROM '+(bf?'увімкнено — старого сезону немає, є «Сезони з …»':'вимкнено — у таблиці всі сезони, без підпису'));
-  DB.seasons.pop();await pg.click('#viewClose');await board();}
- T.check(await pg.evaluate(()=>{const t=document.querySelector('#viewBody .tabs');return !document.querySelector('[data-board="anti"]')&&!!document.querySelector('[data-board="oneclub"]')&&t&&!t.hidden;}),'0.67: вкладки «Антисезон» немає, є «Один клуб» (режим повернуто)');
+  DB.seasons.pop();await board();}
+ T.check(await pg.evaluate(()=>{const t=document.querySelector('#tbAll .seg');return !document.querySelector('[data-board="anti"]')&&!!document.querySelector('[data-board="oneclub"]')&&t&&!t.hidden;}),'0.67: вкладки «Антисезон» немає, є «Один клуб» (режим повернуто)');
  await pg.click('#boardBody tr.me');await pg.waitForTimeout(500);
- T.check(!!(await pg.$('#viewBack'))&&!!(await pg.$('#viewBody .slot')),'рядок відкриває сезон із кнопкою «До таблиці»');
- await pg.click('#viewBack');await pg.waitForTimeout(500);T.check((await pg.$$('#boardBody tr[data-q]')).length===1,'«До таблиці» повертає таблицю');await pg.click('#viewClose');
+ T.check(!(await pg.$('#viewBack'))&&!!(await pg.$('#viewBody .slot')),'рядок відкриває сезон шторкою над екраном «Таблиці»');
+ await pg.click('#viewClose');await pg.waitForTimeout(500);T.check((await pg.$$('#boardBody tr[data-q]')).length===1&&await pg.$eval('#s9',e=>!e.hidden),'«Закрити» — назад до таблиці');
  if(v39){
   T.check(/\S/.test(await pg.textContent('#acctBtn .me-n')),'шапка: поруч з аватаркою — ім\'я (0.62)');await pg.click('#acctBtn');await pg.waitForTimeout(400);T.check(await pg.$eval('#s6',e=>!e.hidden),'аватарка з ім\'ям у шапці відкриває свою сторінку');
   await openSet(pg);await pg.fill('#ppNameIn','Andriy 2');await pg.click('#ppNameSave');await pg.waitForTimeout(500);
-  rows=await board();T.check(rows[0]==='* andriy_2','перейменування на своїй сторінці → у таблиці «andriy_2»: '+rows[0]+' · '+await pg.evaluate(()=>(document.getElementById('ppNameMsg')||{}).textContent));await pg.click('#viewClose');
+  rows=await board();T.check(rows[0]==='* andriy_2','перейменування на своїй сторінці → у таблиці «andriy_2»: '+rows[0]+' · '+await pg.evaluate(()=>(document.getElementById('ppNameMsg')||{}).textContent));await pg.click('#homeBtn');
   await pg.click('#acctBtn');await pg.waitForTimeout(300);await openSet(pg);await pg.fill('#ppNameIn','');await pg.click('#ppNameSave');await pg.waitForTimeout(500);
   T.check(/ти знову/.test(await setMsg(pg)),'порожнє ім\'я — знову анонімний');await pg.click('#homeBtn');
-  rows=await board();T.check(rows[0]==='* '+player.anon_name.toLowerCase(),'у таблиці анонімне ім\'я: '+rows[0]);await pg.click('#viewClose');
+  rows=await board();T.check(rows[0]==='* '+player.anon_name.toLowerCase(),'у таблиці анонімне ім\'я: '+rows[0]);await pg.click('#homeBtn');
   // 'Andriy 2' -> the field turns it into 'andriy_2'
   // foreign device (same device_id, other secret) cannot rename; the DB enforces the secret, emulated here; real check in setup.sh
  }

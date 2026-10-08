@@ -111,7 +111,7 @@ const order=pg=>pg.$$eval('#ppCab .tro.on[data-tr]',es=>es.map(e=>e.dataset.tr))
  T.check(/Класика.*найкращий/.test((await pg.textContent('.pp-list')).replace(/\s+/g,' ')),'«Найкращий і найгірший XI»: класика');
  await pg.screenshot({path:path.join(MOCK,'player_page_059_guest.png'),fullPage:true});
  // board -> another player's page
- await pg.evaluate(()=>document.getElementById('homeBtn').click());await pg.click('#boardOpen');await pg.waitForTimeout(700);
+ await pg.evaluate(()=>document.getElementById('homeBtn').click());await pg.click('#tablesOpen');await pg.waitForTimeout(700);
  const links=await pg.$$eval('#boardBody a.plink',as=>as.map(a=>a.textContent+'→'+a.dataset.u));
  T.check(links.includes('vitia→vitya234')&&links.includes('petro→'+me.public_id),'таблиця: імена з профілю, нижній регістр, посилання: '+links.join(', '));
  await pg.click('#boardBody a[data-u="vitya234"]');await pg.waitForTimeout(700);

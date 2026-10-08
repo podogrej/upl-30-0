@@ -115,17 +115,17 @@ async function siteChecks(){
   T.check(count(C,/GET seasons/)===0,'новий пристрій, головна: таблиці не підвантажуються, trRetro пропущено (GET seasons = 0)');
   T.check(count(C,/player_profile/)===1&&await pg.evaluate(()=>localStorage.getItem('upl30_tr_retro')==='1'),'перший захід: лічильник трофеїв з сервера один раз, позначка trRetro стоїть');
   // all-time table: request starts on touch, opening uses it
-  C=[];await pg.hover('#boardOpen');await pg.mouse.down();await pg.waitForTimeout(300);const touch=count(C,/GET seasons/);
+  C=[];await pg.hover('#tablesOpen');await pg.mouse.down();await pg.waitForTimeout(300);const touch=count(C,/GET seasons/);
   await pg.mouse.up();await pg.waitForTimeout(700);
   T.check(touch===1&&count(C,/GET seasons/)===1&&await pg.evaluate(()=>!!document.getElementById('boardBody').textContent.trim()&&!document.querySelector('#boardBody .sk-box')),`таблиця за весь час: запит із дотику (${touch}), відкриття без другого (${count(C,/GET seasons/)})`);
-  await pg.click('#viewClose');await pg.waitForTimeout(300);
-  C=[];await pg.click('#boardOpen');await pg.waitForTimeout(700);
-  T.check(count(C,/GET seasons/)===1,'повторне відкриття: свіжі дані одним запитом');await pg.click('#viewClose');await pg.waitForTimeout(300);
-  // day table on home
-  C=[];await pg.click('#lbOpenBtn');await pg.waitForTimeout(700);const lbq=C.filter(k=>/daily_results/.test(k));
-  T.check(lbq.length===1&&!/xi|select=\*/.test(lbq[0]),'таблиця дня: один запит, без xi і без * ('+(lbq[0]||'').slice(0,120)+')');
+  await pg.click('#homeBtn');await pg.waitForTimeout(300);
+  C=[];await pg.click('#tablesOpen');await pg.waitForTimeout(700);
+  T.check(count(C,/GET seasons/)===1,'повторне відкриття: свіжі дані одним запитом');
+  C=[];await pg.click('#tbTabs .tab[data-tb=chats]');await pg.waitForTimeout(700);
+  T.check(count(C,/rpc\/tg_leagues_mine/)===1&&count(C,/GET seasons|daily_results/)===0,'«Мої чати»: один запит списку чатів, без таблиць');await pg.click('#homeBtn');await pg.waitForTimeout(300);
+  T.check(count(C,/daily_results/)===0&&!(await pg.$('#lbOpenBtn')),'на головній таблиці дня більше немає');
   // classic season: one save request with trophies, no separate trophies request, no table prefetch afterwards
-  C=[];await pg.click('#lbOpenBtn');await pg.click('#freeOpen');await pg.evaluate(()=>window.__dbg.setFmt('classic'));await pg.click('#startBtn');await draftSeason(pg);await pg.waitForTimeout(4000);
+  C=[];await pg.click('#freeOpen');await pg.evaluate(()=>window.__dbg.setFmt('classic'));await pg.click('#startBtn');await draftSeason(pg);await pg.waitForTimeout(4000);
   T.check(count(C,/API save:season \+trophies/)===1&&count(C,/API save:trophies/)===0,'сезон: нові трофеї в запиті сезону ('+C.filter(k=>/API/.test(k)).join(', ')+')');
   T.check(db.DB.trophies.some(x=>x.trophy==='ms1')&&count(C,/GET seasons/)===0,'сезон: трофей записано, таблиці після сезону не підвантажуються');
   const srv=await pg.evaluate(()=>({at:+localStorage.getItem('upl30_tr_srv_at'),ids:localStorage.getItem('upl30_tr_srv')}));

@@ -87,56 +87,41 @@ function mkDB(n,fmt5){
  // iPad home
  await pg.setViewportSize({width:820,height:1180});await home(pg);await pg.waitForTimeout(400);await shot(pg,'home_ipad',true);
  await b.close();
- // ---- B. site with a DB: all-time table
+ // ---- B. site with a DB: all-time table on the Tables screen
  const bb=await launch();
  {const {db}=mkDB(3);const A=await openSite({b:bb,db,signed:true,viewport:{width:390,height:844},wait:1500});const p=A.pg;
-  await p.click('#boardOpen');await p.waitForTimeout(900);
-  const bd=await p.evaluate(()=>{const bx=document.getElementById('viewBox'),r=bx.getBoundingClientRect(),box=bx.querySelector('.box'),c=document.getElementById('viewClose'),cr=c.getBoundingClientRect();
-    return {hidden:bx.hidden,full:bx.classList.contains('full'),r:[r.left,r.top,r.width,r.height],bw:innerWidth,bh:innerHeight,title:document.getElementById('viewTitle').textContent,close:c.textContent.trim(),ch:Math.round(cr.height),cw:Math.round(cr.width),
+  await p.click('#tablesOpen');await p.waitForTimeout(900);
+  const bd=await p.evaluate(()=>{const s=document.getElementById('s9');
+    return {shown:!s.hidden,sheet:!document.getElementById('viewBox').hidden,title:s.querySelector('h2').textContent,tab:document.querySelector('#tbTabs .tab.on').textContent,back:!document.getElementById('backBtn').hidden,
       chips:[...document.querySelectorAll('#boardBody .lv')].map(x=>x.textContent),words:[...document.querySelectorAll('#boardBody .lvt')].map(x=>x.textContent),
-      txt:document.getElementById('viewBody').innerText,bg:getComputedStyle(bx).backgroundColor,rows:document.querySelectorAll('#boardBody tr[data-q]').length,sub:[...document.querySelectorAll('#boardBody td.nm .sub')].map(x=>x.innerText.replace(/\s+/g,' '))};});
-  T.check(!bd.hidden&&bd.full&&bd.r[0]===0&&bd.r[1]===0&&bd.r[2]===bd.bw&&bd.r[3]===bd.bh,`таблиця: на весь екран (${bd.r.join('×')} з ${bd.bw}×${bd.bh})`);
-  T.check(bd.title==='Таблиця за весь час'&&bd.close==='Закрити'&&bd.ch>=44&&bd.cw>=44,`заголовок «${bd.title}», кнопка «${bd.close}» ${bd.cw}×${bd.ch}`);
+      txt:document.getElementById('tbAll').innerText,rows:document.querySelectorAll('#boardBody tr[data-q]').length};});
+  T.check(bd.shown&&!bd.sheet&&bd.back,'таблиця: окремий екран «Таблиці» з «Назад», не шторка');
+  T.check(bd.title==='Таблиці'&&bd.tab==='За весь час',`заголовок «${bd.title}», вкладка «${bd.tab}»`);
   T.check(bd.rows===5&&!bd.chips.includes('Звичайний')&&!bd.words.includes('Звичайний')&&!/Звичайний/.test(bd.txt),'таблиця: позначки «Звичайний» немає');
   T.check(bd.words.includes('Складний')&&!bd.chips.includes('Складний'),'таблиця: «Складний» — просте слово біля схеми ('+bd.words.join()+')');
   T.check(!/Поруч з іменем/.test(bd.txt),'таблиця: службового рядка про позначку режиму немає');
   await shot(p,'board_phone_dark');await theme(p,'light');await shot(p,'board_phone_light');await theme(p,'dark');
   await p.click('#boardBody tr[data-q]');await p.waitForTimeout(600);
-  const sq0=await p.evaluate(()=>history.state&&history.state.sheet);
-  T.check(await p.$eval('#viewBox',e=>!e.hidden&&e.classList.contains('full'))&&/До таблиці/.test(await p.textContent('#viewBody')),'склад з таблиці: той самий екран, «До таблиці» є');
+  T.check(await p.evaluate(()=>!document.getElementById('viewBox').hidden&&history.state&&history.state.sheet===1&&!document.getElementById('s9').hidden),'склад з таблиці: шторка над екраном «Таблиці», один запис історії');
   await shot(p,'squad_phone_dark');
-  T.check(sq0===2,'склад з таблиці: окремий запис історії');
-  await p.click('#viewBack');await p.waitForTimeout(400);
-  T.check(await p.$eval('#viewBox',e=>!e.hidden&&e.classList.contains('full'))&&/Таблиця за весь час/.test(await p.textContent('#viewTitle'))&&await p.evaluate(()=>history.state.sheet===1),'«До таблиці» повертає до таблиці (запис історії знято)');
-  await p.click('#boardBody tr[data-q]');await p.waitForTimeout(500);await p.click('#viewClose');await p.waitForTimeout(500);
-  T.check(await p.evaluate(()=>!(history.state&&history.state.sheet)&&document.getElementById('viewBox').hidden),'«Закрити» зі складу закриває все й знімає обидва записи історії');
-  await p.click('#boardOpen');await p.waitForTimeout(500);await p.click('#viewClose');await p.waitForTimeout(400);
-  T.check(await p.$eval('#viewBox',e=>e.hidden&&!e.classList.contains('full')),'«Закрити» закриває таблицю і знімає повний екран');
-  // system back / swipe closes the sheet and leaves the screen underneath alone
-  await p.click('#freeOpen');await p.waitForTimeout(300);await home(p);await p.waitForTimeout(300);
-  const sec0=await p.evaluate(()=>window.__dbg.CUR_SEC!==undefined?window.__dbg.CUR_SEC:document.querySelector('section:not([hidden])').id);
-  await p.click('#boardOpen');await p.waitForTimeout(500);
+  await p.click('#viewClose');await p.waitForTimeout(500);
+  T.check(await p.evaluate(()=>!(history.state&&history.state.sheet)&&document.getElementById('viewBox').hidden&&!document.getElementById('s9').hidden),'«Закрити» зі складу — назад до таблиці, запис історії знято');
+  await p.click('#boardBody tr[data-q]');await p.waitForTimeout(500);
   await p.evaluate(()=>history.back());await p.waitForTimeout(500);
-  const bk=await p.evaluate(()=>({hidden:document.getElementById('viewBox').hidden,full:document.getElementById('viewBox').classList.contains('full'),sec:window.__dbg.CUR_SEC!==undefined?window.__dbg.CUR_SEC:document.querySelector('section:not([hidden])').id,st:history.state&&history.state.sheet}));
-  T.check(bk.hidden&&!bk.full&&bk.sec===sec0&&!bk.st,`системне «назад» закриває таблицю, екран під нею не змінюється (${sec0} → ${bk.sec})`);
-  await p.click('#boardOpen');await p.waitForTimeout(400);await p.click('#boardBody tr[data-q]');await p.waitForTimeout(500);
-  await p.evaluate(()=>history.back());await p.waitForTimeout(400);
-  T.check(await p.evaluate(()=>!document.getElementById('viewBox').hidden&&/Таблиця за весь час/.test(document.getElementById('viewTitle').textContent)),'системне «назад» зі складу — до таблиці');
-  await p.evaluate(()=>history.back());await p.waitForTimeout(400);
-  T.check(await p.evaluate(()=>document.getElementById('viewBox').hidden),'ще раз «назад» — таблицю закрито');
-  // Telegram fullscreen: title row sits below Telegram's own buttons
+  T.check(await p.evaluate(()=>document.getElementById('viewBox').hidden&&!document.getElementById('s9').hidden),'системне «назад» зі складу — до таблиці');
+  await p.evaluate(()=>history.back());await p.waitForTimeout(500);
+  T.check(await p.evaluate(()=>!document.getElementById('s1').hidden&&document.getElementById('s9').hidden),'ще раз «назад» — головна');
+  // Telegram fullscreen: the screen title sits below Telegram's own buttons
   await p.evaluate(()=>{document.documentElement.classList.add('tgfs');document.documentElement.style.setProperty('--tg-safe-area-inset-top','60px');document.documentElement.style.setProperty('--tg-content-safe-area-inset-top','54px');});
-  await p.click('#boardOpen');await p.waitForTimeout(400);
-  const fsT=await p.evaluate(()=>({close:document.getElementById('viewClose').getBoundingClientRect().top,title:document.getElementById('viewTitle').getBoundingClientRect().top}));
-  T.check(fsT.close>=114&&fsT.title>=114,`tgfs: заголовок і «Закрити» нижче кнопок Telegram (${Math.round(fsT.title)}/${Math.round(fsT.close)}px ≥114)`);
-  await p.click('#viewClose');await p.waitForTimeout(400);
+  await p.click('#tablesOpen');await p.waitForTimeout(400);
+  const fsT=await p.evaluate(()=>({back:document.getElementById('backBtn').getBoundingClientRect().top,title:document.querySelector('#s9 h2').getBoundingClientRect().top}));
+  T.check(fsT.back>=114&&fsT.title>=114,`tgfs: «Назад» і заголовок нижче кнопок Telegram (${Math.round(fsT.back)}/${Math.round(fsT.title)}px ≥114)`);
   await p.evaluate(()=>{document.documentElement.classList.remove('tgfs');});
   await p.click('#newsBtn');await p.waitForTimeout(200);
-  T.check(await p.$eval('#viewBox',e=>!e.hidden&&!e.classList.contains('full')),'«Що нового» лишається шторкою, не на весь екран');await p.click('#viewClose');
-  await p.setViewportSize({width:820,height:1180});await p.click('#boardOpen');await p.waitForTimeout(700);await shot(p,'board_ipad');
-  const wd=await p.evaluate(()=>{const b=document.querySelector('#viewBox .box').getBoundingClientRect(),r=document.getElementById('viewBox').getBoundingClientRect();return {w:b.width,full:r.width===innerWidth&&r.height===innerHeight};});
-  T.check(wd.full&&wd.w<=640,'iPad: лист на весь екран, зміст не ширший за 640px ('+wd.w+')');
-  await p.click('#viewClose');
+  T.check(await p.$eval('#viewBox',e=>!e.hidden),'«Що нового» лишається шторкою');await p.click('#viewClose');await p.waitForTimeout(300);
+  await p.setViewportSize({width:820,height:1180});await p.waitForTimeout(300);await shot(p,'board_ipad');
+  const wd=await p.evaluate(()=>document.getElementById('tbAll').getBoundingClientRect().width);
+  T.check(wd<=640,'iPad: таблиця не ширша за 640px ('+wd+')');
   await A.ctx.close();}
  // ---- C. league page: invite card under the round card for small leagues, compact share otherwise
  for(const [n,f5,guest] of [[1,0,0],[2,0,0],[3,0,0],[1,1,0],[2,1,0],[3,1,0],[1,0,1]]){const {db}=mkDB(n,f5);const A=await openSite({b:bb,db,signed:true,viewport:{width:390,height:844},query:'?l=abc222',init:guest?'localStorage.setItem("upl30_player",JSON.stringify({id:"p-x",name:"guest",anon_name:"g",public_id:"gest2345"}))':"localStorage.setItem('upl30_player',JSON.stringify({id:'p-me',name:'andre',anon_name:'calm_owl',public_id:'andr2345'}))",wait:1800});const p=A.pg;
@@ -168,10 +153,10 @@ function mkDB(n,fmt5){
   const api={'/api/auth':async()=>({json:{token_hash:'TH'}}),'/api/league':async()=>({json:{ok:true}})};
   const A=await openSite({b:bb,db,api,tg,init,hash:'#tgWebAppData=x',viewport:{width:430,height:900},wait:1800});const p=A.pg;
   T.check(await p.evaluate(()=>window.__bb.vis===false),'Telegram: на головній BackButton схований');
-  await p.click('#boardOpen');await p.waitForTimeout(500);
-  T.check(await p.evaluate(()=>window.__bb.vis===true),'Telegram: поки таблиця відкрита, BackButton показано');
+  await p.click('#tablesOpen');await p.waitForTimeout(500);
+  T.check(await p.evaluate(()=>window.__bb.vis===true),'Telegram: на екрані «Таблиці» BackButton показано');
   await p.evaluate(()=>window.__bb.cb());await p.waitForTimeout(500);
-  T.check(await p.evaluate(()=>document.getElementById('viewBox').hidden&&window.__bb.vis===false),'Telegram: BackButton закриває таблицю й знову ховається на головній');
+  T.check(await p.evaluate(()=>!document.getElementById('s1').hidden&&window.__bb.vis===false),'Telegram: BackButton веде на головну й знову ховається');
   await A.ctx.close();}
  await bb.close();
  process.exit(T.done());})();

@@ -142,40 +142,38 @@ const sk=(pg,sel)=>pg.evaluate(s=>{const n=[...document.querySelectorAll(s+' .sk
   await p.click('#ppRowName');await wait(650);await p.evaluate(()=>history.back());await wait(500);T.check(!(await p.$('#ppSheet')),'ім’я: системне «назад» закриває');
   await p.click('#ppRowName');await wait(650);await p.mouse.click(195,60);await wait(500);T.check(!(await p.$('#ppSheet')),'ім’я: тап по затемненню закриває');
   T.check(A.errs.length===0,'помилок на сторінці немає '+A.errs.join(' | '));
-  // table: full screen, no backdrop, rises from below, header swipe closes
-  await p.click('#homeBtn');await wait(300);await p.click('#boardOpen');await wait(90);
-  const t0=await geo(p,'#viewBox');await wait(650);const t1=await geo(p,'#viewBox');const bd=await bdInfo(p,'#viewBox .sheet-bd');
-  T.check(t0.top>100&&t1.top===0&&t1.bottom===t1.vh&&bd.display==='none','таблиця: на весь екран виїжджає знизу, затемнення немає');
-  await p.mouse.click(30,30);await wait(400);T.check(!(await st(p)).hidden,'таблиця: тап по краю її не закриває');
-  rel=await drag(p,'#viewHead',420,{steps:10,pause:30,hold:200});await rel();await wait(150);await wait(500);
-  T.check((await st(p)).hidden&&(await st(p)).sheet===0&&(await st(p)).focus==='boardOpen','таблиця: закривається свайпом вниз по шапці, фокус на «Таблиця»');
+  // Tables: a screen, not a sheet; a squad opened from it is a bottom sheet that closes with a header swipe, the table stays
+  await p.click('#homeBtn');await wait(300);await p.click('#tablesOpen');await wait(700);
+  T.check(await p.evaluate(()=>!document.getElementById('s9').hidden&&document.getElementById('viewBox').hidden),'таблиці: окремий екран, без шторки');
+  await p.click('#boardBody tr[data-q]');await wait(700);const sq=await geo(p,'#viewBox .box');
+  T.check(Math.abs(sq.bottom-sq.vh)<=.5,'склад із таблиці — шторка знизу');
+  rel=await drag(p,'#viewHead',420,{steps:10,pause:30,hold:200});await rel();await wait(650);
+  T.check((await st(p)).hidden&&(await st(p)).sheet===0&&await p.evaluate(()=>!document.getElementById('s9').hidden),'склад: закривається свайпом вниз по шапці, екран «Таблиці» лишається');
   await A.ctx.close();}
  {const db=mkDB();const tg={initData:'user=x&hash=abc',initDataUnsafe:{user:{id:1,first_name:'Андрій'},start_param:'g-100555'},colorScheme:'dark',platform:'android'};
   const today=['Олег','Марко','Саша','Дмитро','Іра','Петро','Сергій','Таня'].map((x,i)=>({name:x,w:20-i,d:5,l:5+i,pts:70-3*i,gf:50,ga:30}));
   const api={'/api/auth':async()=>({json:{token_hash:'TH'}}),'/api/league':async req=>{if(req.method==='GET'){return {json:{title:'Футбол по середах',day:'2026-09-28',today,members:20,standings:today.map(t=>({name:t.name,wins:2,days:3}))}};}return {json:{ok:true,joined:[]}};}};
-  // home league card skeleton while the board loads
+  // chat tables: opened from a group button the Tables screen starts on the chats tab; skeleton while the chat loads
   H.hold(/league/,true);
   const A=await openSite({b:bb,db,api,tg,hash:'#tgWebAppData=x',route,viewport:{width:430,height:900},wait:900});const p=A.pg;
-  const lk=await p.evaluate(()=>{const c=document.getElementById('leagueCard');return {hidden:c.hidden,sk:c.querySelectorAll('.sk').length,txt:c.innerText};});
-  T.check(!lk.hidden&&lk.sk>=1&&!/Завантаж/.test(lk.txt),'картка ліги на головній: скелетон замість «Завантажуємо табло…»');
+  await p.click('#tablesOpen');await wait(500);
+  const lk=await p.evaluate(()=>{const c=document.getElementById('tbChats');return {hidden:c.hidden,sk:c.querySelectorAll('.sk').length,txt:c.innerText};});
+  T.check(!lk.hidden&&lk.sk>=1&&!/Завантаж/.test(lk.txt),'«Мої чати»: скелетон замість «Завантажуємо табло…»');
   H.release();await wait(900);
-  const lk2=await p.evaluate(()=>({sk:document.querySelectorAll('#leagueCard .sk').length,txt:document.getElementById('leagueCard').innerText}));
-  T.check(lk2.sk===0&&/Футбол по середах/.test(lk2.txt),'картка ліги: після відповіді скелетона немає');
-  await p.click('#leagueAll');await wait(650);const g=await geo(p,'#viewBox .box');
-  T.check(Math.abs(g.bottom-g.vh)<=.5&&/Футбол по середах/.test(await p.textContent('#viewTitle')),'список ліги («Уся таблиця») — шторка знизу');await shot(p,'league_list_phone_dark');
-  await p.mouse.click(215,50);await wait(500);T.check((await st(p)).hidden&&(await st(p)).focus==='leagueAll','список ліги: тап по затемненню закриває, фокус на «Уся таблиця»');
+  const lk2=await p.evaluate(()=>({sk:document.querySelectorAll('#tbChats .sk').length,txt:document.getElementById('tbChats').innerText}));
+  T.check(lk2.sk===0&&/Футбол по середах/.test(lk2.txt)&&/Олег/i.test(lk2.txt),'«Мої чати»: після відповіді скелетона немає, таблиця чату');await shot(p,'league_list_phone_dark');
   await A.ctx.close();}
  // ---- E. skeletons: pending requests show shimmer blocks with the final layout
  {const db=mkDB();
   const A=await openSite({b:bb,db,signed:true,route,viewport:{width:390,height:844},wait:1500});const p=A.pg;
   // all-time table
-  H.hold(/\/rest\/v1\/seasons/);await p.click('#boardOpen');await wait(300);
+  H.hold(/\/rest\/v1\/seasons/);await p.click('#tablesOpen');await wait(300);
   await p.waitForFunction(()=>document.getAnimations().every(a=>a.playState!=='running'||a.effect.getTiming().iterations===Infinity),null,{timeout:3000});   // sheet settled (skeleton shimmer is infinite)
-  const s1=await sk(p,'#viewBody'),skRow=await p.evaluate(()=>{const r=document.querySelectorAll('#boardBody tr');return {n:r.length,h:r[2].getBoundingClientRect().height,top:document.querySelector('#boardBody table').getBoundingClientRect().top};});
-  T.check(s1.n>=20&&s1.anim==='skim'&&s1.box,`таблиця: скелетон (${s1.n} блоків, мерехтіння ${s1.anim}, role=status)`);await noText(p,'#viewBody',T,'таблиця');await shot(p,'skeleton_board_phone_dark');
+  const s1=await sk(p,'#tbAll'),skRow=await p.evaluate(()=>{const r=document.querySelectorAll('#boardBody tr');return {n:r.length,h:r[2].getBoundingClientRect().height,top:document.querySelector('#boardBody table').getBoundingClientRect().top};});
+  T.check(s1.n>=20&&s1.anim==='skim'&&s1.box,`таблиця: скелетон (${s1.n} блоків, мерехтіння ${s1.anim}, role=status)`);await noText(p,'#tbAll',T,'таблиця');await shot(p,'skeleton_board_phone_dark');
   await theme(p,'light');await wait(900);await shot(p,'skeleton_board_phone_light');await theme(p,'dark');
   H.release();await wait(900);
-  const rl=await p.evaluate(()=>{const r=document.querySelectorAll('#boardBody tr[data-q]');return {n:r.length,h:r[1].getBoundingClientRect().height,top:document.querySelector('#boardBody table').getBoundingClientRect().top,sk:document.querySelectorAll('#viewBody .sk').length};});
+  const rl=await p.evaluate(()=>{const r=document.querySelectorAll('#boardBody tr[data-q]');return {n:r.length,h:r[1].getBoundingClientRect().height,top:document.querySelector('#boardBody table').getBoundingClientRect().top,sk:document.querySelectorAll('#tbAll .sk').length};});
   T.check(rl.n>=10&&rl.sk===0&&Math.abs(rl.h-skRow.h)<=4&&Math.abs(rl.top-skRow.top)<=1,`таблиця: рядок ${Math.round(skRow.h)} → ${Math.round(rl.h)}px, верх таблиці ${Math.round(skRow.top)} → ${Math.round(rl.top)} — без стрибка`);
   // squad opened from the table
   H.hold(/\/rest\/v1\/seasons/);await p.click('#boardBody tr[data-q]');await wait(700);

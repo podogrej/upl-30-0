@@ -62,7 +62,7 @@ module.exports = async (req, res) => {
         const medal = ['🥇', '🥈', '🥉'];
         // league created mid-week: period starts from its first day, not Monday
         const first = rows.reduce((m, r) => (String(r.day) < m ? String(r.day) : m), day);
-        let t = `<b>📅 Підсумок тижня ${L.dayShort(first)}–${L.dayShort(day)} — ліга «${L.esc(lg ? lg.title : '')}»</b>\n(сума очків за всі виклики тижня)\n\n`;
+        let t = `<b>📅 Підсумок тижня ${L.dayShort(first)}–${L.dayShort(day)} — ліга «${L.esc(lg ? lg.title : '')}»</b>\n(сума очків за всі дні тижня)\n\n`;
         t += tab.map((s, i) => `${medal[i] || (i + 1) + '.'} ${L.esc(s.name)} — <b>${s.pts}</b> за ${s.days} ${plUk(s.days, 'день', 'дні', 'днів')}${s.wins ? `, перемог: ${s.wins}` : ''}`).join('\n');
         t += `\n\n🏅 Гравець тижня: <b>${L.esc(tab[0].name)}</b>`;
         await L.tg('sendMessage', { chat_id, text: t, parse_mode: 'HTML', reply_markup: L.playKb(chat_id), disable_web_page_preview: true });

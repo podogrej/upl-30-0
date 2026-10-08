@@ -30,7 +30,7 @@ const HELLO = 'Збери XI з усієї історії Прем\'єр-ліг�
   'Колесо видає клуб і сезон, з кожного береш одного гравця. Одинадцять обертів — і 30 турів чемпіонату.\n\n' +
   '/play — грати\n/top — таблиця драфту дня\n/notify — вечірні сповіщення (за замовчуванням вимкнені)\n\nДодай мене в групу з друзями, зроби адміністратором і напиши там /league — буде ліга вашої групи.';
 // make the bot admin before /league: otherwise Telegram upgrades the group to a supergroup with a new id and a league created earlier stays in the old chat
-const GROUP_ABOUT = 'Щодня однакове колесо для всіх, таблиця дня оновлюється сама, а ввечері підсумок: хто виграв день і хто відкрив трофеї.';
+const GROUP_ABOUT = 'Грайте у «Грати»: у лігу йде найкращий із перших трьох сезонів дня кожного. Табло оновлюється саме, а ввечері — підсумок: хто виграв день.';
 const GROUP_HELLO = 'Привіт! Я — 30-0 УПЛ ⚽️\n\nДва кроки:\n1. Зробіть мене адміністратором (досить одного права — «Закріплення повідомлень»), щоб я закріплював табло.\n' +
   '2. Потім напишіть /league — створю лігу вашої групи.\n\n' + GROUP_ABOUT;
 const GROUP_HELLO_ADMIN = 'Привіт! Я — 30-0 УПЛ ⚽️\n\nНапишіть /league — створю лігу вашої групи. ' + GROUP_ABOUT;
@@ -63,7 +63,7 @@ async function league(chat, from) {
   const exists = (await L.sb(`leagues?chat_id=eq.${chat_id}&select=chat_id`) || []).length > 0;
   await L.sb('leagues?on_conflict=chat_id', { method: 'POST', prefer: 'resolution=merge-duplicates,return=minimal', body: { chat_id, title: String(chat.title || 'Група').slice(0, 60), created_by: from && from.id } });
   if (from && !from.is_bot) await L.sb('league_members?on_conflict=chat_id,tg_user_id', { method: 'POST', prefer: 'resolution=merge-duplicates,return=minimal', body: { chat_id, tg_user_id: from.id, name: L.nameOf(from) } });
-  if (!exists) await L.tg('sendMessage', { chat_id, text: '🏟 Лігу групи створено! Грайте драфт дня з кнопки під табло — результати потраплять сюди автоматично. Підсумок дня — щовечора близько 21:00 за Києвом.' });
+  if (!exists) await L.tg('sendMessage', { chat_id, text: '🏟 Лігу групи створено! Грайте з кнопки під табло: у лігу йде найкращий із перших трьох сезонів дня у «Грати», сюди — автоматично. Підсумок дня — щовечора близько 21:00 за Києвом.' });
   await L.upsertBoard(chat_id, L.kyivDate(), { copy: exists });   // new league: board is created and pinned; existing one: update + unpinned copy
 }
 

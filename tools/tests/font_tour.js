@@ -30,7 +30,7 @@ const CHECK=()=>{const W=innerWidth,bad=[];const vis=el=>!el.closest('[hidden]')
   // no home "about" block (moved to the FAQ); font and icon credits are in the footer
   T.check(await pg.evaluate(()=>{const c=document.querySelector('.ft-cred');return !document.getElementById('aboutBox')&&document.getElementById('calcQ').open&&!!c&&/KyivType/.test(c.textContent)&&c.getBoundingClientRect().right<=innerWidth+1;}),`${w}px · «Як рахується гра» розгорнуто, блоку «Про гру» немає; подяки — у підвалі`);
   await safe(async()=>{await pg.click('#newsBtn');await chk('«Що нового»');await pg.click('#viewClose');});
-  await safe(async()=>{await pg.click('#boardOpen');await chk('загальна таблиця');await pg.click('#viewClose');});
+  await safe(async()=>{await pg.click('#tablesOpen');await chk('загальна таблиця');await pg.click('#tbTabs .tab[data-tb=chats]');await chk('мої чати');await pg.click('#backBtn');});
   await safe(async()=>{await pg.click('#trBtn');await chk('трофеї');await pg.click('#homeBtn');});
   await safe(async()=>{await pg.click('#acctBtn');await chk('своя сторінка й «Налаштування»');await pg.click('#ppRowName');await chk('вікно «Ім\'я»');await pg.keyboard.press('Escape');await pg.click('#homeBtn').catch(()=>{});});
   await safe(async()=>{await pg.click('#flOpen');await chk('«Грати з друзями»');await pg.click('#flNew');await chk('нова ліга 11×11');await pg.click('[data-k="fmt"][data-v="f5"]');await chk('нова ліга 5×5');await pg.click('#homeBtn');});

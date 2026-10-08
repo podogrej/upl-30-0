@@ -1,7 +1,8 @@
-// Chat league card on Home (Telegram Mini App) and its "full table" sheet; loading speed of the card and /api/league.
-// A. server: same output as before for a fixture, fewer sequential DB rounds, card=1 without standings, cache header, join still checks membership.
-// B. site: skeleton (or cached board) in the first frame before the main script, no layout shift, GET does not wait for the join POST,
-//    join skipped for 24 h, retry after an error, column header / own row / 48 px button, sheet header and lazy standings, 403 and migration.
+// Chat league tables (since 0.79 on the Tables screen, chats tab) and /api/league.
+// A. server: same output as before for a fixture, fewer sequential DB rounds, card=1 without standings (older tabs), cache header,
+//    join still checks membership, a browser result is ignored.
+// B. site: no table request before the screen opens, skeleton while loading, join skipped for 24 h, retry after an error,
+//    column header / own row, standings from the same request, cache bypass after own season, 403 and migration, 404.
 // Screenshots: tools/tests/out/v077b_*.png.   Run from repo root: node tools/tests/v077b.js [screenshot dir]
 const path=require('path'),fs=require('fs'),crypto=require('crypto');const {ROOT,launch,makeDB,openSite,checker}=require('./_site.js');
 const OUT=process.argv[2]||path.join(ROOT,'tools','tests','out');fs.mkdirSync(OUT,{recursive:true});
@@ -65,13 +66,9 @@ async function server(){
   T.check(j2.c===403&&!F.S.writes.includes('league_members'),'сервер: не учасник групи — 403, у лігу не записано');
   F.S.member='member';const j3=await F.run({method:'POST',body:{initData:id.replace(/hash=\w+/,'hash=00')}});
   T.check(j3.c===401,'сервер: підпис Telegram не збігся — 401');
-  // result to several leagues: written in parallel, titles in the same order
-  const res={w:20,d:5,l:5,pts:65,gf:50,ga:30,place:2,day:DAY,season_id:5};
-  const my=[{chat_id:'-1',leagues:{title:'A'}},{chat_id:'-2',leagues:{title:'B'}},{chat_id:'-3',leagues:{title:'C'}}];
-  const f0=global.fetch;global.fetch=(u,o)=>/league_members\?tg_user_id/.test(decodeURIComponent(String(u)))?wait(20).then(()=>({ok:true,status:200,text:async()=>JSON.stringify(my)})):f0(u,o);
-  const p=await F.run({method:'POST',body:{initData:initData({id:1001,first_name:'Марко'},''),result:res}});global.fetch=f0;
-  const ins=p.log.filter(c=>/^POST league_results/.test(c.k));
-  T.check(p.c===200&&JSON.stringify(p.j.posted)==='["A","B","C"]'&&ins.length===3&&Math.max(...ins.map(c=>c.s))-Math.min(...ins.map(c=>c.s))<15,'сервер: результат у кілька ліг — паралельно, порядок назв збережено');
+  // a result from the browser (older tabs sent the daily draft here) is ignored: nothing written to league_results
+  const p=await F.run({method:'POST',body:{initData:initData({id:1001,first_name:'Марко'},''),result:{w:20,d:5,l:5,pts:65,gf:50,ga:30,place:2,day:DAY,season_id:5}}});
+  T.check(p.c===200&&JSON.stringify(p.j.posted)==='[]'&&!p.log.some(c=>/league_results|league_members\?tg_user_id/.test(c.k)&&!/^GET/.test(c.k)),'сервер: результат від браузера ігнорується (posted порожній, у ліги нічого не записано)');
 }
 
 // ---------- B. site
@@ -92,131 +89,87 @@ function leagueApi(o={}){const A={reqs:[],t0:Date.now(),today:o.today||board(fal
       const j={title:A.title,day:DAY,today:A.today,members:A.members};if(!r.card)j.standings=A.today.map((x,i)=>({name:x.name,u:x.u,wins:12-i,days:14,pts:600}));return {json:j};}};
   A.hold=(full)=>{let res;A.gateFull=!!full;A.gate={p:new Promise(r=>res=r)};A.gate.release=()=>{const g=A.gate;A.gate=null;res();};};
   return A;}
-// card state recorder (init script): first visible state, whether the main script / player pool had run, heights
-const REC=`(()=>{window.__lg={};const f=window.fetch;window.fetch=function(u,o){if(String(u).includes('/api/league'))(window.__req=window.__req||[]).push([(o&&o.method)||'GET',Math.round(performance.now())]);return f.apply(this,arguments);};
-  new MutationObserver(()=>{const e=document.getElementById('leagueCard');if(!e||e.hidden||window.__lg.first)return;
-    window.__lg.first={t:Math.round(performance.now()),pool:!!window.__POOL,main:!!window.__dbg,sk:e.querySelectorAll('tbody .sk.lg-sq').length,busy:!!e.querySelector('[role=status][aria-busy=true]'),data:!!e.querySelector('td.nm .nmt'),h:Math.round(e.getBoundingClientRect().height)};}).observe(document,{subtree:true,childList:true,attributes:true});})();`;
-const cardGeo=pg=>pg.evaluate(()=>{const e=document.getElementById('leagueCard'),r=e.getBoundingClientRect(),n=e.nextElementSibling;let x=n;while(x&&(x.tagName==='SCRIPT'||x.hidden))x=x.nextElementSibling;
-  return {h:Math.round(r.height),top:Math.round(r.top+scrollY),next:x?Math.round(x.getBoundingClientRect().top+scrollY):null,sk:e.querySelectorAll('.sk').length,data:!!e.querySelector('td.nm .nmt')};});
 const shot=(pg,n)=>pg.screenshot({path:path.join(OUT,`v077b_${n}.png`)});
-const toCard=pg=>pg.evaluate(()=>{const e=document.getElementById('leagueCard');e.scrollIntoView({block:"start"});window.scrollBy(0,-76);});
-const poolSlow=ms=>async(r,u)=>{if(/^\/pool\./.test(u.pathname))await wait(ms);return false;};
 
 async function site(b){
-  // 1. cold open from the group button: skeleton before the main script, then data with no layout shift; GET does not wait for POST
-  {const A=leagueApi({getMs:300,postMs:450});
-   const {ctx,pg,errs}=await openSite({b,db:makeDB({}),api:A.api,tg:tgObj('g-100555'),hash:tgHash('g-100555'),route:poolSlow(400),init:REC,viewport:{width:820,height:1180},wait:50});
-   await pg.waitForSelector('#leagueCard td.nm .nmt',{timeout:8000});await wait(300);
-   const f=await pg.evaluate(()=>window.__lg.first),g=await cardGeo(pg);
-   T.check(f&&!f.pool&&!f.main&&f.sk===3&&f.busy&&!f.data,`перший кадр: скелетон 3 рядки (role=status, aria-busy) ще до пулу гравців і головного скрипта (${JSON.stringify(f)})`);
-   T.check(f&&Math.abs(f.h-g.h)<=1,`без зсуву: висота скелетона ${f&&f.h} = висота картки з даними ${g.h}`);
-   for(let i=0;i<40&&!(A.reqs.find(r=>r.m==='POST')||{}).e;i++)await wait(50);
-   const get=A.reqs.find(r=>r.m==='GET'),post=A.reqs.find(r=>r.m==='POST');
-   T.check(get&&post&&get.card==='1'&&!get.t&&get.s<=post.s&&get.e<post.e,`GET не чекає на POST вступу: GET ${get&&get.s}–${get&&get.e} мс, POST ${post&&post.s}–${post&&post.e} мс`);
-   const pr=await pg.evaluate(()=>window.__req);T.check(pr&&pr[0][0]==='GET'&&pr[0][1]<(f?f.t+50:0)+400,`GET стартує з першого скрипта сторінки (${pr&&pr[0][1]} мс від початку)`);
-   // header, column header, rows, button
-   const c=await pg.evaluate(()=>{const e=document.getElementById('leagueCard'),q=s=>e.querySelector(s);const rows=[...e.querySelectorAll('tbody tr')];const btn=q('#leagueAll').getBoundingClientRect(),tb=q('table').getBoundingClientRect();
-     return {kicker:q('.kicker').textContent,title:q('.ttl').textContent,pill:q('.lg-pill').textContent,th:[...e.querySelectorAll('thead th')].map(x=>x.textContent),
-       rowH:Math.min(...rows.map(r=>r.getBoundingClientRect().height)),n:rows.length,medals:e.querySelectorAll('tbody .plc').length,btn:q('#leagueAll').textContent.replace(/\s+/g,' ').trim(),btnH:btn.height,btnW:Math.round(btn.width),tbW:Math.round(tb.width),
-       go:!!document.getElementById('leagueGo'),ptsFs:parseFloat(getComputedStyle(q('td.p')).fontSize),nameFs:parseFloat(getComputedStyle(q('td.nm')).fontSize)};});
-   T.check(c.kicker==='Ліга чату'&&c.title==='Футбол по середах'&&c.pill==='12 з 40 зіграли',`шапка: «${c.kicker}» · ${c.title} · «${c.pill}»`);
+  const open=async pg=>{await pg.click('#tablesOpen');await pg.waitForSelector('#tbChats td.nm .nmt',{timeout:8000});await wait(200);};
+  // 1. opened from the group button: join POST at start, no table request until the Tables screen opens; it starts on the chats tab
+  {const A=leagueApi({getMs:300,postMs:150,today:board(true)});
+   const init=`localStorage.setItem('upl30_player',JSON.stringify({id:'p1',name:'андрій',public_id:'andr2345'}));`;
+   const {ctx,pg,errs}=await openSite({b,db:makeDB({}),api:A.api,tg:tgObj('g-100555'),hash:tgHash('g-100555'),init,viewport:{width:390,height:844},wait:1500});
+   T.check(A.reqs.length===1&&A.reqs[0].m==='POST','на старті — лише вступ у лігу (POST), таблиця не вантажиться заздалегідь: '+A.reqs.map(r=>r.m).join(','));
+   await pg.click('#tablesOpen');await wait(120);
+   const s0=await pg.evaluate(()=>({tab:document.querySelector('#tbTabs .tab.on').dataset.tb,sk:document.querySelectorAll('#tbChats tbody .sk.lg-sq').length,busy:!!document.querySelector('#tbChats [role=status][aria-busy=true]')}));
+   T.check(s0.tab==='chats'&&s0.sk===5&&s0.busy,`з кнопки групи «Таблиці» відкриваються на «Мої чати»; поки вантажиться — скелетон (role=status, aria-busy): ${JSON.stringify(s0)}`);
+   await pg.waitForSelector('#tbChats td.nm .nmt',{timeout:8000});await wait(200);
+   const c=await pg.evaluate(()=>{const e=document.getElementById('tbChats'),q=s=>e.querySelector(s);const rows=[...e.querySelectorAll('tbody tr')];const me=q('tr.me td');
+     return {title:q('.ttl').textContent,pill:q('.lg-pill').textContent,rule:q('.lg-sub').textContent,th:[...e.querySelectorAll('thead th')].map(x=>x.textContent),
+       rowH:Math.min(...rows.map(r=>r.getBoundingClientRect().height)),n:rows.length,medals:e.querySelectorAll('tbody .plc').length,me:q('tr.me')?q('tr.me').innerText.replace(/\s+/g,' ').trim():'',accent:me?getComputedStyle(me).boxShadow:'',
+       ptsFs:parseFloat(getComputedStyle(q('td.p')).fontSize),nameFs:parseFloat(getComputedStyle(q('td.nm')).fontSize)};});
+   T.check(c.title==='Футбол по середах'&&c.pill==='13 з 40 зіграли'&&c.rule==='У лігу йде найкращий із перших трьох сезонів дня у «Грати».',`шапка: ${c.title} · «${c.pill}» · правило одним рядком`);
    T.check(c.th.join('|')==='#|Гравець|В-Н-П|Очки','заголовки колонок: '+c.th.join(' · '));
-   T.check(c.n===3&&c.rowH>=44&&c.medals===3&&c.ptsFs>c.nameFs,`топ-3 з медалями, рядки ≥44 px (${c.rowH}), очки більші за ім'я (${c.ptsFs}>${c.nameFs})`);
-   T.check(/^Уся таблиця · 40 ›$/.test(c.btn)&&c.btnH>=48&&Math.abs(c.btnW-c.tbW)<=1&&!c.go,`кнопка «${c.btn}» на всю ширину таблиці, ${c.btnH} px; дубля «Зіграти драфт дня» немає`);
+   T.check(c.n===13&&c.rowH>=44&&c.medals===3&&c.ptsFs>c.nameFs,`усі 13 рядків ≥44 px (${c.rowH}), медалі топ-3, очки більші за ім'я (${c.ptsFs}>${c.nameFs})`);
+   T.check(/^7 андрій · ти/.test(c.me)&&/inset/.test(c.accent)&&/3px/.test(c.accent),'свій рядок «· ти» з акцентом зліва: '+c.me);
+   const g1=A.reqs.filter(r=>r.m==='GET');T.check(g1.length===1&&!g1[0].card&&!g1[0].t&&g1[0].chat==='-100555','один повний запит (сьогодні й залік разом), без card=1 і без &t=');
+   await pg.click('#lgTabs button[data-t=st]');await wait(150);
+   T.check(A.reqs.filter(r=>r.m==='GET').length===1&&await pg.$$eval('#tbChats tbody tr',t=>t.length)===13&&/Днів.*Перемог/.test(await pg.textContent('#tbChats thead')),'«Залік» — з того самого запиту, 13 рядків');
+   await shot(pg,'chats_st_phone390_dark');await pg.click('#lgTabs button[data-t=today]');
+   await pg.click('#backBtn');await wait(300);await pg.click('#tablesOpen');await wait(300);
+   T.check(A.reqs.filter(r=>r.m==='GET').length===1,'повторне відкриття екрана — з пам’яті, без нового запиту');
+   // own verified free-play season -> the next load goes past the CDN cache
+   A.reqs.length=0;await pg.click('#backBtn');await pg.evaluate(()=>window.__dbg.lgStale());await open(pg);
+   T.check(A.reqs.some(r=>r.m==='GET'&&r.t),'після свого сезону — запит з &t= (мимо кешу)');
    T.check(!errs.length,'помилок JS немає '+errs.join(' | '));
-   // 2. second open within 24 h: no join request; board from the snapshot in the first frame, no shift
-   A.reqs.length=0;A.t0=Date.now();await pg.reload();await pg.waitForSelector('#leagueCard td.nm .nmt');await wait(1200);
-   const f2=await pg.evaluate(()=>window.__lg.first),g2=await cardGeo(pg);
-   T.check(!A.reqs.some(r=>r.m==='POST')&&A.reqs.filter(r=>r.m==='GET').length===1,`повторне відкриття за добу: вступ не повторюється (${A.reqs.map(r=>r.m).join(',')})`);
-   T.check(f2&&f2.data&&!f2.main&&f2.sk===0&&Math.abs(f2.h-g2.h)<=1,`повторне відкриття: у першому кадрі вже табло з кешу, без зсуву (${f2&&f2.h}→${g2.h})`);
+   // 2. second open within 24 h: no join request
+   A.reqs.length=0;await pg.reload();await wait(1500);
+   T.check(!A.reqs.length,`повторне відкриття за добу: вступ не повторюється, таблиці не вантажаться (${A.reqs.map(r=>r.m).join(',')})`);
    const jk=await pg.evaluate(()=>JSON.parse(localStorage.getItem('upl30_joined_-100555')));
    T.check(jk&&jk.u===1&&jk.chat==='-100555'&&Date.now()-jk.at<6e4,'upl30_joined_<чат>: {u, at, chat}');
-   // older than a day or another Telegram user on this device: join again
    await pg.evaluate(()=>{const k='upl30_joined_-100555',j=JSON.parse(localStorage.getItem(k));j.at=Date.now()-25*36e5;localStorage.setItem(k,JSON.stringify(j));});
    A.reqs.length=0;await pg.reload();await wait(1500);T.check(A.reqs.some(r=>r.m==='POST'),'через добу вступ повторюється');
    await pg.evaluate(()=>{const k='upl30_joined_-100555',j=JSON.parse(localStorage.getItem(k));j.u=2;localStorage.setItem(k,JSON.stringify(j));});
    A.reqs.length=0;await pg.reload();await wait(1500);T.check(A.reqs.some(r=>r.m==='POST'),'інший користувач Telegram на пристрої — вступ іде');
    await ctx.close();}
-  // 3. start param only in Telegram.WebApp (no launch data in the URL): GET and POST start together
-  {const A=leagueApi({getMs:300,postMs:450});
-   const {ctx}=await openSite({b,db:makeDB({}),api:A.api,tg:tgObj('g-100555'),hash:'#tgWebAppData=x',viewport:{width:390,height:844},wait:1500});
-   const get=A.reqs.find(r=>r.m==='GET'),post=A.reqs.find(r=>r.m==='POST');
-   T.check(get&&post&&Math.abs(get.s-post.s)<100,`без даних у URL: GET і POST стартують разом (${get&&get.s} / ${post&&post.s} мс)`);await ctx.close();}
-  // 4. error -> load-failed message with a retry button -> retry
+  // 3. error -> load-failed message with a retry button -> retry
   {const A=leagueApi({});A.fail=1;
    const {ctx,pg,errs}=await openSite({b,db:makeDB({}),api:A.api,tg:tgObj('g-100555'),hash:tgHash('g-100555'),viewport:{width:390,height:844},wait:1500});
-   const e=await pg.evaluate(()=>{const c=document.getElementById('leagueCard'),r=document.getElementById('leagueRetry');return {hidden:c.hidden,txt:c.innerText.replace(/\s+/g,' '),h:r?r.getBoundingClientRect().height:0,alert:!!c.querySelector('[role=alert]')};});
-   T.check(!e.hidden&&/Не вдалося завантажити · Спробувати ще/.test(e.txt)&&e.h>=44&&e.alert,`помилка: картка не зникає — «${e.txt.slice(-40)}», кнопка ${e.h} px`);
-   await toCard(pg);await shot(pg,'error_phone390_dark');
-   await pg.click('#leagueRetry');await pg.waitForSelector('#leagueCard td.nm .nmt',{timeout:5000}).catch(()=>{});
-   T.check(await pg.$eval('#leagueCard',c=>c.querySelectorAll('tbody tr').length===3),'«Спробувати ще» завантажує табло');
+   await pg.click('#tablesOpen');await wait(600);
+   const e=await pg.evaluate(()=>{const c=document.getElementById('tbChats'),r=document.getElementById('lgRetry');return {txt:c.innerText.replace(/\s+/g,' '),h:r?r.getBoundingClientRect().height:0,alert:!!c.querySelector('[role=alert]')};});
+   T.check(/Не вдалося завантажити · Спробувати ще/.test(e.txt)&&e.h>=44&&e.alert,`помилка: «${e.txt.slice(-40)}», кнопка ${e.h} px`);
+   await shot(pg,'error_phone390_dark');
+   await pg.click('#lgRetry');await pg.waitForSelector('#tbChats td.nm .nmt',{timeout:5000}).catch(()=>{});
+   T.check(await pg.$$eval('#tbChats tbody tr',t=>t.length)===12,'«Спробувати ще» завантажує таблицю');
    T.check(!errs.length,'помилок JS немає '+errs.join(' | '));await ctx.close();}
-  // 5. own row lower than 3rd, played today; sheet: header, tabs, standings loaded on open (skeleton), cache bust only after own result
-  {const A=leagueApi({today:board(true)});
-   const init=`localStorage.setItem('upl30_player',JSON.stringify({id:'p1',name:'андрій',public_id:'andr2345'}));localStorage.setItem('upl30_daily_${DAY}',JSON.stringify({W:12,D:5,L:13,pts:41}));`;
-   const {ctx,pg,errs}=await openSite({b,db:makeDB({}),api:A.api,tg:tgObj('g-100555'),hash:tgHash('g-100555'),init,viewport:{width:390,height:844},wait:1500});
-   const c=await pg.evaluate(()=>{const e=document.getElementById('leagueCard'),rows=[...e.querySelectorAll('tbody tr')].map(r=>r.innerText.replace(/\s+/g,' ').trim());const me=e.querySelector('tr.me td');
-     return {rows,me:e.querySelector('tr.me')?e.querySelector('tr.me').innerText.replace(/\s+/g,' '):'',accent:me?getComputedStyle(me).boxShadow:'',note:(e.querySelector('.lg-note')||{}).textContent||''};});
-   T.check(c.rows.length===5&&c.rows[3]==='⋮'&&/^7 андрій · ти/.test(c.rows[4]),'головна: топ-3, «⋮», свій 7-й рядок «· ти»: '+c.rows.join(' | '));
-   T.check(/inset/.test(c.accent)&&/3px/.test(c.accent),'свій рядок — акцент зліва ('+c.accent+')');
-   T.check(/^Твій результат уже в табло\./.test(c.note),'рядок статусу: '+c.note);
-   const cardReqs=A.reqs.filter(r=>r.m==='GET');T.check(cardReqs.length===1&&cardReqs[0].card==='1'&&!cardReqs[0].t,'головна бере лише card=1 (без заліку), без &t=');
-   await toCard(pg);await shot(pg,'own_phone390_dark');
-   A.hold(true);await pg.click('#leagueAll');await wait(700);
-   const s1=await pg.evaluate(()=>({title:document.getElementById('viewTitle').textContent,fs:parseFloat(getComputedStyle(document.getElementById('viewTitle')).fontSize),sub:document.querySelector('#viewBody .lg-sub').textContent,
-     th:[...document.querySelectorAll('#viewBody thead th')].map(x=>x.textContent).join('|'),n:document.querySelectorAll('#viewBody tbody tr').length,me:!!document.querySelector('#viewBody tr.me')}));
-   const dd=DAY.slice(8,10)+'.'+DAY.slice(5,7);
-   T.check(s1.title==='Футбол по середах'&&s1.fs>=24&&s1.sub===`Драфт дня ${dd} · зіграли 13 з 40`,`шторка: великий заголовок (${s1.fs}px), «${s1.sub}»`);
-   T.check(s1.th==='#|Гравець|В-Н-П|Очки'&&s1.n===13&&s1.me,'шторка · Сьогодні: заголовки колонок, усі 13, свій рядок');
-   await pg.click('#lgTabs button[data-t=st]');await wait(200);
-   const sk=await pg.evaluate(()=>({sk:document.querySelectorAll('#viewBody tbody .sk').length,busy:!!document.querySelector('#viewBody [role=status][aria-busy=true]'),th:[...document.querySelectorAll('#viewBody thead th')].map(x=>x.textContent).join('|')}));
-   T.check(sk.sk>0&&sk.busy&&sk.th==='#|Гравець|Днів|Перемог','шторка · Залік: поки вантажиться — скелетон з тими самими колонками');
-   await shot(pg,'sheet_st_loading_phone390_dark');
-   A.gate.release();await wait(500);
-   const full=A.reqs.filter(r=>r.m==='GET'&&!r.card);
-   T.check(full.length===1&&!full[0].t&&await pg.$$eval('#viewBody tbody tr',t=>t.length)===13&&!(await pg.$('#viewBody .sk')),'Залік підвантажено при відкритті шторки (повний запит без card=1), 13 рядків');
-   await pg.click('#lgTabs button[data-t=today]');await wait(100);await pg.click('#lgTabs button[data-t=st]');await wait(100);
-   T.check(A.reqs.filter(r=>r.m==='GET'&&!r.card).length===1,'повна таблиця запитується один раз за відкриття сторінки');
-   await pg.click('#viewClose');await wait(500);
-   T.check(!(await pg.$eval('#viewBox',e=>e.classList.contains('lgs'))),'після закриття шторки клас lgs знято');
-   // own result posted -> card reloads bypassing the CDN cache (&t=), the full table too
-   A.reqs.length=0;await pg.evaluate(()=>window.__dbg.leagueLoad('-100555',true));await wait(300);
-   T.check(A.reqs.some(r=>r.card==='1'&&r.t),'після свого результату — card=1 з &t= (мимо кешу)');
-   await pg.click('#leagueAll');await wait(500);T.check(A.reqs.some(r=>!r.card&&r.t&&r.m==='GET'),'і повна таблиця після свого результату — з &t=');
-   await pg.click('#viewClose');await wait(400);
-   T.check(!errs.length,'помилок JS немає '+errs.join(' | '));await ctx.close();}
-  // 6. 403 (not confirmed as a group member): short note, join not remembered; supergroup migration
+  // 4. 403 (not confirmed as a group member): short note, join not remembered; supergroup migration
   {const A=leagueApi({post:()=>({status:403,json:{error:'not a member of this chat'}})});
    const {ctx,pg}=await openSite({b,db:makeDB({}),api:A.api,tg:tgObj('g-100555'),hash:tgHash('g-100555'),viewport:{width:390,height:844},wait:1500});
-   const n=await pg.$eval('#leagueCard',e=>e.innerText.replace(/\s+/g,' '));
-   T.check(/Ти ще не в цій лізі: відкрий гру кнопкою бота в групі\./.test(n)&&!(await pg.evaluate(()=>localStorage.getItem('upl30_joined_-100555'))),'403: коротка примітка, вступ не запамʼятовано');
-   await pg.click('#leagueAll');await wait(500);T.check(/Ти ще не в цій лізі/.test(await pg.textContent('#viewBody')),'403: примітка і в шторці');await pg.click('#viewClose');await wait(300);
+   await open(pg);
+   T.check(/Ти ще не в цій лізі: відкрий гру кнопкою бота в групі\./.test(await pg.textContent('#tbChats'))&&!(await pg.evaluate(()=>localStorage.getItem('upl30_joined_-100555'))),'403: коротка примітка, вступ не запамʼятовано');
    await ctx.close();}
   {const A=leagueApi({post:()=>({json:{ok:true,joined:[{chat_id:'-100999',title:'Футбол по середах'}]}})});
    const {ctx,pg}=await openSite({b,db:makeDB({}),api:A.api,tg:tgObj('g-555'),hash:tgHash('g-555'),viewport:{width:390,height:844},wait:1500});
-   const moved=A.reqs.find(r=>r.m==='GET'&&r.chat==='-100999');
+   await open(pg);
    const st=await pg.evaluate(()=>({lg:JSON.parse(localStorage.getItem('upl30_league')),j:JSON.parse(localStorage.getItem('upl30_joined_-555'))}));
-   T.check(moved&&moved.t&&st.lg==='-100999'&&st.j&&st.j.chat==='-100999','група стала супергрупою: табло з нового id (з &t=), id запамʼятовано');
-   A.reqs.length=0;await pg.reload();await wait(1500);
+   T.check(A.reqs.some(r=>r.m==='GET'&&r.chat==='-100999')&&!A.reqs.some(r=>r.m==='GET'&&r.chat==='-555')&&st.lg==='-100999'&&st.j&&st.j.chat==='-100999','група стала супергрупою: таблиця з нового id, id запамʼятовано');
+   A.reqs.length=0;await pg.reload();await wait(1500);await open(pg);
    T.check(A.reqs.length&&A.reqs.every(r=>r.chat==='-100999'&&r.m==='GET'),'наступне відкриття зі старої кнопки — одразу новий id, без вступу: '+A.reqs.map(r=>r.m+' '+r.chat).join(', '));
    await ctx.close();}
-  // 7. no league for the chat (404): the card disappears
+  // 5. no league for the chat (404)
   {const A=leagueApi({nolg:true});
    const {ctx,pg}=await openSite({b,db:makeDB({}),api:A.api,tg:tgObj('g-777'),hash:tgHash('g-777'),viewport:{width:390,height:844},wait:1500});
-   T.check(await pg.$eval('#leagueCard',e=>e.hidden),'чат без ліги (404) — картки немає');await ctx.close();}
-  // 8. wide screens: column at most 560 px; screenshots iPad 820/1024, landscape 1366, phone 390, dark and light
+   await pg.click('#tablesOpen');await wait(700);
+   T.check(/Ліги цього чату більше немає/.test(await pg.textContent('#tbChats')),'чат без ліги (404) — коротке пояснення');await ctx.close();}
+  // 6. wide screens: one column at most 640 px; screenshots iPad 820/1024, landscape 1366, phone 390, dark and light
   const VPS={ipad820:[820,1180],ipad1024:[1024,1366],land1366:[1366,1024],phone390:[390,844]};
   for(const [k,[w,h]] of Object.entries(VPS))for(const th of ['dark','light']){
     const A=leagueApi({today:board(true)});A.hold();
-    const init=`localStorage.setItem('upl30_theme','${th}');localStorage.setItem('upl30_player',JSON.stringify({id:'p1',name:'андрій',public_id:'andr2345'}));localStorage.setItem('upl30_daily_${DAY}',JSON.stringify({W:12,D:5,L:13,pts:41}));`;
+    const init=`localStorage.setItem('upl30_theme','${th}');localStorage.setItem('upl30_player',JSON.stringify({id:'p1',name:'андрій',public_id:'andr2345'}));`;
     const {ctx,pg,errs}=await openSite({b,db:makeDB({}),api:A.api,tg:tgObj('g-100555',undefined,th),hash:tgHash('g-100555'),init,viewport:{width:w,height:h},colorScheme:th,wait:900});
-    await toCard(pg);await shot(pg,`skeleton_${k}_${th}`);const g0=await cardGeo(pg);
-    A.gate.release();await pg.waitForSelector('#leagueCard td.nm .nmt');await wait(400);await toCard(pg);await shot(pg,`home_${k}_${th}`);
-    const m=await pg.evaluate(()=>{const e=document.getElementById('leagueCard');const t=e.querySelector('table').getBoundingClientRect(),c=e.getBoundingClientRect();return {tw:t.width,cw:c.width,sw:document.documentElement.scrollWidth,vw:innerWidth};});
-    if(th==='dark')T.check(m.tw<=561&&m.sw<=m.vw,`${k}: таблиця ≤ 560 px (${Math.round(m.tw)} у картці ${Math.round(m.cw)}), нічого не вилазить`);
-    await pg.click('#leagueAll');await wait(700);await shot(pg,`sheet_today_${k}_${th}`);
-    await pg.click('#lgTabs button[data-t=st]');await wait(300);await shot(pg,`sheet_st_${k}_${th}`);
-    if(th==='dark')T.check(!errs.length&&g0.sk>0,`${k}: скелетон на знімку, помилок JS немає `+errs.join(' | '));
+    await pg.click('#tablesOpen');await wait(300);await shot(pg,`skeleton_${k}_${th}`);const sk=await pg.$$eval('#tbChats .sk',e=>e.length);
+    A.gate.release();await pg.waitForSelector('#tbChats td.nm .nmt');await wait(400);await shot(pg,`chats_${k}_${th}`);
+    const m=await pg.evaluate(()=>({tw:document.querySelector('#tbChats table').getBoundingClientRect().width,sw:document.documentElement.scrollWidth,vw:innerWidth}));
+    if(th==='dark')T.check(m.tw<=641&&m.sw<=m.vw,`${k}: таблиця ≤ 640 px (${Math.round(m.tw)}), нічого не вилазить`);
+    if(th==='dark')T.check(!errs.length&&sk>0,`${k}: скелетон на знімку, помилок JS немає `+errs.join(' | '));
     await ctx.close();}
 }
 

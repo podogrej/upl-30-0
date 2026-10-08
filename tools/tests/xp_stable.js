@@ -15,7 +15,8 @@ const {openPage}=require('./_page.js');const {checker}=require('./_site.js');
  T.check(p1.xp===p0.xp&&p1.pl===p0.pl,`обмін рівноцінних місць — прогноз той самий (${p0.xp.toFixed(2)} → ${p1.xp.toFixed(2)})`);
  T.check(p2.xp===p0.xp&&p2.pl===p0.pl,`повернули назад — прогноз точно той самий (${p2.xp.toFixed(2)})`);
  // a release without new news items does not light the news dot again for those who read them
- await pg.evaluate(()=>{localStorage.setItem('upl30_news_seen',JSON.stringify('0.77'));});await pg.reload();await pg.waitForTimeout(600);
- T.check(await pg.evaluate(()=>document.getElementById('newsDot').hidden),'«Що нового» вже прочитано (0.77) — точка не горить');
+ const ed=(/const WHATSNEW=\{v:'[\d.]+',news:'([\d.]+)'/.exec(require('fs').readFileSync(require('path').join(__dirname,'..','..','index.html'),'utf8'))||[])[1];
+ await pg.evaluate(e=>{localStorage.setItem('upl30_news_seen',JSON.stringify(e));},ed);await pg.reload();await pg.waitForTimeout(600);
+ T.check(!!ed&&await pg.evaluate(()=>document.getElementById('newsDot').hidden),`«Що нового» вже прочитано (випуск пунктів ${ed}) — точка не горить`);
  T.check(!errs.length,'помилок на сторінці немає '+errs.join(' | '));
  await b.close();process.exit(T.done());})();
