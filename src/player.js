@@ -29,7 +29,7 @@ function openPlayer(u){
   u=u&&/^[a-z2-9]{8}$/.test(u)?u:null;
   const own=!u||!!(PLAYER&&PLAYER.public_id===u);
   document.getElementById('viewBox').hidden=true;
-  PP={u:own?(PLAYER&&PLAYER.public_id)||null:u,own,prof:null,f:'all',s:'rare',all:false,hist:null,loading:true};
+  PP={u:own?(PLAYER&&PLAYER.public_id)||null:u,own,prof:null,f:'all',s:'rare',all:false,hist:null,loading:true,lg:null};   // lg: "My leagues" request, once per open
   go(6);ppUrl(own?null:u);ppRender();ppLoad(PP);
   if(ONLINE&&!TR_PCT)trLoadPct().then(()=>{if(PP&&CUR_SEC===6)ppRenderCab();});
 }
@@ -44,10 +44,13 @@ async function ppLoad(st){
   if(prof&&!prof.public_id&&!prof.name)prof=null;   // no such player
   if(PP!==st)return;st.prof=prof;st.loading=false;st.err=err;ppRender();}
 // own page: trophies from this device (with counters) plus those unlocked on the player's other devices (from DB)
-// account trophies from server go to cache for the home counter (renderTrBtn); once per page load
+// account trophies from server go to cache for the home counter (renderTrBtn): upl30_tr_srv (ids) + upl30_tr_srv_at (when).
+// Without a profile at hand, player_profile is called only when the cache is older than TR_SRV_TTL (or marked stale)
 let TR_SRV_AT=0;
-async function trSrvRefresh(prof){if(!prof){if(!ONLINE||!PLAYER||!PLAYER.id||Date.now()-TR_SRV_AT<6e4)return;TR_SRV_AT=Date.now();try{prof=await ppRpc('player_profile',{p_player:PLAYER.id});}catch(e){return;}}
-  if(prof&&Array.isArray(prof.trophies)){lsSet('upl30_tr_srv',prof.trophies.map(t=>t.id));renderTrBtn();}}
+const TR_SRV_TTL=6*36e5;
+const trSrvStale=()=>lsSet('upl30_tr_srv_at',0);   // sign-in, merge, new trophies: next refresh goes to the server
+async function trSrvRefresh(prof){if(!prof){if(!ONLINE||!PLAYER||!PLAYER.id||Date.now()-TR_SRV_AT<6e4||Date.now()-(+lsGet('upl30_tr_srv_at')||0)<TR_SRV_TTL)return;TR_SRV_AT=Date.now();try{prof=await ppRpc('player_profile',{p_player:PLAYER.id});}catch(e){return;}}
+  if(prof&&Array.isArray(prof.trophies)){lsSet('upl30_tr_srv',prof.trophies.map(t=>t.id));lsSet('upl30_tr_srv_at',Date.now());renderTrBtn();}}
 function ppHave(){const st=PP;const h={};
   if(st.own){const s=trStore();for(const [id,e] of Object.entries(s.t))if(e&&e.n)h[id]={n:e.n,at:e.at};}
   for(const t of (st.prof&&st.prof.trophies)||[])if(!h[t.id])h[t.id]={n:1,at:t.at};

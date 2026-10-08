@@ -1,7 +1,8 @@
 // 30-0 UPL: result writes (/api/save). Audit K5: nobody can write into another player's history.
 // POST {kind, device_id, secret, tg_init?, ...}: the DB checks the device secret (device_ok); the server writes the row with its key.
 // Row owner comes from the device binding in the DB (player_id trigger); Telegram only from a verified Mini App signature (tg_init).
-//   kind 'season'      {row}           -> season + immediate verification (as /api/verify) -> {id, verified, note}
+//   kind 'season'      {row, trophies?} -> season + immediate verification (as /api/verify) -> {id, verified, note, tr?}; trophies: new unlocks of this season
+//                                         (same as kind 'trophies', saves a request; tr = true when written)
 //   kind 'trophies'    {ids:[...]}     -> first trophy unlocks -> {ok}
 //   kind 'challenge'   {row}           -> friend challenge -> {id}
 //   kind 'chal_result' {row}           -> accepted challenge result -> {ok}
@@ -23,6 +24,7 @@ const xiItem = x => ({ n: str(x.n, 60), id: str(x.id, 60), slot: str(x.slot, 4),
   f: num(x.f, -99, 99), g: int(x.g, 0, 99), a: int(x.a, 0, 99), rt: num(x.rt, 0, 20) });
 const tblItem = t => ({ n: str(t.n, 60), w: int(t.w, 0, 30), d: int(t.d, 0, 30), l: int(t.l, 0, 30), gf: int(t.gf, 0, 999), ga: int(t.ga, 0, 999), pts: int(t.pts, 0, 90), me: !!t.me });
 const dayRe = /^\d{4}-\d{2}-\d{2}$/;
+const trophyIds = a => [...new Set((Array.isArray(a) ? a : []).map(String))].filter(t => /^[A-Za-z0-9_]{1,24}$/.test(t)).slice(0, 100);
 
 function seasonRow(r) {
   const sc = score(r); if (!sc) return null;
@@ -48,6 +50,8 @@ async function insert(table, row, qs = '', prefer = 'return=representation') {
   }
 }
 
+const putTrophies = (ids, device_id, tg) => insert('trophies', ids.map(trophy => ({ device_id, trophy, ...tg })), '?on_conflict=device_id,trophy', 'resolution=ignore-duplicates,return=minimal');
+
 module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
   let stage = 'body';
@@ -63,16 +67,18 @@ module.exports = async (req, res) => {
     stage = b.kind;
     if (b.kind === 'season') {
       const row = seasonRow(r); if (!row) return res.status(400).json({ error: 'season?' });
-      const [ins] = await insert('seasons', { ...row, device_id, ...tg }, '?select=id') || [];
+      // the inserted row (select=*) goes straight to verification: no second read
+      const [ins] = await insert('seasons', { ...row, device_id, ...tg }, '?select=*') || [];
       if (!ins || !ins.id) return res.status(500).json({ error: 'no id' });
       stage = 'verify';
-      const v = await verifyById(ins.id);
-      return res.status(200).json({ id: ins.id, verified: v.verified, note: v.note, fl: v.fl });
+      const ids = trophyIds(b.trophies);
+      const [v, tr] = await Promise.all([verifyById(ins.id, ins), ids.length ? putTrophies(ids, device_id, tg).then(() => true, () => false) : undefined]);
+      return res.status(200).json({ id: ins.id, verified: v.verified, note: v.note, fl: v.fl, tr });
     }
-    if (b.kind === 'trophies') {
-      const ids = [...new Set((Array.isArray(b.ids) ? b.ids : []).map(String))].filter(t => /^[A-Za-z0-9_]{1,24}$/.test(t)).slice(0, 100);
+    if (b.kind === 'trophies') {   // 5x5, retro awards, older tabs
+      const ids = trophyIds(b.ids);
       if (!ids.length) return res.status(400).json({ error: 'ids?' });
-      await insert('trophies', ids.map(trophy => ({ device_id, trophy, ...tg })), '?on_conflict=device_id,trophy', 'resolution=ignore-duplicates,return=minimal');
+      await putTrophies(ids, device_id, tg);
       return res.status(200).json({ ok: true, n: ids.length });
     }
     if (b.kind === 'challenge') {
