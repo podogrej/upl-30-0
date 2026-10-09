@@ -220,7 +220,7 @@ const LG_JOIN_TTL=864e5,LG_JOIN_KEEP=30*864e5;   // join is repeated after a day
 const LG_RULE='У лігу йде найкращий сезон із перших трьох спроб дня у «Грати».';
 const lgStart=()=>{const sp=TG&&TG.initDataUnsafe&&TG.initDataUnsafe.start_param||'';return /^g(-?\d+)$/.exec(sp);};
 function leagueChat(){const m=lgStart();
-  if(m){const j=lsGet('upl30_joined_'+m[1]),c=String(j&&j.chat||m[1]);lsSet("upl30_league",c);return c;}return lsGet("upl30_league");}   // j.chat: league moved to the supergroup id
+  if(m){const j=lsGet('upl30_joined_'+m[1]),c=String(j&&j.chat||m[1]);if(!LG.left.has(c))lsSet("upl30_league",c);return c;}return lsGet("upl30_league");}   // j.chat: league moved to the supergroup id; a chat left in this session is not remembered
 // upl30_joined_<chat from the button>: {u: Telegram user, at, chat: league chat id}; device-only, not synced to the account
 function lgJoined(sc){const j=lsGet('upl30_joined_'+sc);return !!(j&&TGU&&j.u===TGU.id&&Date.now()-j.at<LG_JOIN_TTL);}
 function lgJoinedSet(sc,chat){lsSet('upl30_joined_'+sc,{u:TGU&&TGU.id,at:Date.now(),chat});

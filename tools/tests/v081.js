@@ -118,7 +118,7 @@ const toBottom=async pg=>{await pg.evaluate(()=>window.scrollTo(0,document.body.
  T.check(M.calls.some(c=>c[0]==='tg_league_leave'&&c[1].p_chat==='-100555'&&!c[1].p_undo),'tg_league_leave викликано з p_chat');
  T.check(!/Футбол по середах/.test(await txt(p2,'#tbChats'))&&/жодній лізі/.test(await txt(p2,'#tbChats'))&&/Ти вийшов з ліги/.test(await txt(p2,'#toast')),'чат зник із вкладки, тост «Ти вийшов з ліги»');
  await shot(p2,'chat_left');
- T.check(await p2.evaluate(()=>!Object.keys(localStorage).some(k=>k.startsWith('upl30_joined_'))),'вихід із чату: upl30_joined_* стерто (у цій сесії гру відкрито з групи, тож upl30_league знову ставиться — так і має бути)');
+ T.check(await p2.evaluate(()=>localStorage.getItem('upl30_league')===null&&!Object.keys(localStorage).some(k=>k.startsWith('upl30_joined_'))),'вихід із чату: upl30_league і upl30_joined_* стерто — наступний запуск не з групи лігу не поверне');
  await p2.click('#toast button');await p2.waitForTimeout(900);
  T.check(M.calls.some(c=>c[0]==='tg_league_leave'&&c[1].p_undo===true)&&/Футбол по середах/.test(await txt(p2,'#tbChats')),'«Повернути»: чат знову на вкладці');
  T.check(!C.errs.length&&!G.errs.length,'помилок немає '+C.errs.concat(G.errs).join(' | '));
