@@ -1,21 +1,24 @@
 // ---------- Daily challenge (vd_*) rules. Shared by the site (build.py inlines it) and the server (lib/vd_core.js, api/_vd.js).
 // Pure functions over the pool (DATA) and one challenge from lib/challenges.json; no DOM, no global state.
-// A person "played for club X" when the pool has a club-season row of X for him with apps >= 1, or he has apps for X in the season in progress
-// (lib/vd_current.json); UPL only, zero-app rows are ignored.
+// A person is a player of club X when the pool has a club-season row of X for him with apps >= 1, or he has apps for X in the season
+// in progress, or he is in X's squad for that season (lib/vd_current.json); UPL only, zero-app rows are ignored.
 const VD_ATTEMPTS=5,VD_MEDALS=[[11,'perfect','Ідеально','⭐'],[9,'gold','Золото','🥇'],[6,'silver','Срібло','🥈'],[4,'bronze','Бронза','🥉']];
 const VD_LINE={GK:'GK',CB:'DF',RB:'DF',LB:'DF',RWB:'DF',LWB:'DF',DF:'DF',CDM:'MF',CM:'MF',CAM:'MF',RM:'MF',LM:'MF',MF:'MF',RW:'FW',LW:'FW',ST:'FW',FW:'FW'};
 // person index: canonical id -> {apps, clubs:{code:apps}, nat (name or null), n}
-// cur (lib/vd_current.json): apps of the season in progress, {apps:{club:{pool id:apps}}}; counted like pool seasons
+// cur (lib/vd_current.json): season in progress, {apps:{club:{pool id:apps}}, squad:{club:[pool id]}};
+// apps count like pool seasons, a squad entry makes him a player of that club (q.sq) without adding matches
 function vdIndex(DATA,cur){const A=DATA.alias||{},out={};
   const add=(id,club,n,name)=>{const k=A[id]||id;const q=out[k]||(out[k]={apps:0,clubs:{},nat:null,n:name});q.apps+=n;q.clubs[club]=(q.clubs[club]||0)+n;return q;};
   for(const c of DATA.clubs)for(const p of c.pl){if(!(p[3]>=1))continue;const q=add(p[5],c.c,p[3],p[0]);if(p[10]!=null&&DATA.nats&&DATA.nats[p[10]])q.nat=DATA.nats[p[10]];}
   const ca=cur&&cur.apps||{};for(const club in ca)for(const id in ca[club])if(ca[club][id]>=1)add(id,club,ca[club][id],'');
+  const cs=cur&&cur.squad||{};for(const club in cs)for(const id of cs[club]){const k=A[id]||id,q=out[k]||(out[k]={apps:0,clubs:{},nat:null,n:''});(q.sq||(q.sq={}))[club]=1;}
   return out;}
+const vdOfClub=(q,club)=>(q.clubs[club]||0)>=1||!!(q.sq&&q.sq[club]);
 // one condition against a person (q from vdIndex) and the drafted card line (GK/DF/MF/FW)
 function vdMatch(c,q,line){if(!c||!q)return false;const p=c.params||{};
   switch(c.type){
-    case 'club':return (q.clubs[p.club]||0)>=1;
-    case 'clubs_any':return (p.clubs||[]).some(x=>(q.clubs[x]||0)>=1);
+    case 'club':return vdOfClub(q,p.club);
+    case 'clubs_any':return (p.clubs||[]).some(x=>vdOfClub(q,x));
     case 'club_apps_min':return (q.clubs[p.club]||0)>=p.n;
     case 'nationality':return p.nats?(p.nats.includes(q.nat)):(!!q.nat&&!(p.except||[]).includes(q.nat));
     case 'clubs_count_min':return Object.keys(q.clubs).length>=p.n;

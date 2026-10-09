@@ -27,6 +27,8 @@ const A=E.DATA.alias||{},canon=id=>A[id]||id,IDX=V.vdIndex(E.DATA,CUR);
   T.check(zero.length===5&&zero.every(([c,id])=>((IDX[canon(id)]||{clubs:{}}).clubs[c]||0)===real(c,id)&&(real(c,id)>0||!((IDX[canon(id)]||{clubs:{}}).clubs[c]>=1))),`у пулі ${zero.length} рядків з 0 матчів, жоден не робить гравцем клубу`);
   const kar=IDX[canon('tm:59322')],kar0=V.vdIndex(E.DATA)[canon('tm:59322')];
   T.check(kar0&&!kar0.clubs['shakhtar-donetsk']&&V.vdMatch({type:'club',params:{club:'shakhtar-donetsk'}},kar,'DF')&&!!kar.clubs['dynamo-kyiv'],'поточний сезон: Караваєв (лише 2026/27 за Шахтар) — гравець Шахтаря, і далі гравець Динамо');
+  const kov=IDX[canon('tm:120211')],ch0={type:'club',params:{club:'chornomorets-odesa'}};
+  T.check(kov&&!(kov.clubs['chornomorets-odesa']>=1)&&V.vdMatch(ch0,kov,'DF')&&!V.vdMatch(ch0,V.vdIndex(E.DATA,{apps:CUR.apps})[canon('tm:120211')],'DF')&&V.vdMatch({type:'clubs_count_min',params:{n:3}},kov,'DF')===(Object.keys(kov.clubs).length>=3),'заявка 2026/27: Коваль (без матчів за Чорноморець) — гравець Чорноморця, матчів і клубів «зіграв за» не додає');
   T.check(!Object.keys(CUR.apps).some(c=>!E.DATA.clubs.some(x=>x.c===c)),'поточний сезон: усі клуби — slug пулу (ФК Харків 2026 = Металіст 1925)');
   const ils=V.vdEventCard(ILS,E.DATA);
   T.check(ils&&ils.p[0]==='Ілсіньйо'&&ils.c.c==='shakhtar-donetsk','гравець події — його найсильніша картка УПЛ');
@@ -188,7 +190,7 @@ async function siteChecks(b){
   o=await page(b);await o.pg.click('#vdCard');await o.pg.waitForTimeout(500);await draft(o.pg,'avoid');
   const f=await o.pg.evaluate(()=>({t:document.getElementById('vdFail').textContent,st:JSON.parse(localStorage.getItem('upl30_vd_2026-10-12')),res:window.__dbg.S.result}));
   T.check(await secOf(o.pg)==='s11'&&/Не зараховано/.test(f.t)&&/Бракує ще двох гравців Шахтаря/.test(f.t)&&!/Що далі/.test(f.t)&&/Спроба 2 з 5/.test(f.t)&&!f.res,'умову не виконано: «Не зараховано», чому, без блоку «Що далі», спроба 2 з 5, сезон не грався: '+f.t.slice(0,300));
-  T.check(await o.pg.evaluate(()=>document.querySelectorAll('#vdFail .gate .cnote').length===1&&/нинішній чи колишній/.test(document.querySelector('#vdFail .gate .cnote').textContent)),'«Не зараховано»: підпис «гравець клубу — нинішній чи колишній» у блоці умови');
+  T.check(await o.pg.evaluate(()=>document.querySelectorAll('#vdFail .gate .cnote').length===1&&/зіграв за нього хоча б один матч в УПЛ або є в його заявці на сезон.2026\/27/.test(document.querySelector('#vdFail .gate .cnote').textContent)),'«Не зараховано»: підпис «гравець клубу — матч в УПЛ або заявка на сезон» у блоці умови');
   T.check(/Для умови/.test(f.t)&&/Бонус/.test(f.t)&&/Не підійшли/.test(f.t)&&f.st.used===1&&f.st.best===null,'розбір складу: для умови, бонус, не підійшли; спроба записана');
   await o.pg.screenshot({path:path.join(OUT,'v080_fail_phone_dark.png'),fullPage:true});
   // next attempt counts: prefer Shakhtar -> forecast -> season -> result block

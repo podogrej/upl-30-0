@@ -16,9 +16,9 @@ const VD_MON=['січня','лютого','березня','квітня','тр�
 const VD_MONTH=['Січень','Лютий','Березень','Квітень','Травень','Червень','Липень','Серпень','Вересень','Жовтень','Листопад','Грудень'];
 const VD_WD=['нд','пн','вт','ср','чт','пт','сб'];
 const vdDate=d=>`${+d.slice(8,10)} ${VD_MON[+d.slice(5,7)-1]}`;
-// any club condition: show the shared note that a club's player is anyone with a UPL match for it
+// any club condition: show the shared note on who counts as a club's player (UPL match or current-season squad)
 const vdClubIn=c=>!!c&&(['club','clubs_any','club_apps_min'].includes(c.type)||[c.of,c.parts].flat().some(vdClubIn));
-const VD_CLUB_NOTE='Гравець клубу — нинішній чи колишній: будь‑хто, хто зіграв за нього хоча б один матч в УПЛ.';
+const VD_CLUB_NOTE=`Гравець клубу — хто зіграв за нього хоча б один матч в УПЛ або є в його заявці на сезон ${VD_CUR.season||''}.`;
 const vdClubNote=(ch,cls)=>vdClubIn(ch.required)||vdClubIn(ch.bonus)?`<span class="${cls}">${VD_CLUB_NOTE}</span>`:'';
 const vdNo=ch=>[...new Set([ch.required.no,ch.bonus&&ch.bonus.no].filter(Boolean))].join(' · ')||'Не підходить';
 function vdMedals(best){return `<span class="vmst" role="img" aria-label="Медалі: бронза — 4, срібло — 6, золото — 9, ідеально — 11 з 11">${[...VD_MEDALS].reverse().map(([t,,,e])=>`<span class="${best!=null&&best>=t?'got':''}"><i>${e}</i>${t}</span>`).join('')}</span>`;}
