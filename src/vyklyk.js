@@ -3,8 +3,9 @@
 // Attempt: issued by the server (api/_vd.js via /api/seed) when the draft opens; finished when the XI is complete (condition missed: burns)
 // or on Play season (condition met: the server fixes the squad and returns the season seed). Offline: local attempt count and seed.
 const VD_LIST=/*__VD_LIST__*/[];
+const VD_CUR=/*__VD_CUR__*/{};   // season in progress: lib/vd_current.json
 const VD_DAY=(typeof window.__vdToday==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(window.__vdToday))?window.__vdToday:DAY;   // test hook: pretend another day is today
-let VD_IDX=null;const vdIdx=()=>VD_IDX||(VD_IDX=vdIndex(DATA));
+let VD_IDX=null;const vdIdx=()=>VD_IDX||(VD_IDX=vdIndex(DATA,VD_CUR));
 const vdCh=day=>vdFind(VD_LIST,day);
 const VD_SRV={};   // own results from the server (archive): day -> {used, best}
 function vdSt(day){const s=lsGet('upl30_vd_'+day)||{};return {used:s.used||0,best:s.best??null,tries:s.tries||[],open:s.open||null};}
