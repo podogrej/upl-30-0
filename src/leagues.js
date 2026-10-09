@@ -42,6 +42,34 @@ const flMe=d=>PLAYER&&PLAYER.public_id&&d&&d.board.some(r=>r.u===PLAYER.public_i
 const flRules=r=>`<div class="fl-rules">${r.split(' · ').map(x=>`<span class="chip">${esc(x)}</span>`).join('')}</div>`;
 const flBadge=f=>`<i class="fl-badge">${f==='5'?'5×5':'11×11'}</i>`;
 const flTime=t=>{try{return new Intl.DateTimeFormat('uk-UA',{timeZone:'Europe/Kyiv',hour:'2-digit',minute:'2-digit',day:'numeric',month:'short'}).format(new Date(t));}catch(e){return '';}};
+const flDay=t=>{try{return new Intl.DateTimeFormat('uk-UA',{timeZone:'Europe/Kyiv',day:'numeric',month:'short'}).format(new Date(t));}catch(e){return '';}};
+// origin line under the title: who made the league and when (fl_get: owner_name, created_at)
+function flOrigin(d){const me=PLAYER&&PLAYER.public_id,day=d.created_at?flDay(d.created_at):'';if(!day)return '';
+  const who=me&&d.owner===me?'ти':d.owner_name?esc(d.owner_name):'';return `<p class="fl-origin">${who?`Створив ${who} · ${day}`:`Створено ${day}`}</p>`;}
+// bottom of the league page: owner deletes (asks first when others play), member leaves; hidden when signed out
+function flFootHtml(d){const me=PLAYER&&PLAYER.public_id;if(!me||!SESSION||!flMe(d))return '';
+  const n=Number(d.members)||d.board.length;
+  if(d.owner!==me)return `<div class="fl-foot"><button class="fl-quiet calm" id="flLeave">Вийти з ліги</button></div>`;
+  if(FL.confirm&&n>1)return `<div class="fl-foot"><div class="fl-delbox pp-delbox" role="group" aria-label="Видалення ліги"><p>Ліга зникне у всіх ${n} ${plUk(n,'гравця','гравців','гравців')}.</p><div class="row"><button class="danger" id="flDelYes">Видалити</button><button class="ghost" id="flDelNo">Скасувати</button></div></div></div>`;
+  return `<div class="fl-foot"><button class="fl-quiet" id="flDel">Видалити лігу</button></div>`;}
+const flManageErr=e=>/login\?|28000/.test(String(e&&e.message||e))?'Увійди, щоб керувати лігою':'Не вдалося. Спробуй ще раз.';
+// leave / delete: server call, back to the list, toast with Undo (same RPC with p_undo)
+async function flGone(fn,btn){const id=FL.id;btn.disabled=true;
+  try{await playerRpc(fn,{p_id:id});}catch(e){btn.disabled=false;toast(flManageErr(e));return;}
+  openFriends();toast(fn==='fl_delete'?'Лігу видалено':'Ти вийшов з ліги','Повернути',()=>flUndo(fn,id));}
+async function flUndo(fn,id){try{await playerRpc(fn,{p_id:id,p_undo:true});}catch(e){toast(flManageErr(e));return;}openLeague(id);}
+// one bottom toast: toast(text, actionLabel, onAction); hides after 7 s, the timer is paused on touch, hover and focus
+const TOAST_MS=7000,TOAST={t:0,left:0,at:0,hold:false};
+function toastHide(){clearTimeout(TOAST.t);const el=document.getElementById('toast');if(el)el.innerHTML='';}
+function toastHold(on){const c=document.querySelector('#toast .toast');if(!c||TOAST.hold===on)return;TOAST.hold=on;c.classList.toggle('hold',on);
+  if(on){clearTimeout(TOAST.t);TOAST.left-=Date.now()-TOAST.at;}else{TOAST.at=Date.now();TOAST.t=setTimeout(toastHide,Math.max(TOAST.left,600));}}
+function toast(text,action,fn){let el=document.getElementById('toast');
+  if(!el){el=document.createElement('div');el.id='toast';el.setAttribute('role','status');el.setAttribute('aria-live','polite');document.body.appendChild(el);}
+  clearTimeout(TOAST.t);TOAST.left=TOAST_MS;TOAST.hold=false;TOAST.at=Date.now();
+  el.innerHTML=`<div class="toast"><span>${esc(text)}</span>${action?`<button type="button">${esc(action)}</button>`:''}<i></i></div>`;
+  const c=el.firstChild;c.onpointerenter=c.onfocusin=()=>toastHold(true);c.onpointerleave=c.onpointercancel=c.onfocusout=()=>toastHold(false);
+  if(action)c.querySelector('button').onclick=()=>{toastHide();fn&&fn();};
+  TOAST.t=setTimeout(toastHide,TOAST_MS);}
 // ---------- markup
 function flRender(){const el=document.getElementById('fl');if(!el||!FL)return;
   el.innerHTML=FL.view==='create'?flCreateHtml():FL.view==='draft5'?fl5DraftHtml():FL.view==='match5'?fl5MatchHtml():FL.view==='league'?(FL.data&&FL.data.fmt==='5'?fl5LeagueHtml():flLeagueHtml()):flListHtml();flWire();}
@@ -89,11 +117,11 @@ function flLeagueHtml(){const d=FL.data;
   // fewer than 3 members: invite is the main action right under the round card; otherwise a compact share button in the header
   const invite=few?`<div class="fl-invc"><b>Запроси друзів</b><p class="muted">У лізі ще мало гравців. Надішли посилання в чат.</p><div class="fl-inv"><input readonly value="${esc(link)}" id="flLinkIn" aria-label="Посилання на лігу">${shareBtn('primary')}</div><p class="muted" id="flShareMsg" style="font-size:var(--fs-footnote)"></p></div>`:'';
   const compact=!d.over&&!few?shareBtn('ghost fl-sh'):'';
-  return `<div class="fl-head"><div class="fl-top"><h1>${esc(d.name)} <i class="fl-badge">11×11</i></h1>${compact}</div>${flRules(rules)}${compact?'<p class="muted" id="flShareMsg" style="font-size:var(--fs-footnote);margin:0"></p>':''}</div>${card}${invite}
+  return `<div class="fl-head"><div class="fl-top"><h1>${esc(d.name)} <i class="fl-badge">11×11</i></h1>${compact}</div>${flOrigin(d)}${flRules(rules)}${compact?'<p class="muted" id="flShareMsg" style="font-size:var(--fs-footnote);margin:0"></p>':''}</div>${card}${invite}
     <div class="sec0">Таблиця</div><div class="seg fl-tabs"><button data-tab="all" class="${all?'on':''}">Загальна</button><button data-tab="tour" class="${all?'':'on'}">${d.over?'Останній тур':`Тур ${numOr0(d.day_n)} · сьогодні`}</button></div>
     ${rows?`<div class="tbl"><table><tr><th>#</th><th>Гравець</th><th class="num">${all?'Виграв':'Сезон'}</th><th class="num">Оч</th></tr>${rows}</table></div>`:`<p class="pp-empty">${all?'Поки нікого.':'Сьогодні ще ніхто не зіграв.'}</p>`}
     <p class="muted" style="font-size:var(--fs-caption)">${d.scoring==='place'?'За місце в турі: 1-й отримує стільки очок, скільки гравців зіграло того дня, останній — 1. Не зіграв — 0.':'Сума: у залік туру йдуть очки сезону. Не зіграв — 0.'}</p>
-    <button class="ghost" id="flBack" style="margin-top:var(--sp-4)">Усі мої ліги</button>`;}
+    <button class="ghost" id="flBack" style="margin-top:var(--sp-4)">Усі мої ліги</button>${flFootHtml(d)}`;}
 // ---------- actions
 function flWire(){const $=id=>document.getElementById(id),el=$('fl');
   if($('flLogin'))$('flLogin').onclick=()=>{ACCT_MSG='';openAcct();};
@@ -113,6 +141,10 @@ function flWire(){const $=id=>document.getElementById(id),el=$('fl');
       catch(e){b.disabled=false;m.textContent=flErr(e);}};}
   if(FL.view==='draft5'||FL.view==='match5'||(FL.view==='league'&&FL.data&&FL.data.fmt==='5'))fl5Wire($,el);
   if(FL.view==='league'){
+    if($('flDel'))$('flDel').onclick=()=>{const d=FL.data;if((Number(d.members)||d.board.length)>1){FL.confirm=true;flRender();$('flDelNo').focus();}else flGone('fl_delete',$('flDel'));};
+    if($('flDelNo'))$('flDelNo').onclick=()=>{FL.confirm=false;flRender();$('flDel').focus();};
+    if($('flDelYes'))$('flDelYes').onclick=()=>flGone('fl_delete',$('flDelYes'));
+    if($('flLeave'))$('flLeave').onclick=()=>flGone('fl_leave',$('flLeave'));
     el.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{FL.tab=b.dataset.tab;flRender();});
     el.querySelectorAll('[data-form]').forEach(b=>b.onclick=()=>{FL.formation=b.dataset.form;lsSet('upl30_fl_form',FL.formation);flRender();});
     if($('flPlay'))$('flPlay').onclick=flPlay;
@@ -193,8 +225,8 @@ function fl5LeagueHtml(){const d=FL.data,me=PLAYER&&PLAYER.public_id,member=flMe
   // fewer than 3 members: invite right under the status card as the main action; otherwise a compact share button in the header
   const invite=few?`<div class="fl-invc"><b>Запроси друзів</b><p class="muted">У лізі ще мало гравців. Надішли посилання в чат.</p><div class="fl-inv"><input readonly value="${esc(link)}" id="flLinkIn" aria-label="Посилання на лігу">${shareBtn('primary')}</div><p class="muted" id="flShareMsg" style="font-size:var(--fs-footnote)"></p></div>`:'';
   const compact=open&&!few?shareBtn('ghost fl-sh'):'';
-  return `<div class="fl-head"><div class="fl-top"><h1>${esc(d.name)} ${flBadge('5')}</h1>${compact}</div>${flRules(rules)}${compact?'<p class="muted" id="flShareMsg" style="font-size:var(--fs-footnote);margin:0"></p>':''}</div>${card}${invite}<div id="fl5Tro" hidden></div>${out}
-    <button class="ghost" id="flBack" style="margin-top:var(--sp-4)">Усі мої ліги</button>`;}
+  return `<div class="fl-head"><div class="fl-top"><h1>${esc(d.name)} ${flBadge('5')}</h1>${compact}</div>${flOrigin(d)}${flRules(rules)}${compact?'<p class="muted" id="flShareMsg" style="font-size:var(--fs-footnote);margin:0"></p>':''}</div>${card}${invite}<div id="fl5Tro" hidden></div>${out}
+    <button class="ghost" id="flBack" style="margin-top:var(--sp-4)">Усі мої ліги</button>${flFootHtml(d)}`;}
 // match: score, events by minute (goals, penalties, VAR), shootout; "watch live" reveals events one by one
 function fl5Feed(m,nm){const it=[];
   for(const e of m.ev)if(!e.pen)it.push({min:e.min,side:e.side,g:1,h:`${ic('soccer','sm')}<b>${esc(e.sc.name)}</b>${e.as?`<span class="muted"> · пас ${esc(e.as.name)}</span>`:''}`});

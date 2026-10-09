@@ -465,6 +465,17 @@ a.fl-row{text-decoration:none}
 .fl-bars{display:flex;gap:var(--sp-2)}.fl-bars i{flex:1;height:7px;border-radius:var(--r-xs);background:var(--line)}.fl-bars i.done{background:var(--win)}.fl-bars i.now{background:var(--amber)}
 .fl-tries{display:flex;flex-wrap:wrap;align-items:center;gap:var(--sp-2);font-size:var(--fs-body)}.fl-try{display:inline-grid;place-items:center;min-width:30px;height:30px;border:1px solid var(--line);border-radius:var(--r-sm);font-family:var(--font-mono,monospace)}.fl-try.on{background:var(--ink);color:var(--bg)}
 .fl-forms{display:flex;flex-wrap:wrap;justify-content:center;gap:var(--sp-2)}.fl-tour>.big0,.fl-tour>#flMsg{justify-self:center;text-align:center}.fl-rules{display:flex;flex-wrap:wrap;gap:var(--sp-2)}   /* iPad: formations and play-attempt button centered in the card; rules as chips */.fl-tabs{margin:0 0 var(--sp-2)}
+.fl-origin{color:var(--ink2);line-height:var(--lh-sub)}
+.fl-foot{display:grid;justify-items:center;gap:var(--sp-2);margin:var(--sp-6) 0 var(--sp-5)}
+.fl-quiet{border:0;background:none;color:var(--loss);font:var(--wt-bold) var(--fs-footnote) var(--font-body);min-height:44px;padding:0 var(--sp-4)}.fl-quiet.calm{color:var(--ink2)}
+.fl-note{margin:0;color:var(--ink2);font-size:var(--fs-caption);line-height:var(--lh-sub);text-align:center;max-width:34ch}
+.fl-foot .fl-delbox{width:100%;padding:var(--sp-3) var(--sp-4)}.fl-foot .fl-delbox p{font-size:var(--fs-body);line-height:var(--lh-sub)}.fl-foot .fl-delbox .row{flex-wrap:nowrap}.fl-foot .fl-delbox .row button{flex:1 1 0;min-width:0;min-height:44px;padding-inline:var(--sp-3)}
+#toast{position:fixed;left:var(--sp-4);right:var(--sp-4);bottom:calc(var(--sp-4) + env(safe-area-inset-bottom,0px));z-index:70;pointer-events:none}
+.toast{position:relative;max-width:520px;margin:0 auto;pointer-events:auto;display:flex;align-items:center;justify-content:space-between;gap:var(--sp-3);background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:var(--r-md);padding:var(--sp-1) var(--sp-1) var(--sp-1) var(--sp-4);box-shadow:var(--sh-2,0 8px 28px rgba(0,0,0,.35));font-size:var(--fs-body);animation:toastIn var(--dur-2,.2s) ease-out}
+.toast:not(:has(button)){padding:var(--sp-3) var(--sp-4)}.toast button{border:0;background:none;color:var(--amber);font:var(--wt-bold) var(--fs-body) var(--font-body);min-height:44px;padding:0 var(--sp-4)}
+.toast i{position:absolute;left:var(--sp-4);right:var(--sp-4);bottom:0;height:2px;border-radius:2px;background:var(--amber);opacity:.55;transform-origin:left;animation:toastBar 7s linear forwards}.toast.hold i{animation-play-state:paused}
+@keyframes toastIn{from{opacity:0;transform:translateY(8px)}}@keyframes toastBar{to{transform:scaleX(0)}}
+@media (prefers-reduced-motion:reduce){.toast{animation:none}}
 .fl-top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:var(--sp-2)}.fl-top h1{flex:1 1 12em;min-width:0}.fl-sh{display:inline-flex;align-items:center;gap:var(--sp-2);min-height:44px}.fl-sh .ico{width:18px;height:18px}
 .fl-invc{display:grid;grid-template-columns:minmax(0,1fr);gap:var(--sp-2);margin-top:var(--sp-3);padding:var(--sp-4);border:1px solid var(--line);border-radius:var(--r-lg);background:var(--surface)}.fl-invc>b{font-family:var(--font-display);font-size:var(--fs-headline)}.fl-invc p{margin:0}.fl-invc .fl-inv button{min-height:48px}
 .fl-inv{display:flex;gap:var(--sp-2)}.fl-inv input{flex:1;min-width:0;font:inherit;font-family:var(--font-mono,monospace);font-size:var(--fs-headline);padding:var(--sp-3) var(--sp-3);border:1px solid var(--line);border-radius:var(--r-md);background:var(--surface);color:var(--ink)}.fl-inv button{padding:0 var(--sp-4);display:inline-flex;align-items:center;gap:var(--sp-2);font-weight:var(--wt-bold)}
@@ -1185,7 +1196,7 @@ h3,.sec0,#s1 .sec0,.pgh,.trleg .h{font-size:var(--fs-footnote);font-weight:var(-
   <div class="acts"><button class="ft-send" id="fbSend" type="submit">Надіслати</button><button class="ft-cancel" id="fbCancel" type="button">Скасувати</button></div></form>
 <div class="ft-done" id="fbDone" hidden><b>✓</b><span>Дякуємо! Прочитаємо найближчим часом</span></div>
 <div class="ft-pills"><button class="ft-pill" id="fbBtn" type="button"><!--i:mail-->Відгук і баги</button><a class="ft-pill" id="ftBot" href="https://t.me/upl30_bot" target="_blank" rel="noopener"><!--i:telegram-->Telegram-бот</a></div>
-<div class="foot ft-small"><a href="#" id="newsBtn">Що нового у версії 0.80.3<b id="newsDot" hidden></b></a><a href="privacy.html">Конфіденційність</a><a href="terms.html">Умови використання</a></div>
+<div class="foot ft-small"><a href="#" id="newsBtn">Що нового у версії 0.81<b id="newsDot" hidden></b></a><a href="privacy.html">Конфіденційність</a><a href="terms.html">Умови використання</a></div>
 <div class="foot ft-copy">© 2026 30-0 УПЛ · неофіційний фан-проєкт <a href="#" id="themeBtn" class="thm" role="switch" aria-checked="false" aria-label="Світла тема"></a></div>
 <p class="ft-legal">30-0 УПЛ — незалежний фан-проєкт: футбольний драфт і симулятор сезону. Він не пов'язаний з Українською Прем'єр-лігою, Українською асоціацією футболу, клубами, футболістами, їхніми об'єднаннями чи іншими організаціями й не схвалений ними. Назви клубів, імена футболістів, рейтинги, статистику й дані сезонів використано лише з інформаційною та довідковою метою. Офіційні логотипи, емблеми та фото футболістів не використовуються. Усі торговельні марки належать їхнім власникам.</p>
 <div class="ft-cred">Шрифт KyivType Sans © Дмитро Растворцев (айдентика Києва)<br>Іконки: Material Design Icons (Apache 2.0), логотип Telegram — Font Awesome Free (CC BY 4.0)</div>
@@ -2499,7 +2510,8 @@ function drawCard(r){   // card in site style: UPL navy background, UPL.TV gradi
 }
 document.getElementById('chalOpen').onclick=()=>{const b=document.getElementById('chalBox'),t=document.getElementById('chalOpen');b.hidden=!b.hidden;t.classList.toggle('on',!b.hidden);if(!b.hidden){b.scrollIntoView({behavior:'smooth',block:'center'});const n=document.getElementById('chalName');if(n&&!n.hidden&&!n.value)n.focus();}};
 // ---------- What's new: short player-friendly notes on the latest version (technical log: CHANGELOG.md)
-const WHATSNEW={v:'0.80.3',news:'0.80.3',date:'09.10.2026',items:[   // news: edition of the items; a release without new items keeps it, so the news dot does not light up again
+const WHATSNEW={v:'0.81',news:'0.81',date:'09.10.2026',items:[   // news: edition of the items; a release without new items keeps it, so the news dot does not light up again
+  ['logout','Вийти з ліги','Зі своєї ліги можна вийти, а створену тобою — видалити. Передумав — «Повернути».'],
   ['swap-horizontal','Літні трансфери','У виклику дня гравець рахується за новий клуб, щойно потрапив до його заявки на поточний сезон. Підказка під умовою пояснює, хто такий гравець клубу.'],
   ['calendar-star','Виклик дня','Щодня нова умова на склад, привʼязана до події. 5 спроб, рахується краща. Очки — гравці під умову або бонус: 4 — бронза, 6 — срібло, 9 — золото, 11 — «Ідеально».']]};
 function openNews(){screenTag('news');const box=document.getElementById('viewBox');document.getElementById('viewTitle').textContent=`Що нового · версія ${WHATSNEW.v}`;
