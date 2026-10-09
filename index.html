@@ -3697,7 +3697,7 @@ const VD_MONTH=['Січень','Лютий','Березень','Квітень',
 const VD_WD=['нд','пн','вт','ср','чт','пт','сб'];
 const vdDate=d=>`${+d.slice(8,10)} ${VD_MON[+d.slice(5,7)-1]}`;
 // any club condition: show the shared note that a club's player is anyone with a UPL match for it
-const vdClubIn=c=>!!c&&(c.type==='club'||[...(c.of||[]),...(c.parts||[])].some(vdClubIn));
+const vdClubIn=c=>!!c&&(['club','clubs_any','club_apps_min'].includes(c.type)||[c.of,c.parts].flat().some(vdClubIn));
 const VD_CLUB_NOTE='Гравець клубу — нинішній чи колишній: будь‑хто, хто зіграв за нього хоча б один матч в УПЛ.';
 const vdClubNote=(ch,cls)=>vdClubIn(ch.required)||vdClubIn(ch.bonus)?`<span class="${cls}">${VD_CLUB_NOTE}</span>`:'';
 const vdNo=ch=>[...new Set([ch.required.no,ch.bonus&&ch.bonus.no].filter(Boolean))].join(' · ')||'Не підходить';
