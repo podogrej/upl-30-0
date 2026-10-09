@@ -3781,7 +3781,7 @@ function vdBrief(){const el=document.getElementById('vdBrief'),bar=document.getE
   el.hidden=false;el.classList.toggle('ok',e.gate);
   el.innerHTML=`<div class="bl"><p class="bk">Виклик дня · ${vdDate(v.day)}${v.late?' · архів':''}</p><h2 class="bh1">${em?`<span class="em" aria-hidden="true">${em}</span>`:''}<span>${esc(tt)}</span></h2><p class="bs1">${esc(ch.story)}</p></div>`
     +`<div class="br"><div class="rqx"><div class="rq1"><span class="tag-req">${e.gate?ic('check-circle'):''}Обовʼязково</span><span class="cnt" aria-label="Виконано ${e.have} з ${e.need}">${e.have}<i>/${e.need}</i></span></div>`
-    +`<b class="rq2">${esc(rq.label)}</b>${vdClubNote(ch,'cnote')}<p class="rq3">${names.length?`Зараховано: <b>${esc(names.join(', '))}</b>`:'Поки нікого'}</p><div class="rqseg" aria-hidden="true" style="--n:${e.need}">${Array.from({length:e.need},(_,i)=>`<i class="${i<e.have?'on':''}"></i>`).join('')}</div></div>`
+    +`<b class="rq2">${esc(rq.label)}</b>${vdClubNote(ch,'cnote')}${names.length?`<p class="rq3">Зараховано: <b>${esc(names.join(', '))}</b></p>`:''}<div class="rqseg" aria-hidden="true" style="--n:${e.need}">${Array.from({length:e.need},(_,i)=>`<i class="${i<e.have?'on':''}"></i>`).join('')}</div></div>`
     +`<p class="bon1"><span class="lb">Бонус</span>${ch.bonus?`<span class="bv">${esc(ch.bonus.label)}</span><span class="bn">теж рахуються в N/11</span>`:`<span class="bn">рахуються всі, хто підходить під умову</span>`}</p>`
     +`<div class="meta"><div><small>Спроба</small><b>${v.attempt} з ${VD_ATTEMPTS}</b><span class="pips" aria-hidden="true">${pips}</span></div><div><small>Перекрутки</small><b>${Math.max(0,S.rerolls)} з ${tot}</b></div>`
     +`<div class="mm"><small>Медалі</small>${vdMedals(null)}</div></div></div>`;
