@@ -1,9 +1,10 @@
 // Home with solo / with-friends sections, animations (player flies to the pitch, goal flash, summary counters), champion dialog with cup and confetti;
 // reduced motion disables animations. Run from repo root: node tools/tests/v064.js [screenshot dir]
-const path=require('path'),fs=require('fs');const {ROOT,launch}=require('./_page.js');const {checker}=require('./_site.js');
+const path=require('path'),fs=require('fs');const {ROOT,launch,fastReel}=require('./_page.js');const {checker}=require('./_site.js');
 const OUT=process.argv[2]||path.join(ROOT,'tools','tests','out');fs.mkdirSync(OUT,{recursive:true});
 async function open(b,opts={}){const ctx=await b.newContext({viewport:{width:390,height:844},...opts});
-  await ctx.route(u=>!(u.href.startsWith('file:')||/fonts\.(googleapis|gstatic)\.com/.test(u.host)),r=>r.abort());
+  await fastReel(ctx);
+  await ctx.route(u=>!u.href.startsWith('file:'),r=>r.abort());
   await ctx.addInitScript(()=>{window.__champTest=true;});
   const pg=await ctx.newPage();const errs=[];pg.on('pageerror',e=>errs.push(e.message));await pg.goto('file://'+path.join(ROOT,'index.html'));await pg.waitForTimeout(800);return {ctx,pg,errs};}
 async function pickOne(pg){await pg.click('#spinBtn');await pg.waitForSelector('#squad .pl:not([disabled])',{timeout:8000});

@@ -1,6 +1,6 @@
 // Offline "online-like" site: index.html served from https://upl.test/, Supabase REST backed by an in-memory DB,
 // /api/* routed to test handlers (may be the real api/ handlers, whose fetch hits the same DB). No other requests leave.
-const path=require('path'),fs=require('fs');const {ROOT,launch}=require('./_page.js');
+const path=require('path'),fs=require('fs');const {ROOT,launch,fastReel,ready}=require('./_page.js');
 const SITE='https://upl.test/',SB_HOST='qruhcbwycrnfgzzdbljr.supabase.co';
 const CORS={'access-control-allow-origin':'*','access-control-allow-headers':'*','access-control-allow-methods':'GET,POST,PATCH,DELETE,OPTIONS'};
 // supabase-js stub: no session; verifyOtp signs in as opts.user
@@ -70,13 +70,13 @@ async function openSite(opts={}){
         return r.fulfill({status:x.status,headers:{...CORS,'content-type':'application/json'},body:x.body});}
       if(u.host==='cdn.jsdelivr.net'&&/supabase/.test(u.pathname))return r.fulfill({contentType:'application/javascript',body:SB_STUB(opts.user,opts.signed)});   // signed: already logged in
       if(u.host==='telegram.org'&&opts.tg)return r.fulfill({contentType:'application/javascript',body:`window.Telegram={WebApp:Object.assign({ready(){},expand(){},openTelegramLink(u){(window.__tgLinks=window.__tgLinks||[]).push(u);},onEvent(){},isVersionAtLeast(){return false;},disableVerticalSwipes(){window.__noSwipe=1;}},${JSON.stringify(opts.tg)})};`});
-      if(/fonts\.(googleapis|gstatic)\.com/.test(u.host))return r.continue();
       return r.abort();
     }catch(e){console.log('route error',u.href,e.message);return r.abort();}});
+  if(opts.fastReel!==false)await fastReel(ctx);   // reel spin is instant in tests (fastReel:false keeps the real animation)
   const vdToday=opts.vdToday===undefined?'2026-10-12':opts.vdToday;if(vdToday)await ctx.addInitScript(d=>{window.__vdToday=d;},vdToday);   // daily challenge "today" fixed to a day with content (as in _page.js)
   if(opts.init)await ctx.addInitScript(opts.init);   // e.g. seed localStorage before the game loads
   const pg=await ctx.newPage();const errs=[];pg.on('pageerror',e=>errs.push(e.message));pg.on('dialog',d=>/Склад не збережеться/.test(d.message())?d.accept():d.dismiss());   // auto-accept the leave-unfinished-draft confirm
-  await pg.goto(SITE+(opts.query||'')+(opts.hash||''));await pg.waitForTimeout(opts.wait||1000);
+  await pg.goto(SITE+(opts.query||'')+(opts.hash||''));await ready(pg);await pg.waitForTimeout(opts.wait?Math.max(100,opts.wait-600):400);
   return {b,ctx,pg,errs,log};}
 // draft 11 players (first available player, first highlighted slot) and skip the season animation; onSpin runs after each spin
 async function draftSeason(pg,onSpin){

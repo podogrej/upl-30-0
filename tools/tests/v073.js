@@ -1,7 +1,7 @@
 // Draft and summary layout: setup without mode tiles, phone mini-bar and scroll to the list, pitch labels per width, summary hero,
 // best scorer line, distinct draft icons, summary width on iPad. Screenshots: tools/tests/out/v073_*.png
 // Run from repo root: node tools/tests/v073.js [screenshot dir]
-const path=require('path'),fs=require('fs');const {ROOT,openPage,playSeason}=require('./_page.js');const {checker}=require('./_site.js');
+const path=require('path'),fs=require('fs');const {ROOT,launch,openPage,playSeason}=require('./_page.js');const {checker}=require('./_site.js');
 const OUT=process.argv[2]||path.join(ROOT,'tools','tests','out');fs.mkdirSync(OUT,{recursive:true});
 const shot=(pg,n,full)=>pg.screenshot({path:path.join(OUT,`v073_${n}.png`),fullPage:!!full});
 const theme=(pg,t)=>pg.evaluate(t=>document.documentElement.setAttribute('data-theme',t),t);
@@ -10,14 +10,12 @@ const hit=(a,b)=>Math.min(a.right,b.right)-Math.max(a.left,b.left)>0.5&&Math.min
 const box=(pg,sel)=>pg.$eval(sel,e=>{const r=e.getBoundingClientRect();return {left:r.left,right:r.right,top:r.top,bottom:r.bottom,width:r.width,height:r.height};});
 async function pickOne(pg){await pg.click('#spinBtn');await pg.waitForSelector('#squad .pl:not([disabled])',{timeout:8000});await (await pg.$('#squad .pl:not([disabled])')).click();await pg.waitForTimeout(80);
   const t=await pg.$('#pitch .slot.target');if(t){await t.click();await pg.waitForTimeout(60);}}
-(async()=>{const T=checker('0.73');const {b,pg,errs}=await openPage();
- // ---- setup (classic): no mode tiles, title = mode, two difficulty options, start button does not cover anything
+(async()=>{const T=checker('0.73');const B=await launch();   // one browser, a new context per page
+ const {b,pg,errs}=await openPage({b:B});
+ // ---- setup (classic): era options, start button does not cover anything
  await pg.click('#freeOpen');await pg.waitForTimeout(400);
- const su=await pg.evaluate(()=>({tiles:!!document.getElementById('formats'),title:document.getElementById('setTitle').textContent,h3:[...document.querySelectorAll('#s4 h3')].map(h=>h.textContent),
-   dif:[...document.querySelectorAll('#modes .opt')].map(o=>o.textContent),era:!document.getElementById('eraBox').hidden,pos:getComputedStyle(document.getElementById('startBtn')).position}));
- T.check(!su.tiles&&!su.h3.includes('Режими'),'налаштування: блоку режимів немає');
- T.check(su.title==='Класика','налаштування: заголовок — режим («'+su.title+'»)');
- T.check(su.dif.join()==='Звичайний,Складний'&&su.era,'налаштування: дві кнопки складності, роки для класики');
+ const su=await pg.evaluate(()=>({era:!document.getElementById('eraBox').hidden,pos:getComputedStyle(document.getElementById('startBtn')).position}));   // mode tiles, title and difficulty options: modes.js, scenarios.js
+ T.check(su.era,'налаштування: роки для класики');
  T.check(su.pos!=='fixed'&&su.pos!=='sticky','«Почати драфт» у потоці, не прилипає ('+su.pos+')');
  for(const y of ['top','bottom']){await pg.evaluate(y=>window.scrollTo(0,y==='top'?0:document.body.scrollHeight),y);await pg.waitForTimeout(150);
    const sb=await box(pg,'#startBtn');const opts=await pg.$$eval('#s4 .opt, #eras button',els=>els.map(e=>{const r=e.getBoundingClientRect();return {left:r.left,right:r.right,top:r.top,bottom:r.bottom};}));
@@ -91,7 +89,7 @@ async function pickOne(pg){await pg.click('#spinBtn');await pg.waitForSelector('
    if(w===1180)T.check(g.club.length>0&&g.club.every(x=>x==='block'),'підсумок на iPad: рядок клубу на полі є');
    await shot(pg,n,true);}
  // phone: overall rating on the summary pitch without the club name; zone line capitalised; season pick buttons in view after the club spin
- {const o=await openPage({viewport:{width:375,height:667}});await playSeason(o.pg,'classic',1,1);
+ {const o=await openPage({b:B,viewport:{width:375,height:667}});await playSeason(o.pg,'classic',1,1);
   const r=await o.pg.evaluate(()=>({tier:document.getElementById('tier').textContent,r0:[...document.querySelectorAll('#final .pitch .slot .r0')].filter(e=>e.offsetParent).length,ct:[...document.querySelectorAll('#final .pitch .slot .ct')].filter(e=>e.offsetParent).length}));
   T.check(r.r0===11&&r.ct===0,`телефон: загальний рейтинг на полі підсумку (${r.r0}), клубу немає (${r.ct})`);
   T.check(r.tier[0]===r.tier[0].toUpperCase(),'рядок зони з великої літери: '+r.tier);
@@ -101,4 +99,4 @@ async function pickOne(pg){await pg.click('#spinBtn');await pg.waitForSelector('
   T.check(q.bot<=q.vh,`вибір сезону: кнопки сезонів у кадрі після колеса (${Math.round(q.bot)} ≤ ${q.vh})`);
   T.check(!o.errs.length,'телефон 375: помилок немає '+o.errs.join(' | '));await o.b.close();}
  T.check(!errs.length,'помилок на сторінці немає '+errs.join(' | '));
- await b.close();process.exit(T.done());})();
+ await b.close();await B.close();process.exit(T.done());})();
