@@ -130,14 +130,14 @@ async function serverChecks(){
   T.check(yf.json.late===true&&db.DB.vd_results.find(r=>r.device_id===dev&&r.day===YDAY).late===true,'архів: спроба за вчора позначена late (не в серію)');
   const mine=await call({vd:'mine'});
   T.check(mine.status===200&&mine.json.days.find(d=>d.day===TODAY).attempts===5,'свої результати для архіву (vd_mine)');
-  // older 0.79.2 tab: daily draft season still verified by the same engine
+  // older 0.79.2 tab: different ratings since 0.82, so the season is 'not verified' (null), not 'forged'
   const D=E.dailySetupFor(TODAY),dv=crypto.randomUUID();E.setFormat('classic');const dxi=[],u=new Set();
   for(const slot of E.FORMATIONS[D.formation].slots){let pick=null;for(const i of D.seq){const c=E.DATA.clubs[i];for(const p of c.pl){if(u.has(canon(p[5])))continue;const r=E.effRating(p,slot);if(r!=null){pick={c,p,r};break;}}if(pick)break;}
     u.add(canon(pick.p[5]));dxi.push({n:pick.p[0],id:pick.p[5],slot,r:pick.r,r0:pick.p[2],c:pick.c.n,y:pick.c.y});}
   const ds=await callApi(seedH,{device_id:dv,secret,xi:dxi,formation:D.formation,mode:'daily',format:'classic',year:D.year,daily:true});
   const dq=E.run({xi:SX(dxi),mode:'daily',format:'classic',year:D.year,seed:ds.json.seed});
   const dsv=await callApi(saveH,{kind:'season',device_id:dv,secret,row:{mode:'daily',format:'classic',formation:D.formation,year:D.year,seed:ds.json.seed,seed_id:ds.json.seed_id,version:'0.79.2',xi:dxi,day:TODAY,practice:false,w:dq.W,d:dq.D,l:dq.L,pts:dq.pts,place:dq.place,gf:dq.gf,ga:dq.ga,perfect:dq.W===30}});
-  T.check(dsv.json.verified===true,'стара вкладка 0.79.2: сезон драфту дня перевірено ('+dsv.json.note+')');
+  T.check(dsv.json.verified===null,'стара вкладка 0.79.2: сезон не перевірено, а не підробка ('+dsv.json.note+')');
 }
 
 // ---- C. site

@@ -42,14 +42,14 @@ Transfermarkt (Kaggle) и sports.ru (этапы 1–5, сентябрь 2026), �
 |---|---|---|
 | 1 | `research_assists/inject_assists_2021.py` | ассисты 2021/22 (поле 8) из `assists_2021_more.csv`; карточки, отданные другим людям в `fix_2021`, пропускает |
 | 2 | `fix_2021/fix_pool_2021.py` | исправления 2021/22 по sports.ru (Селін, Кльоц, Махнєв, Кравченко, Павловець, Шеліхов, Маріуполь); рейтинг — формула этапа 4 (`recompute_2021.py`) + `smooth_cameo.smoothed()` |
-| 3 | `ratings/smooth_cameo.py` | итоговый рейтинг всех карточек из `pool_ratings_raw.json`: сглаживание камео по человеку (canonical id, с 0.57) + сжатие верха (`TOP_PTS`) + рейтинги v2; как модуль — `smoothed(pool, raw)` (только сглаживание) и `final(pool, raw)` (итог, им пишут fix-скрипты) |
+| 3 | `ratings/smooth_cameo.py` | итоговый рейтинг всех карточек из `pool_ratings_raw.json`: сглаживание камео по человеку (0.57–0.81, с 0.82 выключено: `SMOOTH = False`) + сжатие верха (`TOP_PTS`) + рейтинги v2; как модуль — `smoothed(pool, raw)` (только сглаживание) и `final(pool, raw)` (итог, им пишут fix-скрипты) |
 | 4 | `foot/inject.py` | `pool['foot']` из `foot/foot.csv` (у каждого значения — источник) |
 | 5 | `positions/verify_manual.py <кэш> --apply` | сверка позиций «по памяти» с Transfermarkt (нужна сеть и кэш; без `--apply` только отчёт) |
 | 6 | `fixes/fix_pool_054.py` | исправления 0.54: чужие карточки (Сухоручко, Циганков), пустые позиции из `positions_manual.csv`, гражданство `-1`, год рождения дублей |
 | 6a | `fixes/fix_pool_057.py` | исправления 0.57: 11 ошибочных связок «карточка ↔ человек» (Каліщук, Мазури, Левченко, Кузнецов, Маковські, Капанадзе, Суанов, Бабійчуки, Пашаєви, Баранці), год рождения дубля Тутиченка |
 | 7 | `aliases/apply.py` | `pool['alias']` из `aliases/aliases.csv` |
 | 7a | `class/fill_manual.py` | класс игрока: 8 человек без TM (0.57) из `class_manual.csv` → `class/class.csv` (пул не меняет; после `class/collect.py` — запустить ещё раз) |
-| 7b | `ratings/class_v2.py` | рейтинги v2 (0.57): формула C (класс из `class/class.csv`, K = 10,5), пики владельца `ratings/anchors_v2.csv`, «Моряки Григорчука» +3; считает от `pool_ratings_raw.json` (то же, что `smooth_cameo.final`), печатает 90+/95+ |
+| 7b | `ratings/class_v2.py` | рейтинги v2 (0.57): формула C (класс из `class/class.csv`, K = 10,5; с 0.82 бонус × качество сезона × возраст), пики владельца `ratings/anchors_v2.csv`, «Моряки Григорчука» +3; считает от `pool_ratings_raw.json` (то же, что `smooth_cameo.final`), печатает 90+/95+ |
 | 8 | `update_meta.py` | `pool['meta']` — счётчики из самих данных |
 | 9 | `check_pool.py` | проверка инвариантов (exit 1 при ошибке) — **обязательна перед выпуском** |
 

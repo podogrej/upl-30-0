@@ -7,7 +7,8 @@ and order-independent with other scripts: smooth_cameo.final() = this step after
 
 Steps per card (S = rating after cameo smoothing and TOP_PTS compression):
 1. Formula C (data/class/proposal.md): S >= 70 -> s = S if S <= 82, else 82 + (S - 82)*0.4 (top compression for everyone),
-   R = min(99, round(s + K*C^2)), where C is the person's class (0..1) from data/class/class.csv; S < 70 -> R = S.
+   R = min(99, round(s + K*C^2*Q*G)), where Q = season quality clamp((raw - 80)/12, 0, 1) from the source rating,
+   G = age factor: 1 up to AGE_FULL (goalkeepers + GK_EXTRA), then -AGE_STEP per year (age on 1 Sep of the season); C is the person's class (0..1) from data/class/class.csv; S < 70 -> R = S.
    Class C = weighted mean: national team 25% (senior caps, 120 = 1), European cups 25% (club European apps, 150 = 1),
    money 20% (max of TM peak market value and top transfer fee: EUR 1M = 0, EUR 60M = 1, log scale),
    awards 30% (points, 20 = 1: Ballon d'Or 1-3 = 6, 4-10 = 4, 11-30 = 2; Ukrainian Footballer of the Year 1st = 3, 2nd-3rd = 1.5;
@@ -31,6 +32,8 @@ ANCHORS = os.path.join(D, 'anchors_v2.csv')
 sys.path.insert(0, D)
 import smooth_cameo as SC
 
+Q_LO, Q_SPAN = 80, 12      # class bonus only for strong seasons: Q = (raw - Q_LO) / Q_SPAN, clamped 0..1
+AGE_FULL, AGE_STEP, GK_EXTRA = 30, 0.2, 3
 K = 10.5                     # class bonus K*C^2 (proposal.py -> calibrate(): ~15 people 90+ before manual peaks)
 KNEE, SLOPE, FLOOR = 82, 0.4, 70
 SAILORS = ('chornomorets-odesa', (2011, 2012, 2013), 3)
@@ -90,24 +93,49 @@ def load_class(alias):
     return out
 
 
+def load_dob(alias):
+    out = {}
+    for r in csv.DictReader(open(CLASS, encoding='utf-8', newline='')):
+        d = r['dob'] or (r['person_id'].split(':')[1] if r['person_id'].startswith('w:') else '')
+        if re.match(r'\d{4}-\d{2}-\d{2}$', d[:10]): out[alias.get(r['person_id'], r['person_id'])] = d[:10]
+    return out
+
+
+def age_on(dob, year, birth_year):
+    """age on 1 Sep of season start; falls back to the card's birth year"""
+    if dob:
+        y, m, d = map(int, dob.split('-'))
+        return year - y - (1 if (m, d) > (9, 1) else 0)
+    return year - birth_year if birth_year else AGE_FULL
+
+
+def bonus_factor(raw, age, gk):
+    q = max(0.0, min(1.0, (raw - Q_LO) / Q_SPAN))
+    g = max(0.0, min(1.0, 1 - AGE_STEP * (age - AGE_FULL - (GK_EXTRA if gk else 0))))
+    return q * g
+
+
 def load_anchors():
     return {r['person_id']: int(r['peak']) for r in csv.DictReader(open(ANCHORS, encoding='utf-8', newline=''))}
 
 
-def formula_c(S, c, k=K):
+def formula_c(S, c, k=K, f=1.0):
     if S < FLOOR:
         return S
     s = S if S <= KNEE else KNEE + (S - KNEE) * SLOPE
-    return min(99, round(s + k * c * c))
+    return min(99, round(s + k * c * c * f))
 
 
 def apply_v2(pool, sm, k=K, anchors=True):
     """{card key: smoothed rating} -> {key: v2 rating}; anchors=False applies formula C only (calibration and report)"""
     alias = pool.get('alias') or {}
     canon = lambda i: alias.get(i, i)
-    C = load_class(alias)
+    C, B = load_class(alias), load_dob(alias)
+    raw = json.load(open(RAW, encoding='utf-8'))
     cards = [(SC.key(c, i), c, p) for c in pool['clubs'] for i, p in enumerate(c['pl'])]
-    out = {key: formula_c(sm[key], C.get(canon(p[5]), 0.0), k) for key, c, p in cards}
+    out = {key: formula_c(sm[key], C.get(canon(p[5]), 0.0), k,
+                          bonus_factor(raw[key], age_on(B.get(canon(p[5])), c['y'], p[11]), p[1] == 'GK'))
+           for key, c, p in cards}
     if anchors:
         A = load_anchors()
         best = {}
