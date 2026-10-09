@@ -4,7 +4,7 @@ const {openPage}=require('./_page.js');const {checker}=require('./_site.js');
 const STUB=`window.__hap=[];window.Telegram={WebApp:{initData:'stub',HapticFeedback:{impactOccurred:s=>__hap.push('i:'+s),notificationOccurred:s=>__hap.push('n:'+s),selectionChanged:()=>__hap.push('s')}}};`;
 const hap=pg=>pg.evaluate(()=>window.__hap.slice());
 const clear=pg=>pg.evaluate(()=>{window.__hap.length=0;});
-(async()=>{const T=checker('0.75 рух');const {b,pg,errs}=await openPage();
+(async()=>{const T=checker('0.75 рух');const {b,pg,errs}=await openPage({fastReel:false});   // checks the real reel animation
  // ---- tokens
  const tk=await pg.evaluate(()=>{const g=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();return {sp:g('--spring'),eo:g('--ease-out'),d:[1,2,3,4].map(i=>g('--dur-'+i)),css:CSS.supports('transition-timing-function','linear(0,1)')};});
  T.check(/^(linear\(|cubic-bezier\()/.test(tk.sp)&&/cubic-bezier/.test(tk.eo)&&tk.d.join()==='120ms,240ms,360ms,500ms',`токени руху: spring ${tk.sp.slice(0,18)}…, тривалості ${tk.d.join('/')}`);

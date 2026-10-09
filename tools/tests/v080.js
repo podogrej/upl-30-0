@@ -5,7 +5,7 @@
 // not credited to chat leagues; an older 0.79.2 tab's daily draft season is still verified.
 // C. site (file://, offline): home card states, no hints in the wheel list, event player on the pitch, not-counted screen, result block, archive;
 // screenshots tools/tests/out/v080_*.png (phone dark and light, iPad). Run from repo root: node tools/tests/v080.js
-const path=require('path'),fs=require('fs'),crypto=require('crypto');const {ROOT,launch,makeDB,callApi,checker}=require('./_site.js');
+const path=require('path'),fs=require('fs'),crypto=require('crypto');const {ROOT,launch,makeDB,callApi,checker}=require('./_site.js');const {fastReel}=require('./_page.js');
 process.env.SUPABASE_SERVICE_KEY='svc';
 const E=require(path.join(ROOT,'lib','engine.js')),V=require(path.join(ROOT,'lib','vd_core.js')),LIST=require(path.join(ROOT,'lib','challenges.json'));
 const seedH=require(path.join(ROOT,'api','seed.js')),saveH=require(path.join(ROOT,'api','save.js'));
@@ -143,7 +143,8 @@ async function serverChecks(){
 // ---- C. site
 const DAYS={vd:'2026-10-12',none:'2030-01-01'};
 async function page(b,o={}){const ctx=await b.newContext({viewport:o.vp||{width:390,height:844},colorScheme:o.th||'dark'});
-  await ctx.route(u=>!(u.href.startsWith('file:')||/fonts\.(googleapis|gstatic)\.com/.test(u.host)),r=>r.abort());
+  await fastReel(ctx);
+  await ctx.route(u=>!u.href.startsWith('file:'),r=>r.abort());
   await ctx.addInitScript(([d,th,ls])=>{window.__vdToday=d;if(!sessionStorage.getItem('init')){sessionStorage.setItem('init',1);localStorage.setItem('upl30_theme',th);for(const [k,v] of Object.entries(ls||{}))localStorage.setItem(k,JSON.stringify(v));}},[o.day||DAYS.vd,o.th||'dark',o.ls||{}]);
   const pg=await ctx.newPage();const errs=[];pg.on('pageerror',e=>errs.push(e.message));pg.on('dialog',d=>d.accept());
   await pg.goto('file://'+path.join(ROOT,'index.html'));await pg.waitForTimeout(700);return {ctx,pg,errs};}
@@ -158,7 +159,11 @@ async function draft(pg,mode){for(let i=0;i<11;i++){if(await pg.evaluate(()=>win
       if(m!=='avoid')return ids()[0];
       for(const c of [S.wheel,...D.DATA.clubs.filter(c=>c.c==='vorskla-poltava')]){if(c!==S.wheel){S.wheel=c;D.renderWheel();}const x=ids().find(id=>!sh(id));if(x)return x;}},[mode,i]);
     const btn=await pg.$(`#squad .pl[data-id="${id}"]`);await btn.click();await pg.waitForTimeout(70);const pick=await pg.$('#pitch .slot.target');if(pick){await pick.click();await pg.waitForTimeout(50);}}
-  await pg.waitForTimeout(1200);}
+  await pg.waitForSelector('#s11:not([hidden]),#simBtn:not([hidden])');}   // squad complete: failure screen or Play season
+// failure screen without spins: fill the open slots with players who never played for Shakhtar
+async function fillAvoid(pg){await pg.evaluate(()=>{const D=window.__dbg,S=D.S,ix=D.vdIdx(),A=D.DATA.alias||{},sh=id=>!!(ix[A[id]||id]||{clubs:{}}).clubs['shakhtar-donetsk'];
+    for(const c of D.DATA.clubs){if(S.slots.every(s=>s.player))break;for(const p of c.pl){if(S.slots.every(s=>s.player))break;S.wheel=c;const o=D.posOpts(p);if(!S.taken.has(A[p[5]]||p[5])&&!sh(p[5])&&o.length)D.place(p,o[0]);}}});
+  await pg.waitForSelector('#s11:not([hidden])');}
 async function siteChecks(b){
   // home card: new, no challenge, in progress, done
   let o=await page(b);
@@ -226,7 +231,7 @@ async function siteChecks(b){
     o=await page(b,{vp,th,ls:{'upl30_vd_2026-10-12':{used:1,best:null,tries:[{a:1,g:false,s:2}]}}});
     await o.pg.screenshot({path:path.join(OUT,`v080_home_${tag}.png`)});
     await o.pg.click('#vdCard');await o.pg.waitForTimeout(500);await o.pg.screenshot({path:path.join(OUT,`v080_draft_${tag}.png`)});
-    await draft(o.pg,'avoid');await o.pg.screenshot({path:path.join(OUT,`v080_fail_${tag}.png`),fullPage:true});
+    await fillAvoid(o.pg);await o.pg.screenshot({path:path.join(OUT,`v080_fail_${tag}.png`),fullPage:true});
     await o.pg.evaluate(()=>window.__dbg.openVdArchive());await o.pg.waitForTimeout(300);await o.pg.screenshot({path:path.join(OUT,`v080_archive_${tag}.png`),fullPage:true});
     T.check(!o.errs.length,`${tag}: без помилок `+o.errs.join(' | '));await o.ctx.close();}
 }
