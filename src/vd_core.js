@@ -1,12 +1,15 @@
 // ---------- Daily challenge (vd_*) rules. Shared by the site (build.py inlines it) and the server (lib/vd_core.js, api/_vd.js).
 // Pure functions over the pool (DATA) and one challenge from lib/challenges.json; no DOM, no global state.
-// A person "played for club X" when the pool has a club-season row of X for him with apps >= 1 (UPL seasons only; zero-app rows are ignored).
+// A person "played for club X" when the pool has a club-season row of X for him with apps >= 1, or he has apps for X in the season in progress
+// (lib/vd_current.json); UPL only, zero-app rows are ignored.
 const VD_ATTEMPTS=5,VD_MEDALS=[[11,'perfect','Ідеально','⭐'],[9,'gold','Золото','🥇'],[6,'silver','Срібло','🥈'],[4,'bronze','Бронза','🥉']];
 const VD_LINE={GK:'GK',CB:'DF',RB:'DF',LB:'DF',RWB:'DF',LWB:'DF',DF:'DF',CDM:'MF',CM:'MF',CAM:'MF',RM:'MF',LM:'MF',MF:'MF',RW:'FW',LW:'FW',ST:'FW',FW:'FW'};
 // person index: canonical id -> {apps, clubs:{code:apps}, nat (name or null), n}
-function vdIndex(DATA){const A=DATA.alias||{},out={};
-  for(const c of DATA.clubs)for(const p of c.pl){if(!(p[3]>=1))continue;const k=A[p[5]]||p[5];const q=out[k]||(out[k]={apps:0,clubs:{},nat:null,n:p[0]});
-    q.apps+=p[3];q.clubs[c.c]=(q.clubs[c.c]||0)+p[3];if(p[10]!=null&&DATA.nats&&DATA.nats[p[10]])q.nat=DATA.nats[p[10]];}
+// cur (lib/vd_current.json): apps of the season in progress, {apps:{club:{pool id:apps}}}; counted like pool seasons
+function vdIndex(DATA,cur){const A=DATA.alias||{},out={};
+  const add=(id,club,n,name)=>{const k=A[id]||id;const q=out[k]||(out[k]={apps:0,clubs:{},nat:null,n:name});q.apps+=n;q.clubs[club]=(q.clubs[club]||0)+n;return q;};
+  for(const c of DATA.clubs)for(const p of c.pl){if(!(p[3]>=1))continue;const q=add(p[5],c.c,p[3],p[0]);if(p[10]!=null&&DATA.nats&&DATA.nats[p[10]])q.nat=DATA.nats[p[10]];}
+  const ca=cur&&cur.apps||{};for(const club in ca)for(const id in ca[club])if(ca[club][id]>=1)add(id,club,ca[club][id],'');
   return out;}
 // one condition against a person (q from vdIndex) and the drafted card line (GK/DF/MF/FW)
 function vdMatch(c,q,line){if(!c||!q)return false;const p=c.params||{};

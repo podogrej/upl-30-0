@@ -11,7 +11,8 @@ const V = require('../lib/vd_core.js');
 const LIST = require('../lib/challenges.json');
 let E = null, IDX = null;
 const engine = () => E || (E = require('../lib/engine.js'));
-const index = () => IDX || (IDX = V.vdIndex(engine().DATA));
+const CUR = require('../lib/vd_current.json');   // season in progress
+const index = () => IDX || (IDX = V.vdIndex(engine().DATA, CUR));
 const dayRe = /^\d{4}-\d{2}-\d{2}$/;
 const xiHash = xi => crypto.createHash('sha256').update(xi.map(x => `${x.id}|${x.slot}|${x.c}|${x.y}`).join(';')).digest('hex');
 const dup = e => e && (e.status === 409 || /23505/.test(e.body || ''));

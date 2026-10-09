@@ -13,7 +13,8 @@ const T=checker('v080');const OUT=path.join(ROOT,'tools','tests','out');fs.mkdir
 const kd=d=>new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Kyiv',year:'numeric',month:'2-digit',day:'2-digit'}).format(d);
 const TODAY=kd(new Date()),YDAY=kd(new Date(Date.now()-864e5)),TMRW=kd(new Date(Date.now()+864e5));
 const ILS=LIST.find(c=>c.day==='2026-10-12');
-const A=E.DATA.alias||{},canon=id=>A[id]||id,IDX=V.vdIndex(E.DATA);
+const CUR=require(path.join(ROOT,'lib','vd_current.json'));
+const A=E.DATA.alias||{},canon=id=>A[id]||id,IDX=V.vdIndex(E.DATA,CUR);
 
 // ---- A. rules
 {const D={clubs:[{c:'a',n:'A',y:2000,pl:[['Ікс','MF',70,0,0,'p1','CM','',null,0,0,1990]]},{c:'b',n:'B',y:2001,pl:[['Ікс','MF',72,5,0,'p1','CM','',null,0,0,1990],['Ігрек','DF',70,3,0,'p2','CB','',null,0,1,1991]]}],nats:['Україна','Бразилія'],alias:{}};
@@ -24,6 +25,9 @@ const A=E.DATA.alias||{},canon=id=>A[id]||id,IDX=V.vdIndex(E.DATA);
   const zero=[];for(const c of E.DATA.clubs)for(const p of c.pl)if(p[3]<1)zero.push([c.c,p[5]]);
   const real=(c,id)=>E.DATA.clubs.filter(x=>x.c===c).reduce((a,x)=>a+x.pl.filter(p=>canon(p[5])===canon(id)).reduce((b,p)=>b+p[3],0),0);   // apps from rows with matches only
   T.check(zero.length===5&&zero.every(([c,id])=>((IDX[canon(id)]||{clubs:{}}).clubs[c]||0)===real(c,id)&&(real(c,id)>0||!((IDX[canon(id)]||{clubs:{}}).clubs[c]>=1))),`у пулі ${zero.length} рядків з 0 матчів, жоден не робить гравцем клубу`);
+  const kar=IDX[canon('tm:59322')],kar0=V.vdIndex(E.DATA)[canon('tm:59322')];
+  T.check(kar0&&!kar0.clubs['shakhtar-donetsk']&&V.vdMatch({type:'club',params:{club:'shakhtar-donetsk'}},kar,'DF')&&!!kar.clubs['dynamo-kyiv'],'поточний сезон: Караваєв (лише 2026/27 за Шахтар) — гравець Шахтаря, і далі гравець Динамо');
+  T.check(!Object.keys(CUR.apps).some(c=>!E.DATA.clubs.some(x=>x.c===c)),'поточний сезон: усі клуби — slug пулу (ФК Харків 2026 = Металіст 1925)');
   const ils=V.vdEventCard(ILS,E.DATA);
   T.check(ils&&ils.p[0]==='Ілсіньйо'&&ils.c.c==='shakhtar-donetsk','гравець події — його найсильніша картка УПЛ');
   const mk=ids=>ids.map(id=>({id,line:'MF'}));const nonSh=Object.keys(IDX).filter(k=>!IDX[k].clubs['shakhtar-donetsk']&&IDX[k].nat!=='Бразилія').slice(0,10);

@@ -24,6 +24,9 @@ for (y,c),r in sorted(_rows.items(),key=lambda kv:int(kv[0][0])):
 # daily challenges (lib/challenges.json, also read by the server) -> VD_LIST
 assert '/*__VD_LIST__*/[]' in tpl
 tpl=tpl.replace('/*__VD_LIST__*/[]',json.dumps(json.load(open('../lib/challenges.json',encoding='utf-8')),ensure_ascii=False,separators=(',',':')).replace('</','<\\/'))
+# current-season apps for daily-challenge club conditions (lib/vd_current.json, also read by the server) -> VD_CUR
+assert '/*__VD_CUR__*/{}' in tpl
+tpl=tpl.replace('/*__VD_CUR__*/{}',json.dumps(json.load(open('../lib/vd_current.json',encoding='utf-8')),ensure_ascii=False,separators=(',',':')))
 assert '/*__CLUB_REC__*/{}' in tpl
 tpl=tpl.replace('/*__CLUB_REC__*/{}',json.dumps(_rec,separators=(',',':')))
 import hashlib; datav='d'+hashlib.sha1(open('pool.json','rb').read()).hexdigest()[:8]; tpl=tpl.replace('__DATAV__',datav)
