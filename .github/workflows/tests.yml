@@ -1,4 +1,5 @@
-# Automated checks on every push to test and main and every pull request to main. Same as running bash tools/tests/all.sh locally.
+# Automated checks on every push to test and main and every pull request to main. Same as running bash tools/tests/all.sh locally,
+# split into 4 parallel parts (SHARD); the job named checks (required on main) passes only when every part passed.
 name: Перевірки
 on:
   push:
@@ -10,9 +11,13 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'push' }}   # audit P2-19: never cancel PR checks
 jobs:
-  checks:
+  part:
     runs-on: ubuntu-24.04
-    timeout-minutes: 40
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -22,16 +27,25 @@ jobs:
         with:
           python-version: '3.12'
       - name: Шрифти й Postgres
-        run: sudo apt-get update -q && sudo apt-get install -y -q postgresql fonts-noto-core
+        run: sudo apt-get update -q && sudo apt-get install -y -q fonts-noto-core $([ ${{ matrix.shard }} = 1 ] && echo postgresql)
       - name: Залежності інструментів
         working-directory: tools
         run: npm install --no-audit --no-fund && npx playwright install --with-deps chromium
-      - name: Усі перевірки
+      - name: Перевірки (частина ${{ matrix.shard }} з 4)
         run: bash tools/tests/all.sh
+        env:
+          SHARD: ${{ matrix.shard }}/4
       - name: Знімки екрана
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: snimky
+          name: snimky-${{ matrix.shard }}
           path: tools/tests/out/
           retention-days: 7
+  checks:
+    needs: part
+    if: always()
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Усі частини пройшли
+        run: '[ "${{ needs.part.result }}" = success ] || { echo "part: ${{ needs.part.result }}"; exit 1; }'
