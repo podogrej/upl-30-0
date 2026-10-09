@@ -5,7 +5,7 @@ const E=require(path.join(ROOT,'lib','engine.js'));
  const runs=[['classic',1,1],['classic',2,2],['classic',2,3],['derby',1,1],['oneclub',1,1],['anti',3,1],['vd',0,0],['classic',1,6],['legends',1,2],['pick',0,4]];
  let ok=0;
  for(const [fmt,mode,form] of runs){
-  await playSeason(pg,fmt,mode,form);
+  await playSeason(pg,fmt,mode,form,{dbg:true});
   const c=await pg.evaluate(()=>{const S=window.__dbg.S;const r=S.result;return {seed:r.seed,year:r.year,mode:S.mode,format:S.format,formation:S.formation,
     xi:S.slots.map(s=>({id:s.player.id,name:s.player.name,slot:s.slot,pos:s.player.pos,r:s.player.r,c:s.player.club,y:s.player.y})),W:r.W,D:r.D,L:r.L,gf:r.gf,ga:r.ga,place:r.place}});
   // server resolves the club code for chemistry from the pool by club name and season, same as api/verify.js

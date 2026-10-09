@@ -1,7 +1,7 @@
 // Sheets and skeletons: every dialog is a bottom sheet on a phone (spring in, blurred dim backdrop, grabber, swipe down, back/Escape/backdrop close,
 // focus in and back to the trigger), a centered card on iPad, instant under reduced motion; loading states are shimmer skeletons with the final layout.
 // Screenshots: tools/tests/out/v076_*.png.   Run from repo root: node tools/tests/v076.js [screenshot dir]
-const path=require('path'),fs=require('fs');const {ROOT,openPage}=require('./_page.js');const {launch,makeDB,openSite,checker}=require('./_site.js');
+const path=require('path'),fs=require('fs');const {ROOT,launch,openPage}=require('./_page.js');const {makeDB,openSite,checker}=require('./_site.js');
 const OUT=process.argv[2]||path.join(ROOT,'tools','tests','out');fs.mkdirSync(OUT,{recursive:true});
 const shot=(pg,n,full)=>pg.screenshot({path:path.join(OUT,`v076_${n}.png`),fullPage:!!full});
 const theme=(pg,t)=>pg.evaluate(t=>document.documentElement.setAttribute('data-theme',t),t);
@@ -37,9 +37,9 @@ const noText=async(pg,sel,T,what)=>{const t=await pg.evaluate(s=>document.queryS
 const sk=(pg,sel)=>pg.evaluate(s=>{const n=[...document.querySelectorAll(s+' .sk')].filter(e=>e.getBoundingClientRect().width>0);const a=n[0]&&getComputedStyle(n[0],'::after');
   return {n:n.length,anim:a?a.animationName:'',box:!!document.querySelector(s+' [role=status][aria-busy=true]')||!!document.querySelector(s+'[role=status]')||!!n[0].closest('[role=status]')};},sel);
 
-(async()=>{const T=checker('0.76 шторки');
+(async()=>{const T=checker('0.76 шторки');const bb=await launch();   // one browser for the whole file
  // ---- A. phone, file:// page: the "What's new" sheet
- {const {b,pg,errs}=await openPage();
+ {const {b,pg,errs}=await openPage({b:bb});
   await pg.click('#newsBtn');await wait(70);
   const mid=await geo(pg,'#viewBox .box');
   const an=await pg.evaluate(()=>document.getAnimations().filter(a=>a.effect&&a.effect.getTiming().duration===420).map(a=>String(a.effect.getTiming().easing)));
@@ -92,7 +92,7 @@ const sk=(pg,sel)=>pg.evaluate(s=>{const n=[...document.querySelectorAll(s+' .sk
   T.check(Math.abs(tg.bottom-tg.vh)<=.5&&/Трофеї/.test(await pg.textContent('#viewTitle')),'«Трофеї» (офлайн) — теж шторка знизу');await pg.keyboard.press('Escape');await wait(400);
   await b.close();}
  // ---- B. reduced motion: instant
- {const {b,pg}=await openPage({reducedMotion:'reduce'});await pg.click('#newsBtn');
+ {const {b,pg}=await openPage({b:bb,reducedMotion:'reduce'});await pg.click('#newsBtn');
   const r0=await pg.evaluate(()=>({anims:document.getAnimations().length,bottom:document.querySelector('#viewBox .box').getBoundingClientRect().bottom,vh:innerHeight}));
   T.check(r0.anims===0&&Math.abs(r0.bottom-r0.vh)<=.5,'«Зменшити рух»: шторка з’являється одразу, без анімацій');
   await pg.click('#viewClose');await wait(120);const s=await st(pg);T.check(s.ghosts===0&&s.hidden,'«Зменшити рух»: закривається одразу, без «привида»');
@@ -101,7 +101,7 @@ const sk=(pg,sel)=>pg.evaluate(s=>{const n=[...document.querySelectorAll(s+' .sk
   T.check(sa,'«Зменшити рух»: мерехтіння скелетона вимкнено');
   await b.close();}
  // ---- C. iPad: centered card
- {const {b,pg}=await openPage({viewport:{width:820,height:1180}});await pg.click('#newsBtn');await wait(70);
+ {const {b,pg}=await openPage({b:bb,viewport:{width:820,height:1180}});await pg.click('#newsBtn');await wait(70);
   const mid=await pg.evaluate(()=>+getComputedStyle(document.querySelector('#viewBox .box')).opacity);await wait(500);
   const g=await geo(pg,'#viewBox .box');const gr=await pg.evaluate(()=>getComputedStyle(document.querySelector('#viewBox .grab')).display);
   T.check(Math.abs((g.left+g.right)/2-g.vw/2)<=1&&g.bottom<g.vh-40&&g.w<=640&&g.top>40&&gr==='none'&&mid<1,`iPad: картка по центру (${Math.round(g.w)}px), без ручки, з’являється плавно`);
@@ -110,7 +110,6 @@ const sk=(pg,sel)=>pg.evaluate(s=>{const n=[...document.querySelectorAll(s+' .sk
   await pg.mouse.click(30,30);await wait(500);T.check((await st(pg)).hidden,'iPad: тап по затемненню закриває');
   await b.close();}
  // ---- D. site: login sheet, name sheet, table (full screen), league list
- const bb=await launch();
  {const db=mkDB();
   const A=await openSite({b:bb,db,viewport:{width:390,height:844},wait:1500});const p=A.pg;   // no sign-in: login sheet
   await p.click('#acctBtn');await wait(300);await p.click('#ppLogin');await wait(650);
@@ -215,27 +214,27 @@ const sk=(pg,sel)=>pg.evaluate(s=>{const n=[...document.querySelectorAll(s+' .sk
   const a2=await p.evaluate(()=>{const r=s=>document.querySelector(s).getBoundingClientRect();return {sk:document.querySelectorAll('#pp .sk').length,name:document.getElementById('ppName').textContent,head:r('.pp-head').height,big:r('.pp-big3').top,bigH:r('.pp-big3').height};});
   T.check(a2.sk===0&&a2.name==='vitia'&&Math.abs(a2.head-a1.head)<=2&&Math.abs(a2.big-a1.big)<=2&&Math.abs(a2.bigH-a1.bigH)<=2,`чужа сторінка (${a2.sk} скелетонів, ім'я ${a2.name}): шапка ${Math.round(a1.head)} → ${Math.round(a2.head)}, плитки ${Math.round(a1.big)} → ${Math.round(a2.big)}, висота ${Math.round(a1.bigH)} → ${Math.round(a2.bigH)}px — без стрибка`);
   await A.ctx.close();}
- await bb.close();
  // ---- F. source: no old loading text left in code for players
  {const src=['template.html','account.js','leagues.js','player.js','trophies.js','five.js','oneclub.js','challenge.js'].map(f=>fs.readFileSync(path.join(ROOT,'src',f),'utf8')).join('\n');
   const left=(src.match(/[^`'"\n]{0,30}Завантаж(?:ення|уємо)…[^`'"\n]{0,20}/g)||[]);T.check(left.length===0,'у коді не лишилось «Завантаження…» / «Завантажуємо…» '+left.slice(0,2).join(' | '));}
  // ---- H. how-to-play button (#howGo) on the home screen opens the FAQ answer
- {const {b:bh,pg}=await openPage();await pg.click('#howGo');await pg.waitForTimeout(300);
+ {const {b:bh,pg}=await openPage({b:bb});await pg.click('#howGo');await pg.waitForTimeout(300);
   T.check(await pg.evaluate(()=>document.getElementById('faqBox').open&&document.getElementById('howQ').open),'«Як грати?» відкриває відповідь у FAQ');await bh.close();}
- // ---- G. no repeated fades and no table height jumps
- {const {b:bg,pg}=await openPage();
+ // ---- G. no repeated fades and no table height jumps (whole replay: the 6-row window moves with the player, so every tour is sampled)
+ {const {b:bg,pg}=await openPage({b:bb});
   await pg.evaluate(()=>document.getElementById('homeBtn').click());await pg.click('#freeOpen');await pg.evaluate(()=>window.__dbg.setFmt('classic'));await pg.click('#modes .opt:nth-child(1)');await pg.click('#startBtn');
   await pg.click('#spinBtn');await pg.waitForSelector('#squad .pl:not([disabled])',{timeout:8000});
   await pg.click('#showR');await pg.waitForTimeout(600);
   T.check(await pg.evaluate(()=>!document.getElementById('squad').classList.contains('rin')),'рейтинги: клас появи знято після першої анімації');
   for(let i=0;i<11;i++){if(i){await pg.click('#spinBtn');await pg.waitForSelector('#squad .pl:not([disabled])',{timeout:8000});}
-    const btn=await pg.$('.pl:not([disabled])');await btn.click();await pg.waitForTimeout(80);const pick=await pg.$('#pitch .slot.target');if(pick){await pick.click();await pg.waitForTimeout(60);}
-    if(i===0)T.check(await pg.evaluate(()=>[...document.querySelectorAll('#squad .pl .rt')].every(e=>!e.getAnimations().length)),'рейтинги не з\'являються наново після вибору гравця');}
+    if(i===0){const btn=await pg.$('.pl:not([disabled])');await btn.click();await pg.waitForTimeout(80);const pick=await pg.$('#pitch .slot.target');if(pick){await pick.click();await pg.waitForTimeout(60);}
+      T.check(await pg.evaluate(()=>[...document.querySelectorAll('#squad .pl .rt')].every(e=>!e.getAnimations().length)),'рейтинги не з\'являються наново після вибору гравця');}
+    else await pg.evaluate(()=>{const D=window.__dbg,id=document.querySelector('#squad .pl:not([disabled])').dataset.id,p=D.S.wheel.pl.find(x=>x[5]===id);D.place(p,D.posOpts(p)[0]);});}
   await pg.waitForSelector('#simBtn:not([hidden])');await pg.click('#simBtn');await pg.waitForSelector('#live:not([hidden])',{timeout:8000});   // the season starts after the server seed request
   const rows=new Set(),hs=new Set();
   for(let k=0;k<70;k++){const v=await pg.evaluate(()=>{const t=document.getElementById('lvTable');return document.getElementById('live').hidden?null:[t.querySelectorAll('tr').length,Math.round(t.getBoundingClientRect().height)];});
-    if(!v)break;if(v[0]>1&&v[1]>0){   // ±3 px: web font may finish loading mid-season
+    if(!v)break;if(v[0]>1&&v[1]>0){   // +-3 px: web font may finish loading mid-season
      rows.add(v[0]);hs.add(v[1]);}await wait(300);}
   T.check(rows.size===1&&rows.has(7)&&Math.max(...hs)-Math.min(...hs)<=3,`живий сезон: завжди 6 рядків і та сама висота (рядків ${[...rows]}, висота ${[...hs]})`);
   await bg.close();}
- process.exit(T.done());})();
+ await bb.close();process.exit(T.done());})();

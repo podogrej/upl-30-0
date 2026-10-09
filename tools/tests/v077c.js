@@ -1,6 +1,6 @@
 // Motion release 0.77: trophy opening (sealed token flip), picked player flies to the pitch, live season odometer digits.
 // Screenshots: tools/tests/out/v077c_*.png.   Run from repo root: node tools/tests/v077c.js [screenshot dir]
-const path=require('path'),fs=require('fs');const {ROOT,openPage}=require('./_page.js');const {checker}=require('./_site.js');
+const path=require('path'),fs=require('fs');const {ROOT,launch,openPage}=require('./_page.js');const {checker}=require('./_site.js');
 const OUT=process.argv[2]||path.join(ROOT,'tools','tests','out');fs.mkdirSync(OUT,{recursive:true});
 const shot=(pg,n)=>pg.screenshot({path:path.join(OUT,`v077c_${n}.png`)});
 const wait=ms=>new Promise(r=>setTimeout(r,ms));
@@ -24,10 +24,11 @@ const flyInfo=pg=>pg.evaluate(()=>{const g=document.querySelector('.flyg');retur
 const clean=pg=>pg.evaluate(()=>({g:document.querySelectorAll('.flyg').length,fw:document.querySelectorAll('.slot.fw').length,filled:window.__dbg.S.slots.filter(s=>s.player).length,
   names:[...document.querySelectorAll('#pitch .slot.filled .nm')].map(e=>e.textContent).filter(Boolean).length,vis:[...document.querySelectorAll('#pitch .slot.filled .disc')].every(e=>getComputedStyle(e.parentNode.firstElementChild).opacity==='1')}));
 
-(async()=>{
+let B;   // one browser for the whole file; every openPage() is a new context
+(async()=>{B=await launch();
  // ================= 2. player flies to the pitch
  for(const [label,vw,vh,fmt,via] of [['телефон 390',390,844,'classic','btn'],['телефон, слот',390,844,'classic','slot'],['iPad 1024',1024,768,'classic','btn'],['iPad 820',820,1180,'classic','slot'],['Вибір сезону',1024,768,'pick','btn'],['тренування',1024,768,'practice','btn']]){
-  const {b,pg,errs}=await openPage({viewport:{width:vw,height:vh}});await startDraft(pg,fmt);let flew=0;const rec=[];
+  const {b,pg,errs}=await openPage({b:B,viewport:{width:vw,height:vh}});await startDraft(pg,fmt);let flew=0;const rec=[];
   for(let i=0;i<3;i++){await spin(pg);await pickTap(pg,via);
     const g=await pg.waitForSelector('.flyg',{state:'attached',timeout:1500}).catch(()=>null);
     if(g){const f=await flyInfo(pg);rec.push(f);if(i===0)await shot(pg,`fly_${vw}_${fmt}_${via}`);}
@@ -40,7 +41,7 @@ const clean=pg=>pg.evaluate(()=>({g:document.querySelectorAll('.flyg').length,fw
   T.check(errs.length===0,`${label}: помилок JS немає`+(errs.length?': '+errs[0]:''));await b.close();}
 
  // fly ends exactly on the slot label, first animation is the chip transform of ~420 ms, never blocks taps
- {const {b,pg}=await openPage({viewport:{width:1024,height:768}});await startDraft(pg,'classic');let got=null;for(let i=0;i<8&&!got;i++){await spin(pg);await pickTap(pg,'btn');got=await pg.waitForSelector('.flyg',{state:'attached',timeout:1500}).catch(()=>null);if(!got)await wait(500);}
+ {const {b,pg}=await openPage({b:B,viewport:{width:1024,height:768}});await startDraft(pg,'classic');let got=null;for(let i=0;i<8&&!got;i++){await spin(pg);await pickTap(pg,'btn');got=await pg.waitForSelector('.flyg',{state:'attached',timeout:1500}).catch(()=>null);if(!got)await wait(500);}
   T.check(!!got,'iPad: хоча б один з перших виборів летить');
   const d=await pg.evaluate(()=>{const g=document.querySelector('.flyg'),an=g.getAnimations().map(a=>[a.effect.getTiming().duration,Object.keys(a.effect.getKeyframes()[0]).filter(k=>/^(transform|opacity)$/.test(k)).join()]);
     const r=g.getBoundingClientRect(),hit=document.elementFromPoint(r.left+r.width/2,r.top+r.height/2);return {an,hit:hit&&hit.classList.contains('flyg')};});
@@ -51,7 +52,7 @@ const clean=pg=>pg.evaluate(()=>({g:document.querySelectorAll('.flyg').length,fw
   await b.close();}
 
  // rapid picks: two places in the same tick, state and visuals stay consistent
- {const {b,pg,errs}=await openPage({viewport:{width:1024,height:768}});await startDraft(pg,'classic');await spin(pg);
+ {const {b,pg,errs}=await openPage({b:B,viewport:{width:1024,height:768}});await startDraft(pg,'classic');await spin(pg);
   const r=await pg.evaluate(async()=>{const S=window.__dbg.S,w=S.wheel,ok=[];for(const p of w.pl){if(window.__dbg.posOpts(p).length)ok.push(p);if(ok.length>6)break;}
     const used=[];for(let i=0;i<3;i++){const p=ok.find(x=>!S.taken.has(x[5])&&!used.includes(x[5])&&window.__dbg.posOpts(x).length);if(!p)break;used.push(p[5]);S.wheel=w;window.__dbg.place(p,window.__dbg.posOpts(p)[0]);}
     S.wheel=null;return {n:S.slots.filter(s=>s.player).length,g:document.querySelectorAll('.flyg').length};});
@@ -61,22 +62,24 @@ const clean=pg=>pg.evaluate(()=>({g:document.querySelectorAll('.flyg').length,fw
   T.check(errs.length===0,'швидкі вибори: помилок JS немає'+(errs.length?': '+errs[0]:''));await b.close();}
 
  // reduced motion: no ghost, no waiting slot, no landing animation
- {const {b,pg,errs}=await openPage({viewport:{width:1024,height:768},reducedMotion:'reduce'});await startDraft(pg,'classic');await spin(pg);await pickTap(pg,'btn');
+ {const {b,pg,errs}=await openPage({b:B,viewport:{width:1024,height:768},reducedMotion:'reduce'});await startDraft(pg,'classic');await spin(pg);await pickTap(pg,'btn');
   const r=await pg.evaluate(()=>({g:document.querySelectorAll('.flyg').length,fw:document.querySelectorAll('.slot.fw').length,land:document.querySelectorAll('.disc.land0').length,filled:window.__dbg.S.slots.filter(s=>s.player).length}));
   await wait(120);const r2=await pg.evaluate(()=>document.querySelectorAll('.flyg').length);
   T.check(r.g===0&&r2===0&&r.fw===0&&r.land===0&&r.filled===1,'reduce: без привида, без чекання слота, без посадки — одразу кінцевий стан');
   T.check(errs.length===0,'reduce: помилок JS немає');await b.close();}
 
  // offscreen slot (short phone): flight skipped, state is right
- {const {b,pg,errs}=await openPage({viewport:{width:320,height:480}});await startDraft(pg,'classic');await spin(pg);await pickTap(pg,'btn');await wait(150);
+ {const {b,pg,errs}=await openPage({b:B,viewport:{width:320,height:480}});await startDraft(pg,'classic');await spin(pg);await pickTap(pg,'btn');await wait(150);
   const r=await pg.evaluate(()=>({g:document.querySelectorAll('.flyg').length,fw:document.querySelectorAll('.slot.fw').length}));await wait(600);const c=await clean(pg);
   T.check(c.g===0&&c.fw===0&&c.filled===1&&c.vis,`320×480: слот поза екраном або переліт завершився — стан чистий (ghost ${r.g}, fw ${r.fw})`);
   T.check(await noScroll(pg),'320×480: без горизонтальної прокрутки');T.check(errs.length===0,'320×480: помилок JS немає');await b.close();}
 
  // ================= 3. live season digits
- async function playToLive(pg){await startDraft(pg,'classic');for(let i=0;i<11;i++){await spin(pg);await pickTap(pg,'slot');await pg.waitForTimeout(50);}
+ // squad is filled through the game API (the draft taps are covered above)
+async function fillDbg(pg){await pg.evaluate(()=>{const D=window.__dbg,id=document.querySelector('#squad .pl:not([disabled])').dataset.id,p=D.S.wheel.pl.find(x=>x[5]===id);D.place(p,D.posOpts(p)[0]);});}
+ async function playToLive(pg){await startDraft(pg,'classic');for(let i=0;i<11;i++){await spin(pg);await fillDbg(pg);}
   await pg.waitForSelector('#simBtn:not([hidden])',{timeout:15000});await pg.click('#simBtn');await pg.waitForSelector('#live:not([hidden])');}
- {const {b,pg,errs}=await openPage({viewport:{width:390,height:844}});await pg.evaluate(STUB);await playToLive(pg);
+ {const {b,pg,errs}=await openPage({b:B,viewport:{width:390,height:844}});await pg.evaluate(STUB);await playToLive(pg);
   const R=await pg.evaluate(()=>{const r=window.__dbg.S.result;let w=0,d=0,l=0;r.log.forEach(m=>{if(m.res==='W')w++;else if(m.res==='D')d++;else l++;});return {n:r.log.length,rec:`${w}-${d}-${l}`,pts:String(w*3+d)};});
   // sample the header every ~40 ms while rounds tick
   const samples=[];let shotDone=false,maxDur=0,odSeen=0;
@@ -108,7 +111,7 @@ const clean=pg=>pg.evaluate(()=>({g:document.querySelectorAll('.flyg').length,fw
   T.check(errs.length===0,'цифри: помилок JS немає'+(errs.length?': '+errs[0]:''));await b.close();}
 
  // skip while digits roll: settles, morph pairs are named, final numbers are right
- {const {b,pg,errs}=await openPage({viewport:{width:390,height:844}});await playToLive(pg);
+ {const {b,pg,errs}=await openPage({b:B,viewport:{width:390,height:844}});await playToLive(pg);
   await pg.waitForFunction(()=>document.querySelectorAll('#live .od').length>0,null,{polling:'raf',timeout:8000});
   const f0=await pg.evaluate(()=>{document.getElementById('skipBtn').click();return {od:document.querySelectorAll('#live .od').length,names:[document.getElementById('lvRec').style.viewTransitionName,document.getElementById('lvPts').style.viewTransitionName].join()};});
   T.check(f0.od===0&&f0.names==='vt-rec,vt-pts',`«Одразу до фіналу»: цифри зафіксовано до морфа (od ${f0.od}), імена ${f0.names}`);
@@ -120,14 +123,14 @@ const clean=pg=>pg.evaluate(()=>({g:document.querySelectorAll('.flyg').length,fw
   T.check(errs.length===0,'skip: помилок JS немає'+(errs.length?': '+errs[0]:''));await b.close();}
 
  // reduced motion: digits change instantly, no cells
- {const {b,pg,errs}=await openPage({viewport:{width:390,height:844},reducedMotion:'reduce'});await playToLive(pg);let od=0;
+ {const {b,pg,errs}=await openPage({b:B,viewport:{width:390,height:844},reducedMotion:'reduce'});await playToLive(pg);let od=0;
   for(let k=0;k<12;k++){od=Math.max(od,await pg.evaluate(()=>document.querySelectorAll('#live .od').length));await wait(100);}
   const t=await pg.evaluate(()=>/^\d+-\d+-\d+$/.test(document.getElementById('lvRec').textContent)&&/^\d+$/.test(document.getElementById('lvPts').textContent)&&/^Тур \d+ \/ \d+$/.test(document.getElementById('lvRound').textContent));
   T.check(od===0&&t,'reduce: цифри змінюються миттєво, без комірок');T.check(errs.length===0,'reduce цифри: помилок JS немає');await b.close();}
 
  // widths: 320, iPad, tgfs, light theme
  for(const [vw,vh,tg,th,tag] of [[320,640,0,'','320'],[1024,768,0,'light','ipad-light'],[390,844,1,'','tgfs']]){
-  const {b,pg,errs}=await openPage({viewport:{width:vw,height:vh}});if(tg)await pg.evaluate(()=>document.documentElement.classList.add('tgfs'));if(th)await pg.evaluate(t=>document.documentElement.setAttribute('data-theme',t),th);
+  const {b,pg,errs}=await openPage({b:B,viewport:{width:vw,height:vh}});if(tg)await pg.evaluate(()=>document.documentElement.classList.add('tgfs'));if(th)await pg.evaluate(t=>document.documentElement.setAttribute('data-theme',t),th);
   await playToLive(pg);await pg.waitForFunction(()=>document.querySelectorAll('#live .od').length>0,null,{polling:'raf',timeout:8000});await shot(pg,`live_${tag}`);
   T.check(await noScroll(pg),`${tag}: без горизонтальної прокрутки під час прокрутки цифр`);T.check(errs.length===0,`${tag}: помилок JS немає`);await b.close();}
 
@@ -136,7 +139,7 @@ const clean=pg=>pg.evaluate(()=>({g:document.querySelectorAll('.flyg').length,fw
    const s={t:{top3:{n:1,at:'2026-10-01'}},seasons:3,dailies:0};[...ids].forEach(id=>{s.t[id]={n:1,at:'2026-10-02'};});localStorage.setItem('upl30_tr',JSON.stringify(s));
    document.getElementById('s1').hidden=true;document.getElementById('s3').hidden=false;document.getElementById('final').hidden=false;document.getElementById('live').hidden=true;
    return {sec,ids};});
- {const {b,pg,errs}=await openPage({viewport:{width:390,height:844}});await pg.evaluate(STUB);const {sec,ids}=await seed(pg);
+ {const {b,pg,errs}=await openPage({b:B,viewport:{width:390,height:844}});await pg.evaluate(STUB);const {sec,ids}=await seed(pg);
   await pg.evaluate(ids=>{window.__dbg.renderNewTro({tro:{got:ids.concat(['top3']),fresh:ids}});document.getElementById('newTro').style.marginTop='900px';},ids);
   const w0=await pg.evaluate(()=>({wait:document.getElementById('newTro').classList.contains('wait'),open:document.querySelectorAll('#newTro .tro.open').length,seal:document.querySelectorAll('#newTro .tseal').length,
     cnt:document.getElementById('trTotN').textContent,run:document.getElementById('newTro').getAnimations({subtree:true}).filter(a=>a.playState==='running').length,hap:window.__hap.length}));
@@ -169,7 +172,7 @@ const clean=pg=>pg.evaluate(()=>({g:document.querySelectorAll('.flyg').length,fw
   T.check(await noScroll(pg),'трофеї 390: без горизонтальної прокрутки');T.check(errs.length===0,'трофеї: помилок JS немає'+(errs.length?': '+errs[0]:''));await b.close();}
 
  // trophy stagger and rarity colors, light theme, 320
- {const {b,pg,errs}=await openPage({viewport:{width:320,height:640}});await pg.evaluate(()=>document.documentElement.setAttribute('data-theme','light'));const {ids}=await seed(pg);
+ {const {b,pg,errs}=await openPage({b:B,viewport:{width:320,height:640}});await pg.evaluate(()=>document.documentElement.setAttribute('data-theme','light'));const {ids}=await seed(pg);
   await pg.evaluate(ids=>{window.__dbg.renderNewTro({tro:{got:ids,fresh:ids}});},ids);await pg.evaluate(()=>document.getElementById('newTro').scrollIntoView({block:'center'}));await wait(420);
   const st=await pg.evaluate(()=>[...document.querySelectorAll('#newTro .tro.open')].map(c=>({od:c.style.getPropertyValue('--od'),rc:getComputedStyle(c).getPropertyValue('--rc').trim()})));
   T.check(st.map(x=>x.od).join()==='0ms,180ms,360ms','кілька трофеїв: затримка сходинками 0/180/360 мс ('+st.map(x=>x.od)+')');
@@ -177,7 +180,7 @@ const clean=pg=>pg.evaluate(()=>({g:document.querySelectorAll('.flyg').length,fw
   await shot(pg,'trophy_320_light');T.check(await noScroll(pg),'трофеї 320: без горизонтальної прокрутки');T.check(errs.length===0,'трофеї 320: помилок JS немає');await b.close();}
 
  // reduced motion: instant end state, haptics stay
- {const {b,pg,errs}=await openPage({viewport:{width:390,height:844},reducedMotion:'reduce'});await pg.evaluate(STUB);const {ids}=await seed(pg);
+ {const {b,pg,errs}=await openPage({b:B,viewport:{width:390,height:844},reducedMotion:'reduce'});await pg.evaluate(STUB);const {ids}=await seed(pg);
   await pg.evaluate(ids=>{window.__dbg.renderNewTro({tro:{got:ids,fresh:ids}});},ids);
   const r=await pg.evaluate(()=>({open:document.querySelectorAll('#newTro .tro.open').length,seal:document.querySelectorAll('#newTro .tseal').length,wait:document.getElementById('newTro').classList.contains('wait'),
     anims:document.getElementById('newTro').getAnimations({subtree:true}).length,cnt:document.getElementById('trTotN').textContent,cards:document.querySelectorAll('#newTro .tro.new').length}));
@@ -185,7 +188,7 @@ const clean=pg=>pg.evaluate(()=>({g:document.querySelectorAll('.flyg').length,fw
   await wait(1000);T.check(await pg.evaluate(()=>window.__hap.length>0),'reduce: вібрація зберігається');T.check(errs.length===0,'reduce трофеї: помилок JS немає');await b.close();}
 
  // a repeat render (new summary) cancels stale timers: counter belongs to the latest render
- {const {b,pg,errs}=await openPage({viewport:{width:390,height:844}});await pg.evaluate(STUB);const {ids}=await seed(pg);
+ {const {b,pg,errs}=await openPage({b:B,viewport:{width:390,height:844}});await pg.evaluate(STUB);const {ids}=await seed(pg);
   await pg.evaluate(ids=>{window.__dbg.renderNewTro({tro:{got:ids,fresh:ids}});},ids);await wait(300);
   await pg.evaluate(ids=>{window.__dbg.renderNewTro({tro:{got:['champ'],fresh:['champ']}});},ids);await pg.evaluate(()=>document.getElementById('newTro').scrollIntoView({block:'center'}));await wait(2200);
   const c=await pg.evaluate(()=>({cnt:document.getElementById('trTotN').textContent,hap:window.__hap.filter(x=>x==='i:heavy').length}));
@@ -193,11 +196,11 @@ const clean=pg=>pg.evaluate(()=>({g:document.querySelectorAll('.flyg').length,fw
   T.check(errs.length===0,'повторний показ: помилок JS немає');await b.close();}
 
  // milestone trophies (ms*) are shown but not counted in the cabinet total
- {const {b,pg,errs}=await openPage({viewport:{width:390,height:844}});await pg.evaluate(STUB);const {ids}=await seed(pg);
+ {const {b,pg,errs}=await openPage({b:B,viewport:{width:390,height:844}});await pg.evaluate(STUB);const {ids}=await seed(pg);
   await pg.evaluate(()=>{window.__dbg.renderNewTro({tro:{got:['ms1'],fresh:['ms1']}});document.getElementById('newTro').scrollIntoView({block:'center'});});await wait(300);
   T.check(await pg.evaluate(()=>!document.getElementById('trTotN')),'лише рубіж: «Зібрано» не показано');
   await pg.evaluate(id=>{window.__dbg.renderNewTro({tro:{got:[id,'ms1'],fresh:[id,'ms1']}});document.getElementById('newTro').scrollIntoView({block:'center'});},ids[1]);await wait(2500);
   const c=await pg.evaluate(()=>document.getElementById('trTotN').textContent.trim());
   T.check(c==='4',`трофей + рубіж: «Зібрано» дорахувало до 4, рубіж не враховано (${c})`);
   T.check(errs.length===0,'рубежі: помилок JS немає');await b.close();}
- FAILS.forEach(m=>console.log('ПРОВАЛ:',m));process.exit(T.done());})();
+ FAILS.forEach(m=>console.log('ПРОВАЛ:',m));await B.close();process.exit(T.done());})();
