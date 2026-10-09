@@ -169,7 +169,7 @@ async function siteChecks(b){
   let o=await page(b);
   const h=await o.pg.evaluate(()=>({card:document.getElementById('vdCard').className,txt:document.getElementById('vdBox').textContent,old:!!document.getElementById('dailyBtn'),
     sec:[...document.querySelectorAll('.sec0')].map(x=>x.textContent).join(),grati:document.querySelector('.btns0>#freeOpen')&&document.querySelector('.btns0>#freeOpen').nextElementSibling.id}));
-  T.check(/\bnew\b/.test(h.card)&&/День народження Ілсіньйо/.test(h.txt)&&/Зібрати склад/.test(h.txt)&&!h.old&&h.grati==='vdBox','головна: «Грати», під ним картка виклику (нова), кнопки «Драфт дня» немає');
+  T.check(/\bnew\b/.test(h.card)&&h.txt.includes(ILS.title.replace(/^\S+\s/,''))&&/Зібрати склад/.test(h.txt)&&!h.old&&h.grati==='vdBox','головна: «Грати», під ним картка виклику (нова), кнопки «Драфт дня» немає');
   T.check(h.sec==='Інші режими,Результати','головна: розділи «Інші режими» і «Результати»');
   await o.pg.screenshot({path:path.join(OUT,'v080_home_new.png')});
   // draft: event player placed, quiet mark only on his circle, brief, no hints in the list
