@@ -54,14 +54,14 @@ const TROPHIES=[
   {id:"antilast",i:"⬇️",n:"Нижче плінтуса",d:"Антисезон: фініш останнім",cat:"modes",rep:1,t:c=>c.format==='anti'&&c.r.place===16},
   {id:"anti0",i:"🪦",n:"Нуль без палички",d:"Антисезон: програй усі 30 матчів",cat:"modes",t:c=>c.format==='anti'&&c.r.L===30},
   {id:"antidry",i:"🥖",n:"Сухий пайок",d:"Антисезон: забий 5 голів або менше",cat:"modes",t:c=>c.format==='anti'&&c.r.gf<=5},
-  // daily draft (checked via counters)
-  {id:"dchamp",i:"📅",n:"Герой дня",d:"Стань чемпіоном в офіційній спробі драфту дня",cat:"daily",rep:1,t:c=>c.dailyOfficial&&c.r.place===1},
-  {id:"s3",i:"🔥",n:"Бог любить трійцю",d:"Зіграй драфт дня 3 дні поспіль",cat:"daily",st:s=>s.streak>=3,prog:s=>[s.streak,3]},
+  // daily: streak and days counted by the daily challenge (a counted attempt on its own day); dchamp belonged to the removed daily draft
+  {id:"dchamp",i:"📅",n:"Герой дня",d:"Стань чемпіоном в офіційній спробі драфту дня (режиму вже немає)",cat:"daily",rep:1,gone:1},
+  {id:"s3",i:"🔥",n:"Бог любить трійцю",d:"Виконай виклик дня 3 дні поспіль",cat:"daily",st:s=>s.streak>=3,prog:s=>[s.streak,3]},
   {id:"s7",i:"🗓️",n:"Як на роботу",d:"7 днів поспіль",cat:"daily",st:s=>s.streak>=7,prog:s=>[s.streak,7]},
   {id:"s14",i:"📆",n:"Відпустка? Не чув",d:"14 днів поспіль",cat:"daily",st:s=>s.streak>=14,prog:s=>[s.streak,14]},
   {id:"s30",i:"🏛️",n:"Трудоголік",d:"30 днів поспіль",cat:"daily",st:s=>s.streak>=30,prog:s=>[s.streak,30]},
-  {id:"d10",i:"☕",n:"Завсідник",d:"Зіграй 10 драфтів дня",cat:"daily",st:s=>s.dailies>=10,prog:s=>[s.dailies,10]},
-  {id:"d50",i:"🎖️",n:"Старожил",d:"Зіграй 50 драфтів дня",cat:"daily",st:s=>s.dailies>=50,prog:s=>[s.dailies,50]},
+  {id:"d10",i:"☕",n:"Завсідник",d:"Виконай виклик дня 10 разів",cat:"daily",st:s=>s.dailies>=10,prog:s=>[s.dailies,10]},
+  {id:"d50",i:"🎖️",n:"Старожил",d:"Виконай виклик дня 50 разів",cat:"daily",st:s=>s.dailies>=50,prog:s=>[s.dailies,50]},
   // 5x5 leagues with friends: awarded when the player views his league's finished tournament (fl5Award in leagues.js), once per league
   {id:"f5play",i:"🤝",n:"Двір на двір",d:"Зіграй турнір ліги 5×5 з друзями",cat:"friends",rep:1,f5:1},
   {id:"f5champ",i:"👑",n:"Король двору",d:"Виграй лігу 5×5 з друзями",cat:"friends",rep:1,f5:1},
@@ -158,13 +158,13 @@ function trCtxNow(r){
   const m=MODES[S.mode];
   const xi=S.slots.map(s=>{const p=s.player;const q=PERSON[p.id]||{};return {name:p.name,id:p.id,slot:s.slot,main:p.main,r0:p.r0,r:p.r,nat:p.nat??q.nat??-1,by:p.by||q.by||0,cc:p.cc||(DATA.clubs.find(x=>x.n===p.club&&x.y===p.y)||{}).c,y:p.y};});
   const pl=r.players.map(p=>({...p,r0:(xi.find(x=>x.id===p.id)||{}).r0||p.r}));
-  return {r,xi,pl,mode:S.mode,format:S.format,reveal:!!(m.reveal||m.showRatings),dailyOfficial:!!(S.daily&&!S.daily.practice)};
+  return {r,xi,pl,mode:S.mode,format:S.format,reveal:!!(m.reveal||m.showRatings)};
 }
 function trCtxRow(row){   // from a seasons log row (for retroactive awarding)
   const xi=(row.xi||[]).map(p=>{const q=PERSON[p.id]||{};const cc=(DATA.clubs.find(x=>x.n===p.c&&x.y===p.y)||{}).c;return {name:p.n,id:p.id,slot:p.slot,main:q.main,r0:p.r0??p.r,r:p.r,nat:q.nat??-1,by:q.by||0,cc,y:p.y};});
   const pl=(row.xi||[]).map(p=>({id:p.id,slot:p.slot,g:p.g||0,a:p.a||0,rt:p.rt||0,form:p.f||0,r0:p.r0??p.r}));
   const r={W:row.w,D:row.d,L:row.l,pts:row.pts,place:row.place,gf:row.gf,ga:row.ga,xp:row.xp??row.pts,golden:!!row.golden};
-  const m=MODES[row.mode]||{};return {r,xi,pl,mode:row.mode,format:row.format,reveal:!!(m.reveal||m.showRatings),dailyOfficial:!!(row.day&&!row.practice)};
+  const m=MODES[row.mode]||{};return {r,xi,pl,mode:row.mode,format:row.format,reveal:!!(m.reveal||m.showRatings)};
 }
 // record a season into the collection; returns {got:[ids], fresh:[new ids]}; sync:false - the caller sends fresh ids itself (with the season)
 function trAward(c,{daily,sync=true}={}){

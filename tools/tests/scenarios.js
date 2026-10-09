@@ -1,4 +1,4 @@
-// Pre-release scenarios: home, theme, 4 seasons (classic, daily, anti-season, derby), result text and card.
+// Pre-release scenarios: home, theme, 4 seasons (classic, daily challenge, anti-season, derby), result text and card.
 // Run from repo root: node tools/tests/scenarios.js [screenshot dir]. Exit code 0 = all good.
 const path=require('path'),fs=require('fs');const {ROOT,openPage,playSeason,pickFmt}=require('./_page.js');
 const OUT=process.argv[2]||path.join(ROOT,'tools','tests','out');fs.mkdirSync(OUT,{recursive:true});
@@ -60,7 +60,7 @@ const fail=[];const check=(ok,msg)=>{if(!ok)fail.push(msg);};
    const c1={...base,r:{W:10,D:10,L:10,pts:40,place:9,gf:30,ga:30,xp:40,log:L(30,i=>({ug:i<5?0:1,og:i<5?1:0,res:i<5?'L':'W',home:true,opp:'X'}))}};
    const g=e(c1);return g.includes('equal')&&g.includes('sheep')&&!g.includes('homefort');}),'нові трофеї: «Порівну»/«Стадо баранів»/«Білгород» рахуються неправильно');
  check(await pg.evaluate(()=>{const e=window.__dbg.trEval;const r=p=>({r:{W:20,D:9,L:1,pts:p,place:2,gf:60,ga:20,xp:60},xi:[],pl:[],mode:'normal',format:'classic',reveal:true});return e(r(69)).includes('nice')&&!e(r(70)).includes('nice');}),'трофей Nice: не видається за 69 або видається не за 69');
- for(const [fmt,mode,form] of [['classic',1,1],['daily',0,0],['anti',3,1],['derby',2,2]]){
+ for(const [fmt,mode,form] of [['classic',1,1],['vd',0,0],['anti',3,1],['derby',2,2]]){
   await playSeason(pg,fmt,mode,form);
   await pg.screenshot({path:path.join(OUT,`result_${fmt}.png`),fullPage:true});
   await pg.click('#tgShareBtn');await pg.waitForTimeout(900);   // outside Telegram and without a native share sheet: shows the card

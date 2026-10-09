@@ -2,7 +2,7 @@
 // A. server: daily seed is one insert (409 path keeps retry / race / other squad), season save does not re-read the row,
 //    new trophies come with the season, daily result is one upsert, chat league standings page past 1000 rows, league card.
 // B. site: no table prefetch, tables load on open (head start on touch), trophy counter cache (6 h), trophy_stats cache (1 h),
-//    player page asks for leagues once, day table loaded once and without xi, no user_state write when nothing changed.
+//    player page asks for leagues once, daily challenge asks for its attempt once, no user_state write when nothing changed.
 // Run from repo root: node tools/tests/v078.js
 const path=require('path'),crypto=require('crypto');const {ROOT,launch,makeDB,callApi,openSite,draftSeason,checker}=require('./_site.js');
 const {pgStub}=require('./_rest.js');
@@ -142,10 +142,9 @@ async function siteChecks(){
   await pg.evaluate(()=>{localStorage.setItem('upl30_tr_srv_at',String(Date.now()-7*36e5));localStorage.setItem('upl30_tr_pct',JSON.stringify({at:Date.now()-2*36e5,v:{players:1,t:{}}}));});
   C=[];await pg.reload();await pg.waitForTimeout(3000);
   T.check(count(C,/player_profile/)===1,'кеш лічильника старший за 6 год — один player_profile');
-  // daily: day table loaded once (after the verdict), no table prefetch
-  C=[];await pg.evaluate(()=>document.getElementById('homeBtn').click());await pg.waitForTimeout(200);await pg.click('#dailyBtn');await draftSeason(pg);await pg.waitForTimeout(5000);
-  T.check(count(C,/daily_results/)===1&&count(C,/GET seasons/)===0,`драфт дня: таблиця дня один раз (${count(C,/daily_results/)}), без підвантаження таблиць`);
-  T.check(await pg.$$eval('#lbTable tr.me',e=>e.length)===1,'драфт дня: свій рядок у таблиці дня');
+  // daily challenge: opening it asks the server for the attempt once (here refused: not today), no tables are loaded
+  C=[];await pg.evaluate(()=>document.getElementById('homeBtn').click());await pg.waitForTimeout(200);await pg.click('#vdCard');await pg.waitForTimeout(1500);
+  T.check(count(C,/API seed/)===1&&count(C,/daily_results|GET seasons/)===0,`виклик дня: один запит спроби (${count(C,/API seed/)}), без таблиць`);
   T.check(o.errs.length===0,'без помилок на сторінці'+(o.errs.length?': '+o.errs.join(' | '):''));
   await o.ctx.close();
   // signed in: no user_state write when nothing changed

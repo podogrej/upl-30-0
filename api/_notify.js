@@ -44,7 +44,7 @@ const chunks = (a, n = 100) => { const out = []; for (let i = 0; i < a.length; i
 const all = q => L.sbAll(q);   // every row: paged by 1000
 const addDay = (d, n) => new Date(Date.UTC(+d.slice(0, 4), +d.slice(5, 7) - 1, +d.slice(8, 10)) + n * 864e5).toISOString().slice(0, 10);
 const weekKey = d => addDay(d, -((new Date(Date.UTC(+d.slice(0, 4), +d.slice(5, 7) - 1, +d.slice(8, 10))).getUTCDay() + 6) % 7));
-// daily-draft streak at risk today: replays the site's streakUpdate/streakInfo (src/template.html) over the played days,
+// daily streak at risk today: replays the site's streakUpdate/streakInfo (src/template.html) over the played days,
 // including the freeze (one skipped day per week, counted in the week of the day it was used); 0 if not at risk
 function streakAtRisk(days, today) {
   if (days.has(today)) return 0;
@@ -76,12 +76,15 @@ async function sendEvening(day) {
     list.sort(L.sortRes);
     list.forEach((r, i) => { (mine[r.tg_user_id] = mine[r.tg_user_id] || []).push({ title: titles[chat] || 'ліга', place: i + 1, n: list.length, pts: r.pts, w: r.w, d: r.d, l: r.l }); });
   }
-  // daily-draft days over the last STREAK_DAYS days, by Telegram id or by the linked player; ids go in chunks (URL length), rows page by page
+  // streak days over the last STREAK_DAYS days (daily draft before 0.80, then daily challenge), by Telegram id or by the linked player; ids go in chunks (URL length), rows page by page
   const pidOf = {}, from = addDay(day, -STREAK_DAYS), daysOf = {}, rows = [];
   for (const part of chunks(ids)) for (const k of await all(`player_links?kind=eq.tg&key=in.(${part.join(',')})&select=key,player_id&order=key.asc`)) pidOf[k.key] = k.player_id;
   const sel = `daily_results?day=gte.${from}&verified=is.true&select=id,day,tg_user_id,player_id&order=id.asc`;
   for (const part of chunks(ids)) rows.push(...await all(`${sel}&tg_user_id=in.(${part.join(',')})`));
   for (const part of chunks([...new Set(Object.values(pidOf))])) rows.push(...await all(`${sel}&player_id=in.(${part.join(',')})`));
+  // since 0.80 the streak counts days with a counted daily challenge attempt on its own day (vd_results, gate met, not from the archive)
+  const vsel = `vd_results?day=gte.${from}&gate_ok=is.true&late=is.false&select=id,day,player_id&order=id.asc`;
+  for (const part of chunks([...new Set(Object.values(pidOf))])) rows.push(...await all(`${vsel}&player_id=in.(${part.join(',')})`).catch(() => []));
   for (const id of ids) daysOf[id] = new Set(rows.filter(r => String(r.tg_user_id) === String(id) || (pidOf[id] && r.player_id === pidOf[id])).map(r => String(r.day).slice(0, 10)));
   for (const id of ids) {
     const lg = mine[id] || [], risk = streakAtRisk(daysOf[id], day);
@@ -90,7 +93,7 @@ async function sendEvening(day) {
     if (!marked) continue;
     let t = `<b>🌙 Твій день №${L.dayNo(day)}</b>`;
     if (lg.length) t += '\n\n' + lg.map(x => `«${L.esc(x.title)}» — <b>${x.place}</b> з ${x.n} · ${x.pts} оч. (${x.w}-${x.d}-${x.l})`).join('\n');
-    if (risk) t += `\n\n🔥 Серія ${risk} дн. під загрозою — зіграй драфт дня до півночі за Києвом.`;
+    if (risk) t += `\n\n🔥 Серія ${risk} дн. під загрозою — виконай виклик дня до півночі за Києвом.`;
     const r = await L.tg('sendMessage', { chat_id: id, text: t, parse_mode: 'HTML', disable_web_page_preview: true,
       reply_markup: { inline_keyboard: [[{ text: '▶️ Грати', web_app: { url: 'https://upl30.com.ua/' } }], [{ text: '🔕 Вимкнути сповіщення', callback_data: 'nt:off' }]] } });
     if (r && r.ok) out.sent++;

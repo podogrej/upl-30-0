@@ -232,9 +232,6 @@ summary{cursor:pointer;font-weight:var(--wt-bold);padding-block:var(--sp-3);min-
 .lvTable{table-layout:fixed;width:100%;font-variant-numeric:tabular-nums}.lvTable col.n{width:2.6em}.lvTable col.s{width:2.6em}.lvTable col.d{width:3.4em}.lvTable col.p{width:3em}.lvTable td:nth-child(2){overflow:hidden;text-overflow:ellipsis;white-space:nowrap}   /* fixed columns: widths don't follow content, so the live table doesn't sway between rounds */
 select.need{border-color:var(--loss);box-shadow:0 0 0 2px color-mix(in srgb,var(--loss) 35%,transparent)}select{font:inherit;font-family:var(--font-body);font-size:var(--fs-headline);padding:var(--sp-3) 42px var(--sp-3) var(--sp-4);border:1px solid var(--line);border-radius:var(--r-md);background:var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%237f8aad' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E") no-repeat right 12px center/22px;color:var(--ink);max-width:100%;-webkit-appearance:none;appearance:none}   /* custom arrow on the right, site font */
 /* leaderboard */
-.lb{display:grid;gap:var(--sp-2);margin-top:var(--sp-4);border:1px solid var(--line);border-radius:var(--r-lg);background:var(--surface);padding:var(--sp-4)}
-.lb input{font:inherit;font-size:var(--fs-headline);padding:var(--sp-2) var(--sp-3);border:1px solid var(--line);border-radius:var(--r-md);background:var(--bg);color:var(--ink);min-width:0;flex:1 1 160px}
-.lb .msg{font-size:var(--fs-footnote);color:var(--ink2)}
 /* expected */
 .tiles{display:grid;gap:var(--sp-2)}.tiles.t2{grid-template-columns:repeat(2,minmax(0,1fr))}
 .tile{border:1px solid var(--line);border-radius:var(--r-md);padding:var(--sp-3) var(--sp-3);background:var(--bg);display:grid;gap:var(--sp-0h);min-width:0}
@@ -356,7 +353,6 @@ td .sub{font-size:var(--fs-caption2);color:var(--muted);margin-top:var(--sp-0h);
 .share textarea{width:100%;min-height:118px;font-family:var(--font-mono);font-size:var(--fs-footnote);line-height:var(--lh-body);border:1px solid var(--line);border-radius:var(--r-sm);padding:var(--sp-3);background:var(--surface);color:var(--ink);resize:vertical}
 .share img{width:100%;max-width:360px;border-radius:var(--r-md);border:1px solid var(--line);display:block}
 .share .hint{font-size:var(--fs-caption);color:var(--ink2)}
-.flag{font-family:var(--font-mono);font-size:var(--fs-caption);padding:var(--sp-1) var(--sp-2);border-radius:var(--r-pill);background:var(--amber);color:#fff;justify-self:start}
 /* sheets: bottom sheet on phone (spring in, blurred dim, swipe down to close), centered card from 600px, full screen for the table */
 .overlay,.sheet0{--sx:var(--sp-card);position:fixed;inset:0;display:flex;align-items:flex-end;justify-content:center;overflow:hidden;overflow:clip;overscroll-behavior:contain}   /* clip: never scrolls (the spring gap filler overflows below) */
 .overlay{z-index:50}.sheet0{z-index:60}
@@ -557,7 +553,7 @@ tr.gap td{padding:0 var(--sp-2);line-height:var(--lh-snug);color:var(--muted);te
 .lg-note{margin:0;font-size:var(--fs-footnote);color:var(--ink2);text-align:center}.lg-empty{margin:0;color:var(--ink2)}
 .lg-err{margin:0;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;color:var(--ink2);font-size:var(--fs-footnote)}.lg-err button.link0{padding:0 var(--sp-2);font-size:inherit}
 .lg-sub{margin:0 0 var(--sp-3);color:var(--ink2);font-size:var(--fs-footnote)}.lg-foot{font-size:var(--fs-footnote)}
-.opt,.row0,.daily,.wheel,.lb{border-color:transparent;background:var(--card);box-shadow:var(--sh-1)}   /* resting cards: depth level 1 */
+.opt,.row0,.daily,.wheel{border-color:transparent;background:var(--card);box-shadow:var(--sh-1)}   /* resting cards: depth level 1 */
 .opt.on{border-color:transparent;box-shadow:inset 0 0 0 1.5px var(--amber),var(--sh-1)}
 /* header: avatar + name */
 header.top{border-bottom-color:var(--line2)}
@@ -630,6 +626,7 @@ button.go0{max-width:none;margin-top:var(--sp-5)}
   #s2>#pitch{grid-column:1;grid-row:2;position:sticky;top:72px;max-width:440px}
   #s2>#moveRow{grid-column:1;grid-row:3}#s2>#moveHint{grid-column:1;grid-row:4}
   #s2>.grid{grid-column:2;grid-row:2/span 3;margin-top:0!important}
+  #s2>.grid .spin0{min-height:0;align-content:start;padding:var(--sp-4);border-radius:var(--r-md);background:var(--card);box-shadow:var(--sh-1)}   /* idle state = same card as the wheel, top-aligned with the pitch; the 44px+ tap area is padding, not empty margin */
 }
 /* phone draft: slim bar with progress, shown once the pitch has scrolled away; two-column layout does not need it */
 .mini{position:fixed;left:0;right:0;top:var(--hh,57px);z-index:35;display:flex;align-items:center;gap:var(--sp-3);height:44px;padding:0 var(--sp-4);background:color-mix(in srgb,var(--bg) 92%,transparent);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);transform:translateY(-100%);opacity:0;visibility:hidden;transition:transform var(--dur-3) var(--ease-out),opacity var(--dur-2) var(--ease-out),visibility 0s var(--dur-3)}
@@ -646,11 +643,6 @@ button.go0{max-width:none;margin-top:var(--sp-5)}
 /* home */
 .hero0{gap:0}.hero0 .logo0{margin-bottom:var(--sp-3)}.hero0 .lead0{max-width:30ch;margin:0 0 var(--sp-5)}
 .btns0{display:grid;gap:var(--sp-2);width:min(100%,420px)}.btns0 .big0{max-width:none;min-height:54px;margin:0}
-button.daily0{display:grid;grid-auto-flow:column;justify-content:center;align-content:center;align-items:baseline;column-gap:var(--sp-2);min-height:54px;padding:var(--sp-2) var(--sp-4);border-radius:var(--r-md);border:1.5px solid color-mix(in srgb,var(--amber) 65%,transparent);background:none;color:var(--ink);font:var(--wt-bold) var(--fs-headline) var(--font-display);cursor:pointer}
-.daily0>*{display:block;line-height:1;margin:0}.daily0>.ic{width:22px;height:22px;align-self:center;color:var(--amber2)}.daily0>.ic .ico{width:22px;height:22px}   /* text on one baseline, icon centered on the row, accent color */
-.daily0 small{font:var(--wt-medium) var(--fs-footnote) var(--font-body);color:var(--ink2);white-space:nowrap}.daily0 small .hot0{color:var(--amber);font-weight:var(--wt-bold)}.daily0 small .hot0 .ic{width:auto;height:auto;margin:0 var(--sp-0h) 0 0;vertical-align:-3px}.daily0 small .hot0 .ico{display:inline-block;width:16px;height:16px}
-button.daily0:disabled{opacity:1;border-color:var(--line);cursor:default}.daily0:disabled span{color:var(--ink2)}
-.dstat0{margin:var(--sp-3) 0 0;font-size:var(--fs-body);color:var(--ink2);max-width:36ch}.dstat0:empty{display:none}
 .links0{display:flex;gap:var(--sp-4);justify-content:center;margin-top:var(--sp-3)}
 .links0 button{border:0;background:none;padding:var(--sp-1) var(--sp-0h);color:var(--ink2);font:var(--wt-medium) var(--fs-footnote) var(--font-body);text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--line)}
 /* mode tiles: tinted icon circle on the left, title and short caption, chevron on phones */
@@ -723,9 +715,6 @@ body:has(#s1[hidden]) .foot0,body:has(#s1[hidden]) .ft-cred,body:has(#s1[hidden]
 .ft-form .hint{margin:var(--sp-0h) 0 0;font-size:var(--fs-caption);color:var(--muted)}.ft-form .hint a{color:var(--ink2);font-weight:var(--wt-bold);text-decoration:underline;text-underline-offset:2px}.ft-form .err{margin:0;font-size:var(--fs-footnote);color:var(--loss)}
 .ft-form .acts{display:flex;align-items:center;gap:var(--sp-3);margin-top:var(--sp-1)}.ft-send{border:0;border-radius:var(--r-sm);padding:var(--sp-2) var(--sp-4);font:var(--wt-bold) var(--fs-footnote) var(--font-body);background:var(--ink);color:var(--bg);cursor:pointer}.ft-send:disabled{opacity:.5}.ft-cancel{border:0;background:none;padding:var(--sp-2) var(--sp-0h);font:var(--wt-medium) var(--fs-footnote) var(--font-body);color:var(--muted);cursor:pointer}
 .ft-done{width:min(100%,380px);display:flex;gap:var(--sp-2);align-items:center;justify-content:center;text-align:left;padding:var(--sp-3) var(--sp-4);border-radius:var(--r-md);font-size:var(--fs-body);color:var(--ink);background:color-mix(in srgb,var(--win) 12%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--win) 45%,transparent)}.ft-done[hidden]{display:none}.ft-done b{color:var(--win);font-size:var(--fs-headline)}
-table.lbt th.n,table.lbt td.n{width:28px;padding-left:var(--sp-0h);padding-right:var(--sp-0h);text-align:center}
-table.lbt td.n .sk{height:22px;vertical-align:baseline}   /* same height as the place chip in real rows */
-.lbfoot{margin-top:var(--sp-2);font-size:var(--fs-footnote)}
 /* wheel */
 .cdot{display:inline-block;width:14px;height:14px;border-radius:50%;margin-right:10px;vertical-align:-1px;background:var(--c1,var(--line));box-shadow:inset 0 0 0 3px var(--c2,transparent),0 0 0 1px rgba(255,255,255,.18)}
 .reel .strip>div.club{display:flex;align-items:center}@media (max-width:600px){.reel .cdot{display:none}}   /* phone: club circle was only visible for short names; removed */
@@ -858,7 +847,7 @@ section>h3:first-child,.box h3:first-of-type,#viewBody>h3:first-child,#viewBody>
 /* trophies as tiles: one per row, small icon next to the title, title in gradient, description below; locked ones dimmed */
 .tro{grid-template-columns:40px 1fr auto;column-gap:var(--sp-2);row-gap:var(--sp-1);align-items:start;padding:var(--sp-4) var(--sp-4)}
 .tro .tri{grid-row:1;align-self:center;margin:0;display:grid;place-items:center}
-.tro .trt{gap:var(--sp-1)}.tro .trt b{font-size:var(--fs-body);line-height:var(--lh-snug)}
+.tro .trt{gap:var(--sp-1);align-self:center}.tro .trt b{font-size:var(--fs-body);line-height:var(--lh-snug)}
 .tro.on .trt b{color:var(--ink);justify-self:start}
 .tro:not(.on){opacity:1;background:var(--surface);box-shadow:inset 0 0 0 1px var(--line)}
 /* summary: trophy titles in white, calm borders, no pink glow; only Share uses the gradient */
@@ -894,13 +883,139 @@ section>h3:first-child,.box h3:first-of-type,#viewBody>h3:first-child,#viewBody>
 h3,.sec0,#s1 .sec0,.pgh,.big .l,.trleg .h,.daily .kicker,.pre .kicker,details.pp-hist>summary{text-transform:none;letter-spacing:var(--ls-0)}
 h3,.sec0,#s1 .sec0,.pgh,.trleg .h{font-size:var(--fs-footnote);font-weight:var(--wt-bold);font-family:var(--font-body)}
 .sec0,#s1 .sec0{color:var(--muted)}
+/* ===== daily challenge (src/vyklyk.js): home card, header streak, draft brief and sticky bar, not counted, result block, archive */
+:root{--gtag:#c4146f;--med-ink:#8a5a00;--fail-ink:#b3192b}
+:root[data-theme="dark"]{--gtag:#c8226e;--med-ink:var(--draw);--fail-ink:#ff7a8a}
+.btns0{width:min(100%,640px)}
+.stk0{display:inline-flex;align-items:center;gap:var(--sp-1);min-height:44px;font:var(--wt-bold) var(--fs-footnote) var(--font-body);color:var(--ink2);white-space:nowrap;font-variant-numeric:tabular-nums}
+.stk0 .ic{color:var(--amber2)}.stk0 .ico{width:18px;height:18px}:root:not([data-theme="dark"]) .stk0 .ic{color:var(--amber)}
+.hdr-r{display:flex;align-items:center;gap:var(--sp-2)}
+/* home card: the whole card is the button */
+.evc.evc{display:grid;gap:var(--sp-2);width:100%;text-align:left;padding:var(--sp-4);border-radius:var(--r-lg);background:var(--card);border:1px solid var(--line);color:var(--ink);box-shadow:var(--sh-1);font:inherit;font-weight:var(--wt-regular)}
+.evc.new{border-color:color-mix(in srgb,var(--gtag) 55%,var(--line));background:color-mix(in srgb,var(--gtag) 8%,var(--card))}
+.evc.done,.evc.soon{box-shadow:none}
+.evc:focus-visible{outline:2px solid var(--amber2);outline-offset:2px}
+.evc .e1{display:flex;justify-content:space-between;align-items:center;gap:var(--sp-3);min-height:24px}
+.evc .lb,.brief .bk,.bon1 .lb,.brief .meta small,.lab2,.vsec{font:var(--wt-bold) var(--fs-caption) var(--font-body);letter-spacing:var(--ls-caps);text-transform:uppercase;color:var(--ink2)}
+.evc .af{display:inline-flex;align-items:center;gap:var(--sp-0h);font:var(--wt-bold) var(--fs-footnote) var(--font-body);color:var(--ink2)}.evc .af .ico{width:16px;height:16px;color:var(--muted)}
+.evc .e2{display:flex;align-items:center;gap:var(--sp-2);font:var(--wt-black) var(--fs-title3)/var(--lh-snug) var(--font-display);letter-spacing:var(--ls-tight);text-wrap:balance}
+.evc .em,.brief .em,.rs .em,.vres .em,.tc-i{font-family:var(--font-emoji);font-weight:var(--wt-regular);line-height:1}.evc .e2 .em{font-size:24px}
+.evc .e3{font-size:var(--fs-body);color:var(--ink2)}
+.evc .evr{display:flex;align-items:center;gap:var(--sp-2);margin-top:var(--sp-1)}.evc .evr .mm{font-size:26px;font-family:var(--font-emoji)}.evc .evr .mm .ico{width:26px;height:26px;color:var(--win)}
+.evc .evr b{font:var(--wt-black) var(--fs-title2)/1 var(--font-display);font-variant-numeric:tabular-nums}.evc .evr>span:last-child{font-size:var(--fs-footnote);color:var(--ink2)}
+.evc .evr.no{font-size:var(--fs-footnote);color:var(--fail-ink);font-weight:var(--wt-bold)}
+.evc .e4{margin-top:var(--sp-1)}
+.evc .evt{display:flex;align-items:center;gap:6px;margin-top:var(--sp-1);font-size:var(--fs-footnote);color:var(--ink2);font-variant-numeric:tabular-nums}.evc .evt .ico{width:14px;height:14px;color:var(--muted)}
+.vmst{display:flex;flex-wrap:wrap;gap:var(--sp-2)}
+.vmst>span{display:inline-flex;align-items:center;gap:6px;min-height:30px;padding:0 var(--sp-3) 0 var(--sp-2);border-radius:var(--r-pill);border:1px solid var(--line);font:var(--wt-bold) var(--fs-footnote) var(--font-body);color:var(--muted);font-variant-numeric:tabular-nums}
+.vmst i{font-style:normal;font-family:var(--font-emoji);font-size:15px;filter:grayscale(1);opacity:.45}
+.vmst span.got{color:var(--ink);border-color:color-mix(in srgb,var(--draw) 60%,var(--line));background:color-mix(in srgb,var(--draw) 12%,transparent)}.vmst span.got i{filter:none;opacity:1}
+.links0 #vdArchGo{color:var(--ink2)}
+/* draft: brief above the pitch */
+.brief{display:grid;gap:var(--sp-3);padding:var(--sp-4);border:1px solid var(--line);border-radius:var(--r-lg);background:var(--card);box-shadow:var(--sh-2)}
+.brief .bl,.brief .br{display:grid;gap:var(--sp-3);align-content:start;min-width:0}
+.brief .bk{margin:0}
+.brief .bh1{margin:calc(var(--sp-2) * -1) 0 0;display:flex;align-items:center;gap:var(--sp-2);font:var(--wt-black) var(--fs-title3)/var(--lh-snug) var(--font-display);letter-spacing:var(--ls-tight);text-wrap:balance}.brief .bh1 .em{font-size:22px}
+.brief .bs1{margin:calc(var(--sp-1) * -1) 0 0;font-size:var(--fs-body);color:var(--ink2)}
+.tag-req{display:inline-flex;align-items:center;gap:6px;min-height:24px;padding:0 10px;border-radius:var(--r-pill);background:var(--gtag);color:#fff;font:var(--wt-bold) var(--fs-caption)/1 var(--font-body);white-space:nowrap;width:max-content}.tag-req .ic,.tag-req .ico{width:14px;height:14px}
+.rqx{display:grid;gap:var(--sp-2);padding:var(--sp-3);border-radius:var(--r-md);background:color-mix(in srgb,var(--gtag) 13%,var(--card));box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--gtag) 70%,transparent);transition:background-color var(--dur-3) var(--ease-out),box-shadow var(--dur-3) var(--ease-out)}
+.brief.ok .rqx{background:color-mix(in srgb,var(--win) 12%,var(--card));box-shadow:inset 0 0 0 1.5px var(--win)}.brief.ok .tag-req{background:var(--win);color:#04210f}
+:root:not([data-theme="dark"]) .brief.ok .tag-req{color:#fff}
+.rq1{display:flex;justify-content:space-between;align-items:center}
+.rqx .cnt{font:var(--wt-black) 32px/1 var(--font-display);font-variant-numeric:tabular-nums}.rqx .cnt i{font-style:normal;font-size:18px;color:var(--ink2)}
+.rq2{font:var(--wt-bold) var(--fs-headline)/var(--lh-snug) var(--font-display);text-wrap:balance}
+.rq3{margin:0;font-size:var(--fs-footnote);color:var(--ink2)}.rq3 b{color:var(--ink)}
+.rqseg{display:grid;grid-template-columns:repeat(var(--n,2),1fr);gap:var(--sp-1)}.rqseg i{height:6px;border-radius:3px;background:color-mix(in srgb,var(--ink) 16%,transparent);transition:background-color var(--dur-3) var(--ease-out)}.rqseg i.on{background:var(--win)}
+.bon1{margin:0;display:flex;flex-wrap:wrap;align-items:baseline;gap:var(--sp-1) var(--sp-3)}.bon1 .bv{font:var(--wt-bold) var(--fs-body) var(--font-display)}.bon1 .bn{font-size:var(--fs-footnote);color:var(--ink2)}
+.brief .meta{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-2)}
+.brief .meta>div{display:grid;gap:var(--sp-0h);padding:var(--sp-2) var(--sp-3);border:1px solid var(--line);border-radius:var(--r-md);background:var(--bg)}
+.brief .meta b{font:var(--wt-black) var(--fs-headline) var(--font-display);font-variant-numeric:tabular-nums;white-space:nowrap}
+.brief .pips{display:inline-flex;gap:var(--sp-1)}.brief .pips i{width:14px;height:6px;border-radius:3px;background:color-mix(in srgb,var(--ink) 16%,transparent)}.brief .pips i.u{background:var(--ink2)}.brief .pips i.c{background:var(--amber2)}
+.brief .meta .mm{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:var(--sp-3);flex-wrap:wrap}
+.brief .meta .vmst{gap:var(--sp-1)}.brief .meta .vmst>span{min-height:26px;padding:0 var(--sp-2) 0 6px}
+.dtop:has(#vdBrief:not([hidden])){gap:var(--sp-3)}
+@media (min-width:760px){.brief{grid-template-columns:1fr 1fr;gap:var(--sp-5);padding:var(--sp-5)}}
+/* event mark on the pitch circle */
+.evg{position:absolute;left:-9px;top:-8px;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font:12px/1 var(--font-emoji);background:var(--bg);box-shadow:0 0 0 1px var(--line);pointer-events:none}
+/* compact sticky bar once the brief has scrolled away */
+.vbar{position:fixed;left:0;right:0;top:var(--hh,57px);z-index:36;display:flex;justify-content:space-between;align-items:center;gap:var(--sp-3);min-height:52px;padding:6px max(var(--sp-4),calc((100vw - 1120px) / 2 + var(--sp-4)));background:color-mix(in srgb,var(--bg) 94%,transparent);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);box-shadow:inset 0 -2px 0 var(--gtag);transform:translateY(-110%);opacity:0;visibility:hidden;transition:transform var(--dur-2) var(--ease-out),opacity var(--dur-2) var(--ease-out),visibility 0s var(--dur-2)}
+.vbar.on{transform:none;opacity:1;visibility:visible;transition-delay:0s}
+.vbar .tx{display:grid;min-width:0}.vbar small{font:var(--wt-bold) var(--fs-caption) var(--font-body);color:var(--ink2)}
+.vbar b{font:var(--wt-bold) var(--fs-body) var(--font-display);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vbar .cnt.sm{display:inline-block;font:var(--wt-black) var(--fs-footnote)/1 var(--font-display);padding:3px 8px;border-radius:var(--r-pill);background:var(--gtag);color:#fff;margin-right:6px;vertical-align:1px;font-variant-numeric:tabular-nums}.vbar .cnt.sm.ok{background:var(--win);color:#04210f}
+.vbar .rt{display:grid;justify-items:end;font-size:var(--fs-footnote);color:var(--ink2);white-space:nowrap;font-variant-numeric:tabular-nums}.vbar .rt b{color:var(--ink)}
+@media (prefers-reduced-motion:reduce){.vbar,.rqx,.rqseg i{transition:none}}
+/* gate block (not counted screen) */
+.gate{display:grid;gap:var(--sp-2);padding:var(--sp-3) var(--sp-4);border-radius:var(--r-md)}
+.gate.bad{background:color-mix(in srgb,var(--loss) 12%,var(--card));box-shadow:inset 0 0 0 1.5px var(--loss)}.gate.bad .tag-req{background:#c21f33}
+.gate .gb2{display:grid;grid-template-columns:auto 1fr;gap:var(--sp-3);align-items:center}.gate .gb2 b{font:var(--wt-bold) var(--fs-headline)/var(--lh-snug) var(--font-display);text-wrap:balance}
+.gate .n{min-width:56px;height:56px;padding:0 var(--sp-2);border-radius:var(--r-md);display:grid;place-items:center;font:var(--wt-black) 24px/1 var(--font-display);font-variant-numeric:tabular-nums;background:var(--bg);box-shadow:inset 0 0 0 1.5px var(--line)}.gate .n.no{color:var(--fail-ink)}
+/* not counted (s11) */
+.rs{display:grid;gap:var(--sp-4);padding-top:var(--sp-4)}
+.rs .at,.vres .at{margin:0;display:flex;align-items:center;gap:6px;font:var(--wt-bold) var(--fs-footnote) var(--font-body);color:var(--ink2)}
+.rs h1{margin:0;font:var(--wt-black) var(--fs-title1)/var(--lh-tight) var(--font-display);letter-spacing:var(--ls-tight)}.rs h1.no{color:var(--fail-ink)}
+.rs .why2{margin:0;font:var(--wt-medium) var(--fs-headline) var(--font-body);color:var(--ink);text-wrap:pretty}
+.next2{display:grid;gap:var(--sp-2);padding:var(--sp-3) var(--sp-4);border:1px solid var(--line);border-radius:var(--r-md);background:var(--card)}
+.next2 b{font:var(--wt-bold) var(--fs-headline) var(--font-display)}.next2 p{margin:0;font-size:var(--fs-body);color:var(--ink2)}.next2 .would{font-size:var(--fs-footnote);color:var(--muted)}
+.rs-ft{position:sticky;bottom:0;display:grid;gap:var(--sp-2);justify-items:center;margin:var(--sp-5) calc(var(--sp-4) * -1) 0;padding:var(--sp-3) var(--sp-4) calc(var(--sp-3) + env(safe-area-inset-bottom,0px));background:color-mix(in srgb,var(--bg) 94%,transparent);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-top:1px solid var(--line)}
+.rs-ft .big0{display:flex;align-items:center;justify-content:center;gap:var(--sp-2);width:min(100%,560px);max-width:none}.rs-ft .big0 .ico{width:20px;height:20px}
+.rs-ft .fine{margin:0;font-size:var(--fs-footnote);color:var(--ink2)}
+/* squad breakdown */
+.sqd{display:grid;gap:var(--sp-2)}
+.lab2{display:flex;justify-content:space-between;align-items:baseline;gap:var(--sp-3)}.lab2 span{text-transform:none;letter-spacing:0;font-weight:var(--wt-bold);color:var(--ink2);font-size:var(--fs-footnote)}
+.grp h3,.grp .h3{display:flex;align-items:center;gap:var(--sp-2);margin:0;font:var(--wt-bold) var(--fs-headline) var(--font-display);text-transform:none;letter-spacing:0;color:var(--ink)}
+.grp h3>span,.grp .h3>span{font:var(--wt-bold) var(--fs-footnote) var(--font-body);color:var(--ink2);padding:2px 8px;border-radius:var(--r-pill);border:1px solid var(--line)}
+.grp h3 .cn2{border:0;padding:0}.cn2.lo{color:var(--fail-ink)!important}.cn2.ok{color:var(--win)!important}
+.grp>p{margin:2px 0 0;font-size:var(--fs-footnote);color:var(--ink2)}.grp>p.none{margin-top:var(--sp-2);color:var(--muted)}
+.grp ul{list-style:none;margin:var(--sp-2) 0 0;padding:0}
+.pr{display:grid;grid-template-columns:36px 1fr;gap:var(--sp-3);align-items:start;padding:var(--sp-3) 0;border-top:1px solid var(--line)}
+.pr .pos{font:var(--wt-black) var(--fs-caption2) var(--font-body);text-align:center;padding:3px 0;border-radius:var(--r-xs);color:#fff;margin-top:2px}.pr .pos.GK{color:#1a1300}
+.pr b{display:block;font:var(--wt-bold) var(--fs-body) var(--font-display)}.pr small{display:block;margin-top:var(--sp-1);font-size:var(--fs-footnote);color:var(--ink2)}
+.pr .cs{display:flex;flex-wrap:wrap;gap:var(--sp-1);margin-top:var(--sp-1)}
+.pr .chip{display:inline-flex;align-items:center;gap:var(--sp-1);font:var(--wt-bold) var(--fs-caption) var(--font-body);padding:2px 8px;min-height:24px}.pr .chip .ic,.pr .chip .ico{width:14px;height:14px;margin:0}
+.pr .chip.r{color:var(--win);border-color:var(--win)}.pr .chip.b{color:var(--med-ink);border-color:color-mix(in srgb,var(--draw) 55%,var(--line))}
+.grp.bg{border-top:1px solid var(--line);padding-top:var(--sp-3)}
+.grp.bg>summary{display:flex;justify-content:space-between;align-items:center;gap:var(--sp-3);cursor:pointer;list-style:none;min-height:44px}.grp.bg>summary::-webkit-details-marker{display:none}
+.grp.bg .bh{display:grid;gap:var(--sp-1);min-width:0}.grp.bg .bs{font-size:var(--fs-footnote);color:var(--ink2)}
+.grp.bg .more .ico{width:18px;height:18px;color:var(--muted);transform:rotate(90deg);transition:transform var(--dur-2) var(--ease-out)}.grp.bg[open] .more .ico{transform:rotate(-90deg)}
+.grp.nn{margin-top:var(--sp-2)}
+/* counted attempt: block above the season result */
+.vres{display:grid;gap:var(--sp-3);margin-top:var(--sp-4);padding:var(--sp-card);border-radius:var(--r-lg);background:var(--surface);box-shadow:var(--sh-2);border:1px solid color-mix(in srgb,var(--win) 45%,var(--line))}
+.vres .vh{margin:0;display:flex;align-items:center;gap:var(--sp-2);font:var(--wt-black) var(--fs-title1)/var(--lh-tight) var(--font-display);letter-spacing:var(--ls-tight)}.vres .vh .em{font-size:30px}
+.vres .sub2{margin:calc(var(--sp-2) * -1) 0 0;font-size:var(--fs-body);color:var(--ink2)}
+.lad{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--sp-2)}
+.lad .med{display:grid;justify-items:center;gap:2px;padding:var(--sp-2) var(--sp-1);border-radius:var(--r-md);border:1px solid var(--line);font:var(--wt-black) var(--fs-headline) var(--font-display);color:var(--muted);font-variant-numeric:tabular-nums}
+.lad .med span{font:22px/1 var(--font-emoji);filter:grayscale(1);opacity:.45}.lad .med small{font:var(--wt-medium) var(--fs-caption) var(--font-body)}
+.lad .med.got{color:var(--ink)}.lad .med.got span{filter:none;opacity:1}.lad .med.cur{border-color:var(--draw);background:color-mix(in srgb,var(--draw) 12%,transparent)}
+.vres .vnext{margin:0;font-size:var(--fs-footnote);color:var(--ink2)}
+.vres details.vsq>summary{cursor:pointer;min-height:44px;display:flex;align-items:center;font:var(--wt-bold) var(--fs-body) var(--font-body);color:var(--ink2)}
+.vres #vdMore{display:flex;align-items:center;justify-content:center;gap:var(--sp-2);width:100%}.vres #vdMore .ico{width:18px;height:18px}
+/* archive (s10): grid like 38-0, today on top, month sections */
+.lead1{margin:0 0 var(--sp-2);font-size:var(--fs-body);color:var(--ink2)}
+.vmsg{margin:0 0 var(--sp-2);padding:var(--sp-2) var(--sp-3);border-radius:var(--r-md);background:color-mix(in srgb,var(--loss) 10%,var(--card));font-size:var(--fs-footnote);color:var(--ink)}
+.vsec{display:flex;align-items:center;gap:var(--sp-3);margin:var(--sp-5) 0 var(--sp-3);color:var(--muted)}.vsec::after{content:'';flex:1;height:1px;background:var(--line)}
+.vgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--sp-2)}
+@media (min-width:700px){.vgrid{grid-template-columns:repeat(4,minmax(0,1fr));gap:var(--sp-3)}}
+.tc.tc{display:grid;grid-template-rows:auto auto 1fr auto;gap:var(--sp-2);min-height:150px;padding:var(--sp-3);border:1px solid var(--line);border-radius:var(--r-lg);background:var(--card);box-shadow:var(--sh-1);min-width:0;text-align:left;color:var(--ink);font:inherit;font-weight:var(--wt-regular)}
+.tc.tdy{border:1.5px solid var(--amber2);background:linear-gradient(160deg,color-mix(in srgb,var(--amber) 12%,var(--card)),var(--card))}
+.vgrid.one{grid-template-columns:minmax(0,1fr)}@media (min-width:700px){.vgrid.one{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.tc-h{display:flex;justify-content:space-between;gap:var(--sp-2);font:var(--wt-bold) var(--fs-caption) var(--font-body);letter-spacing:var(--ls-caps);text-transform:uppercase;color:var(--muted)}.tc.tdy .tc-h{color:var(--amber2)}
+.tc-i{font-size:20px;height:22px}
+.tc-t{font:var(--wt-bold) var(--fs-body)/var(--lh-snug) var(--font-display);text-wrap:balance}
+.tc-r{display:flex;align-items:center;gap:var(--sp-1);font:var(--wt-bold) var(--fs-footnote) var(--font-body);font-variant-numeric:tabular-nums;color:var(--win);white-space:nowrap}
+.tc-r em{margin-left:auto;font-style:normal;font-weight:var(--wt-medium);color:var(--muted);font-size:var(--fs-caption)}.tc-r .ic,.tc-r .ico{width:14px;height:14px}
+.tc.perfect{border-color:color-mix(in srgb,var(--draw) 55%,var(--line))}.tc.perfect .tc-r{color:var(--med-ink)}
+.tc.fail .tc-r{color:var(--fail-ink)}.tc.todo .tc-r{color:var(--ink2)}.tc.tdy.todo .tc-r{color:var(--amber2)}
+.tc[aria-disabled="true"]{cursor:default}
+:root:not([data-theme="dark"]) .tc.tdy{border-color:var(--amber)}:root:not([data-theme="dark"]) .tc.tdy .tc-h,:root:not([data-theme="dark"]) .tc.tdy.todo .tc-r{color:var(--amber)}
 </style>
 
 <div class="wrap">
   <header class="top">
     <div class="navl"><button class="nav" id="backBtn" hidden><!--i:chevron-right-->Назад</button><button class="nav" id="homeBtn" title="На головну" aria-label="На головну" hidden><!--i:home-outline--></button><span class="hlogo" id="hLogo">30-0</span></div>
-    <div class="hdr-r"><button class="nav" id="acctBtn" hidden>Увійти</button></div>
+    <div class="hdr-r"><span class="stk0" id="stkChip" hidden></span><button class="nav" id="acctBtn" hidden>Увійти</button></div>
   </header>
+  <div class="vbar" id="vdBar" aria-hidden="true"></div>
   <div class="mini" id="miniBar" role="group" aria-label="Склад"><b id="miniCnt">0/11</b><span class="md" id="miniDots" aria-hidden="true"></span><button type="button" class="ghost" id="miniUp">Поле ▴</button></div>   <!-- outside sections: their enter animation would make it scroll with the page -->
 
   <!-- HOME -->
@@ -910,10 +1025,9 @@ h3,.sec0,#s1 .sec0,.pgh,.trleg .h{font-size:var(--fs-footnote);font-weight:var(-
       <p class="lead0">Збери найсильнішу 11-ку УПЛ і пройди сезон без поразок.</p>
       <div class="btns0">
         <button class="primary big0" id="freeOpen">Грати</button>
-        <button class="daily0" id="dailyBtn"><!--i:calendar-star--><span id="dLabel">Драфт дня</span><small id="dMeta"></small></button>
+        <div class="evc0" id="vdBox"></div>
       </div>
-      <p class="dstat0" id="dStatus"></p>
-      <div class="links0"><button id="howGo">Як грати?</button></div>
+      <div class="links0"><button id="howGo">Як грати?</button><button id="vdArchGo">Архів викликів</button></div>
     </div>
     <div class="daily" id="chalCard" hidden></div>
     <div class="sec0">Інші режими</div>
@@ -924,7 +1038,7 @@ h3,.sec0,#s1 .sec0,.pgh,.trleg .h{font-size:var(--fs-footnote);font-weight:var(-
     </div>
     <!-- 5x5 on one phone is hidden until 5x5 online ships; code is kept -->
     <button class="row0" id="f5Open" hidden><!--i:account-group--><span><b>5×5 на одному телефоні</b></span></button>
-    <div class="sec0">Таблиці й трофеї</div>
+    <div class="sec0">Результати</div>
     <div class="tiles0 m2">
       <button class="tile1" id="tablesOpen" data-k="board"><!--i:format-list-numbered--><span><b>Таблиці</b><small>За весь час · Мої чати</small></span><i class="chev" aria-hidden="true">›</i></button>
       <button class="tile1" id="trBtn" data-k="tr"><!--i:trophy--><span><b>Трофеї</b><small id="trCount">Зібрані нагороди</small></span><i class="chev" aria-hidden="true">›</i></button>
@@ -932,7 +1046,7 @@ h3,.sec0,#s1 .sec0,.pgh,.trleg .h{font-size:var(--fs-footnote);font-weight:var(-
     <details class="faqbox0" id="faqBox"><summary>Питання та відповіді</summary>
     <div class="faq0">
       <!-- FAQ: reconcile with the game before every x.x9 version (CLAUDE.md) -->
-      <details id="howQ"><summary>Як грати?</summary><ol class="how0"><li>Тисни «Грати» або «Драфт дня».</li><li>Крути колесо: воно дає клуб і сезон. Тапни гравця — під ним з'являться кнопки позицій, тапни потрібну. Помилився — «Переставити гравців» під полем.</li><li>Зібрав 11 — дивись прогноз (рейтинги, xP, шанси) і грай 30 турів.</li></ol></details>
+      <details id="howQ"><summary>Як грати?</summary><ol class="how0"><li>Тисни «Грати» або картку «Виклик дня».</li><li>Крути колесо: воно дає клуб і сезон. Тапни гравця — під ним з'являться кнопки позицій, тапни потрібну. Помилився — «Переставити гравців» під полем.</li><li>Зібрав 11 — дивись прогноз (рейтинги, xP, шанси) і грай 30 турів.</li></ol></details>
       <details id="calcQ"><summary>Як рахується гра?</summary><p>Рейтинг кожного гравця рахується за його сезон: голи й асисти за матч, частка зіграних матчів, місце команди, пропущені та сухі матчі для воротарів. Порівняння йде всередині сезону та позиції, тож зірки 90-х і 2020-х стоять поруч.</p><p>Кожен матч розігрується як два пуассонівські потоки голів. Атака твоєї команди складається з нападу й півзахисту, оборона — з воротаря, захисту й півзахисту. Суперники — «Ліга легенд»: 15 клубів, що зробили історію УПЛ, кожен у сезоні з найсильнішим складом (середній рейтинг 11 найкращих гравців; лише сезони ліги на 16 команд). Домашнє поле дає невелику перевагу; форма гравців коливається від сезону до сезону й від матчу до матчу; гравці одного клубу дають «хімію».</p><p class="muted">Рейтинги розрахункові й ще будуть донастроюватися.</p></details>
       <details><summary>Звідки рейтинги гравців?</summary><p>Рейтинг рахується окремо за кожен сезон: голи, асисти, частка зіграних матчів, успіх команди, для оборонців — пропущені й сухі матчі. Гравця порівнюють лише з гравцями його лінії в тому самому сезоні, тому 90-ті й 2020-ті стоять поруч. Зверху — клас гравця: збірна, єврокубки, трансфери й нагороди, тож 90+ мають лише справжні зірки.</p></details>
       <details><summary>Чому рейтинги приховані під час драфту?</summary><p>Щоб грала пам'ять і футбольне чуття, а не таблиця. Рейтинги відкриваються, щойно ти зібрав 11 гравців, — перед сезоном. Хочеш бачити одразу — увімкни в драфті «Рейтинги», але тоді в таблиці поруч з результатом буде позначка «рейтинги відкриті».</p></details>
@@ -941,7 +1055,7 @@ h3,.sec0,#s1 .sec0,.pgh,.trleg .h{font-size:var(--fs-footnote);font-weight:var(-
       <details><summary>Що таке «хімія»?</summary><p>Троє й більше гравців одного клубу грають разом краще, а якщо вони ще й з одного сезону — ще трохи краще. Бонус видно перед сезоном у рядку «Хімія».</p></details>
       <details><summary>Що таке xP, шанси й «везіння»?</summary><p>xP — скільки очок твій склад у середньому набирає проти цих суперників за 300 симуляцій сезону. Шанси (чемпіон, Ліга чемпіонів, єврокубки, виліт) — як часто він так фінішує в цих симуляціях. Навіть у скромного складу є шанс на «сезон-диво», а в сильного — рідкісний «золотий сезон», коли все йде в ворота й 30 перемог із 30 стають реальними. Суперники теж щоразу грають по-різному: буває, що фаворити провалюють сезон. xG — очікувані голи. Везіння — різниця між набраними очками й xP. Після сезону поруч із результатом — прогноз місця й вердикт: «Усе за сценарієм», «Краще за прогноз» чи «Провал сезону».</p></details>
       <details><summary>Як визначаються місця при рівності очок?</summary><p>За регламентом УПЛ: очки в особистих зустрічах → різниця м'ячів в особистих → забиті в особистих → загальна різниця м'ячів → загальна кількість забитих. За 1-ше місце — «золотий матч», за інші — жереб.</p></details>
-      <details><summary>Що таке «Драфт дня»?</summary><p>Одна схема, одні суперники й одне колесо на день для всіх. Офіційна спроба — одна, результат іде в таблицю дня під сезоном. Грай щодня, щоб тримати серію: один пропущений день на тиждень прощається (заморозка).</p></details>
+      <details id="vdQ"><summary>Що таке «Виклик дня»?</summary><p>Щодня — нова умова на склад, привʼязана до події: день народження, матч, історія УПЛ. Збери 11 гравців так, щоб виконати обовʼязкову умову, — тоді сезон зіграється, а виклик зарахується. Рахунок — скільки з 11 гравців підходять під умову чи бонус: 4 — бронза, 6 — срібло, 9 — золото, 11 — «Ідеально». На день 5 спроб, рахується краща; без умови спроба згорає. «Гравець клубу» — той, хто зіграв за клуб хоча б один матч в УПЛ. Пропущені дні можна зіграти в архіві, але серію тримає лише виклик у свій день: один пропущений день на тиждень прощається (заморозка).</p></details>
       <details><summary>Що таке «Вибір сезону»?</summary><p>Колесо дає лише клуб, а сезон обираєш сам — з трьох випадкових сезонів цього клубу. Перекручувань немає, назад не повернешся. Результат іде в загальну таблицю з позначкою режиму.</p></details>
       <details><summary>Що таке «Один клуб»?</summary><p>Обираєш клуб — і збираєш найкращу 11-ку з усіх його сезонів в УПЛ. Колесо дає лише сезони цього клубу. У кожного клубу свої рекорди: набери більше очок, ніж клуб у найкращому сезоні, і менше, ніж у найгіршому, — і клуб пройдено. Складність дуже залежить від клубу, тому таблиця окрема.</p></details>
       <details><summary>Як грати з друзями?</summary><p>«Ліга з друзями» на головній: створи лігу й надішли посилання в чат. 11×11 — ліга на кілька днів: щодня спроба, очки сумуються. 5×5 — турнір: кожен збирає п'ятірку, а коли збір закінчиться, п'ятірки грають одна з одною. У Telegram-чаті додай бота @upl30_bot, зроби його адміністратором і напиши /league — буде ліга чату. Щодня в лігу йде найкращий сезон із перших трьох спроб у «Грати» (класика, звичайна складність, усі роки; спроба зараховується, щойно запущено сезон, навіть якщо його не дограно); таблиці твоїх чатів — у «Таблиці» → «Мої чати». А ще — кнопка «Кинути виклик другу» після сезону. «Поділитися» надсилає картку з результатом прямо в чат.</p></details>
@@ -967,6 +1081,7 @@ h3,.sec0,#s1 .sec0,.pgh,.trleg .h{font-size:var(--fs-footnote);font-weight:var(-
   <!-- STEP 2 -->
   <section id="s2" hidden>
     <div class="dtop">
+      <section class="brief" id="vdBrief" hidden aria-label="Виклик дня"></section>
       <!-- mode and formation / rerolls as dots / N/11 / Restart button -->
       <div class="l1"><span class="ml" id="modeLabel"></span><span class="rd" id="rrDots" title="Перекрути"></span><b id="draftCount">0/11</b><button class="ghost" id="restartBtn"><!--i:restart-->Спочатку</button></div>
       <div class="bar"><i id="draftBar"></i></div>
@@ -1003,6 +1118,10 @@ h3,.sec0,#s1 .sec0,.pgh,.trleg .h{font-size:var(--fs-footnote);font-weight:var(-
     <div id="tbAll"></div><div id="tbChats" hidden></div>
   </section>
 
+  <!-- DAILY CHALLENGE: archive and the not-counted attempt (src/vyklyk.js) -->
+  <section id="s10" hidden><div id="vdArch"></div></section>
+  <section id="s11" hidden><div id="vdFail"></div></section>
+
   <!-- PLAYER PAGE: src/player.js -->
   <section id="s6" hidden><div id="pp"></div></section>
 
@@ -1017,6 +1136,7 @@ h3,.sec0,#s1 .sec0,.pgh,.trleg .h{font-size:var(--fs-footnote);font-weight:var(-
       <button class="link0" id="skipBtn">Одразу до фіналу сезону</button>
     </div>
     <div id="final">
+    <div class="vres" id="vdRes" hidden></div>
     <div class="hero" style="margin-top:var(--sp-4)">
       <div class="plc0"><div class="pn0"><b id="placeBig">0</b><span>місце</span></div><div class="pz0"><div class="tier" id="tier"></div><div class="verd0" id="verdRow" hidden></div></div></div>
       <div class="score0" id="recTiles"></div>
@@ -1027,15 +1147,7 @@ h3,.sec0,#s1 .sec0,.pgh,.trleg .h{font-size:var(--fs-footnote);font-weight:var(-
       <p class="note" id="leagueMsg" hidden style="margin:0"></p>
       <p class="note" id="chalLine" hidden style="margin:0"></p>
     </div>
-    <div class="lb" id="lbBox" hidden>
-      <h3 style="margin:0">Таблиця дня</h3>
-      <div class="row" id="lbForm"><input id="nick" maxlength="24" placeholder="Твоє ім'я (3–20 символів)" autocomplete="nickname"><button class="primary" id="lbSend">Надіслати результат</button></div>
-      <div class="msg" id="lbMsg"></div>
-      <div class="muted" id="lbAcct" hidden style="font-size:var(--fs-footnote)">Не хочеш вводити нік щодня? <button class="ghost" id="lbAcctGo" style="padding:var(--sp-1) var(--sp-3)">Увійди</button></div>
-      <div class="tbl" id="lbTable"></div>
-    </div>
     <div class="share" id="shareBox">
-      <span class="flag" id="practiceFlag" hidden>Тренування: офіційний результат дня вже записано</span>
       <textarea id="shareText" hidden readonly aria-label="Текст для поширення"></textarea>
       <!-- single Share button: card + preview link (/r/<id>, api/r.js); without system share menu: card and Copy -->
       <button class="sharebtn primary" id="tgShareBtn"><!--i:share-variant-->Поділитися</button>
@@ -1082,7 +1194,7 @@ h3,.sec0,#s1 .sec0,.pgh,.trleg .h{font-size:var(--fs-footnote);font-weight:var(-
 
 <div class="overlay" id="viewBox" hidden><div class="sheet-bd"></div><div class="box" role="dialog" aria-modal="true" aria-labelledby="viewTitle" tabindex="-1"><div class="sheet-head" id="viewHead"><div class="grab" aria-hidden="true"></div><div class="vhead"><h3 id="viewTitle">Склад</h3><button class="ghost" id="viewClose">Закрити</button></div></div><div id="viewBody"></div></div></div>
 <footer class="ft" id="ft">   <!-- footer: sections, feedback form, bot, version, credits -->
-<nav class="foot0" aria-label="Розділи"><a href="#" data-go="dailyBtn">Драфт дня</a><a href="#" data-go="pickOpen">Вибір сезону</a><a href="#" data-go="clubOpen">Один клуб</a><a href="#" data-go="flOpen">Ліга з друзями</a><a href="#" data-go="tablesOpen">Таблиці</a><a href="#" data-go="trBtn">Трофеї</a><a href="#" data-go="howQ">Питання</a></nav>
+<nav class="foot0" aria-label="Розділи"><a href="#" data-go="vdBox">Виклик дня</a><a href="#" data-go="pickOpen">Вибір сезону</a><a href="#" data-go="clubOpen">Один клуб</a><a href="#" data-go="flOpen">Ліга з друзями</a><a href="#" data-go="tablesOpen">Таблиці</a><a href="#" data-go="trBtn">Трофеї</a><a href="#" data-go="howQ">Питання</a></nav>
 <form class="ft-form" id="fbForm" hidden novalidate><div class="ttl">Повідомити про проблему</div>
   <textarea id="fbTxt" maxlength="2000" placeholder="Що сталося? Баг, ідея, будь-що" aria-label="Що сталося?"></textarea>
   <label for="fbContact">Пошта або @нік у Telegram, щоб ми відповіли</label><input id="fbContact" maxlength="100" autocomplete="email">
@@ -1091,7 +1203,7 @@ h3,.sec0,#s1 .sec0,.pgh,.trleg .h{font-size:var(--fs-footnote);font-weight:var(-
   <div class="acts"><button class="ft-send" id="fbSend" type="submit">Надіслати</button><button class="ft-cancel" id="fbCancel" type="button">Скасувати</button></div></form>
 <div class="ft-done" id="fbDone" hidden><b>✓</b><span>Дякуємо! Прочитаємо найближчим часом</span></div>
 <div class="ft-pills"><button class="ft-pill" id="fbBtn" type="button"><!--i:mail-->Відгук і баги</button><a class="ft-pill" id="ftBot" href="https://t.me/upl30_bot" target="_blank" rel="noopener"><!--i:telegram-->Telegram-бот</a></div>
-<div class="foot ft-small"><a href="#" id="newsBtn">Що нового у версії 0.79.2<b id="newsDot" hidden></b></a><a href="privacy.html">Конфіденційність</a><a href="terms.html">Умови використання</a></div>
+<div class="foot ft-small"><a href="#" id="newsBtn">Що нового у версії 0.80<b id="newsDot" hidden></b></a><a href="privacy.html">Конфіденційність</a><a href="terms.html">Умови використання</a></div>
 <div class="foot ft-copy">© 2026 30-0 УПЛ · неофіційний фан-проєкт <a href="#" id="themeBtn" class="thm" role="switch" aria-checked="false" aria-label="Світла тема"></a></div>
 <p class="ft-legal">30-0 УПЛ — незалежний фан-проєкт: футбольний драфт і симулятор сезону. Він не пов'язаний з Українською Прем'єр-лігою, Українською асоціацією футболу, клубами, футболістами, їхніми об'єднаннями чи іншими організаціями й не схвалений ними. Назви клубів, імена футболістів, рейтинги, статистику й дані сезонів використано лише з інформаційною та довідковою метою. Офіційні логотипи, емблеми та фото футболістів не використовуються. Усі торговельні марки належать їхнім власникам.</p>
 <div class="ft-cred">Шрифт KyivType Sans © Дмитро Растворцев (айдентика Києва)<br>Іконки: Material Design Icons (Apache 2.0), логотип Telegram — Font Awesome Free (CC BY 4.0)</div>
@@ -1173,7 +1285,7 @@ function buildLeague(best){const hist={};for(const y of YEARS16)for(const t of D
 const LEAGUES={[LEAGUE_CULT]:buildLeague(false),[LEAGUE_LEGENDS]:buildLeague(true)};
 const LEAGUE_NAME={[LEAGUE_CULT]:'Ліга культових клубів',[LEAGUE_LEGENDS]:'Ліга легенд'};
 function seasonOf(y){return DATA.seasons[y]||LEAGUES[y];}
-// classic, season pick, daily draft and friend challenge play against the legends league (strongest seasons of cult clubs); anti-season plays against cult clubs
+// classic, season pick, daily challenge and friend challenge play against the legends league (strongest seasons of cult clubs); anti-season plays against cult clubs
 function oppYear(){return S.format==='classic'||S.format==='legends'?LEAGUE_LEGENDS:LEAGUE_CULT;}
 function oppLabel(y){return LEAGUE_NAME[y]||('УПЛ '+seasonLabel(y));}
 const MODES = {
@@ -1189,7 +1301,7 @@ const FORMATS = {
   anti:{name:"Антисезон 0-30",desc:"Навпаки: збери найгірший склад і програй усі 30 матчів. Рейтинги не показуються — обирай з пам'яті."},
   legends:{name:"Ліга легенд",desc:"Ті самі 15 культових клубів, але кожен у сезоні з найсильнішим складом."}};
 const ANTI_MIN_APPS=10;
-// eras: the wheel yields only club-seasons with y0 <= year <= y1 (year = season start: 2015 = 2015/16); opponents unchanged. Daily draft, friend challenge and one-club always use all years.
+// eras: the wheel yields only club-seasons with y0 <= year <= y1 (year = season start: 2015 = 2015/16); opponents unchanged. Daily challenge, friend challenge and one-club always use all years.
 // key is stored in seasons.era; the server validates the squad (api/verify.js). old: legacy open-ended eras, kept for existing leagues and saved seasons, not offered
 const ERAS={all:{name:'Усі роки',y0:0},d1990:{name:'90-ті',y0:0,y1:1999},d2000:{name:'2000-ні',y0:2000,y1:2009},d2010:{name:'2010-ті',y0:2010,y1:2019},d2020:{name:'2020-ті',y0:2020},
   y2000:{name:'З 2000-х',y0:2000,old:1},y2010:{name:'З 2010-х',y0:2010,old:1},y2015:{name:'Сучасність',y0:2015,old:1}};
@@ -1244,52 +1356,37 @@ let BEST=lsGet("upl30_best_v2")||{};
 {const old=lsGet("upl30_best");if(old){if(!BEST.classic){BEST.classic=old;lsSet("upl30_best_v2",BEST);}try{localStorage.removeItem("upl30_best");}catch(e){}}}   // legacy best score -> upl30_best_v2; remove the old key
 
 // ---------- state
-let S={pending:null,move:null,format:"classic",pickMode:false,freeMode:"normal",club:lsGet("upl30_club")||null,era:ERA_KEYS.includes(lsGet("upl30_era"))?lsGet("upl30_era"):'all',formation:"4-4-2",mode:"normal",slots:[],taken:new Set(),wheel:null,rerolls:0,result:null,daily:null};
+let S={pending:null,move:null,format:"classic",pickMode:false,freeMode:"normal",club:lsGet("upl30_club")||null,era:ERA_KEYS.includes(lsGet("upl30_era"))?lsGet("upl30_era"):'all',formation:"4-4-2",mode:"normal",slots:[],taken:new Set(),wheel:null,rerolls:0,result:null,vd:null};
 // star bias of the wheel: strong club-seasons come up more often (weight exp(k*(strength-85)), strength = top-11 average); 0 disables
 const STAR_BIAS=0.04;   // strong seasons more often; top 4 of their season x1.5; Dynamo and Shakhtar x0.8 so the star quarter also includes Dnipro, Metalist, Zorya, Chornomorets
 for(const c of DATA.clubs){const r=c.pl.map(p=>p[2]).sort((a,b)=>b-a).slice(0,11);c.q=r.reduce((a,b)=>a+b,0)/r.length;c.w=Math.exp(STAR_BIAS*(c.q-85))*(c.pos<=4?1.5:1)*(c.c==='dynamo-kyiv'||c.c==='shakhtar-donetsk'?0.8:1);}
 function pickWeighted(cands,r){if(S.format==='anti'||!STAR_BIAS)return cands[Math.floor(r()*cands.length)];let tot=0;for(const c of cands)tot+=c.w;let x=r()*tot;for(const c of cands){x-=c.w;if(x<=0)return c;}return cands[cands.length-1];}
-// ---------- daily challenge
+// ---------- day (Kyiv) and local cleanup
 const DAY=kyivDate();
-function dailySetup(){
-  const r=mulberry32(hashStr("upl30|"+DAY+"|setup"));
-  const fs=Object.keys(FORMATIONS);const formation=fs[Math.floor(r()*fs.length)];
-  const year=LEAGUE_LEGENDS;   // formerly LEAGUE_CULT
-  const wr=mulberry32(hashStr("upl30|"+DAY+"|wheel"));const seq=[];for(let i=0;i<600;i++){const c=pickWeighted(DATA.clubs,wr);seq.push(DATA.clubs.indexOf(c));}
-  return {formation,year,seq,ptr:0};
-}
-const DAILY=dailySetup();
-// cleanup: daily draft result and sent flag (upl30_daily_<day>, upl30_sent_<day>) are needed only today; delete those older than 14 days
-try{const old=dayAdd(DAY,-14);for(let i=localStorage.length-1;i>=0;i--){const k=localStorage.key(i),m=/^upl30_(?:daily|sent)_(\d{4}-\d{2}-\d{2})$/.exec(k||'');if(m&&m[1]<old)localStorage.removeItem(k);}}catch(e){}
+// cleanup: per-day keys (daily challenge upl30_vd_<day>; daily draft upl30_daily_/upl30_sent_ from older versions) older than 14 days
+try{const old=dayAdd(DAY,-14);for(let i=localStorage.length-1;i>=0;i--){const k=localStorage.key(i),m=/^upl30_(?:vd|daily|sent)_(\d{4}-\d{2}-\d{2})$/.exec(k||'');if(m&&m[1]<old)localStorage.removeItem(k);}}catch(e){}
 setTimeout(()=>{try{renderTrBtn();trRetro();}catch(e){}try{chalLoad();}catch(e){}},0);
+// daily draft mode (removed from the game in 0.80): kept for the server engine, which still verifies seasons from older tabs
 MODES.daily={name:"Драфт дня",desc:"",damp:1,star:0,rerolls:1,showRatings:false,reveal:true};
 function dayAdd(day,n){return new Date(Date.UTC(+day.slice(0,4),+day.slice(5,7)-1,+day.slice(8,10))+n*864e5).toISOString().slice(0,10);}
 function weekKey(day){const wd=(new Date(Date.UTC(+day.slice(0,4),+day.slice(5,7)-1,+day.slice(8,10))).getUTCDay()+6)%7;return dayAdd(day,-wd);}
-// daily draft streak with a freeze: one missed day per week does not reset the streak
+// daily streak (a counted daily challenge attempt on its own day) with a freeze: one missed day per week does not reset the streak
 function streakInfo(){const st=lsGet("upl30_streak")||{};const y=dayAdd(DAY,-1),y2=dayAdd(DAY,-2);const freeze=st.freezeWeek!==weekKey(DAY);
   const alive=st.last===DAY||st.last===y||(st.last===y2&&freeze);
   return {count:alive?(st.count||0):0,alive,freeze,rescue:st.last===y2&&freeze,best:st.best||st.count||0};}
 function streakUpdate(){const st=lsGet("upl30_streak")||{};const y=dayAdd(DAY,-1),y2=dayAdd(DAY,-2);let count=1,freezeWeek=st.freezeWeek,used=false;
   if(st.last===DAY)count=st.count||1;else if(st.last===y)count=(st.count||0)+1;else if(st.last===y2&&st.freezeWeek!==weekKey(DAY)){count=(st.count||0)+1;freezeWeek=weekKey(DAY);used=true;}
   lsSet("upl30_streak",{last:DAY,count,freezeWeek,best:Math.max(st.best||0,count)});return {count,used};}
-function renderDailyCard(){
-  const done=lsGet("upl30_daily_"+DAY);const si=streakInfo();
-  const fire=si.count>1?` · <b class="hot0" title="${si.freeze?'Один пропущений день на тиждень не обнуляє серію':'Заморозку цього тижня використано'}">${ic('fire')}${si.count} дн.</b>`:'';
-  document.getElementById('dMeta').innerHTML=(done?'новий завтра':`${DAY.slice(8,10)}.${DAY.slice(5,7)} · ${DAILY.formation}`)+fire;   // icon, title and date on one line
-  document.getElementById('dStatus').textContent=done?`Сьогодні: ${done.W}-${done.D}-${done.L}, ${done.pts} ${ptsWord(done.pts)}, ${done.place} місце`:(si.rescue&&si.count>1?`Вчора пропустив — зіграй сьогодні, і заморозка збереже серію ${si.count} дн.`:'');
-  document.getElementById('dLabel').textContent=done?'Зіграно':'Драфт дня';document.getElementById('dailyBtn').disabled=!!done;
-}
-
 function newSlots(f){S.pickOpts=null;S.locking=false;S.lockTok=(S.lockTok||0)+1;S.showREver=false;S.locked=false;S.pre=null;S.srv=null;S.year=null;return FORMATIONS[f].slots.map(slot=>({slot,pos:GROUP_OF[slot],player:null}));}
 function openSlots(){return S.slots.filter(s=>!s.player);}
 function bestSlot(p){let best=null;for(const s of openSlots()){const r=effRating(p,s.slot);if(r!=null&&(!best||r>best.r))best={s,r};}return best;}
 function eligible(cs){const anti=S.format==="anti";return cs.pl.filter(p=>!S.taken.has(canon(p[5]))&&(!anti||p[3]>=ANTI_MIN_APPS)&&bestSlot(p));}
-function eraOf(){return S.league?S.league.era:S.daily||S.challenge||S.format==='oneclub'?'all':S.era;}
+function eraOf(){return S.league?S.league.era:S.vd||S.challenge||S.format==='oneclub'?'all':S.era;}
 // ratings are revealed (mode) and not played from memory in friend leagues
 function ratingsOpen(){const m=MODES[S.mode];return !!(m.reveal||m.showRatings)&&!(S.league&&S.league.memory);}   // era of the current game
 function wheelPool(){const e=eraOf();let cs=DATA.clubs;
-  if(!S.daily&&S.format==="derby")cs=cs.filter(c=>FORMATS.derby.clubs.includes(c.c));
-  else if(!S.daily&&S.format==="oneclub")cs=cs.filter(c=>c.c===S.club);
+  if(S.format==="derby")cs=cs.filter(c=>FORMATS.derby.clubs.includes(c.c));
+  else if(S.format==="oneclub")cs=cs.filter(c=>c.c===S.club);
   return e==='all'?cs:cs.filter(c=>inEra(e,c.y));}
 function isOk(cs,p){return !S.taken.has(canon(p[5]))&&(S.format!=="anti"||p[3]>=ANTI_MIN_APPS)&&!!bestSlot(p);}
 
@@ -1318,7 +1415,7 @@ function showBest(){const el=document.getElementById('bestLine');const key=bestK
 showBest();
 let CUR_SEC=1;
 // Clarity (production host only, build.py): current screen tag so recordings and heatmaps can be filtered by screen (Filters -> Custom tags -> screen)
-const SEC_NAME={1:'home',2:'draft',3:'result',4:'setup',5:'five',6:'player',7:'friends',8:'oneclub',9:'table'};
+const SEC_NAME={1:'home',2:'draft',3:'result',4:'setup',5:'five',6:'player',7:'friends',8:'oneclub',9:'table',10:'vd_archive',11:'vd_fail'};
 function screenTag(name){try{if(window.clarity)window.clarity('set','screen',name);}catch(e){}}
 // View transitions: without them (old WebView, reduced motion) swap() runs synchronously; with them it runs in the transition callback,
 // one frame later. A pending swap is flushed by the next go()/vtRun so state never lags behind more than one transition.
@@ -1341,13 +1438,13 @@ function draftWave(){if(matchMedia('(prefers-reduced-motion: reduce)').matches||
   s2.classList.remove('wave');void s2.offsetWidth;s2.classList.add('wave');setTimeout(()=>s2.classList.remove('wave'),1400);}
 function go(n,pop,link,after){if(VT_PEND)VT_PEND();if(n===2)PITCH_VIS=true;if(!pop&&n!==CUR_SEC)navPush(n);const prev=CUR_SEC,back=!!pop||(n===1&&prev!==1);screenTag(SEC_NAME[n]);if(n!==6&&prev===6)ppUrl(null);if(n!==7&&prev===7)flUrl(null);if(n===8)renderOc();else if(n===4&&S.format==='oneclub')setFmt('oneclub');
   CUR_SEC=n;
-  vtRun(vt=>{[1,2,3,4,5,6,7,8,9].forEach(i=>{const el=document.getElementById('s'+i);const was=el.hidden;el.hidden=(i!==n);if(i===n&&(was||prev!==n)){el.classList.remove('enter','back');if(!vt){void el.offsetWidth;el.classList.add(back?'back':'enter');}}});navUi();miniSync();window.scrollTo({top:0});if(n===2&&link)draftWave();if(after)after();},
+  vtRun(vt=>{[1,2,3,4,5,6,7,8,9,10,11].forEach(i=>{const el=document.getElementById('s'+i);const was=el.hidden;el.hidden=(i!==n);if(i===n&&(was||prev!==n)){el.classList.remove('enter','back');if(!vt){void el.offsetWidth;el.classList.add(back?'back':'enter');}}});navUi();miniSync();window.scrollTo({top:0});if(n===2&&link)draftWave();if(after)after();},
     {back,pairs:link&&n===2&&prev!==2?[[document.querySelector(link),'#s2 .dtop .bar','vt-play']]:[]});}
 // Back button + home icon. Every screen change is a browser history entry,
 // so swipe, browser back and Telegram BackButton go to the previous screen. Season summary replaces the draft (back goes to settings).
 let NAV_I=0,NAV_FREE=false;   // NAV_I: history entry index of this tab (0 = first screen); NAV_FREE: leaving the draft already confirmed
 let SHEET=0;   // sheet open: one history entry
-function navPush(n){const rep=n===3&&CUR_SEC===2;if(!rep)NAV_I++;try{history[rep?'replaceState':'pushState']({sec:n,i:NAV_I},'',location.href);}catch(e){}}
+function navPush(n){const rep=(n===3||n===11)&&CUR_SEC===2;if(!rep)NAV_I++;try{history[rep?'replaceState':'pushState']({sec:n,i:NAV_I},'',location.href);}catch(e){}}
 function navUi(){const inner=CUR_SEC!==1;document.querySelector('header.top').classList.toggle('in',inner);document.getElementById('backBtn').hidden=!inner;document.getElementById('homeBtn').hidden=!inner;document.getElementById('hLogo').hidden=inner;
   try{if(TG&&TG.BackButton){if(inner||SHEET)TG.BackButton.show();else TG.BackButton.hide();}}catch(e){}}
 // draft in progress (players picked, no season yet): confirm before leaving
@@ -1364,11 +1461,8 @@ addEventListener('popstate',e=>{const sd=e.state&&e.state.sheet||0;
   NAV_FREE=false;NAV_I=st.i||0;go(st.sec,true);});
 try{history.replaceState({sec:1,i:0},'',location.href);}catch(e){}
 screenTag('home');   // start screen (others via go())
-document.getElementById('dailyBtn').onclick=()=>{S.league=null;S.daily={practice:!!lsGet("upl30_daily_"+DAY)};S.chal=null;S.challenge=null;setFmt('classic');DAILY.ptr=0;S.formation=DAILY.formation;S.mode="daily";S.result=null;
-  S.slots=newSlots(S.formation);S.taken=new Set();S.wheel=null;S.rerolls=MODES.daily.rerolls;S.showR=false;S.moveMode=false;document.getElementById('modeLabel').textContent=`Драфт дня · ${S.formation}`;renderDraft();go(2,false,'#dailyBtn');};
-renderDailyCard();
-document.getElementById('startBtn').onclick=()=>{if(S.format==='oneclub'&&!S.club){openOc();return;}S.league=null;S.daily=null;S.result=null;S.challenge=null;S.chal=S.format==='classic'&&S.era==='all'&&!S.pickMode?chalNewGame():null;S.mode=S.pickMode?'pick':S.freeMode||'normal';if(S.format==='anti')S.mode='hardcore';S.slots=newSlots(S.formation);S.taken=new Set();S.wheel=null;S.rerolls=MODES[S.mode].rerolls;S.showR=false;S.moveMode=false;document.getElementById('modeLabel').textContent=fmtLabel()+S.formation+" · "+modeName();renderDraft();go(2,false,'#startBtn');};
-document.getElementById('restartBtn').onclick=()=>{if(S.league){openLeague(S.league.id);return;}go(S.daily||S.challenge?1:4);};
+document.getElementById('startBtn').onclick=()=>{if(S.format==='oneclub'&&!S.club){openOc();return;}S.league=null;S.vd=null;S.result=null;S.challenge=null;S.chal=S.format==='classic'&&S.era==='all'&&!S.pickMode?chalNewGame():null;S.mode=S.pickMode?'pick':S.freeMode||'normal';if(S.format==='anti')S.mode='hardcore';S.slots=newSlots(S.formation);S.taken=new Set();S.wheel=null;S.rerolls=MODES[S.mode].rerolls;S.showR=false;S.moveMode=false;document.getElementById('modeLabel').textContent=fmtLabel()+S.formation+" · "+modeName();renderDraft();go(2,false,'#startBtn');};
+document.getElementById('restartBtn').onclick=()=>{if(S.league){openLeague(S.league.id);return;}go(S.vd||S.challenge?1:4);};
 document.getElementById('homeBtn').onclick=()=>askLeave(()=>go(1));document.getElementById('backBtn').onclick=navBack;
 document.getElementById('freeOpen').onclick=()=>{setFmt(S.format==='oneclub'||S.pickMode?'classic':S.format);go(4);};   // resync the setup screen with S (challenge sets S.format directly); season pick and one club have their own entries
 document.getElementById('flOpen').onclick=()=>openFriends();
@@ -1489,8 +1583,8 @@ function renderOcRes(r){const el=document.getElementById('ocRes');const o=r&&r.o
 const rtCol=v=>v>=95?'#b8860b':v>=90?'#1f9d55':v>=85?'#2f6db5':'#6b7280';
 const rPill=(v,reveal)=>`<span class="pill r${reveal?' reveal':''}" style="--pc:${rtCol(v)}">${v}</span>`;   // player rating (base only, DECISIONS item 15)
 const avgPill=t=>`<span class="pill avg" title="Середня оцінка за сезон">${t}</span>`;
-// chip: circle (position, pill), surname, club and season; o.pill = pill, o.r0 = overall rating in the club line (season summary)
-function chipInner(pos,p,o){const disc=`<div class="disc"${p?` style="${clubPal(ccOf(p))}"`:''}><span class="pos">${pos}</span>${o.pill||''}</div>`;if(!p)return disc;const n=p.name||p.n;
+// chip: circle (position, pill, p.ev = quiet daily challenge event mark), surname, club and season; o.pill = pill, o.r0 = overall rating in the club line (season summary)
+function chipInner(pos,p,o){const disc=`<div class="disc"${p?` style="${clubPal(ccOf(p))}"`:''}><span class="pos">${pos}</span>${o.pill||''}${p&&p.ev?`<span class="evg" aria-hidden="true">${esc(p.ev)}</span>`:''}</div>`;if(!p)return disc;const n=p.name||p.n;
   return disc+`<div class="nm${nmCls(n)}" title="${esc(n)}">${esc(cardName(n))}${nickOf(p.id)}</div><div class="club${o.r0!=null?' hr':''}"><span class="ct">${esc(clubShort(p.club||p.c))}${p.y?' '+SEA_SHORT(p.y):''}${o.r0!=null?' · ':''}</span>${o.r0!=null?`<span class="r0" title="Загальний рейтинг">${o.r0}</span>`:''}</div>`;}
 function slotInner(slot,p,o){return chipInner(POSNAME[slot],p,o);}
 function renderPitch(el,slots,withClub){
@@ -1564,7 +1658,7 @@ function renderDraft(){
   document.getElementById('draftCount').textContent=filled+"/11";
   {const tot=(MODES[S.mode]||{}).rerolls||0,left=Math.max(0,S.rerolls||0);document.getElementById('rrDots').innerHTML=tot?Array.from({length:tot},(_,i)=>`<i class="${i<left?'on':''}"></i>`).join(''):'';}document.getElementById('draftBar').style.width=Math.round(filled/11*100)+'%';renderMini();
   {const mb=document.getElementById('moveBtn');mb.hidden=filled<2;mb.classList.toggle('on',!!S.moveMode);mb.lastChild.textContent=S.moveMode?'Готово':'Переставити гравців';}
-  renderPitch(document.getElementById('pitch'),S.slots,false);
+  renderPitch(document.getElementById('pitch'),S.slots,false);vdBrief();
   const done=filled===11;
   document.getElementById('spinBtn').hidden=done||!!S.wheel||!!S.pickOpts;
   document.getElementById('preBox').hidden=!S.locked&&!S.locking;
@@ -1614,16 +1708,17 @@ function renderPickOpts(){const box=document.getElementById('seaPick'),o=S.pickO
   const f=box.querySelector('button');if(f)f.focus({preventScroll:true});}
 function spin(mode){if(S.mode!=='pick')document.querySelector('.reels').classList.remove('one');   // leftover from an abandoned season pick
   if(S.mode==='pick'&&!mode){spinPick();return;}
+  if(S.vd&&S.vd.wait){const v=S.vd,b=document.getElementById('spinBtn');b.disabled=true;v.wait.then(()=>{b.disabled=false;if(S.vd===v&&!v.over)spin(mode);});return;}   // attempt not issued yet
   let cs;
-  if(S.daily&&!mode){while(DAILY.ptr<DAILY.seq.length){const c=DATA.clubs[DAILY.seq[DAILY.ptr++]];if(eligible(c).length>0){cs=c;break;}}}
+  if(S.vd&&!mode){while(S.vd.ptr<S.vd.seq.length){const c=DATA.clubs[S.vd.seq[S.vd.ptr++]];if(eligible(c).length>0){cs=c;break;}}}
   else if(S.chal&&!mode){while(S.chal.ptr<S.chal.seq.length){const c=DATA.clubs[S.chal.seq[S.chal.ptr++]];if(eligible(c).length>0){cs=c;break;}}}
   if(!cs)cs=pickSeason(mode==='year'?S.wheel.c:null,mode==='club'?S.wheel.y:null);
   if(!cs&&mode){cs=pickSeason();}   // nothing found within club/season: spin everything
   if(!cs){alertNoCands();return;}
-  S.wheel=cs;S.move=null;S.pending=null;
+  S.wheel=cs;S.move=null;S.pending=null;if(S.vd)vdSave();
   const w=document.getElementById('wheel');w.hidden=false;document.getElementById('spinBtn').hidden=true;
   document.getElementById('squad').innerHTML='';document.getElementById('rerollRow').style.visibility='hidden';
-  const one=S.format==='oneclub'&&!S.daily&&!S.league,spinClub=mode!=='year'&&!one,spinYear=mode!=='club';   // one-club: club does not spin, seasons only of that club
+  const one=S.format==='oneclub'&&!S.league,spinClub=mode!=='year'&&!one,spinYear=mode!=='club';   // one-club: club does not spin, seasons only of that club
   const e=eraOf(),WP=DATA.clubs.filter(c=>inEra(e,c.y)&&(!one||c.c===S.club)),names=[...new Set(WP.map(c=>shortTeam(c.n)))],years=[...new Set(WP.map(c=>c.y))].sort();   // reels show only clubs and seasons of the selected era
   haptic('light');
   Promise.all([reelRoll('reelClub','club',names,shortTeam(cs.n),spinClub?14:0),reelRoll('reelYear','season',years.map(seasonLabel),seasonLabel(cs.y),spinYear?16:0,spinClub?REEL_LAG:0)]).then(()=>{if(S.wheel===cs){haptic('medium');S.wheelFresh=true;renderWheel();revealList();}});
@@ -1654,7 +1749,7 @@ function renderWheel(){
     b.onclick=()=>choose(p);row.appendChild(b);
     if(S.pending===p&&ok){const box=posBox(p,b);row.classList.add('wrap');row.appendChild(box);sq.appendChild(row);row.style.setProperty('--pw',box.offsetWidth+8+'px');}   // position buttons always under the player, on phone and iPad
     else sq.appendChild(row);}
-  S.wheelFresh=false;
+  S.wheelFresh=false;if(S.vd)vdSave();   // daily challenge: the open attempt survives leaving the draft
 }
 // alternative player positions: real ones only (from data), up to three
 const ALT_SLOTS=['GK','CB','RB','LB','RWB','LWB','CDM','CM','CAM','RM','LM','RW','LW','ST'];
@@ -1686,14 +1781,15 @@ function place(p,s){
   s.player={name:p[0],pos:GROUP_OF[s.slot],slot:s.slot,main:p[6],alts:p[7],r,r0:p[2],apps:p[3],goals:p[4],ast:p[8],cs:p[9],nat:p[10],by:p[11],cc:S.wheel.c,id:p[5],club:S.wheel.n,y:S.wheel.y};S.taken.add(canon(p[5]));S.wheel=null;S.move=null;S.pending=null;keepScroll(renderDraft);haptic('light');
   {const ix=S.slots.indexOf(s),sl=document.querySelectorAll('#pitch .slot')[ix],disc=sl&&sl.querySelector('.disc');if(disc&&!LESS_MOTION()&&!flyTo(fly0,ix))restartAnim(disc,'land0');}   // name chip flies to the slot, else short landing only
   {const n=S.slots.filter(x=>x.player).length,seen=lsGet('upl30_hint_move')||0;if(n===2&&seen<2){const h=document.getElementById('moveHint');h.hidden=false;h.textContent='Порада: кнопка «Переставити гравців» під полем дозволяє поміняти позиції.';lsSet('upl30_hint_move',seen+1);}}
-  if(S.slots.every(x=>x.player))setTimeout(lockDraft,0);   // squad complete: ratings, forecast and Play season immediately; progress bar in preBox while computing
+  if(S.slots.every(x=>x.player))setTimeout(S.vd?vdComplete:lockDraft,0);   // squad complete (daily challenge: required condition first): ratings, forecast and Play season immediately; progress bar in preBox while computing
 }
 // phone draft: progress bar over the list + scroll to the list once the wheel stops
 const TWOCOL=()=>matchMedia('(min-width:1000px),(min-width:760px) and (min-height:700px)').matches;
 var PITCH_VIS=true;   // var: go() may run before this line
 function miniSync(){const el=document.getElementById('miniBar');if(!el)return;
   document.documentElement.style.setProperty('--hh',document.querySelector('header.top').offsetHeight+'px');
-  el.classList.toggle('on',CUR_SEC===2&&!PITCH_VIS&&!TWOCOL());}
+  const vb=document.getElementById('vdBar'),von=CUR_SEC===2&&!!S.vd&&!!S.vdOut;vb.classList.toggle('on',von);   // daily challenge: its sticky bar replaces the mini bar
+  el.classList.toggle('on',CUR_SEC===2&&!PITCH_VIS&&!TWOCOL()&&!von);}
 function renderMini(){const ord={GK:0,DF:1,MF:2,FW:3},sl=[...S.slots].sort((a,b)=>ord[GROUP_OF[a.slot]]-ord[GROUP_OF[b.slot]]),n=sl.filter(x=>x.player).length;
   document.getElementById('miniCnt').textContent=n+'/11';document.getElementById('miniBar').setAttribute('aria-label',`Склад: ${n} з 11`);
   document.getElementById('miniDots').innerHTML=sl.map(x=>`<i class="${GROUP_OF[x.slot]}${x.player?' f':''}"></i>`).join('');miniSync();}
@@ -1725,12 +1821,12 @@ async function xpRun(xi,mode,year,step){let sp=0,sg=0,sa=0;const pl=[],op={};
 async function lockDraft(){
   if(S.locked||S.locking||!S.slots.every(s=>s.player))return;S.locking=true;const tok=S.lockTok=(S.lockTok||0)+1;
   const xi=S.slots.map(s=>s.player);const mode=MODES[S.mode];
-  const year=S.daily?DAILY.year:S.chal?S.chal.year:oppYear();
+  const year=S.chal?S.chal.year:oppYear();
   // server seed and xP runs (xpRun) in parallel; runs in chunks so the UI does not freeze and the progress bar advances
   const pb=document.getElementById('preBox');pb.hidden=false;pb.innerHTML='<div class="kicker">Рахуємо прогноз…</div><div class="bar"><i id="xpBar"></i></div>';
   pb.scrollIntoView({behavior:'smooth',block:'center'});
-  // audit P1-4: daily draft and league attempt seeds are fetched only on Play season, otherwise a swap after the forecast consumed the attempt
-  const seedP=(S.daily&&!S.daily.practice)||lgAttempt()?Promise.resolve(null):fetchSeed(year);
+  // audit P1-4: league attempt and daily challenge seeds are fetched only on Play season, otherwise a swap after the forecast consumed the attempt
+  const seedP=S.vd||lgAttempt()?Promise.resolve(null):fetchSeed(year);
   const pre=await xpRun(xi,mode,year,async f=>{const b=document.getElementById('xpBar');if(b)b.style.width=Math.round(f*100)+'%';await new Promise(r=>setTimeout(r,0));return tok===S.lockTok;});
   if(!pre)return;   // squad changed while computing
   S.srv=seedP;S.year=year;S.pre=pre;S.locked=true;S.locking=false;   // forecast immediately; the server seed request is awaited only on Play season
@@ -1963,14 +2059,14 @@ const TROPHIES=[
   {id:"antilast",i:"⬇️",n:"Нижче плінтуса",d:"Антисезон: фініш останнім",cat:"modes",rep:1,t:c=>c.format==='anti'&&c.r.place===16},
   {id:"anti0",i:"🪦",n:"Нуль без палички",d:"Антисезон: програй усі 30 матчів",cat:"modes",t:c=>c.format==='anti'&&c.r.L===30},
   {id:"antidry",i:"🥖",n:"Сухий пайок",d:"Антисезон: забий 5 голів або менше",cat:"modes",t:c=>c.format==='anti'&&c.r.gf<=5},
-  // daily draft (checked via counters)
-  {id:"dchamp",i:"📅",n:"Герой дня",d:"Стань чемпіоном в офіційній спробі драфту дня",cat:"daily",rep:1,t:c=>c.dailyOfficial&&c.r.place===1},
-  {id:"s3",i:"🔥",n:"Бог любить трійцю",d:"Зіграй драфт дня 3 дні поспіль",cat:"daily",st:s=>s.streak>=3,prog:s=>[s.streak,3]},
+  // daily: streak and days counted by the daily challenge (a counted attempt on its own day); dchamp belonged to the removed daily draft
+  {id:"dchamp",i:"📅",n:"Герой дня",d:"Стань чемпіоном в офіційній спробі драфту дня (режиму вже немає)",cat:"daily",rep:1,gone:1},
+  {id:"s3",i:"🔥",n:"Бог любить трійцю",d:"Виконай виклик дня 3 дні поспіль",cat:"daily",st:s=>s.streak>=3,prog:s=>[s.streak,3]},
   {id:"s7",i:"🗓️",n:"Як на роботу",d:"7 днів поспіль",cat:"daily",st:s=>s.streak>=7,prog:s=>[s.streak,7]},
   {id:"s14",i:"📆",n:"Відпустка? Не чув",d:"14 днів поспіль",cat:"daily",st:s=>s.streak>=14,prog:s=>[s.streak,14]},
   {id:"s30",i:"🏛️",n:"Трудоголік",d:"30 днів поспіль",cat:"daily",st:s=>s.streak>=30,prog:s=>[s.streak,30]},
-  {id:"d10",i:"☕",n:"Завсідник",d:"Зіграй 10 драфтів дня",cat:"daily",st:s=>s.dailies>=10,prog:s=>[s.dailies,10]},
-  {id:"d50",i:"🎖️",n:"Старожил",d:"Зіграй 50 драфтів дня",cat:"daily",st:s=>s.dailies>=50,prog:s=>[s.dailies,50]},
+  {id:"d10",i:"☕",n:"Завсідник",d:"Виконай виклик дня 10 разів",cat:"daily",st:s=>s.dailies>=10,prog:s=>[s.dailies,10]},
+  {id:"d50",i:"🎖️",n:"Старожил",d:"Виконай виклик дня 50 разів",cat:"daily",st:s=>s.dailies>=50,prog:s=>[s.dailies,50]},
   // 5x5 leagues with friends: awarded when the player views his league's finished tournament (fl5Award in leagues.js), once per league
   {id:"f5play",i:"🤝",n:"Двір на двір",d:"Зіграй турнір ліги 5×5 з друзями",cat:"friends",rep:1,f5:1},
   {id:"f5champ",i:"👑",n:"Король двору",d:"Виграй лігу 5×5 з друзями",cat:"friends",rep:1,f5:1},
@@ -2067,13 +2163,13 @@ function trCtxNow(r){
   const m=MODES[S.mode];
   const xi=S.slots.map(s=>{const p=s.player;const q=PERSON[p.id]||{};return {name:p.name,id:p.id,slot:s.slot,main:p.main,r0:p.r0,r:p.r,nat:p.nat??q.nat??-1,by:p.by||q.by||0,cc:p.cc||(DATA.clubs.find(x=>x.n===p.club&&x.y===p.y)||{}).c,y:p.y};});
   const pl=r.players.map(p=>({...p,r0:(xi.find(x=>x.id===p.id)||{}).r0||p.r}));
-  return {r,xi,pl,mode:S.mode,format:S.format,reveal:!!(m.reveal||m.showRatings),dailyOfficial:!!(S.daily&&!S.daily.practice)};
+  return {r,xi,pl,mode:S.mode,format:S.format,reveal:!!(m.reveal||m.showRatings)};
 }
 function trCtxRow(row){   // from a seasons log row (for retroactive awarding)
   const xi=(row.xi||[]).map(p=>{const q=PERSON[p.id]||{};const cc=(DATA.clubs.find(x=>x.n===p.c&&x.y===p.y)||{}).c;return {name:p.n,id:p.id,slot:p.slot,main:q.main,r0:p.r0??p.r,r:p.r,nat:q.nat??-1,by:q.by||0,cc,y:p.y};});
   const pl=(row.xi||[]).map(p=>({id:p.id,slot:p.slot,g:p.g||0,a:p.a||0,rt:p.rt||0,form:p.f||0,r0:p.r0??p.r}));
   const r={W:row.w,D:row.d,L:row.l,pts:row.pts,place:row.place,gf:row.gf,ga:row.ga,xp:row.xp??row.pts,golden:!!row.golden};
-  const m=MODES[row.mode]||{};return {r,xi,pl,mode:row.mode,format:row.format,reveal:!!(m.reveal||m.showRatings),dailyOfficial:!!(row.day&&!row.practice)};
+  const m=MODES[row.mode]||{};return {r,xi,pl,mode:row.mode,format:row.format,reveal:!!(m.reveal||m.showRatings)};
 }
 // record a season into the collection; returns {got:[ids], fresh:[new ids]}; sync:false - the caller sends fresh ids itself (with the season)
 function trAward(c,{daily,sync=true}={}){
@@ -2182,12 +2278,12 @@ function renderNewTro(r){
 // season seed comes from the server (after the squad is locked) so results cannot be brute-forced; offline uses a local seed
 // 429 (rate limited per minute): season plays with a local seed, with a soft note under the result (RATE_NOTE)
 let RATE_NOTE='';
-// a cold server can answer late: wait up to 6 s, retry once after a timeout (the server returns the same daily seed)
+// a cold server can answer late: wait up to 6 s, retry once after a timeout (the server returns the same league attempt seed)
 async function fetchSeed(year,retry=1){
   if(!ONLINE)return null;
   const ctl=typeof AbortController!=='undefined'?new AbortController():null;const tm=setTimeout(()=>ctl&&ctl.abort(),6000);
   try{const r=await _fetch('/api/seed',{method:'POST',headers:{'Content-Type':'application/json'},signal:ctl&&ctl.signal,
-      body:JSON.stringify({device_id:deviceId(),secret:devSecret(),xi:S.slots.map(s=>({id:s.player.id,slot:s.slot,c:s.player.club,y:s.player.y})),formation:S.formation,mode:S.mode,format:S.format,year,daily:!!(S.daily&&!S.daily.practice),league:lgAttempt()})});
+      body:JSON.stringify({device_id:deviceId(),secret:devSecret(),xi:S.slots.map(s=>({id:s.player.id,slot:s.slot,c:s.player.club,y:s.player.y})),formation:S.formation,mode:S.mode,format:S.format,year,league:lgAttempt()})});
     if(r.status===429){const j=await r.json().catch(()=>({}));RATE_NOTE=j.error||'Забагато запитів за хвилину. Зачекай трохи й спробуй ще раз.';}
     if(!r.ok)return null;const j=await r.json();return j&&j.seed?j:null;}catch(e){clearTimeout(tm);return e&&e.name==='AbortError'&&retry>0?fetchSeed(year,retry-1):null;}finally{clearTimeout(tm);}
 }
@@ -2196,9 +2292,10 @@ async function playSeason(year){
   S.teamName=(lsGet('upl30_team')||'').trim()||'Твоя 11-ка';
   if(SIM_BUSY)return;SIM_BUSY=true;const sb=document.getElementById('simBtn');const sbt=sb.textContent;sb.disabled=true;sb.textContent='Готуємо сезон…';
   const xi=S.slots.map(s=>s.player);const mode=MODES[S.mode];
-  let srv=null;
-  if(S.locked&&S.year&&!year){year=S.year;srv=await S.srv;S.srv=null;if(!srv&&((S.daily&&!S.daily.practice)||lgAttempt()))srv=await fetchSeed(year);}   // year and seed issued when the squad was locked
-  else{if(S.daily){year=DAILY.year;}else if(S.chal){year=S.chal.year;}if(!year)year=oppYear();srv=await fetchSeed(year);}
+  let srv=null,vf=null;
+  if(S.vd){vf=await vdFinish(S.vd,vdEvalNow());if(!vf.gate){sb.disabled=false;sb.textContent=sbt;SIM_BUSY=false;vdFailShow(vf);return;}srv=vf.seed;year=S.year||oppYear();}   // daily challenge: the server fixes the squad and issues the attempt's seed
+  else if(S.locked&&S.year&&!year){year=S.year;srv=await S.srv;S.srv=null;if(!srv&&lgAttempt())srv=await fetchSeed(year);}   // year and seed issued when the squad was locked
+  else{if(S.chal){year=S.chal.year;}if(!year)year=oppYear();srv=await fetchSeed(year);}
   sb.disabled=false;sb.textContent=sbt;SIM_BUSY=false;
   const seed=srv?srv.seed:Math.floor(Math.random()*2147483647);rnd=mulberry32(seed);const r=simulate(xi,mode,year);rnd=Math.random;r.seed=seed;r.seedId=srv?srv.seed_id:null;r.slow=srv?'':RATE_NOTE;RATE_NOTE='';S.result=r;
   // xP: from the pre-season forecast, or computed here (no forecast / different year)
@@ -2242,20 +2339,17 @@ async function playSeason(year){
   document.getElementById('myXiTitle').textContent=S.teamName||'Твоя 11-ка';
   document.getElementById('modelNote').textContent=(ratingsOpen()?`Середній рейтинг XI ${avg}`:`Лише пам'ять: рейтинги не розкриваються`)+(r.t.gap>12?` · лінії розбалансовані (розрив ${r.t.gap.toFixed(0)}), штраф`:'')+`. Очікувані голи проти середньої команди: ${(seasonOf(r.year).base*r.u.att).toFixed(2)} за матч, пропущені ${(seasonOf(r.year).base*r.u.def).toFixed(2)}.`;
   tblHint();
-  if(S.daily){
-    if(!S.daily.practice){lsSet("upl30_daily_"+DAY,{W:r.W,D:r.D,L:r.L,pts:r.pts,place:r.place,gf:r.gf,ga:r.ga,xp:Math.round(r.xp*10)/10});
-      const su=streakUpdate();r.streak=su;renderDailyCard();}
-  } else if(S.mode!=='practice') {
+  r.vd=vf;if(vf&&vf.streak)r.streak=vf.streak;
+  if(S.mode!=='practice'&&!S.vd) {
     if(S.format==='oneclub'&&!S.league&&S.club)r.oc=ocAfter(S.club,r.pts);   // before BEST: old best records seed club records
     const key=bestKey();const best=BEST[key];const anti=S.format==='anti';
     const sc=x=>anti?-(x.pts*100-x.place):x.pts*100+(30-x.place);
     if(!best||sc(r)>sc(best)){BEST[key]={W:r.W,D:r.D,L:r.L,pts:r.pts,place:r.place,formation:S.formation,mode:S.mode};lsSet("upl30_best_v2",BEST);showBest();}
   }
-  r.tro=(S.mode==='practice'||(S.daily&&S.daily.practice))?null:trAward(trCtxNow(r),{daily:!!S.daily,sync:false});renderTrBtn();if(typeof SESSION!=='undefined'&&SESSION)acctPush();
+  r.tro=S.mode==='practice'?null:trAward(trCtxNow(r),{daily:!!(vf&&vf.first),sync:false});renderTrBtn();if(typeof SESSION!=='undefined'&&SESSION)acctPush();
   document.getElementById('leagueMsg').hidden=true;if(S.league){const lm=document.getElementById('leagueMsg');lm.hidden=false;lm.textContent=`Спроба ліги «${S.league.name}» — зарахуємо після перевірки сервером.`;}
-  document.getElementById('againBtn').textContent=S.league?'До ліги':'Новий драфт';
-  document.getElementById('practiceFlag').hidden=!(S.daily&&S.daily.practice);
-  renderShare(r);renderLb(r);logSeason(r);chalAfterSeason(r);
+  document.getElementById('againBtn').textContent=S.league?'До ліги':S.vd?'На головну':'Новий драфт';
+  vdResult(r);renderShare(r);logSeason(r);chalAfterSeason(r);
   go(3);startReveal(r);
 }
 let REV=null;
@@ -2304,7 +2398,7 @@ function finishReveal(){const R=REV;clearInterval(R.t);if(R.fin)return;R.fin=tru
   vtRun(swap,{pairs:[[$('lvRec'),'#recTiles>div:first-child>b','vt-rec'],[$('lvPts'),'#recTiles b.hot','vt-pts']]});}
 document.getElementById('skipBtn').onclick=()=>finishReveal();
 document.querySelectorAll('#tabs .tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('#tabs .tab').forEach(x=>x.classList.toggle('on',x===b));['t1','t2'].forEach(id=>document.getElementById(id).hidden=id!==b.dataset.tab);tblHint();});
-document.getElementById('againBtn').onclick=()=>{S.result=null;if(S.league){openLeague(S.league.id);return;}go(S.daily||S.challenge?1:4);};
+document.getElementById('againBtn').onclick=()=>{S.result=null;if(S.league){openLeague(S.league.id);return;}go(S.vd||S.challenge?1:4);};
 // ---------- online leaderboard (only on the real site)
 const ONLINE=true;
 // two databases: main (players) and test (development only). Test DB only on the Vercel test-branch host (...-git-test-...vercel.app)
@@ -2317,9 +2411,6 @@ const SB_URL=SB_ENVS[SB_ENV].url, SB_KEY=SB_ENVS[SB_ENV].key;
 const DATA_VERSION="d63f138d2";   // player pool fingerprint (ratings): stored with every season
 if(SB_ENV==='test'){for(const id of ['homeBtn','hLogo']){const b=document.getElementById(id);if(b)b.insertAdjacentHTML('beforeend','<span class="testbadge">ТЕСТ</span>');}}
 function deviceId(){let id=lsGet("upl30_device");if(!id){lsSet("upl30_tr_retro",1);try{id=crypto.randomUUID();}catch(e){const h=[...crypto.getRandomValues(new Uint8Array(16))].map(b=>b.toString(16).padStart(2,'0')).join('');id=`${h.slice(0,8)}-${h.slice(8,12)}-4${h.slice(13,16)}-a${h.slice(17,20)}-${h.slice(20,32)}`;}lsSet("upl30_device",id);}return id;}
-const LB_COLS='device_id,player_id,nickname,w,d,l,pts,gf,ga';   // what lbHtml shows (no xi)
-async function sbTop(day){const q=sel=>`${SB_URL}/rest/v1/daily_results?apikey=${SB_KEY}&day=eq.${day}&verified=is.true&select=${sel}&order=pts.desc,ga.asc,gf.desc&limit=500`;   // only results the server recorded from a verified season
-  let r=await fetch(q(LB_COLS+','+PL_SEL[0]));if(!r.ok)r=await fetch(q(LB_COLS+','+PL_SEL[1]));if(!r.ok)r=await fetch(q('*'));if(!r.ok){throw new Error('GET '+r.status+' '+(await r.text()).slice(0,200));}return r.json();}
 const VERSION=(document.getElementById('newsBtn').textContent.match(/версі[яї] ([\d.]+)/)||[])[1]||'?';
 window.__errCtx=()=>({version:VERSION,screen:SEC_NAME[CUR_SEC],tg:TG&&TG.initData?`${TG.platform||'?'} ${TG.version||''}`:null,player:PLAYER&&PLAYER.public_id||null});   // for error reports (first <script>)
 // ---------- Telegram Mini App: when opened inside Telegram take the profile name, theme and the Send to chat button
@@ -2391,7 +2482,7 @@ function logSeason(r){
   const [tier]=tierOf(r);
   const row={device_id:deviceId(),nickname:myName()||null,competition:'upl',data_version:DATA_VERSION,mode:S.mode,format:S.format,club:S.format==='oneclub'?S.club:null,formation:S.formation,year:r.year,seed:r.seed,version:VERSION,
     w:r.W,d:r.D,l:r.L,pts:r.pts,place:r.place,gf:r.gf,ga:r.ga,xp:Math.round(r.xp*10)/10,xg:Math.round(r.xgf*10)/10,xga:Math.round(r.xga*10)/10,
-    tier,golden:!!r.golden,perfect:r.W===30,seed_id:r.seedId||null,practice:S.mode==='practice'||!!(S.daily&&S.daily.practice),day:S.daily?DAY:null,
+    tier,golden:!!r.golden,perfect:r.W===30,seed_id:r.seedId||null,practice:S.mode==='practice',
     xi:S.slots.map(s=>{const p=s.player;const q=r.players.find(v=>v.id===p.id)||{};return {n:p.name,id:p.id,slot:s.slot,r:p.r,r0:p.r0,c:p.club,y:p.y,f:q.form||0,g:q.g||0,a:q.a||0,rt:q.rt?Math.round(q.rt*100)/100:null};}),
     tbl:r.table.map(t=>({n:t.n,w:t.w,d:t.d,l:t.l,gf:t.gf,ga:t.ga,pts:t.pts,me:t.id==='USER'}))};
   if(eraOf()!=='all')row.era=eraOf();   // era only when not All years (seasons.era)
@@ -2400,11 +2491,11 @@ function logSeason(r){
   // season is saved and verified by the server (/api/save, device secret); this season's new trophies travel in the same request
   const tro=r.tro&&r.tro.fresh.length?r.tro.fresh:null;
   saveApi('season',{row,trophies:tro||undefined}).then(j=>{r.rowId=j.id;verifiedUi(r,j);flAfterSave(r,j);if(j.verified===true&&lgFree(row))lgStale();if(tro){if(j.tr!==true)trSync(tro);trSrvStale();}})
-    .catch(e=>{if(e.status===429){r.slow=e.message;verifiedUi(r,{});}lbRelease(r);if(tro)trSync(tro);console.warn('save',e);});
+    .catch(e=>{if(e.status===429){r.slow=e.message;verifiedUi(r,{});}if(tro)trSync(tro);console.warn('save',e);});
 }
 // season that chat leagues count (server rule: api/_league.js leagueFree): classic free play, normal level, all years
 // its seed is requested as a league attempt (api/seed.js); a friend challenge or friends league attempt is not one
-const lgAttempt=()=>!S.daily&&!S.league&&!S.challenge&&!S.pickMode&&S.format==='classic'&&S.mode==='normal'&&eraOf()==='all';
+const lgAttempt=()=>!S.vd&&!S.league&&!S.challenge&&!S.pickMode&&S.format==='classic'&&S.mode==='normal'&&eraOf()==='all';
 // play button of the chat tables: always the format chat leagues count
 function openLeaguePlay(){setFmt('classic');const m=document.querySelector('#modes .opt[data-m="normal"]'),e=document.querySelector('#eras [data-era="all"]');if(m)m.click();if(e)e.click();go(4);}
 const lgFree=w=>w.format==='classic'&&w.mode==='normal'&&!w.practice&&!w.day&&!w.era&&!w.fl_id;
@@ -2414,9 +2505,6 @@ async function verifySeason(r){
 }
 function verifiedUi(r,j){r.verified=j.verified;
     const el=document.getElementById('verLine');if(el&&S.result===r){el.hidden=j.verified!==true&&!r.slow;if(j.verified===true){el.innerHTML=ic('check-decagram','sm')+'Результат перевірено сервером';boardStale();}else if(r.slow)el.textContent=r.slow;}
-    // daily result is written to the table by the server (from the verified season); no manual submit needed
-    if(j.verified===true&&S.result===r&&S.daily&&!S.daily.practice){lsSet("upl30_sent_"+DAY,true);const f=document.getElementById('lbForm'),m=document.getElementById('lbMsg');if(f&&!f.hidden){f.hidden=true;m.textContent='Твій результат уже в таблиці дня.';document.getElementById('lbAcct').hidden=true;}}
-    lbRelease(r);
 }
 const fmtN=n=>Number(n||0).toLocaleString('uk-UA');
 // smooth expand: block via slide(el, open); all <details> the same (no animation with reduced motion)
@@ -2557,7 +2645,6 @@ const skBox=h=>`<div class="sk-box" role="status" aria-busy="true" aria-label="�
 const skN=(n,f)=>Array.from({length:n},(_,i)=>f(i)).join('');
 const skNum='<td class="num"><i class="sk num"></i></td>';
 const skBoard=(n=10)=>skBox(`<div class="tbl"><table><tr><th>#</th><th>Гравець</th><th class="num">В-Н-П</th><th class="num">Г</th><th class="num">О</th></tr>${skN(n,()=>`<tr>${skNum}<td class="nm"><span class="nmt"><i class="sk w60"></i></span><div class="sub"><i class="sk w40"></i></div></td>${skNum}${skNum}${skNum}</tr>`)}</table></div>`);
-const skLb=(n=5)=>skBox(`<div class="clickable"><table class="lbt"><tr><th class="n">#</th><th>Гравець</th><th class="num">В-Н-П</th><th class="num">Голи</th><th class="num">Очки</th></tr>${skN(n,()=>`<tr><td class="n"><i class="sk w20"></i></td><td><i class="sk w60"></i></td>${skNum}${skNum}${skNum}</tr>`)}</table></div>`);
 const skView=()=>skBox(`<div class="sk blk sk-hero"></div><div class="sk blk sk-h3"></div><div class="sk blk sk-pitch"></div>`);
 let BOARD='main';
 function openBoard(b){BOARD=b||BOARD;const el=document.getElementById('tbAll');
@@ -2616,7 +2703,6 @@ if(ONLINE){const sid=(new URLSearchParams(location.search).get('s')||'').replace
 document.getElementById('trBtn').onclick=()=>{if(!ONLINE){openTrophies();return;}openPlayer();ppScrollCab();};
 document.getElementById('chalBtn').onclick=chalShare;document.getElementById('chalCopyBtn').onclick=chalCopy;
 document.getElementById('acctBtn').onclick=()=>openPlayer();
-document.getElementById('lbAcctGo').onclick=()=>{ACCT_MSG='';openAcct();};
 // ---------- Sheets: one controller for #viewBox and #ppSheet.
 // Phone: bottom sheet (spring in, drag the grabber/header down to close); from 600px: centered card; the table is full screen.
 const SHEET_MS=420;
@@ -3074,7 +3160,7 @@ function flWire(){const $=id=>document.getElementById(id),el=$('fl');
 // league attempt: regular classic draft under league rules (rerolls, ratings, era); formation is the player's own
 function flPlay(){const d=FL&&FL.data;if(!d)return;
   S.league={id:d.id,name:d.name,rerolls:d.rerolls,memory:d.ratings==='memory',era:ERAS[d.era]?d.era:'all'};
-  S.daily=null;S.challenge=null;S.chal=null;S.result=null;setFmt('classic');S.mode='normal';
+  S.vd=null;S.challenge=null;S.chal=null;S.result=null;setFmt('classic');S.mode='normal';
   S.formation=FORMATIONS[FL.formation]?FL.formation:'4-4-2';S.slots=newSlots(S.formation);S.taken=new Set();S.wheel=null;S.rerolls=d.rerolls;S.showR=false;S.moveMode=false;
   document.getElementById('modeLabel').textContent=`Ліга «${d.name}» · ${S.formation}`;renderDraft();go(2);}
 // after a league season: line under the result (credited or not)
@@ -3224,8 +3310,8 @@ async function acctInit(){
   else{acctTgAuto();if(!IN_TG()&&acctBotPending())acctBotPoll();}
 }
 function acctTgAuto(){if(!acctTgAuto.lg&&IN_TG()){acctTgAuto.lg=1;leagueInit();}if(SB&&!SESSION&&TG&&TG.initData&&!acctTgAuto.done){acctTgAuto.done=1;acctTelegram({initData:TG.initData},true);}}   // inside Telegram: sign in silently
-// ---------- state sync (trophies, streak, records, nick, daily attempt) via user_state table
-const ACCT_KEYS=()=>["upl30_tr","upl30_streak","upl30_best_v2","upl30_nick","upl30_daily_"+DAY,"upl30_sent_"+DAY,"upl30_tr_retro","upl30_clubrec"];
+// ---------- state sync (trophies, streak, records, nick, today's daily challenge) via user_state table
+const ACCT_KEYS=()=>["upl30_tr","upl30_streak","upl30_best_v2","upl30_nick","upl30_vd_"+DAY,"upl30_tr_retro","upl30_clubrec"];
 function acctLocal(){const o={};for(const k of ACCT_KEYS()){const v=lsGet(k);if(v!=null)o[k]=v;}return o;}
 function acctMerge(a,b){   // a: local, b: from server
   const o={...b,...a};
@@ -3237,6 +3323,8 @@ function acctMerge(a,b){   // a: local, b: from server
   for(const [k,v] of Object.entries(ba)){const w=best[k];const sc=x=>k==='anti'?-(x.pts*100-x.place):x.pts*100+(30-x.place);if(!w||sc(v)>sc(w))best[k]=v;}
   if(Object.keys(best).length)o.upl30_best_v2=best;
   const ca=a.upl30_clubrec,cb=b.upl30_clubrec;if(ca&&cb){const c={...cb};for(const [k,v] of Object.entries(ca)){const w=c[k];c[k]=w?{b:Math.max(v.b,w.b),w:Math.min(v.w,w.w),n:Math.max(v.n,w.n)}:v;}o.upl30_clubrec=c;}   // One club records: best of both
+  {const k="upl30_vd_"+DAY,va=a[k],vb=b[k];if(va&&vb){const tries=[...(vb.tries||[])];for(const t of va.tries||[])if(!tries.some(x=>x.a===t.a))tries.push(t);   // today's challenge: union of attempts, best of both
+    const bs=[va.best,vb.best].filter(x=>x!=null);o[k]={used:Math.max(va.used||0,vb.used||0),best:bs.length?Math.max(...bs):null,tries,open:va.open||vb.open||null};}}
   if(b.upl30_nick)o.upl30_nick=b.upl30_nick;
   return o;
 }
@@ -3247,7 +3335,7 @@ async function acctPull(){
     for(const [k,v] of Object.entries(merged))lsSet(k,v);
     if(merged.upl30_best_v2)BEST=merged.upl30_best_v2;
     if(!jsonEq(acctLocal(),server))await acctPush();   // nothing new on this device: no write
-    renderTrBtn();showBest();renderDailyCard();return {server,merged};
+    renderTrBtn();showBest();renderVdCard();return {server,merged};
   }catch(e){return null;}
 }
 // deep equality regardless of key order (jsonb reorders keys)
@@ -3528,7 +3616,7 @@ function renderChal(){
   document.getElementById('chalGo').onclick=chalStart;
 }
 function chalStart(){
-  const c=CHAL;if(!c)return;S.league=null;S.daily=null;S.result=null;S.format='classic';S.pickMode=false;S.mode=MODES[c.mode]&&c.mode!=='daily'?c.mode:'normal';S.formation=FORMATIONS[c.formation]?c.formation:'4-4-2';
+  const c=CHAL;if(!c)return;S.league=null;S.vd=null;S.result=null;S.format='classic';S.pickMode=false;S.mode=MODES[c.mode]&&c.mode!=='daily'?c.mode:'normal';S.formation=FORMATIONS[c.formation]?c.formation:'4-4-2';
   S.chal=chalNewGame(+c.seed,+c.year);S.challenge=c;
   S.slots=newSlots(S.formation);S.taken=new Set();S.wheel=null;S.rerolls=MODES[S.mode].rerolls;
   document.getElementById('modeLabel').textContent=`Виклик · ${S.formation} · ${MODES[S.mode].name}`;renderDraft();go(2);
@@ -3536,7 +3624,7 @@ function chalStart(){
 // after the season: compare with the challenge and save the result
 function chalAfterSeason(r){
   const line=document.getElementById('chalLine'),box=document.getElementById('chalBox');
-  const can=ONLINE&&S.chal&&!S.daily&&S.format==='classic';   // the Challenge tile opens this block
+  const can=ONLINE&&S.chal&&!S.vd&&S.format==='classic';   // the Challenge tile opens this block
   if(box)box.hidden=true;const tile=document.getElementById('chalOpen');if(tile)tile.hidden=!can;
   const ni=document.getElementById('chalName');if(ni){ni.hidden=!!TGU;if(!ni.value)ni.value=myName();}
   document.getElementById('chalMsg').textContent='';
@@ -3547,37 +3635,217 @@ function chalAfterSeason(r){
   saveApi('chal_result',{row}).then(()=>chalLoad(true)).catch(e=>console.warn('chal',e));
 }
 
-// a player may have two daily results (merged logins from two devices): the table shows only the best
-function bestPerPlayer(rows){const seen=new Set();return rows.filter(r=>{if(!r.player_id)return true;if(seen.has(r.player_id))return false;seen.add(r.player_id);return true;});}
-function lbHtml(rows){
-  const me=deviceId();rows.sort((a,b)=>b.pts-a.pts||(b.gf-b.ga)-(a.gf-a.ga)||b.gf-a.gf);rows=bestPerPlayer(rows);
-  const pid=PLAYER&&PLAYER.id;const mi=rows.findIndex(r=>r.device_id===me||(pid&&r.player_id===pid));const show=rows.map((r,i)=>({...r,i})).filter(r=>r.i<20||r.i===mi);
-  if(!rows.length)return '<p class="muted">Поки що ніхто не зіграв. Будь першим!</p>';
-  return `<div class="clickable"><table class="lbt"><tr><th class="n">#</th><th>Гравець</th><th class="num">В-Н-П</th><th class="num">Голи</th><th class="num">Очки</th></tr>`+show.map(r=>`<tr data-q="day=eq.${DAY}&device_id=eq.${esc(encodeURIComponent(r.device_id))}&practice=is.false"${r.i===mi?' class="me"':''}><td class="n">${r.i<3?`<span class="plc p${r.i+1}">${r.i+1}</span>`:r.i+1}</td><td>${plink(r)}</td><td class="num">${numOr0(r.w)}-${numOr0(r.d)}-${numOr0(r.l)}</td><td class="num">${numOr0(r.gf)}:${numOr0(r.ga)}</td><td class="num"><b>${numOr0(r.pts)}</b></td></tr>`).join('')+`</table></div><p class="muted lbfoot">Зіграли сьогодні: ${rows.length} · лише перевірені сервером · тап по рядку — склад</p>`;
+// ---------- Daily challenge (vd_*) rules. Shared by the site (build.py inlines it) and the server (lib/vd_core.js, api/_vd.js).
+// Pure functions over the pool (DATA) and one challenge from lib/challenges.json; no DOM, no global state.
+// A person "played for club X" when the pool has a club-season row of X for him with apps >= 1 (UPL seasons only; zero-app rows are ignored).
+const VD_ATTEMPTS=5,VD_MEDALS=[[11,'perfect','Ідеально','⭐'],[9,'gold','Золото','🥇'],[6,'silver','Срібло','🥈'],[4,'bronze','Бронза','🥉']];
+const VD_LINE={GK:'GK',CB:'DF',RB:'DF',LB:'DF',RWB:'DF',LWB:'DF',DF:'DF',CDM:'MF',CM:'MF',CAM:'MF',RM:'MF',LM:'MF',MF:'MF',RW:'FW',LW:'FW',ST:'FW',FW:'FW'};
+// person index: canonical id -> {apps, clubs:{code:apps}, nat (name or null), n}
+function vdIndex(DATA){const A=DATA.alias||{},out={};
+  for(const c of DATA.clubs)for(const p of c.pl){if(!(p[3]>=1))continue;const k=A[p[5]]||p[5];const q=out[k]||(out[k]={apps:0,clubs:{},nat:null,n:p[0]});
+    q.apps+=p[3];q.clubs[c.c]=(q.clubs[c.c]||0)+p[3];if(p[10]!=null&&DATA.nats&&DATA.nats[p[10]])q.nat=DATA.nats[p[10]];}
+  return out;}
+// one condition against a person (q from vdIndex) and the drafted card line (GK/DF/MF/FW)
+function vdMatch(c,q,line){if(!c||!q)return false;const p=c.params||{};
+  switch(c.type){
+    case 'club':return (q.clubs[p.club]||0)>=1;
+    case 'clubs_any':return (p.clubs||[]).some(x=>(q.clubs[x]||0)>=1);
+    case 'club_apps_min':return (q.clubs[p.club]||0)>=p.n;
+    case 'nationality':return p.nats?(p.nats.includes(q.nat)):(!!q.nat&&!(p.except||[]).includes(q.nat));
+    case 'clubs_count_min':return Object.keys(q.clubs).length>=p.n;
+    case 'apps_total_min':return q.apps>=p.n;
+    case 'line':return (p.lines||[]).includes(line)!==!!p.not;
+    case 'and':return (c.of||[]).every(x=>vdMatch(x,q,line));
+    case 'or':return (c.of||[]).some(x=>vdMatch(x,q,line));
+    case 'not':return !vdMatch(c.of,q,line);
+  }return false;}
+const vdParts=ch=>ch.required.parts||[ch.required];
+// largest assignment of players to required parts (each player fills at most one slot of one part); small brute force: <= 11 players
+function vdAssign(parts,ok){const need=parts.map(p=>p.count||1),got=parts.map(()=>[]);let best=null,bestN=-1;
+  const n=ok.length;(function rec(i,cnt){if(cnt+Math.min(n-i,need.reduce((a,x,j)=>a+Math.max(0,x-got[j].length),0))<=bestN)return;
+    if(i===n){if(cnt>bestN){bestN=cnt;best=got.map(a=>a.slice());}return;}
+    for(let j=0;j<parts.length;j++)if(ok[i][j]&&got[j].length<need[j]){got[j].push(i);rec(i+1,cnt+1);got[j].pop();}
+    rec(i+1,cnt);})(0,0);
+  return best||parts.map(()=>[]);}
+// xi: [{id, line}] -> {gate, have, need, score, parts:[{have,need,ids}], rows:[{id, req, bonus, event}]}
+// event player never counts for the required condition, always counts in the score
+function vdEval(ch,xi,idx,alias){const A=alias||{},parts=vdParts(ch),ev=ch.eventPlayer?(A[ch.eventPlayer]||ch.eventPlayer):null;
+  const rows=xi.map(x=>{const k=A[x.id]||x.id,q=idx[k],event=!!ev&&k===ev;
+    const ok=parts.map(pt=>!event&&vdMatch(pt,q,x.line));return {id:x.id,event,ok,req:ok.some(Boolean),bonus:event||(!!ch.bonus&&vdMatch(ch.bonus,q,x.line))};});
+  const as=vdAssign(parts,rows.map(r=>r.ok));const need=parts.reduce((a,p)=>a+(p.count||1),0),have=as.reduce((a,x)=>a+x.length,0);
+  return {gate:have>=need,have,need,score:rows.filter(r=>r.req||r.bonus).length,
+    parts:parts.map((p,j)=>({need:p.count||1,have:as[j].length,ids:as[j].map(i=>rows[i].id)})),rows:rows.map(({ok,...r})=>r)};}
+const vdMedal=s=>{for(const m of VD_MEDALS)if(s>=m[0])return {at:m[0],k:m[1],n:m[2],e:m[3]};return null;};
+// card the event player stands with: his strongest UPL card (ties: latest season)
+function vdEventCard(ch,DATA){if(!ch||!ch.eventPlayer)return null;const A=DATA.alias||{},ev=A[ch.eventPlayer]||ch.eventPlayer;let best=null;
+  for(const c of DATA.clubs)for(const p of c.pl)if((A[p[5]]||p[5])===ev&&p[3]>=1&&(!best||p[2]>best.p[2]||(p[2]===best.p[2]&&c.y>best.c.y)))best={c,p};
+  return best;}
+const vdFind=(list,day)=>(list||[]).find(x=>x.day===day)||null;
+// ---------- Daily challenge UI (vd_*): home card, attempt flow, brief and sticky bar on the draft, not-counted screen, result block, archive.
+// Rules live in vd_core.js (shared with the server); content in lib/challenges.json (inlined by build.py as VD_LIST).
+// Attempt: issued by the server (api/_vd.js via /api/seed) when the draft opens; finished when the XI is complete (condition missed: burns)
+// or on Play season (condition met: the server fixes the squad and returns the season seed). Offline: local attempt count and seed.
+const VD_LIST=[{"day":"2026-10-09","title":"⚽ Верес — Шахтар","story":"Верес і Шахтар грають між собою в турі УПЛ. Склад — із гравців обох клубів.","task":"Додай у склад гравця Вереса і гравця Шахтаря.","formation":"4-4-2","eventPlayer":null,"required":{"parts":[{"type":"club","params":{"club":"veres-rivne"},"count":1,"label":"гравець Вереса","who":{"one":"гравця Вереса","many":"гравців Вереса"}},{"type":"club","params":{"club":"shakhtar-donetsk"},"count":1,"label":"гравець Шахтаря","who":{"one":"гравця Шахтаря","many":"гравців Шахтаря"}}],"label":"1 гравець Вереса і 1 гравець Шахтаря","short":"Верес і Шахтар","no":"не грав ні за Верес, ні за Шахтар"},"bonus":null},{"day":"2026-10-10","title":"🎂 День народження Брауна Ідейє","story":"Брауну Ідейє — 38. За Динамо нігерієць забивав у 2011–2014 роках.","task":"Ідейє вже в складі. Додай двох гравців Динамо.","formation":"4-4-2","eventPlayer":"tm:64308","required":{"type":"club","params":{"club":"dynamo-kyiv"},"count":2,"label":"2 колишні або діючі гравці Динамо","short":"гравці Динамо","who":{"one":"гравця Динамо","many":"гравців Динамо"},"no":"не грав за Динамо"},"bonus":{"type":"and","of":[{"type":"nationality","params":{"except":["Україна"]}},{"type":"line","params":{"lines":["DF"],"not":true}}],"label":"🌍 Легіонери, крім захисників","no":"не легіонер або захисник"}},{"day":"2026-10-11","title":"⚽ Динамо — Карпати","story":"Динамо проти Карпат — у турі УПЛ. Львів’яни повернулися в еліту у 2024 році.","task":"Додай у склад двох гравців Карпат.","formation":"4-4-2","eventPlayer":null,"required":{"type":"club","params":{"club":"karpaty-lviv"},"count":2,"label":"2 колишні або діючі гравці Карпат","short":"гравці Карпат","who":{"one":"гравця Карпат","many":"гравців Карпат"},"no":"не грав за Карпати"},"bonus":{"type":"and","of":[{"type":"club","params":{"club":"dynamo-kyiv"}},{"type":"nationality","params":{"except":["Україна"]}}],"label":"🌍 Легіонери Динамо","no":"не легіонер Динамо"}},{"day":"2026-10-12","title":"🎂 День народження Ілсіньйо","story":"Ілсіньйо виповнюється 41. У Шахтарі бразилець грав у 2007–2015 роках.","task":"Ілсіньйо вже в складі. Додай двох гравців Шахтаря.","formation":"4-4-2","eventPlayer":"tm:52937","required":{"type":"club","params":{"club":"shakhtar-donetsk"},"count":2,"label":"2 колишні або діючі гравці Шахтаря","short":"гравці Шахтаря","who":{"one":"гравця Шахтаря","many":"гравців Шахтаря"},"no":"не грав за Шахтар"},"bonus":{"type":"nationality","params":{"nats":["Бразилія"]},"label":"🇧🇷 Бразильці","no":"не бразилець"}},{"day":"2026-10-13","title":"🧳 Мандрівники","story":"Футболісти, які змінили в УПЛ сім і більше клубів. Таких в історії ліги — пів сотні.","task":"Знайди двох гравців, які грали в УПЛ за 7+ клубів.","formation":"4-4-2","eventPlayer":null,"required":{"type":"clubs_count_min","params":{"n":7},"count":2,"label":"2 гравці, які грали в УПЛ за 7+ клубів","short":"гравці 7+ клубів","who":{"one":"гравця 7+ клубів","many":"гравців 7+ клубів"},"no":"менше 7 клубів"},"bonus":{"type":"clubs_count_min","params":{"n":6},"label":"🧳 Гравці 6+ клубів","no":"менше 6 клубів"}},{"day":"2026-10-14","title":"🎖️ Ветерани УПЛ","story":"225 матчів в УПЛ — це понад сім повних сезонів без жодного пропуску.","task":"Знайди двох гравців із 225+ матчами в УПЛ.","formation":"4-4-2","eventPlayer":null,"required":{"type":"apps_total_min","params":{"n":225},"count":2,"label":"2 гравці з 225+ матчами в УПЛ","short":"гравці 225+ матчів","who":{"one":"гравця з 225+ матчами","many":"гравців із 225+ матчами"},"no":"менше 225 матчів"},"bonus":null},{"day":"2026-10-15","title":"📅 Чорноморець — Динамо 2:1","story":"15 жовтня 2017 року останній Чорноморець обіграв друге Динамо — 2:1.","task":"Додай двох гравців Чорноморця з 50+ матчами в УПЛ.","formation":"4-4-2","eventPlayer":null,"required":{"type":"and","of":[{"type":"club","params":{"club":"chornomorets-odesa"}},{"type":"apps_total_min","params":{"n":50}}],"count":2,"label":"2 гравці Чорноморця, які провели в УПЛ 50+ матчів","short":"Чорноморець, 50+ матчів","who":{"one":"гравця Чорноморця з 50+ матчами","many":"гравців Чорноморця з 50+ матчами"},"no":"не грав за Чорноморець або менше 50 матчів"},"bonus":null}];
+const VD_DAY=(typeof window.__vdToday==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(window.__vdToday))?window.__vdToday:DAY;   // test hook: pretend another day is today
+let VD_IDX=null;const vdIdx=()=>VD_IDX||(VD_IDX=vdIndex(DATA));
+const vdCh=day=>vdFind(VD_LIST,day);
+const VD_SRV={};   // own results from the server (archive): day -> {used, best}
+function vdSt(day){const s=lsGet('upl30_vd_'+day)||{};return {used:s.used||0,best:s.best??null,tries:s.tries||[],open:s.open||null};}
+function vdState(day){const a=vdSt(day),b=VD_SRV[day];if(!b)return a;const bs=[a.best,b.best].filter(x=>x!=null);return {...a,used:Math.max(a.used,b.used||0),best:bs.length?Math.max(...bs):null};}
+const VD_EM=/^(\p{Extended_Pictographic}️?)\s*/u;
+const vdSplit=t=>{const m=VD_EM.exec(t||'');return m?[m[1],t.slice(m[0].length)]:['',String(t||'')];};
+const VD_MON=['січня','лютого','березня','квітня','травня','червня','липня','серпня','вересня','жовтня','листопада','грудня'];
+const VD_MONTH=['Січень','Лютий','Березень','Квітень','Травень','Червень','Липень','Серпень','Вересень','Жовтень','Листопад','Грудень'];
+const VD_WD=['нд','пн','вт','ср','чт','пт','сб'];
+const vdDate=d=>`${+d.slice(8,10)} ${VD_MON[+d.slice(5,7)-1]}`;
+const vdNo=ch=>[...new Set([ch.required.no,ch.bonus&&ch.bonus.no].filter(Boolean))].join(' · ')||'Не підходить';
+function vdMedals(best){return `<span class="vmst" role="img" aria-label="Медалі: бронза — 4, срібло — 6, золото — 9, ідеально — 11 з 11">${[...VD_MEDALS].reverse().map(([t,,,e])=>`<span class="${best!=null&&best>=t?'got':''}"><i>${e}</i>${t}</span>`).join('')}</span>`;}
+// time to the next Kyiv midnight, hours and minutes
+function vdLeft(){try{const f=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Kyiv',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(new Date());
+  const h=+f.find(x=>x.type==='hour').value,m=+f.find(x=>x.type==='minute').value,l=24*60-(h*60+m);return `${Math.floor(l/60)} г ${l%60} хв`;}catch(e){return '';}}
+async function vdApi(body){const ctl=typeof AbortController!=='undefined'?new AbortController():null;const tm=setTimeout(()=>ctl&&ctl.abort(),6000);
+  try{const r=await _fetch('/api/seed',{method:'POST',headers:{'Content-Type':'application/json'},signal:ctl&&ctl.signal,body:JSON.stringify({device_id:deviceId(),secret:devSecret(),...body})});
+    const j=await r.json().catch(()=>({}));return {...j,status:r.status};}finally{clearTimeout(tm);}}
+function vdMerge(day,j){if(!j||j.used==null)return;const st=vdSt(day),bs=[st.best,j.best].filter(x=>x!=null);
+  lsSet('upl30_vd_'+day,{used:Math.max(st.used,j.used),best:bs.length?Math.max(...bs):null,tries:st.tries,open:st.open});}
+// open attempt progress (picked players, wheel pointer and seed, rerolls, current wheel): reopening resumes it exactly instead of a fresh draft on a known wheel
+function vdSave(){const v=S.vd;if(!v||v.fin||!v.seq)return;const st=vdSt(v.day);
+  lsSet('upl30_vd_'+v.day,{...st,open:{a:v.attempt,sid:v.seedId||null,ws:v.ws,ptr:v.ptr,rr:S.rerolls,w:S.wheel?DATA.clubs.indexOf(S.wheel):-1,sl:S.slots.map(x=>x.player)}});}
+function vdRestore(v){const o=vdSt(v.day).open;if(!o||o.a!==v.attempt||(o.sid||null)!==(v.seedId||null)||!Array.isArray(o.sl)||o.sl.length!==S.slots.length)return;
+  S.slots.forEach((x,i)=>{x.player=o.sl[i]||null;});S.taken=new Set(S.slots.filter(x=>x.player).map(x=>canon(x.player.id)));
+  v.ws=o.ws;v.seq=wheelSeq(o.ws);v.ptr=o.ptr||0;S.rerolls=o.rr??S.rerolls;S.wheel=o.w>=0?DATA.clubs[o.w]:null;S.wheelFresh=false;}
+
+// ---- header streak
+function stkRender(){const el=document.getElementById('stkChip');if(!el)return;const n=streakInfo().count;el.hidden=n<1;
+  if(n>=1){el.innerHTML=`${ic('fire')}${n} ${plUk(n,'день','дні','днів')}`;el.title=`Серія виклику дня: ${n} ${plUk(n,'день','дні','днів')} поспіль`;}}
+
+// ---- home card: new / in progress (best medal) / done (timer to the next one); no challenge today: "coming soon"
+function renderVdCard(){const box=document.getElementById('vdBox');if(!box)return;stkRender();const ch=vdCh(VD_DAY);
+  if(!ch){box.innerHTML=`<div class="evc soon"><span class="e1"><span class="lb">Виклик дня</span></span><span class="e3">Новий виклик скоро.</span></div>`;return;}
+  const st=vdState(VD_DAY),done=st.used>=VD_ATTEMPTS||st.best===11,k=done?'done':st.used?'progress':'new';
+  const af=k==='new'?'Зібрати склад':k==='progress'?(st.best!=null?'Покращити':'Ще спроба'):'Переглянути';
+  const m=st.best!=null&&vdMedal(st.best),[em,tt]=vdSplit(ch.title);
+  const res=st.best!=null?`<span class="evr"><span class="mm" aria-hidden="true">${m?m.e:ic('check-circle')}</span><b>${st.best}/11</b><span>краща спроба</span></span>`
+    :st.used?`<span class="evr no"><span>Не зараховано · ${done?'спроби закінчились':`спроба ${st.used} з ${VD_ATTEMPTS}`}</span></span>`:'';
+  box.innerHTML=`<button class="evc ${k}" id="vdCard" type="button"><span class="e1"><span class="lb">Виклик дня</span><span class="af">${af}${ic('chevron-right')}</span></span>`
+    +`<span class="e2">${em?`<span class="em" aria-hidden="true">${em}</span>`:''}<span>${esc(tt)}</span></span><span class="e3">${esc(ch.task)}</span>${res}<span class="e4">${vdMedals(st.best)}</span>`
+    +(done?`<span class="evt">${ic('timer-sand')}<span id="vdLeft">Новий виклик через ${vdLeft()}</span></span>`:'')+`</button>`;
+  document.getElementById('vdCard').onclick=()=>done?openVdArchive():vdOpen(VD_DAY,'#vdCard');}
+setInterval(()=>{const el=document.getElementById('vdLeft');if(el&&CUR_SEC===1)el.textContent='Новий виклик через '+vdLeft();},30e3);
+
+// ---- attempt: draft with the event player already on the pitch; the server issues (or resumes) the attempt
+function vdOpen(day,from){const ch=vdCh(day);if(!ch)return;const st=vdState(day);
+  if(st.used>=VD_ATTEMPTS){openVdArchive('Спроби на цей день закінчились.');return;}
+  S.league=null;S.challenge=null;S.chal=null;S.result=null;setFmt('classic');S.mode='normal';S.formation=FORMATIONS[ch.formation]?ch.formation:'4-4-2';
+  S.slots=newSlots(S.formation);S.taken=new Set();S.wheel=null;S.rerolls=MODES.normal.rerolls;S.showR=false;S.moveMode=false;S.pending=null;S.move=null;
+  const v=S.vd={day,ch,late:day<VD_DAY,attempt:st.used+1,seq:null,ptr:0,wait:null,fin:null,seedId:null};
+  const ev=vdEventCard(ch,DATA);
+  if(ev){const p=ev.p,b=bestSlot(p);if(b){const s=b.s;s.player={name:p[0],pos:GROUP_OF[s.slot],slot:s.slot,main:p[6],alts:p[7],r:effRating(p,s.slot),r0:p[2],apps:p[3],goals:p[4],ast:p[8],cs:p[9],nat:p[10],by:p[11],cc:ev.c.c,id:p[5],club:ev.c.n,y:ev.c.y,ev:vdSplit(ch.title)[0]||'★'};S.taken.add(canon(p[5]));}}
+  document.getElementById('modeLabel').textContent=`Виклик дня · ${S.formation}`;
+  v.wait=vdStart(v).then(()=>{v.wait=null;if(S.vd!==v)return;if(v.over){S.vd=null;openVdArchive('Спроби на цей день закінчились.');return;}renderDraft();if(S.slots.every(x=>x.player))setTimeout(vdComplete,0);});
+  renderDraft();go(2,false,from);}
+async function vdStart(v){let seed=null;   // online: the wheel comes from the attempt (server checks the XI against it)
+  if(ONLINE){try{const j=await vdApi({vd:'start',day:v.day});
+      if(j.attempt){v.attempt=j.attempt;v.seedId=j.seed_id;seed=hashStr(String(j.seed_id)+'|wheel');vdMerge(v.day,j);}   // same attempt -> same wheel
+      else if(j.status===409){vdMerge(v.day,{...j,used:VD_ATTEMPTS});v.over=true;}}catch(e){}}
+  v.ws=seed||Math.floor(Math.random()*2147483647);v.seq=wheelSeq(v.ws);if(!v.over)vdRestore(v);}
+const vdXi=()=>S.slots.filter(s=>s.player).map(s=>({id:s.player.id,line:VD_LINE[s.player.main]||s.player.pos,p:s.player}));
+function vdEvalNow(){const xi=vdXi(),e=vdEval(S.vd.ch,xi,vdIdx(),DATA.alias);e.xi=xi;return e;}
+// XI complete: condition met -> forecast and Play season; missed -> the attempt burns, no season
+function vdComplete(){const v=S.vd;if(!v||S.locked||S.locking||v.fin)return;const e=vdEvalNow();
+  if(e.gate){lockDraft();return;}
+  vdFinish(v,e).then(f=>{if(S.vd!==v)return;if(f.gate)lockDraft();else vdFailShow(f);});}
+// finish once per attempt: server verdict (score computed there) or local one offline; local record, streak, home card
+function vdFinish(v,e){if(v.fin)return v.fin;return v.fin=(async()=>{let j=null;
+  if(ONLINE&&v.seedId){try{j=await vdApi({vd:'finish',day:v.day,attempt:v.attempt,formation:S.formation,xi:S.slots.map(s=>({id:s.player.id,slot:s.slot,c:s.player.club,y:s.player.y}))});if(j.status>=300)j=null;}catch(x){j=null;}}
+  const gate=j?!!j.gate:e.gate,score=j?j.score:e.score,st=vdSt(v.day),late=j&&j.late!=null?!!j.late:v.late;   // late: the server's day decides (midnight)
+  const first=gate&&!late&&!st.tries.some(x=>x.g&&!x.l);   // first counted attempt of today: streak and the trophy counter
+  const tries=[...st.tries.filter(x=>x.a!==v.attempt),{a:v.attempt,g:gate,s:score,l:late}];
+  const bs=[st.best,j&&j.best,...tries.filter(x=>x.g).map(x=>x.s)].filter(x=>x!=null);
+  const used=Math.max(st.used,v.attempt,j&&j.used||0);
+  lsSet('upl30_vd_'+v.day,{used,best:bs.length?Math.max(...bs):null,tries});
+  const streak=first?streakUpdate():null;renderVdCard();if(typeof SESSION!=='undefined'&&SESSION)acctPush();
+  return {gate,score,e,attempt:v.attempt,used,late,first,streak,seed:j&&j.seed?{seed:j.seed,seed_id:j.seed_id}:null};})();}
+
+// ---- brief on the draft screen and the compact sticky bar
+function vdBrief(){const el=document.getElementById('vdBrief'),bar=document.getElementById('vdBar'),v=S.vd;
+  if(!v){if(!el.hidden){el.hidden=true;el.innerHTML='';}bar.innerHTML='';return;}
+  vdSave();
+  const ch=v.ch,rq=ch.required,e=vdEvalNow(),[em,tt]=vdSplit(ch.title),tot=MODES.normal.rerolls;
+  const names=e.parts.flatMap(p=>p.ids).map(id=>{const x=e.xi.find(q=>q.id===id);return x?cardName(x.p.name):'';}).filter(Boolean);
+  const pips=Array.from({length:VD_ATTEMPTS},(_,i)=>`<i class="${i+1<v.attempt?'u':i+1===v.attempt?'c':''}"></i>`).join('');
+  el.hidden=false;el.classList.toggle('ok',e.gate);
+  el.innerHTML=`<div class="bl"><p class="bk">Виклик дня · ${vdDate(v.day)}${v.late?' · архів':''}</p><h2 class="bh1">${em?`<span class="em" aria-hidden="true">${em}</span>`:''}<span>${esc(tt)}</span></h2><p class="bs1">${esc(ch.story)}</p></div>`
+    +`<div class="br"><div class="rqx"><div class="rq1"><span class="tag-req">${e.gate?ic('check-circle'):''}Обовʼязково</span><span class="cnt" aria-label="Виконано ${e.have} з ${e.need}">${e.have}<i>/${e.need}</i></span></div>`
+    +`<b class="rq2">${esc(rq.label)}</b><p class="rq3">${names.length?`Зараховано: <b>${esc(names.join(', '))}</b>`:'Поки нікого'}</p><div class="rqseg" aria-hidden="true" style="--n:${e.need}">${Array.from({length:e.need},(_,i)=>`<i class="${i<e.have?'on':''}"></i>`).join('')}</div></div>`
+    +`<p class="bon1"><span class="lb">Бонус</span>${ch.bonus?`<span class="bv">${esc(ch.bonus.label)}</span><span class="bn">теж рахуються в N/11</span>`:`<span class="bn">рахуються всі, хто підходить під умову</span>`}</p>`
+    +`<div class="meta"><div><small>Спроба</small><b>${v.attempt} з ${VD_ATTEMPTS}</b><span class="pips" aria-hidden="true">${pips}</span></div><div><small>Перекрутки</small><b>${Math.max(0,S.rerolls)} з ${tot}</b></div>`
+    +`<div class="mm"><small>Медалі</small>${vdMedals(null)}</div></div></div>`;
+  bar.innerHTML=`<div class="tx"><small>Обовʼязково</small><b><span class="cnt sm${e.gate?' ok':''}">${e.have}/${e.need}</span>${esc(rq.short||rq.label)}</b></div><div class="rt"><span>Спроба <b>${v.attempt}/${VD_ATTEMPTS}</b></span><span>Перекрутки <b>${Math.max(0,S.rerolls)}</b></span></div>`;
 }
-async function loadLb(el,p){el.innerHTML=skLb();try{el.innerHTML=lbHtml(await (p||sbTop(DAY)));}catch(e){el.innerHTML='<p class="muted">Таблиця зараз недоступна.</p><p class="muted mono" style="font-size:var(--fs-caption2)">'+esc(String(e&&e.message||e))+'</p>';}}
-function renderLb(r){
-  const box=document.getElementById('lbBox');box.hidden=!(ONLINE&&S.daily);if(box.hidden)return;
-  const sent=lsGet("upl30_sent_"+DAY);const form=document.getElementById('lbForm');const msg=document.getElementById('lbMsg');
-  document.getElementById('nick').value=myName();
-  form.hidden=!!sent||S.daily.practice;msg.textContent=S.daily.practice&&!sent?'Тренувальні спроби в таблицю не потрапляють.':(sent?'Твій результат уже в таблиці.':'');
-  document.getElementById('lbAcct').hidden=!(ONLINE&&!SESSION&&!(TG&&TG.initData)&&!form.hidden);
-  // official attempt: the server adds it to the table while verifying, so load the table once, after the verdict (lbRelease)
-  r.lbWait=!form.hidden;if(r.lbWait){document.getElementById('lbTable').innerHTML=skLb();setTimeout(()=>lbRelease(r),LB_WAIT_MS);}
-  else loadLb(document.getElementById('lbTable'));
-}
-const LB_WAIT_MS=12e3;   // no verdict by then (slow or lost save): load the table anyway
-function lbRelease(r){if(!r||!r.lbWait)return;r.lbWait=false;if(S.result===r)loadLb(document.getElementById('lbTable'));}
-document.getElementById('lbSend').onclick=async()=>{
-  const nick=document.getElementById('nick').value.trim();const msg=document.getElementById('lbMsg');
-  {const c=nameCheck(nick);if(c.err||!c.name){haptic('error');msg.textContent=NAME_MSG[c.err||'len'];return;}}
-  const res=lsGet("upl30_daily_"+DAY);if(!res){msg.textContent='Спершу зіграй офіційну спробу.';return;}
-  const r=S.result;const btn=document.getElementById('lbSend');btn.disabled=true;msg.textContent='Надсилаю…';
-  const done=t=>{nickSet(nick);lsSet("upl30_sent_"+DAY,true);document.getElementById('lbForm').hidden=true;msg.textContent=t;loadLb(document.getElementById('lbTable'));};
-  // daily result is written to the table only by the server, from a verified season (nobody can write into another profile). The button only saves the name.
-  nickSet(nick);if(r&&r.rowId&&r.verified==null&&r.seedId)await verifySeason(r);
-  if(r&&r.verified===true)done('Готово! Ти в таблиці.');else msg.textContent='Ім\'я збережено. Результат з\'явиться в таблиці, щойно сервер його перевірить.';
-  btn.disabled=false;};
+// S.vdOut: the brief scrolled above the header; miniSync shows the bar only on the draft screen
+if(typeof IntersectionObserver!=='undefined')new IntersectionObserver(([x])=>{S.vdOut=!x.isIntersecting&&x.boundingClientRect.top<0;miniSync();},{rootMargin:'-60px 0px 0px 0px'}).observe(document.getElementById('vdBrief'));
+
+// ---- why it did not count, squad breakdown
+const VD_N=['','одного','двох','трьох','чотирьох','пʼятьох'];
+function vdWhy(ch,e){const parts=vdParts(ch),miss=[];
+  e.parts.forEach((p,j)=>{const k=p.need-p.have;if(k<=0)return;const w=parts[j].who||ch.required.who||{one:'гравця',many:'гравців'};miss.push(`ще ${VD_N[k]||k} ${k===1?w.one:w.many}`);});
+  const ids=e.parts.flatMap(p=>p.ids),nm=ids.map(id=>{const x=e.xi.find(q=>q.id===id);return x?x.p.name:'';}).filter(Boolean);
+  const tail=parts.length>1?'':nm.length?` — у складі тільки ${nm.join(', ')}`:' — у складі немає жодного';
+  return `Бракує ${miss.join(' і ')}${tail}.`;}
+function vdSquad(ch,e){const P=id=>e.xi.find(x=>x.id===id).p,bl=ch.bonus?esc(ch.bonus.label):'';
+  const req=e.rows.filter(r=>r.req),bon=e.rows.filter(r=>!r.req&&r.bonus),no=e.rows.filter(r=>!r.req&&!r.bonus);
+  const card=p=>`${esc(clubShort(p.club))} ${SEA_SHORT(p.y)}`;
+  const row=(r,chips,sub)=>{const p=P(r.id);return `<li class="pr"><span class="pos ${GROUP_OF[p.slot]}">${POSNAME[p.slot]}</span><div><b>${esc(p.name)}</b>${chips?`<span class="cs">${chips}</span>`:''}<small>${sub}</small></div></li>`;};
+  return `<div class="sqd"><div class="lab2">Склад · 11 гравців<span>рахується ${e.score}</span></div>`
+    +`<section class="grp"><h3>Для умови<span class="cn2 ${e.gate?'ok':'lo'}">${e.have} з ${e.need}</span></h3><p>${esc(ch.required.label)}</p>`
+    +(req.length?`<ul>${req.map(r=>row(r,`<span class="chip r">${ic('check-circle')}Умова</span>${r.bonus&&bl?`<span class="chip b">${bl}</span>`:''}`,card(P(r.id)))).join('')}</ul>`:'<p class="none">У складі — нікого.</p>')+`</section>`
+    +(bon.length?`<details class="grp bg"><summary><span class="bh"><span class="h3">Бонус<span>${bon.length}</span></span><span class="bs">${bl?bl+': ':''}${bon.map(r=>esc(cardName(P(r.id).name))).join(', ')}</span></span><span class="more">${ic('chevron-right')}</span></summary><ul>${bon.map(r=>row(r,'',card(P(r.id)))).join('')}</ul></details>`:'')
+    +(no.length?`<section class="grp nn"><h3>Не підійшли<span>${no.length}</span></h3><p>${esc(vdNo(ch).replace(/^./,c=>c.toUpperCase()))}</p><ul>${no.map(r=>row(r,'',card(P(r.id)))).join('')}</ul></section>`:'')+`</div>`;}
+
+// ---- not counted (s11): one sentence why, what next, breakdown
+function vdFailShow(f){const v=S.vd;if(!v)return;const ch=v.ch,e=f.e,[em,tt]=vdSplit(ch.title),left=VD_ATTEMPTS-f.used,m=vdMedal(e.score);haptic('warning');
+  document.getElementById('vdFail').innerHTML=`<div class="rs"><p class="at">${em?`<span class="em" aria-hidden="true">${em}</span>`:''}${esc(tt)} · спроба ${f.attempt} з ${VD_ATTEMPTS}</p><h1 class="no">Не зараховано</h1>`
+    +`<p class="why2">${esc(vdWhy(ch,e))}</p><div class="gate bad"><span class="tag-req">Обовʼязково</span><div class="gb2"><span class="n no">${e.have}/${e.need}</span><b>${esc(ch.required.label)}</b></div></div>`
+    +`<section class="next2"><b>${left>0?'Що далі':'Це була остання спроба'}</b><p>${left>0?`Ця спроба витрачена, але в тебе ще ${left} ${plUk(left,'спроба','спроби','спроб')} з ${VD_ATTEMPTS}. Умова та сама: ${esc(ch.required.label)}.`:`Спроб більше немає. ${v.late?'Інші дні — в архіві.':'Новий виклик — завтра.'}`}</p>`
+    +(m?`<p class="would">Без умови було б ${e.score} з 11 — це ${m.e}, але така спроба не рахується.</p>`:'')+`</section>${vdSquad(ch,e)}</div>`
+    +`<div class="rs-ft">${left>0?`<button class="primary big0" id="vdAgain" type="button">${ic('restart')}Спроба ${f.attempt+1} з ${VD_ATTEMPTS}</button><p class="fine">${MODES.normal.rerolls} перекрутки на спробу · сезон не грається</p>`:`<button class="primary big0" id="vdToArch" type="button">До викликів</button>`}</div>`;
+  const a=document.getElementById('vdAgain'),b=document.getElementById('vdToArch');if(a)a.onclick=()=>vdOpen(v.day);if(b)b.onclick=()=>openVdArchive();
+  go(11);}
+
+// ---- counted attempt: block above the season result
+function vdResult(r){const el=document.getElementById('vdRes'),f=r.vd,v=S.vd;if(!f||!v){el.hidden=true;el.innerHTML='';return;}
+  const ch=v.ch,[em,tt]=vdSplit(ch.title),m=vdMedal(f.score),st=vdSt(v.day),left=VD_ATTEMPTS-f.used,nx=[...VD_MEDALS].reverse().find(x=>x[0]>f.score);
+  el.hidden=false;
+  el.innerHTML=`<p class="at">${em?`<span class="em" aria-hidden="true">${em}</span>`:''}${esc(tt)} · спроба ${f.attempt} з ${VD_ATTEMPTS}</p>`
+    +`<h2 class="vh">${m?`<span class="em" aria-hidden="true">${m.e}</span>${m.n}`:'Зараховано'}</h2><p class="sub2">Виклик зараховано · ${f.score} з 11 гравців${st.best!=null&&st.best>f.score?` · краща спроба ${st.best}/11`:''}${v.late?' · з архіву, без серії':''}</p>`
+    +`<div class="lad">${[...VD_MEDALS].reverse().map(([t,k,n,e])=>`<div class="med${f.score>=t?' got':''}${m&&m.k===k?' cur':''}"><span aria-hidden="true">${e}</span>${t}<small>${n}</small></div>`).join('')}</div>`
+    +(nx?`<p class="vnext">До «${nx[2]}» ще ${nx[0]-f.score} ${plUk(nx[0]-f.score,'гравець','гравці','гравців')}</p>`:'')
+    +`<details class="vsq"><summary>Хто рахується</summary>${vdSquad(ch,f.e)}</details>`
+    +(left>0&&(st.best??0)<11?`<button class="ghost" id="vdMore" type="button">${ic('restart')}Покращити · спроба ${f.attempt+1} з ${VD_ATTEMPTS}</button>`:'');
+  const b=document.getElementById('vdMore');if(b)b.onclick=()=>vdOpen(v.day);}
+
+// ---- archive (s10): today on top, past days by month; a missed day can be played later (no streak)
+async function vdMine(){if(!ONLINE||vdMine.p)return vdMine.p;return vdMine.p=(async()=>{try{const j=await vdApi({vd:'mine',from:VD_LIST.length?VD_LIST[0].day:null});
+    for(const d of j.days||[])VD_SRV[d.day]={used:d.attempts,best:d.best};}catch(e){vdMine.p=null;}})();}
+function vdTile(ch,today){const st=vdState(ch.day),[em,tt]=vdSplit(ch.title),d=new Date(ch.day+'T12:00:00Z');let cls,res;
+  if(st.best!=null){cls=st.best===11?'perfect':'got';res=`${st.best===11?ic('star'):''}${st.best}/11<em>${st.best===11?'Ідеально':st.used>=VD_ATTEMPTS?`${st.used}/${VD_ATTEMPTS}`:'Побий'}</em>`;}
+  else if(st.used){cls='fail';res=`Не зараховано<em>${st.used}/${VD_ATTEMPTS}</em>`;}
+  else{cls='todo';res=today?'Зібрати склад':'Пропущено';}
+  const late=st.tries.length&&st.tries.every(x=>x.l);
+  return `<button class="tc ${cls}${today?' tdy':''}" type="button" data-day="${ch.day}"${st.used>=VD_ATTEMPTS?' aria-disabled="true"':''}><span class="tc-h"><span>${VD_WD[d.getUTCDay()]} ${d.getUTCDate()}</span>${late?'<span>з архіву</span>':''}</span>`
+    +`<span class="tc-i" aria-hidden="true">${em}</span><span class="tc-t">${esc(tt)}</span><span class="tc-r">${res}</span></button>`;}
+function renderVdArchive(msg){const el=document.getElementById('vdArch'),today=vdCh(VD_DAY);
+  const past=VD_LIST.filter(c=>c.day<VD_DAY).sort((a,b)=>a.day<b.day?1:-1),by=[];
+  for(const c of past){const k=c.day.slice(0,7);let g=by.find(x=>x.k===k);if(!g)by.push(g={k,list:[]});g.list.push(c);}
+  el.innerHTML=`<h2 class="lg-h" style="margin-top:var(--sp-4)">Виклик дня</h2><p class="lead1">Пропущені дні можна зіграти пізніше — серію тримає лише виклик у свій день.</p>${msg?`<p class="vmsg" role="status">${esc(msg)}</p>`:''}`
+    +`<div class="vsec">Сьогодні</div>${today?`<div class="vgrid one">${vdTile(today,true)}</div>`:'<p class="muted">Новий виклик скоро.</p>'}`
+    +(by.length?by.map(g=>`<div class="vsec">${VD_MONTH[+g.k.slice(5,7)-1]} ${g.k.slice(0,4)}</div><div class="vgrid">${g.list.map(c=>vdTile(c,false)).join('')}</div>`).join(''):'<p class="muted vempty">Минулі виклики зʼявляться тут.</p>');
+  el.querySelectorAll('.tc[data-day]').forEach(b=>b.onclick=()=>{if(b.getAttribute('aria-disabled')==='true'){haptic('error');return;}vdOpen(b.dataset.day,`.tc[data-day="${b.dataset.day}"]`);});}
+function openVdArchive(msg){renderVdArchive(msg);go(10);vdMine().then(()=>{if(CUR_SEC===10)renderVdArchive(msg);renderVdCard();});}
+document.getElementById('vdArchGo').onclick=()=>openVdArchive();
+renderVdCard();
+
 // ---------- share
 function gridOf(r){const m={W:"🟩",D:"🟨",L:"🟥"};let s="";r.log.forEach((x,i)=>{s+=m[x.res];if(i%10===9&&i<r.log.length-1)s+="\n";});return s;}
 // e.g. 'One club: Karpaty (Lviv) / ', 'Derby / '; empty for classic
@@ -3589,11 +3857,12 @@ function fmtLabel(){const e=eraOf(),era=e==='all'?'':ERAS[e].name+' · ';   // e
 const shareUrl=r=>location.origin.startsWith('http')?location.origin+(r&&r.rowId?'/r/'+r.rowId:'/'):SITE;
 function shareTextOf(r,noLink,noGrid){   // noGrid: caption for the card; squares are already drawn on it
   const [tier,gold]=tierOf(r);const fmt=fmtLabel();
-  const head=S.daily?`⚽ 30-0 УПЛ · Драфт дня`:`⚽ 30-0 УПЛ · ${fmt}${S.formation} · ${modeName()}`;
+  const vm=r.vd&&S.vd&&vdMedal(r.vd.score);
+  const head=r.vd&&S.vd?`⚽ 30-0 УПЛ · Виклик дня\n${S.vd.ch.title}: ${r.vd.score}/11${vm?' '+vm.e:''}`:`⚽ 30-0 УПЛ · ${fmt}${S.formation} · ${modeName()}`;
   const wd=(n,a,b,c)=>n+' '+plUk(n,a,b,c);
   const rec=`${wd(r.W,'перемога','перемоги','перемог')}, ${wd(r.D,'нічия','нічиї','нічиїх')}, ${wd(r.L,'поразка','поразки','поразок')}`;
   const top=r.scorers[0]?`\nНайкращий бомбардир: ${r.scorers[0].name} — ${r.scorers[0].g}`:'';
-  const stk=S.daily&&r.streak&&r.streak.count>1?`\n🔥 Серія: ${r.streak.count} дн. поспіль${r.streak.used?' (❄️ заморозка)':''}`:'';
+  const stk=r.streak&&r.streak.count>1?`\n🔥 Серія: ${r.streak.count} дн. поспіль${r.streak.used?' (❄️ заморозка)':''}`:'';
   const tro=r.tro&&r.tro.fresh.length?`\n🏆 ${r.tro.fresh.length>1?'Нові трофеї':'Новий трофей'}: ${r.tro.fresh.map(id=>trDef(id).n).join(', ')}`:'';
   const link=ONLINE&&!noLink?`\n\nЗбери свою 11-ку: ${TG?tgLink():shareUrl(r)}`:'';
   return `${head}${gold?'\n'+tier:''}\n\n${rec}\n${r.pts} ${ptsWord(r.pts)} · ${r.place} місце · голи ${r.gf}:${r.ga}${noGrid?'':'\n\n'+gridOf(r)}${noGrid?'\n':''}${top}${stk}${tro}${link}`;
@@ -3636,8 +3905,8 @@ function drawCard(r){   // card in site style: UPL navy background, UPL.TV gradi
   const bg=g.createRadialGradient(W*.15,0,0,W*.15,0,H*1.1);bg.addColorStop(0,'#1d2d63');bg.addColorStop(.55,'#0b1430');bg.addColorStop(1,'#0a1129');g.fillStyle=bg;g.fillRect(0,0,W,H);
   g.fillStyle=grad(0,W);g.fillRect(0,0,W,12);g.fillRect(0,H-12,W,12);
   g.font=`900 44px ${DISP}`;g.fillStyle=INK;g.fillText('30-0',80,128);const lw=g.measureText('30-0 ').width,uw=g.measureText('УПЛ').width;g.fillStyle=grad(80+lw,80+lw+uw);g.fillText('УПЛ',80+lw,128);
-  if(S.daily){const head=`ДРАФТ ДНЯ · ${DAY.slice(8,10)}.${DAY.slice(5,7)}.${DAY.slice(0,4)}`;g.fillStyle=INK2;g.font=`600 26px ${MONO}`;g.fillText(head,80,182);}   // no formation or mode
-  const [tier,gold]=tierOf(r);let y=S.daily?230:180;   // tier label (e.g. Champions, 30-0-0): only for special seasons
+  const vdc=r.vd&&S.vd;if(vdc){const d=S.vd.day,head=`ВИКЛИК ДНЯ · ${r.vd.score}/11 · ${d.slice(8,10)}.${d.slice(5,7)}.${d.slice(0,4)}`;g.fillStyle=INK2;g.font=`600 26px ${MONO}`;g.fillText(head,80,182);}   // no formation or mode
+  const [tier,gold]=tierOf(r);let y=vdc?230:180;   // tier label (e.g. Champions, 30-0-0): only for special seasons
   if(gold){const fs=fit(tier,f=>`800 ${f}px ${DISP}`,W-160,64,34);const tw=g.measureText(tier).width;g.fillStyle=grad(80,80+tw);g.fillText(tier,80,y+fs);y+=fs+40;}
   // main tile: W-D-L / points / place (as on the site), goals and xG below
   const hh=300;rr(80,y,W-160,hh,32);g.fillStyle='rgba(255,255,255,.06)';g.fill();g.strokeStyle='rgba(224,40,122,.35)';g.lineWidth=2;g.stroke();
@@ -3670,10 +3939,10 @@ function drawCard(r){   // card in site style: UPL navy background, UPL.TV gradi
 }
 document.getElementById('chalOpen').onclick=()=>{const b=document.getElementById('chalBox'),t=document.getElementById('chalOpen');b.hidden=!b.hidden;t.classList.toggle('on',!b.hidden);if(!b.hidden){b.scrollIntoView({behavior:'smooth',block:'center'});const n=document.getElementById('chalName');if(n&&!n.hidden&&!n.value)n.focus();}};
 // ---------- What's new: short player-friendly notes on the latest version (technical log: CHANGELOG.md)
-const WHATSNEW={v:'0.79.2',news:'0.79.2',date:'09.10.2026',items:[   // news: edition of the items; a release without new items keeps it, so the news dot does not light up again
-  ['crown','Більше чемпіонств','Сильний склад тепер частіше бере титул: лідери «Ліги легенд» більше не набирають по 74 очки щосезону.'],
-  ['lightning-bolt','Везіння суперників','Шахтар чи Динамо можуть провалити сезон, а середняк — вистрілити. У підсумковій таблиці видно, хто набрав набагато більше чи менше за очікуване.'],
-  ['account-group','Ліги чатів — на звичайній грі','У лігу чату йде найкращий сезон із перших трьох спроб дня у «Грати».']]};
+const WHATSNEW={v:'0.80',news:'0.80',date:'09.10.2026',items:[   // news: edition of the items; a release without new items keeps it, so the news dot does not light up again
+  ['calendar-star','Виклик дня','Щодня нова умова на склад, привʼязана до події. 5 спроб, рахується краща. Очки — гравці під умову або бонус: 4 — бронза, 6 — срібло, 9 — золото, 11 — «Ідеально».'],
+  ['restart','Замість драфту дня','Драфту дня більше немає: його місце на головній зайняв виклик. Серія й трофеї за дні тепер рахуються за виконаний виклик.'],
+  ['bookshelf','Архів викликів','Пропущений день можна зіграти пізніше з архіву, але серію тримає лише виклик у свій день.']]};
 function openNews(){screenTag('news');const box=document.getElementById('viewBox');document.getElementById('viewTitle').textContent=`Що нового · версія ${WHATSNEW.v}`;
   document.getElementById('viewBody').innerHTML=`<div class="news">${WHATSNEW.items.map(([e,h,d])=>`<div class="ni">${ic(e,'lg')}<div><b>${esc(h)}</b><p>${esc(d)}</p></div></div>`).join('')}</div>`;
   box.hidden=false;lsSet('upl30_news_seen',WHATSNEW.news||WHATSNEW.v);document.getElementById('newsDot').hidden=true;}
@@ -3923,7 +4192,7 @@ function f5Render(){
 
 document.getElementById('f5Open').onclick=f5Start;
 // audit P2-5: only what tests use; drawCard for card checks, simulate/rerun for fast determinism
-window.__dbg={go,place,em,loadLb,haptic,seasonHaptic,renderNewTro,TROPHIES,CLUB_REC,ocMine,ocAfter,renderOc,renderOcRes,openOc,acctMerge,get BEST(){return BEST;},get VT_N(){return VT_N;},ic,seasonLabel,boardFetch,boardStale,BOARD_FROM,setFmt,lgRender,lgStale,openTables,boardHtml,oppYear,champModal,drawCard,chalNewGame,DAILY,LEAGUE_CULT,LEAGUE_LEGENDS,openTrophies,renderNewTro,bestPerPlayer,renderWheel,posOpts,eraOf,ptsWord,viewHtml,renderPitch,pitchHtml,f5Pitch,F5_FORMS,cardName,clubShort,simulate,shareTextOf,trCtxNow,trAward,trStore,FORMATIONS,GROUP_OF,DATA,TROPHIES,trEval,PERSON,effRating,get S(){return S;},rerun(seed,year,xi){rnd=mulberry32(seed);const r=simulate(xi||S.slots.map(s=>s.player),MODES[S.mode],year);rnd=Math.random;return {W:r.W,D:r.D,L:r.L,gf:r.gf,ga:r.ga,place:r.place};}};
+window.__dbg={go,place,em,haptic,seasonHaptic,renderNewTro,TROPHIES,CLUB_REC,ocMine,ocAfter,renderOc,renderOcRes,openOc,acctMerge,get BEST(){return BEST;},get VT_N(){return VT_N;},ic,seasonLabel,boardFetch,boardStale,BOARD_FROM,setFmt,lgRender,lgStale,openTables,boardHtml,oppYear,champModal,drawCard,chalNewGame,LEAGUE_CULT,LEAGUE_LEGENDS,openTrophies,renderNewTro,renderWheel,posOpts,eraOf,ptsWord,viewHtml,renderPitch,pitchHtml,f5Pitch,F5_FORMS,cardName,clubShort,simulate,shareTextOf,trCtxNow,trAward,trStore,FORMATIONS,GROUP_OF,DATA,TROPHIES,trEval,PERSON,effRating,get S(){return S;},vdOpen,vdEval,vdIndex,vdIdx,VD_LIST,renderVdCard,openVdArchive,vdSt,rerun(seed,year,xi){rnd=mulberry32(seed);const r=simulate(xi||S.slots.map(s=>s.player),MODES[S.mode],year);rnd=Math.random;return {W:r.W,D:r.D,L:r.L,gf:r.gf,ga:r.ga,place:r.place};}};
 // Telegram script was requested by the first inline script: init now if it already loaded, otherwise on its load
 if(ONLINE){window.__tgCb=tgInit;if(window.__tgOk)tgInit();}
 })();

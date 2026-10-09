@@ -583,6 +583,21 @@ done
 chk "v079: season_seeds.league типово false, індекс спроб є" postgres "
   assert (select column_default from information_schema.columns where table_name = 'season_seeds' and column_name = 'league') = 'false', 'league default';
   assert exists (select 1 from pg_indexes where indexname = 'season_seeds_league_day_idx'), 'індекс';"
+# ===== v080: daily challenge attempts (vd_results, season_seeds.vd_day / vd_attempt, vd_mine) =====
+for pass in 1 2; do
+  if $P -d t1 -f "$ROOT/sql/v080_vyklyk_dnia.sql" >/dev/null 2>"$D/err"; then ok "запуск $pass: v080_vyklyk_dnia.sql"; else bad "запуск $pass: v080_vyklyk_dnia.sql — $(grep -v NOTICE "$D/err" | head -3)"; fi
+done
+VDEV=dddddddd-0000-4000-a000-000000000080
+chk "v080: vd_results закрита для anon/authenticated, vd_mine — лише сервер" postgres "
+  assert not has_table_privilege('anon', 'vd_results', 'select') and not has_table_privilege('authenticated', 'vd_results', 'insert'), 'права таблиці';
+  assert not has_function_privilege('anon', 'vd_mine(uuid, date)', 'execute') and not has_function_privilege('authenticated', 'vd_mine(uuid, date)', 'execute'), 'права vd_mine';"
+chk "v080: спроби 1..5, одна на номер; спроба seed — одна на пристрій, день і номер; vd_mine — краща із зарахованих" postgres "
+  insert into vd_results(day, device_id, attempt, gate_ok, score) values ('2026-10-12', '$VDEV', 1, false, 9), ('2026-10-12', '$VDEV', 2, true, 6), ('2026-10-12', '$VDEV', 3, true, 4);
+  begin insert into vd_results(day, device_id, attempt, gate_ok, score) values ('2026-10-12', '$VDEV', 6, true, 1); assert false, 'спроба 6'; exception when check_violation then null; end;
+  begin insert into vd_results(day, device_id, attempt, gate_ok, score) values ('2026-10-12', '$VDEV', 2, true, 1); assert false, 'двічі спроба 2'; exception when unique_violation then null; end;
+  insert into season_seeds(device_id, xi_hash, seed, day, vd_day, vd_attempt) values ('$VDEV', '', 1, '2026-10-12', '2026-10-12', 1);
+  begin insert into season_seeds(device_id, xi_hash, seed, day, vd_day, vd_attempt) values ('$VDEV', '', 2, '2026-10-12', '2026-10-12', 1); assert false, 'двічі seed спроби'; exception when unique_violation then null; end;
+  assert (select best from vd_mine('$VDEV', null) where c_day = '2026-10-12') = 6 and (select attempts from vd_mine('$VDEV', null) where c_day = '2026-10-12') = 3, 'vd_mine';"
 # upgrade from the earlier test-DB version: rows with old statuses must not break the re-run
 $P -d t1 -q -c "alter table channel_posts drop constraint channel_posts_status_chk; insert into channel_posts(text, publish_at, status) values ('old-a', now(), 'approved'), ('old-s', now(), 'skipped');" >/dev/null 2>&1
 if $P -d t1 -f "$ROOT/sql/v06997_channel_posts.sql" >/dev/null 2>"$D/err"; then ok "v06997 поверх старої версії (approved/skipped)"; else bad "v06997 поверх старої версії — $(grep -v NOTICE "$D/err" | head -3)"; fi

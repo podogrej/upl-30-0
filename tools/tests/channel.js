@@ -88,13 +88,14 @@ const kb=x=>(x.b.reply_markup&&x.b.reply_markup.inline_keyboard||[]).flat().map(
   P().push(row({text:'y'.repeat(5000),publish_at:'2030-10-12T08:00:00.000Z'}));TG.length=0;await C.runChannel(new Date('2030-10-12T08:01:00Z'));
   ok(sent(777,/не вийде в такому вигляді: задовгий/).length===1&&kb(sent(777,/задовгий/)[0]).includes(`cp:p:${P()[5].id}:rej`),'задовга чернетка — пояснення і кнопка «Відхилити»');
   // autoposts
+  require('../../lib/challenges.json').push({day:'2030-10-15',title:'🎂 Тестовий виклик',story:'Історія дня.',task:'Додай двох гравців.'});   // autopost only for a day with a challenge
   const before=P().length;await C.runChannel(new Date('2030-10-14T12:00:00Z'));   // Monday, 15:00 Kyiv time - too early
-  ok(!P().slice(before).some(p=>/Драфт дня/.test(p.text)),'анонс драфту дня не готується вдень (лише ввечері напередодні)');
+  ok(!P().slice(before).some(p=>/Виклик дня/.test(p.text)),'анонс виклику дня не готується вдень (лише ввечері напередодні)');
   TG.length=0;await C.runChannel(new Date('2030-10-14T16:00:00Z'));   // 19:00 Kyiv time - prepare tomorrow's post
-  const dl=P().filter(p=>p.source==='auto'&&/Драфт дня №\d+ · 15\.10/.test(p.text));
-  ok(dl.length===1&&/start=ch_daily/.test(dl[0].text)&&dl[0].status==='draft'&&dl[0].publish_at==='2030-10-15T06:00:00.000Z'&&!TG.some(x=>/Драфт дня/.test(x.b.text||'')),'автопост: анонс драфту дня на 15.10 — чернетка, прийде на схвалення о 9:00 за Києвом');
-  await C.runChannel(new Date('2030-10-14T17:00:00Z'));ok(P().filter(p=>p.source==='auto'&&/Драфт дня №\d+ · 15\.10/.test(p.text)).length===1,'анонс — лише раз на день');
-  TG.length=0;await C.runChannel(new Date('2030-10-15T06:01:00Z'));ok(dl[0].status==='pending_approval'&&TG.some(x=>/Драфт дня/.test(x.b.text||'')&&kb(x).includes(`cp:p:${dl[0].id}:pub`)),'о 9:00 анонс прийшов власнику на схвалення');
+  const dl=P().filter(p=>p.source==='auto'&&/Виклик дня · 15\.10/.test(p.text));
+  ok(dl.length===1&&/start=ch_daily/.test(dl[0].text)&&dl[0].status==='draft'&&dl[0].publish_at==='2030-10-15T06:00:00.000Z'&&/Тестовий виклик/.test(dl[0].text)&&!TG.some(x=>/Виклик дня/.test(x.b.text||'')),'автопост: анонс виклику дня на 15.10 — чернетка, прийде на схвалення о 9:00 за Києвом');
+  await C.runChannel(new Date('2030-10-14T17:00:00Z'));ok(P().filter(p=>p.source==='auto'&&/Виклик дня · 15\.10/.test(p.text)).length===1,'анонс — лише раз на день');
+  TG.length=0;await C.runChannel(new Date('2030-10-15T06:01:00Z'));ok(dl[0].status==='pending_approval'&&TG.some(x=>/Виклик дня/.test(x.b.text||'')&&kb(x).includes(`cp:p:${dl[0].id}:pub`)),'о 9:00 анонс прийшов власнику на схвалення');
   tbl('https://prod.db','seasons').push({id:1,created_at:'2030-10-09T10:00:00.000Z',verified:true,practice:false,pts:85,w:27,d:4,l:-1,gf:70,ga:20,nickname:'andre',xi:[{n:'Андрій Шевченко'},{n:'Сергій Ребров'}]},
     {id:2,created_at:'2030-10-10T10:00:00.000Z',verified:true,practice:false,pts:60,w:18,d:6,l:6,gf:50,ga:30,nickname:'vitya',xi:[{n:'Андрій Шевченко'}]});
   DBS['https://prod.db'].app_marks=DBS['https://prod.db'].app_marks.filter(m=>!/^ch_week/.test(m.key));await C.runChannel(new Date('2030-10-14T04:30:00Z'));ok(!P().some(p=>/Тиждень у 30-0/.test(p.text)),'підсумки тижня не готуються вночі');await C.runChannel(new Date('2030-10-14T05:30:00Z'));

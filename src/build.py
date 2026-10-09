@@ -2,7 +2,7 @@
 # -> ../index.html (self-contained site for Vercel) and ../dist/30-0-upl.html (offline prototype)
 import os
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
-tpl=open('template.html').read().replace('/*__ICONS__*/',open('icons.js').read()).replace('/*__TROPHIES__*/',open('trophies.js').read()).replace('/*__PLAYER__*/',open('player.js').read()).replace('/*__ONECLUB__*/',open('oneclub.js').read()).replace('/*__LEAGUES__*/',open('leagues.js').read()).replace('/*__ACCOUNT__*/',open('account.js').read()).replace('/*__CHALLENGE__*/',open('challenge.js').read()).replace('/*__FIVE__*/',open('pen_skill.js').read()+open('five_core.js').read().split('\nif(typeof module')[0]+'\n'+open('five.js').read()); pool=open('pool.json').read().replace('</','<\\/')
+tpl=open('template.html').read().replace('/*__ICONS__*/',open('icons.js').read()).replace('/*__TROPHIES__*/',open('trophies.js').read()).replace('/*__PLAYER__*/',open('player.js').read()).replace('/*__ONECLUB__*/',open('oneclub.js').read()).replace('/*__LEAGUES__*/',open('leagues.js').read()).replace('/*__ACCOUNT__*/',open('account.js').read()).replace('/*__CHALLENGE__*/',open('challenge.js').read()).replace('/*__VYKLYK__*/',open('vd_core.js').read().split('\nif(typeof module')[0]+'\n'+open('vyklyk.js').read()).replace('/*__FIVE__*/',open('pen_skill.js').read()+open('five_core.js').read().split('\nif(typeof module')[0]+'\n'+open('five.js').read()); pool=open('pool.json').read().replace('</','<\\/')
 # club colors (data/club_colors.csv, code = c in pool.json) -> CLUB_COLORS {code:[c1,c2,c3]}; clubs without c1 are skipped (neutral chip)
 import csv,json
 _cc={r['code']:[r['c1'],r['c2'],r['c3']] for r in csv.DictReader(open('../data/club_colors.csv',encoding='utf-8')) if r['c1']}
@@ -21,6 +21,9 @@ for (y,c),r in sorted(_rows.items(),key=lambda kv:int(kv[0][0])):
     if not b:_rec[c]=[*v,*v];continue
     if v[0]>b[0]:b[0:3]=v
     if v[0]<b[3]:b[3:6]=v
+# daily challenges (lib/challenges.json, also read by the server) -> VD_LIST
+assert '/*__VD_LIST__*/[]' in tpl
+tpl=tpl.replace('/*__VD_LIST__*/[]',json.dumps(json.load(open('../lib/challenges.json',encoding='utf-8')),ensure_ascii=False,separators=(',',':')).replace('</','<\\/'))
 assert '/*__CLUB_REC__*/{}' in tpl
 tpl=tpl.replace('/*__CLUB_REC__*/{}',json.dumps(_rec,separators=(',',':')))
 import hashlib; datav='d'+hashlib.sha1(open('pool.json','rb').read()).hexdigest()[:8]; tpl=tpl.replace('__DATAV__',datav)
