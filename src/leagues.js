@@ -37,7 +37,7 @@ async function flLoad(){const st=FL;try{st.data=await flRpc('fl_get',{p_id:st.id
 const fl5Due=d=>d&&d.fmt==='5'&&!d.result&&d.deadline&&new Date(d.deadline)<=new Date(d.now||Date.now());
 async function fl5Play(){const st=FL;try{const r=await _fetch('/api/fl5',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:st.id,device_id:deviceId()})});
   if(r.ok){const d=await r.json();if(FL===st&&d&&d.id){st.data=d;flRender();}}}catch(e){}}
-const flMe=d=>PLAYER&&PLAYER.public_id&&d&&d.board.some(r=>r.u===PLAYER.public_id);
+const flMe=d=>PLAYER&&PLAYER.public_id&&d&&(d.board||[]).some(r=>r.u===PLAYER.public_id&&!r.left);   // left members stay in the table but can join again
 // league rules rendered as chips
 const flRules=r=>`<div class="fl-rules">${r.split(' · ').map(x=>`<span class="chip">${esc(x)}</span>`).join('')}</div>`;
 const flBadge=f=>`<i class="fl-badge">${f==='5'?'5×5':'11×11'}</i>`;

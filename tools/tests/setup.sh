@@ -614,10 +614,13 @@ chk "v081: учасник виходить — ліга зникає з його
   j := fl_leave('$L3', '$SEC', '$V81'); assert (j->>'left')::boolean, j::text;
   assert not exists (select 1 from json_array_elements(fl_mine('$L3', '$SEC')) x where x->>'id' = '$V81'), 'у списку після виходу';
   assert (fl_get('$V81')->>'members')::int = 1 and json_array_length(fl_get('$V81')->'board') = 2, 'members 1, таблиця зберегла обох';
+  assert (select count(*) from json_array_elements(fl_get('$V81')->'board') x where (x->>'left')::boolean) = 1, 'у таблиці позначено, хто вийшов';
   j := fl_leave('$L3', '$SEC', '$V81', true); assert exists (select 1 from json_array_elements(fl_mine('$L3', '$SEC')) x where x->>'id' = '$V81'), 'повернення';
   j := fl_leave('$L3', '$SEC', '$V81');
   j := fl_join('$L3', '$SEC', '$V81'); assert exists (select 1 from json_array_elements(fl_mine('$L3', '$SEC')) x where x->>'id' = '$V81'), 'вступ знову';
   begin j := fl_delete('$L3', '$SEC', '$V81'); assert false, 'учасник видалив'; exception when sqlstate '22023' then assert sqlerrm = 'fl_none', sqlerrm; end;" ',"sub":"'$U3'"'
+chk "v081: хто вийшов, не здає п'ятірку і не отримує залік (fl5_submit, fl_record перевіряють left_at)" postgres "
+  perform 1; assert (select bool_and(prosrc ~ 'left_at is null') from pg_proc where proname in ('fl_record', 'fl5_submit')), 'fl_record / fl5_submit';"
 chk "v081: власник не виходить, а видаляє — ліга зникає для всіх і за посиланням; відновлення" authenticated "
   begin j := fl_leave('$MX', '$SEC', '$V81'); assert false, 'власник вийшов'; exception when sqlstate '22023' then assert sqlerrm = 'fl_owner', sqlerrm; end;
   assert (select x->>'mine' from json_array_elements(fl_mine('$MX', '$SEC')) x where x->>'id' = '$V81') = 'true', 'mine';

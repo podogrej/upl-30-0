@@ -266,7 +266,7 @@ function lgBody(c,d){
     +`<div class="seg fl-tabs" id="lgTabs"><button data-t="today"${LG.tab==='today'?' class="on"':''}>Сьогодні</button><button data-t="st"${LG.tab!=='today'?' class="on"':''}>Залік</button></div>`+body
     +(LEAGUE_DENIED&&c.chat===String(lsGet('upl30_league'))&&!t.some(lgMe)?'<p class="lg-note">Ти ще не в цій лізі: відкрий гру кнопкою бота в групі.</p>':'');}
 // leave a chat league (the league belongs to the group): server call, refresh the tab, toast with Undo
-function lgForget(chat){try{for(let i=localStorage.length-1;i>=0;i--){const k=localStorage.key(i);if(k&&k.startsWith('upl30_joined_')){const v=lsGet(k);if(k==='upl30_joined_'+chat||(v&&String(v.chat)===chat))localStorage.removeItem(k);}}}catch(e){}}
+function lgForget(chat){try{for(let i=localStorage.length-1;i>=0;i--){const k=localStorage.key(i);if(k&&k.startsWith('upl30_joined_')){const v=lsGet(k);if(k==='upl30_joined_'+chat||(v&&String(v.chat)===chat))localStorage.removeItem(k);}}if(String(lsGet('upl30_league'))===String(chat))localStorage.removeItem('upl30_league');}catch(e){}}   // the remembered chat would bring the left league back on the next launch
 const lgReset=()=>{LG.list=null;LG.rows=null;LG.data={};lgRender();};
 async function lgLeave(chat,btn){btn.disabled=true;
   try{await playerRpc('tg_league_leave',{p_chat:chat});}catch(e){btn.disabled=false;toast(flManageErr(e));return;}

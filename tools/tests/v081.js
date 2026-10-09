@@ -9,14 +9,14 @@ function mk(){
   const names={[ME]:'andre',vitya234:'vitia',igor2345:'igor',olha2345:'olha'};
   const L={abc222:{owner:ME,mem:[ME],name:'Соло'},abc333:{owner:ME,mem:[ME,'vitya234','igor2345','olha2345'],name:'Четвірка'},abc444:{owner:'vitya234',mem:[ME,'vitya234','igor2345'],name:'Чужа'}};
   const gone=new Set(),left=new Set(),calls=[];let chatOut=false;
-  const get=id=>{const l=L[id];if(!l||gone.has(id))return null;const mem=l.mem.filter(u=>!(u===ME&&left.has(id)));
+  const get=id=>{const l=L[id];if(!l||gone.has(id))return null;const isLeft=u=>u===ME&&left.has(id),mem=l.mem.filter(u=>!isLeft(u));   // as the SQL: a member who left stays in the table with left:true
     return {id,name:l.name,fmt:'11',start_day:'2026-10-05',days:3,tries:3,take:'best',scoring:'place',rerolls:1,ratings:'show',era:'all',today:'2026-10-09',day_n:2,over:false,owner:l.owner,
-      owner_name:names[l.owner],created_at:'2026-10-05T10:00:00Z',members:mem.length,board:mem.map((u,i)=>({u,name:names[u],total:4-i,wins:i?0:1,best:50,played:1})),tour:[]};};
+      owner_name:names[l.owner],created_at:'2026-10-05T10:00:00Z',members:mem.length,board:l.mem.map((u,i)=>({u,name:names[u],total:4-i,wins:i?0:1,best:50,played:1,left:isLeft(u)})),tour:[]};};
   const js={id:'p-me',name:'andre',anon_name:'calm_owl',public_id:ME,name_next:null,contact_email:null,news_optin:false};
   const guard=(id,ok)=>ok?{ok:true}:{status:400,body:'{"message":"fl_none"}'};
   const rpc={player_hello:()=>js,link_account:()=>({...js,merge_offer:null}),trophy_stats:()=>({players:2,t:{}}),
     player_profile:()=>({public_id:ME,name:'andre',anon:false,since:'2026-09-02T10:00:00Z',seasons:0,champions:0,perfect:0,best_classic:0,win_pct:0,best:{},worst:{},trophies:[],streak_best:0,streak_now:0}),
-    fl_mine:()=>Object.keys(L).filter(id=>get(id)&&get(id).board.some(r=>r.u===ME)).map(id=>({id,name:L[id].name,fmt:'11',days:3,tries:3,day_n:2,over:false,members:get(id).members,tries_today:0,place:1,mine:L[id].owner===ME})),
+    fl_mine:()=>Object.keys(L).filter(id=>get(id)&&get(id).board.some(r=>r.u===ME&&!r.left)).map(id=>({id,name:L[id].name,fmt:'11',days:3,tries:3,day_n:2,over:false,members:get(id).members,tries_today:0,place:1,mine:L[id].owner===ME})),
     fl_get:a=>get(a.p_id)||{status:200,body:'null'},
     fl_leave:a=>{calls.push(['fl_leave',a]);if(global.FAIL)return {status:400,body:'{"message":"boom"}'};if(L[a.p_id].owner===ME)return {status:400,body:'{"message":"fl_owner"}'};a.p_undo?left.delete(a.p_id):left.add(a.p_id);return {ok:true};},
     fl_delete:a=>{calls.push(['fl_delete',a]);if(global.FAIL)return {status:400,body:'{"message":"boom"}'};a.p_undo?gone.delete(a.p_id):gone.add(a.p_id);return {ok:true};},
@@ -88,6 +88,10 @@ const toBottom=async pg=>{await pg.evaluate(()=>window.scrollTo(0,document.body.
  global.FAIL=true;await pg.click('#flLeave');await pg.waitForTimeout(500);
  T.check(/Не вдалося\. Спробуй ще раз\./.test(await txt(pg,'#toast'))&&!await pg.$('#toast button')&&/Чужа/.test(await txt(pg,'#fl')),'помилка: тост без дії, лишились на сторінці ліги');
  global.FAIL=false;
+ await pg.click('#flLeave');await pg.waitForTimeout(500);
+ const LV=await openSite({b,db,query:'?l=abc444',wait:1500});await LV.pg.waitForSelector('#fl .fl-origin');
+ T.check(/приєднатися/i.test(await txt(LV.pg,'#fl'))&&!await LV.pg.$('#flLeave'),'вийшов і відкрив посилання: «Приєднатися», а не «Вийти з ліги» (у таблиці лишився з позначкою left)');
+ M.left.delete('abc444');await LV.ctx.close();
  T.check(!A.errs.length,'помилок на сторінці немає '+A.errs.join(' | '));
  // ---- iPad
  await pg.setViewportSize({width:820,height:1180});await openL(pg,'abc444');await toBottom(pg);await shot(pg,'member_ipad');
@@ -114,6 +118,7 @@ const toBottom=async pg=>{await pg.evaluate(()=>window.scrollTo(0,document.body.
  T.check(M.calls.some(c=>c[0]==='tg_league_leave'&&c[1].p_chat==='-100555'&&!c[1].p_undo),'tg_league_leave викликано з p_chat');
  T.check(!/Футбол по середах/.test(await txt(p2,'#tbChats'))&&/жодній лізі/.test(await txt(p2,'#tbChats'))&&/Ти вийшов з ліги/.test(await txt(p2,'#toast')),'чат зник із вкладки, тост «Ти вийшов з ліги»');
  await shot(p2,'chat_left');
+ T.check(await p2.evaluate(()=>!Object.keys(localStorage).some(k=>k.startsWith('upl30_joined_'))),'вихід із чату: upl30_joined_* стерто (у цій сесії гру відкрито з групи, тож upl30_league знову ставиться — так і має бути)');
  await p2.click('#toast button');await p2.waitForTimeout(900);
  T.check(M.calls.some(c=>c[0]==='tg_league_leave'&&c[1].p_undo===true)&&/Футбол по середах/.test(await txt(p2,'#tbChats')),'«Повернути»: чат знову на вкладці');
  T.check(!C.errs.length&&!G.errs.length,'помилок немає '+C.errs.concat(G.errs).join(' | '));
