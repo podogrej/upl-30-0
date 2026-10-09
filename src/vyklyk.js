@@ -15,6 +15,10 @@ const VD_MON=['січня','лютого','березня','квітня','тр�
 const VD_MONTH=['Січень','Лютий','Березень','Квітень','Травень','Червень','Липень','Серпень','Вересень','Жовтень','Листопад','Грудень'];
 const VD_WD=['нд','пн','вт','ср','чт','пт','сб'];
 const vdDate=d=>`${+d.slice(8,10)} ${VD_MON[+d.slice(5,7)-1]}`;
+// any club condition: show the shared note that a club's player is anyone with a UPL match for it
+const vdClubIn=c=>!!c&&(c.type==='club'||[...(c.of||[]),...(c.parts||[])].some(vdClubIn));
+const VD_CLUB_NOTE='Гравець клубу — нинішній чи колишній: будь‑хто, хто зіграв за нього хоча б один матч в УПЛ.';
+const vdClubNote=(ch,cls)=>vdClubIn(ch.required)||vdClubIn(ch.bonus)?`<span class="${cls}">${VD_CLUB_NOTE}</span>`:'';
 const vdNo=ch=>[...new Set([ch.required.no,ch.bonus&&ch.bonus.no].filter(Boolean))].join(' · ')||'Не підходить';
 function vdMedals(best){return `<span class="vmst" role="img" aria-label="Медалі: бронза — 4, срібло — 6, золото — 9, ідеально — 11 з 11">${[...VD_MEDALS].reverse().map(([t,,,e])=>`<span class="${best!=null&&best>=t?'got':''}"><i>${e}</i>${t}</span>`).join('')}</span>`;}
 // time to the next Kyiv midnight, hours and minutes
@@ -45,7 +49,7 @@ function renderVdCard(){const box=document.getElementById('vdBox');if(!box)retur
   const res=st.best!=null?`<span class="evr"><span class="mm" aria-hidden="true">${m?m.e:ic('check-circle')}</span><b>${st.best}/11</b><span>краща спроба</span></span>`
     :st.used?`<span class="evr no"><span>Не зараховано · ${done?'спроби закінчились':`спроба ${st.used} з ${VD_ATTEMPTS}`}</span></span>`:'';
   box.innerHTML=`<button class="evc ${k}" id="vdCard" type="button"><span class="e1"><span class="lb">Виклик дня</span><span class="af">${af}${ic('chevron-right')}</span></span>`
-    +`<span class="e2">${em?`<span class="em" aria-hidden="true">${em}</span>`:''}<span>${esc(tt)}</span></span><span class="e3">${esc(ch.task)}</span>${res}<span class="e4">${vdMedals(st.best)}</span>`
+    +`<span class="e2">${em?`<span class="em" aria-hidden="true">${em}</span>`:''}<span>${esc(tt)}</span></span><span class="e3">${esc(ch.task)}</span>${vdClubNote(ch,'e5')}${res}<span class="e4">${vdMedals(st.best)}</span>`
     +(done?`<span class="evt">${ic('timer-sand')}<span id="vdLeft">Новий виклик через ${vdLeft()}</span></span>`:'')+`</button>`;
   document.getElementById('vdCard').onclick=()=>done?openVdArchive():vdOpen(VD_DAY,'#vdCard');}
 setInterval(()=>{const el=document.getElementById('vdLeft');if(el&&CUR_SEC===1)el.textContent='Новий виклик через '+vdLeft();},30e3);
@@ -95,7 +99,7 @@ function vdBrief(){const el=document.getElementById('vdBrief'),bar=document.getE
   el.innerHTML=`<div class="bl"><p class="bk">Виклик дня · ${vdDate(v.day)}${v.late?' · архів':''}</p><h2 class="bh1">${em?`<span class="em" aria-hidden="true">${em}</span>`:''}<span>${esc(tt)}</span></h2><p class="bs1">${esc(ch.story)}</p></div>`
     +`<div class="br"><div class="rqx"><div class="rq1"><span class="tag-req">${e.gate?ic('check-circle'):''}Обовʼязково</span><span class="cnt" aria-label="Виконано ${e.have} з ${e.need}">${e.have}<i>/${e.need}</i></span></div>`
     +`<b class="rq2">${esc(rq.label)}</b><p class="rq3">${names.length?`Зараховано: <b>${esc(names.join(', '))}</b>`:'Поки нікого'}</p><div class="rqseg" aria-hidden="true" style="--n:${e.need}">${Array.from({length:e.need},(_,i)=>`<i class="${i<e.have?'on':''}"></i>`).join('')}</div></div>`
-    +`<p class="bon1"><span class="lb">Бонус</span>${ch.bonus?`<span class="bv">${esc(ch.bonus.label)}</span><span class="bn">теж рахуються в N/11</span>`:`<span class="bn">рахуються всі, хто підходить під умову</span>`}</p>`
+    +`<p class="bon1"><span class="lb">Бонус</span>${ch.bonus?`<span class="bv">${esc(ch.bonus.label)}</span><span class="bn">теж рахуються в N/11</span>`:`<span class="bn">рахуються всі, хто підходить під умову</span>`}</p>${vdClubNote(ch,'cnote')}`
     +`<div class="meta"><div><small>Спроба</small><b>${v.attempt} з ${VD_ATTEMPTS}</b><span class="pips" aria-hidden="true">${pips}</span></div><div><small>Перекрутки</small><b>${Math.max(0,S.rerolls)} з ${tot}</b></div>`
     +`<div class="mm"><small>Медалі</small>${vdMedals(null)}</div></div></div>`;
   bar.innerHTML=`<div class="tx"><small>Обовʼязково</small><b><span class="cnt sm${e.gate?' ok':''}">${e.have}/${e.need}</span>${esc(rq.short||rq.label)}</b></div><div class="rt"><span>Спроба <b>${v.attempt}/${VD_ATTEMPTS}</b></span><span>Перекрутки <b>${Math.max(0,S.rerolls)}</b></span></div>`;
