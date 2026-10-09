@@ -215,8 +215,10 @@ async function siteChecks(b){
   T.check(/\bdone\b/.test(dn.c)&&/Новий виклик через \d+ г \d+ хв/.test(dn.t)&&/9\/11/.test(dn.t)&&/Переглянути/.test(dn.t),'головна: виконано — таймер до нового виклику');
   await o.pg.screenshot({path:path.join(OUT,'v080_home_done.png')});
   await o.pg.click('#vdCard');await o.pg.waitForTimeout(500);
+  const MN=['Січень','Лютий','Березень','Квітень','Травень','Червень','Липень','Серпень','Вересень','Жовтень','Листопад','Грудень'];
+  const PAST=LIST.filter(c=>c.day<'2026-10-12'),ARCH_MONTHS=[...new Set(PAST.map(c=>c.day.slice(0,7)))].sort().reverse().map(k=>MN[+k.slice(5,7)-1]+' '+k.slice(0,4));
   const ar=await o.pg.evaluate(()=>({tiles:[...document.querySelectorAll('#vdArch .tc')].map(t=>t.dataset.day+':'+t.querySelector('.tc-r').textContent),secs:[...document.querySelectorAll('#vdArch .vsec')].map(x=>x.textContent)}));
-  T.check(await secOf(o.pg)==='s10'&&ar.tiles.length===4&&/^2026-10-12:9\/11/.test(ar.tiles[0])&&ar.tiles.slice(1).every(t=>/Пропущено/.test(t))&&ar.secs.join()==='Сьогодні,Жовтень 2026','архів: сьогодні вгорі, минулі дні за місяцями («Пропущено»)');
+  T.check(await secOf(o.pg)==='s10'&&ar.tiles.length===1+PAST.length&&/^2026-10-12:9\/11/.test(ar.tiles[0])&&ar.tiles.slice(1).every(t=>/Пропущено/.test(t))&&ar.secs.join()===['Сьогодні',...ARCH_MONTHS].join(),'архів: сьогодні вгорі, минулі дні за місяцями («Пропущено»)');
   await o.pg.screenshot({path:path.join(OUT,'v080_archive_phone_dark.png'),fullPage:true});
   await o.pg.click('#vdArch .tc[data-day="2026-10-10"]');await o.pg.waitForTimeout(500);
   const late=await o.pg.evaluate(()=>({late:window.__dbg.S.vd&&window.__dbg.S.vd.late,ev:window.__dbg.S.slots.filter(s=>s.player).map(s=>s.player.name).join(),b:document.getElementById('vdBrief').textContent}));
