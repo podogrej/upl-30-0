@@ -220,7 +220,7 @@ const sk=(pg,sel)=>pg.evaluate(s=>{const n=[...document.querySelectorAll(s+' .sk
  // ---- H. how-to-play button (#howGo) on the home screen opens the FAQ answer
  {const {b:bh,pg}=await openPage({b:bb});await pg.click('#howGo');await pg.waitForTimeout(300);
   T.check(await pg.evaluate(()=>document.getElementById('faqBox').open&&document.getElementById('howQ').open),'«Як грати?» відкриває відповідь у FAQ');await bh.close();}
- // ---- G. no repeated fades and no table height jumps (a few live ticks only; the whole replay is covered by live_height)
+ // ---- G. no repeated fades and no table height jumps (whole replay: the 6-row window moves with the player, so every tour is sampled)
  {const {b:bg,pg}=await openPage({b:bb});
   await pg.evaluate(()=>document.getElementById('homeBtn').click());await pg.click('#freeOpen');await pg.evaluate(()=>window.__dbg.setFmt('classic'));await pg.click('#modes .opt:nth-child(1)');await pg.click('#startBtn');
   await pg.click('#spinBtn');await pg.waitForSelector('#squad .pl:not([disabled])',{timeout:8000});
@@ -232,7 +232,7 @@ const sk=(pg,sel)=>pg.evaluate(s=>{const n=[...document.querySelectorAll(s+' .sk
     else await pg.evaluate(()=>{const D=window.__dbg,id=document.querySelector('#squad .pl:not([disabled])').dataset.id,p=D.S.wheel.pl.find(x=>x[5]===id);D.place(p,D.posOpts(p)[0]);});}
   await pg.waitForSelector('#simBtn:not([hidden])');await pg.click('#simBtn');await pg.waitForSelector('#live:not([hidden])',{timeout:8000});   // the season starts after the server seed request
   const rows=new Set(),hs=new Set();
-  for(let k=0;k<10;k++){const v=await pg.evaluate(()=>{const t=document.getElementById('lvTable');return document.getElementById('live').hidden?null:[t.querySelectorAll('tr').length,Math.round(t.getBoundingClientRect().height)];});
+  for(let k=0;k<70;k++){const v=await pg.evaluate(()=>{const t=document.getElementById('lvTable');return document.getElementById('live').hidden?null:[t.querySelectorAll('tr').length,Math.round(t.getBoundingClientRect().height)];});
     if(!v)break;if(v[0]>1&&v[1]>0){   // +-3 px: web font may finish loading mid-season
      rows.add(v[0]);hs.add(v[1]);}await wait(300);}
   T.check(rows.size===1&&rows.has(7)&&Math.max(...hs)-Math.min(...hs)<=3,`живий сезон: завжди 6 рядків і та сама висота (рядків ${[...rows]}, висота ${[...hs]})`);
