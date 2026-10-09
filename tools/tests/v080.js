@@ -164,9 +164,9 @@ async function siteChecks(b){
   // draft: event player placed, quiet mark only on his circle, brief, no hints in the list
   await o.pg.click('#vdCard');await o.pg.waitForTimeout(600);
   const d=await o.pg.evaluate(()=>{const S=window.__dbg.S;return {n:S.slots.filter(s=>s.player).length,ev:S.slots.filter(s=>s.player&&s.player.ev).map(s=>s.player.name),marks:document.querySelectorAll('#pitch .evg').length,
-    brief:document.getElementById('vdBrief').textContent,label:document.getElementById('modeLabel').textContent,rr:S.rerolls};});
+    brief:document.getElementById('vdBrief').textContent,note:document.querySelectorAll('#vdBrief .rqx .cnote').length,label:document.getElementById('modeLabel').textContent,rr:S.rerolls};});
   T.check(d.n===1&&d.ev.join()==='Ілсіньйо'&&d.marks===1,'гравець події вже на полі, тиха позначка лише на його кружку');
-  T.check(/Обовʼязково/.test(d.brief)&&/0\/2/.test(d.brief)&&/Спроба1з5/.test(d.brief.replace(/\s+/g,''))&&/Бразильці/.test(d.brief)&&d.rr===2,'бриф: умова з лічильником 0/2, бонус, спроба 1 з 5, 2 перекрутки: '+d.brief);
+  T.check(/Обовʼязково/.test(d.brief)&&/0\/2/.test(d.brief)&&/Спроба1з5/.test(d.brief.replace(/\s+/g,''))&&/Бразильці/.test(d.brief)&&d.rr===2&&d.note===1&&!/Поки нікого/.test(d.brief),'бриф: умова з лічильником 0/2, підпис «гравець клубу» в блоці умови, без «Поки нікого», бонус, спроба 1 з 5, 2 перекрутки: '+d.brief);
   await o.pg.screenshot({path:path.join(OUT,'v080_draft_phone_dark.png'),fullPage:true});
   await o.pg.click('#spinBtn');await o.pg.waitForSelector('#squad .pl:not([disabled])',{timeout:8000});
   const list=await o.pg.evaluate(()=>{const sq=document.getElementById('squad');return {txt:sq.textContent,cls:[...new Set([...sq.querySelectorAll('*')].map(e=>e.className).filter(Boolean))]};});
@@ -183,7 +183,8 @@ async function siteChecks(b){
   // not counted: avoid Shakhtar
   o=await page(b);await o.pg.click('#vdCard');await o.pg.waitForTimeout(500);await draft(o.pg,'avoid');
   const f=await o.pg.evaluate(()=>({t:document.getElementById('vdFail').textContent,st:JSON.parse(localStorage.getItem('upl30_vd_2026-10-12')),res:window.__dbg.S.result}));
-  T.check(await secOf(o.pg)==='s11'&&/Не зараховано/.test(f.t)&&/Бракує ще двох гравців Шахтаря/.test(f.t)&&/Що далі/.test(f.t)&&/ще 4 спроби з 5/.test(f.t)&&/Спроба 2 з 5/.test(f.t)&&!f.res,'умову не виконано: «Не зараховано», чому, що далі, спроба 2 з 5, сезон не грався: '+f.t.slice(0,300));
+  T.check(await secOf(o.pg)==='s11'&&/Не зараховано/.test(f.t)&&/Бракує ще двох гравців Шахтаря/.test(f.t)&&!/Що далі/.test(f.t)&&/Спроба 2 з 5/.test(f.t)&&!f.res,'умову не виконано: «Не зараховано», чому, без блоку «Що далі», спроба 2 з 5, сезон не грався: '+f.t.slice(0,300));
+  T.check(await o.pg.evaluate(()=>document.querySelectorAll('#vdFail .gate .cnote').length===1&&/нинішній чи колишній/.test(document.querySelector('#vdFail .gate .cnote').textContent)),'«Не зараховано»: підпис «гравець клубу — нинішній чи колишній» у блоці умови');
   T.check(/Для умови/.test(f.t)&&/Бонус/.test(f.t)&&/Не підійшли/.test(f.t)&&f.st.used===1&&f.st.best===null,'розбір складу: для умови, бонус, не підійшли; спроба записана');
   await o.pg.screenshot({path:path.join(OUT,'v080_fail_phone_dark.png'),fullPage:true});
   // next attempt counts: prefer Shakhtar -> forecast -> season -> result block

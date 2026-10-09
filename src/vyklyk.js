@@ -15,6 +15,10 @@ const VD_MON=['січня','лютого','березня','квітня','тр�
 const VD_MONTH=['Січень','Лютий','Березень','Квітень','Травень','Червень','Липень','Серпень','Вересень','Жовтень','Листопад','Грудень'];
 const VD_WD=['нд','пн','вт','ср','чт','пт','сб'];
 const vdDate=d=>`${+d.slice(8,10)} ${VD_MON[+d.slice(5,7)-1]}`;
+// any club condition: show the shared note that a club's player is anyone with a UPL match for it
+const vdClubIn=c=>!!c&&(['club','clubs_any','club_apps_min'].includes(c.type)||[c.of,c.parts].flat().some(vdClubIn));
+const VD_CLUB_NOTE='Гравець клубу — нинішній чи колишній: будь‑хто, хто зіграв за нього хоча б один матч в УПЛ.';
+const vdClubNote=(ch,cls)=>vdClubIn(ch.required)||vdClubIn(ch.bonus)?`<span class="${cls}">${VD_CLUB_NOTE}</span>`:'';
 const vdNo=ch=>[...new Set([ch.required.no,ch.bonus&&ch.bonus.no].filter(Boolean))].join(' · ')||'Не підходить';
 function vdMedals(best){return `<span class="vmst" role="img" aria-label="Медалі: бронза — 4, срібло — 6, золото — 9, ідеально — 11 з 11">${[...VD_MEDALS].reverse().map(([t,,,e])=>`<span class="${best!=null&&best>=t?'got':''}"><i>${e}</i>${t}</span>`).join('')}</span>`;}
 // time to the next Kyiv midnight, hours and minutes
@@ -94,7 +98,7 @@ function vdBrief(){const el=document.getElementById('vdBrief'),bar=document.getE
   el.hidden=false;el.classList.toggle('ok',e.gate);
   el.innerHTML=`<div class="bl"><p class="bk">Виклик дня · ${vdDate(v.day)}${v.late?' · архів':''}</p><h2 class="bh1">${em?`<span class="em" aria-hidden="true">${em}</span>`:''}<span>${esc(tt)}</span></h2><p class="bs1">${esc(ch.story)}</p></div>`
     +`<div class="br"><div class="rqx"><div class="rq1"><span class="tag-req">${e.gate?ic('check-circle'):''}Обовʼязково</span><span class="cnt" aria-label="Виконано ${e.have} з ${e.need}">${e.have}<i>/${e.need}</i></span></div>`
-    +`<b class="rq2">${esc(rq.label)}</b><p class="rq3">${names.length?`Зараховано: <b>${esc(names.join(', '))}</b>`:'Поки нікого'}</p><div class="rqseg" aria-hidden="true" style="--n:${e.need}">${Array.from({length:e.need},(_,i)=>`<i class="${i<e.have?'on':''}"></i>`).join('')}</div></div>`
+    +`<b class="rq2">${esc(rq.label)}</b>${vdClubNote(ch,'cnote')}${names.length?`<p class="rq3">Зараховано: <b>${esc(names.join(', '))}</b></p>`:''}<div class="rqseg" aria-hidden="true" style="--n:${e.need}">${Array.from({length:e.need},(_,i)=>`<i class="${i<e.have?'on':''}"></i>`).join('')}</div></div>`
     +`<p class="bon1"><span class="lb">Бонус</span>${ch.bonus?`<span class="bv">${esc(ch.bonus.label)}</span><span class="bn">теж рахуються в N/11</span>`:`<span class="bn">рахуються всі, хто підходить під умову</span>`}</p>`
     +`<div class="meta"><div><small>Спроба</small><b>${v.attempt} з ${VD_ATTEMPTS}</b><span class="pips" aria-hidden="true">${pips}</span></div><div><small>Перекрутки</small><b>${Math.max(0,S.rerolls)} з ${tot}</b></div>`
     +`<div class="mm"><small>Медалі</small>${vdMedals(null)}</div></div></div>`;
@@ -121,11 +125,10 @@ function vdSquad(ch,e){const P=id=>e.xi.find(x=>x.id===id).p,bl=ch.bonus?esc(ch.
     +(no.length?`<section class="grp nn"><h3>Не підійшли<span>${no.length}</span></h3><p>${esc(vdNo(ch).replace(/^./,c=>c.toUpperCase()))}</p><ul>${no.map(r=>row(r,'',card(P(r.id)))).join('')}</ul></section>`:'')+`</div>`;}
 
 // ---- not counted (s11): one sentence why, what next, breakdown
-function vdFailShow(f){const v=S.vd;if(!v)return;const ch=v.ch,e=f.e,[em,tt]=vdSplit(ch.title),left=VD_ATTEMPTS-f.used,m=vdMedal(e.score);haptic('warning');
+function vdFailShow(f){const v=S.vd;if(!v)return;const ch=v.ch,e=f.e,[em,tt]=vdSplit(ch.title),left=VD_ATTEMPTS-f.used;haptic('warning');
   document.getElementById('vdFail').innerHTML=`<div class="rs"><p class="at">${em?`<span class="em" aria-hidden="true">${em}</span>`:''}${esc(tt)} · спроба ${f.attempt} з ${VD_ATTEMPTS}</p><h1 class="no">Не зараховано</h1>`
-    +`<p class="why2">${esc(vdWhy(ch,e))}</p><div class="gate bad"><span class="tag-req">Обовʼязково</span><div class="gb2"><span class="n no">${e.have}/${e.need}</span><b>${esc(ch.required.label)}</b></div></div>`
-    +`<section class="next2"><b>${left>0?'Що далі':'Це була остання спроба'}</b><p>${left>0?`Ця спроба витрачена, але в тебе ще ${left} ${plUk(left,'спроба','спроби','спроб')} з ${VD_ATTEMPTS}. Умова та сама: ${esc(ch.required.label)}.`:`Спроб більше немає. ${v.late?'Інші дні — в архіві.':'Новий виклик — завтра.'}`}</p>`
-    +(m?`<p class="would">Без умови було б ${e.score} з 11 — це ${m.e}, але така спроба не рахується.</p>`:'')+`</section>${vdSquad(ch,e)}</div>`
+    +`<p class="why2">${esc(vdWhy(ch,e))}</p><div class="gate bad"><span class="tag-req">Обовʼязково</span><div class="gb2"><span class="n no">${e.have}/${e.need}</span><b>${esc(ch.required.label)}</b></div>${vdClubNote(ch,'cnote')}</div>`
+    +`${vdSquad(ch,e)}</div>`
     +`<div class="rs-ft">${left>0?`<button class="primary big0" id="vdAgain" type="button">${ic('restart')}Спроба ${f.attempt+1} з ${VD_ATTEMPTS}</button><p class="fine">${MODES.normal.rerolls} перекрутки на спробу · сезон не грається</p>`:`<button class="primary big0" id="vdToArch" type="button">До викликів</button>`}</div>`;
   const a=document.getElementById('vdAgain'),b=document.getElementById('vdToArch');if(a)a.onclick=()=>vdOpen(v.day);if(b)b.onclick=()=>openVdArchive();
   go(11);}
