@@ -47,7 +47,7 @@ async function league(chat, from) {
   const chat_id = chat.id;
   const exists = (await L.sb(`leagues?chat_id=eq.${chat_id}&select=chat_id`) || []).length > 0;
   await L.sb('leagues?on_conflict=chat_id', { method: 'POST', prefer: 'resolution=merge-duplicates,return=minimal', body: { chat_id, title: String(chat.title || 'Група').slice(0, 60), created_by: from && from.id } });
-  if (from && !from.is_bot) await L.sb('league_members?on_conflict=chat_id,tg_user_id', { method: 'POST', prefer: 'resolution=merge-duplicates,return=minimal', body: { chat_id, tg_user_id: from.id, name: L.nameOf(from) } });
+  if (from && !from.is_bot) await L.sb('league_members?on_conflict=chat_id,tg_user_id', { method: 'POST', prefer: 'resolution=merge-duplicates,return=minimal', body: { chat_id, tg_user_id: from.id, name: L.nameOf(from), left_at: null } });
   if (!exists) await L.tg('sendMessage', { chat_id, text: '🏟 Лігу групи створено! Грайте з кнопки під табло: у лігу йде найкращий сезон із перших трьох спроб дня у «Грати», сюди — автоматично. Підсумок дня — щовечора близько 21:00 за Києвом.' });
   await L.upsertBoard(chat_id, L.kyivDate(), { copy: exists });   // new league: board is created and pinned; existing one: update + unpinned copy
 }

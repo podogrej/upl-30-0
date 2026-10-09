@@ -598,6 +598,41 @@ chk "v080: спроби 1..5, одна на номер; спроба seed — о
   insert into season_seeds(device_id, xi_hash, seed, day, vd_day, vd_attempt) values ('$VDEV', '', 1, '2026-10-12', '2026-10-12', 1);
   begin insert into season_seeds(device_id, xi_hash, seed, day, vd_day, vd_attempt) values ('$VDEV', '', 2, '2026-10-12', '2026-10-12', 1); assert false, 'двічі seed спроби'; exception when unique_violation then null; end;
   assert (select best from vd_mine('$VDEV', null) where c_day = '2026-10-12') = 6 and (select attempts from vd_mine('$VDEV', null) where c_day = '2026-10-12') = 3, 'vd_mine';"
+# ===== v081: leave a league / delete own friends league (marked, never removed) =====
+for pass in 1 2; do
+  if $P -d t1 -f "$ROOT/sql/v081_leave_leagues.sql" >/dev/null 2>"$D/err"; then ok "запуск $pass: v081_leave_leagues.sql"; else bad "запуск $pass: v081_leave_leagues.sql — $(grep -v NOTICE "$D/err" | head -3)"; fi
+done
+chk "v081: власник створює лігу" authenticated "
+  j := fl_create('$MX', '$SEC', 'Ліга на вихід', 3, 1, 'best', 'place', 1, 'show', 'all');" ',"sub":"'$UG'"'
+V81=$($P -d t1 -tAc "select id from fl_leagues where name = 'Ліга на вихід' order by created_at desc limit 1")
+chk "v081: друг вступає" authenticated "
+  j := fl_join('$L3', '$SEC', '$V81'); assert json_array_length(j->'board') = 2, 'учасників ' || j::text;" ',"sub":"'$U3'"'
+chk "v081: anon не виходить і не видаляє лігу друзів" anon "
+  begin j := fl_leave('$L3', '$SEC', '$V81'); assert false, 'anon вийшов'; exception when insufficient_privilege then null; end;
+  begin j := fl_delete('$MX', '$SEC', '$V81'); assert false, 'anon видалив'; exception when insufficient_privilege then null; end;"
+chk "v081: учасник виходить — ліга зникає з його списку, але не в інших; повернення; вступ за кодом знову" authenticated "
+  j := fl_leave('$L3', '$SEC', '$V81'); assert (j->>'left')::boolean, j::text;
+  assert not exists (select 1 from json_array_elements(fl_mine('$L3', '$SEC')) x where x->>'id' = '$V81'), 'у списку після виходу';
+  assert (fl_get('$V81')->>'members')::int = 1 and json_array_length(fl_get('$V81')->'board') = 2, 'members 1, таблиця зберегла обох';
+  j := fl_leave('$L3', '$SEC', '$V81', true); assert exists (select 1 from json_array_elements(fl_mine('$L3', '$SEC')) x where x->>'id' = '$V81'), 'повернення';
+  j := fl_leave('$L3', '$SEC', '$V81');
+  j := fl_join('$L3', '$SEC', '$V81'); assert exists (select 1 from json_array_elements(fl_mine('$L3', '$SEC')) x where x->>'id' = '$V81'), 'вступ знову';
+  begin j := fl_delete('$L3', '$SEC', '$V81'); assert false, 'учасник видалив'; exception when sqlstate '22023' then assert sqlerrm = 'fl_none', sqlerrm; end;" ',"sub":"'$U3'"'
+chk "v081: власник не виходить, а видаляє — ліга зникає для всіх і за посиланням; відновлення" authenticated "
+  begin j := fl_leave('$MX', '$SEC', '$V81'); assert false, 'власник вийшов'; exception when sqlstate '22023' then assert sqlerrm = 'fl_owner', sqlerrm; end;
+  assert (select x->>'mine' from json_array_elements(fl_mine('$MX', '$SEC')) x where x->>'id' = '$V81') = 'true', 'mine';
+  assert fl_get('$V81')->>'owner_name' is not null and fl_get('$V81')->>'created_at' is not null, 'owner_name, created_at';
+  j := fl_delete('$MX', '$SEC', '$V81'); assert (j->>'deleted')::boolean, j::text;
+  assert fl_get('$V81') is null, 'fl_get видаленої';
+  assert not exists (select 1 from json_array_elements(fl_mine('$MX', '$SEC')) x where x->>'id' = '$V81'), 'у списку власника';
+  begin j := fl_delete('$MX', '$SEC', '$V81'); assert false, 'двічі'; exception when sqlstate '22023' then null; end;
+  j := fl_delete('$MX', '$SEC', '$V81', true); assert fl_get('$V81') is not null, 'відновлення';" ',"sub":"'$UG'"'
+chk "v081: видалення лише позначає рядок" postgres "
+  perform 1; assert exists (select 1 from fl_leagues where id = '$V81' and deleted_at is null), 'рядок';"
+$P -d t1 -q -c "update fl_leagues set deleted_at = now() where id = '$V81'"
+chk "v081: видалену лігу не відкрити за посиланням" authenticated "
+  begin j := fl_join('$L3', '$SEC', '$V81'); assert false, 'вступив у видалену'; exception when sqlstate '22023' then assert sqlerrm = 'fl_none', sqlerrm; end;" ',"sub":"'$U3'"'
+$P -d t1 -q -c "update fl_leagues set deleted_at = null where id = '$V81'"
 # upgrade from the earlier test-DB version: rows with old statuses must not break the re-run
 $P -d t1 -q -c "alter table channel_posts drop constraint channel_posts_status_chk; insert into channel_posts(text, publish_at, status) values ('old-a', now(), 'approved'), ('old-s', now(), 'skipped');" >/dev/null 2>&1
 if $P -d t1 -f "$ROOT/sql/v06997_channel_posts.sql" >/dev/null 2>"$D/err"; then ok "v06997 поверх старої версії (approved/skipped)"; else bad "v06997 поверх старої версії — $(grep -v NOTICE "$D/err" | head -3)"; fi
