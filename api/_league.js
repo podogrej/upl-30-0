@@ -82,7 +82,7 @@ async function standings(chat_id) { return standingsOf(await leagueRows(chat_id)
 async function boardText(chat_id, day) {
   const [lg] = await sb(`leagues?chat_id=eq.${chat_id}&select=title`) || [];
   const rows = (await onlyVerified(await sb(`league_results?chat_id=eq.${chat_id}&day=eq.${day}&select=*`) || [])).sort(sortRes);
-  const members = (await sb(`league_members?chat_id=eq.${chat_id}&select=tg_user_id`) || []).length;
+  const members = (await sb(`league_members?chat_id=eq.${chat_id}&left_at=is.null&select=tg_user_id`) || []).length;
   const medal = ['🥇', '🥈', '🥉'];
   let t = `<b>🏟 Ліга «${esc(lg ? lg.title : 'група')}»</b>\nДень №${dayNo(day)} · ${dayShort(day)}. ${RULE}\n\n`;
   if (!rows.length) t += 'Сьогодні ще ніхто не зіграв. Будь першим!';
@@ -166,7 +166,7 @@ async function putBest(best, day, members) {
 async function membersOf(pid, tgId) {
   const ids = new Set(tgId ? [String(tgId)] : []);
   if (pid) for (const l of await sb(`player_links?kind=eq.tg&player_id=eq.${pid}&select=key`) || []) if (/^\d+$/.test(String(l.key))) ids.add(String(l.key));
-  return ids.size ? await sb(`league_members?tg_user_id=in.(${[...ids].join(',')})&select=chat_id,tg_user_id,name`) || [] : [];
+  return ids.size ? await sb(`league_members?tg_user_id=in.(${[...ids].join(',')})&left_at=is.null&select=chat_id,tg_user_id,name`) || [] : [];
 }
 // a season was just verified (seedRow: its seed): update every chat league of its player, then their pinned boards
 async function creditSeason(row, seedRow) {

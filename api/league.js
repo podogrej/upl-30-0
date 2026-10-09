@@ -41,7 +41,7 @@ module.exports = async (req, res) => {
       const [[lg], rows, memberRows] = await Promise.all([
         L.sb(`leagues?chat_id=eq.${chat}&select=title`).then(x => x || []),
         card ? L.sb(`league_results?chat_id=eq.${chat}&day=eq.${day}&select=${L.RES_COLS}`).then(x => L.onlyVerified(x || [])) : L.leagueRows(chat),
-        L.sb(`league_members?chat_id=eq.${chat}&select=tg_user_id`).then(x => x || [])]);
+        L.sb(`league_members?chat_id=eq.${chat}&left_at=is.null&select=tg_user_id`).then(x => x || [])]);
       if (!lg) return res.status(404).json({ error: 'no league' });
       const today = rows.filter(r => String(r.day).slice(0, 10) === day).sort(L.sortRes).map(({ name, u, w, d, l, pts, gf, ga, created_at }) => ({ name, u, w, d, l, pts, gf, ga, created_at }));
       res.setHeader('Cache-Control', 'public, s-maxage=30, stale-while-revalidate=300');
@@ -69,7 +69,7 @@ module.exports = async (req, res) => {
       if (mem && mem.moved) { chat_to = mem.moved; }   // league moved to the supergroup id
       if (lg && !(mem && (mem.moved ? mem.ok : mem))) return res.status(403).json({ error: 'not a member of this chat' });
       if (lg) {
-        await L.sb('league_members?on_conflict=chat_id,tg_user_id', { method: 'POST', prefer: 'resolution=merge-duplicates,return=minimal', body: { chat_id: chat_to, tg_user_id: u.id, name } });
+        await L.sb('league_members?on_conflict=chat_id,tg_user_id', { method: 'POST', prefer: 'resolution=merge-duplicates,return=minimal', body: { chat_id: chat_to, tg_user_id: u.id, name, left_at: null } });   // opening from the group rejoins after leaving
         const j = { chat_id: chat_to, title: lg.title };
         joined.push(j);
         stage = 'backfill';

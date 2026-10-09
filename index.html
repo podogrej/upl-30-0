@@ -481,6 +481,17 @@ a.fl-row{text-decoration:none}
 .fl-bars{display:flex;gap:var(--sp-2)}.fl-bars i{flex:1;height:7px;border-radius:var(--r-xs);background:var(--line)}.fl-bars i.done{background:var(--win)}.fl-bars i.now{background:var(--amber)}
 .fl-tries{display:flex;flex-wrap:wrap;align-items:center;gap:var(--sp-2);font-size:var(--fs-body)}.fl-try{display:inline-grid;place-items:center;min-width:30px;height:30px;border:1px solid var(--line);border-radius:var(--r-sm);font-family:var(--font-mono,monospace)}.fl-try.on{background:var(--ink);color:var(--bg)}
 .fl-forms{display:flex;flex-wrap:wrap;justify-content:center;gap:var(--sp-2)}.fl-tour>.big0,.fl-tour>#flMsg{justify-self:center;text-align:center}.fl-rules{display:flex;flex-wrap:wrap;gap:var(--sp-2)}   /* iPad: formations and play-attempt button centered in the card; rules as chips */.fl-tabs{margin:0 0 var(--sp-2)}
+.fl-origin{color:var(--ink2);line-height:var(--lh-sub)}
+.fl-foot{display:grid;justify-items:center;gap:var(--sp-2);margin:var(--sp-6) 0 var(--sp-5)}
+.fl-quiet{border:0;background:none;color:var(--loss);font:var(--wt-bold) var(--fs-footnote) var(--font-body);min-height:44px;padding:0 var(--sp-4)}.fl-quiet.calm{color:var(--ink2)}
+.fl-note{margin:0;color:var(--ink2);font-size:var(--fs-caption);line-height:var(--lh-sub);text-align:center;max-width:34ch}
+.fl-foot .fl-delbox{width:100%;padding:var(--sp-3) var(--sp-4)}.fl-foot .fl-delbox p{font-size:var(--fs-body);line-height:var(--lh-sub)}.fl-foot .fl-delbox .row{flex-wrap:nowrap}.fl-foot .fl-delbox .row button{flex:1 1 0;min-width:0;min-height:44px;padding-inline:var(--sp-3)}
+#toast{position:fixed;left:var(--sp-4);right:var(--sp-4);bottom:calc(var(--sp-4) + env(safe-area-inset-bottom,0px));z-index:70;pointer-events:none}
+.toast{position:relative;max-width:520px;margin:0 auto;pointer-events:auto;display:flex;align-items:center;justify-content:space-between;gap:var(--sp-3);background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:var(--r-md);padding:var(--sp-1) var(--sp-1) var(--sp-1) var(--sp-4);box-shadow:var(--sh-2,0 8px 28px rgba(0,0,0,.35));font-size:var(--fs-body);animation:toastIn var(--dur-2,.2s) ease-out}
+.toast:not(:has(button)){padding:var(--sp-3) var(--sp-4)}.toast button{border:0;background:none;color:var(--amber);font:var(--wt-bold) var(--fs-body) var(--font-body);min-height:44px;padding:0 var(--sp-4)}
+.toast i{position:absolute;left:var(--sp-4);right:var(--sp-4);bottom:0;height:2px;border-radius:2px;background:var(--amber);opacity:.55;transform-origin:left;animation:toastBar 7s linear forwards}.toast.hold i{animation-play-state:paused}
+@keyframes toastIn{from{opacity:0;transform:translateY(8px)}}@keyframes toastBar{to{transform:scaleX(0)}}
+@media (prefers-reduced-motion:reduce){.toast{animation:none}}
 .fl-top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:var(--sp-2)}.fl-top h1{flex:1 1 12em;min-width:0}.fl-sh{display:inline-flex;align-items:center;gap:var(--sp-2);min-height:44px}.fl-sh .ico{width:18px;height:18px}
 .fl-invc{display:grid;grid-template-columns:minmax(0,1fr);gap:var(--sp-2);margin-top:var(--sp-3);padding:var(--sp-4);border:1px solid var(--line);border-radius:var(--r-lg);background:var(--surface)}.fl-invc>b{font-family:var(--font-display);font-size:var(--fs-headline)}.fl-invc p{margin:0}.fl-invc .fl-inv button{min-height:48px}
 .fl-inv{display:flex;gap:var(--sp-2)}.fl-inv input{flex:1;min-width:0;font:inherit;font-family:var(--font-mono,monospace);font-size:var(--fs-headline);padding:var(--sp-3) var(--sp-3);border:1px solid var(--line);border-radius:var(--r-md);background:var(--surface);color:var(--ink)}.fl-inv button{padding:0 var(--sp-4);display:inline-flex;align-items:center;gap:var(--sp-2);font-weight:var(--wt-bold)}
@@ -1201,7 +1212,7 @@ h3,.sec0,#s1 .sec0,.pgh,.trleg .h{font-size:var(--fs-footnote);font-weight:var(-
   <div class="acts"><button class="ft-send" id="fbSend" type="submit">Надіслати</button><button class="ft-cancel" id="fbCancel" type="button">Скасувати</button></div></form>
 <div class="ft-done" id="fbDone" hidden><b>✓</b><span>Дякуємо! Прочитаємо найближчим часом</span></div>
 <div class="ft-pills"><button class="ft-pill" id="fbBtn" type="button"><!--i:mail-->Відгук і баги</button><a class="ft-pill" id="ftBot" href="https://t.me/upl30_bot" target="_blank" rel="noopener"><!--i:telegram-->Telegram-бот</a></div>
-<div class="foot ft-small"><a href="#" id="newsBtn">Що нового у версії 0.80.3<b id="newsDot" hidden></b></a><a href="privacy.html">Конфіденційність</a><a href="terms.html">Умови використання</a></div>
+<div class="foot ft-small"><a href="#" id="newsBtn">Що нового у версії 0.81<b id="newsDot" hidden></b></a><a href="privacy.html">Конфіденційність</a><a href="terms.html">Умови використання</a></div>
 <div class="foot ft-copy">© 2026 30-0 УПЛ · неофіційний фан-проєкт <a href="#" id="themeBtn" class="thm" role="switch" aria-checked="false" aria-label="Світла тема"></a></div>
 <p class="ft-legal">30-0 УПЛ — незалежний фан-проєкт: футбольний драфт і симулятор сезону. Він не пов'язаний з Українською Прем'єр-лігою, Українською асоціацією футболу, клубами, футболістами, їхніми об'єднаннями чи іншими організаціями й не схвалений ними. Назви клубів, імена футболістів, рейтинги, статистику й дані сезонів використано лише з інформаційною та довідковою метою. Офіційні логотипи, емблеми та фото футболістів не використовуються. Усі торговельні марки належать їхнім власникам.</p>
 <div class="ft-cred">Шрифт KyivType Sans © Дмитро Растворцев (айдентика Києва)<br>Іконки: Material Design Icons (Apache 2.0), логотип Telegram — Font Awesome Free (CC BY 4.0)</div>
@@ -3069,11 +3080,39 @@ async function flLoad(){const st=FL;try{st.data=await flRpc('fl_get',{p_id:st.id
 const fl5Due=d=>d&&d.fmt==='5'&&!d.result&&d.deadline&&new Date(d.deadline)<=new Date(d.now||Date.now());
 async function fl5Play(){const st=FL;try{const r=await _fetch('/api/fl5',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:st.id,device_id:deviceId()})});
   if(r.ok){const d=await r.json();if(FL===st&&d&&d.id){st.data=d;flRender();}}}catch(e){}}
-const flMe=d=>PLAYER&&PLAYER.public_id&&d&&d.board.some(r=>r.u===PLAYER.public_id);
+const flMe=d=>PLAYER&&PLAYER.public_id&&d&&(d.board||[]).some(r=>r.u===PLAYER.public_id&&!r.left);   // left members stay in the table but can join again
 // league rules rendered as chips
 const flRules=r=>`<div class="fl-rules">${r.split(' · ').map(x=>`<span class="chip">${esc(x)}</span>`).join('')}</div>`;
 const flBadge=f=>`<i class="fl-badge">${f==='5'?'5×5':'11×11'}</i>`;
 const flTime=t=>{try{return new Intl.DateTimeFormat('uk-UA',{timeZone:'Europe/Kyiv',hour:'2-digit',minute:'2-digit',day:'numeric',month:'short'}).format(new Date(t));}catch(e){return '';}};
+const flDay=t=>{try{return new Intl.DateTimeFormat('uk-UA',{timeZone:'Europe/Kyiv',day:'numeric',month:'short'}).format(new Date(t));}catch(e){return '';}};
+// origin line under the title: who made the league and when (fl_get: owner_name, created_at)
+function flOrigin(d){const me=PLAYER&&PLAYER.public_id,day=d.created_at?flDay(d.created_at):'';if(!day)return '';
+  const who=me&&d.owner===me?'ти':d.owner_name?esc(d.owner_name):'';return `<p class="fl-origin">${who?`Створив ${who} · ${day}`:`Створено ${day}`}</p>`;}
+// bottom of the league page: owner deletes (asks first when others play), member leaves; hidden when signed out
+function flFootHtml(d){const me=PLAYER&&PLAYER.public_id;if(!me||!SESSION||!flMe(d))return '';
+  const n=Number(d.members)||d.board.length;
+  if(d.owner!==me)return `<div class="fl-foot"><button class="fl-quiet calm" id="flLeave">Вийти з ліги</button></div>`;
+  if(FL.confirm&&n>1)return `<div class="fl-foot"><div class="fl-delbox pp-delbox" role="group" aria-label="Видалення ліги"><p>Ліга зникне у всіх ${n} ${plUk(n,'гравця','гравців','гравців')}.</p><div class="row"><button class="danger" id="flDelYes">Видалити</button><button class="ghost" id="flDelNo">Скасувати</button></div></div></div>`;
+  return `<div class="fl-foot"><button class="fl-quiet" id="flDel">Видалити лігу</button></div>`;}
+const flManageErr=e=>/login\?|28000/.test(String(e&&e.message||e))?'Увійди, щоб керувати лігою':'Не вдалося. Спробуй ще раз.';
+// leave / delete: server call, back to the list, toast with Undo (same RPC with p_undo)
+async function flGone(fn,btn){const id=FL.id;btn.disabled=true;
+  try{await playerRpc(fn,{p_id:id});}catch(e){btn.disabled=false;toast(flManageErr(e));return;}
+  openFriends();toast(fn==='fl_delete'?'Лігу видалено':'Ти вийшов з ліги','Повернути',()=>flUndo(fn,id));}
+async function flUndo(fn,id){try{await playerRpc(fn,{p_id:id,p_undo:true});}catch(e){toast(flManageErr(e));return;}openLeague(id);}
+// one bottom toast: toast(text, actionLabel, onAction); hides after 7 s, the timer is paused on touch, hover and focus
+const TOAST_MS=7000,TOAST={t:0,left:0,at:0,hold:false};
+function toastHide(){clearTimeout(TOAST.t);const el=document.getElementById('toast');if(el)el.innerHTML='';}
+function toastHold(on){const c=document.querySelector('#toast .toast');if(!c||TOAST.hold===on)return;TOAST.hold=on;c.classList.toggle('hold',on);
+  if(on){clearTimeout(TOAST.t);TOAST.left-=Date.now()-TOAST.at;}else{TOAST.at=Date.now();TOAST.t=setTimeout(toastHide,Math.max(TOAST.left,600));}}
+function toast(text,action,fn){let el=document.getElementById('toast');
+  if(!el){el=document.createElement('div');el.id='toast';el.setAttribute('role','status');el.setAttribute('aria-live','polite');document.body.appendChild(el);}
+  clearTimeout(TOAST.t);TOAST.left=TOAST_MS;TOAST.hold=false;TOAST.at=Date.now();
+  el.innerHTML=`<div class="toast"><span>${esc(text)}</span>${action?`<button type="button">${esc(action)}</button>`:''}<i></i></div>`;
+  const c=el.firstChild;c.onpointerenter=c.onfocusin=()=>toastHold(true);c.onpointerleave=c.onpointercancel=c.onfocusout=()=>toastHold(false);
+  if(action)c.querySelector('button').onclick=()=>{toastHide();fn&&fn();};
+  TOAST.t=setTimeout(toastHide,TOAST_MS);}
 // ---------- markup
 function flRender(){const el=document.getElementById('fl');if(!el||!FL)return;
   el.innerHTML=FL.view==='create'?flCreateHtml():FL.view==='draft5'?fl5DraftHtml():FL.view==='match5'?fl5MatchHtml():FL.view==='league'?(FL.data&&FL.data.fmt==='5'?fl5LeagueHtml():flLeagueHtml()):flListHtml();flWire();}
@@ -3121,11 +3160,11 @@ function flLeagueHtml(){const d=FL.data;
   // fewer than 3 members: invite is the main action right under the round card; otherwise a compact share button in the header
   const invite=few?`<div class="fl-invc"><b>Запроси друзів</b><p class="muted">У лізі ще мало гравців. Надішли посилання в чат.</p><div class="fl-inv"><input readonly value="${esc(link)}" id="flLinkIn" aria-label="Посилання на лігу">${shareBtn('primary')}</div><p class="muted" id="flShareMsg" style="font-size:var(--fs-footnote)"></p></div>`:'';
   const compact=!d.over&&!few?shareBtn('ghost fl-sh'):'';
-  return `<div class="fl-head"><div class="fl-top"><h1>${esc(d.name)} <i class="fl-badge">11×11</i></h1>${compact}</div>${flRules(rules)}${compact?'<p class="muted" id="flShareMsg" style="font-size:var(--fs-footnote);margin:0"></p>':''}</div>${card}${invite}
+  return `<div class="fl-head"><div class="fl-top"><h1>${esc(d.name)} <i class="fl-badge">11×11</i></h1>${compact}</div>${flOrigin(d)}${flRules(rules)}${compact?'<p class="muted" id="flShareMsg" style="font-size:var(--fs-footnote);margin:0"></p>':''}</div>${card}${invite}
     <div class="sec0">Таблиця</div><div class="seg fl-tabs"><button data-tab="all" class="${all?'on':''}">Загальна</button><button data-tab="tour" class="${all?'':'on'}">${d.over?'Останній тур':`Тур ${numOr0(d.day_n)} · сьогодні`}</button></div>
     ${rows?`<div class="tbl"><table><tr><th>#</th><th>Гравець</th><th class="num">${all?'Виграв':'Сезон'}</th><th class="num">Оч</th></tr>${rows}</table></div>`:`<p class="pp-empty">${all?'Поки нікого.':'Сьогодні ще ніхто не зіграв.'}</p>`}
     <p class="muted" style="font-size:var(--fs-caption)">${d.scoring==='place'?'За місце в турі: 1-й отримує стільки очок, скільки гравців зіграло того дня, останній — 1. Не зіграв — 0.':'Сума: у залік туру йдуть очки сезону. Не зіграв — 0.'}</p>
-    <button class="ghost" id="flBack" style="margin-top:var(--sp-4)">Усі мої ліги</button>`;}
+    <button class="ghost" id="flBack" style="margin-top:var(--sp-4)">Усі мої ліги</button>${flFootHtml(d)}`;}
 // ---------- actions
 function flWire(){const $=id=>document.getElementById(id),el=$('fl');
   if($('flLogin'))$('flLogin').onclick=()=>{ACCT_MSG='';openAcct();};
@@ -3145,6 +3184,10 @@ function flWire(){const $=id=>document.getElementById(id),el=$('fl');
       catch(e){b.disabled=false;m.textContent=flErr(e);}};}
   if(FL.view==='draft5'||FL.view==='match5'||(FL.view==='league'&&FL.data&&FL.data.fmt==='5'))fl5Wire($,el);
   if(FL.view==='league'){
+    if($('flDel'))$('flDel').onclick=()=>{const d=FL.data;if((Number(d.members)||d.board.length)>1){FL.confirm=true;flRender();$('flDelNo').focus();}else flGone('fl_delete',$('flDel'));};
+    if($('flDelNo'))$('flDelNo').onclick=()=>{FL.confirm=false;flRender();$('flDel').focus();};
+    if($('flDelYes'))$('flDelYes').onclick=()=>flGone('fl_delete',$('flDelYes'));
+    if($('flLeave'))$('flLeave').onclick=()=>flGone('fl_leave',$('flLeave'));
     el.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{FL.tab=b.dataset.tab;flRender();});
     el.querySelectorAll('[data-form]').forEach(b=>b.onclick=()=>{FL.formation=b.dataset.form;lsSet('upl30_fl_form',FL.formation);flRender();});
     if($('flPlay'))$('flPlay').onclick=flPlay;
@@ -3225,8 +3268,8 @@ function fl5LeagueHtml(){const d=FL.data,me=PLAYER&&PLAYER.public_id,member=flMe
   // fewer than 3 members: invite right under the status card as the main action; otherwise a compact share button in the header
   const invite=few?`<div class="fl-invc"><b>Запроси друзів</b><p class="muted">У лізі ще мало гравців. Надішли посилання в чат.</p><div class="fl-inv"><input readonly value="${esc(link)}" id="flLinkIn" aria-label="Посилання на лігу">${shareBtn('primary')}</div><p class="muted" id="flShareMsg" style="font-size:var(--fs-footnote)"></p></div>`:'';
   const compact=open&&!few?shareBtn('ghost fl-sh'):'';
-  return `<div class="fl-head"><div class="fl-top"><h1>${esc(d.name)} ${flBadge('5')}</h1>${compact}</div>${flRules(rules)}${compact?'<p class="muted" id="flShareMsg" style="font-size:var(--fs-footnote);margin:0"></p>':''}</div>${card}${invite}<div id="fl5Tro" hidden></div>${out}
-    <button class="ghost" id="flBack" style="margin-top:var(--sp-4)">Усі мої ліги</button>`;}
+  return `<div class="fl-head"><div class="fl-top"><h1>${esc(d.name)} ${flBadge('5')}</h1>${compact}</div>${flOrigin(d)}${flRules(rules)}${compact?'<p class="muted" id="flShareMsg" style="font-size:var(--fs-footnote);margin:0"></p>':''}</div>${card}${invite}<div id="fl5Tro" hidden></div>${out}
+    <button class="ghost" id="flBack" style="margin-top:var(--sp-4)">Усі мої ліги</button>${flFootHtml(d)}`;}
 // match: score, events by minute (goals, penalties, VAR), shootout; "watch live" reveals events one by one
 function fl5Feed(m,nm){const it=[];
   for(const e of m.ev)if(!e.pen)it.push({min:e.min,side:e.side,g:1,h:`${ic('soccer','sm')}<b>${esc(e.sc.name)}</b>${e.as?`<span class="muted"> · пас ${esc(e.as.name)}</span>`:''}`});
@@ -3497,12 +3540,12 @@ function acctNudge(r){
 // is opened from a group button, and load the chat tables only when the tab is opened.
 let LEAGUE_DENIED=false;   // Telegram did not confirm group membership for the chat of the launch button
 // list: request for the chats of this player, rows: its result; data[chat]: GET /api/league answer | 'load' | 'err'; bust: bypass CDN cache after own season
-const LG={list:null,rows:null,chat:null,tab:'today',data:{},bust:0};
+const LG={list:null,rows:null,chat:null,tab:'today',data:{},bust:0,left:new Set()};   // left: chats left in this session; mine: row comes from tg_leagues_mine
 const LG_JOIN_TTL=864e5,LG_JOIN_KEEP=30*864e5;   // join is repeated after a day; join records older than a month are removed
 const LG_RULE='У лігу йде найкращий сезон із перших трьох спроб дня у «Грати».';
 const lgStart=()=>{const sp=TG&&TG.initDataUnsafe&&TG.initDataUnsafe.start_param||'';return /^g(-?\d+)$/.exec(sp);};
 function leagueChat(){const m=lgStart();
-  if(m){const j=lsGet('upl30_joined_'+m[1]),c=String(j&&j.chat||m[1]);lsSet("upl30_league",c);return c;}return lsGet("upl30_league");}   // j.chat: league moved to the supergroup id
+  if(m){const j=lsGet('upl30_joined_'+m[1]),c=String(j&&j.chat||m[1]);if(!LG.left.has(c))lsSet("upl30_league",c);return c;}return lsGet("upl30_league");}   // j.chat: league moved to the supergroup id; a chat left in this session is not remembered
 // upl30_joined_<chat from the button>: {u: Telegram user, at, chat: league chat id}; device-only, not synced to the account
 function lgJoined(sc){const j=lsGet('upl30_joined_'+sc);return !!(j&&TGU&&j.u===TGU.id&&Date.now()-j.at<LG_JOIN_TTL);}
 function lgJoinedSet(sc,chat){lsSet('upl30_joined_'+sc,{u:TGU&&TGU.id,at:Date.now(),chat});
@@ -3520,8 +3563,8 @@ async function leagueInit(){
 function lgStale(){LG.bust=Date.now();LG.data={};}
 // chats of this player: the chat of the launch button (this device) and the account's group leagues (tg_leagues_mine, sql/v070.sql)
 function lgList(){if(!LG.list){const own=IN_TG()?leagueChat():null;
-  LG.list=playerRpc('tg_leagues_mine').catch(()=>[]).then(r=>{const a=(Array.isArray(r)?r:[]).map(x=>({chat:String(x.chat_id),title:String(x.title||'')}));
-    if(own&&!a.some(x=>x.chat===String(own)))a.unshift({chat:String(own),title:''});LG.rows=a;lgRender();});}
+  LG.list=playerRpc('tg_leagues_mine').catch(()=>[]).then(r=>{const a=(Array.isArray(r)?r:[]).map(x=>({chat:String(x.chat_id),title:String(x.title||''),mine:true}));
+    if(own&&!LG.left.has(String(own))&&!a.some(x=>x.chat===String(own)))a.unshift({chat:String(own),title:''});LG.rows=a;lgRender();});}
   return LG.list;}
 function lgLoad(chat){LG.data[chat]='load';
   _fetch('/api/league?chat='+encodeURIComponent(chat)+(LG.bust?'&t='+LG.bust:'')).then(r=>{if(r.status===404)return {gone:true};if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
@@ -3547,6 +3590,14 @@ function lgBody(c,d){
   return lgHd(d.title||c.title,`<span class="lg-pill">${n} з ${m} зіграли</span>`)+`<p class="lg-sub">${LG_RULE}</p>`
     +`<div class="seg fl-tabs" id="lgTabs"><button data-t="today"${LG.tab==='today'?' class="on"':''}>Сьогодні</button><button data-t="st"${LG.tab!=='today'?' class="on"':''}>Залік</button></div>`+body
     +(LEAGUE_DENIED&&c.chat===String(lsGet('upl30_league'))&&!t.some(lgMe)?'<p class="lg-note">Ти ще не в цій лізі: відкрий гру кнопкою бота в групі.</p>':'');}
+// leave a chat league (the league belongs to the group): server call, refresh the tab, toast with Undo
+function lgForget(chat){try{for(let i=localStorage.length-1;i>=0;i--){const k=localStorage.key(i);if(k&&k.startsWith('upl30_joined_')){const v=lsGet(k);if(k==='upl30_joined_'+chat||(v&&String(v.chat)===chat))localStorage.removeItem(k);}}if(String(lsGet('upl30_league'))===String(chat))localStorage.removeItem('upl30_league');}catch(e){}}   // the remembered chat would bring the left league back on the next launch
+const lgReset=()=>{LG.list=null;LG.rows=null;LG.data={};lgRender();};
+async function lgLeave(chat,btn){btn.disabled=true;
+  try{await playerRpc('tg_league_leave',{p_chat:chat});}catch(e){btn.disabled=false;toast(flManageErr(e));return;}
+  LG.left.add(chat);lgForget(chat);lgReset();
+  toast('Ти вийшов з ліги','Повернути',async()=>{try{await playerRpc('tg_league_leave',{p_chat:chat,p_undo:true});}catch(e){toast(flManageErr(e));return;}LG.left.delete(chat);lgReset();});}
+const lgLeaveHtml=(c,d)=>c.mine&&SESSION&&d&&typeof d==='object'&&!d.gone?'<div class="fl-foot"><button class="fl-quiet calm" id="lgLeave">Вийти з ліги</button><p class="fl-note">Ліга належить групі в Telegram. Повернешся, якщо знову відкриєш гру з групи.</p></div>':'';
 // chats tab (#tbChats): chat chips when there are several, then one chat table
 function lgRender(){const el=document.getElementById('tbChats');if(!el||el.hidden)return;
   if(!ONLINE){el.innerHTML='<p class="muted">Ліги чатів працюють на сайті '+SITE_HOST+' і в Telegram-боті @upl30_bot.</p>';return;}
@@ -3556,10 +3607,11 @@ function lgRender(){const el=document.getElementById('tbChats');if(!el||el.hidde
   const c=a.find(x=>x.chat===LG.chat)||a[0];LG.chat=c.chat;
   if(LG.data[c.chat]===undefined)lgLoad(c.chat);
   const d=LG.data[c.chat];if(d&&d.title&&!c.title)c.title=d.title;
-  el.innerHTML=(a.length>1?`<div class="lg-chips" role="tablist">${a.map(x=>`<button class="chip${x===c?' on':''}" role="tab" aria-selected="${x===c}" data-chat="${esc(x.chat)}">${esc(x.title||'Чат')}</button>`).join('')}</div>`:'')+lgBody(c,d);
+  el.innerHTML=(a.length>1?`<div class="lg-chips" role="tablist">${a.map(x=>`<button class="chip${x===c?' on':''}" role="tab" aria-selected="${x===c}" data-chat="${esc(x.chat)}">${esc(x.title||'Чат')}</button>`).join('')}</div>`:'')+lgBody(c,d)+lgLeaveHtml(c,d);
   el.querySelectorAll('[data-chat]').forEach(b=>b.onclick=()=>{LG.chat=b.dataset.chat;lgRender();});
   el.querySelectorAll('#lgTabs button').forEach(b=>b.onclick=()=>{LG.tab=b.dataset.t;lgRender();});
   const rt=document.getElementById('lgRetry');if(rt)rt.onclick=()=>{lgLoad(c.chat);lgRender();};
+  const lv=document.getElementById('lgLeave');if(lv)lv.onclick=()=>lgLeave(c.chat,lv);
   const pl=document.getElementById('lgPlay');if(pl)pl.onclick=openLeaguePlay;}
 
 // ---------- Friend challenge ("beat my result"): same wheel seed, formation, mode and opponents
@@ -3947,7 +3999,8 @@ function drawCard(r){   // card in site style: UPL navy background, UPL.TV gradi
 }
 document.getElementById('chalOpen').onclick=()=>{const b=document.getElementById('chalBox'),t=document.getElementById('chalOpen');b.hidden=!b.hidden;t.classList.toggle('on',!b.hidden);if(!b.hidden){b.scrollIntoView({behavior:'smooth',block:'center'});const n=document.getElementById('chalName');if(n&&!n.hidden&&!n.value)n.focus();}};
 // ---------- What's new: short player-friendly notes on the latest version (technical log: CHANGELOG.md)
-const WHATSNEW={v:'0.80.3',news:'0.80.3',date:'09.10.2026',items:[   // news: edition of the items; a release without new items keeps it, so the news dot does not light up again
+const WHATSNEW={v:'0.81',news:'0.81',date:'09.10.2026',items:[   // news: edition of the items; a release without new items keeps it, so the news dot does not light up again
+  ['logout','Вийти з ліги','Зі своєї ліги можна вийти, а створену тобою — видалити. Передумав — «Повернути».'],
   ['swap-horizontal','Літні трансфери','У виклику дня гравець рахується за новий клуб, щойно потрапив до його заявки на поточний сезон. Підказка під умовою пояснює, хто такий гравець клубу.'],
   ['calendar-star','Виклик дня','Щодня нова умова на склад, привʼязана до події. 5 спроб, рахується краща. Очки — гравці під умову або бонус: 4 — бронза, 6 — срібло, 9 — золото, 11 — «Ідеально».']]};
 function openNews(){screenTag('news');const box=document.getElementById('viewBox');document.getElementById('viewTitle').textContent=`Що нового · версія ${WHATSNEW.v}`;
