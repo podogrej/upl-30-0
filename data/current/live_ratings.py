@@ -9,9 +9,9 @@ Sources (Transfermarkt, cached in <cache dir>; rerun reuses the cache, --offline
   - goalkeepers: tmapi per-game data (UKR1, season 2026): goals conceded while on the pitch, clean sheets
     (60+ minutes and the opponent scored 0, as stage 4 did for Kaggle seasons).
 Rules:
-  - person (canonical id via pool['alias']) with a 2025/26 card -> that card's current rating
+  - person (canonical id via pool['alias']) whose 2025/26 card has CARRY_MIN_APPS+ apps -> that card's current rating
     (several cards: most apps, then higher rating);
-  - otherwise stage 4 (same as data/fix_2021/recompute_2021.py) over all 2026/27 players by line,
+  - otherwise (short 2025/26 card, debut, returning) stage 4 (same as data/fix_2021/recompute_2021.py) over all 2026/27 players by line,
     team strength from the current table, under 8 apps -> toward 50 (weight apps/8);
     then TOP_PTS (smooth_cameo.top_map), then formula C (class_v2) with quality Q and age G; no cameo smoothing.
   - defenders have no clean sheets here (feature weight is redistributed, as stage 4 does for missing data).
@@ -28,6 +28,7 @@ import class_v2 as CV
 CACHE = sys.argv[1]
 OFFLINE = '--offline' in sys.argv
 SEASON, PREV = 2026, 2025
+CARRY_MIN_APPS = 10
 OUT = os.path.join(D, 'live_ratings_2026.csv')
 UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36'
 BASE = 'https://www.transfermarkt.com'
@@ -235,18 +236,24 @@ def main():
     A = CV.load_anchors()
     for r in rows:
         pid = r['pid']
-        if pid and pid in prev:
-            apps25, rating25, club25 = prev[pid][0], prev[pid][1], prev[pid][2]
-            r.update(source='carried 2025/26', rating=rating25, r2025=rating25, note='%s, %d apps' % (club25, apps25))
+        p25 = prev.get(pid) if pid else None
+        if p25 and p25[0] >= CARRY_MIN_APPS:
+            r.update(source='carried 2025/26', rating=p25[1], r2025=p25[1], note='%s, %d apps' % (p25[2], p25[0]))
             continue
         raw = round(r['s4']); S = SC.top_map(raw)
         dob = B.get(pid) if pid else None
         age = CV.age_on(dob, SEASON, last[pid][3]) if dob or (pid and last[pid][3]) else r['age']
         c = C.get(pid, 0.0) if pid else 0.0
         f = CV.bonus_factor(raw, age, r['line'] == 'GK')
-        r.update(source='debut: rounds', rating=max(45, min(99, CV.formula_c(S, c, CV.K, f))), r2025='',
+        if p25:
+            src, note = 'rounds: short 2025/26', '2025/26: %s, %d apps' % (p25[2], p25[0])
+        elif pid:
+            src, note = 'rounds: returning', 'last card %d' % last[pid][0]
+        else:
+            src, note = 'rounds: debut', 'new to pool'
+        r.update(source=src, rating=max(45, min(99, CV.formula_c(S, c, CV.K, f))), r2025=p25[1] if p25 else '',
                  raw=raw, S=S, C=round(c, 3), f=round(f, 3), age_used=age,
-                 note=('returning, last card %d' % last[pid][0] if pid else 'new to pool') + ('; has manual peak' if pid in A else ''))
+                 note=note + ('; has manual peak' if pid in A else ''))
 
     cols = ['club', 'club_uk', 'person_id', 'tm_id', 'name', 'name_tm', 'line', 'tm_pos', 'apps', 'goals', 'assists', 'minutes',
             'gk_conceded', 'gk_clean_sheets', 'club_games', 'club_place', 'source', 'rating', 'rating_2025', 'stage4', 'note']
@@ -264,13 +271,14 @@ def main():
 
 
 def report(rows, table):
-    car = [r for r in rows if r['source'].startswith('carried')]; deb = [r for r in rows if r['source'].startswith('debut')]
-    print('cards', len(rows), '| carried', len(car), '| debut', len(deb), '(new to pool %d)' % sum(1 for r in deb if not r['pid']))
+    car = [r for r in rows if r['source'].startswith('carried')]; deb = [r for r in rows if r['source'].startswith('rounds')]
+    print('cards', len(rows), '| carried', len(car), '| rounds', len(deb),
+          {s: sum(1 for r in deb if r['source'] == s) for s in ('rounds: short 2025/26', 'rounds: debut', 'rounds: returning')})
     print('GK with conceded:', sum(1 for r in rows if r['line'] == 'GK' and r['conc'] is not None), 'of', sum(1 for r in rows if r['line'] == 'GK'))
     print('\nTOP 30')
     for r in sorted(rows, key=lambda r: (-r['rating'], -r['apps']))[:30]:
         print(f"{r['rating']:>3} {r['name_uk']:<26} {r['club']:<22} {r['line']} {r['apps']}м {r['goals']}г {r['assists']}а  {r['source']}")
-    print('\nDEBUT >= 75')
+    print('\nROUNDS >= 75')
     for r in sorted(deb, key=lambda r: -r['rating']):
         if r['rating'] >= 75:
             print(f"{r['rating']:>3} {r['name_uk']:<26} {r['club']:<22} {r['line']} {r['apps']}м {r['goals']}г {r['assists']}а s4={r['s4']} raw={r['raw']} S={r['S']} C={r['C']} f={r['f']}  {r['note']}")
