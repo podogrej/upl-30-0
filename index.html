@@ -955,8 +955,6 @@ h3,.sec0,#s1 .sec0,.pgh,.trleg .h{font-size:var(--fs-footnote);font-weight:var(-
 .rs .at,.vres .at{margin:0;display:flex;align-items:center;gap:6px;font:var(--wt-bold) var(--fs-footnote) var(--font-body);color:var(--ink2)}
 .rs h1{margin:0;font:var(--wt-black) var(--fs-title1)/var(--lh-tight) var(--font-display);letter-spacing:var(--ls-tight)}.rs h1.no{color:var(--fail-ink)}
 .rs .why2{margin:0;font:var(--wt-medium) var(--fs-headline) var(--font-body);color:var(--ink);text-wrap:pretty}
-.next2{display:grid;gap:var(--sp-2);padding:var(--sp-3) var(--sp-4);border:1px solid var(--line);border-radius:var(--r-md);background:var(--card)}
-.next2 b{font:var(--wt-bold) var(--fs-headline) var(--font-display)}.next2 p{margin:0;font-size:var(--fs-body);color:var(--ink2)}.next2 .would{font-size:var(--fs-footnote);color:var(--muted)}
 .rs-ft{position:sticky;bottom:0;display:grid;gap:var(--sp-2);justify-items:center;margin:var(--sp-5) calc(var(--sp-4) * -1) 0;padding:var(--sp-3) var(--sp-4) calc(var(--sp-3) + env(safe-area-inset-bottom,0px));background:color-mix(in srgb,var(--bg) 94%,transparent);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-top:1px solid var(--line)}
 .rs-ft .big0{display:flex;align-items:center;justify-content:center;gap:var(--sp-2);width:min(100%,560px);max-width:none}.rs-ft .big0 .ico{width:20px;height:20px}
 .rs-ft .fine{margin:0;font-size:var(--fs-footnote);color:var(--ink2)}
@@ -3109,7 +3107,7 @@ function flLeagueHtml(){const d=FL.data;
   const rules=`${d.board.length} ${plUk(d.board.length,'гравець','гравці','гравців')} · ${d.scoring==='place'?'очки за місце':'сума очок'} · ${d.tries>1?`${d.take==='best'?'найкраща':'остання'} з ${d.tries} спроб`:'1 спроба на день'} · перекрути ${d.rerolls}${d.ratings==='memory'?' · на пам\'ять':''}${d.era!=='all'&&ERAS[d.era]?' · '+ERAS[d.era].name.toLowerCase():''}`;
   const bars=Array.from({length:d.days},(_,i)=>`<i class="${i+1<d.day_n?'done':i+1===d.day_n&&!d.over?'now':''}"></i>`).join('');
   let card;
-  if(d.over){const w=d.board[0];card=`<div class="fl-tour"><div class="fl-th"><b>Ліга завершена</b></div><div class="fl-bars">${bars}</div>${w?`<p style="margin:0">${em('trophy','sm')}Переможець — <b>${esc(w.name)}</b>, ${numOr0(w.total)} ${ptsWord(numOr0(w.total))}</p>`:''}</div>`;}
+  if(d.over){const w=d.board[0];card=`<div class="fl-tour"><div class="fl-th"><b>Лігу завершено</b></div><div class="fl-bars">${bars}</div>${w?`<p style="margin:0">${em('trophy','sm')}Переможець — <b>${esc(w.name)}</b>, ${numOr0(w.total)} ${ptsWord(numOr0(w.total))}</p>`:''}</div>`;}
   else{const chips=Array.from({length:d.tries},(_,i)=>`<span class="fl-try${i<used?' on':''}">${i<used&&mine&&d.tries===1?numOr0(mine.pts):i+1}</span>`).join('');
     const btn=!member?(SESSION?`<button class="primary big0" id="flJoin">Приєднатися й грати</button>`:`<button class="primary big0" id="flLogin">Увійти, щоб приєднатися</button>`)
       :left?`<div class="fl-forms">${Object.keys(FORMATIONS).map(f=>`<button class="chip${FL.formation===f?' onc':''}" data-form="${f}">${f}</button>`).join('')}</div><button class="primary big0${few?' solid':''}" id="flPlay">Зіграти спробу ${used+1} з ${d.tries}</button>`
@@ -3204,7 +3202,7 @@ function fl5LeagueHtml(){const d=FL.data,me=PLAYER&&PLAYER.public_id,member=flMe
   const nm=i=>res&&res.teams&&res.teams[i]?res.teams[i].name:'?';
   const score=m=>`${m.ga}:${m.gb}${m.pens?` <span class="muted">(пен. ${m.pens[0]}:${m.pens[1]})</span>`:''}`;
   let card;
-  if(res&&res.cancelled)card=`<div class="fl-tour"><b>Ліга скасована</b><p class="muted" style="margin:0">До кінця збору склад зібрали менше двох гравців.</p></div>`;
+  if(res&&res.cancelled)card=`<div class="fl-tour"><b>Лігу скасовано</b><p class="muted" style="margin:0">До кінця збору склад зібрали менше двох гравців.</p></div>`;
   else if(res){const fin=[...res.matches].reverse().find(m=>m.stage==='final')||res.matches[res.matches.length-1];fl5Award(d);
     card=`<div class="fl-tour fl5champ"><div class="kicker">${em('trophy','sm')}Турнір зіграно</div><div class="ttl">${esc(nm(res.champ))}</div><p class="muted" style="margin:0">${res.n===2?`Серія ${res.wins[0]}:${res.wins[1]} · ${esc(nm(0))} — ${esc(nm(1))}`:`Фінал: ${esc(nm(fin.i))} ${score(fin)} ${esc(nm(fin.j))}`}</p>${member?`<button class="primary big0" id="fl5Rev">Реванш</button><p class="muted" style="margin:0;font-size:var(--fs-footnote)">Нова ліга з тими самими правилами — надішли посилання тій самій компанії.</p>`:''}</div>`;}
   else if(fl5Due(d))card=`<div class="fl-tour"><b>Збір закінчився — розігруємо турнір…</b></div>`;
@@ -3808,11 +3806,10 @@ function vdSquad(ch,e){const P=id=>e.xi.find(x=>x.id===id).p,bl=ch.bonus?esc(ch.
     +(no.length?`<section class="grp nn"><h3>Не підійшли<span>${no.length}</span></h3><p>${esc(vdNo(ch).replace(/^./,c=>c.toUpperCase()))}</p><ul>${no.map(r=>row(r,'',card(P(r.id)))).join('')}</ul></section>`:'')+`</div>`;}
 
 // ---- not counted (s11): one sentence why, what next, breakdown
-function vdFailShow(f){const v=S.vd;if(!v)return;const ch=v.ch,e=f.e,[em,tt]=vdSplit(ch.title),left=VD_ATTEMPTS-f.used,m=vdMedal(e.score);haptic('warning');
+function vdFailShow(f){const v=S.vd;if(!v)return;const ch=v.ch,e=f.e,[em,tt]=vdSplit(ch.title),left=VD_ATTEMPTS-f.used;haptic('warning');
   document.getElementById('vdFail').innerHTML=`<div class="rs"><p class="at">${em?`<span class="em" aria-hidden="true">${em}</span>`:''}${esc(tt)} · спроба ${f.attempt} з ${VD_ATTEMPTS}</p><h1 class="no">Не зараховано</h1>`
     +`<p class="why2">${esc(vdWhy(ch,e))}</p><div class="gate bad"><span class="tag-req">Обовʼязково</span><div class="gb2"><span class="n no">${e.have}/${e.need}</span><b>${esc(ch.required.label)}</b></div>${vdClubNote(ch,'cnote')}</div>`
-    +`<section class="next2"><b>${left>0?'Що далі':'Це була остання спроба'}</b><p>${left>0?`Ця спроба витрачена, але в тебе ще ${left} ${plUk(left,'спроба','спроби','спроб')} з ${VD_ATTEMPTS}. Умова та сама: ${esc(ch.required.label)}.`:`Спроб більше немає. ${v.late?'Інші дні — в архіві.':'Новий виклик — завтра.'}`}</p>`
-    +(m?`<p class="would">Без умови було б ${e.score} з 11 — це ${m.e}, але така спроба не рахується.</p>`:'')+`</section>${vdSquad(ch,e)}</div>`
+    +`${vdSquad(ch,e)}</div>`
     +`<div class="rs-ft">${left>0?`<button class="primary big0" id="vdAgain" type="button">${ic('restart')}Спроба ${f.attempt+1} з ${VD_ATTEMPTS}</button><p class="fine">${MODES.normal.rerolls} перекрутки на спробу · сезон не грається</p>`:`<button class="primary big0" id="vdToArch" type="button">До викликів</button>`}</div>`;
   const a=document.getElementById('vdAgain'),b=document.getElementById('vdToArch');if(a)a.onclick=()=>vdOpen(v.day);if(b)b.onclick=()=>openVdArchive();
   go(11);}

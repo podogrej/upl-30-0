@@ -125,11 +125,10 @@ function vdSquad(ch,e){const P=id=>e.xi.find(x=>x.id===id).p,bl=ch.bonus?esc(ch.
     +(no.length?`<section class="grp nn"><h3>Не підійшли<span>${no.length}</span></h3><p>${esc(vdNo(ch).replace(/^./,c=>c.toUpperCase()))}</p><ul>${no.map(r=>row(r,'',card(P(r.id)))).join('')}</ul></section>`:'')+`</div>`;}
 
 // ---- not counted (s11): one sentence why, what next, breakdown
-function vdFailShow(f){const v=S.vd;if(!v)return;const ch=v.ch,e=f.e,[em,tt]=vdSplit(ch.title),left=VD_ATTEMPTS-f.used,m=vdMedal(e.score);haptic('warning');
+function vdFailShow(f){const v=S.vd;if(!v)return;const ch=v.ch,e=f.e,[em,tt]=vdSplit(ch.title),left=VD_ATTEMPTS-f.used;haptic('warning');
   document.getElementById('vdFail').innerHTML=`<div class="rs"><p class="at">${em?`<span class="em" aria-hidden="true">${em}</span>`:''}${esc(tt)} · спроба ${f.attempt} з ${VD_ATTEMPTS}</p><h1 class="no">Не зараховано</h1>`
     +`<p class="why2">${esc(vdWhy(ch,e))}</p><div class="gate bad"><span class="tag-req">Обовʼязково</span><div class="gb2"><span class="n no">${e.have}/${e.need}</span><b>${esc(ch.required.label)}</b></div>${vdClubNote(ch,'cnote')}</div>`
-    +`<section class="next2"><b>${left>0?'Що далі':'Це була остання спроба'}</b><p>${left>0?`Ця спроба витрачена, але в тебе ще ${left} ${plUk(left,'спроба','спроби','спроб')} з ${VD_ATTEMPTS}. Умова та сама: ${esc(ch.required.label)}.`:`Спроб більше немає. ${v.late?'Інші дні — в архіві.':'Новий виклик — завтра.'}`}</p>`
-    +(m?`<p class="would">Без умови було б ${e.score} з 11 — це ${m.e}, але така спроба не рахується.</p>`:'')+`</section>${vdSquad(ch,e)}</div>`
+    +`${vdSquad(ch,e)}</div>`
     +`<div class="rs-ft">${left>0?`<button class="primary big0" id="vdAgain" type="button">${ic('restart')}Спроба ${f.attempt+1} з ${VD_ATTEMPTS}</button><p class="fine">${MODES.normal.rerolls} перекрутки на спробу · сезон не грається</p>`:`<button class="primary big0" id="vdToArch" type="button">До викликів</button>`}</div>`;
   const a=document.getElementById('vdAgain'),b=document.getElementById('vdToArch');if(a)a.onclick=()=>vdOpen(v.day);if(b)b.onclick=()=>openVdArchive();
   go(11);}

@@ -183,7 +183,7 @@ async function siteChecks(b){
   // not counted: avoid Shakhtar
   o=await page(b);await o.pg.click('#vdCard');await o.pg.waitForTimeout(500);await draft(o.pg,'avoid');
   const f=await o.pg.evaluate(()=>({t:document.getElementById('vdFail').textContent,st:JSON.parse(localStorage.getItem('upl30_vd_2026-10-12')),res:window.__dbg.S.result}));
-  T.check(await secOf(o.pg)==='s11'&&/Не зараховано/.test(f.t)&&/Бракує ще двох гравців Шахтаря/.test(f.t)&&/Що далі/.test(f.t)&&/ще 4 спроби з 5/.test(f.t)&&/Спроба 2 з 5/.test(f.t)&&!f.res,'умову не виконано: «Не зараховано», чому, що далі, спроба 2 з 5, сезон не грався: '+f.t.slice(0,300));
+  T.check(await secOf(o.pg)==='s11'&&/Не зараховано/.test(f.t)&&/Бракує ще двох гравців Шахтаря/.test(f.t)&&!/Що далі/.test(f.t)&&/Спроба 2 з 5/.test(f.t)&&!f.res,'умову не виконано: «Не зараховано», чому, без блоку «Що далі», спроба 2 з 5, сезон не грався: '+f.t.slice(0,300));
   T.check(/Для умови/.test(f.t)&&/Бонус/.test(f.t)&&/Не підійшли/.test(f.t)&&f.st.used===1&&f.st.best===null,'розбір складу: для умови, бонус, не підійшли; спроба записана');
   await o.pg.screenshot({path:path.join(OUT,'v080_fail_phone_dark.png'),fullPage:true});
   // next attempt counts: prefer Shakhtar -> forecast -> season -> result block
