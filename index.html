@@ -900,7 +900,7 @@ h3,.sec0,#s1 .sec0,.pgh,.trleg .h{font-size:var(--fs-footnote);font-weight:var(-
 .evc .af{display:inline-flex;align-items:center;gap:var(--sp-0h);font:var(--wt-bold) var(--fs-footnote) var(--font-body);color:var(--ink2)}.evc .af .ico{width:16px;height:16px;color:var(--muted)}
 .evc .e2{display:flex;align-items:center;gap:var(--sp-2);font:var(--wt-black) var(--fs-title3)/var(--lh-snug) var(--font-display);letter-spacing:var(--ls-tight);text-wrap:balance}
 .evc .em,.brief .em,.rs .em,.vres .em,.tc-i{font-family:var(--font-emoji);font-weight:var(--wt-regular);line-height:1}.evc .e2 .em{font-size:24px}
-.evc .e3{font-size:var(--fs-body);color:var(--ink2)}.evc .e5,.brief .cnote{display:block;margin:0;font-size:var(--fs-footnote);color:var(--ink2)}
+.evc .e3{font-size:var(--fs-body);color:var(--ink2)}.cnote{display:block;margin:0;font-size:var(--fs-footnote);color:var(--ink2)}
 .evc .evr{display:flex;align-items:center;gap:var(--sp-2);margin-top:var(--sp-1)}.evc .evr .mm{font-size:26px;font-family:var(--font-emoji)}.evc .evr .mm .ico{width:26px;height:26px;color:var(--win)}
 .evc .evr b{font:var(--wt-black) var(--fs-title2)/1 var(--font-display);font-variant-numeric:tabular-nums}.evc .evr>span:last-child{font-size:var(--fs-footnote);color:var(--ink2)}
 .evc .evr.no{font-size:var(--fs-footnote);color:var(--fail-ink);font-weight:var(--wt-bold)}
@@ -3732,7 +3732,7 @@ function renderVdCard(){const box=document.getElementById('vdBox');if(!box)retur
   const res=st.best!=null?`<span class="evr"><span class="mm" aria-hidden="true">${m?m.e:ic('check-circle')}</span><b>${st.best}/11</b><span>краща спроба</span></span>`
     :st.used?`<span class="evr no"><span>Не зараховано · ${done?'спроби закінчились':`спроба ${st.used} з ${VD_ATTEMPTS}`}</span></span>`:'';
   box.innerHTML=`<button class="evc ${k}" id="vdCard" type="button"><span class="e1"><span class="lb">Виклик дня</span><span class="af">${af}${ic('chevron-right')}</span></span>`
-    +`<span class="e2">${em?`<span class="em" aria-hidden="true">${em}</span>`:''}<span>${esc(tt)}</span></span><span class="e3">${esc(ch.task)}</span>${vdClubNote(ch,'e5')}${res}<span class="e4">${vdMedals(st.best)}</span>`
+    +`<span class="e2">${em?`<span class="em" aria-hidden="true">${em}</span>`:''}<span>${esc(tt)}</span></span><span class="e3">${esc(ch.task)}</span>${res}<span class="e4">${vdMedals(st.best)}</span>`
     +(done?`<span class="evt">${ic('timer-sand')}<span id="vdLeft">Новий виклик через ${vdLeft()}</span></span>`:'')+`</button>`;
   document.getElementById('vdCard').onclick=()=>done?openVdArchive():vdOpen(VD_DAY,'#vdCard');}
 setInterval(()=>{const el=document.getElementById('vdLeft');if(el&&CUR_SEC===1)el.textContent='Новий виклик через '+vdLeft();},30e3);
@@ -3781,8 +3781,8 @@ function vdBrief(){const el=document.getElementById('vdBrief'),bar=document.getE
   el.hidden=false;el.classList.toggle('ok',e.gate);
   el.innerHTML=`<div class="bl"><p class="bk">Виклик дня · ${vdDate(v.day)}${v.late?' · архів':''}</p><h2 class="bh1">${em?`<span class="em" aria-hidden="true">${em}</span>`:''}<span>${esc(tt)}</span></h2><p class="bs1">${esc(ch.story)}</p></div>`
     +`<div class="br"><div class="rqx"><div class="rq1"><span class="tag-req">${e.gate?ic('check-circle'):''}Обовʼязково</span><span class="cnt" aria-label="Виконано ${e.have} з ${e.need}">${e.have}<i>/${e.need}</i></span></div>`
-    +`<b class="rq2">${esc(rq.label)}</b><p class="rq3">${names.length?`Зараховано: <b>${esc(names.join(', '))}</b>`:'Поки нікого'}</p><div class="rqseg" aria-hidden="true" style="--n:${e.need}">${Array.from({length:e.need},(_,i)=>`<i class="${i<e.have?'on':''}"></i>`).join('')}</div></div>`
-    +`<p class="bon1"><span class="lb">Бонус</span>${ch.bonus?`<span class="bv">${esc(ch.bonus.label)}</span><span class="bn">теж рахуються в N/11</span>`:`<span class="bn">рахуються всі, хто підходить під умову</span>`}</p>${vdClubNote(ch,'cnote')}`
+    +`<b class="rq2">${esc(rq.label)}</b>${vdClubNote(ch,'cnote')}<p class="rq3">${names.length?`Зараховано: <b>${esc(names.join(', '))}</b>`:'Поки нікого'}</p><div class="rqseg" aria-hidden="true" style="--n:${e.need}">${Array.from({length:e.need},(_,i)=>`<i class="${i<e.have?'on':''}"></i>`).join('')}</div></div>`
+    +`<p class="bon1"><span class="lb">Бонус</span>${ch.bonus?`<span class="bv">${esc(ch.bonus.label)}</span><span class="bn">теж рахуються в N/11</span>`:`<span class="bn">рахуються всі, хто підходить під умову</span>`}</p>`
     +`<div class="meta"><div><small>Спроба</small><b>${v.attempt} з ${VD_ATTEMPTS}</b><span class="pips" aria-hidden="true">${pips}</span></div><div><small>Перекрутки</small><b>${Math.max(0,S.rerolls)} з ${tot}</b></div>`
     +`<div class="mm"><small>Медалі</small>${vdMedals(null)}</div></div></div>`;
   bar.innerHTML=`<div class="tx"><small>Обовʼязково</small><b><span class="cnt sm${e.gate?' ok':''}">${e.have}/${e.need}</span>${esc(rq.short||rq.label)}</b></div><div class="rt"><span>Спроба <b>${v.attempt}/${VD_ATTEMPTS}</b></span><span>Перекрутки <b>${Math.max(0,S.rerolls)}</b></span></div>`;
@@ -3810,7 +3810,7 @@ function vdSquad(ch,e){const P=id=>e.xi.find(x=>x.id===id).p,bl=ch.bonus?esc(ch.
 // ---- not counted (s11): one sentence why, what next, breakdown
 function vdFailShow(f){const v=S.vd;if(!v)return;const ch=v.ch,e=f.e,[em,tt]=vdSplit(ch.title),left=VD_ATTEMPTS-f.used,m=vdMedal(e.score);haptic('warning');
   document.getElementById('vdFail').innerHTML=`<div class="rs"><p class="at">${em?`<span class="em" aria-hidden="true">${em}</span>`:''}${esc(tt)} · спроба ${f.attempt} з ${VD_ATTEMPTS}</p><h1 class="no">Не зараховано</h1>`
-    +`<p class="why2">${esc(vdWhy(ch,e))}</p><div class="gate bad"><span class="tag-req">Обовʼязково</span><div class="gb2"><span class="n no">${e.have}/${e.need}</span><b>${esc(ch.required.label)}</b></div></div>`
+    +`<p class="why2">${esc(vdWhy(ch,e))}</p><div class="gate bad"><span class="tag-req">Обовʼязково</span><div class="gb2"><span class="n no">${e.have}/${e.need}</span><b>${esc(ch.required.label)}</b></div>${vdClubNote(ch,'cnote')}</div>`
     +`<section class="next2"><b>${left>0?'Що далі':'Це була остання спроба'}</b><p>${left>0?`Ця спроба витрачена, але в тебе ще ${left} ${plUk(left,'спроба','спроби','спроб')} з ${VD_ATTEMPTS}. Умова та сама: ${esc(ch.required.label)}.`:`Спроб більше немає. ${v.late?'Інші дні — в архіві.':'Новий виклик — завтра.'}`}</p>`
     +(m?`<p class="would">Без умови було б ${e.score} з 11 — це ${m.e}, але така спроба не рахується.</p>`:'')+`</section>${vdSquad(ch,e)}</div>`
     +`<div class="rs-ft">${left>0?`<button class="primary big0" id="vdAgain" type="button">${ic('restart')}Спроба ${f.attempt+1} з ${VD_ATTEMPTS}</button><p class="fine">${MODES.normal.rerolls} перекрутки на спробу · сезон не грається</p>`:`<button class="primary big0" id="vdToArch" type="button">До викликів</button>`}</div>`;
