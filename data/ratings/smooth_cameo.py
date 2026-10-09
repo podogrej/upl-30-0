@@ -1,4 +1,4 @@
-"""Cameo-season smoothing and top-of-scale compression (TOP_PTS): few apps -> rating pulled toward the player's nearby full seasons.
+"""Top-of-scale compression (TOP_PTS); cameo smoothing is off since 0.82 (SMOOTH = False): a card reflects only its own season.
 Run from repo root: python3 data/ratings/smooth_cameo.py  (then python3 src/build.py && node tools/make_engine.js)
 Always computes from source ratings (data/ratings/pool_ratings_raw.json, created on first run), so it is idempotent.
 Rule: if apps < FULL and the same person has other seasons with 10+ apps within +-2 years,
@@ -13,6 +13,7 @@ from collections import defaultdict
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..')
 POOL = os.path.join(ROOT, 'src', 'pool.json'); RAW = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'pool_ratings_raw.json')
 FULL, MIN_REF_APPS, WINDOW = 15, 10, 2
+SMOOTH = False   # pull of short seasons toward nearby seasons (0.46-0.81)
 # Compress the top of the scale so only ~1% of cards are 90+ (was 4.2%).
 # Piecewise linear, shared by all lines; nothing changes below 80. Applied last, so reruns are safe.
 TOP_PTS = [(45, 45), (80, 80), (94, 90), (96, 93), (97, 95), (98, 97), (99, 99)]
@@ -40,7 +41,7 @@ def smoothed(pool, raw):
         for i, p in enumerate(c['pl']):
             r, a = raw[key(c, i)], p[3] or 0
             ref = [fr for fy, fa, fr in per[canon(p[5])] if fa >= MIN_REF_APPS and abs(fy - c['y']) <= WINDOW and fy != c['y']]
-            new = r if (a >= FULL or not ref) else round((a / FULL) * r + (1 - a / FULL) * sum(ref) / len(ref))
+            new = r if (not SMOOTH or a >= FULL or not ref) else round((a / FULL) * r + (1 - a / FULL) * sum(ref) / len(ref))
             out[key(c, i)] = top_map(max(45, min(99, new)))
     return out
 

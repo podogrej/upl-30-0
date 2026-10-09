@@ -97,7 +97,7 @@ const TROPHIES=[
   {id:"equal",i:"⚖️",n:"Порівну",d:"Рівно 10 перемог, 10 нічиїх і 10 поразок",cat:"season",rep:1,t:c=>c.r.W===10&&c.r.D===10&&c.r.L===10},
   {id:"lonewolf",i:"🐺",n:"Один у полі не воїн",d:"Гравець забив 20+, а команда вилетіла",cat:"players",rep:1,t:c=>notAnti(c)&&c.r.place>=15&&c.pl.some(p=>p.g>=20)},
   {id:"ukrposhta",i:"📮",n:"Укрпошта",d:"Атакувальний півзахисник чи вінгер віддав менше 5 асистів",cat:"players",rep:1,t:c=>notAnti(c)&&c.pl.length===11&&c.pl.some(p=>['CAM','LW','RW'].includes(p.slot)&&(p.a||0)<5)},
-  {id:"kukuriku",i:"🐓",n:"Кукуріку",d:"Анатолій Тимощук у складі",cat:"secret",sec:1,t:c=>c.xi.some(x=>x.id==='w:1979-03-30:timoschuk')},
+  {id:"kukuriku",i:"🐓",n:"Зрада",d:"Анатолій Тимощук у складі",cat:"secret",sec:1,t:c=>c.xi.some(x=>x.id==='w:1979-03-30:timoschuk')},
   {id:"lobanovsky",i:"📋",n:"Лобан би схвалив",d:"Чемпіон, у складі 6+ гравців «Динамо» 1997–2001",cat:"secret",sec:1,t:c=>notAnti(c)&&c.r.place===1&&c.xi.filter(x=>x.cc==='dynamo-kyiv'&&x.y>=1997&&x.y<=2000).length>=6},
   {id:"panenka",i:"🪶",n:"Паненка",d:"Артем Мілевський у складі, команда в трійці",cat:"secret",sec:1,t:c=>notAnti(c)&&c.r.place<=3&&c.xi.some(x=>x.id==='tm:9800')},
   {id:"samba8",i:"💃",n:"Карнавал",d:"8+ бразильців в одному складі",cat:"secret",sec:1,t:c=>c.xi.filter(x=>DATA.nats[x.nat]==='Бразилія').length>=8},
