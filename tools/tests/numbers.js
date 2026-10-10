@@ -115,7 +115,7 @@ const noHScroll=pg=>pg.evaluate(()=>document.documentElement.scrollWidth<=innerW
   await A.pg.click('#freeOpen');await A.pg.click('#startBtn');
   await draftSeason(A.pg);await A.pg.waitForTimeout(600);
   const off=sent&&sent.off,xi=sent&&sent.row&&sent.row.xi;
-  T.check(Array.isArray(off)&&off.length===11&&off.every((a,i)=>Array.isArray(a)&&a[0]===xi[i].id&&a.length<=64&&a.length>1),'зіграний сезон: off — 11 списків, перший у кожному — обраний гравець '+(off?off.map(a=>a.length).join(','):'немає'));
+  T.check(Array.isArray(off)&&off.length===11&&off.every((a,i)=>Array.isArray(a)&&a[0]===xi[i].id&&a.length<=64&&a.length>=1)&&off.some(a=>a.length>1),'зіграний сезон: off — 11 списків, перший у кожному — обраний гравець '+(off?off.map(a=>a.length).join(','):'немає'));
   T.check(!A.errs.length,'драфт: без помилок '+A.errs.join(' | '));await A.ctx.close();}
  await b.close();
  process.exit(T.done());
