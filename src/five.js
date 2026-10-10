@@ -49,15 +49,18 @@ function f5Play(){
 function f5Live(m,done){
   const bar=document.getElementById('f5Bar'),dot=document.getElementById('f5Dot'),min=document.getElementById('f5Min'),sa=document.getElementById('f5Sa'),sb=document.getElementById('f5Sb'),goal=document.getElementById('f5Goal');
   const RUN=5000,PAUSE=1000;let t0=null,paused=0,gi=0,a=0,b=0,stop=false;
+  // bar and dot move by transform only; the track width is measured once and on resize
+  let W=dot.parentNode.clientWidth;const meas=()=>{W=dot.parentNode.clientWidth;};window.addEventListener('resize',meas);
+  const at=pc=>{bar.style.transform=`translateX(${pc-100}%)`;dot.style.transform=`translate(${pc/100*W}px,0) translate(-50%,-50%)`;};
   F5.skip=()=>{stop=true;finish();};
-  function finish(){sa.textContent=m.ga;sb.textContent=m.gb;bar.style.width='100%';dot.style.left='100%';min.textContent="40'";goal.hidden=true;done();}
+  function finish(){window.removeEventListener('resize',meas);sa.textContent=m.ga;sb.textContent=m.gb;bar.style.transform='none';dot.style.transform='';dot.style.left='100%';min.textContent="40'";goal.hidden=true;done();}
   function frame(ts){if(stop)return;if(t0==null)t0=ts;const el=ts-t0-paused;const mm=Math.min(40,el/RUN*40);
     const next=m.ev[gi];
-    if(next&&mm>=next.min){const at=next.min/40*100;bar.style.width=at+'%';dot.style.left=at+'%';min.textContent=next.min+"'";
+    if(next&&mm>=next.min){at(next.min/40*100);min.textContent=next.min+"'";
       if(next.side===0)a++;else b++;sa.textContent=a;sb.textContent=b;
       goal.hidden=false;goal.className='f5goal s'+next.side;goal.innerHTML=`${ic('soccer','sm')}<b>${next.min}'</b> ${esc(next.sc.name)}${next.as?`<span class="muted"> · пас ${esc(next.as.name)}</span>`:''} <span class="muted">(${esc(f5Label(next.side?m.B:m.A))})</span>`;
       gi++;const p0=performance.now();setTimeout(()=>{paused+=performance.now()-p0;requestAnimationFrame(frame);},PAUSE);return;}
-    const pc=mm/40*100;bar.style.width=pc+'%';dot.style.left=pc+'%';min.textContent=Math.floor(mm)+"'";
+    at(mm/40*100);min.textContent=Math.floor(mm)+"'";
     if(mm>=40){finish();return;}requestAnimationFrame(frame);}
   requestAnimationFrame(frame);}
 // ---------- UI
@@ -123,7 +126,7 @@ function f5Render(){
   if(f.phase==='live'){
     el.innerHTML=`<div class="hero f5live" style="margin-top:var(--sp-4)"><div class="kicker">${r.table?'Фінал':'Матч'} · 2×20 хвилин</div>
       <div class="f5score"><span>${esc(f5Label(m0.A))}</span><b><span id="f5Sa">0</span>:<span id="f5Sb">0</span></b><span>${esc(f5Label(m0.B))}</span></div>
-      <div class="f5track"><div class="f5bar" id="f5Bar"></div><div class="f5dot" id="f5Dot"></div><i style="left:50%"></i></div>
+      <div class="f5track"><div class="f5clip"><div class="f5bar" id="f5Bar"></div></div><div class="f5dot" id="f5Dot"></div><i style="left:50%"></i></div>
       <div class="row" style="justify-content:space-between"><span class="mono" id="f5Min">0'</span><button class="ghost" id="f5Skip">Пропустити</button></div>
       <div class="f5goal" id="f5Goal" hidden></div></div>
       ${r.table?`<h3>Група</h3><div class="tbl"><table><tr><th>#</th><th>Команда</th><th class="num">В</th><th class="num">Н</th><th class="num">П</th><th class="num">Г</th><th class="num">О</th></tr>${r.table.map((s,i)=>`<tr${i<2?' class="z-cl"':''}><td class="num">${i+1}</td><td>${esc(f5Label(s.t))}</td><td class="num">${s.w}</td><td class="num">${s.d}</td><td class="num">${s.l}</td><td class="num">${s.gf}:${s.ga}</td><td class="num"><b>${s.p}</b></td></tr>`).join('')}</table></div>`:''}`;

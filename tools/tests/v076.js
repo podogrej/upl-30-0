@@ -41,7 +41,7 @@ const sk=(pg,sel)=>pg.evaluate(s=>{const n=[...document.querySelectorAll(s+' .sk
 
 (async()=>{const T=checker('0.76 шторки');const bb=await launch();   // one browser for the whole file
  // ---- A. phone, file:// page: the "What's new" sheet
- {const {b,pg,errs}=await openPage({b:bb});
+ {const {b,pg,errs}=await openPage({b:bb,fastMotion:false});
   await pg.click('#newsBtn');await wait(70);
   const mid=await geo(pg,'#viewBox .box');
   const an=await pg.evaluate(()=>document.getAnimations().filter(a=>a.effect&&a.effect.getTiming().duration===420).map(a=>String(a.effect.getTiming().easing)));
@@ -94,7 +94,7 @@ const sk=(pg,sel)=>pg.evaluate(s=>{const n=[...document.querySelectorAll(s+' .sk
   T.check(Math.abs(tg.bottom-tg.vh)<=.5&&/Трофеї/.test(await pg.textContent('#viewTitle')),'«Трофеї» (офлайн) — теж шторка знизу');await pg.keyboard.press('Escape');await wait(400);
   await b.close();}
  // ---- B. reduced motion: instant
- {const {b,pg}=await openPage({b:bb,reducedMotion:'reduce'});await pg.click('#newsBtn');
+ {const {b,pg}=await openPage({b:bb,fastMotion:false,reducedMotion:'reduce'});await pg.click('#newsBtn');
   const r0=await pg.evaluate(()=>({anims:document.getAnimations().length,bottom:document.querySelector('#viewBox .box').getBoundingClientRect().bottom,vh:innerHeight}));
   T.check(r0.anims===0&&Math.abs(r0.bottom-r0.vh)<=.5,'«Зменшити рух»: шторка з’являється одразу, без анімацій');
   await pg.click('#viewClose');await wait(120);const s=await st(pg);T.check(s.ghosts===0&&s.hidden,'«Зменшити рух»: закривається одразу, без «привида»');
@@ -103,7 +103,7 @@ const sk=(pg,sel)=>pg.evaluate(s=>{const n=[...document.querySelectorAll(s+' .sk
   T.check(sa,'«Зменшити рух»: мерехтіння скелетона вимкнено');
   await b.close();}
  // ---- C. iPad: centered card
- {const {b,pg}=await openPage({b:bb,viewport:{width:820,height:1180}});await pg.click('#newsBtn');await wait(70);
+ {const {b,pg}=await openPage({b:bb,fastMotion:false,viewport:{width:820,height:1180}});await pg.click('#newsBtn');await wait(70);
   const mid=await pg.evaluate(()=>+getComputedStyle(document.querySelector('#viewBox .box')).opacity);await wait(500);
   const g=await geo(pg,'#viewBox .box');const gr=await pg.evaluate(()=>getComputedStyle(document.querySelector('#viewBox .grab')).display);
   T.check(Math.abs((g.left+g.right)/2-g.vw/2)<=1&&g.bottom<g.vh-40&&g.w<=640&&g.top>40&&gr==='none'&&mid<1,`iPad: картка по центру (${Math.round(g.w)}px), без ручки, з’являється плавно`);
@@ -113,7 +113,7 @@ const sk=(pg,sel)=>pg.evaluate(s=>{const n=[...document.querySelectorAll(s+' .sk
   await b.close();}
  // ---- D. site: login sheet, name sheet, table (full screen), league list
  {const db=mkDB();
-  const A=await openSite({b:bb,db,viewport:{width:390,height:844},wait:1500});const p=A.pg;   // no sign-in: login sheet
+  const A=await openSite({b:bb,fastMotion:false,db,viewport:{width:390,height:844},wait:1500});const p=A.pg;   // no sign-in: login sheet
   await p.click('#acctBtn');await wait(300);await p.click('#ppLogin');await wait(650);
   const lg=await geo(p,'#viewBox .box'),ls=await p.evaluate(()=>({login:document.getElementById('viewBox').classList.contains('login'),x:!!document.querySelector('#viewClose svg.ico')&&document.getElementById('viewClose').getAttribute('aria-label')==='Закрити',focus:document.activeElement.className}));
   T.check(ls.login&&Math.abs(lg.bottom-lg.vh)<=.5&&ls.x,'вхід: шторка знизу з хрестиком (SVG)');await shot(p,'login_phone_dark');
@@ -121,7 +121,7 @@ const sk=(pg,sel)=>pg.evaluate(s=>{const n=[...document.querySelectorAll(s+' .sk
   await p.click('#ppLogin');await wait(650);rel=await drag(p,'#viewHead',160,{steps:8,pause:20});await rel();await wait(600);
   T.check((await st(p)).hidden,'вхід: закривається свайпом вниз');
   await A.ctx.close();}
- {const db=mkDB();const A=await openSite({b:bb,db,signed:true,viewport:{width:390,height:844},wait:1500});const p=A.pg;
+ {const db=mkDB();const A=await openSite({b:bb,fastMotion:false,db,signed:true,viewport:{width:390,height:844},wait:1500});const p=A.pg;
   await p.click('#acctBtn');await wait(400);await p.click('#ppRowName');const m1=await p.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>r(document.querySelector('#ppSheet .sheet0-box').getBoundingClientRect().top))));await wait(700);
   const g=await geo(p,'#ppSheet .sheet0-box');const s1=await p.evaluate(()=>({st:history.state&&history.state.sheet,foc:document.activeElement.id,grab:!!document.querySelector('#ppSheet .grab')}));
   T.check(m1>g.top+20&&Math.abs(g.bottom-g.vh)<=.5&&g.rad>=16,`ім’я: шторка знизу з пружиною (верх ${Math.round(m1)} → ${Math.round(g.top)}, низ ${g.bottom}/${g.vh}, кути ${g.rad})`);
@@ -155,7 +155,7 @@ const sk=(pg,sel)=>pg.evaluate(s=>{const n=[...document.querySelectorAll(s+' .sk
   const api={'/api/auth':async()=>({json:{token_hash:'TH'}}),'/api/league':async req=>{if(req.method==='GET'){return {json:{title:'Футбол по середах',day:'2026-09-28',today,members:20,standings:today.map(t=>({name:t.name,wins:2,days:3}))}};}return {json:{ok:true,joined:[]}};}};
   // chat tables: opened from a group button the Tables screen starts on the chats tab; skeleton while the chat loads
   H.hold(/league/,true);
-  const A=await openSite({b:bb,db,api,tg,hash:'#tgWebAppData=x',route,viewport:{width:430,height:900},wait:900});const p=A.pg;
+  const A=await openSite({b:bb,fastMotion:false,db,api,tg,hash:'#tgWebAppData=x',route,viewport:{width:430,height:900},wait:900});const p=A.pg;
   await p.click('#tablesOpen');await wait(500);
   const lk=await p.evaluate(()=>{const c=document.getElementById('tbChats');return {hidden:c.hidden,sk:c.querySelectorAll('.sk').length,txt:c.innerText};});
   T.check(!lk.hidden&&lk.sk>=1&&!/Завантаж/.test(lk.txt),'«Мої чати»: скелетон замість «Завантажуємо табло…»');
@@ -165,7 +165,7 @@ const sk=(pg,sel)=>pg.evaluate(s=>{const n=[...document.querySelectorAll(s+' .sk
   await A.ctx.close();}
  // ---- E. skeletons: pending requests show shimmer blocks with the final layout
  {const db=mkDB();
-  const A=await openSite({b:bb,db,signed:true,route,viewport:{width:390,height:844},wait:1500});const p=A.pg;
+  const A=await openSite({b:bb,fastMotion:false,db,signed:true,route,viewport:{width:390,height:844},wait:1500});const p=A.pg;
   // all-time table
   H.hold(/\/rest\/v1\/seasons/);await p.click('#tablesOpen');await wait(300);
   await p.waitForFunction(()=>document.getAnimations().every(a=>a.playState!=='running'||a.effect.getTiming().iterations===Infinity),null,{timeout:3000});   // sheet settled (skeleton shimmer is infinite)
@@ -209,7 +209,7 @@ const sk=(pg,sel)=>pg.evaluate(s=>{const n=[...document.querySelectorAll(s+' .sk
   T.check(h2.sk===0&&h2.rows>=5,'сторінка гравця: скелетонів не лишилось, сезони на місці');
   T.check(A.errs.length===0,'помилок на сторінці немає '+A.errs.join(' | '));await A.ctx.close();}
  {const db=mkDB();H.hold(/rpc\/player_profile_pub/);
-  const A=await openSite({b:bb,db,signed:true,route,query:'?u=vitya234',viewport:{width:390,height:844},wait:900});const p=A.pg;
+  const A=await openSite({b:bb,fastMotion:false,db,signed:true,route,query:'?u=vitya234',viewport:{width:390,height:844},wait:900});const p=A.pg;
   const a1=await p.evaluate(()=>{const r=s=>document.querySelector(s).getBoundingClientRect();return {sk:document.querySelectorAll('#pp .sk').length,txt:document.getElementById('pp').innerText,head:r('.pp-head').height,big:r('.pp-big3').top,bigH:r('.pp-big3').height};});
   T.check(a1.sk>=5&&!/…|Завантаж/.test(a1.txt),'чужа сторінка гравця: скелетон імені й плиток, без «…»');await shot(p,'skeleton_player_other_phone_dark');
   H.release();await wait(900);
@@ -220,10 +220,10 @@ const sk=(pg,sel)=>pg.evaluate(s=>{const n=[...document.querySelectorAll(s+' .sk
  {const src=['template.html','account.js','leagues.js','player.js','trophies.js','five.js','oneclub.js','challenge.js'].map(f=>fs.readFileSync(path.join(ROOT,'src',f),'utf8')).join('\n');
   const left=(src.match(/[^`'"\n]{0,30}Завантаж(?:ення|уємо)…[^`'"\n]{0,20}/g)||[]);T.check(left.length===0,'у коді не лишилось «Завантаження…» / «Завантажуємо…» '+left.slice(0,2).join(' | '));}
  // ---- H. how-to-play button (#howGo) on the home screen opens the FAQ answer
- {const {b:bh,pg}=await openPage({b:bb});await pg.click('#howGo');await pg.waitForTimeout(300);
+ {const {b:bh,pg}=await openPage({b:bb,fastMotion:false});await pg.click('#howGo');await pg.waitForTimeout(300);
   T.check(await pg.evaluate(()=>document.getElementById('faqBox').open&&document.getElementById('howQ').open),'«Як грати?» відкриває відповідь у FAQ');await bh.close();}
  // ---- G. no repeated fades and no table height jumps (whole replay: the 6-row window moves with the player, so every tour is sampled)
- {const {b:bg,pg}=await openPage({b:bb});
+ {const {b:bg,pg}=await openPage({b:bb,fastMotion:false});
   await pg.evaluate(()=>document.getElementById('homeBtn').click());await pg.click('#freeOpen');await pg.evaluate(()=>window.__dbg.setFmt('classic'));await pg.click('#modes .opt:nth-child(1)');await pg.click('#startBtn');
   await pg.click('#spinBtn');await pg.waitForSelector('#squad .pl:not([disabled])',{timeout:8000});
   await pg.click('#showR');await pg.waitForTimeout(600);

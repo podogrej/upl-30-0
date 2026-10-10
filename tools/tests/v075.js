@@ -1,5 +1,5 @@
 // Motion release checks: motion tokens, press feedback (scale on :active, no layout shift, spring release), haptics through a stubbed
-// Telegram HapticFeedback, reels (second reel lag, blur, settle), reduced motion. Run from repo root: node tools/tests/v075.js
+// Telegram HapticFeedback, reels (second reel lag, edge mask instead of blur, settle), reduced motion. Run from repo root: node tools/tests/v075.js
 const {openPage}=require('./_page.js');const {checker}=require('./_site.js');
 const STUB=`window.__hap=[];window.Telegram={WebApp:{initData:'stub',HapticFeedback:{impactOccurred:s=>__hap.push('i:'+s),notificationOccurred:s=>__hap.push('n:'+s),selectionChanged:()=>__hap.push('s')}}};`;
 const hap=pg=>pg.evaluate(()=>window.__hap.slice());
@@ -44,12 +44,12 @@ const clear=pg=>pg.evaluate(()=>{window.__hap.length=0;});
  await pg.click('#freeOpen');await pg.waitForTimeout(300);await pg.click('#startBtn');await pg.waitForTimeout(600);await clear(pg);   // let the screen transition finish before timing the reels
  await pg.evaluate(()=>{window.__mv=new Promise(r=>{const c=document.querySelector('#reelClub .strip'),y=document.querySelector('#reelYear .strip'),t0=performance.now();let a=null,b2=null,bl=0;
    const tick=()=>{const t=performance.now()-t0,f=getComputedStyle(c).filter;if(a==null&&c.classList.contains('go'))a=t;if(b2==null&&y.classList.contains('go'))b2=t;const m=/blur\(([\d.]+)px\)/.exec(f);if(m)bl=Math.max(bl,parseFloat(m[1]));
-     if(t<1500)requestAnimationFrame(tick);else r({a,b:b2,bl});};tick();});});
+     if(t<1500)requestAnimationFrame(tick);else{const cs=getComputedStyle(c.parentNode);r({a,b:b2,bl,mask:cs.maskImage||cs.webkitMaskImage||''});}};tick();});});
  await pg.click('#spinBtn');await pg.waitForTimeout(60);
  let h=await hap(pg);T.check(h.includes('i:light'),`старт колеса: i:light (${h})`);
  const mv=await pg.evaluate(()=>window.__mv);
  T.check(mv.a!=null&&mv.b!=null&&mv.b-mv.a>=100&&mv.b-mv.a<=300,`другий барабан стартує пізніше (${Math.round(mv.b-mv.a)} мс)`);
- T.check(mv.bl>0&&mv.bl<=3,`барабан крутиться з легким розмиттям (${mv.bl}px)`);
+ T.check(mv.bl===0&&/linear-gradient/.test(mv.mask),`барабан без розмиття стрічки, вікно з маскою по краях (blur ${mv.bl}px, mask ${mv.mask.slice(0,40)})`);
  await pg.waitForSelector('#squad .pl:not([disabled])',{timeout:8000});await pg.waitForTimeout(100);
  h=await hap(pg);T.check(h.includes('i:medium'),`зупинка колеса: i:medium (${h})`);
  const dirty=await pg.evaluate(()=>[...document.querySelectorAll('.reel .strip')].some(s=>s.classList.contains('go')||s.style.transform!==''));

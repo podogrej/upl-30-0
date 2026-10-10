@@ -30,13 +30,13 @@ localStorage.setItem('upl30_tr',JSON.stringify({t:{champ:{n:1,at:'2026-10-01'},f
   const tag=`${w}px ${theme}`;
   const {pg,errs,ctx}=await openSite({b,db:makeDB({}),init:SEED,viewport:{width:w,height:h},colorScheme:theme,wait:1500});
   await pg.evaluate(t=>{document.documentElement.dataset.theme=t;},theme);await pg.waitForTimeout(200);
-  // home
+  // home (visible mode rows only: season pick is hidden)
   await noEmoji(pg,`${tag} · головна`);await noScroll(pg,`${tag} · головна`);
-  const home=await pg.evaluate(()=>{const tiles=[...document.querySelectorAll('button.tile1')];const bg=e=>getComputedStyle(e).backgroundColor;
+  const home=await pg.evaluate(()=>{const tiles=[...document.querySelectorAll('button.tile1')].filter(t=>!t.hidden);const bg=e=>getComputedStyle(e).backgroundColor;
    return {n:tiles.length,plates:tiles.filter(t=>{const i=t.querySelector(':scope>.ic');return i&&i.querySelector('svg.ico')&&bg(i)!=='rgba(0, 0, 0, 0)'&&i.getBoundingClientRect().width>=44;}).length,
     tr:!!document.querySelector('#trBtn>.ic svg.ico')&&!/🏆/.test(document.getElementById('trBtn').textContent),daily:!!document.querySelector('#vdCard .af svg.ico'),fire:!!document.querySelector('#stkChip svg.ico'),
     mail:!!document.querySelector('#fbBtn svg.ico'),cred:getComputedStyle(document.querySelector('.ft-cred')).display!=='none',nav:getComputedStyle(document.querySelector('.foot0')).display!=='none'};});
-  T.check(home.n===5&&home.plates===5,`${tag} · рядки режимів: 5 плашок з SVG-іконкою (${home.plates}/${home.n})`);
+  T.check(home.n===4&&home.plates===4,`${tag} · рядки режимів: 4 плашки з SVG-іконкою (${home.plates}/${home.n})`);
   T.check(home.tr,`${tag} · «Трофеї» на головній — SVG, не 🏆`);T.check(home.daily&&home.fire&&home.mail,`${tag} · виклик дня, серія й відгук — SVG`);
   T.check(home.cred&&home.nav,`${tag} · на головній повний футер (розділи й подяки)`);
   if(w===390)await shot(pg,`home_phone_${theme}`,true);if(w===820)await shot(pg,'home_ipad_dark',true);

@@ -90,20 +90,40 @@ function vdFinish(v,e){if(v.fin)return v.fin;return v.fin=(async()=>{let j=null;
   return {gate,score,e,attempt:v.attempt,used,late,first,streak,seed:j&&j.seed?{seed:j.seed,seed_id:j.seed_id}:null};})();}
 
 // ---- brief on the draft screen and the compact sticky bar
+// markup is built once per attempt; later calls update it in place, so the counter rolls, segments fill and the names row grows smoothly
+const vdNames=a=>a.map(n=>`<span class="nn">${esc(n)}</span>`).join(', ');
 function vdBrief(){const el=document.getElementById('vdBrief'),bar=document.getElementById('vdBar'),v=S.vd;
-  if(!v){if(!el.hidden){el.hidden=true;el.innerHTML='';}bar.innerHTML='';return;}
+  if(!v){if(!el.hidden){el.hidden=true;el.innerHTML='';}delete el.dataset.k;bar.innerHTML='';return;}
   vdSave();
-  const ch=v.ch,rq=ch.required,e=vdEvalNow(),[em,tt]=vdSplit(ch.title),tot=MODES.normal.rerolls;
+  const ch=v.ch,rq=ch.required,e=vdEvalNow(),[em,tt]=vdSplit(ch.title),tot=MODES.normal.rerolls,rr=Math.max(0,S.rerolls);
   const names=e.parts.flatMap(p=>p.ids).map(id=>{const x=e.xi.find(q=>q.id===id);return x?cardName(x.p.name):'';}).filter(Boolean);
   const pips=Array.from({length:VD_ATTEMPTS},(_,i)=>`<i class="${i+1<v.attempt?'u':i+1===v.attempt?'c':''}"></i>`).join('');
-  el.hidden=false;el.classList.toggle('ok',e.gate);
-  el.innerHTML=`<div class="bl"><p class="bk">Виклик дня · ${vdDate(v.day)}${v.late?' · архів':''}</p><h2 class="bh1">${em?`<span class="em" aria-hidden="true">${em}</span>`:''}<span>${esc(tt)}</span></h2><p class="bs1">${esc(ch.story)}</p></div>`
-    +`<div class="br"><div class="rqx"><div class="rq1"><span class="tag-req">${e.gate?ic('check-circle'):''}Обовʼязково</span><span class="cnt" aria-label="Виконано ${e.have} з ${e.need}">${e.have}<i>/${e.need}</i></span></div>`
-    +`<b class="rq2">${esc(rq.label)}</b>${vdClubNote(ch,'cnote')}${names.length?`<p class="rq3">Зараховано: <b>${esc(names.join(', '))}</b></p>`:''}<div class="rqseg" aria-hidden="true" style="--n:${e.need}">${Array.from({length:e.need},(_,i)=>`<i class="${i<e.have?'on':''}"></i>`).join('')}</div></div>`
-    +`<p class="bon1"><span class="lb">Бонус</span>${ch.bonus?`<span class="bv">${esc(ch.bonus.label)}</span><span class="bn">теж рахуються в N/11</span>`:`<span class="bn">рахуються всі, хто підходить під умову</span>`}</p>`
-    +`<div class="meta"><div><small>Спроба</small><b>${v.attempt} з ${VD_ATTEMPTS}</b><span class="pips" aria-hidden="true">${pips}</span></div><div><small>Перекрутки</small><b>${Math.max(0,S.rerolls)} з ${tot}</b></div>`
-    +`<div class="mm"><small>Медалі</small>${vdMedals(null)}</div></div></div>`;
-  bar.innerHTML=`<div class="tx"><small>Обовʼязково</small><b><span class="cnt sm${e.gate?' ok':''}">${e.have}/${e.need}</span>${esc(rq.short||rq.label)}</b></div><div class="rt"><span>Спроба <b>${v.attempt}/${VD_ATTEMPTS}</b></span><span>Перекрутки <b>${Math.max(0,S.rerolls)}</b></span></div>`;
+  const meta=`<div><small>Спроба</small><b>${v.attempt} з ${VD_ATTEMPTS}</b><span class="pips" aria-hidden="true">${pips}</span></div><div><small>Перекрутки</small><b>${rr} з ${tot}</b></div>`
+    +`<div class="mm"><small>Медалі</small>${vdMedals(null)}</div>`;
+  const key=[v.day,v.attempt,v.late?1:0,e.need].join('|');el.hidden=false;
+  if(el.dataset.k!==key||!el.querySelector('.rqx')){el.dataset.k=key;el.classList.toggle('ok',e.gate);
+    el.innerHTML=`<div class="bl"><p class="bk">Виклик дня · ${vdDate(v.day)}${v.late?' · архів':''}</p><h2 class="bh1">${em?`<span class="em" aria-hidden="true">${em}</span>`:''}<span>${esc(tt)}</span></h2><p class="bs1">${esc(ch.story)}</p></div>`
+      +`<div class="br"><div class="rqx"><div class="rq1"><span class="tag-req"><span class="ckw"><span>${ic('check-circle')}</span></span>Обовʼязково</span><span class="cnt" aria-label="Виконано ${e.have} з ${e.need}"><span class="cv">${e.have}</span><i>/${e.need}</i></span></div>`
+      +`<b class="rq2">${esc(rq.label)}</b>${vdClubNote(ch,'cnote')}<div class="rq3w${names.length?' open':''}"><p class="rq3">Зараховано: <b class="nms">${vdNames(names)}</b></p></div><div class="rqseg" aria-hidden="true" style="--n:${e.need}">${Array.from({length:e.need},(_,i)=>`<i class="${i<e.have?'on':''}"></i>`).join('')}</div></div>`
+      +`<p class="bon1"><span class="lb">Бонус</span>${ch.bonus?`<span class="bv">${esc(ch.bonus.label)}</span><span class="bn">теж рахуються в N/11</span>`:`<span class="bn">рахуються всі, хто підходить під умову</span>`}</p>`
+      +`<div class="meta">${meta}</div></div>`;
+    bar.innerHTML=`<div class="tx"><small>Обовʼязково</small><b><span class="cnt sm${e.gate?' ok':''}">${e.have}/${e.need}</span>${esc(rq.short||rq.label)}</b></div><div class="rt"><span>Спроба <b>${v.attempt}/${VD_ATTEMPTS}</b></span><span>Перекрутки <b class="rr">${rr}</b></span></div>`;
+    return;}
+  const rqx=el.querySelector('.rqx'),cnt=rqx.querySelector('.cnt'),cv=cnt.querySelector('.cv'),was=+(cv.dataset.odo!==undefined?cv.dataset.odo:cv.textContent);
+  if(was!==e.have){odoSet(cv,e.have,e.have<was);if(e.have>was)bump(cnt);cnt.setAttribute('aria-label',`Виконано ${e.have} з ${e.need}`);}
+  rqx.querySelectorAll('.rqseg i').forEach((x,i)=>x.classList.toggle('on',i<e.have));
+  const w=rqx.querySelector('.rq3w'),nms=w.querySelector('.nms'),old=[...nms.querySelectorAll('.nn')].map(x=>x.textContent);
+  if(old.join('\n')!==names.join('\n')){let added=null;
+    smoothHeight(w,()=>{w.classList.toggle('open',names.length>0);
+      if(old.every((n,i)=>names[i]===n)){for(let i=old.length;i<names.length;i++){if(i)nms.append(', ');const sp=document.createElement('span');sp.className='nn';sp.textContent=names[i];nms.append(sp);added=sp;}}
+      else nms.innerHTML=vdNames(names);});
+    if(added&&!LESS_MOTION()&&added.animate)added.animate([{opacity:0,transform:'translateX(-4px)'},{opacity:1,transform:'none'}],{duration:MOTION.ms('--dur-2'),delay:MOTION.t(60),easing:MOTION.ease(),fill:'backwards'});}
+  if(e.gate&&!el.classList.contains('ok')){el.classList.add('ok');haptic('success');
+    if(!LESS_MOTION()&&rqx.animate){const pop=MOTION.tok('--spring-pop');rqx.querySelector('.ckw .ic').animate([{transform:'scale(.6)',opacity:0},{transform:'none',opacity:1}],{duration:MOTION.ms('--dur-3'),delay:MOTION.t(80),easing:pop,fill:'backwards'});
+      rqx.animate([{transform:'scale(.98)'},{transform:'none'}],{duration:MOTION.ms('--dur-3'),easing:pop});}}
+  else if(!e.gate)el.classList.remove('ok');
+  el.querySelector('.meta').innerHTML=meta;
+  const bc=bar.querySelector('.cnt');if(bc){odoSet(bc,`${e.have}/${e.need}`,e.have<was);bc.classList.toggle('ok',e.gate);bar.querySelector('.rr').textContent=rr;}
 }
 // S.vdOut: the brief scrolled above the header; miniSync shows the bar only on the draft screen
 if(typeof IntersectionObserver!=='undefined')new IntersectionObserver(([x])=>{S.vdOut=!x.isIntersecting&&x.boundingClientRect.top<0;miniSync();},{rootMargin:'-60px 0px 0px 0px'}).observe(document.getElementById('vdBrief'));

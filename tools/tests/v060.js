@@ -1,4 +1,4 @@
-// Single-player pack: season pick (wheel gives a club -> three seasons, no respins, saved as mode 'pick'), 5x5 hidden, FAQ,
+// Single-player pack: season pick (hidden on home, ?pick=1 brings it back; wheel gives a club -> three seasons, no respins, saved as mode 'pick'), 5x5 hidden, FAQ,
 // Share block, 'ratings shown' flag (show_r), rare trophy effect, best daily result per player.
 // Run from repo root: node tools/tests/v060.js [screenshot dir]. Exit code 0 = all good.
 const path=require('path'),fs=require('fs');const {ROOT}=require('./_page.js');const {openSite,makeDB}=require('./_site.js');
@@ -8,11 +8,16 @@ const fail=[];let n=0;const check=(ok,msg)=>{n++;console.log((ok?'✓ ':'✗ ')+
  // online-like site (https://upl.test/, _site.js): recent Chromium (GitHub Actions) blocks /api/* requests from a file:// page
  const saves=[];const db=makeDB({seasons:{auto:'id'},season_seeds:{auto:'id'},daily_results:{auto:'id'}});
  const {b,pg,errs}=await openSite({db,api:{'/api/save':async req=>{saves.push(req.body||{});return {json:{id:7,verified:true}};},'/api/seed':async()=>({json:{seed:12345,seed_id:'s1'}})}});
- // ---- home: new-mode badge, 5x5 hidden, FAQ up to date
- const home=await pg.evaluate(()=>({pick:!document.getElementById('pickOpen').hidden,f5:document.getElementById('f5Open').hidden,
-   faq:document.querySelector('.faq0').textContent.replace(/\s+/g,' '),old:!!document.getElementById('dailyBtn')}));
- check(home.pick&&home.f5,'головна: «Вибір сезону» є, 5×5 на одному телефоні сховано');
- check(/Що таке «Виклик дня»/.test(home.faq)&&!/Драфт дня/.test(home.faq)&&/Що таке «Вибір сезону»/.test(home.faq)&&!/5×5 на одному пристрої/.test(home.faq)&&/Це ти\?/.test(home.faq),'FAQ: виклик дня (драфту дня немає), вибір сезону, «Це ти?», без 5×5 на одному пристрої');
+ // ---- home: season pick is hidden (tile, footer link, FAQ entry), 5x5 hidden, FAQ up to date
+ const home=await pg.evaluate(()=>{const faq=[...document.querySelectorAll('.faq0>details')].filter(d=>!d.hidden).map(d=>d.textContent.replace(/\s+/g,' ')).join(' | ');   // questions and answers of visible entries
+   return {pick:!document.getElementById('pickOpen').hidden,foot:!document.querySelector('.foot0 a[data-go="pickOpen"]').hidden,tiles:document.getElementById('modeTiles').className,
+     f5:document.getElementById('f5Open').hidden,faq,old:!!document.getElementById('dailyBtn')};});
+ check(!home.pick&&!home.foot&&/\bm2\b/.test(home.tiles)&&home.f5,'головна: «Вибір сезону» сховано (плитка й посилання в підвалі), «Інші режими» у дві колонки, 5×5 на одному телефоні сховано');
+ check(/Що таке «Виклик дня»/.test(home.faq)&&!/Драфт дня/.test(home.faq)&&!/Вибір сезону/.test(home.faq)&&!/5×5 на одному пристрої/.test(home.faq)&&/Це ти\?/.test(home.faq),'FAQ: виклик дня, «Це ти?», без «Вибір сезону» й без 5×5 на одному пристрої');
+ // ?pick=1 brings the mode back (one flag): tile, footer link, FAQ entry, three columns on wide screens
+ await pg.goto('https://upl.test/?pick=1');await pg.waitForFunction(()=>window.__dbg&&document.fonts.status==='loaded',null,{timeout:15000});await pg.waitForTimeout(300);
+ const on=await pg.evaluate(()=>({pick:!document.getElementById('pickOpen').hidden,foot:!document.querySelector('.foot0 a[data-go="pickOpen"]').hidden,faq:!document.querySelector('.faq0 details[data-pick]').hidden,tiles:document.getElementById('modeTiles').className}));
+ check(on.pick&&on.foot&&on.faq&&/\bm3\b/.test(on.tiles),'?pick=1: плитка, посилання, FAQ «Вибір сезону» повертаються: '+JSON.stringify(on));
  check(!home.old,'кнопки «Драфт дня» немає');
  // ---- season pick: format tile, no modes
  // season pick from home goes straight to the draft; settings via Play -> season pick tile

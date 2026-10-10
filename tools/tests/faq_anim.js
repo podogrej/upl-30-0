@@ -8,7 +8,7 @@ const sample=(pg,sel,ms)=>pg.evaluate(([sel,ms])=>new Promise(res=>{const d=docu
 const smooth=h=>h.every((v,i)=>i===0||Math.abs(v-h[i-1])<=Math.max(60,Math.abs(h[h.length-1]-h[0])*0.6));   // no single-frame jump of the whole distance
 (async()=>{const T=checker('FAQ');
  for(const reduce of [false,true]){
-  const {b,ctx,pg,errs}=await openSite({db:makeDB({}),viewport:{width:390,height:844},wait:1200});
+  const {b,ctx,pg,errs}=await openSite({db:makeDB({}),fastMotion:false,viewport:{width:390,height:844},wait:1200});
   if(reduce)await pg.emulateMedia({reducedMotion:'reduce'});
   const tag=reduce?' (reduced motion)':'';
   const open=()=>pg.evaluate(()=>document.getElementById('faqBox').open);

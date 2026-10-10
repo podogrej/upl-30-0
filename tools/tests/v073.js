@@ -93,7 +93,7 @@ async function pickOne(pg){await pg.click('#spinBtn');await pg.waitForSelector('
   const r=await o.pg.evaluate(()=>({tier:document.getElementById('tier').textContent,r0:[...document.querySelectorAll('#final .pitch .slot .r0')].filter(e=>e.offsetParent).length,ct:[...document.querySelectorAll('#final .pitch .slot .ct')].filter(e=>e.offsetParent).length}));
   T.check(r.r0===11&&r.ct===0,`телефон: загальний рейтинг на полі підсумку (${r.r0}), клубу немає (${r.ct})`);
   T.check(r.tier[0]===r.tier[0].toUpperCase(),'рядок зони з великої літери: '+r.tier);
-  await o.pg.evaluate(()=>document.getElementById('homeBtn').click());await o.pg.click('#pickOpen');await o.pg.waitForTimeout(300);
+  await o.pg.evaluate(()=>document.getElementById('homeBtn').click());await o.pg.evaluate(()=>document.getElementById('pickOpen').click());await o.pg.waitForTimeout(300);   // season pick is hidden on home; its entry still works
   await o.pg.click('#spinBtn');await o.pg.waitForSelector('#seaPick:not([hidden]) button',{timeout:8000});await o.pg.waitForTimeout(900);
   const q=await o.pg.evaluate(()=>({bot:document.querySelector('#seaPick button').getBoundingClientRect().bottom,vh:innerHeight}));
   T.check(q.bot<=q.vh,`вибір сезону: кнопки сезонів у кадрі після колеса (${Math.round(q.bot)} ≤ ${q.vh})`);

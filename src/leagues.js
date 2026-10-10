@@ -60,14 +60,19 @@ async function flGone(fn,btn){const id=FL.id;btn.disabled=true;
 async function flUndo(fn,id){try{await playerRpc(fn,{p_id:id,p_undo:true});}catch(e){toast(flManageErr(e));return;}openLeague(id);}
 // one bottom toast: toast(text, actionLabel, onAction); hides after 7 s, the timer is paused on touch, hover and focus
 const TOAST_MS=7000,TOAST={t:0,left:0,at:0,hold:false};
-function toastHide(){clearTimeout(TOAST.t);const el=document.getElementById('toast');if(el)el.innerHTML='';}
-function toastHold(on){const c=document.querySelector('#toast .toast');if(!c||TOAST.hold===on)return;TOAST.hold=on;c.classList.toggle('hold',on);
+// exit: back down the way it came in (opacity only with reduced motion), removed when the animation ends
+function toastOut(c,ms){if(c.dataset.out)return;c.dataset.out='1';c.classList.add('out');c.setAttribute('aria-hidden','true');const rm=()=>c.remove();
+  if(!c.animate){rm();return;}const kf=LESS_MOTION()?[{opacity:1},{opacity:0}]:[{opacity:1,transform:'none'},{opacity:0,transform:'translateY(12px)'}];
+  c.animate(kf,{duration:ms,easing:MOTION.ease(),fill:'forwards'}).finished.then(rm,rm);setTimeout(rm,ms+300);}
+function toastHide(){clearTimeout(TOAST.t);document.querySelectorAll('#toast .toast:not(.out)').forEach(c=>toastOut(c,MOTION.ms('--dur-out')));}
+function toastHold(on){const c=document.querySelector('#toast .toast:not(.out)');if(!c||TOAST.hold===on)return;TOAST.hold=on;c.classList.toggle('hold',on);
   if(on){clearTimeout(TOAST.t);TOAST.left-=Date.now()-TOAST.at;}else{TOAST.at=Date.now();TOAST.t=setTimeout(toastHide,Math.max(TOAST.left,600));}}
 function toast(text,action,fn){let el=document.getElementById('toast');
   if(!el){el=document.createElement('div');el.id='toast';el.setAttribute('role','status');el.setAttribute('aria-live','polite');document.body.appendChild(el);}
   clearTimeout(TOAST.t);TOAST.left=TOAST_MS;TOAST.hold=false;TOAST.at=Date.now();
-  el.innerHTML=`<div class="toast"><span>${esc(text)}</span>${action?`<button type="button">${esc(action)}</button>`:''}<i></i></div>`;
-  const c=el.firstChild;c.onpointerenter=c.onfocusin=()=>toastHold(true);c.onpointerleave=c.onpointercancel=c.onfocusout=()=>toastHold(false);
+  el.querySelectorAll('.toast:not(.out)').forEach(c=>toastOut(c,MOTION.t(120)));   // replaced: the old one leaves quickly, the new one enters at once
+  el.insertAdjacentHTML('beforeend',`<div class="toast"><span>${esc(text)}</span>${action?`<button type="button">${esc(action)}</button>`:''}<i></i></div>`);
+  const c=el.lastElementChild;c.onpointerenter=c.onfocusin=()=>toastHold(true);c.onpointerleave=c.onpointercancel=c.onfocusout=()=>toastHold(false);
   if(action)c.querySelector('button').onclick=()=>{toastHide();fn&&fn();};
   TOAST.t=setTimeout(toastHide,TOAST_MS);}
 // ---------- markup
