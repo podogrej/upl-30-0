@@ -2063,8 +2063,7 @@ function tickReveal(){
   // one match: result as square color, no letters or '@'; round is shown above, card lists scorers only
   document.getElementById('lvMatch').innerHTML=`<div class="lvMatch"><span class="lvRes ${m.res}"></span><div><b>${esc(shortTeam(m.opp))}</b>${m.who.length?`<div class="who">${esc(whoMin(m))}</div>`:''}</div><span class="sc">${m.ug}:${m.og}</span></div>`;
   document.getElementById('lvGrid').children[REV.i].className=m.res+' nw';
-  if(m.ug>0)haptic('light',3000);   // own goals only, at most one per ~5 rounds
-  if(m.res==='W')restartAnim(document.getElementById('lvMatch').firstChild,'goal0');   // flash on win only, green
+  if(m.res==='W'){haptic('light');restartAnim(document.getElementById('lvMatch').firstChild,'goal0');}   // tap and green flash on wins only
   const snap=r.snaps[k-1];const ui=snap.findIndex(t=>t.id==='USER');const last=snap.length-1,xtra=ui<4?4:ui===last?last-1:-1;const rows=snap.map((t,i)=>({...t,i})).filter(t=>t.i<4||t.i===ui||t.i===last||t.i===xtra);   // always 6 rows: table height stays the same
   // live table: no zone colors during the season, zones only in the final table
   const lt=document.getElementById('lvTable'),was=rowTops(lt);
