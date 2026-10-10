@@ -2573,7 +2573,7 @@ function shareTextOf(r,noLink,noGrid){   // noGrid: caption for the card; square
   const rec=`${wd(r.W,'перемога','перемоги','перемог')}, ${wd(r.D,'нічия','нічиї','нічиїх')}, ${wd(r.L,'поразка','поразки','поразок')}`;
   const top=r.scorers[0]?`\nНайкращий бомбардир: ${r.scorers[0].name} — ${r.scorers[0].g}`:'';
   const stk=r.streak&&r.streak.count>1?`\n🔥 Серія: ${r.streak.count} дн. поспіль${r.streak.used?' (❄️ заморозка)':''}`:'';
-  const tro=r.tro&&r.tro.fresh.length?`\n🏆 ${r.tro.fresh.length>1?'Нові трофеї':'Новий трофей'}: ${r.tro.fresh.map(id=>trDef(id).n).join(', ')}`:'';
+  const tro=r.tro&&r.tro.fresh.length?`\n🏆 ${r.tro.fresh.length>1?'Нові трофеї':'Новий трофей'}: ${r.tro.fresh.map(id=>`«${trDef(id).n}»`).join(', ')}`:'';
   const link=ONLINE&&!noLink?`\n\nЗбери свою 11-ку: ${TG?tgLink():shareUrl(r)}`:'';
   return `${head}${gold?'\n'+tier:''}\n\n${rec}\n${r.pts} ${ptsWord(r.pts)} · ${r.place} місце · голи ${r.gf}:${r.ga}${noGrid?'':'\n\n'+gridOf(r)}${noGrid?'\n':''}${top}${stk}${tro}${link}`;
 }

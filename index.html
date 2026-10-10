@@ -2302,8 +2302,8 @@ const TROPHIES=[
   {id:"nil5",i:"🥱",n:"Нудьга",d:"5+ нічиїх 0:0 за сезон",cat:"season",rep:1,t:c=>notAnti(c)&&mixed(c)&&LOG(c).filter(m=>m.ug===0&&m.og===0).length>=5},
   {id:"cs18",i:"🔒",n:"Ворота на замку",d:"18+ матчів без пропущених голів",cat:"season",rep:1,t:c=>notAnti(c)&&mixed(c)&&LOG(c).filter(m=>m.og===0).length>=18},
   {id:"fourth",i:"4️⃣",n:"Перший за бортом",d:"Фініш на 4-му місці",cat:"season",rep:1,t:c=>notAnti(c)&&mixed(c)&&c.r.place===4},
-  {id:"loss17",i:"🇧🇷",n:"Вийшов бразилити",d:"Програй матч 1:7",cat:"season",rep:1,t:c=>notAnti(c)&&LOG(c).some(m=>m.ug===1&&m.og===7)},
-  {id:"win71",i:"🇩🇪",n:"Вийшов німити",d:"Виграй матч 7:1",cat:"season",rep:1,t:c=>notAnti(c)&&mixed(c)&&LOG(c).some(m=>m.ug===7&&m.og===1)},
+  {id:"loss17",i:"🥁",n:"Вийшов бразилити",d:"Програй матч 1:7",cat:"season",rep:1,t:c=>notAnti(c)&&LOG(c).some(m=>m.ug===1&&m.og===7)},
+  {id:"win71",i:"🥨",n:"Вийшов німити",d:"Виграй матч 7:1",cat:"season",rep:1,t:c=>notAnti(c)&&mixed(c)&&LOG(c).some(m=>m.ug===7&&m.og===1)},
   {id:"scorer20",i:"👟",n:"Голеадор",d:"Гравець забиває 20+ голів за сезон",cat:"players",rep:1,t:c=>notAnti(c)&&mixed(c)&&c.pl.some(p=>p.g>=20)},
   {id:"duo15",i:"👯",n:"Шева й Інзагі",d:"Двоє гравців забили 15+ голів за сезон",cat:"players",rep:1,t:c=>notAnti(c)&&mixed(c)&&goalsDesc(c)[1]>=15},
   {id:"trio12",i:"🔱",n:"Бейленко, Бенземенко, Роналденко",d:"Троє гравців забили 12+ голів за сезон",cat:"players",rep:1,t:c=>notAnti(c)&&mixed(c)&&goalsDesc(c)[2]>=12},
@@ -4222,7 +4222,7 @@ function shareTextOf(r,noLink,noGrid){   // noGrid: caption for the card; square
   const rec=`${wd(r.W,'перемога','перемоги','перемог')}, ${wd(r.D,'нічия','нічиї','нічиїх')}, ${wd(r.L,'поразка','поразки','поразок')}`;
   const top=r.scorers[0]?`\nНайкращий бомбардир: ${r.scorers[0].name} — ${r.scorers[0].g}`:'';
   const stk=r.streak&&r.streak.count>1?`\n🔥 Серія: ${r.streak.count} дн. поспіль${r.streak.used?' (❄️ заморозка)':''}`:'';
-  const tro=r.tro&&r.tro.fresh.length?`\n🏆 ${r.tro.fresh.length>1?'Нові трофеї':'Новий трофей'}: ${r.tro.fresh.map(id=>trDef(id).n).join(', ')}`:'';
+  const tro=r.tro&&r.tro.fresh.length?`\n🏆 ${r.tro.fresh.length>1?'Нові трофеї':'Новий трофей'}: ${r.tro.fresh.map(id=>`«${trDef(id).n}»`).join(', ')}`:'';
   const link=ONLINE&&!noLink?`\n\nЗбери свою 11-ку: ${TG?tgLink():shareUrl(r)}`:'';
   return `${head}${gold?'\n'+tier:''}\n\n${rec}\n${r.pts} ${ptsWord(r.pts)} · ${r.place} місце · голи ${r.gf}:${r.ga}${noGrid?'':'\n\n'+gridOf(r)}${noGrid?'\n':''}${top}${stk}${tro}${link}`;
 }

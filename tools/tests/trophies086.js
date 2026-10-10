@@ -47,7 +47,7 @@ const away=Array.from({length:30},(_,k)=>M(k%2?0:1,k%2?0:2,k%2===0));   // home:
 both('awayfort',ctx({log:away}),ctx({log:set(away,1,M(0,1,false))}),'усі поразки вдома — так, одна на виїзді — ні');
 T.check(!has('awayfort',ctx({log:away.slice(0,29)})),'awayfort: неповний журнал матчів — ні');
 const halves=(a,b)=>Array.from({length:30},(_,k)=>k<15?a(k):b(k-15));   // a, b: match index within the half
-both('surge2',ctx({log:halves(k=>k<4?M(1,0):M(0,1),k=>k<8?M(1,0):M(0,1))}),ctx({log:halves(k=>k<4?M(1,0):M(0,1),k=>k<7?M(1,0):M(0,1))}),'друге коло +12 очок — так, +9 — ні');
+both('surge2',ctx({log:halves(k=>k>=11?M(1,0):M(0,1),k=>k<8?M(1,0):M(0,1))}),ctx({log:halves(k=>k>=11?M(1,0):M(0,1),k=>k<7?M(1,0):M(0,1))}),'друге коло +12 очок — так, +9 — ні');   // first-half wins at the end: catches an off-by-one split
 both('fade2',ctx({log:halves(k=>k<8?M(1,0):M(0,1),k=>k<4?M(1,0):M(0,1))}),ctx({log:halves(k=>k<7?M(1,0):M(0,1),k=>k<4?M(1,0):M(0,1))}),'друге коло −12 очок — так, −9 — ні');
 T.check(!has('surge2',ctx({log:halves(k=>M(0,1),k=>M(1,0)).slice(0,29)})),'surge2: неповний журнал — ні');
 both('nil5',ctx({log:Array.from({length:30},(_,k)=>k<5?M(0,0):M(1,1))}),ctx({log:Array.from({length:30},(_,k)=>k<4?M(0,0):M(1,1))}),'п’ять 0:0 — так, чотири — ні');
