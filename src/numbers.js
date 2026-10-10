@@ -76,7 +76,7 @@ function nmHtml(){
       ${!NM.all&&names.length>shown.length?`<button class="nm-more" type="button" id="nmAll">Показати всіх ${fmtN(d.once)}</button>`:NM.all&&more>0?`<p class="nm-note">і ще ${fmtN(more)}</p>`:''}</div>`;}
   // points by mode and clubs
   const md=(d.modes||[]).filter(m=>m.k>0),mx=Math.max(1,...md.map(m=>Math.abs(m.pts))),c0=d.cl[0]?d.cl[0].k:1;
-  const lab=b=>b==='daily'?'Виклик дня':(PP_BUCKETS.find(x=>x[0]===b)||[0,b])[1];   // daily-seed seasons are the daily challenge now
+  const lab=b=>(PP_BUCKETS.find(x=>x[0]===b)||[0,b])[1];
   const club=(c,i)=>nmBar(esc(c.c),nmPct(c.k,d.xin)+'%','',100*c.k/c0,i>0);
   const restK=d.xin-d.cl.reduce((a,c)=>a+c.k,0);
   if(md.length||d.cl.length)h+=`<div class="pp-sec"><h3>Очки й клуби</h3></div><div class="nm-card">
