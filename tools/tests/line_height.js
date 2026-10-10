@@ -54,6 +54,8 @@ async function run(T,width){
    await back(pg);await tryClick(pg,'#flOpen');await at(pg,'friends');
    await back(pg);await tryClick(pg,'#freeOpen');await at(pg,'setup');
    await tryClick(pg,'#startBtn');await tryClick(pg,'#spinBtn');await at(pg,'draft');
+   {const hs=await pg.$$eval('#squad .plrow:not(.wrap) .pl',b=>b.map(x=>Math.round(x.getBoundingClientRect().height)));const mx=Math.max(0,...hs);   // wheel list rows stay compact (a stray .nm margin once doubled them)
+    T.check(hs.length>3&&mx<=64,`${width}: рядки списку колеса компактні (${hs.length}, найвищий ${mx} px)`);}
    await back(pg);await pg.evaluate(()=>{document.getElementById('freeOpen').click();});await pg.evaluate(()=>window.__dbg.setFmt('classic'));await pg.click('#startBtn');
    for(let i=0;i<11;i++){await pg.click('#spinBtn');await pg.waitForSelector('#squad .pl:not([disabled])',{timeout:8000});
      const btn=await pg.$('.pl:not([disabled])');await btn.click();await pg.waitForTimeout(80);const pick=await pg.$('#pitch .slot.target');if(pick){await pick.click();await pg.waitForTimeout(60);}}

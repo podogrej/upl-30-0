@@ -40,10 +40,10 @@ const nmBar=(l,v,sub,pct,dim)=>`<div class="nm-bar${dim?' dim':''}"><span>${l}</
 const nmSea=n=>`${fmtN(n)} ${plUk(n,'сезон','сезони','сезонів')}`;
 function nmHtml(){
   const d=NM&&NM.d,h2='<h2>Твої цифри</h2>';
-  if(!d)return NM&&NM.loading?`<section class="nm" id="nmSec" aria-busy="true">${h2}<p class="nm-verdict"><i class="sk w60"></i></p></section>`:'';
-  if(d.n<NM_MIN)return `<section class="nm" id="nmSec">${h2}<p class="nm-low">Зіграй ще кілька сезонів, і ми розкажемо, який ти тренер.</p><p class="nm-basis">${d.n?`Поки є ${nmSea(d.n)}, а для висновків потрібно п'ять.`:'Для висновків потрібно п\'ять сезонів.'}</p></section>`;
+  if(!d)return NM&&NM.loading?`<section class="nms" id="nmSec" aria-busy="true">${h2}<p class="nm-verdict"><i class="sk w60"></i></p></section>`:'';
+  if(d.n<NM_MIN)return `<section class="nms" id="nmSec">${h2}<p class="nm-low">Зіграй ще кілька сезонів, і ми розкажемо, який ти тренер.</p><p class="nm-basis">${d.n?`Поки є ${nmSea(d.n)}, а для висновків потрібно п'ять.`:'Для висновків потрібно п\'ять сезонів.'}</p></section>`;
   const games=d.w+d.d+d.l,pl=id=>d.pl[id]||{};
-  let h=`<section class="nm" id="nmSec">${h2}<p class="nm-verdict">${nmVerdict(d)}</p><p class="nm-basis">За ${nmSea(d.n)} у твоїх складах ${plUk(d.uniq,'був','було','було')} ${fmtN(d.uniq)} ${plUk(d.uniq,'різний гравець','різні гравці','різних гравців')}.</p><div class="nm-two"><div>`;
+  let h=`<section class="nms" id="nmSec">${h2}<p class="nm-verdict">${nmVerdict(d)}</p><p class="nm-basis">За ${nmSea(d.n)} у твоїх складах ${plUk(d.uniq,'був','було','було')} ${fmtN(d.uniq)} ${plUk(d.uniq,'різний гравець','різні гравці','різних гравців')}.</p><div class="nm-two"><div>`;
   // record
   if(games)h+=`<div class="pp-sec"><h3>Твій рекорд</h3><span class="best">${nmSea(d.n)}</span></div><div class="nm-card">
     <div class="nm-rec-top"><b>${nmPct(d.w,games)}%</b><span>матчів ти виграв</span></div>
