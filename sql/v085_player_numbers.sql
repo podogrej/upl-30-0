@@ -18,8 +18,7 @@ begin
   return new;
 end $$;
 revoke execute on function public.season_offers_forget() from public, anon, authenticated;
-drop trigger if exists players_offers_forget on public.players;
-create trigger players_offers_forget after update of deleted_at on public.players
+create or replace trigger players_offers_forget after update of deleted_at on public.players
   for each row when (new.deleted_at is not null and old.deleted_at is null) execute function public.season_offers_forget();
 
 -- volatile: device_check locks and inserts (see v068_fl_mine_volatile.sql)
