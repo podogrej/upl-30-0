@@ -1,5 +1,5 @@
 # Automated checks on every push to test and main and every pull request to main. Same as running bash tools/tests/all.sh locally,
-# split into 4 parallel parts (SHARD); the job named checks (required on main) passes only when every part passed.
+# split into 4 parallel parts (SHARD), plus the screen comparison with main (visual); the job named checks (required on main) passes only when all of them passed.
 name: Перевірки
 on:
   push:
@@ -42,10 +42,47 @@ jobs:
           name: snimky-${{ matrix.shard }}
           path: tools/tests/out/
           retention-days: 7
+  # screens look like prod: the same shooter (HEAD copy of visual_diff.js and helpers) photographs main and this build, then compares;
+  # a changed screen must be listed in tools/tests/visual_expect.json for the current version
+  visual:
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/test' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          path: base
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Шрифти
+        run: sudo apt-get update -q && sudo apt-get install -y -q fonts-noto-core
+      - name: Залежності інструментів
+        working-directory: tools
+        run: npm install --no-audit --no-fund && npx playwright install --with-deps chromium
+      - name: Той самий знімальник у main
+        run: ln -s "$PWD/tools/node_modules" base/tools/node_modules && cp tools/tests/visual_diff.js tools/tests/_site.js tools/tests/_page.js base/tools/tests/
+      - name: Знімки main
+        run: node base/tools/tests/visual_diff.js shoot "$RUNNER_TEMP/vis_base"
+      - name: Знімки цієї версії
+        run: node tools/tests/visual_diff.js shoot "$RUNNER_TEMP/vis_head"
+      - name: Порівняння з main
+        run: node tools/tests/visual_diff.js compare "$RUNNER_TEMP/vis_base" "$RUNNER_TEMP/vis_head"
+      - name: Змінені екрани (до | після)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ekrany
+          path: tools/tests/out/visual/
+          retention-days: 7
   checks:
-    needs: part
+    needs: [part, visual]
     if: always()
     runs-on: ubuntu-24.04
     steps:
       - name: Усі частини пройшли
-        run: '[ "${{ needs.part.result }}" = success ] || { echo "part: ${{ needs.part.result }}"; exit 1; }'
+        run: |
+          [ "${{ needs.part.result }}" = success ] || { echo "part: ${{ needs.part.result }}"; exit 1; }
+          case "${{ needs.visual.result }}" in success|skipped) ;; *) echo "visual: ${{ needs.visual.result }}"; exit 1;; esac
