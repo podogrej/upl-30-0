@@ -33,6 +33,6 @@ if (m) {
   const g = run({ hash: '#access_token=eyJ.x.y&refresh_token=r&expires_in=3600', consumeAfter: 3 });
   T.check(g.length === 1 && g[0].t === 'load' && g[0].hash === '', 'вхід Google: чекає, поки сайт забере #access_token, потім вантажить (без токена в адресі)');
   const s = run({ hash: '#access_token=eyJ.x.y&refresh_token=r' });
-  T.check(s.length === 2 && s[0].t === 'strip' && s[1].t === 'load' && s[1].hash === '', 'токен не забрали за 10 с — адресу очищено (replaceState) до завантаження Clarity');
+  T.check(!s.length, 'токен не забрали за 10 с — Clarity не вантажиться, адресу не чіпаємо (вхід не зламається на повільній мережі)');
 }
 process.exit(T.done());

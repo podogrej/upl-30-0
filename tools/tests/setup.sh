@@ -736,9 +736,12 @@ chk "v087: творець надсилає свій — бачить лише с
   assert (select count(*) from jsonb_array_elements(j::jsonb->'fives') f where f ? 'xi') = 1 and (select f->>'form' from jsonb_array_elements(j::jsonb->'fives') f where f ? 'xi') = '2-2', 'лише свій ' || j::text;
   assert (select count(*) from json_array_elements(j->'fives') f where f->>'name' is not null and f->>'u' is not null) = 2, 'хто надіслав';" ',"sub":"'$UG'"'
 chk "v087: anon до турніру не бачить жодного складу; fl_get_full закрита для anon/authenticated" anon "
-  j := fl_get('$F87'); assert (j->>'fives_n')::int = 2 and not exists (select 1 from jsonb_array_elements(j::jsonb->'fives') f where f ? 'xi' or f ? 'form'), j::text;
+  j := fl_get('$F87'); assert (j->>'fives_n')::int = 2 and not exists (select 1 from jsonb_array_elements(j::jsonb->'fives') f where f ? 'xi'), j::text;
+  assert (select count(*) from jsonb_array_elements(j::jsonb->'fives') f where f ? 'form') = 2, 'схема видна (0.86 не покаже undefined)';
   begin j := fl_get_full('$F87'); assert false, 'anon fl_get_full'; exception when insufficient_privilege then null; end;
   assert not has_function_privilege('authenticated', 'fl_get_full(text)', 'execute'), 'authenticated fl_get_full';"
+chk "v087: сервер 0.86 (service_role, fl_get) під час викладки бачить усі склади" service_role "
+  j := fl_get('$F87'); assert (select count(*) from jsonb_array_elements(j::jsonb->'fives') f where f ? 'xi') = 2, j::text;"
 chk "v087: сервер бачить усі склади (fl_get_full); після турніру — усі склади відкриті для всіх" postgres "
   assert (select count(*) from jsonb_array_elements(fl_get_full('$F87')::jsonb->'fives') f where f ? 'xi') = 2, 'full';
   update fl_leagues set deadline = now() - interval '1 minute' where id = '$F87';

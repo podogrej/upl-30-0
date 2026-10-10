@@ -44,11 +44,11 @@ head='''<!doctype html>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' x2='1'%3E%3Cstop offset='0' stop-color='%239a2bb5'/%3E%3Cstop offset='.5' stop-color='%23e0287a'/%3E%3Cstop offset='1' stop-color='%23ff831e'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='14' fill='%230b1430'/%3E%3Ctext x='32' y='38' font-size='23' font-family='Arial Black,Arial,sans-serif' font-weight='900' fill='white' text-anchor='middle' letter-spacing='-1'%3E30-0%3C/text%3E%3Crect x='12' y='46' width='40' height='6' rx='3' fill='url(%23g)'/%3E%3C/svg%3E">\n<link rel="apple-touch-icon" href="icon-180.png">   <!-- app icon: navy background with the UPL gradient -->
 <script>/* Microsoft Clarity (anonymous click analytics): production host only, not on the test deployment or in automated tests.
    Never inside the Telegram Mini App; sign-in fragments (#access_token, #tgWebAppData) are never shown to it:
-   wait until the app has consumed them (up to 10 s), strip what is left, then load */
+   wait until the app has consumed them (up to 10 s); if they are still there, skip Clarity this time and leave the URL alone */
 (function(){if(!/^(upl30\.com\.ua|upl-30-0\.vercel\.app)$/.test(location.hostname))return;
 var tg=/tgWebApp/.test(location.hash);try{tg=tg||!!sessionStorage.getItem('__telegram__initParams');}catch(e){}if(tg||window.TelegramWebviewProxy)return;
 var cred=function(){return /(^|[#&])(access_token|refresh_token|provider_token|tgWebAppData)=/.test(location.hash);};
-var go=function(){if(cred())try{history.replaceState(null,'',location.pathname+location.search);}catch(e){}
+var go=function(){if(cred())return;
 (function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);})(window,document,"clarity","script","yq84mk48cm");};
 if(!cred())return go();var n=0,t=setInterval(function(){if(!cred()||++n>=20){clearInterval(t);go();}},500);})();</script>
 <style>html{-webkit-text-size-adjust:100%}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}[hidden]{display:none!important}img{max-width:100%}</style>

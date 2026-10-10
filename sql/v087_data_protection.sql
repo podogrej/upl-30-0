@@ -100,7 +100,8 @@ $function$;
 revoke execute on function public.fl_get_full(text) from public, anon, authenticated;
 grant execute on function public.fl_get_full(text) to service_role;
 
--- fl_get: same JSON; for a 5x5 league without a result, "fives" keeps who submitted (u, name, at) and drops form/xi,
+-- fl_get: same JSON; for a 5x5 league without a result, "fives" keeps who submitted (u, name, form, at) and drops xi,
+-- the server (service_role, incl. the 0.86 /api/fl5 during rollout) still gets everything;
 -- except the signed-in caller's own lineup; fives_n = number of submitted lineups
 create or replace function public.fl_get(p_id text)
  returns json language sql stable security definer set search_path to 'public'
@@ -109,10 +110,11 @@ as $function$
   me as (select pl.public_id from player_links k join players pl on pl.id = k.player_id
           where k.kind = 'auth' and k.key = auth.uid()::text limit 1)
   select case
-    when f.j is null or f.j->>'fmt' is distinct from '5' or coalesce(json_typeof(f.j->'result'), 'null') <> 'null' then f.j
+    when f.j is null or f.j->>'fmt' is distinct from '5' or coalesce(json_typeof(f.j->'result'), 'null') <> 'null'
+         or coalesce(auth.role(), '') = 'service_role' then f.j
     else (f.j::jsonb || jsonb_build_object(
             'fives_n', json_array_length(f.j->'fives'),
-            'fives', coalesce((select jsonb_agg(case when x.v->>'u' = (select public_id from me) then x.v else x.v - 'xi' - 'form' end order by x.o)
+            'fives', coalesce((select jsonb_agg(case when x.v->>'u' = (select public_id from me) then x.v else x.v - 'xi' end order by x.o)
                                  from jsonb_array_elements(f.j::jsonb->'fives') with ordinality x(v, o)), '[]'::jsonb)))::json
   end from f;
 $function$;
