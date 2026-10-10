@@ -29,16 +29,25 @@ def top_map(r):
     return r
 
 
+def live_years(pool):
+    """years of live seasons (data/current/add_live_season.py): their cards keep the pool rating and are not in raw"""
+    return {int(y) for y, s in pool['seasons'].items() if s.get('status') == 'live'}
+
+
 def smoothed(pool, raw):
     """smoothed rating of every card from raw ratings; does not write the pool"""
     alias = pool.get('alias') or {}
     canon = lambda pid: alias.get(pid, pid)
+    live = live_years(pool)
     per = defaultdict(list)
     for c in pool['clubs']:
+        if c['y'] in live: continue
         for i, p in enumerate(c['pl']): per[canon(p[5])].append((c['y'], p[3] or 0, raw[key(c, i)]))
     out = {}
     for c in pool['clubs']:
         for i, p in enumerate(c['pl']):
+            if c['y'] in live:
+                out[key(c, i)] = p[2]; continue
             r, a = raw[key(c, i)], p[3] or 0
             ref = [fr for fy, fa, fr in per[canon(p[5])] if fa >= MIN_REF_APPS and abs(fy - c['y']) <= WINDOW and fy != c['y']]
             new = r if (not SMOOTH or a >= FULL or not ref) else round((a / FULL) * r + (1 - a / FULL) * sum(ref) / len(ref))

@@ -1212,12 +1212,12 @@ h3,.sec0,#s1 .sec0,.pgh,.trleg .h{font-size:var(--fs-footnote);font-weight:var(-
   <div class="acts"><button class="ft-send" id="fbSend" type="submit">Надіслати</button><button class="ft-cancel" id="fbCancel" type="button">Скасувати</button></div></form>
 <div class="ft-done" id="fbDone" hidden><b>✓</b><span>Дякуємо! Прочитаємо найближчим часом</span></div>
 <div class="ft-pills"><button class="ft-pill" id="fbBtn" type="button"><!--i:mail-->Відгук і баги</button><a class="ft-pill" id="ftBot" href="https://t.me/upl30_bot" target="_blank" rel="noopener"><!--i:telegram-->Telegram-бот</a></div>
-<div class="foot ft-small"><a href="#" id="newsBtn">Що нового у версії 0.82.1<b id="newsDot" hidden></b></a><a href="privacy.html">Конфіденційність</a><a href="terms.html">Умови використання</a></div>
+<div class="foot ft-small"><a href="#" id="newsBtn">Що нового у версії 0.83<b id="newsDot" hidden></b></a><a href="privacy.html">Конфіденційність</a><a href="terms.html">Умови використання</a></div>
 <div class="foot ft-copy">© 2026 30-0 УПЛ · неофіційний фан-проєкт <a href="#" id="themeBtn" class="thm" role="switch" aria-checked="false" aria-label="Світла тема"></a></div>
 <p class="ft-legal">30-0 УПЛ — незалежний фан-проєкт: футбольний драфт і симулятор сезону. Він не пов'язаний з Українською Прем'єр-лігою, Українською асоціацією футболу, клубами, футболістами, їхніми об'єднаннями чи іншими організаціями й не схвалений ними. Назви клубів, імена футболістів, рейтинги, статистику й дані сезонів використано лише з інформаційною та довідковою метою. Офіційні логотипи, емблеми та фото футболістів не використовуються. Усі торговельні марки належать їхнім власникам.</p>
 <div class="ft-cred">Шрифт KyivType Sans © Дмитро Растворцев (айдентика Києва)<br>Іконки: Material Design Icons (Apache 2.0), логотип Telegram — Font Awesome Free (CC BY 4.0)</div>
 </footer>
-<script src="pool.dc84b62ee.js"></script>
+<script src="pool.df821a1a5.js"></script>
 <script>
 (function(){
 const DATA = window.__POOL||JSON.parse(document.getElementById('pool').textContent);   // site: separate pool.*.js file (cached); artifact build: inlined
@@ -1272,8 +1272,11 @@ function footAdj(id,slot){const f=DATA.foot&&DATA.foot[id];if(!f)return 0;
   if(slot in FOOT_INV)return f==='B'||f===FOOT_INV[slot]?1:0;
   return 0;}   // LM/RM and central positions: no effect
 function effRating(p,slot){const pen=slotPenalty(p[6],p[7],slot);if(pen==null)return null;return S.format==='anti'?p[2]:Math.max(40,p[2]-pen+footAdj(p[5],slot));}   // no penalty in anti-season, otherwise playing out of position would be an exploit
+// live season (status 'live'): rated from the rounds played so far; on the wheel, but not an opponent league and its place is not final
+const isLive=y=>!!DATA.seasons[y]&&DATA.seasons[y].status==='live';
+const placeNote=(cs,cap)=>isLive(cs.y)?`${cap?'С':'с'}езон триває, зараз ${cs.pos}-е місце`:null;
 // 30 rounds = 16-team seasons (you replace the last team); 12/14/18-team seasons are not used
-const YEARS16 = Object.keys(DATA.seasons).map(Number).filter(y=>DATA.seasons[y].teams.length===16);
+const YEARS16 = Object.keys(DATA.seasons).map(Number).filter(y=>DATA.seasons[y].teams.length===16&&!isLive(y));
 // ---------- opponents: 'cult clubs league' (anti-season only);
 // 'legends league': the same 15 clubs, each in its strongest-squad season (separate format). Strength from 16-team seasons only.
 // Ids 9001/9002 are pseudo-seasons (stored in seasons.year; real seasons are years 1992-2025).
@@ -1366,9 +1369,9 @@ let BEST=lsGet("upl30_best_v2")||{};
 
 // ---------- state
 let S={pending:null,move:null,format:"classic",pickMode:false,freeMode:"normal",club:lsGet("upl30_club")||null,era:ERA_KEYS.includes(lsGet("upl30_era"))?lsGet("upl30_era"):'all',formation:"4-4-2",mode:"normal",slots:[],taken:new Set(),wheel:null,rerolls:0,result:null,vd:null};
-// star bias of the wheel: strong club-seasons come up more often (weight exp(k*(strength-85)), strength = top-11 average); 0 disables
+// star bias of the wheel: strong club-seasons come up more often (weight exp(k*(strength-85)), strength = top-11 average); 0 disables; live season: no top-4 bonus
 const STAR_BIAS=0.04;   // strong seasons more often; top 4 of their season x1.5; Dynamo and Shakhtar x0.8 so the star quarter also includes Dnipro, Metalist, Zorya, Chornomorets
-for(const c of DATA.clubs){const r=c.pl.map(p=>p[2]).sort((a,b)=>b-a).slice(0,11);c.q=r.reduce((a,b)=>a+b,0)/r.length;c.w=Math.exp(STAR_BIAS*(c.q-85))*(c.pos<=4?1.5:1)*(c.c==='dynamo-kyiv'||c.c==='shakhtar-donetsk'?0.8:1);}
+for(const c of DATA.clubs){const r=c.pl.map(p=>p[2]).sort((a,b)=>b-a).slice(0,11);c.q=r.reduce((a,b)=>a+b,0)/r.length;c.w=Math.exp(STAR_BIAS*(c.q-85))*(c.pos<=4&&!isLive(c.y)?1.5:1)*(c.c==='dynamo-kyiv'||c.c==='shakhtar-donetsk'?0.8:1);}
 function pickWeighted(cands,r){if(S.format==='anti'||!STAR_BIAS)return cands[Math.floor(r()*cands.length)];let tot=0;for(const c of cands)tot+=c.w;let x=r()*tot;for(const c of cands){x-=c.w;if(x<=0)return c;}return cands[cands.length-1];}
 // ---------- day (Kyiv) and local cleanup
 const DAY=kyivDate();
@@ -1712,7 +1715,7 @@ function spinPick(){
 }
 function renderPickOpts(){const box=document.getElementById('seaPick'),o=S.pickOpts||[];box.hidden=false;
   document.getElementById('wHint').textContent=o.length>1?'Обери сезон — назад не повернешся':'У цього клубу лише один сезон, де є кого взяти';
-  box.innerHTML=o.map((c,i)=>`<button type="button" data-i="${i}"><b>${SEA_SHORT(c.y)}</b><small>${c.pos} місце</small></button>`).join('');
+  box.innerHTML=o.map((c,i)=>`<button type="button" data-i="${i}"><b>${SEA_SHORT(c.y)}</b><small>${isLive(c.y)?`зараз ${c.pos}-е`:c.pos+' місце'}</small></button>`).join('');
   box.querySelectorAll('button').forEach(b=>b.onclick=()=>{const c=o[+b.dataset.i];S.pickOpts=null;box.hidden=true;S.wheel=c;S.wheelFresh=true;renderWheel();revealList();});
   const f=box.querySelector('button');if(f)f.focus({preventScroll:true});}
 function spin(mode){if(S.mode!=='pick')document.querySelector('.reels').classList.remove('one');   // leftover from an abandoned season pick
@@ -1741,7 +1744,7 @@ function renderWheel(){
   const setStrip=(sel,html)=>{const el=document.querySelector(sel);if(el.innerHTML!==html)el.innerHTML=html;};
   setStrip('#reelClub .strip',`<div class="club"><i class="cdot" style="${clubPal(cs.c)}"></i>${esc(shortTeam(cs.n))}</div>`);   // short name: the full one did not fit on phone
   setStrip('#reelYear .strip',`<div class="season">${seasonLabel(cs.y)}</div>`);document.querySelector('.reels').classList.remove('one');
-  document.getElementById('wHint').textContent=`Місце клубу в тому сезоні: ${cs.pos}`+(S.format==='anti'?` · лише гравці з ${ANTI_MIN_APPS}+ матчами`:'');
+  document.getElementById('wHint').textContent=(placeNote(cs,1)||`Місце клубу в тому сезоні: ${cs.pos}`)+(S.format==='anti'?` · лише гравці з ${ANTI_MIN_APPS}+ матчами`:'');
   const rr=document.getElementById('rerollRow');rr.style.visibility='visible';document.getElementById('rerollClub').hidden=document.getElementById('rerollBtn').hidden=S.format==='oneclub';   // one-club: club stays, only the season changes
   rr.hidden=S.rerolls<=0;document.getElementById('rerollCnt').textContent=S.rerolls;
   const sq=document.getElementById('squad');sq.innerHTML='';
@@ -2015,7 +2018,8 @@ function tierOf(r){
 // ---------- TROPHIES: visible (condition known), secret (count only), milestones by season count; repeatable ones have an xN counter
 const PERSON={};   // person_id -> {main, nat, by, clubs:Set}; clubs is one Set shared by the whole person (duplicate id and canonical, DATA.alias)
 {const CL={};for(const c of DATA.clubs)for(const p of c.pl){const k=canon(p[5]);const cl=CL[k]||(CL[k]=new Set());const q=PERSON[p[5]]||(PERSON[p[5]]={main:p[6],nat:p[10],by:p[11],clubs:cl});cl.add(c.c);}}
-const CLUBS_NOW=new Set(DATA.clubs.filter(c=>c.y===Math.max(...DATA.clubs.map(x=>x.y))).map(c=>c.c));
+const LAST_DONE=Math.max(...DATA.clubs.filter(c=>!isLive(c.y)).map(c=>c.y));   // last finished season (the trophy text names it)
+const CLUBS_NOW=new Set(DATA.clubs.filter(c=>c.y===LAST_DONE).map(c=>c.c));
 const UA=0;   // DATA.nats[0] = Ukraine
 const TR_KINDS=[["base","Основні"],["friends","З друзями"],["secret","Секретні"]];   // colors and filters use only these three classes (trKind)
 const surname=n=>{const t=String(n).split(' ');return t[t.length-1];};
@@ -2417,7 +2421,7 @@ const SB_ENVS={prod:{url:"https://qruhcbwycrnfgzzdbljr.supabase.co",key:"sb_publ
                test:{url:"https://joahjmpupilukdbmbdfl.supabase.co",key:"sb_publishable_OqaI_M6vP6S6D9fxzfwFcQ_TcQx8Rkz"}};
 const SB_ENV=(ONLINE&&SB_ENVS.test.url&&(/-git-test-/.test(location.hostname)||/[?&]db=test\b/.test(location.search)))?'test':'prod';
 const SB_URL=SB_ENVS[SB_ENV].url, SB_KEY=SB_ENVS[SB_ENV].key;
-const DATA_VERSION="dc84b62ee";   // player pool fingerprint (ratings): stored with every season
+const DATA_VERSION="df821a1a5";   // player pool fingerprint (ratings): stored with every season
 if(SB_ENV==='test'){for(const id of ['homeBtn','hLogo']){const b=document.getElementById(id);if(b)b.insertAdjacentHTML('beforeend','<span class="testbadge">ТЕСТ</span>');}}
 function deviceId(){let id=lsGet("upl30_device");if(!id){lsSet("upl30_tr_retro",1);try{id=crypto.randomUUID();}catch(e){const h=[...crypto.getRandomValues(new Uint8Array(16))].map(b=>b.toString(16).padStart(2,'0')).join('');id=`${h.slice(0,8)}-${h.slice(8,12)}-4${h.slice(13,16)}-a${h.slice(17,20)}-${h.slice(20,32)}`;}lsSet("upl30_device",id);}return id;}
 const VERSION=(document.getElementById('newsBtn').textContent.match(/версі[яї] ([\d.]+)/)||[])[1]||'?';
@@ -3227,7 +3231,7 @@ function fl5DraftHtml(){const d=FL.data,t=FL.d5,cs=t.cs,n=t.slots.filter(s=>s.pl
     <div class="fl5d">${f5Pitch(t)}
     ${full?`<div class="fl5send"><button class="primary big0" id="fl5Send">Відправити склад</button><p class="muted" id="flMsg" style="font-size:var(--fs-footnote);text-align:center">Після відправки змінити не можна. Склади суперників відкриті.</p></div>`
       :`<div class="wheel" style="margin-top:var(--sp-3)"><div class="reels"><div class="reel"><div class="strip"><div class="club">${cs?`<i class="cdot" style="${clubPal(cs.c)}"></i>${esc(cs.n)}`:'Гравців немає'}</div></div></div><div class="reel"><div class="strip"><div class="season">${cs?seasonLabel(cs.y):''}</div></div></div></div>
-      <p class="why0">Потрібні: ${[...need].map(s=>F5_L[s]).join(', ')}${cs?` · місце клубу в тому сезоні: ${cs.pos}`:''}</p>
+      <p class="why0">Потрібні: ${[...need].map(s=>F5_L[s]).join(', ')}${cs?` · ${placeNote(cs)||'місце клубу в тому сезоні: '+cs.pos}`:''}</p>
       ${t.rerolls>0?`<div class="rr"><span class="lbl"><span>Перекрутити колесо</span><span class="rrn">залишилось <b>${t.rerolls}</b></span></span><span class="seg"><button id="fl5Rr">Інший клуб і сезон</button></span></div>`:''}
       <div class="squad">${list.map(p=>`<div class="plrow"><button class="pl" data-p5="${esc(p[5])}"><span class="pos ${f5G(p)}">${F5_L[f5G(p)]}</span><span class="nm">${esc(p[0])}</span><span class="rt"></span></button></div>`).join('')}</div></div>`}</div>
     <button class="ghost" id="fl5Back" style="margin-top:var(--sp-4)">До ліги</button>`;}
@@ -3693,11 +3697,12 @@ const VD_ATTEMPTS=5,VD_MEDALS=[[11,'perfect','Ідеально','⭐'],[9,'gold'
 const VD_LINE={GK:'GK',CB:'DF',RB:'DF',LB:'DF',RWB:'DF',LWB:'DF',DF:'DF',CDM:'MF',CM:'MF',CAM:'MF',RM:'MF',LM:'MF',MF:'MF',RW:'FW',LW:'FW',ST:'FW',FW:'FW'};
 // person index: canonical id -> {apps, clubs:{code:apps}, nat (name or null), n}
 // cur (lib/vd_current.json): season in progress, {apps:{club:{pool id:apps}}, squad:{club:[pool id]}};
-// apps count like pool seasons, a squad entry makes him a player of that club (q.sq) without adding matches
+// apps count like pool seasons (ignored once that season is in the pool as a live season), a squad entry makes him a player of that club (q.sq) without adding matches
 function vdIndex(DATA,cur){const A=DATA.alias||{},out={};
   const add=(id,club,n,name)=>{const k=A[id]||id;const q=out[k]||(out[k]={apps:0,clubs:{},nat:null,n:name});q.apps+=n;q.clubs[club]=(q.clubs[club]||0)+n;return q;};
   for(const c of DATA.clubs)for(const p of c.pl){if(!(p[3]>=1))continue;const q=add(p[5],c.c,p[3],p[0]);if(p[10]!=null&&DATA.nats&&DATA.nats[p[10]])q.nat=DATA.nats[p[10]];}
-  const ca=cur&&cur.apps||{};for(const club in ca)for(const id in ca[club])if(ca[club][id]>=1)add(id,club,ca[club][id],'');
+  const curY=cur&&cur.season?parseInt(cur.season,10):null,inPool=DATA.clubs.some(c=>c.y===curY);   // live season in the pool: its apps come from the pool only
+  const ca=!inPool&&cur&&cur.apps||{};for(const club in ca)for(const id in ca[club])if(ca[club][id]>=1)add(id,club,ca[club][id],'');
   const cs=cur&&cur.squad||{};for(const club in cs)for(const id of cs[club]){const k=A[id]||id,q=out[k]||(out[k]={apps:0,clubs:{},nat:null,n:''});(q.sq||(q.sq={}))[club]=1;}
   return out;}
 const vdOfClub=(q,club)=>(q.clubs[club]||0)>=1||!!(q.sq&&q.sq[club]);
@@ -3999,9 +4004,8 @@ function drawCard(r){   // card in site style: UPL navy background, UPL.TV gradi
 }
 document.getElementById('chalOpen').onclick=()=>{const b=document.getElementById('chalBox'),t=document.getElementById('chalOpen');b.hidden=!b.hidden;t.classList.toggle('on',!b.hidden);if(!b.hidden){b.scrollIntoView({behavior:'smooth',block:'center'});const n=document.getElementById('chalName');if(n&&!n.hidden&&!n.value)n.focus();}};
 // ---------- What's new: short player-friendly notes on the latest version (technical log: CHANGELOG.md)
-const WHATSNEW={v:'0.82.1',news:'0.82.1',date:'10.10.2026',items:[   // news: edition of the items; a release without new items keeps it, so the news dot does not light up again
-  ['star','Рейтинг — за сезон','Рейтинг картки тепер показує, як гравець провів саме цей сезон. Дебют на кілька матчів чи сезон ветерана не тягнуться вгору кращими роками.'],
-  ['calendar-check','Архів викликів','Виклики з першого туру сезону — щодня новий, з 31 липня. Пропущений день можна зіграти з архіву.']]};
+const WHATSNEW={v:'0.83',news:'0.83',date:'10.10.2026',items:[   // news: edition of the items; a release without new items keeps it, so the news dot does not light up again
+  ['calendar-check','Сезон 2026/27 у грі','Поточний сезон уже на колесі: склади й рейтинги за зіграними турами. Узимку рейтинги оновимо, а після 30-го туру сезон стане звичайним.']]};
 function openNews(){screenTag('news');const box=document.getElementById('viewBox');document.getElementById('viewTitle').textContent=`Що нового · версія ${WHATSNEW.v}`;
   document.getElementById('viewBody').innerHTML=`<div class="news">${WHATSNEW.items.map(([e,h,d])=>`<div class="ni">${ic(e,'lg')}<div><b>${esc(h)}</b><p>${esc(d)}</p></div></div>`).join('')}</div>`;
   box.hidden=false;lsSet('upl30_news_seen',WHATSNEW.news||WHATSNEW.v);document.getElementById('newsDot').hidden=true;}
@@ -4208,7 +4212,7 @@ function f5Render(){
     el.innerHTML=`<div class="row" style="justify-content:space-between;margin-block:var(--sp-4) var(--sp-2)"><div>${f5Head(team)} <span class="muted mono">${5-f5Open(team).length}/5 · ${team.form}</span></div><span class="muted mono">${f.mode==='turns'?`хід ${f.pick+1}/${total}`:''}</span></div>
       ${f5Pitch(team)}
       <div class="wheel" style="margin-top:var(--sp-3)"><div class="reels"><div class="reel"><div class="strip"><div class="club">${cs?esc(cs.n):''}</div></div></div><div class="reel"><div class="strip"><div class="season">${cs?seasonLabel(cs.y):''}</div></div></div></div>
-      <div class="row" style="justify-content:space-between"><span class="muted">${cs?cs.pos+' місце в тому сезоні · потрібні: '+[...need].map(s=>F5_L[s]).join(', '):''}</span>${team.rerolls>0?`<button class="ghost" id="f5Rr">Перекрутити (${team.rerolls})</button>`:''}</div>
+      <div class="row" style="justify-content:space-between"><span class="muted">${cs?(placeNote(cs,1)||cs.pos+' місце в тому сезоні')+' · потрібні: '+[...need].map(s=>F5_L[s]).join(', '):''}</span>${team.rerolls>0?`<button class="ghost" id="f5Rr">Перекрутити (${team.rerolls})</button>`:''}</div>
       <div class="sqHead noast"><span></span><span></span><span><b>Матчі</b><i>Мат</i></span><span><b>Голи</b><i>Гол</i></span><span></span><span class="h"></span></div><div class="squad noast" id="f5Sq"></div></div>`;
     const sq=document.getElementById('f5Sq');let sep=false;
     for(const {p,ok} of list){if(!ok&&!sep){sep=true;const h=document.createElement('div');h.className='muted';h.style.cssText='font-size:var(--fs-caption);margin:var(--sp-2) 0 var(--sp-0h)';h.textContent='Лінія вже заповнена або гравця взяли';sq.appendChild(h);}

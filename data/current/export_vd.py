@@ -4,6 +4,7 @@ Usage (from repo root): python3 data/current/export_vd.py
 Reads data/current/apps_2026.csv and squads_2026.csv, writes lib/vd_current.json:
 {season, date, apps:{club:{pool_id:apps}}, squad:{club:[pool_id]}}. Squads are refreshed after each transfer window.
 Only players already in the pool; club slugs renamed to the pool's slug for the same club.
+Once the season is in the pool (live season, add_live_season.py) vdIndex ignores these apps and uses the pool; squads still count.
 """
 import csv, json, os
 SEASON, DATE = '2026/27', '2026-10-09'

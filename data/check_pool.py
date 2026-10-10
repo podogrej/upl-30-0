@@ -12,6 +12,7 @@ Hard rules (violation -> exit 1):
   line GK <=> main GK;
 - one person (id) has the same name, birth year and citizenship on all cards;
 - every season team (seasons[year].teams) has a club-season, and every club-season is among its season's teams;
+- season status is complete / abandoned_18_rounds / live; live only for the latest season;
 - foot keys are pool ids, values L/R/B;
 - alias: both ids are in the pool, no chains, duplicate and canonical never in the same club-season;
 - meta.club_seasons / players / persons / person_ids / aliases equal the real counts (data/update_meta.py);
@@ -29,6 +30,8 @@ TRANSFERS = os.path.join(ROOT, 'data', 'check_pool_transfers.csv')
 POS = {'GK', 'CB', 'LB', 'RB', 'LWB', 'RWB', 'CDM', 'CM', 'CAM', 'LM', 'RM', 'LW', 'RW', 'ST', 'CF'}
 LINES = {'GK', 'DF', 'MF', 'FW'}
 ID_RE = re.compile(r'^(tm:\d+|w:\d{4}-\d{2}-\d{2}:[a-z]+)$')
+# live: season in progress (data/current/add_live_season.py), only the latest season
+STATUSES = {'complete', 'abandoned_18_rounds', 'live'}
 ALT_RE = re.compile(r'^([A-Z]+)(:\d(\.\d+)?)?$')
 
 
@@ -92,6 +95,9 @@ def main():
     teams = {(int(y), t[0]) for y, s in pool['seasons'].items() for t in s.get('teams', [])}
     for y, s in pool['seasons'].items():
         if not s.get('teams'): E(f'сезон {y} без команд')
+        if s.get('status') not in STATUSES: E(f'сезон {y}: статус «{s.get("status")}»')
+    live = [int(y) for y, s in pool['seasons'].items() if s.get('status') == 'live']
+    if live and (len(live) > 1 or live[0] != max(map(int, pool['seasons']))): E(f'живий сезон не один або не останній: {live}')
     for k in sorted(teams - set(cs_keys)): E(f'команда сезону {k} без клуб-сезону')
     for k in sorted(set(cs_keys) - teams): E(f'клуб-сезон {k} не в командах свого сезону')
 

@@ -184,7 +184,7 @@ function fl5DraftHtml(){const d=FL.data,t=FL.d5,cs=t.cs,n=t.slots.filter(s=>s.pl
     <div class="fl5d">${f5Pitch(t)}
     ${full?`<div class="fl5send"><button class="primary big0" id="fl5Send">Відправити склад</button><p class="muted" id="flMsg" style="font-size:var(--fs-footnote);text-align:center">Після відправки змінити не можна. Склади суперників відкриті.</p></div>`
       :`<div class="wheel" style="margin-top:var(--sp-3)"><div class="reels"><div class="reel"><div class="strip"><div class="club">${cs?`<i class="cdot" style="${clubPal(cs.c)}"></i>${esc(cs.n)}`:'Гравців немає'}</div></div></div><div class="reel"><div class="strip"><div class="season">${cs?seasonLabel(cs.y):''}</div></div></div></div>
-      <p class="why0">Потрібні: ${[...need].map(s=>F5_L[s]).join(', ')}${cs?` · місце клубу в тому сезоні: ${cs.pos}`:''}</p>
+      <p class="why0">Потрібні: ${[...need].map(s=>F5_L[s]).join(', ')}${cs?` · ${placeNote(cs)||'місце клубу в тому сезоні: '+cs.pos}`:''}</p>
       ${t.rerolls>0?`<div class="rr"><span class="lbl"><span>Перекрутити колесо</span><span class="rrn">залишилось <b>${t.rerolls}</b></span></span><span class="seg"><button id="fl5Rr">Інший клуб і сезон</button></span></div>`:''}
       <div class="squad">${list.map(p=>`<div class="plrow"><button class="pl" data-p5="${esc(p[5])}"><span class="pos ${f5G(p)}">${F5_L[f5G(p)]}</span><span class="nm">${esc(p[0])}</span><span class="rt"></span></button></div>`).join('')}</div></div>`}</div>
     <button class="ghost" id="fl5Back" style="margin-top:var(--sp-4)">До ліги</button>`;}

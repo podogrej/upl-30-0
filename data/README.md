@@ -51,6 +51,7 @@ Transfermarkt (Kaggle) и sports.ru (этапы 1–5, сентябрь 2026), �
 | 7a | `class/fill_manual.py` | класс игрока: 8 человек без TM (0.57) из `class_manual.csv` → `class/class.csv` (пул не меняет; после `class/collect.py` — запустить ещё раз) |
 | 7b | `ratings/class_v2.py` | рейтинги v2 (0.57): формула C (класс из `class/class.csv`, K = 10,5; с 0.82 бонус × качество сезона × возраст), пики владельца `ratings/anchors_v2.csv`, «Моряки Григорчука» +3; считает от `pool_ratings_raw.json` (то же, что `smooth_cameo.final`), печатает 90+/95+ |
 | 8 | `update_meta.py` | `pool['meta']` — счётчики из самих данных |
+| 8a | `current/add_live_season.py` | живой сезон 2026/27 (0.83): клуб-сезоны `y=2026` из `current/live_ratings_2026.csv` (рейтинг уже итоговый) и `current/new_people_2026.csv` (новые люди: профиль TM + украинское имя вручную), `seasons['2026'].status = 'live'`; при каждом запуске пересобирает все карточки 2026 (зимнее обновление = новый CSV + запуск). `smooth_cameo`/`class_v2` живые карточки не пересчитывают и не берут в доноры/пики |
 | 9 | `check_pool.py` | проверка инвариантов (exit 1 при ошибке) — **обязательна перед выпуском** |
 
 Потом сборка: `python3 src/build.py && node tools/make_engine.js`.

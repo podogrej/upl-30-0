@@ -6,11 +6,12 @@ const VD_ATTEMPTS=5,VD_MEDALS=[[11,'perfect','Ідеально','⭐'],[9,'gold'
 const VD_LINE={GK:'GK',CB:'DF',RB:'DF',LB:'DF',RWB:'DF',LWB:'DF',DF:'DF',CDM:'MF',CM:'MF',CAM:'MF',RM:'MF',LM:'MF',MF:'MF',RW:'FW',LW:'FW',ST:'FW',FW:'FW'};
 // person index: canonical id -> {apps, clubs:{code:apps}, nat (name or null), n}
 // cur (lib/vd_current.json): season in progress, {apps:{club:{pool id:apps}}, squad:{club:[pool id]}};
-// apps count like pool seasons, a squad entry makes him a player of that club (q.sq) without adding matches
+// apps count like pool seasons (ignored once that season is in the pool as a live season), a squad entry makes him a player of that club (q.sq) without adding matches
 function vdIndex(DATA,cur){const A=DATA.alias||{},out={};
   const add=(id,club,n,name)=>{const k=A[id]||id;const q=out[k]||(out[k]={apps:0,clubs:{},nat:null,n:name});q.apps+=n;q.clubs[club]=(q.clubs[club]||0)+n;return q;};
   for(const c of DATA.clubs)for(const p of c.pl){if(!(p[3]>=1))continue;const q=add(p[5],c.c,p[3],p[0]);if(p[10]!=null&&DATA.nats&&DATA.nats[p[10]])q.nat=DATA.nats[p[10]];}
-  const ca=cur&&cur.apps||{};for(const club in ca)for(const id in ca[club])if(ca[club][id]>=1)add(id,club,ca[club][id],'');
+  const curY=cur&&cur.season?parseInt(cur.season,10):null,inPool=DATA.clubs.some(c=>c.y===curY);   // live season in the pool: its apps come from the pool only
+  const ca=!inPool&&cur&&cur.apps||{};for(const club in ca)for(const id in ca[club])if(ca[club][id]>=1)add(id,club,ca[club][id],'');
   const cs=cur&&cur.squad||{};for(const club in cs)for(const id of cs[club]){const k=A[id]||id,q=out[k]||(out[k]={apps:0,clubs:{},nat:null,n:''});(q.sq||(q.sq={}))[club]=1;}
   return out;}
 const vdOfClub=(q,club)=>(q.clubs[club]||0)>=1||!!(q.sq&&q.sq[club]);

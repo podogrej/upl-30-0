@@ -132,7 +132,8 @@ def apply_v2(pool, sm, k=K, anchors=True):
     canon = lambda i: alias.get(i, i)
     C, B = load_class(alias), load_dob(alias)
     raw = json.load(open(RAW, encoding='utf-8'))
-    cards = [(SC.key(c, i), c, p) for c in pool['clubs'] for i, p in enumerate(c['pl'])]
+    live = SC.live_years(pool)
+    cards = [(SC.key(c, i), c, p) for c in pool['clubs'] if c['y'] not in live for i, p in enumerate(c['pl'])]
     out = {key: formula_c(sm[key], C.get(canon(p[5]), 0.0), k,
                           bonus_factor(raw[key], age_on(B.get(canon(p[5])), c['y'], p[11]), p[1] == 'GK'))
            for key, c, p in cards}
@@ -151,6 +152,7 @@ def apply_v2(pool, sm, k=K, anchors=True):
                 out[key] += bonus
                 if pid in A: out[key] = min(out[key], A[pid])   # bonus card of a person with a manual peak: capped at the peak
             out[key] = max(45, min(99, out[key]))
+    out.update((SC.key(c, i), p[2]) for c in pool['clubs'] if c['y'] in live for i, p in enumerate(c['pl']))   # live cards: final already
     return out
 
 
