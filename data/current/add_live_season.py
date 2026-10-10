@@ -25,6 +25,7 @@ PEOPLE = os.path.join(D, 'new_people_2026.csv')
 MATCHES = os.path.join(ROOT, 'data', 'matches', 'upl_matches.csv')
 YEAR, SEASON = 2026, '2026/27'
 SAME_CLUB = {'fc-kharkiv': 'metalist-1925'}
+NAME_NOW = {'metalist-1925': 'ФК Харків'}   # club-season name for the live season only; history keeps the old name
 # ceiling for ratings computed from 2026/27 rounds (not for carried 2025/26 ratings) until the winter refresh; None = off
 LIVE_ROUNDS_CAP = 85
 UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36'
@@ -154,7 +155,7 @@ def build():
     place = {SAME_CLUB.get(r['club'], r['club']): int(r['club_place']) for r in rows}
     st = team_stats()
     base = sum(v[1] for v in st.values()) / sum(v[0] for v in st.values())
-    teams = sorted(((s, club_name[s], place[s], round(st[s][1] / st[s][0] / base, 3), round(st[s][2] / st[s][0] / base, 3))
+    teams = sorted(((s, NAME_NOW.get(s, club_name[s]), place[s], round(st[s][1] / st[s][0] / base, 3), round(st[s][2] / st[s][0] / base, 3))
                     for s in place), key=lambda t: t[2])
     assert len(teams) == 16 and [t[2] for t in teams] == list(range(1, 17)), teams
     for s, n, pos, _, _ in teams:

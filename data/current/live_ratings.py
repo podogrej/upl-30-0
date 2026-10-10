@@ -9,7 +9,7 @@ Sources (Transfermarkt, cached in <cache dir>; rerun reuses the cache, --offline
   - goalkeepers: tmapi per-game data (UKR1, season 2026): goals conceded while on the pitch, clean sheets
     (60+ minutes and the opponent scored 0, as stage 4 did for Kaggle seasons).
 Rules:
-  - person (canonical id via pool['alias']) whose 2025/26 card has CARRY_MIN_APPS+ apps -> that card's current rating
+  - person (canonical id via pool['alias']) with CARRY_MIN_APPS+ apps over the whole 2025/26 season -> that card's current rating
     (several cards: most apps, then higher rating);
   - otherwise (short 2025/26 card, debut, returning) stage 4 (same as data/fix_2021/recompute_2021.py) over all 2026/27 players by line,
     team strength from the current table; small samples pulled toward 50 with weight = share of the club's games;
@@ -236,13 +236,15 @@ def main():
     pool = json.load(open(os.path.join(ROOT, 'src', 'pool.json'), encoding='utf-8'))
     alias = pool.get('alias') or {}
     canon = lambda pid: alias.get(pid, pid)
-    ids = set(); last = {}; prev = {}; club_name = {}
+    ids = set(); last = {}; prev = {}; prev_tot = {}; club_name = {}
     for c in pool['clubs']:
+        if c['y'] > PREV: continue   # ignore the live season itself (rerun after add_live_season.py)
         club_name.setdefault(c['c'], c['n'])
         for p in c['pl']:
             pid = canon(p[5]); ids.add(p[5])
             if c['y'] >= last.get(pid, (0,))[0]: last[pid] = (c['y'], p[0], p[1], p[11])
             if c['y'] == PREV:
+                prev_tot[pid] = prev_tot.get(pid, 0) + (p[3] or 0)
                 cand = (p[3] or 0, p[2], c['c'], p[3], p[4])
                 if cand > prev.get(pid, (-1,)): prev[pid] = cand
     names = {r['person_id']: (r['proposal'] or r['name_uk']) for r in csv.DictReader(open(os.path.join(ROOT, 'data/names/names_master.csv'), encoding='utf-8'))}
@@ -267,8 +269,8 @@ def main():
     for r in rows:
         pid = r['pid']
         p25 = prev.get(pid) if pid else None
-        if p25 and p25[0] >= CARRY_MIN_APPS:
-            r.update(source='carried 2025/26', rating=p25[1], r2025=p25[1], note='%s, %d apps' % (p25[2], p25[0]))
+        if p25 and prev_tot[pid] >= CARRY_MIN_APPS:   # whole 2025/26 season, all clubs; rating of the busiest card
+            r.update(source='carried 2025/26', rating=p25[1], r2025=p25[1], note='%s, %d apps (season %d)' % (p25[2], p25[0], prev_tot[pid]))
             continue
         raw = round(r['s4']); S = SC.top_map(raw)
         dob = B.get(pid) if pid else None
