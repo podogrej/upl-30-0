@@ -34,7 +34,7 @@ function pageInit(seed,now){
 }
 // CSS for the screenshot only: no caret, no transient toast (timer driven), header in flow so a full-page shot does not depend on scroll
 const SHOT_CSS='*,*::before,*::after{caret-color:transparent!important}#toast{visibility:hidden!important}header.top{position:static!important}';
-// version text differs by design between builds: mask it ("Що нового у версії 0.85.2" -> "... версії 0.0")
+// version text differs by design between builds: mask the footer version number as "0.0"
 const maskVersion=pg=>pg.evaluate(()=>{const w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);let n;
   while((n=w.nextNode()))if(/версі[яї] \d+(\.\d+)+/.test(n.nodeValue))n.nodeValue=n.nodeValue.replace(/(версі[яї]) \d+(\.\d+)+/g,'$1 0.0');});
 
@@ -119,7 +119,7 @@ async function shoot(dir){
      await step(pg,'live',async()=>{const before=await pg.evaluate(()=>window.__vdIntervals?[...window.__vdIntervals.keys()]:null);if(!before)return false;
        await click(pg,'#simBtn');await pg.waitForSelector('#skipBtn:visible',{timeout:15000});
        return await pg.evaluate(old=>{const R=window.__vdIntervals,rd=()=>(document.getElementById('lvRound')||{}).textContent||'';
-         for(const [id,fn] of [...R])if(!old.includes(id)){const was=rd();clearInterval(id);fn();if(rd()===was)continue;   // the round ticker changes "Тур N / 30"
+         for(const [id,fn] of [...R])if(!old.includes(id)){const was=rd();clearInterval(id);fn();if(rd()===was)continue;   // the round ticker label changes
            for(let i=0;i<40&&!/Тур 15\b/.test(rd());i++)fn();return /Тур 15\b/.test(rd());}
          return false;},before);});
      await step(pg,'result',async()=>{await click(pg,'#skipBtn');await pg.waitForSelector('#final:not([hidden])',{timeout:8000});await pg.waitForTimeout(1500);});
