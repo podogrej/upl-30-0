@@ -52,7 +52,7 @@ const snap=JSON.parse(fs.readFileSync(SNAP,'utf8'));
 const short=c=>c.length<4&&!c.includes('-');
 const newShort=Object.keys(now).filter(c=>!snap[c]&&short(c));
 T.check(!newShort.length,`нові класи в CSS не короткі (≥ 4 символи або з дефісом): `+(newShort.map(c=>'.'+c).join(', ')||'нових коротких немає'));
-const newGlobal=Object.keys(now).filter(c=>now[c].bare&&!(snap[c]&&snap[c].bare)&&(owners[c]||[]).length>=2);
+const newGlobal=Object.keys(now).filter(c=>now[c].bare&&snap[c]&&!snap[c].bare&&(owners[c]||[]).length>=2);   // only classes that already existed: a brand-new prefixed class may span files
 T.check(!newGlobal.length,`нове глобальне правило не чіпляє класи, які вже вживають кілька файлів`+newGlobal.map(c=>`\n    .${c} — уже в ${owners[c].join(', ')}: дай розділу свій клас із приставкою`).join(''));
 T.check(all.size>200&&bare.size>100,`розібрано CSS: класів ${all.size}, глобальних ${bare.size}; у розмітці ${Object.keys(owners).length}`);
 const gone=Object.keys(snap).filter(c=>!now[c]).length,added=Object.keys(now).filter(c=>!snap[c]);

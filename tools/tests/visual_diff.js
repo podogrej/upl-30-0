@@ -72,7 +72,7 @@ function numbers(E){
 async function shoot(dir){
   const {launch,makeDB,openSite}=require('./_site.js');
   fs.mkdirSync(dir,{recursive:true});for(const f of fs.readdirSync(dir))if(f.endsWith('.png'))fs.unlinkSync(path.join(dir,f));
-  const t0=Date.now(),B=await launch(),report={saved:[],skipped:[],unstable:[],errors:[]};
+  const t0=Date.now(),B=await launch(),report={saved:[],skipped:[],failed:[],unstable:[],errors:[]};
   const tg={initData:'user=x&hash=abc',initDataUnsafe:{user:{id:1,first_name:'Андрій'},start_param:'g-100555'},platform:'android'};
   const nm=['Олег','Марко','Саша','Дмитро','Іра','Петро','Сергій','Таня'];
   const api={'/api/auth':async()=>({json:{token_hash:'TH'}}),
@@ -92,7 +92,7 @@ async function shoot(dir){
       fs.writeFileSync(file,buf);report.saved.push(`${name}_${tag}`);};
     // one screen: a missing hook or element in this build means skipped, not failed
     const step=async(pg,name,fn)=>{try{if(await fn()===false){report.skipped.push(`${name}_${tag}`);return;}await snap(pg,name);}
-      catch(e){report.skipped.push(`${name}_${tag}: ${String(e.message).split('\n')[0].slice(0,120)}`);}};
+      catch(e){report.failed.push(`${name}_${tag}: ${String(e.message).split('\n')[0].slice(0,120)}`);}};   // an error is a failure: a silent skip would hide the screen from compare
     const has=(pg,k)=>pg.evaluate(k=>!!(window.__dbg&&window.__dbg[k]),k);
     const back=pg=>pg.evaluate(()=>{const c=document.getElementById('viewClose');if(c&&c.offsetParent)c.click();document.getElementById('homeBtn').click();}).then(()=>pg.waitForTimeout(250));
     const click=(pg,sel)=>pg.click(sel,{timeout:3000});
@@ -137,9 +137,10 @@ async function shoot(dir){
   console.log(`знімки: ${report.saved.length} у ${path.relative(process.cwd(),dir)||dir} за ${sec} с`);
   for(const s of report.skipped)console.log('· пропущено',s);
   for(const s of report.unstable)console.log('✗ нестабільний знімок',s);
+  for(const s of report.failed)console.log('✗ не вдалося зняти',s);
   for(const s of report.errors)console.log('✗ помилки на сторінці',s);
   fs.writeFileSync(path.join(dir,'shoot.json'),JSON.stringify({version:version(),sec:+sec,...report},null,1));
-  return report.unstable.length||!report.saved.length?1:0;}
+  return report.unstable.length||report.failed.length||!report.saved.length?1:0;}
 
 // ---------- compare
 function version(){return (fs.readFileSync(path.join(ROOT,'src','template.html'),'utf8').match(VER_RE)||[])[1]||'?';}
@@ -164,7 +165,7 @@ function compare(baseDir,headDir){
   console.log(`версія ${exp.v}; visual_expect.json: ${exp.jv===exp.v?`очікувані зміни: ${exp.list.join(', ')||'жодних'}`:`версія ${exp.jv} ≠ ${exp.v}, список не діє`}`);
   const screen=f=>f.replace(/_\d+_(dark|light)\.png$/,'');const rep=[],by={};
   for(const f of [...head].sort()){const s=screen(f);by[s]=by[s]||{n:0,ch:[]};
-    if(!base.has(f)){rep.push(`new     ${f} (no base screenshot)`);console.log('· новий знімок без бази:',f);continue;}
+    if(!base.has(f)){rep.push(`new     ${f} (no base screenshot)`);by[s].ch.push(f.slice(s.length+1,-4)+' без бази');continue;}   // unseen in base: allowed only via visual_expect.json
     const a=P.sync.read(fs.readFileSync(path.join(baseDir,f))),b=P.sync.read(fs.readFileSync(path.join(headDir,f))),d=diff(a,b);by[s].n++;
     const ch=d.ratio>AREA_MAX,what=d.size?'розмір '+d.size:(100*d.ratio).toFixed(2)+'%';rep.push(`${ch?'CHANGED':'same   '} ${f} ${d.size||`${d.px} px (${(100*d.ratio).toFixed(3)}%)`}`);
     if(ch){by[s].ch.push(f.slice(s.length+1,-4)+' '+what);sideBySide(a,b,path.join(OUT,f.replace(/\.png$/,'_before_after.png')));}}
