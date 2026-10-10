@@ -51,9 +51,9 @@ function makeDB(cfg={},rpc={}){
   return {DB,handle,fetch};}
 // invoke a Vercel handler (api/*.js) without a server
 const callApi=(h,body,method='POST',query={})=>new Promise(res=>{h({method,body,query,headers:{}},{status(c){this.c=c;return this;},json(j){res({status:this.c||200,json:j});},send(j){res({status:this.c||200,json:j});},setHeader(){},end(){res({status:this.c||200,json:null});}});});
-// open the page. opts: {b, query:'?c=..', hash, init:'JS run before load', db, api:{'/api/x':async(req)=>({status,json})}, tg:{...WebApp}, user, route:(r,url)=>bool, viewport}
+// open the page. opts: {b, query:'?c=..', hash, colorScheme, reducedMotion, init:'JS run before load', db, api:{'/api/x':async(req)=>({status,json})}, tg:{...WebApp}, user, route:(r,url)=>bool, viewport}
 async function openSite(opts={}){
-  const b=opts.b||await launch();const ctx=await b.newContext({viewport:opts.viewport||{width:390,height:844},colorScheme:opts.colorScheme||'dark'});
+  const b=opts.b||await launch();const ctx=await b.newContext({viewport:opts.viewport||{width:390,height:844},colorScheme:opts.colorScheme||'dark',reducedMotion:opts.reducedMotion||'no-preference'});
   const html=fs.readFileSync(path.join(ROOT,'index.html'));const log=[];
   await ctx.route(()=>true,async r=>{const req=r.request(),u=new URL(req.url()),m=req.method();
     try{
