@@ -4092,7 +4092,8 @@ function drawCard(r){   // card in site style: UPL navy background, UPL.TV gradi
 }
 document.getElementById('chalOpen').onclick=()=>{const b=document.getElementById('chalBox'),t=document.getElementById('chalOpen');b.hidden=!b.hidden;t.classList.toggle('on',!b.hidden);if(!b.hidden){b.scrollIntoView({behavior:'smooth',block:'center'});const n=document.getElementById('chalName');if(n&&!n.hidden&&!n.value)n.focus();}};
 // ---------- What's new: short player-friendly notes on the latest version (technical log: CHANGELOG.md)
-const WHATSNEW={v:'0.84.1',news:'0.84',date:'10.10.2026',items:[   // news: edition of the items; a release without new items keeps it, so the news dot does not light up again
+const WHATSNEW={v:'0.84.1',news:'0.84.1',date:'10.10.2026',items:[   // news: edition of the items; a release without new items keeps it, so the news dot does not light up again
+  ['soccer','Охайніший підсумок сезону','Значки біля бомбардира й гравця сезону стоять рівно, довге ім’я переноситься поруч, а не під значок. У Telegram під час сезону телефон вібрує лише на перемогах.'],
   ['calendar-star','Виклик дня живіше','Підійшов гравець під умову: цифра прокручується, смужка заповнюється, а блок умови більше не смикається. Умову виконано — галочка й зелений колір.'],
   ['soccer-field','Плавніший драфт','Лічильник складу відраховує, витрачена перекрутка гасне, а підсвічене місце на полі блимає двічі й завмирає.'],
   ['trophy','Спокійніші трофеї','Нові трофеї з’являються по черзі, полиск — лише в найрідкіснішого. Тема перемикається м’яким переходом.']]};
