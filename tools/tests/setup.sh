@@ -692,14 +692,14 @@ chk "v06997: старі статуси approved → pending_approval, skipped �
   assert (select status from channel_posts where text = 'old-a') = 'pending_approval' and (select status from channel_posts where text = 'old-s') = 'rejected', 'старі статуси';
   assert exists (select 1 from pg_constraint where conname = 'channel_posts_status_chk'), 'перевірка статусу є';"
 # ===== v087: PII-free read paths, 5×5 lineups hidden until the result, Telegram identity in app_metadata =====
-# auth users before the backfill: server-made (no password, confirmed, email identity), self sign-ups with the same service email
+# auth users before the backfill: server-made (random password, confirmed, no confirmation mail, before the cutoff), self sign-ups with the same service email
 T1=87000000-0000-4000-a000-000000000901; T2=87000000-0000-4000-a000-000000000902; T3=87000000-0000-4000-a000-000000000903; T4=87000000-0000-4000-a000-000000000904
 $P -d t1 -q >/dev/null 2>"$D/err" <<SQL || bad "v087: тестові акаунти — $(head -3 "$D/err")"
-insert into auth.users(id, email, encrypted_password, email_confirmed_at, raw_app_meta_data) values
-  ('$T1', 'tg-901@users.upl-30-0.vercel.app', '', now(), '{"provider":"email","providers":["email"]}'),
-  ('$T2', 'tg-902@users.upl-30-0.vercel.app', '\$2a\$10\$attackerhash', now(), '{"provider":"email","providers":["email"]}'),
-  ('$T3', 'tg-903@users.upl-30-0.vercel.app', '', null, '{"provider":"email","providers":["email"]}'),
-  ('$T4', 'tg-904@users.upl-30-0.vercel.app', null, now(), '{"provider":"email","providers":["email"]}');
+insert into auth.users(id, email, encrypted_password, email_confirmed_at, confirmation_sent_at, created_at, raw_app_meta_data) values
+  ('$T1', 'tg-901@users.upl-30-0.vercel.app', '\$2a\$10\$serverrandom', now(), null, '2026-10-01', '{"provider":"email","providers":["email"]}'),
+  ('$T2', 'tg-902@users.upl-30-0.vercel.app', '\$2a\$10\$attackerhash', now(), now(), '2026-10-01', '{"provider":"email","providers":["email"]}'),
+  ('$T3', 'tg-903@users.upl-30-0.vercel.app', '', null, null, '2026-10-01', '{"provider":"email","providers":["email"]}'),
+  ('$T4', 'tg-904@users.upl-30-0.vercel.app', null, now(), null, '2026-10-01', '{"provider":"email","providers":["email"]}');
 insert into auth.identities(user_id, provider) values ('$T1', 'email'), ('$T2', 'email'), ('$T3', 'email'), ('$T4', 'email'), ('$T4', 'google');
 SQL
 for pass in 1 2; do
@@ -758,8 +758,10 @@ chk "v087: tg_auth_user — лише сервер; ok / bad / none" postgres "
   assert tg_auth_user(901) = 'ok' and tg_auth_user(902) = 'bad' and tg_auth_user(903) = 'bad' and tg_auth_user(904) = 'bad' and tg_auth_user(905) = 'none', 'статуси';
   assert not has_function_privilege('anon', 'tg_auth_user(bigint)', 'execute') and not has_function_privilege('authenticated', 'tg_auth_user(bigint)', 'execute'), 'права';
   assert not has_function_privilege('anon', 'tg_server_made(uuid)', 'execute'), 'tg_server_made';
-  insert into auth.users(id, email, encrypted_password, email_confirmed_at, raw_app_meta_data) values ('87000000-0000-4000-a000-000000000906', 'tg-906@users.upl-30-0.vercel.app', '', now(), '{}');
+  insert into auth.users(id, email, encrypted_password, email_confirmed_at, confirmation_sent_at, created_at, raw_app_meta_data) values ('87000000-0000-4000-a000-000000000906', 'tg-906@users.upl-30-0.vercel.app', 'x', now(), null, '2026-10-11', '{}');
   assert tg_auth_user(906) = 'ok', 'акаунт від попереднього сервера';
+  insert into auth.users(id, email, encrypted_password, email_confirmed_at, confirmation_sent_at, created_at, raw_app_meta_data) values ('87000000-0000-4000-a000-000000000907', 'tg-907@users.upl-30-0.vercel.app', 'x', now(), null, '2026-10-13', '{}');
+  assert tg_auth_user(907) = 'bad', 'після виходу 0.87 акаунт без tg_id — чужий';
   assert (select raw_app_meta_data->>'tg_id' from auth.users where email like 'tg-906@%') = '906', 'акаунт від попереднього сервера — отримав tg_id';
   update auth.users set raw_app_meta_data = '{\"tg_id\":\"999\"}' where id = '$T4';
   assert tg_auth_user(904) = 'bad', 'tg_id іншого користувача';"

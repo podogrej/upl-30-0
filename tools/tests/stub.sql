@@ -1,7 +1,7 @@
 -- Supabase stub for local Postgres: roles anon/authenticated/service_role, auth.users, auth.uid(), auth.role(), storage.buckets
 do $$ begin if not exists (select 1 from pg_roles where rolname='anon') then create role anon nologin; create role authenticated nologin; create role service_role nologin bypassrls; end if; end $$;
 create schema auth;
-create table auth.users (id uuid primary key default gen_random_uuid(), email text, encrypted_password text, email_confirmed_at timestamptz, raw_app_meta_data jsonb, raw_user_meta_data jsonb);
+create table auth.users (id uuid primary key default gen_random_uuid(), email text, encrypted_password text, email_confirmed_at timestamptz, confirmation_sent_at timestamptz, created_at timestamptz default now(), raw_app_meta_data jsonb, raw_user_meta_data jsonb);
 create table auth.identities (id uuid primary key default gen_random_uuid(), user_id uuid references auth.users(id), provider text not null);
 create function auth.uid() returns uuid language sql stable as $$ select coalesce(nullif(current_setting('request.jwt.claim.sub', true),''), (nullif(current_setting('request.jwt.claims', true),'')::jsonb->>'sub'))::uuid $$;
 create function auth.role() returns text language sql stable as $$ select coalesce(nullif(current_setting('request.jwt.claim.role', true),''), (nullif(current_setting('request.jwt.claims', true),'')::jsonb->>'role')) $$;

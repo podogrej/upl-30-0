@@ -125,11 +125,14 @@ grant execute on function public.fl_get(text) to anon, authenticated;
 create or replace function public.tg_server_made(p_uid uuid) returns boolean language sql stable security definer set search_path = public as $$
   select exists (select 1 from auth.users u
                   where u.id = p_uid and u.email ~ '^tg-\d{1,20}@users\.upl-30-0\.vercel\.app$'
-                    and coalesce(u.encrypted_password, '') = '' and u.email_confirmed_at is not null
+                    and u.email_confirmed_at is not null and u.confirmation_sent_at is null
+                    and u.created_at < timestamptz '2026-10-12 00:00+00'
                     and not exists (select 1 from auth.identities i where i.user_id = u.id and i.provider <> 'email'));
 $$;
 revoke execute on function public.tg_server_made(uuid) from public, anon, authenticated;
 
+-- server-made = created by the admin API before 0.87 (confirmed without a confirmation mail; the server sets a random password, so the
+-- password is not a signal). Accounts created after the cutoff must already carry app_metadata.tg_id from the new /api/auth.
 -- backfill: server-made accounts without app_metadata.tg_id get it from the email
 update auth.users u
    set raw_app_meta_data = coalesce(u.raw_app_meta_data, '{}'::jsonb) || jsonb_build_object('tg_id', substring(u.email from '^tg-(\d+)@'))
