@@ -1,0 +1,1013 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>30-0 УПЛ · анімації v2</title>
+<script>
+(function(){var p='auto';try{p=localStorage.getItem('proto_theme')||'auto';}catch(e){}
+  var m=window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches;
+  document.documentElement.setAttribute('data-theme',p==='auto'?(m?'dark':'light'):p);
+  document.documentElement.setAttribute('data-pref',p);
+  if(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)document.documentElement.classList.add('less');})();
+</script>
+<style>
+@font-face{font-family:"KyivType Sans";src:url(data:font/otf;base64,__FONT_REGULAR__) format("opentype");font-weight:400 500;font-display:swap}
+@font-face{font-family:"KyivType Sans";src:url(data:font/otf;base64,__FONT_BOLD__) format("opentype");font-weight:600 700;font-display:swap}
+@font-face{font-family:"KyivType Sans";src:url(data:font/otf;base64,__FONT_BLACK__) format("opentype");font-weight:800 900;font-display:swap}
+
+/* game tokens (src/template.html); .th-l / .th-d scope a theme to one element */
+:root,.th-l{
+  --bg:#f4f5fa;--bg2:#eceef6;--surface:#fff;--line:#dfe3ef;--ink:#132346;--ink2:#4a5578;--muted:#5e6888;--pitch:#2a4fa8;
+  --amber:#6d2abb;--amber2:#d8177b;--win:#0b7a3a;--draw:#c98a00;--loss:#e0263b;--gtag:#c4146f;
+  --gk:#FFCC00;--df:#0062d1;--mf:#34C759;--fw:#FF3B30;
+  --sh-1:0 1px 2px rgba(19,35,70,.06),0 1px 3px rgba(19,35,70,.05);--sh-2:0 2px 6px rgba(19,35,70,.06),0 10px 28px rgba(19,35,70,.10);--sh-3:0 4px 12px rgba(19,35,70,.08),0 18px 48px rgba(19,35,70,.18);
+  --line2:color-mix(in srgb,var(--line) 55%,transparent);
+  color-scheme:light;
+}
+:root[data-theme="dark"],.th-d{
+  --bg:#0b1430;--bg2:#0f1b3d;--surface:#132346;--line:#26396b;--ink:#fff;--ink2:#b9c2de;--muted:#7f8aad;
+  --amber:#e0287a;--amber2:#ff5aa0;--win:#2fd07a;--draw:#f5b83d;--loss:#ff4d5e;--gtag:#c8226e;
+  --gk:#FFD60A;--df:#0A84FF;--mf:#30D158;--fw:#FF453A;
+  --sh-1:0 1px 2px rgba(0,0,0,.35);--sh-2:inset 0 1px 0 rgba(255,255,255,.06),0 10px 28px rgba(0,0,0,.45);--sh-3:inset 0 1px 0 rgba(255,255,255,.08),0 18px 48px rgba(0,0,0,.6);
+  --line2:color-mix(in srgb,var(--line) 55%,transparent);
+  color-scheme:dark;
+}
+:root{
+  --font-display:"KyivType Sans",system-ui,sans-serif;--font-body:"KyivType Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --font-emoji:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif;
+  --fs-caption2:11px;--fs-caption:12px;--fs-footnote:13px;--fs-body:15px;--fs-headline:17px;--fs-title3:20px;--fs-title2:24px;--fs-title1:28px;
+  --wt-regular:400;--wt-medium:500;--wt-bold:700;--wt-black:900;
+  --lh-snug:1.2;--lh-sub:1.28;--lh-body:1.5;--ls-tight:-.02em;--ls-caps:.06em;
+  --sp-0h:2px;--sp-1:4px;--sp-2:8px;--sp-3:12px;--sp-4:16px;--sp-5:24px;--sp-6:32px;--sp-7:48px;
+  --r-xs:6px;--r-sm:8px;--r-md:12px;--r-lg:16px;--r-xl:22px;--r-pill:999px;
+}
+
+/* motion tokens; --k = slow-motion factor */
+:root{--k:1;
+  --dur-0:calc(100ms * var(--k));--dur-1:calc(120ms * var(--k));--dur-2:calc(240ms * var(--k));--dur-3:calc(360ms * var(--k));--dur-4:calc(500ms * var(--k));--dur-out:calc(160ms * var(--k));
+  --ease-out:cubic-bezier(.23,1,.32,1);
+  --spring-old:cubic-bezier(.2,1.2,.3,1);--spring-pop:cubic-bezier(.2,1.2,.3,1);--spring:cubic-bezier(.25,1,.5,1);--spring-sheet:cubic-bezier(.32,.72,0,1);
+}
+@supports (transition-timing-function:linear(0,1)){:root{
+  --spring-old:linear(0,.065,.218,.406,.593,.757,.887,.981,1.041,1.072,1.083,1.08,1.068,1.053,1.037,1.023,1.011,1.003,.997,.994,.993,.993,.994,.995,1);
+  --spring-pop:var(--spring-old);
+  --spring:linear(0,.053,.167,.301,.431,.547,.645,.726,.79,.841,.881,.911,.934,.951,.964,.973,.981,.986,.99,.992,.995,.996,.997,.998,1);
+}}
+html.slow{--k:4}
+
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;overflow-x:clip}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:var(--fs-body);line-height:var(--lh-sub);padding:0 var(--sp-4) var(--sp-7);padding-left:max(var(--sp-4),env(safe-area-inset-left));padding-right:max(var(--sp-4),env(safe-area-inset-right))}
+::selection{background:color-mix(in srgb,var(--amber2) 30%,transparent)}
+h1,h2,h3{font-family:var(--font-display);text-wrap:balance;margin:0}
+p{margin:0;max-width:62ch}
+button{font:inherit;cursor:pointer;border:1px solid var(--ink);background:var(--surface);color:var(--ink);border-radius:var(--r-md);padding:var(--sp-3) var(--sp-4);font-weight:var(--wt-bold);-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+a{-webkit-tap-highlight-color:transparent}
+:focus-visible{outline:3px solid var(--amber2);outline-offset:2px}
+.slot:focus-visible{outline:none}.slot:focus-visible .disc{outline:3px solid var(--amber2);outline-offset:2px}
+button.ghost{border-color:var(--line);background:transparent;color:var(--ink2);padding:var(--sp-2) var(--sp-3);font-weight:var(--wt-medium)}
+.ico{width:16px;height:16px;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.wrap{max-width:760px;margin:0 auto}
+
+/* page chrome press feedback: proposed calm release */
+.ctl button,header button,.btnp{transition:scale var(--dur-3) var(--spring)}
+.ctl button:active,header button:active,.btnp:active{scale:.97;transition-duration:var(--dur-0);transition-timing-function:var(--ease-out)}
+html.less .ctl button,html.less header button,html.less .btnp{transition:none}
+html.less .ctl button:active,html.less header button:active,html.less .btnp:active{scale:none}
+
+header.top{position:sticky;top:0;z-index:40;margin:0 calc(var(--sp-4) * -1);padding:var(--sp-2) var(--sp-4);padding-top:max(var(--sp-2),env(safe-area-inset-top));background:color-mix(in srgb,var(--bg) 90%,transparent);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+@media (prefers-reduced-transparency:reduce){header.top{background:var(--bg);-webkit-backdrop-filter:none;backdrop-filter:none}}
+header .in{max-width:760px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;gap:0 var(--sp-4)}
+header .brand{font:var(--wt-black) var(--fs-headline)/1 var(--font-display);letter-spacing:var(--ls-tight);margin-right:auto;white-space:nowrap}
+header .brand span{color:var(--ink2);font-weight:var(--wt-bold)}
+.sws{display:flex;gap:var(--sp-4);align-items:center}
+label.swl{display:inline-flex;align-items:center;gap:var(--sp-2);font-size:var(--fs-footnote);font-weight:var(--wt-bold);color:var(--ink2);cursor:pointer;white-space:nowrap;min-height:44px}
+input.sw{appearance:none;-webkit-appearance:none;flex:none;width:46px;height:28px;border-radius:var(--r-lg);background:var(--line);position:relative;cursor:pointer;margin:0;transition:background-color var(--dur-2) var(--ease-out)}
+input.sw::after{content:"";position:absolute;left:3px;top:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform var(--dur-2) var(--rel,var(--spring))}
+input.sw:checked{background:var(--win)}input.sw:checked::after{transform:translateX(18px)}
+html.less input.sw,html.less input.sw::after{transition:none}
+#themeBtn{display:inline-flex;align-items:center;gap:var(--sp-2);min-height:44px;border-color:var(--line);background:var(--surface);font-size:var(--fs-footnote);padding:0 var(--sp-3)}
+#themeBtn .ico{width:18px;height:18px}
+
+.intro{padding:var(--sp-6) 0 0}
+.intro h1{font:var(--wt-black) var(--fs-title1)/1.1 var(--font-display);letter-spacing:var(--ls-tight)}
+.intro p{margin-top:var(--sp-3);color:var(--ink2);line-height:var(--lh-body)}
+.legend{margin-top:var(--sp-4);display:grid;gap:var(--sp-2);padding:var(--sp-3) var(--sp-4);border-radius:var(--r-lg);background:var(--bg2);font-size:var(--fs-footnote);color:var(--ink2);line-height:var(--lh-body)}
+.legend b{color:var(--ink)}
+.legend code{font:inherit;font-variant-numeric:tabular-nums;color:var(--muted)}
+.part{margin-top:var(--sp-7);padding-top:var(--sp-5);border-top:1px solid var(--line)}
+.part h2{font:var(--wt-black) var(--fs-title2)/1.1 var(--font-display);letter-spacing:var(--ls-tight)}
+.part p{margin-top:var(--sp-2);color:var(--ink2);line-height:var(--lh-body)}
+
+/* demo section */
+.demo{padding-top:var(--sp-6);scroll-margin-top:110px}
+.part+.demo{padding-top:var(--sp-5)}
+.demo>h3{font-size:var(--fs-title3);font-weight:var(--wt-bold);display:flex;gap:var(--sp-2);align-items:baseline}
+.demo>h3 .n{font:var(--wt-black) var(--fs-title3)/1 var(--font-display);color:var(--amber2);font-variant-numeric:tabular-nums;min-width:1.2em}
+.demo>.lede{margin-top:var(--sp-2);color:var(--ink2);line-height:var(--lh-body)}
+.stage{margin-top:var(--sp-4);padding:var(--sp-4);border-radius:var(--r-xl);background:var(--bg2);position:relative}
+.ctl{margin-top:var(--sp-3);display:flex;align-items:center;justify-content:space-between;gap:var(--sp-3)}
+.rep{display:inline-flex;align-items:center;gap:var(--sp-2);min-height:44px}
+.rep .ico{width:18px;height:18px}
+
+/* before/after segmented control with a sliding thumb */
+.seg2{position:relative;display:grid;grid-template-columns:1fr 1fr;padding:3px;border-radius:var(--r-md);background:var(--line2);box-shadow:inset 0 0 0 1px var(--line);min-width:200px}
+.seg2 .thumb{position:absolute;top:3px;bottom:3px;left:3px;width:calc(50% - 3px);border-radius:calc(var(--r-md) - 3px);background:var(--surface);box-shadow:var(--sh-1);transition:transform var(--dur-2) var(--spring)}
+.demo[data-mode="after"] .seg2 .thumb{transform:translateX(100%)}
+html.less .seg2 .thumb{transition:none}
+.seg2 button{position:relative;border:0;background:none;min-height:40px;padding:0 var(--sp-4);color:var(--ink2);font-size:var(--fs-footnote);transition:color var(--dur-1) var(--ease-out)}
+.seg2 button[aria-pressed="true"]{color:var(--ink)}
+.seg2 button:active{scale:none!important}
+
+@media (hover:hover) and (pointer:fine){button.ghost:hover,#themeBtn:hover{background:var(--surface);color:var(--ink)}.seg2 button:hover{color:var(--ink)}}
+.notes{max-width:68ch;margin-top:var(--sp-3);padding:0;list-style:none;display:grid;gap:var(--sp-2);font-size:var(--fs-footnote);color:var(--ink2);line-height:var(--lh-body)}
+.notes li{position:relative;padding-left:var(--sp-4)}
+.notes li::before{content:"";position:absolute;left:2px;top:.62em;width:6px;height:6px;border-radius:50%;background:var(--line)}
+.notes.after li::before{background:var(--win)}
+.notes.before li::before{background:var(--loss)}
+.notes li.lm::before{background:var(--muted)}
+.demo[data-mode="after"] .notes.before,.demo[data-mode="before"] .notes.after{display:none}
+.notes b{color:var(--ink);font-weight:var(--wt-bold)}
+.notes .v{color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
+.noanim,.noanim *,.noanim *::after,.noanim *::before{transition:none!important}
+@keyframes fade{from{opacity:0}}
+
+/* ---------- 1. daily challenge requirement (game .brief/.rqx) ---------- */
+.brief{display:grid;gap:var(--sp-3);padding:var(--sp-4);border-radius:var(--r-lg);background:var(--surface);box-shadow:var(--sh-2)}
+.lab2{font:var(--wt-bold) var(--fs-caption) var(--font-body);letter-spacing:var(--ls-caps);text-transform:uppercase;color:var(--ink2)}
+.bh1{display:flex;align-items:center;gap:var(--sp-2);font:var(--wt-black) var(--fs-title3)/var(--lh-snug) var(--font-display);letter-spacing:var(--ls-tight);margin-top:calc(var(--sp-2) * -1)}
+.bh1 .em{font-family:var(--font-emoji);font-weight:400;font-size:22px;line-height:1}
+.rqx{position:relative;isolation:isolate;display:grid;gap:var(--sp-2);padding:var(--sp-3);border-radius:var(--r-md);background:color-mix(in srgb,var(--gtag) 13%,var(--surface));box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--gtag) 70%,transparent)}
+.rq1{display:flex;justify-content:space-between;align-items:center}
+.tag-req{position:relative;isolation:isolate;display:inline-flex;align-items:center;min-height:24px;padding:0 10px;border-radius:var(--r-pill);background:var(--gtag);color:#fff;font:var(--wt-bold) var(--fs-caption)/1 var(--font-body);white-space:nowrap}
+.tag-req .ico{width:14px;height:14px;stroke-width:2.4}
+.tag-req>.ck{margin-right:6px}
+.ckw{display:inline-grid;grid-template-columns:0fr;transition:grid-template-columns var(--dur-3) var(--spring)}
+.ckw>span{min-width:0;overflow:hidden;display:flex}
+.ckw .ck{margin-right:6px}
+.brief.ok .ckw{grid-template-columns:1fr}
+.cnt{display:inline-block;transform-origin:right center;font:var(--wt-black) 32px/1 var(--font-display);font-variant-numeric:tabular-nums}.cnt i{font-style:normal;font-size:18px;color:var(--ink2)}
+.rq2{font:var(--wt-bold) var(--fs-headline)/var(--lh-snug) var(--font-display)}
+.rq3{font-size:var(--fs-footnote);color:var(--ink2)}.rq3 b{color:var(--ink)}
+.rq3w{margin-top:calc(var(--sp-2) * -1);overflow:hidden}
+.rq3w .rq3{padding-top:var(--sp-2)}
+.rq3w:not(.open) .rq3{display:none}
+.rq3 .nn{display:inline-block}
+.rqseg{display:grid;grid-template-columns:repeat(2,1fr);gap:var(--sp-1)}
+.rqseg i{position:relative;overflow:hidden;height:6px;border-radius:3px;background:color-mix(in srgb,var(--ink) 16%,transparent)}
+.next{display:flex;align-items:center;justify-content:space-between;gap:var(--sp-3);margin-top:var(--sp-3);padding:var(--sp-3) var(--sp-4);border-radius:var(--r-lg);background:var(--surface);box-shadow:var(--sh-1);font-weight:var(--wt-bold)}
+.next span{color:var(--ink2);font-weight:var(--wt-medium);font-size:var(--fs-footnote);font-variant-numeric:tabular-nums}
+.demo[data-mode="before"] .rqseg i.on{background:var(--win)}
+.demo[data-mode="before"] .brief.ok .rqx{background:color-mix(in srgb,var(--win) 12%,var(--surface));box-shadow:inset 0 0 0 1.5px var(--win)}
+.demo[data-mode="before"] .brief.ok .tag-req{background:var(--win);color:#04210f}
+:root:not([data-theme="dark"]) .demo[data-mode="before"] .brief.ok .tag-req{color:#fff}
+.demo[data-mode="after"] .rqseg i::after{content:"";position:absolute;inset:0;border-radius:inherit;background:var(--win);transform:translateX(-101%);transition:transform calc(420ms * var(--k)) var(--ease-out)}
+.demo[data-mode="after"] .rqseg i.on::after{transform:none}
+.demo[data-mode="after"] .rqx::before,.demo[data-mode="after"] .tag-req::before{content:"";position:absolute;inset:0;z-index:-1;border-radius:inherit;opacity:0;transition:opacity var(--dur-3) var(--ease-out)}
+.demo[data-mode="after"] .rqx::before{background:color-mix(in srgb,var(--win) 12%,var(--surface));box-shadow:inset 0 0 0 1.5px var(--win)}
+.demo[data-mode="after"] .tag-req::before{background:var(--win)}
+.demo[data-mode="after"] .brief.ok .rqx::before,.demo[data-mode="after"] .brief.ok .tag-req::before{opacity:1}
+.demo[data-mode="after"] .tag-req{transition:color var(--dur-3) var(--ease-out)}
+.demo[data-mode="after"] .brief.ok .tag-req{color:#04210f}
+:root:not([data-theme="dark"]) .demo[data-mode="after"] .brief.ok .tag-req{color:#fff}
+html.less .demo[data-mode="after"] .rqseg i::after,html.less .demo[data-mode="after"] .rqx::before,html.less .demo[data-mode="after"] .tag-req::before,html.less .demo[data-mode="after"] .tag-req,html.less .ckw{transition:none}
+/* odometer (game odoSet) */
+.od{display:inline-block;position:relative;clip-path:inset(0 -2px)}.od-n,.od-o{display:inline-block}.od-o{position:absolute;left:0;top:0}
+
+/* ---------- 2. tokens ---------- */
+.tk{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:var(--sp-3)}
+.tk .curve,.tk .cell.wide{grid-column:1/-1}
+.tk .cell{display:grid;gap:var(--sp-2);align-content:start;min-width:0}
+.tk .cap{font-size:var(--fs-caption);font-weight:var(--wt-bold);color:var(--ink2);white-space:nowrap}
+.curve{display:grid;grid-template-columns:auto 1fr;gap:var(--sp-3);align-items:center;padding:var(--sp-3);border-radius:var(--r-md);background:var(--surface);box-shadow:var(--sh-1)}
+.curve svg{width:132px;height:72px;display:block;overflow:visible}
+.curve .tgt{stroke:var(--line);stroke-width:1;stroke-dasharray:3 3;fill:none}
+.curve .c{fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:opacity var(--dur-2) var(--ease-out)}
+.curve .c.old{stroke:var(--loss)}.curve .c.new{stroke:var(--win)}
+.demo[data-mode="after"] .curve .c.old,.demo[data-mode="before"] .curve .c.new{opacity:.22}
+.curve .lg{display:grid;gap:var(--sp-1);font-size:var(--fs-caption);color:var(--ink2)}
+.curve .lg span{display:flex;align-items:center;gap:var(--sp-2)}
+.curve .lg i{width:14px;height:3px;border-radius:2px;flex:none}
+.curve .lg .o i{background:var(--loss)}.curve .lg .w i{background:var(--win)}
+.demo[data-mode="after"] .curve .lg .w,.demo[data-mode="before"] .curve .lg .o{color:var(--ink);font-weight:var(--wt-bold)}
+.scr{height:150px;border-radius:var(--r-lg);background:var(--bg);box-shadow:inset 0 0 0 1px var(--line);overflow:hidden;padding:var(--sp-2)}
+.scr .sc{display:grid;gap:var(--sp-2)}
+.scr .hd{height:10px;width:46%;border-radius:5px;background:var(--line);margin:var(--sp-1) 0}
+.row1{display:grid;grid-template-columns:28px 1fr;gap:var(--sp-2);align-items:center;padding:var(--sp-2);border-radius:var(--r-md);background:var(--surface);box-shadow:var(--sh-1)}
+.row1 i{width:28px;height:28px;border-radius:var(--r-sm);background:color-mix(in srgb,var(--amber2) 18%,transparent)}
+.row1 b{font-size:var(--fs-footnote)}
+.row1:nth-child(3) i{background:color-mix(in srgb,var(--df) 18%,transparent)}
+button.press{position:relative;width:100%;min-height:64px;background:var(--pitch);border-color:var(--pitch);color:#fff;font:var(--wt-bold) var(--fs-headline) var(--font-display);overflow:hidden;transition:scale var(--dur-3) var(--rel,var(--spring))}
+button.press::after{content:"";position:absolute;inset:0;background:#fff;opacity:0;transition:opacity var(--dur-1) var(--ease-out)}
+.demo[data-mode="before"] .press,.demo[data-mode="before"] .sw.dsw{--rel:var(--spring-old)}
+button.press:active,button.press.down{scale:.97;transition-duration:var(--dur-0);transition-timing-function:var(--ease-out)}
+button.press:active::after,button.press.down::after{opacity:.08}
+html.less button.press{transition:none}html.less button.press:active,html.less button.press.down{scale:none}
+.swpad{height:64px;display:grid;place-items:center;padding:0 var(--sp-2);border-radius:var(--r-md);background:var(--surface);box-shadow:var(--sh-1)}
+.landpad{width:84px;height:64px;border-radius:var(--r-md);background:radial-gradient(120% 120% at 50% 40%,#1a3a7a 0,#0e2350 80%);display:grid;place-items:center}
+
+/* ---------- pitch and chips (game .pitch/.slot) ---------- */
+.pitch{position:relative;width:100%;max-width:460px;margin-inline:auto;aspect-ratio:68/54;container-type:inline-size;border-radius:14px;overflow:hidden;color:#fff;background:radial-gradient(120% 80% at 50% 45%,#1a3a7a 0,#0e2350 70%)}
+.pitch svg.mk{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.pitch svg.mk *{fill:none;stroke:rgba(200,215,255,.24);stroke-width:.45}
+.slot{--cs:36px;--bw:4px;position:absolute;transform:translate(-50%,calc(var(--cs) / -2));display:flex;flex-direction:column;align-items:center;white-space:nowrap;outline:none;-webkit-tap-highlight-color:transparent}
+.slot.inline{position:relative;transform:none}
+.disc{position:relative;width:var(--cs);height:var(--cs);border-radius:50%;display:grid;place-items:center;background:var(--c1,#2b3a33);border:var(--bw) solid var(--c2,#9fb3a8);box-shadow:0 0 0 1.5px rgba(255,255,255,.85),0 2px 6px rgba(0,0,0,.4)}
+.disc .pos{font-weight:800;font-size:9.5px;line-height:1;color:var(--ct,#fff)}
+.slot .nm{margin-top:3px;font-weight:800;font-size:13px;line-height:1.2;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.6)}
+.slot.empty .disc{background:rgba(255,255,255,.06);border:1.5px dashed rgba(255,255,255,.45);box-shadow:none}
+.slot.empty .pos{color:rgba(255,255,255,.8)}
+.slot.target{cursor:pointer}
+.slot.target .disc{border:2px solid #7df0a8}.slot.target .pos{color:#7df0a8}
+.slot.target::before{content:"";position:absolute;inset:-8px}
+@container (min-width:400px){.slot{--cs:42px;--bw:4.5px}.disc .pos{font-size:11px}.slot .nm{font-size:14px}}
+.demo[data-mode="before"] .slot.target .disc{animation:glow calc(1.1s * var(--k)) ease-in-out infinite}
+@keyframes glow{0%,100%{box-shadow:0 0 0 1.5px rgba(125,240,168,.9)}50%{box-shadow:0 0 0 6px rgba(125,240,168,.3)}}
+.demo[data-mode="after"] .slot.target .disc{box-shadow:0 0 0 1.5px rgba(125,240,168,.9)}
+.demo[data-mode="after"] .slot.target .disc::after{content:"";position:absolute;inset:-5px;border-radius:50%;border:2px solid #7df0a8;opacity:0;pointer-events:none;animation:ring calc(1200ms * var(--k)) var(--ease-out) calc(var(--rd,0ms) * var(--k)) 2}
+@keyframes ring{from{transform:scale(1);opacity:.7}to{transform:scale(1.55);opacity:0}}
+html.less .demo[data-mode="after"] .slot.target .disc::after{animation:none}
+.disc.land0{animation:land0 var(--dur-3) var(--spring-pop)}@keyframes land0{0%{transform:scale(.55)}100%{transform:none}}
+html.less .disc.land0{animation:none}
+.hint{margin:0 0 var(--sp-3);font-size:var(--fs-footnote);color:var(--ink2);line-height:var(--lh-snug);min-height:2.4em}
+.hint b{color:var(--ink)}
+.pick{margin:var(--sp-3) auto 0;max-width:460px;display:flex;align-items:center;gap:var(--sp-3);padding:var(--sp-2) var(--sp-3);border-radius:var(--r-md);background:var(--surface);box-shadow:0 0 0 2px var(--amber2)}
+.pick .slot{--cs:32px;--bw:3.5px}
+.pick b{display:block}.pick small{color:var(--ink2);font-size:var(--fs-caption)}
+.pick.gone{box-shadow:inset 0 0 0 1px var(--line);opacity:.55;transition:opacity var(--dur-2) var(--ease-out)}
+.flychip{position:fixed;z-index:30;pointer-events:none;margin:0}
+
+/* ---------- 3. draft header (game .dtop) and mini bar ---------- */
+.dtop{display:grid;gap:var(--sp-2);padding:var(--sp-3) var(--sp-4);border-radius:var(--r-lg);background:var(--surface);box-shadow:var(--sh-1)}
+.l1{display:flex;align-items:center;gap:var(--sp-2)}
+.l1 .ml{flex:1;min-width:0;font-weight:var(--wt-bold);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rd{display:inline-flex;gap:var(--sp-1)}.rd i{width:8px;height:8px;border-radius:50%;background:var(--line)}.rd i.on{background:var(--amber)}
+.l1>b{display:inline-block;transform-origin:right center;font:var(--wt-bold) var(--fs-body) var(--font-display);font-variant-numeric:tabular-nums;min-width:4ch;text-align:right}
+.bar{height:4px;border-radius:var(--r-sm);background:var(--line2);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--amber);border-radius:var(--r-sm)}
+.demo[data-mode="before"] .bar i{width:0;transition:width var(--dur-3) var(--ease-out)}
+.demo[data-mode="after"] .bar i{width:100%;transform:translateX(-100%);transition:transform var(--dur-3) var(--ease-out)}
+.demo[data-mode="after"] .rd i{background:var(--amber);transition:transform var(--dur-2) var(--ease-out),opacity var(--dur-2) var(--ease-out)}
+.demo[data-mode="after"] .rd i.spent{transform:scale(.6);opacity:.35}
+.mini{margin-top:var(--sp-3);display:flex;align-items:center;gap:var(--sp-3);height:44px;padding:0 var(--sp-4);border-radius:var(--r-lg);background:var(--bg);box-shadow:inset 0 0 0 1px var(--line)}
+.mini b{display:inline-block;transform-origin:left center;font:var(--wt-bold) var(--fs-body) var(--font-display);font-variant-numeric:tabular-nums;min-width:4ch}
+.md{flex:1;display:flex;gap:var(--sp-1);align-items:center;min-width:0}
+.md i{--c:var(--muted);position:relative;width:10px;height:10px;border-radius:50%;border:1.5px solid color-mix(in srgb,var(--c) 70%,transparent)}
+.md i.GK{--c:var(--gk)}.md i.DF{--c:var(--df)}.md i.MF{--c:var(--mf)}.md i.FW{--c:var(--fw)}
+.demo[data-mode="before"] .md i.f{background:var(--c);border-color:var(--c)}
+.demo[data-mode="after"] .md i::after{content:"";position:absolute;inset:-1.5px;border-radius:50%;background:var(--c);transform:scale(.4);opacity:0;transition:transform var(--dur-3) var(--spring-pop),opacity var(--dur-1) var(--ease-out)}
+.demo[data-mode="after"] .md i.f::after{transform:none;opacity:1}
+.mini .tag{font-size:var(--fs-caption);color:var(--muted)}
+html.less .demo[data-mode="after"] .bar i,html.less .demo[data-mode="after"] .rd i,html.less .demo[data-mode="after"] .md i::after{transition:none}
+
+/* ---------- 5. toast ---------- */
+.tscr{position:relative;height:236px;border-radius:var(--r-lg);background:var(--bg);box-shadow:inset 0 0 0 1px var(--line);overflow:hidden;padding:var(--sp-3)}
+.tscr .acts{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-2)}
+.tscr .acts button{min-height:44px;padding:var(--sp-2) var(--sp-3);font-size:var(--fs-footnote);border-color:var(--line)}
+.tscr .ph{margin-top:var(--sp-3);display:grid;gap:var(--sp-2)}
+.tscr .ph i{display:block;height:38px;border-radius:var(--r-md);background:var(--surface);box-shadow:var(--sh-1)}
+.tbox{position:absolute;left:var(--sp-3);right:var(--sp-3);bottom:var(--sp-3);height:52px}
+.toast{position:absolute;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:space-between;gap:var(--sp-3);min-height:52px;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:var(--r-md);padding:var(--sp-1) var(--sp-1) var(--sp-1) var(--sp-4);box-shadow:var(--sh-2);font-size:var(--fs-body);overflow:hidden}
+.toast:not(:has(button)){padding:var(--sp-3) var(--sp-4)}
+.toast button{border:0;background:none;color:var(--amber);font:var(--wt-bold) var(--fs-body) var(--font-body);min-height:44px;padding:0 var(--sp-4)}
+.toast i{position:absolute;left:var(--sp-4);right:var(--sp-4);bottom:0;height:2px;border-radius:2px;background:var(--amber);opacity:.55;transform-origin:left;animation:toastBar calc(2600ms * var(--k)) linear forwards}
+.toast.old{animation:toastIn var(--dur-2) ease-out}
+@keyframes toastIn{from{opacity:0;transform:translateY(8px)}}
+@keyframes toastBar{to{transform:scaleX(0)}}
+
+/* ---------- 6. tabs ---------- */
+.tabs6{display:grid;gap:var(--sp-4)}
+.tabs{position:relative;display:flex;gap:var(--sp-2);box-shadow:inset 0 -2px var(--line);overflow-x:auto;overflow-y:hidden;scrollbar-width:none}
+.tab{border:0;border-bottom:3px solid transparent;border-radius:0;background:transparent;color:var(--ink2);padding:var(--sp-3) var(--sp-4);font-weight:var(--wt-bold);white-space:nowrap;min-height:44px}
+.tab.on{color:var(--ink)}
+.demo[data-mode="before"] .tab.on{border-bottom-color:var(--ink)}
+.tabs .ind{position:absolute;left:0;bottom:0;width:100px;height:3px;background:var(--ink);transform-origin:left;pointer-events:none;display:none}
+.demo[data-mode="after"] .tabs .ind{display:block}
+.demo[data-mode="after"] .tab{transition:color var(--dur-1) var(--ease-out)}
+.panes{display:grid}
+.panes>div{grid-area:1/1;min-width:0}
+.panes>div[aria-hidden="true"]{visibility:hidden}
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--sp-2)}
+.tile{padding:var(--sp-3);border-radius:var(--r-md);background:var(--surface);box-shadow:var(--sh-1);display:grid;gap:var(--sp-1)}
+.tile b{font:var(--wt-black) var(--fs-title3)/1 var(--font-display);font-variant-numeric:tabular-nums}
+.tile span{font-size:var(--fs-caption);color:var(--ink2)}
+.tbl{display:grid;border-radius:var(--r-md);background:var(--surface);box-shadow:var(--sh-1);overflow:hidden}
+.tbl div{display:flex;justify-content:space-between;padding:var(--sp-2) var(--sp-3);font-size:var(--fs-footnote)}
+.tbl div+div{border-top:1px solid var(--line)}
+.tbl b{font-variant-numeric:tabular-nums}
+.erah{font-size:var(--fs-caption);font-weight:var(--wt-bold);color:var(--ink2);margin-bottom:var(--sp-2)}
+.seg.era{position:relative;display:flex;width:100%;border:1px solid var(--line);border-radius:var(--r-md);overflow:hidden;isolation:isolate}
+.seg.era button{position:relative;z-index:1;flex:1 1 auto;border:0;border-radius:0;background:transparent;color:var(--ink2);padding:var(--sp-3) var(--sp-0h);min-height:44px;font-size:var(--fs-caption);font-weight:var(--wt-bold);white-space:nowrap}
+.seg.era button+button{border-left:1px solid var(--line)}
+.demo[data-mode="before"] .seg.era button.on{background:var(--ink);color:var(--bg)}
+.seg.era .pill{position:absolute;inset:0;z-index:0;background:var(--ink);clip-path:inset(0 100% 0 0);display:none;pointer-events:none}
+.demo[data-mode="after"] .seg.era .pill{display:block}
+.demo[data-mode="after"] .seg.era button{transition:color var(--dur-1) var(--ease-out)}
+.demo[data-mode="after"] .seg.era button.on{color:var(--bg)}
+.eracap{margin-top:var(--sp-2);font-size:var(--fs-footnote);color:var(--ink2);font-variant-numeric:tabular-nums}
+
+/* ---------- 7. wheel reel ---------- */
+.reels{display:grid;grid-template-columns:minmax(0,1fr) 104px;gap:var(--sp-2);align-items:center}
+.reel{position:relative;height:66px;padding:0 var(--sp-3);border:1px solid var(--line);border-radius:var(--r-md);background:var(--bg);overflow:hidden}
+.reel .win{height:100%}
+.demo[data-mode="after"] .reel .win{-webkit-mask-image:linear-gradient(transparent,#000 25%,#000 75%,transparent);mask-image:linear-gradient(transparent,#000 25%,#000 75%,transparent)}
+.strip{display:grid;will-change:transform}
+.strip>div{height:64px;display:grid;align-content:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font:var(--wt-bold) var(--fs-headline)/1.2 var(--font-display)}
+.reel.yr .strip>div{text-align:center;font-variant-numeric:tabular-nums}
+.wbtn{margin-top:var(--sp-3);width:100%;min-height:52px;background:var(--pitch);color:#fff;border-color:var(--pitch);font:var(--wt-bold) var(--fs-headline) var(--font-display)}
+.reels.one{grid-template-columns:minmax(0,1fr)}
+
+/* ---------- 8. season pick ---------- */
+.whint{margin:var(--sp-3) 0 var(--sp-2);font-size:var(--fs-footnote);color:var(--ink2)}
+.seapick{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--sp-2)}
+.seapick button{display:grid;gap:var(--sp-0h);padding:var(--sp-3) var(--sp-2);border:1px solid var(--line);border-radius:var(--r-md);background:var(--surface);color:var(--ink);font-weight:var(--wt-medium)}
+.seapick button b{font:var(--wt-bold) var(--fs-title3)/1.1 var(--font-display);font-variant-numeric:tabular-nums}
+.seapick button small{color:var(--ink2);font-size:var(--fs-caption)}
+@media (hover:hover) and (pointer:fine){.seapick button:hover{border-color:var(--amber)}}
+.seapick.hide button{visibility:hidden}
+
+/* ---------- 9. forecast ---------- */
+.pre{display:grid;gap:var(--sp-2);padding:var(--sp-4);border-radius:var(--r-lg);background:var(--surface);box-shadow:var(--sh-1)}
+.pgh{font-size:var(--fs-caption);font-weight:var(--wt-bold);letter-spacing:var(--ls-caps);text-transform:uppercase;color:var(--ink2);margin-top:var(--sp-2)}
+.pgh:first-child{margin-top:0}
+.prow{display:grid;grid-template-columns:8.6em minmax(0,1fr) 3em;align-items:center;gap:var(--sp-2)}
+.prow b{text-align:right;font-variant-numeric:tabular-nums}
+.pbar{height:6px;border-radius:var(--r-sm);background:var(--line2);overflow:hidden}
+.pbar i{display:block;height:100%;background:var(--amber);border-radius:var(--r-sm)}
+.demo[data-mode="after"] .pbar i{width:100%}
+
+/* ---------- 10. theme ---------- */
+.thdemo{max-width:360px;margin-inline:auto;display:grid;gap:var(--sp-3);padding:var(--sp-4);border-radius:var(--r-xl);background:var(--bg);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line);view-transition-name:thdemo}
+.thdemo .wm{font:var(--wt-black) var(--fs-title2)/1 var(--font-display);letter-spacing:var(--ls-tight)}
+.thdemo .wm span{color:var(--amber2)}
+.thdemo .go{min-height:52px;background:var(--pitch);border-color:var(--pitch);color:#fff;font:var(--wt-bold) var(--fs-headline) var(--font-display)}
+.thdemo .mrow{display:flex;justify-content:space-between;align-items:center;padding:var(--sp-3);border-radius:var(--r-md);background:var(--surface);box-shadow:var(--sh-1);font-weight:var(--wt-bold)}
+.thdemo .mrow span{color:var(--ink2);font-weight:var(--wt-medium);font-size:var(--fs-footnote)}
+.thdemo .ft{display:flex;justify-content:center;align-items:center;gap:var(--sp-2);font-size:var(--fs-footnote);color:var(--ink2);min-height:44px}
+.thm{position:relative;display:inline-flex;align-items:center;justify-content:space-between;width:46px;height:24px;padding:0 var(--sp-1);border-radius:var(--r-md);border:1px solid var(--line);background:var(--surface);cursor:pointer;color:var(--muted);vertical-align:middle;text-decoration:none}
+.thm::before{content:"";position:absolute;inset:-11px -2px}
+.thm .ico{width:13px;height:13px;fill:currentColor;stroke:none;position:relative;z-index:1}
+.thm .knob{position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:var(--amber);transition:transform var(--dur-2) var(--spring);view-transition-name:thknob}
+.thm.dk .knob{transform:translateX(22px)}
+.thm .ico:first-child{color:var(--ink)}.thm.dk .ico:first-child{color:var(--muted)}.thm.dk .ico:last-child{color:var(--ink)}
+html.less .thm .knob{transition:none}
+.thdemo.fb{transition:background-color var(--dur-2) linear,color var(--dur-2) linear}
+html.vtl{view-transition-name:none}
+::view-transition-old(thdemo),::view-transition-new(thdemo),::view-transition-old(root),::view-transition-new(root){animation-duration:calc(240ms * var(--k));animation-timing-function:linear;mix-blend-mode:normal}
+::view-transition-group(thknob){animation-duration:calc(240ms * var(--k));animation-timing-function:var(--spring)}
+::view-transition-group(thdemo),::view-transition-group(root){animation-duration:calc(240ms * var(--k))}
+
+/* ---------- 11. press feedback ---------- */
+.pr{display:grid;gap:var(--sp-4)}
+.pr .row{display:flex;flex-wrap:wrap;gap:var(--sp-2);align-items:center;justify-content:center}
+.ft-pill{display:inline-flex;align-items:center;gap:var(--sp-2);min-height:44px;padding:0 var(--sp-4);border-radius:var(--r-pill);border:1px solid var(--line);background:var(--surface);color:var(--ink2);font:var(--wt-medium) var(--fs-footnote) var(--font-body);cursor:pointer;white-space:nowrap;text-decoration:none}
+.ft-pill .ico{width:15px;height:15px}
+.thmrow{display:inline-flex;align-items:center;gap:var(--sp-2);min-height:44px;padding:0 var(--sp-2);font-size:var(--fs-footnote);color:var(--ink2)}
+.ptxt{font-size:var(--fs-footnote);color:var(--ink2);line-height:var(--lh-body);text-align:center;max-width:none}
+.plink{color:var(--ink);text-decoration:underline;text-decoration-color:color-mix(in srgb,var(--ink) 30%,transparent);text-underline-offset:3px}
+.faq{border-radius:var(--r-md);background:var(--surface);box-shadow:var(--sh-1);overflow:hidden}
+.faq summary{list-style:none;display:flex;justify-content:space-between;align-items:center;min-height:48px;padding:0 var(--sp-4);font-weight:var(--wt-bold);cursor:pointer;-webkit-tap-highlight-color:transparent}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary .ico{transition:transform var(--dur-2) var(--spring)}
+.faq[open] summary .ico{transform:rotate(180deg)}
+.faq p{padding:0 var(--sp-4) var(--sp-4);font-size:var(--fs-footnote);color:var(--ink2);line-height:var(--lh-body)}
+.demo[data-mode="after"] .pr .pz{transition:scale var(--dur-3) var(--spring),filter var(--dur-3) var(--spring)}
+.demo[data-mode="after"] .pr .pz:active,.demo[data-mode="after"] .pr .pz.down{scale:.97;filter:brightness(1.08);transition-duration:var(--dur-0);transition-timing-function:var(--ease-out)}
+.demo[data-mode="after"] .plink{transition:opacity var(--dur-2) var(--ease-out)}
+.demo[data-mode="after"] .plink:active,.demo[data-mode="after"] .plink.down{opacity:.55;transition-duration:var(--dur-0)}
+.demo[data-mode="after"] .faq summary{transition:background-color var(--dur-2) var(--ease-out)}
+.demo[data-mode="after"] .faq summary:active,.demo[data-mode="after"] .faq summary.down{background:var(--bg2);transition-duration:var(--dur-0)}
+html.less .demo[data-mode="after"] .pr .pz:active,html.less .demo[data-mode="after"] .pr .pz.down{scale:none}
+
+/* ---------- 12. 5x5 ---------- */
+.f5{display:grid;gap:var(--sp-2);padding:var(--sp-4);border-radius:var(--r-lg);background:var(--surface);box-shadow:var(--sh-1)}
+.f5sc{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:var(--sp-3);font-weight:var(--wt-bold)}
+.f5sc span:last-child{text-align:right}
+.f5sc b{font:var(--wt-black) var(--fs-title1)/1 var(--font-display);font-variant-numeric:tabular-nums}
+.f5min{text-align:center;font-size:var(--fs-footnote);color:var(--ink2);font-variant-numeric:tabular-nums}
+.f5track{position:relative;height:10px;border-radius:var(--r-pill);background:var(--bg2);border:1px solid var(--line);margin-top:var(--sp-2)}
+.f5track>i{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--line);left:50%}
+.f5clip{position:absolute;inset:0;border-radius:inherit;overflow:hidden}
+.f5bar{position:absolute;left:0;top:0;bottom:0;width:0;border-radius:var(--r-pill);background:color-mix(in srgb,var(--amber) 55%,transparent)}
+.demo[data-mode="after"] .f5bar{width:100%;transform:translateX(-100%)}
+.f5dot{position:absolute;top:50%;left:0;width:18px;height:18px;border-radius:50%;background:var(--ink);border:3px solid var(--amber);transform:translate(-50%,-50%);z-index:1}
+.f5meta{margin-top:var(--sp-2);display:flex;justify-content:space-between;gap:var(--sp-2);font-size:var(--fs-caption);color:var(--ink2)}
+.f5meta b{color:var(--ink);font-variant-numeric:tabular-nums}
+.demo[data-mode="before"] .f5meta b{color:var(--loss)}
+.demo[data-mode="after"] .f5meta b{color:var(--win)}
+
+@media (min-width:700px){
+  .intro{padding-top:var(--sp-7)}
+  .intro h1{font-size:34px}
+  .stage{padding:var(--sp-5)}
+  header .sws{order:1}#themeBtn{order:2}
+  .tk{grid-template-columns:1.3fr 1fr auto auto}.tk .cell.wide{grid-column:auto}
+  .vd .brief,.vd .next,.narrow{max-width:440px;margin-inline:auto}
+  .tabs6{grid-template-columns:1fr 1fr;gap:var(--sp-5);align-items:start}
+  .tscr{max-width:440px;margin-inline:auto}
+}
+@media (max-width:370px){.seg2{min-width:0}.seg2 button{padding:0 var(--sp-3)}.sws{gap:var(--sp-3)}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-redo" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.7 2.7L16 10"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></symbol>
+  <symbol id="i-auto" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-sunf" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/></symbol>
+  <symbol id="i-moonf" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></symbol>
+  <symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24"><path d="M21 3 3 10.5l7 2.5 2.5 7z"/><path d="m10 13 4-4"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+</svg>
+
+<header class="top"><div class="in">
+  <div class="brand">30-0 УПЛ <span>· анімації</span></div>
+  <button type="button" id="themeBtn" aria-label="Тема"><svg class="ico"><use href="#i-auto"/></svg><span>Авто</span></button>
+  <div class="sws">
+    <label class="swl"><input type="checkbox" class="sw" id="lessSw" role="switch">Менше руху</label>
+    <label class="swl"><input type="checkbox" class="sw" id="slowSw" role="switch">Повільно ×4</label>
+  </div>
+</div></header>
+
+<main class="wrap">
+  <div class="intro">
+    <h1>Рух у грі: друга версія</h1>
+    <p>Перші чотири моменти вже погоджені, їх трохи підсилено. Нижче решта кандидатів з аудиту. У кожному блоці перемикай «Було / Стане» і тисни «Повторити».</p>
+    <div class="legend">
+      <span><b>Плавне гальмування</b>: швидкий старт, мʼяка зупинка. Для появ і зникнень. <code>cubic-bezier(.23,1,.32,1)</code></span>
+      <span><b>Пружина</b>: стає на місце без перельоту. Для екранів, кнопок, перемикачів.</span>
+      <span><b>Пружина з поштовхом</b>: переліт 8 %. Лише для «приземлень»: гравець на полі, галочка, точка.</span>
+    </div>
+  </div>
+
+  <div class="part"><h2>Перший випуск</h2><p>Погоджено. Рух трохи виразніший, ніж у першому прототипі, і виправлено стрибок висоти у «Виклику дня».</p></div>
+
+  <!-- 1 -->
+  <section class="demo vd" id="d1" data-mode="after">
+    <h3><span class="n">1</span>Виклик дня: прогрес умови</h3>
+    <p class="lede">Гравець потрапив під умову: цифра прокручується, сегмент заповнюється, рядок «Зараховано» розкривається плавно, і блок нижче не стрибає.</p>
+    <div class="stage">
+      <div class="brief" id="vdBrief">
+        <span class="lab2">Виклик дня · 12 жовтня</span>
+        <div class="bh1"><span class="em" aria-hidden="true">🎂</span>Ілсіньйо — 41</div>
+        <div class="rqx" id="rqx"></div>
+      </div>
+      <div class="next">Крутити колесо<span id="vdNext">0/11</span></div>
+    </div>
+    <div class="ctl"><div class="seg2"><span class="thumb"></span><button type="button" data-m="before">Було</button><button type="button" data-m="after">Стане</button></div>
+      <button type="button" class="ghost rep"><svg class="ico"><use href="#i-redo"/></svg>Повторити</button></div>
+    <ul class="notes before">
+      <li>Блок щоразу перебудовується наново: переходи не грають, <b>0/2 → 1/2 → виконано</b> перескакує.</li>
+      <li><b>Стрибок висоти</b>: рядок «Зараховано» зʼявляється миттєво, а коли друге імʼя переносить його на новий рядок, ще раз. Усе нижче смикається.</li>
+    </ul>
+    <ul class="notes after">
+      <li><b>Висота блоку</b>: від старої до нової, <span class="v">360 мс</span>, пружина. Так само, коли друге імʼя переносить рядок. Розмітку будуємо один раз, далі лише міняємо текст і класи.</li>
+      <li><b>Нове імʼя</b> проявляється: прозорість <span class="v">0 → 1</span> і зсув <span class="v">4 px</span>, <span class="v">240 мс</span>, плавне гальмування.</li>
+      <li><b>Цифра</b> прокручується (зсув 70 %, <span class="v">200 мс</span>) і коротко збільшується <span class="v">1 → 1,1 → 1</span> за <span class="v">280 мс</span>.</li>
+      <li><b>Сегмент</b> заповнюється зсувом зліва, <span class="v">420 мс</span>, плавне гальмування.</li>
+      <li><b>Виконано</b>: зелений фон проявляється прозорістю, <span class="v">360 мс</span>. Блок легко «сідає» (<span class="v">0,98 → 1</span>), галочка розсуває місце і зʼявляється з поштовхом (<span class="v">0,6 → 1</span>, <span class="v">360 мс</span>).</li>
+      <li class="lm">Менше руху: висота, цифри й колір змінюються одразу.</li>
+    </ul>
+  </section>
+
+  <!-- 2 -->
+  <section class="demo" id="d2" data-mode="after">
+    <h3><span class="n">2</span>Одна спокійна пружина</h3>
+    <p class="lede">Вхід екрана, кнопка й перемикач без перельоту. Поштовх лишається тільки там, де щось «приземляється».</p>
+    <div class="stage">
+      <div class="tk">
+        <div class="curve">
+          <svg viewBox="0 0 132 72" aria-hidden="true"><line class="tgt" x1="0" x2="132" y1="14" y2="14"/><polyline class="c old" id="cvOld"/><polyline class="c new" id="cvNew"/></svg>
+          <div class="lg"><span class="o"><i></i>Було: переліт 8 %</span><span class="w"><i></i>Стане: без перельоту</span><span>пунктир: ціль</span></div>
+        </div>
+        <div class="cell wide"><span class="cap">Вхід екрана</span><div class="scr"><div class="sc" id="scr"><div class="hd"></div><div class="row1"><i></i><b>Класика</b></div><div class="row1"><i></i><b>Виклик дня</b></div><div class="row1"><i></i><b>Ліги</b></div></div></div></div>
+        <div class="cell"><span class="cap">Кнопка</span><button type="button" class="press" id="press">Грати</button></div>
+        <div class="cell"><span class="cap">Перемикач</span><div class="swpad"><input type="checkbox" class="sw dsw" id="demoSw" role="switch" aria-label="Рейтинги"></div></div>
+        <div class="cell"><span class="cap">Приземлення</span><div class="landpad"><div class="slot inline" style="--c1:#fff;--c2:#0047ab;--ct:#0047ab"><div class="disc" id="landDisc"><span class="pos">ПВ</span></div></div></div></div>
+      </div>
+    </div>
+    <div class="ctl"><div class="seg2"><span class="thumb"></span><button type="button" data-m="before">Було</button><button type="button" data-m="after">Стане</button></div>
+      <button type="button" class="ghost rep"><svg class="ico"><use href="#i-redo"/></svg>Повторити</button></div>
+    <ul class="notes before">
+      <li>Пружина з перельотом 8 % стоїть на всьому: екрани, кнопки, перемикачі. Звідси легке відчуття «іграшковості».</li>
+      <li>Кожна анімація має свої числа в коді, змінити тон однією правкою не можна.</li>
+    </ul>
+    <ul class="notes after">
+      <li><b>Вхід екрана</b>: знизу <span class="v">20 px</span>, <span class="v">360 мс</span>, пружина. <b>Кнопка</b>: натиск <span class="v">0,97</span> за <span class="v">100 мс</span>, відпускання <span class="v">360 мс</span>, пружина. <b>Перемикач</b>: <span class="v">240 мс</span>, пружина.</li>
+      <li><b>Приземлення</b> без змін: <span class="v">0,55 → 1</span>, <span class="v">360 мс</span>, пружина з поштовхом.</li>
+      <li>Чесно: на кнопці різниця ледь помітна, на перемикачі й вході екрана видно. Пункт про єдиний спокійний тон, а не про новий ефект.</li>
+    </ul>
+  </section>
+
+  <!-- 3 -->
+  <section class="demo" id="d3" data-mode="after">
+    <h3><span class="n">3</span>Драфт: лічильник і перекрутки</h3>
+    <p class="lede">Кожен вибір видно: число відраховує, смужка росте, витрачена перекрутка гасне, а не зникає.</p>
+    <div class="stage">
+      <div class="dtop" id="dtop">
+        <div class="l1"><span class="ml">Класика · 4-3-3</span><span class="rd" id="rd" title="Перекрутки"></span><b id="dc"><span class="cv">0</span>/11</b></div>
+        <div class="bar"><i id="dbar"></i></div>
+      </div>
+      <div class="mini" id="mini"><b><span class="cv">0</span>/11</b><span class="md" id="md"></span><span class="tag">плашка</span></div>
+    </div>
+    <div class="ctl"><div class="seg2"><span class="thumb"></span><button type="button" data-m="before">Було</button><button type="button" data-m="after">Стане</button></div>
+      <button type="button" class="ghost rep"><svg class="ico"><use href="#i-redo"/></svg>Повторити</button></div>
+    <ul class="notes before">
+      <li>Число <b>перескакує</b>; точка перекрутки <b>зникає миттєво</b>.</li>
+      <li>Смужка росте через ширину: телефон перераховує розмітку кожного кадру.</li>
+    </ul>
+    <ul class="notes after">
+      <li><b>0/11 → 1/11</b>: прокрутка цифри <span class="v">200 мс</span> і коротке збільшення <span class="v">1 → 1,1 → 1</span>, <span class="v">280 мс</span>. Так само в плашці.</li>
+      <li><b>Смужка</b>: зсув заповненої смуги, <span class="v">360 мс</span>, плавне гальмування. Заокруглений кінець лишається круглим.</li>
+      <li><b>Перекрутка гасне</b>: масштаб <span class="v">0,6</span>, прозорість <span class="v">0,35</span>, <span class="v">240 мс</span>.</li>
+      <li><b>Точка в плашці</b>: <span class="v">0,4 → 1</span>, <span class="v">360 мс</span>, пружина з поштовхом.</li>
+    </ul>
+  </section>
+
+  <!-- 4 -->
+  <section class="demo" id="d4" data-mode="after">
+    <h3><span class="n">4</span>Підсвічене місце на полі</h3>
+    <p class="lede">Кільця розходяться двічі й завмирають. Тапни місце, і гравець перелітає з картки на поле.</p>
+    <div class="stage">
+      <p class="hint" id="hint4">Обери позицію для <b>Андрія Ярмоленка</b>: тапни підсвічене місце на полі.</p>
+      <div class="pitch" id="pitch4">
+        <svg class="mk" viewBox="0 0 68 54" preserveAspectRatio="none" aria-hidden="true"><rect x="1" y="1" width="66" height="60"/><rect x="13.84" y="1" width="40.32" height="16.5"/><rect x="24.84" y="1" width="18.32" height="5.5"/><path d="M26.7 17.5a9.15 9.15 0 0 0 14.6 0"/><circle cx="34" cy="53" r="9.15"/><line x1="1" y1="53" x2="67" y2="53"/></svg>
+      </div>
+      <div class="pick" id="pick4"><div class="slot inline" style="--c1:#fff;--c2:#0047ab;--ct:#0047ab"><div class="disc" id="pickDisc"><span class="pos">ПВ</span></div></div><div><b>Андрій Ярмоленко</b><small>Динамо · 2014/15 · ППЗ або НП</small></div></div>
+    </div>
+    <div class="ctl"><div class="seg2"><span class="thumb"></span><button type="button" data-m="before">Було</button><button type="button" data-m="after">Стане</button></div>
+      <button type="button" class="ghost rep"><svg class="ico"><use href="#i-redo"/></svg>Повторити</button></div>
+    <ul class="notes before">
+      <li><b>Пульс без кінця</b>, через тінь: браузер перемальовує його кожного кадру, поки гравець думає.</li>
+      <li>З «Менше руху» все одно блимає.</li>
+    </ul>
+    <ul class="notes after">
+      <li><b>Поява</b>: «клац» <span class="v">0,92 → 1</span>, <span class="v">240 мс</span>, пружина з поштовхом.</li>
+      <li><b>Кільце</b>: масштаб <span class="v">1 → 1,55</span>, прозорість <span class="v">0,7 → 0</span>, <span class="v">1200 мс</span>, двічі. Друге місце стартує на <span class="v">150 мс</span> пізніше — без синхронного «миготіння». Далі лише статична обводка.</li>
+      <li><b>Переліт</b> (уже є в грі): <span class="v">420 мс</span>, крива шторки, потім приземлення з поштовхом.</li>
+      <li class="lm">Менше руху: лише статична обводка, гравець зʼявляється одразу.</li>
+    </ul>
+  </section>
+
+  <div class="part"><h2>Ще з аудиту</h2><p>На розгляд. Кожен пункт окремий і маленький, симуляцію не чіпає.</p></div>
+
+  <!-- 5 -->
+  <section class="demo" id="d5" data-mode="after">
+    <h3><span class="n">5</span>Сповіщення: іде тим самим шляхом</h3>
+    <p class="lede">Сповіщення внизу виїжджає знизу і так само туди ж іде. Нове змінює старе без різкої підміни.</p>
+    <div class="stage">
+      <div class="tscr" id="tscr">
+        <div class="acts"><button type="button" class="btnp" data-t="0">Скопіювати посилання</button><button type="button" class="btnp" data-t="1">Прибрати гравця</button></div>
+        <div class="ph" aria-hidden="true"><i></i><i></i><i></i></div>
+        <div class="tbox" id="tbox" aria-live="polite"></div>
+      </div>
+    </div>
+    <div class="ctl"><div class="seg2"><span class="thumb"></span><button type="button" data-m="before">Було</button><button type="button" data-m="after">Стане</button></div>
+      <button type="button" class="ghost rep"><svg class="ico"><use href="#i-redo"/></svg>Повторити</button></div>
+    <ul class="notes before">
+      <li>Виїжджає знизу, а <b>зникає миттєво</b>. Нове сповіщення просто підміняє старе.</li>
+    </ul>
+    <ul class="notes after">
+      <li><b>Вхід</b>: прозорість <span class="v">0 → 1</span>, знизу <span class="v">12 px</span>, <span class="v">240 мс</span>, плавне гальмування.</li>
+      <li><b>Вихід</b> тим самим шляхом униз, <span class="v">160 мс</span>, коротше за вхід. Видаляємо після завершення анімації.</li>
+      <li><b>Заміна</b>: старе йде за <span class="v">120 мс</span>, нове входить одразу, без паузи.</li>
+      <li class="lm">Менше руху: лише прозорість, <span class="v">160 мс</span>. У прототипі сповіщення живе 2,6 с, у грі 7 с.</li>
+    </ul>
+  </section>
+
+  <!-- 6 -->
+  <section class="demo" id="d6" data-mode="after">
+    <h3><span class="n">6</span>Вкладки й перемикачі: бігунок їде</h3>
+    <p class="lede">Як сегментований перемикач в iOS: видно, звідки й куди переключилось. Вміст не їде вбік: це дані, їх читають.</p>
+    <div class="stage">
+      <div class="tabs6">
+        <div>
+          <div class="tabs" role="tablist" id="tabs6"><span class="ind"></span><button class="tab on" type="button" role="tab" aria-selected="true" data-p="0">Огляд</button><button class="tab" type="button" role="tab" aria-selected="false" data-p="1">Статистика сезону</button></div>
+          <div class="panes" id="panes6" style="margin-top:var(--sp-3)">
+            <div aria-hidden="false"><div class="tiles"><div class="tile"><b>1</b><span>місце</span></div><div class="tile"><b>63</b><span>очки</span></div><div class="tile"><b>58,4</b><span>xP</span></div></div></div>
+            <div aria-hidden="true"><div class="tbl"><div><span>Луїс Адріано</span><b>14</b></div><div><span>Жадсон</span><b>9</b></div><div><span>Вілліан</span><b>7</b></div></div></div>
+          </div>
+        </div>
+        <div>
+          <div class="erah" id="eraH">Роки</div>
+          <div class="seg era" id="era6" role="radiogroup" aria-labelledby="eraH"><span class="pill"></span><button type="button" role="radio" class="on" aria-checked="true">Усі роки</button><button type="button" role="radio" aria-checked="false">90-ті</button><button type="button" role="radio" aria-checked="false">2000-ні</button><button type="button" role="radio" aria-checked="false">2010-ті</button><button type="button" role="radio" aria-checked="false">2020-ті</button></div>
+          <p class="eracap" id="eracap">Сезони 1992–2025</p>
+        </div>
+      </div>
+    </div>
+    <div class="ctl"><div class="seg2"><span class="thumb"></span><button type="button" data-m="before">Було</button><button type="button" data-m="after">Стане</button></div>
+      <button type="button" class="ghost rep"><svg class="ico"><use href="#i-redo"/></svg>Повторити</button></div>
+    <ul class="notes before">
+      <li>Підкреслення і темна плашка <b>перескакують</b> на нову кнопку.</li>
+    </ul>
+    <ul class="notes after">
+      <li><b>Підкреслення вкладки</b>: зсув і масштаб по горизонталі, <span class="v">240 мс</span>, пружина.</li>
+      <li><b>Плашка років</b>: одна темна підкладка, що відкривається маскою під новою кнопкою, <span class="v">240 мс</span>, пружина. Колір тексту — <span class="v">120 мс</span>.</li>
+      <li><b>Вміст вкладки</b>: тільки прозорість, <span class="v">120 мс</span>. Обидві вкладки займають одне місце, тож висота не стрибає.</li>
+      <li class="lm">Менше руху: бігунок стає одразу, вміст лише проявляється.</li>
+    </ul>
+  </section>
+
+  <!-- 7 -->
+  <section class="demo" id="d7" data-mode="after">
+    <h3><span class="n">7</span>Колесо: маска замість розмиття</h3>
+    <p class="lede">Лента крутиться так само довго й з тією ж інтригою. Відчуття швидкості дає затемнення по краях вікна, а не розмиття всієї ленти.</p>
+    <div class="stage">
+      <div class="narrow">
+        <div class="reels"><div class="reel" id="reelC"><div class="win"><div class="strip"><div>Шахтар</div></div></div></div><div class="reel yr" id="reelY"><div class="win"><div class="strip"><div>2009/10</div></div></div></div></div>
+        <button type="button" class="wbtn btnp" id="spin7">Крутити</button>
+      </div>
+    </div>
+    <div class="ctl"><div class="seg2"><span class="thumb"></span><button type="button" data-m="before">Було</button><button type="button" data-m="after">Стане</button></div>
+      <button type="button" class="ghost rep"><svg class="ico"><use href="#i-redo"/></svg>Повторити</button></div>
+    <ul class="notes before">
+      <li>Уся лента розмивається на <b>1,85 с</b>. Це найдорожча анімація сайту, а колесо крутиться 11+ разів за драфт.</li>
+    </ul>
+    <ul class="notes after">
+      <li><b>Маска</b> по краях вікна: прозоро → повністю видно на <span class="v">25 %</span> і <span class="v">75 %</span> висоти. Вона не рухається, рухається лише лента.</li>
+      <li><b>Лента</b> без змін: <span class="v">1850 мс</span>, <code>cubic-bezier(.15,.75,.2,1)</code>, переліт <span class="v">6 px</span>, потім пружина <span class="v">360 мс</span>.</li>
+      <li class="lm">Перевірити на iPhone у Telegram: якщо розмиття не гальмує, можна лишити як є. Менше руху: результат одразу.</li>
+    </ul>
+  </section>
+
+  <!-- 8 -->
+  <section class="demo" id="d8" data-mode="after">
+    <h3><span class="n">8</span>Вибір сезону: варіанти по черзі</h3>
+    <p class="lede">Після колеса три сезони зʼявляються один за одним: видно звʼязок із прокруткою, без «вистрибування» разом.</p>
+    <div class="stage">
+      <div class="narrow">
+        <div class="reels one"><div class="reel"><div class="win"><div class="strip"><div>Шахтар</div></div></div></div></div>
+        <p class="whint">Обери сезон — назад не повернешся</p>
+        <div class="seapick" id="sea8" role="group" aria-label="Обери сезон"><button type="button"><b>08/09</b><small>2 місце</small></button><button type="button"><b>10/11</b><small>1 місце</small></button><button type="button"><b>16/17</b><small>1 місце</small></button></div>
+      </div>
+    </div>
+    <div class="ctl"><div class="seg2"><span class="thumb"></span><button type="button" data-m="before">Було</button><button type="button" data-m="after">Стане</button></div>
+      <button type="button" class="ghost rep"><svg class="ico"><use href="#i-redo"/></svg>Повторити</button></div>
+    <ul class="notes before">
+      <li>Три кнопки <b>зʼявляються разом</b>, одразу після зупинки колеса.</li>
+    </ul>
+    <ul class="notes after">
+      <li><b>Кожна кнопка</b>: прозорість <span class="v">0 → 1</span>, знизу <span class="v">8 px</span>, <span class="v">240 мс</span>, плавне гальмування, крок <span class="v">40 мс</span> (усього <span class="v">320 мс</span>).</li>
+      <li>Без масштабу. Натискати можна одразу, не чекаючи кінця.</li>
+      <li class="lm">Менше руху: лише прозорість.</li>
+    </ul>
+  </section>
+
+  <!-- 9 -->
+  <section class="demo" id="d9" data-mode="after">
+    <h3><span class="n">9</span>Прогноз: смуги ростуть один раз</h3>
+    <p class="lede">Коли прогноз готовий, смуги виростають по черзі, і видно шанси й силу ліній. При перестановках гравців одразу, без анімації.</p>
+    <div class="stage">
+      <div class="pre narrow" id="pre9"></div>
+    </div>
+    <div class="ctl"><div class="seg2"><span class="thumb"></span><button type="button" data-m="before">Було</button><button type="button" data-m="after">Стане</button></div>
+      <button type="button" class="ghost rep"><svg class="ico"><use href="#i-redo"/></svg>Повторити</button></div>
+    <ul class="notes before">
+      <li>Смуги зʼявляються <b>одразу повні</b>: перехід через ширину задуманий, але блок малюється рядком, тож він не грає.</li>
+    </ul>
+    <ul class="notes after">
+      <li><b>Смуга</b>: зсув заповненої смуги з нуля до значення, <span class="v">500 мс</span>, плавне гальмування, крок <span class="v">40 мс</span> між рядками.</li>
+      <li>Відсотки й числа не прокручуються: їх читають одразу.</li>
+      <li class="lm">Менше руху: смуги одразу на місці.</li>
+    </ul>
+  </section>
+
+  <!-- 10 -->
+  <section class="demo" id="d10" data-mode="after">
+    <h3><span class="n">10</span>Зміна теми: мʼякий перехід</h3>
+    <p class="lede">Тапни перемикач унизу картки. Світле й темне перетікають одне в одне, без різкого спалаху яскравості.</p>
+    <div class="stage">
+      <div class="thdemo th-l" id="th10">
+        <div class="wm">30-0 <span>УПЛ</span></div>
+        <button type="button" class="go" tabindex="-1">Грати</button>
+        <div class="mrow">Виклик дня<span>Ілсіньйо — 41</span></div>
+        <div class="mrow">Ліги<span>Офіс · 3 місце</span></div>
+        <div class="ft">Тема <a class="thm" id="thm10" href="#" role="switch" aria-checked="false" aria-label="Темна тема"><svg class="ico"><use href="#i-sunf"/></svg><svg class="ico"><use href="#i-moonf"/></svg><span class="knob"></span></a></div>
+      </div>
+    </div>
+    <div class="ctl"><div class="seg2"><span class="thumb"></span><button type="button" data-m="before">Було</button><button type="button" data-m="after">Стане</button></div>
+      <button type="button" class="ghost rep"><svg class="ico"><use href="#i-redo"/></svg>Повторити</button></div>
+    <ul class="notes before">
+      <li>Тема перемикається <b>миттєво</b>: увесь екран спалахує з темного на світлий.</li>
+    </ul>
+    <ul class="notes after">
+      <li><b>Перехресне згасання</b> старого й нового вигляду, <span class="v">240 мс</span>, рівномірно, без зсувів. Через уже наявні в грі переходи між екранами.</li>
+      <li><b>Кружечок</b> перемикача їде, <span class="v">240 мс</span>, пружина.</li>
+      <li>Де браузер переходів не вміє (iOS до 18), миттєво, як зараз. Кнопка теми вгорі цієї сторінки працює так само.</li>
+    </ul>
+  </section>
+
+  <!-- 11 -->
+  <section class="demo" id="d11" data-mode="after">
+    <h3><span class="n">11</span>Відгук на натиск для посилань-кнопок</h3>
+    <p class="lede">Однакові на вигляд елементи відгукуються однаково. Натисни будь-що тут.</p>
+    <div class="stage">
+      <div class="pr narrow">
+        <div class="row"><a class="ft-pill pz" href="#" data-p><svg class="ico"><use href="#i-mail"/></svg>Відгук і баги</a><a class="ft-pill pz" href="#" data-p><svg class="ico"><use href="#i-send"/></svg>Telegram-бот</a><span class="thmrow">Тема <a class="thm pz" href="#" data-p role="switch" aria-checked="false" aria-label="Темна тема"><svg class="ico"><use href="#i-sunf"/></svg><svg class="ico"><use href="#i-moonf"/></svg><span class="knob" style="view-transition-name:none"></span></a></span></div>
+        <p class="ptxt">Дані — з <a class="plink" href="#" data-p>Transfermarkt і архівів УПЛ</a>.</p>
+        <details class="faq"><summary data-p>Як рахуються очки?<svg class="ico"><use href="#i-down"/></svg></summary><p>За перемогу 3 очки, за нічию 1. Сезон: 30 турів.</p></details>
+      </div>
+    </div>
+    <div class="ctl"><div class="seg2"><span class="thumb"></span><button type="button" data-m="before">Було</button><button type="button" data-m="after">Стане</button></div>
+      <button type="button" class="ghost rep"><svg class="ico"><use href="#i-redo"/></svg>Повторити</button></div>
+    <ul class="notes before">
+      <li>Кнопки-посилання <b>не реагують</b> на натиск, хоча звичайні кнопки поруч реагують.</li>
+    </ul>
+    <ul class="notes after">
+      <li><b>Пігулки й перемикач теми</b>: масштаб <span class="v">0,97</span> і яскравість <span class="v">1,08</span> за <span class="v">100 мс</span>, відпускання <span class="v">360 мс</span>, пружина — як у кнопок.</li>
+      <li><b>Посилання в тексті</b>: лише притемнення <span class="v">55 %</span>: масштаб слова посеред речення виглядає дивно.</li>
+      <li><b>Питання FAQ</b>: лише тло, без масштабу, бо великий блок не має «стрибати».</li>
+      <li class="lm">Менше руху: без масштабу, лише яскравість і тло.</li>
+    </ul>
+  </section>
+
+  <!-- 12 -->
+  <section class="demo" id="d12" data-mode="after">
+    <h3><span class="n">12</span>5×5: смуга матчу без перерахунку</h3>
+    <p class="lede">На вигляд те саме. Різниця в навантаженні: смуга й точка більше не змушують телефон перераховувати розмітку щокадру.</p>
+    <div class="stage">
+      <div class="f5 narrow" id="f5">
+        <div class="f5sc"><span>Шахтар</span><b><span class="cv" id="f5a">0</span>:<span class="cv" id="f5b">0</span></b><span>Динамо</span></div>
+        <div class="f5min"><span id="f5m">0</span>′</div>
+        <div class="f5track" id="f5t"><div class="f5clip"><div class="f5bar" id="f5bar"></div></div><div class="f5dot" id="f5dot"></div><i></i></div>
+        <div class="f5meta"><span>Кадрів із перерахунком розмітки</span><b id="f5cnt">0</b></div>
+      </div>
+    </div>
+    <div class="ctl"><div class="seg2"><span class="thumb"></span><button type="button" data-m="before">Було</button><button type="button" data-m="after">Стане</button></div>
+      <button type="button" class="ghost rep"><svg class="ico"><use href="#i-redo"/></svg>Повторити</button></div>
+    <ul class="notes before">
+      <li>Кожен кадр змінює <b>ширину</b> смуги й <b>положення зліва</b> точки: 60 перерахунків розмітки на секунду.</li>
+    </ul>
+    <ul class="notes after">
+      <li><b>Смуга</b>: зсув заповненої смуги, <b>точка</b>: зсув по горизонталі. Ширину доріжки міряємо один раз (і при повороті екрана).</li>
+      <li>Темп матчу й паузи на голах не змінюються.</li>
+    </ul>
+  </section>
+</main>
+
+<script>
+(function(){
+'use strict';
+const $=s=>document.querySelector(s),root=document.documentElement;
+const LESS=()=>root.classList.contains('less');
+const K=()=>root.classList.contains('slow')?4:1;
+const tok=n=>getComputedStyle(root).getPropertyValue(n).trim();
+const wait=ms=>new Promise(r=>setTimeout(r,ms*K()));
+function anim(el,kf,o){if(!el||!el.animate)return null;return el.animate(kf,Object.assign({},o,{duration:o.duration*K(),delay:(o.delay||0)*K()}));}
+function restart(el,cls){el.classList.remove(cls);void el.offsetWidth;el.classList.add(cls);}
+function noAnim(el,fn){el.classList.add('noanim');fn();void el.offsetWidth;el.classList.remove('noanim');}
+const done=a=>a?a.finished.catch(()=>{}):Promise.resolve();
+
+/* odometer, port of game odoSet: changed digits roll, 200ms ease-out */
+function odoSet(el,v,now){const str=String(v),prev=el.dataset.odo!==undefined?el.dataset.odo:el.textContent;
+  el.getAnimations({subtree:true}).forEach(a=>a.cancel());el.textContent=prev;el.dataset.odo=str;
+  if(now||prev===str||LESS()||!el.animate){el.textContent=str;return;}
+  const fr=document.createDocumentFragment(),an=[],o={duration:200,easing:tok('--ease-out'),fill:'forwards'};
+  for(let i=0;i<str.length;i++){const k=prev.length-(str.length-i),pc=k>=0?prev[k]:'';if(pc===str[i]){fr.append(str[i]);continue;}
+    const c=document.createElement('span');c.className='od';c.innerHTML=`<span class="od-o" aria-hidden="true">${pc}</span><span class="od-n">${str[i]}</span>`;fr.append(c);
+    an.push(anim(c.firstChild,[{transform:'none',opacity:1},{transform:'translateY(-70%)',opacity:0}],o),anim(c.lastChild,[{transform:'translateY(70%)',opacity:0},{transform:'none',opacity:1}],o));}
+  el.textContent='';el.append(fr);
+  Promise.all(an.map(done)).then(()=>{if(el.dataset.odo===str)el.textContent=str;});}
+/* short emphasis on a changed number */
+function bump(el){if(LESS())return;anim(el,[{transform:'scale(1)'},{transform:'scale(1.1)',offset:.35},{transform:'scale(1)'}],{duration:280,easing:tok('--ease-out')});}
+/* animate a block's height from its current on-screen value to the new one */
+function smoothHeight(el,mutate,ms){const h0=el.getBoundingClientRect().height;el.getAnimations().forEach(a=>a.cancel());mutate();
+  const h1=el.getBoundingClientRect().height;if(LESS()||Math.abs(h1-h0)<.5)return;
+  anim(el,[{height:h0+'px'},{height:h1+'px'}],{duration:ms||360,easing:tok('--spring')});}
+
+/* ---------- 1 ---------- */
+const D1={names:['Даріо Срна','Тарас Степаненко'],
+  /* before: game markup, rebuilt on every change */
+  html(k){const ok=k>=2,nm=this.names.slice(0,k);
+    return `<div class="rq1"><span class="tag-req">${ok?'<svg class="ico ck"><use href="#i-check"/></svg>':''}Обовʼязково</span><span class="cnt"><span class="cv">${k}</span><i>/2</i></span></div>`
+      +`<b class="rq2">2 гравці Шахтаря</b>${nm.length?`<p class="rq3">Зараховано: <b>${nm.join(', ')}</b></p>`:''}`
+      +`<div class="rqseg"><i class="${k>0?'on':''}"></i><i class="${k>1?'on':''}"></i></div>`;},
+  /* after: built once, then updated in place */
+  build(){$('#rqx').innerHTML=`<div class="rq1"><span class="tag-req"><span class="ckw"><span><svg class="ico ck"><use href="#i-check"/></svg></span></span>Обовʼязково</span><span class="cnt"><span class="cv">0</span><i>/2</i></span></div>`
+      +`<b class="rq2">2 гравці Шахтаря</b><div class="rq3w"><p class="rq3">Зараховано: <b class="nms"></b></p></div>`
+      +`<div class="rqseg"><i></i><i></i></div>`;},
+  set(k,mode){const rqx=$('#rqx'),br=$('#vdBrief');
+    if(mode==='before'){rqx.innerHTML=this.html(k);br.classList.toggle('ok',k>=2);return;}
+    const cv=rqx.querySelector('.cv');odoSet(cv,k);bump(rqx.querySelector('.cnt'));
+    rqx.querySelectorAll('.rqseg i').forEach((s,i)=>s.classList.toggle('on',i<k));
+    const w=rqx.querySelector('.rq3w'),nms=w.querySelector('.nms');let added=null;
+    smoothHeight(w,()=>{w.classList.toggle('open',k>0);
+      const have=nms.querySelectorAll('.nn').length;
+      for(let i=have;i<k;i++){if(i)nms.append(', ');const s=document.createElement('span');s.className='nn';s.textContent=this.names[i];nms.append(s);added=s;}});
+    if(added&&!LESS())anim(added,[{opacity:0,transform:'translateX(-4px)'},{opacity:1,transform:'none'}],{duration:240,delay:60,easing:tok('--ease-out'),fill:'backwards'});
+    if(k>=2&&!br.classList.contains('ok')){br.classList.add('ok');
+      if(!LESS()){anim(rqx.querySelector('.ck'),[{transform:'scale(.6)',opacity:0},{transform:'none',opacity:1}],{duration:360,delay:80,easing:tok('--spring-pop'),fill:'backwards'});
+        anim(rqx,[{transform:'scale(.98)'},{transform:'none'}],{duration:360,easing:tok('--spring-pop')});}
+      if(navigator.vibrate)try{navigator.vibrate(12);}catch(e){}}},
+  async play(mode,run){const br=$('#vdBrief');
+    noAnim(br,()=>{br.classList.remove('ok');if(mode==='before')$('#rqx').innerHTML=this.html(0);else this.build();});
+    $('#vdNext').textContent='0/11';
+    await wait(700);if(run())return;this.set(1,mode);$('#vdNext').textContent='1/11';
+    await wait(1300);if(run())return;this.set(2,mode);$('#vdNext').textContent='2/11';}};
+
+/* ---------- 2 ---------- */
+const OLD=[0,.065,.218,.406,.593,.757,.887,.981,1.041,1.072,1.083,1.08,1.068,1.053,1.037,1.023,1.011,1.003,.997,.994,.993,.993,.994,.995,1];
+const NEW=[0,.053,.167,.301,.431,.547,.645,.726,.79,.841,.881,.911,.934,.951,.964,.973,.981,.986,.99,.992,.995,.996,.997,.998,1];
+const pts=a=>a.map((v,i)=>`${(i/(a.length-1)*132).toFixed(1)},${(72-v*58).toFixed(1)}`).join(' ');
+$('#cvOld').setAttribute('points',pts(OLD));$('#cvNew').setAttribute('points',pts(NEW));
+const D2={async play(mode,run){const scr=$('#scr'),b=$('#press'),d=$('#landDisc'),sw=$('#demoSw');
+    noAnim($('#d2 .stage'),()=>{sw.checked=false;});
+    if(mode==='before'&&LESS()){/* old site skipped the screen transition entirely */}
+    else if(LESS())anim(scr,[{opacity:0},{opacity:1}],{duration:240,easing:tok('--ease-out')});
+    else anim(scr,[{opacity:0,transform:'translateY(20px)'},{opacity:1,transform:'none'}],{duration:360,easing:tok(mode==='after'?'--spring':'--spring-old'),fill:'backwards'});
+    await wait(600);if(run())return;b.classList.add('down');await wait(140);b.classList.remove('down');
+    await wait(450);if(run())return;sw.checked=true;
+    await wait(450);if(run())return;restart(d,'land0');}};
+
+/* ---------- 3 ---------- */
+const POS=['GK','DF','DF','DF','DF','MF','MF','MF','FW','FW','FW'],ORDER=[0,4,6,9,2,7];
+const D3={n:0,left:3,
+  draw(mode){const rd=$('#rd');
+    if(mode==='before'){rd.innerHTML=Array.from({length:3},(_,i)=>`<i class="${i<this.left?'on':''}"></i>`).join('');rd.dataset.m='';$('#dbar').style.width=(this.n/11*100)+'%';$('#dbar').style.transform='';}
+    else{if(rd.children.length!==3||rd.dataset.m!=='a'){rd.innerHTML='<i></i><i></i><i></i>';rd.dataset.m='a';}
+      [...rd.children].forEach((d,i)=>d.classList.toggle('spent',i>=this.left));$('#dbar').style.width='';$('#dbar').style.transform=`translateX(${(this.n/11-1)*100}%)`;}
+    [...$('#md').children].forEach((d,i)=>d.classList.toggle('f',ORDER.slice(0,this.n).includes(i)));},
+  count(mode,now){[$('#dc .cv'),$('#mini .cv')].forEach(el=>{if(mode==='before'||now){el.getAnimations({subtree:true}).forEach(a=>a.cancel());el.dataset.odo=String(this.n);el.textContent=this.n;}else{odoSet(el,this.n);bump(el.parentNode);}});},
+  async play(mode,run){this.n=0;this.left=3;$('#rd').dataset.m='';const st=$('#d3 .stage');noAnim(st,()=>{this.draw(mode);this.count(mode,true);});
+    const steps=['p','p','r','p','p','r','p'];
+    for(const s of steps){await wait(800);if(run())return;if(s==='p')this.n++;else this.left--;this.draw(mode);if(s==='p')this.count(mode);}}};
+
+/* ---------- 4 ---------- */
+const SL=[{x:18,y:66,p:'ЛПЗ',nm:'Коноплянка',c:['#1c3f94','#fff','#fff']},{x:50,y:74,p:'ЦП',nm:'Гусєв',c:['#fff','#0047ab','#0047ab']},{x:82,y:66,p:'ППЗ',t:1},{x:50,y:30,p:'НП',t:1}];
+const D4={done:false,
+  render(){const pt=$('#pitch4');pt.querySelectorAll('.slot').forEach(s=>s.remove());let ti=0;
+    SL.forEach(s=>{const el=document.createElement('div');el.className='slot '+(s.t?'empty target':'filled');el.style.left=s.x+'%';el.style.top=s.y+'%';
+      if(s.c){el.style.setProperty('--c1',s.c[0]);el.style.setProperty('--c2',s.c[1]);el.style.setProperty('--ct',s.c[2]);}
+      if(s.t){el.tabIndex=0;el.setAttribute('role','button');el.setAttribute('aria-label','Поставити на '+s.p);el.style.setProperty('--rd',(120+150*ti++)+'ms');}
+      el.innerHTML=`<div class="disc"><span class="pos">${s.p}</span></div>${s.nm?`<span class="nm">${s.nm}</span>`:''}`;pt.append(el);});
+    $('#pick4').classList.remove('gone');},
+  async place(el){if(this.done)return;this.done=true;const pt=$('#pitch4');pt.querySelectorAll('.slot.target').forEach(s=>{s.classList.remove('target');s.removeAttribute('tabindex');s.removeAttribute('role');});
+    const disc=el.querySelector('.disc'),src=$('#pickDisc');
+    const fill=()=>{el.classList.remove('empty');el.classList.add('filled');el.style.setProperty('--c1','#fff');el.style.setProperty('--c2','#0047ab');el.style.setProperty('--ct','#0047ab');
+      el.insertAdjacentHTML('beforeend','<span class="nm">Ярмоленко</span>');};
+    $('#pick4').classList.add('gone');
+    if(!LESS()&&document.body.animate){const a=src.getBoundingClientRect(),b=disc.getBoundingClientRect();
+      const c=src.cloneNode(true);c.classList.add('flychip');c.style.left=a.left+'px';c.style.top=a.top+'px';document.body.append(c);
+      el.style.visibility='hidden';
+      const dx=b.left+b.width/2-(a.left+a.width/2),dy=b.top+b.height/2-(a.top+a.height/2),s=b.width/a.width;
+      await done(anim(c,[{transform:'none'},{transform:`translate(${dx}px,${dy}px) scale(${s})`}],{duration:420,easing:tok('--spring-sheet'),fill:'forwards'}));
+      c.remove();el.style.visibility='';fill();restart(disc,'land0');}
+    else fill();
+    $('#hint4').innerHTML='Готово. «Повторити» — підсвітити місця ще раз.';},
+  async play(mode){this.done=false;document.querySelectorAll('.flychip').forEach(c=>c.remove());$('#hint4').innerHTML='Обери позицію для <b>Андрія Ярмоленка</b>: тапни підсвічене місце на полі.';this.render();
+    if(mode==='after'&&!LESS())$('#pitch4').querySelectorAll('.slot.target .disc').forEach(d=>anim(d,[{transform:'scale(.92)'},{transform:'none'}],{duration:240,easing:tok('--spring-pop')}));}};
+$('#pitch4').addEventListener('click',e=>{const s=e.target.closest('.slot.target');if(s)D4.place(s);});
+$('#pitch4').addEventListener('keydown',e=>{const s=e.target.closest('.slot.target');if(s&&(e.key==='Enter'||e.key===' ')){e.preventDefault();D4.place(s);}});
+
+/* ---------- 5 toast ---------- */
+const TOASTS=[{t:'Посилання скопійовано'},{t:'Гравця прибрано',b:'Повернути'}];
+const D5={cur:null,timer:0,
+  mode(){return $('#d5').dataset.mode;},
+  hide(t,fast){if(!t||t.dataset.out)return Promise.resolve();t.dataset.out='1';if(this.cur===t)this.cur=null;
+    if(this.mode()==='before'||!t.animate){t.remove();return Promise.resolve();}
+    const kf=LESS()?[{opacity:1},{opacity:0}]:[{opacity:1,transform:'none'},{opacity:0,transform:'translateY(12px)'}];
+    const a=anim(t,kf,{duration:fast?120:160,easing:tok('--ease-out'),fill:'forwards'});
+    const safety=setTimeout(()=>t.remove(),300*K());
+    return done(a).then(()=>{clearTimeout(safety);t.remove();});},
+  show(i){const box=$('#tbox'),m=TOASTS[i],before=this.mode()==='before';clearTimeout(this.timer);
+    const old=this.cur;if(old){if(before)old.remove();else this.hide(old,true);}
+    const t=document.createElement('div');t.className='toast'+(before?' old':'');t.setAttribute('role','status');
+    t.innerHTML=`<span>${m.t}</span>${m.b?`<button type="button">${m.b}</button>`:''}<i></i>`;box.append(t);this.cur=t;
+    if(m.b)t.querySelector('button').onclick=()=>this.hide(t);
+    if(!before)anim(t,LESS()?[{opacity:0},{opacity:1}]:[{opacity:0,transform:'translateY(12px)'},{opacity:1,transform:'none'}],{duration:LESS()?160:240,easing:tok('--ease-out'),fill:'backwards'});
+    this.timer=setTimeout(()=>{if(this.cur===t)this.hide(t);},2600*K());},
+  async play(mode,run){clearTimeout(this.timer);$('#tbox').innerHTML='';this.cur=null;
+    await wait(300);if(run())return;this.show(0);await wait(1300);if(run())return;this.show(1);}};
+$('#tscr').querySelectorAll('.acts button').forEach(b=>b.addEventListener('click',()=>D5.show(+b.dataset.t)));
+
+/* ---------- 6 tabs ---------- */
+const D6={
+  ind(now){const tabs=$('#tabs6'),on=tabs.querySelector('.tab.on'),ind=tabs.querySelector('.ind');
+    const x=on.offsetLeft,w=on.offsetWidth;
+    if(now||LESS())ind.style.transition='none';else ind.style.transition=`transform calc(240ms * var(--k)) ${tok('--spring')}`;
+    ind.style.transform=`translateX(${x}px) scaleX(${w/100})`;if(now)void ind.offsetWidth;},
+  pill(now){const seg=$('#era6'),on=seg.querySelector('.on'),p=seg.querySelector('.pill');const W=seg.clientWidth,l=on.offsetLeft,r=W-l-on.offsetWidth;
+    p.style.transition=(now||LESS())?'none':`clip-path calc(240ms * var(--k)) ${tok('--spring')}`;
+    p.style.clipPath=`inset(0 ${r}px 0 ${l}px)`;if(now)void p.offsetWidth;},
+  tab(i,now){const tabs=[...$('#tabs6').querySelectorAll('.tab')],panes=[...$('#panes6').children];
+    tabs.forEach((t,j)=>{t.classList.toggle('on',j===i);t.setAttribute('aria-selected',String(j===i));});
+    panes.forEach((p,j)=>{const show=j===i,was=p.getAttribute('aria-hidden')==='false';p.setAttribute('aria-hidden',String(!show));
+      if(show&&!was&&!now&&$('#d6').dataset.mode==='after')anim(p,[{opacity:0},{opacity:1}],{duration:120,easing:tok('--ease-out')});});
+    this.ind(now);},
+  CAPS:['Сезони 1992–2025','Сезони 1992–1999','Сезони 2000–2009','Сезони 2010–2019','Сезони 2020–2025'],
+  era(i,now){const bs=[...$('#era6').querySelectorAll('button')];bs.forEach((b,j)=>{b.classList.toggle('on',j===i);b.setAttribute('aria-checked',String(j===i));});$('#eracap').textContent=this.CAPS[i];this.pill(now);},
+  async play(mode,run){this.tab(0,true);this.era(0,true);
+    await wait(600);if(run())return;this.tab(1);await wait(300);if(run())return;this.era(2);
+    await wait(900);if(run())return;this.era(4);await wait(500);if(run())return;this.tab(0);await wait(500);if(run())return;this.era(1);}};
+$('#tabs6').querySelectorAll('.tab').forEach((t,i)=>t.addEventListener('click',()=>D6.tab(i)));
+$('#era6').querySelectorAll('button').forEach((b,i)=>b.addEventListener('click',()=>D6.era(i)));
+window.addEventListener('resize',()=>{D6.ind(true);D6.pill(true);});
+
+/* ---------- 7 reel ---------- */
+const CLUBS=['Динамо','Дніпро','Металіст','Ворскла','Зоря','Олександрія','Карпати','Чорноморець','Таврія','Арсенал','Кривбас','Волинь','Металург Д','Іллічівець','Говерла','Десна'];
+const YEARS=['2004/05','2006/07','2008/09','2010/11','2012/13','2016/17','2018/19','2020/21','2001/02','2013/14','2015/16'];
+function roll(reel,list,target,n,mode){const strip=reel.querySelector('.strip');strip.getAnimations().forEach(a=>a.cancel());
+  const pool=[];for(let i=0;i<n;i++)pool.push(list[(i*7+n)%list.length]);pool.push(target);
+  strip.innerHTML=pool.map(s=>`<div>${s}</div>`).join('');const h=strip.firstElementChild.offsetHeight,end=-(pool.length-1)*h;
+  if(LESS()){strip.style.transform=`translateY(${end}px)`;return Promise.resolve();}
+  strip.style.transform='';
+  if(mode==='before')anim(strip,[{filter:'blur(0)'},{filter:'blur(1.4px)',offset:.12},{filter:'blur(1.4px)',offset:.62},{filter:'blur(0)'}],{duration:1850,easing:'linear'});
+  const a=anim(strip,[{transform:'translateY(0)'},{transform:`translateY(${end-6}px)`}],{duration:1850,easing:'cubic-bezier(.15,.75,.2,1)',fill:'forwards'});
+  return done(a).then(()=>{if(a.playState!=='finished')return;strip.style.transform=`translateY(${end}px)`;
+    const b=anim(strip,[{transform:`translateY(${end-6}px)`},{transform:`translateY(${end}px)`}],{duration:360,easing:tok('--spring')});a.cancel();return done(b);});}
+const D7={i:0,play(mode){const t=['Шахтар','Дніпро','Металіст'][this.i++%3];
+    roll($('#reelC'),CLUBS,t,14,mode);roll($('#reelY'),YEARS,['2009/10','2014/15','2012/13'][(this.i-1)%3],10,mode);}};
+$('#spin7').addEventListener('click',()=>D7.play($('#d7').dataset.mode));
+
+/* ---------- 8 season pick ---------- */
+const D8={async play(mode,run){const box=$('#sea8'),bs=[...box.children];bs.forEach(b=>b.getAnimations().forEach(a=>a.cancel()));box.classList.add('hide');
+    await wait(500);if(run())return;box.classList.remove('hide');
+    if(mode==='before')return;
+    bs.forEach((b,i)=>anim(b,LESS()?[{opacity:0},{opacity:1}]:[{opacity:0,transform:'translateY(8px)'},{opacity:1,transform:'none'}],{duration:240,delay:i*40,easing:tok('--ease-out'),fill:'backwards'}));}};
+
+/* ---------- 9 forecast ---------- */
+const ODDS=[['Чемпіон',18],['Ліга чемпіонів',41],['Єврокубки',63],['Виліт',2]],LINES=[['Атака',84],['Півзахист',79],['Захист',76],['Воротар',81]];
+const D9={play(mode){const lw=v=>Math.max(4,Math.min(100,(v-60)/39*100));
+    const row=(n,w,lab)=>`<div class="prow"><span>${n}</span><div class="pbar"><i data-w="${w.toFixed(0)}"></i></div><b>${lab}</b></div>`;
+    $('#pre9').innerHTML=`<div class="pgh">Шанси</div>`+ODDS.map(([n,v])=>row(n,v,v+'%')).join('')+`<div class="pgh">Сила ліній</div>`+LINES.map(([n,v])=>row(n,lw(v),v)).join('');
+    $('#pre9').querySelectorAll('.pbar i').forEach((i,k)=>{const w=+i.dataset.w;
+      if(mode==='before'){i.style.width=w+'%';return;}
+      i.style.transform=`translateX(${w-100}%)`;
+      if(!LESS())anim(i,[{transform:'translateX(-100%)'},{transform:`translateX(${w-100}%)`}],{duration:500,delay:k*40,easing:tok('--ease-out'),fill:'backwards'});});}};
+
+/* ---------- 10 theme ---------- */
+const VT=()=>typeof document.startViewTransition==='function';
+function setThemeCard(dark){const c=$('#th10'),s=$('#thm10');c.classList.toggle('th-d',dark);c.classList.toggle('th-l',!dark);s.classList.toggle('dk',dark);s.setAttribute('aria-checked',String(dark));}
+const D10={dark:false,
+  toggle(){const dark=!this.dark;this.dark=dark;const mode=$('#d10').dataset.mode,c=$('#th10');
+    if(mode==='before'){noAnim(c,()=>setThemeCard(dark));return;}
+    if(VT()){root.classList.add('vtl');const t=document.startViewTransition(()=>setThemeCard(dark));t.finished.finally(()=>root.classList.remove('vtl'));}
+    else{c.classList.add('fb');setThemeCard(dark);setTimeout(()=>c.classList.remove('fb'),300*K());}},
+  async play(mode,run){this.dark=false;noAnim($('#th10'),()=>setThemeCard(false));
+    await wait(500);if(run())return;this.toggle();await wait(1300);if(run())return;this.toggle();}};
+$('#thm10').addEventListener('click',e=>{e.preventDefault();D10.toggle();});
+
+/* ---------- 11 press ---------- */
+document.querySelectorAll('#d11 a[data-p]').forEach(a=>a.addEventListener('click',e=>e.preventDefault()));
+document.querySelectorAll('#d11 .thm').forEach(t=>t.addEventListener('click',()=>{const on=!t.classList.contains('dk');t.classList.toggle('dk',on);t.setAttribute('aria-checked',String(on));}));
+const D11={async play(mode,run){const els=[...document.querySelectorAll('#d11 [data-p]')];
+    for(const el of els){await wait(380);if(run())return;el.classList.add('down');await wait(150);el.classList.remove('down');}}};
+
+/* ---------- 12 5x5 ---------- */
+const D12={raf:0,
+  async play(mode,run){cancelAnimationFrame(this.raf);const bar=$('#f5bar'),dot=$('#f5dot'),tr=$('#f5t'),cnt=$('#f5cnt'),m=$('#f5m');
+    bar.style.cssText='';dot.style.cssText='';['#f5a','#f5b'].forEach(s=>{const e=$(s);e.dataset.odo='0';e.textContent='0';});cnt.textContent='0';m.textContent='0';
+    let W=tr.clientWidth,frames=0,t0=0,paused=0,lastMin=-1;const GOALS=[[23,'#f5a',1],[64,'#f5b',1],[78,'#f5a',2]];let gi=0;const TOTAL=5400;
+    const onR=()=>{W=tr.clientWidth;};window.addEventListener('resize',onR);
+    const step=ts=>{if(run()){window.removeEventListener('resize',onR);return;}
+      if(!t0)t0=ts;let el=(ts-t0-paused)/K();
+      if(gi<GOALS.length&&el>=GOALS[gi][0]/90*TOTAL){const g=GOALS[gi++];odoSet($(g[1]),g[2]);const p0=ts;
+        setTimeout(()=>{paused+=performance.now()-p0;this.raf=requestAnimationFrame(step);},500*K());return;}
+      const p=Math.min(1,el/TOTAL),min=Math.floor(p*90);
+      if(min!==lastMin){m.textContent=min;lastMin=min;}
+      if(mode==='before'){bar.style.width=(p*100)+'%';dot.style.left=(p*100)+'%';frames++;cnt.textContent=frames;}
+      else{bar.style.transform=`translateX(${(p-1)*100}%)`;dot.style.transform=`translate(${p*W}px,0) translate(-50%,-50%)`;}
+      if(p<1)this.raf=requestAnimationFrame(step);else window.removeEventListener('resize',onR);};
+    this.raf=requestAnimationFrame(step);}};
+
+/* ---------- wiring ---------- */
+const DEMOS={d1:D1,d2:D2,d3:D3,d4:D4,d5:D5,d6:D6,d7:D7,d8:D8,d9:D9,d10:D10,d11:D11,d12:D12},runs={};
+function play(id){const sec=document.getElementById(id),mode=sec.dataset.mode,my=(runs[id]=(runs[id]||0)+1);
+  Promise.resolve(DEMOS[id].play(mode,()=>runs[id]!==my)).catch(()=>{});}
+document.querySelectorAll('.demo').forEach(sec=>{
+  const sync=()=>sec.querySelectorAll('.seg2 button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.m===sec.dataset.mode)));sync();
+  sec.querySelectorAll('.seg2 button').forEach(b=>b.addEventListener('click',()=>{if(sec.dataset.mode===b.dataset.m)return;sec.dataset.mode=b.dataset.m;sync();play(sec.id);}));
+  sec.querySelector('.rep').addEventListener('click',()=>play(sec.id));});
+/* static initial state, then each demo plays once on first view */
+D1.build();
+$('#md').innerHTML=POS.map(p=>`<i class="${p}"></i>`).join('');D3.draw('after');
+D4.render();D6.tab(0,true);D6.era(0,true);D9.play('after');
+document.fonts&&document.fonts.ready.then(()=>{D6.ind(true);D6.pill(true);});
+
+const seen=new Set();
+if('IntersectionObserver' in window){const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting&&!seen.has(e.target.id)){seen.add(e.target.id);play(e.target.id);}}),{threshold:.45});
+  document.querySelectorAll('.demo').forEach(s=>io.observe(s));}
+else Object.keys(DEMOS).forEach(play);
+
+/* global switches */
+const lessSw=$('#lessSw'),slowSw=$('#slowSw');lessSw.checked=LESS();
+lessSw.addEventListener('change',()=>root.classList.toggle('less',lessSw.checked));
+slowSw.addEventListener('change',()=>root.classList.toggle('slow',slowSw.checked));
+document.addEventListener('touchstart',()=>{},{passive:true});
+
+/* theme: auto follows the system, button cycles auto -> light -> dark, cross-fades where supported */
+const TH={auto:['Авто','#i-auto'],light:['Світла','#i-sun'],dark:['Темна','#i-moon']},mq=matchMedia('(prefers-color-scheme: dark)');
+function applyTheme(p){root.setAttribute('data-pref',p);root.setAttribute('data-theme',p==='auto'?(mq.matches?'dark':'light'):p);
+  const b=$('#themeBtn');b.querySelector('span').textContent=TH[p][0];b.querySelector('use').setAttribute('href',TH[p][1]);b.setAttribute('aria-label','Тема: '+TH[p][0].toLowerCase());}
+applyTheme(root.getAttribute('data-pref')||'auto');
+$('#themeBtn').addEventListener('click',()=>{const o=['auto','light','dark'],p=o[(o.indexOf(root.getAttribute('data-pref'))+1)%3];try{localStorage.setItem('proto_theme',p);}catch(e){}
+  if(VT())document.startViewTransition(()=>{applyTheme(p);requestAnimationFrame(()=>{D6.ind(true);D6.pill(true);});});else applyTheme(p);});
+(mq.addEventListener?mq.addEventListener.bind(mq,'change'):mq.addListener.bind(mq))(()=>{if(root.getAttribute('data-pref')==='auto')applyTheme('auto');});
+})();
+</script>
+</body>
+</html>
