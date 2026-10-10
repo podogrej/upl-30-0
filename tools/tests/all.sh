@@ -21,7 +21,7 @@ step "сервер завантажується (як на Vercel)" node tools/t
 step "vercel.json (ignoreCommand ≤ 256)" node -e 'const c=require("./vercel.json").ignoreCommand||"";if(c.length>256){console.log("ignoreCommand: "+c.length+" > 256");process.exit(1)}'
 # fast non-browser tests: always run
 SK=${SHARD%/*}; SN=${SHARD#*/}; [ -n "$SHARD" ] || { SK=1; SN=1; }
-[ "$SK" = 1 ] && for t in cheat card_api err_digest player_texts feedback board_pin cron_summary channel notify code_comments css_classes; do step "тест $t" node "tools/tests/$t.js"; done
+[ "$SK" = 1 ] && for t in cheat card_api err_digest player_texts feedback board_pin cron_summary channel notify code_comments css_classes trophies086; do step "тест $t" node "tools/tests/$t.js"; done
 # browser tests are independent, so JOBS run in parallel (default 3), longest first; QUICK=1 runs only a short set
 # longest first (seconds with 3 parallel jobs, 10.2026, reel spin skipped in tests): parts get them in snake order, so each part ends up with a similar total
 UI="v077c font_tour v077d scenarios live_height modes draft58 determinism line_height v076 v076b v078 v074 v080 v073 v081 long_names icon_align spin_shots v077b tro chal v39 v064 fl61 leagueui oneclub72 v060 v077a emoji_layout f5test2 player_page numbers xp_stable v079 fl63 news pitch_layout v075 faq_anim err_report nav_back tg_swipes"

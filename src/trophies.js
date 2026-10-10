@@ -13,6 +13,10 @@ const notAnti=c=>c.format!=='anti', mixed=c=>c.format==='classic'||c.format==='l
 const LOG=c=>(c.r&&c.r.log)||[];
 const ERA=(c,cc,y0,y1)=>c.xi.filter(x=>x.cc===cc&&x.y>=y0&&x.y<=y1).length;   // number of club cc players from seasons y0..y1 (year = season start)
 const homeL=c=>LOG(c).filter(m=>m.home&&m.res==='L').length;
+const full=c=>LOG(c).length===30;   // full match log (old log rows have none)
+const goalsDesc=c=>c.pl.map(p=>p.g||0).sort((a,b)=>b-a);   // goals per player, highest first
+const runMax=(c,ok)=>{let k=0,b=0;for(const m of LOG(c)){k=ok(m)?k+1:0;if(k>b)b=k;}return b;};   // longest run of matches meeting ok
+const halfGain=c=>{let d=0;LOG(c).forEach((m,k)=>{const p=m.res==='W'?3:m.res==='D'?1:0;d+=k<15?-p:p;});return d;};   // points in matches 16-30 minus points in 1-15
 // surnames of Ukrainian MPs (convocations 2-9) present in the pool: data/trophies/rada.py
 const RADA=new Set("абрамов аваков авраменко акопян аксьонов алексєєв андрієвський анненков арабаджи артеменко бабак бабенко бабич бабій бакай балашов балицький баранов безсмертний безуглий близнюк богдан боднар боженко бойко бойчук бондар бондаренко бондарчук боровик буряк білецький білий білик білоус білоцерковець ванат васильєв василів ващук власов вознюк волинець волков волошин гаврилов гавриш гармаш герасименко геращенко гетьман глущенко головатий головко голуб гончар гончаренко горбенко горбунов гордєєв гордієнко горобець гошовський грановський грачов гриценко грищенко гудима гузенко гуменюк гурін гусак давидов даниленко данченко даценко дем'янчук демченко денисенко деркач дмитренко дмитрук довгий домбровський донець дорохов дудка діденко дідик жданов жук заблоцький загоруйко задорожний запорожець заставний захарченко заєць зейналов зозуля зуб зубов зуєв зінкевич зінченко кабанов кабаченко калюжний камінський каплієнко капустян капустін карабута касьянов качур кириленко киричок клименко климець клімов коваленко коваль ковальов ковальчук кожевников кожушко козак козаков козаченко козир козловський козуб колесніченко колєв комар кондратенко кондратюк кононов корнійчук корнієнко король костенко костюк кравець кравцов кравченко кравчук кривенко криворучко кривошеєв крячко кріль кудря кузнєцов кулаков кулик курило кучер кучеренко кучерук кісельов лаба лавриненко ларін левченко лелюк леонов литвин литвиненко лозинський лозінський лук'янчук лукаш лукашук луньов луценко ляшенко літвінов мазур мазуренко майборода макаренко малишев мальцев мамчур марков мартиненко мартинюк марченко марчук матвєєв матвійчук матвієнко матківський матюха мельник мельниченко мельничук мисик михайленко мкртчян мокан мороз морозенко морозов москвін моісеєнко мулик мухін мхітарян мірошник мірошниченко мірошніченко місюра міщенко нагорняк наконечний нестеренко новак новіков носенко ніколаєнко овчаренко олійник омельченко омельчук омельянович онищенко опанасенко орлов остапенко павленко павлов павлюк павліш паламарчук парасків пастух петрик петров пилипенко пилипчук писаренко подоляк поляков поліщук пономаренко пономарьов попов портнов потапов потімков присяжнюк приходько продан прокопенко прокопчук проценко пташник пінчук піскун радченко рева ременюк рибак рибалка рижук романовський романчук романюк руденко савенко савка савченко савчук садовий саламаха салій самойленко сафронов сахно семенюк сидоренко сидорчук силантьєв симоненко синенко синиця сирота ситник сич скорик скороход скрипка скрипник славов слободян смірнов соколов соломатін сорока степаненко степанов степанюк стойко стоян суркіс суслов сушко таран таранов тарасенко тарасов тарасюк тищенко ткаченко ткачук товт тодоров толочко топалов трегубов третьяков трухін тістик унгурян федоренко федоров федорук федорчук фомін фірсов хлань хоменко царенко целих циба цимбалюк цкітішвілі чайка черненко черняк черній чорний чумак чумаченко шандра шаповалов шахов швець шевченко шевчук шершун шестаков шибко шинкаренко шпак шульга юрченко юшко яблонський якименко яковенко янковський яровенко ярош яценко яцик євтушок ємельянов ємець єремеєв єрмак єрохін єфремов єфімов єщенко іваненко іванов ігнатенко ісаєв ісаєнко іщенко".split(' '));
 // Ukrainians from the pool who played for European clubs (excluding RU, BY): data/trophies/abroad.py
@@ -91,13 +95,13 @@ const TROPHIES=[
   {id:"nice",i:"😏",n:"Nice",d:"Набери рівно 69 очок",cat:"secret",sec:1,t:c=>notAnti(c)&&c.r.pts===69},
   // ---- batch 0.42
   {id:"homefort",i:"🏰",n:"Білгород-Дністровський",d:"Жодної поразки вдома за сезон",cat:"season",rep:1,t:c=>notAnti(c)&&LOG(c).length===30&&LOG(c).every(m=>!m.home||m.res!=='L')},
-  {id:"thrash",i:"🐢",n:"Розбили, як Бог черепаху",d:"Перемога з різницею 6+ м'ячів",cat:"season",rep:1,t:c=>notAnti(c)&&LOG(c).some(m=>m.ug-m.og>=6)},
+  {id:"thrash",i:"🐢",n:"Хокейний рахунок",d:"Перемога з різницею 6+ м'ячів",cat:"season",rep:1,t:c=>notAnti(c)&&LOG(c).some(m=>m.ug-m.og>=6)},
   {id:"tractor",i:"🚜",n:"Як трактор переїхав",d:"Поразка з різницею 6+ м'ячів",cat:"season",rep:1,t:c=>notAnti(c)&&LOG(c).some(m=>m.og-m.ug>=6)},
   {id:"minimal",i:"1️⃣",n:"Мінімалісти",d:"10+ перемог з рахунком 1:0",cat:"season",rep:1,t:c=>notAnti(c)&&LOG(c).filter(m=>m.ug===1&&m.og===0).length>=10},
   {id:"drawish",i:"🤝",n:"Нічия — теж результат",d:"15+ нічиїх за сезон",cat:"season",rep:1,t:c=>notAnti(c)&&c.r.D>=15},
   {id:"equal",i:"⚖️",n:"Порівну",d:"Рівно 10 перемог, 10 нічиїх і 10 поразок",cat:"season",rep:1,t:c=>c.r.W===10&&c.r.D===10&&c.r.L===10},
   {id:"lonewolf",i:"🐺",n:"Один у полі не воїн",d:"Гравець забив 20+, а команда вилетіла",cat:"players",rep:1,t:c=>notAnti(c)&&c.r.place>=15&&c.pl.some(p=>p.g>=20)},
-  {id:"ukrposhta",i:"📮",n:"Укрпошта",d:"Атакувальний півзахисник чи вінгер віддав менше 5 асистів",cat:"players",rep:1,t:c=>notAnti(c)&&c.pl.length===11&&c.pl.some(p=>['CAM','LW','RW'].includes(p.slot)&&(p.a||0)<5)},
+  {id:"ukrposhta",i:"📮",n:"Укрпошта",d:"Атакувальний півзахисник чи вінгер віддав менше 3 асистів",cat:"players",rep:1,t:c=>notAnti(c)&&c.pl.length===11&&c.pl.some(p=>['CAM','LW','RW'].includes(p.slot)&&(p.a||0)<3)},
   {id:"kukuriku",i:"🐓",n:"Зрада",d:"Анатолій Тимощук у складі",cat:"secret",sec:1,t:c=>c.xi.some(x=>x.id==='w:1979-03-30:timoschuk')},
   {id:"lobanovsky",i:"📋",n:"Лобан би схвалив",d:"Чемпіон, у складі 6+ гравців «Динамо» 1997–2001",cat:"secret",sec:1,t:c=>notAnti(c)&&c.r.place===1&&c.xi.filter(x=>x.cc==='dynamo-kyiv'&&x.y>=1997&&x.y<=2000).length>=6},
   {id:"panenka",i:"🪶",n:"Паненка",d:"Артем Мілевський у складі, команда в трійці",cat:"secret",sec:1,t:c=>notAnti(c)&&c.r.place<=3&&c.xi.some(x=>x.id==='tm:9800')},
@@ -117,13 +121,14 @@ const TROPHIES=[
   {id:"zarobitchany",i:"🧳",n:"Заробітчани",d:"5+ українців, які грали в клубах Європи",cat:"secret",sec:1,t:c=>c.xi.filter(x=>ABROAD.has(x.id)||ABROAD.has(canon(x.id))).length>=5},
   {id:"trio",i:"🍻",n:"Третім будеш?",d:"Алієв, Мілевський і Бухал в одному складі",cat:"secret",sec:1,t:c=>['tm:9796','tm:9800','tm:381268'].every(id=>c.xi.some(x=>x.id===id))},
   {id:"rada",i:"🏛️",n:"Верховна Рада",d:"6+ гравців із прізвищами народних депутатів",cat:"secret",sec:1,t:c=>c.xi.filter(x=>RADA.has(normSur(x.name))).length>=6},
-  // "shame records": anti-season only (classic has a strength floor for weak squads); measured: 70+ ~19%, 90+ ~7%, 115+ ~1.5%, 130+ ~0.3% of seasons
-  {id:"ga150",i:"🍝",n:"Де тонко, там і рветься",d:"Пропусти 70+ голів в антисезоні",cat:"secret",sec:1,t:c=>c.format==='anti'&&c.r.ga>=70},
-  {id:"ga250",i:"🚪",n:"День відчинених дверей",d:"Пропусти 80+ голів в антисезоні",cat:"secret",sec:1,t:c=>c.format==='anti'&&c.r.ga>=80},
-  {id:"ga400",i:"🎯",n:"Гра в одні ворота",d:"Пропусти 90+ голів в антисезоні",cat:"secret",sec:1,t:c=>c.format==='anti'&&c.r.ga>=90},
-  {id:"ga600",i:"🤾",n:"Гандбольний рахунок",d:"Пропусти 100+ голів в антисезоні",cat:"secret",sec:1,t:c=>c.format==='anti'&&c.r.ga>=100},
-  {id:"ga800",i:"🏀",n:"Баскетбольний рахунок",d:"Пропусти 115+ голів в антисезоні",cat:"secret",sec:1,t:c=>c.format==='anti'&&c.r.ga>=115},
-  {id:"ga1000",i:"💯",n:"Все буде добре",d:"Пропусти 130+ голів в антисезоні",cat:"secret",sec:1,t:c=>c.format==='anti'&&c.r.ga>=130},
+  // "shame records": anti-season only (classic has a strength floor for weak squads); thresholds only go down, holders keep them;
+  // measured with tools/trophy_freq.js (fan bot): 60+ ~27%, 70+ ~12%, 80+ ~5%, 90+ ~2%, 100+ ~0.9%, 110+ ~0.3% of anti seasons
+  {id:"ga150",i:"🍝",n:"Де тонко, там і рветься",d:"Пропусти 60+ голів в антисезоні",cat:"secret",sec:1,t:c=>c.format==='anti'&&c.r.ga>=60},
+  {id:"ga250",i:"🚪",n:"День відчинених дверей",d:"Пропусти 70+ голів в антисезоні",cat:"secret",sec:1,t:c=>c.format==='anti'&&c.r.ga>=70},
+  {id:"ga400",i:"🎯",n:"Гра в одні ворота",d:"Пропусти 80+ голів в антисезоні",cat:"secret",sec:1,t:c=>c.format==='anti'&&c.r.ga>=80},
+  {id:"ga600",i:"🤾",n:"Гандбольний рахунок",d:"Пропусти 90+ голів в антисезоні",cat:"secret",sec:1,t:c=>c.format==='anti'&&c.r.ga>=90},
+  {id:"ga800",i:"🏀",n:"Баскетбольний рахунок",d:"Пропусти 100+ голів в антисезоні",cat:"secret",sec:1,t:c=>c.format==='anti'&&c.r.ga>=100},
+  {id:"ga1000",i:"💯",n:"Все буде добре",d:"Пропусти 110+ голів в антисезоні",cat:"secret",sec:1,t:c=>c.format==='anti'&&c.r.ga>=110},
   // namesakes: 11 identical names, trophies named after settlements
   ...[['serhiivka','Сергій','Сергіївка'],['andriivka','Андрій','Андріївка'],['dmytrivka','Дмитро','Дмитрівка'],['yuriivka','Юрій','Юріївка'],['oleksiivka','Олексій','Олексіївка'],['maksymivka','Максим','Максимівка'],['romaniv','Роман','Романів'],['volodymyr','Володимир','Володимир']]
     .map(([id,nm,town])=>({id,i:"📍",n:town,d:`11 гравців на ім'я ${nm} в одному складі`,cat:"secret",sec:1,t:c=>c.xi.filter(x=>firstName(x.name)===nm).length>=11})),
@@ -149,6 +154,26 @@ const TROPHIES=[
   {id:"bronze06",i:"🥉",n:"Бронза-2006",d:"Візьми бронзу з п'ятьма гравцями «Чорноморця» 2005/06",cat:"secret",sec:1,t:c=>notAnti(c)&&c.r.place===3&&ERA(c,'chornomorets-odesa',2005,2005)>=5},
   {id:"cup92",i:"🏆",n:"Перший кубок",d:"Збери п'ятьох гравців «Чорноморця» 1992 — першого володаря Кубка України",cat:"secret",sec:1,t:c=>ERA(c,'chornomorets-odesa',1992,1992)>=5},
   {id:"tablo",i:"🔢",n:"Результат на табло",q:"Лобановський",d:"Чемпіон, забивши 45 або менше",cat:"secret",sec:1,t:c=>notAnti(c)&&c.r.place===1&&c.r.gf<=45},
+  // steps and mid-frequency trophies; mixed(c): in one club / derby most of them come in 35-80% of seasons (tools/trophy_freq.js);
+  // loss17 has no mixed(c): a strong one-club squad loses 1:7 less often than a classic one
+  {id:"rout8",i:"🏋️",n:"Як на тренуванні",d:"Перемога з різницею 8+ м'ячів",cat:"season",rep:1,t:c=>notAnti(c)&&mixed(c)&&LOG(c).some(m=>m.ug-m.og>=8)},
+  {id:"conc12",i:"🚌",n:"Моурінью задоволений",d:"Пропусти 12 голів або менше",cat:"season",rep:1,t:c=>notAnti(c)&&mixed(c)&&c.r.ga<=12},
+  {id:"champ75",i:"🚀",n:"Поза конкуренцією",d:"Стань чемпіоном із 75+ очками",cat:"season",rep:1,t:c=>notAnti(c)&&mixed(c)&&c.r.place===1&&c.r.pts>=75},
+  {id:"wins10",i:"🚄",n:"Інтерсіті без зупинок",d:"10 перемог поспіль",cat:"season",rep:1,t:c=>notAnti(c)&&mixed(c)&&runMax(c,m=>m.res==='W')>=10},
+  {id:"unbeat20",i:"💪",n:"Нас не подолати",d:"20 матчів поспіль без поразок",cat:"season",rep:1,t:c=>notAnti(c)&&mixed(c)&&runMax(c,m=>m.res!=='L')>=20},
+  {id:"awayfort",i:"🛋️",n:"Почувайтеся як вдома",d:"Жодної поразки на виїзді за сезон",cat:"season",rep:1,t:c=>notAnti(c)&&mixed(c)&&full(c)&&LOG(c).every(m=>m.home||m.res!=='L')},
+  {id:"surge2",i:"📈",n:"Друге дихання",d:"У другому колі (матчі 16–30) набери на 12+ очок більше, ніж у першому",cat:"season",rep:1,t:c=>notAnti(c)&&mixed(c)&&full(c)&&halfGain(c)>=12},
+  {id:"fade2",i:"🌸",n:"Весняне загострення",d:"У другому колі (матчі 16–30) набери на 12+ очок менше, ніж у першому",cat:"season",rep:1,t:c=>notAnti(c)&&mixed(c)&&full(c)&&halfGain(c)<=-12},
+  {id:"nil5",i:"🥱",n:"Нудьга",d:"5+ нічиїх 0:0 за сезон",cat:"season",rep:1,t:c=>notAnti(c)&&mixed(c)&&LOG(c).filter(m=>m.ug===0&&m.og===0).length>=5},
+  {id:"cs18",i:"🔒",n:"Ворота на замку",d:"18+ матчів без пропущених голів",cat:"season",rep:1,t:c=>notAnti(c)&&mixed(c)&&LOG(c).filter(m=>m.og===0).length>=18},
+  {id:"fourth",i:"4️⃣",n:"Перший за бортом",d:"Фініш на 4-му місці",cat:"season",rep:1,t:c=>notAnti(c)&&mixed(c)&&c.r.place===4},
+  {id:"loss17",i:"🇧🇷",n:"Вийшов бразилити",d:"Програй матч 1:7",cat:"season",rep:1,t:c=>notAnti(c)&&LOG(c).some(m=>m.ug===1&&m.og===7)},
+  {id:"win71",i:"🇩🇪",n:"Вийшов німити",d:"Виграй матч 7:1",cat:"season",rep:1,t:c=>notAnti(c)&&mixed(c)&&LOG(c).some(m=>m.ug===7&&m.og===1)},
+  {id:"scorer20",i:"👟",n:"Голеадор",d:"Гравець забиває 20+ голів за сезон",cat:"players",rep:1,t:c=>notAnti(c)&&mixed(c)&&c.pl.some(p=>p.g>=20)},
+  {id:"duo15",i:"👯",n:"Шева й Інзагі",d:"Двоє гравців забили 15+ голів за сезон",cat:"players",rep:1,t:c=>notAnti(c)&&mixed(c)&&goalsDesc(c)[1]>=15},
+  {id:"trio12",i:"🔱",n:"Бейленко, Бенземенко, Роналденко",d:"Троє гравців забили 12+ голів за сезон",cat:"players",rep:1,t:c=>notAnti(c)&&mixed(c)&&goalsDesc(c)[2]>=12},
+  {id:"trio15",i:"💫",n:"Мессієнко, Суаресенко, Неймаренко",d:"Троє гравців забили 15+ голів за сезон",cat:"players",rep:1,t:c=>notAnti(c)&&mixed(c)&&goalsDesc(c)[2]>=15},
+  {id:"dfgoals12",i:"🪖",n:"Оборона — найкращий напад",d:"Захисники разом забили 12+ голів за сезон",cat:"players",rep:1,t:c=>notAnti(c)&&mixed(c)&&c.pl.filter(p=>GROUP_OF[p.slot]==='DF').reduce((a,p)=>a+(p.g||0),0)>=12},
 ];
 const MILESTONES=[[1,"🌱","Перший сезон"],[5,"⚽","5 сезонів"],[10,"🎫","10 сезонів"],[25,"🎗️","25 сезонів"],[50,"🥇","Півсотні"],[100,"💯","Клуб 100"],[250,"🏛️","250 сезонів"]];
 function trStore(){const s=lsGet("upl30_tr")||{};s.t=s.t||{};s.seasons=s.seasons||0;s.dailies=s.dailies||0;return s;}
