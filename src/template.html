@@ -425,6 +425,78 @@ td .sub .sk{height:18px;border-radius:var(--r-pill)}
 .pp-fav .v{font-family:var(--font-mono);font-size:var(--fs-caption);color:var(--muted)}
 .pp-sec{display:flex;align-items:baseline;justify-content:space-between;gap:var(--sp-2);margin:var(--sp-5) 0 var(--sp-3)}
 .pp-sec h3{margin:0}.pp-sec .best{font-size:var(--fs-caption)}
+/* "Your numbers" on the own player page (src/numbers.js); the XI uses the game's .pitch and .slot */
+.nm{margin-top:var(--sp-7)}
+.nm>h2{margin:0 0 var(--sp-3);font-size:var(--fs-title3)}
+.nm-verdict{margin:0;font:var(--wt-bold) var(--fs-title2)/var(--lh-snug) var(--font-display);letter-spacing:var(--ls-tight);text-wrap:balance;max-width:24ch}
+.nm-verdict em{font-style:normal;color:var(--amber2)}
+:root[data-theme="light"] .nm-verdict em{color:var(--amber)}
+.nm-basis{margin:var(--sp-2) 0 0;font-size:var(--fs-footnote);line-height:var(--lh-sub);color:var(--ink2)}
+.nm h3{margin-block:var(--sp-6) var(--sp-3)}
+.nm .pp-sec{margin-block:var(--sp-6) var(--sp-3)}
+.nm .pp-sec h3{margin:0}
+.nm-card{border:1px solid var(--line);border-radius:var(--r-md);background:var(--surface);box-shadow:var(--sh-1);padding:var(--sp-4)}
+.nm-sub{margin:0 0 var(--sp-3);font-size:var(--fs-footnote);font-weight:var(--wt-bold);color:var(--ink2);line-height:var(--lh-sub)}
+.nm-div{border:0;border-top:1px solid var(--line);margin:var(--sp-4) 0}
+.nm-note{margin:var(--sp-3) 0 0;font-size:var(--fs-caption);line-height:var(--lh-sub);color:var(--muted)}
+/* record */
+.nm-rec-top{display:flex;align-items:baseline;gap:var(--sp-3)}
+.nm-rec-top b{font:var(--wt-black) var(--fs-large)/var(--lh-tight) var(--font-display);letter-spacing:var(--ls-tight);font-variant-numeric:tabular-nums}
+.nm-rec-top span{font-size:var(--fs-footnote);color:var(--ink2);line-height:var(--lh-sub)}
+.nm-wdl{display:flex;height:10px;border-radius:var(--r-pill);overflow:hidden;gap:2px;margin:var(--sp-3) 0 var(--sp-2)}
+.nm-wdl i{display:block;height:100%}.nm-wdl .w{background:var(--win)}.nm-wdl .d{background:var(--draw)}.nm-wdl .l{background:var(--loss)}
+.nm-wdl-l{display:flex;justify-content:space-between;font-size:var(--fs-caption);line-height:var(--lh-sub);color:var(--ink2);font-variant-numeric:tabular-nums}
+.nm-wdl-l b{color:var(--ink);font-weight:var(--wt-bold)}
+.nm-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--sp-3);margin-top:var(--sp-4);padding-top:var(--sp-4);border-top:1px solid var(--line)}
+.nm-stats div{min-width:0}.nm-stats b{display:block;font:var(--wt-bold) var(--fs-title3)/var(--lh-tight) var(--font-display);font-variant-numeric:tabular-nums;letter-spacing:var(--ls-tight)}
+.nm-stats span{display:block;margin-top:var(--sp-1);font-size:var(--fs-caption);line-height:var(--lh-sub);color:var(--muted)}
+.nm-pc{margin-top:var(--sp-3);border:1px solid var(--line);border-radius:var(--r-md);background:var(--surface);padding:var(--sp-4);animation:nmin var(--dur-3) var(--ease-out) both}
+@keyframes nmin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.nm-pc{animation:none}}
+.nm-pc-h{display:flex;align-items:baseline;justify-content:space-between;gap:var(--sp-3)}
+.nm-pc-h b{font:var(--wt-bold) var(--fs-headline)/var(--lh-snug) var(--font-display);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nm-pc-h span{font-size:var(--fs-caption);color:var(--muted);white-space:nowrap}
+.nm-pc-g{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--sp-2);margin-top:var(--sp-3)}
+.nm-pc-g b{display:block;font:var(--wt-bold) var(--fs-title3)/var(--lh-tight) var(--font-display);font-variant-numeric:tabular-nums}
+.nm-pc-g span{display:block;margin-top:var(--sp-1);font-size:var(--fs-caption);line-height:var(--lh-sub);color:var(--muted)}
+.nm-pc-d{margin:var(--sp-3) 0 0;padding-top:var(--sp-3);border-top:1px solid var(--line);font-size:var(--fs-footnote);line-height:var(--lh-sub);color:var(--ink2)}
+.nm-pc-d b{color:var(--ink);font-weight:var(--wt-bold)}
+.nm-pc-d strong{font-weight:var(--wt-bold);color:var(--win)}.nm-pc-d strong.neg{color:var(--loss)}
+/* rows */
+.nm-rows{border:1px solid var(--line);border-radius:var(--r-md);background:var(--surface);overflow:hidden;box-shadow:var(--sh-1)}
+.nm-row{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:var(--sp-3);align-items:center;padding:var(--sp-3) var(--sp-4);min-height:56px}
+.nm-row+.nm-row{border-top:1px solid var(--line)}
+.nm-row .ic{color:var(--muted)}
+.nm-row .k{display:block;font-size:var(--fs-caption);color:var(--ink2);font-weight:var(--wt-bold);line-height:var(--lh-sub)}
+.nm-row b{display:block;font-size:var(--fs-body);font-weight:var(--wt-bold);line-height:var(--lh-snug);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nm-row small{display:block;font-size:var(--fs-caption);color:var(--muted);line-height:var(--lh-sub)}
+.nm-row .n{font:var(--wt-bold) var(--fs-title3)/var(--lh-tight) var(--font-display);font-variant-numeric:tabular-nums;text-align:right}
+.nm-row .n small{margin-top:2px}
+/* once */
+.nm-once{display:grid;grid-template-columns:auto minmax(0,1fr);gap:var(--sp-4);align-items:center}
+.nm-once b{font:var(--wt-black) var(--fs-numeral)/var(--lh-tight) var(--font-display);letter-spacing:var(--ls-tight);font-variant-numeric:tabular-nums}
+.nm-once p{margin:0;font-size:var(--fs-footnote);line-height:var(--lh-sub);color:var(--ink2)}
+.nm-chips{display:flex;flex-wrap:wrap;gap:var(--sp-2);margin-top:var(--sp-3)}
+.nm-chips .chip{font-family:var(--font-body)}
+.nm-more{display:inline-flex;align-items:center;min-height:44px;margin-top:var(--sp-1);padding:0;border:0;background:none;color:var(--ink2);font:var(--wt-bold) var(--fs-footnote)/1 var(--font-body);cursor:pointer}
+/* bars */
+.nm-bars{display:grid;gap:var(--sp-3)}
+.nm-bar{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:var(--sp-1) var(--sp-3);align-items:baseline}
+.nm-bar>span{font-size:var(--fs-footnote);line-height:var(--lh-sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nm-bar>b{font:var(--wt-bold) var(--fs-footnote)/var(--lh-sub) var(--font-body);font-variant-numeric:tabular-nums}
+.nm-bar>b small{font-weight:var(--wt-regular);color:var(--muted);font-size:var(--fs-caption);margin-left:var(--sp-1)}
+.nm-bar>i{grid-column:1/-1;display:block;height:6px;border-radius:var(--r-pill);background:var(--bg2);overflow:hidden}
+.nm-bar>i u{display:block;height:100%;border-radius:inherit;background:var(--amber);text-decoration:none}
+.nm-bar.dim>i u{background:color-mix(in srgb,var(--amber) 55%,var(--bg2))}
+.nm-fold{margin-top:var(--sp-2)}.nm-fold summary{list-style:none;display:flex;align-items:center;min-height:44px;cursor:pointer;font:var(--wt-bold) var(--fs-footnote)/1 var(--font-body);color:var(--ink2)}
+.nm-fold summary::-webkit-details-marker{display:none}
+.nm-fold .nm-bars{margin-top:var(--sp-2)}
+.nm-low{margin:0;font:var(--wt-bold) var(--fs-headline)/var(--lh-snug) var(--font-display)}
+@media (min-width:640px){
+ .nm-two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:var(--sp-5);align-items:start}
+}
+.nm-pitch-cap{margin:var(--sp-2) auto 0;max-width:460px;font-size:var(--fs-caption);line-height:var(--lh-sub);color:var(--muted)}
+.nm-row .t{min-width:0}
 .pp-bar{height:4px;border-radius:var(--r-xs);background:var(--line);overflow:hidden;margin:calc(var(--sp-1) * -1) 0 var(--sp-3)}.pp-bar i{display:block;height:100%;background:var(--amber)}
 .pp-filt{display:grid;grid-template-columns:repeat(auto-fit,minmax(0,1fr));gap:var(--sp-2);margin-bottom:var(--sp-2)}.pp-filt .chip.chip{display:grid;justify-items:center;gap:var(--sp-0h);min-width:0;padding:var(--sp-2) var(--sp-1);white-space:nowrap;line-height:var(--lh-snug);text-align:center}.pp-filt .chip i{font-size:var(--fs-caption2)}   /* four filters as equal buttons in one row, count under the label */
 .pp-filt .chip{flex:none;cursor:pointer;font-weight:var(--wt-bold)}.pp-filt .chip i{font-style:normal;color:var(--muted)}
@@ -1221,7 +1293,7 @@ h3,.sec0,#s1 .sec0,.pgh,.trleg .h{font-size:var(--fs-footnote);font-weight:var(-
   <div class="acts"><button class="ft-send" id="fbSend" type="submit">Надіслати</button><button class="ft-cancel" id="fbCancel" type="button">Скасувати</button></div></form>
 <div class="ft-done" id="fbDone" hidden><b>✓</b><span>Дякуємо! Прочитаємо найближчим часом</span></div>
 <div class="ft-pills"><button class="ft-pill" id="fbBtn" type="button"><!--i:mail-->Відгук і баги</button><a class="ft-pill" id="ftBot" href="https://t.me/upl30_bot" target="_blank" rel="noopener"><!--i:telegram-->Telegram-бот</a></div>
-<div class="foot ft-small"><a href="#" id="newsBtn">Що нового у версії 0.84.1<b id="newsDot" hidden></b></a><a href="privacy.html">Конфіденційність</a><a href="terms.html">Умови використання</a></div>
+<div class="foot ft-small"><a href="#" id="newsBtn">Що нового у версії 0.85<b id="newsDot" hidden></b></a><a href="privacy.html">Конфіденційність</a><a href="terms.html">Умови використання</a></div>
 <div class="foot ft-copy">© 2026 30-0 УПЛ · неофіційний фан-проєкт <a href="#" id="themeBtn" class="thm" role="switch" aria-checked="false" aria-label="Світла тема"></a></div>
 <p class="ft-legal">30-0 УПЛ — незалежний фан-проєкт: футбольний драфт і симулятор сезону. Він не пов'язаний з Українською Прем'єр-лігою, Українською асоціацією футболу, клубами, футболістами, їхніми об'єднаннями чи іншими організаціями й не схвалений ними. Назви клубів, імена футболістів, рейтинги, статистику й дані сезонів використано лише з інформаційною та довідковою метою. Офіційні логотипи, емблеми та фото футболістів не використовуються. Усі торговельні марки належать їхнім власникам.</p>
 <div class="ft-cred">Шрифт KyivType Sans © Дмитро Растворцев (айдентика Києва)<br>Іконки: Material Design Icons (Apache 2.0), логотип Telegram — Font Awesome Free (CC BY 4.0)</div>
@@ -1394,7 +1466,7 @@ function streakInfo(){const st=lsGet("upl30_streak")||{};const y=dayAdd(DAY,-1),
 function streakUpdate(){const st=lsGet("upl30_streak")||{};const y=dayAdd(DAY,-1),y2=dayAdd(DAY,-2);let count=1,freezeWeek=st.freezeWeek,used=false;
   if(st.last===DAY)count=st.count||1;else if(st.last===y)count=(st.count||0)+1;else if(st.last===y2&&st.freezeWeek!==weekKey(DAY)){count=(st.count||0)+1;freezeWeek=weekKey(DAY);used=true;}
   lsSet("upl30_streak",{last:DAY,count,freezeWeek,best:Math.max(st.best||0,count)});return {count,used};}
-function newSlots(f){S.pickOpts=null;S.locking=false;S.lockTok=(S.lockTok||0)+1;S.showREver=false;S.locked=false;S.pre=null;S.srv=null;S.year=null;return FORMATIONS[f].slots.map(slot=>({slot,pos:GROUP_OF[slot],player:null}));}
+function newSlots(f){S.pickOpts=null;S.offNow=new Set();S.locking=false;S.lockTok=(S.lockTok||0)+1;S.showREver=false;S.locked=false;S.pre=null;S.srv=null;S.year=null;return FORMATIONS[f].slots.map(slot=>({slot,pos:GROUP_OF[slot],player:null}));}
 function openSlots(){return S.slots.filter(s=>!s.player);}
 function bestSlot(p){let best=null;for(const s of openSlots()){const r=effRating(p,s.slot);if(r!=null&&(!best||r>best.r))best={s,r};}return best;}
 function eligible(cs){const anti=S.format==="anti";return cs.pl.filter(p=>!S.taken.has(canon(p[5]))&&(!anti||p[3]>=ANTI_MIN_APPS)&&bestSlot(p));}
@@ -1688,6 +1760,7 @@ function renderWheel(){
   sq.classList.toggle('nor',!show);
   const anti=S.format==='anti';const list=[...cs.pl].map(p=>({p,ok:isOk(cs,p)})).sort((a,b)=>(b.ok-a.ok)||(anti?a.p[0].localeCompare(b.p[0],'uk'):sortR?b.p[2]-a.p[2]:(b.p[3]-a.p[3]||b.p[4]-a.p[4])));
   let sep=false;const nOk=list.filter(x=>x.ok).length,nOff=list.length-nOk;
+  S.offNow=S.offNow||new Set();for(const x of list)if(x.ok)S.offNow.add(x.p[5]);   // wheel offers for this pick (sent with the season, /api/save off)
   document.getElementById('sqTop').hidden=false;document.getElementById('sqCnt').textContent=`Гравці · ${nOk}`;
   for(const {p,ok} of list){if(!ok&&!sep){sep=true;const h=document.createElement('div');h.className='offhd';h.textContent=S.taken.size?`Не підходять під вільні позиції (${nOff}) — переставте когось у складі, щоб відкрити`:`Не підходять під вільні позиції (${nOff})`;sq.appendChild(h);}   // list is expanded immediately
     // matches, goals, assists and clean sheets hidden; sorted by matches; rating only via toggle; multiple positions as buttons on the right of the row
@@ -1725,9 +1798,11 @@ function posBox(p,row){const opts=posOpts(p),box=document.createElement('div');b
 // no blank screen or smooth jump (flicker when picking from the bottom of the list): immediately, same frame, wheel button at the bottom of the screen
 function keepScroll(fn){fn();const z=document.getElementById('spinZone');if(!z||!z.offsetParent)return;const r=z.getBoundingClientRect();
   if(r.bottom>innerHeight-8||r.top<0)window.scrollTo({top:Math.max(0,scrollY+r.bottom-innerHeight+16),behavior:'instant'});}
+// offered ids since the previous pick, picked one first; max 64 (server limit)
+function offTake(id){const a=[id,...[...(S.offNow||[])].filter(x=>x!==id)].slice(0,64);S.offNow=new Set();return a;}
 function place(p,s){
   const r=effRating(p,s.slot),fly0=flySrc(p);
-  s.player={name:p[0],pos:GROUP_OF[s.slot],slot:s.slot,main:p[6],alts:p[7],r,r0:p[2],apps:p[3],goals:p[4],ast:p[8],cs:p[9],nat:p[10],by:p[11],cc:S.wheel.c,id:p[5],club:S.wheel.n,y:S.wheel.y};S.taken.add(canon(p[5]));S.wheel=null;S.move=null;S.pending=null;keepScroll(renderDraft);haptic('light');
+  s.player={name:p[0],pos:GROUP_OF[s.slot],slot:s.slot,main:p[6],alts:p[7],r,r0:p[2],apps:p[3],goals:p[4],ast:p[8],cs:p[9],nat:p[10],by:p[11],cc:S.wheel.c,id:p[5],club:S.wheel.n,y:S.wheel.y,off:offTake(p[5])};S.taken.add(canon(p[5]));S.wheel=null;S.move=null;S.pending=null;keepScroll(renderDraft);haptic('light');
   {const ix=S.slots.indexOf(s),sl=document.querySelectorAll('#pitch .slot')[ix],disc=sl&&sl.querySelector('.disc');if(disc&&!LESS_MOTION()&&!flyTo(fly0,ix))restartAnim(disc,'land0');}   // name chip flies to the slot, else short landing only
   {const n=S.slots.filter(x=>x.player).length,seen=lsGet('upl30_hint_move')||0;if(n===2&&seen<2){const h=document.getElementById('moveHint');h.hidden=false;h.textContent='Порада: кнопка «Переставити гравців» під полем дозволяє поміняти позиції.';lsSet('upl30_hint_move',seen+1);}}
   if(S.slots.every(x=>x.player))setTimeout(S.vd?vdComplete:lockDraft,0);   // squad complete (daily challenge: required condition first): ratings, forecast and Play season immediately; progress bar in preBox while computing
@@ -2175,7 +2250,8 @@ function logSeason(r){
   if(S.league)row.fl_id=S.league.id;   // friend league attempt is credited by the server after verification
   // season is saved and verified by the server (/api/save, device secret); this season's new trophies travel in the same request
   const tro=r.tro&&r.tro.fresh.length?r.tro.fresh:null;
-  saveApi('season',{row,trophies:tro||undefined}).then(j=>{r.rowId=j.id;verifiedUi(r,j);flAfterSave(r,j);if(j.verified===true&&lgFree(row))lgStale();if(tro){if(j.tr!==true)trSync(tro);trSrvStale();}})
+  const off=S.slots.map(s=>s.player&&s.player.off),offOk=off.every((a,i)=>Array.isArray(a)&&a.includes(row.xi[i].id));   // resumed drafts may lack early offers: send none then
+  saveApi('season',{row,trophies:tro||undefined,off:offOk?off:undefined}).then(j=>{r.rowId=j.id;verifiedUi(r,j);flAfterSave(r,j);if(j.verified===true&&lgFree(row))lgStale();if(tro){if(j.tr!==true)trSync(tro);trSrvStale();}})
     .catch(e=>{if(e.status===429){r.slow=e.message;verifiedUi(r,{});}if(tro)trSync(tro);console.warn('save',e);});
 }
 // season that chat leagues count (server rule: api/_league.js leagueFree): classic free play, normal level, all years
@@ -2573,11 +2649,8 @@ function drawCard(r){   // card in site style: UPL navy background, UPL.TV gradi
 }
 document.getElementById('chalOpen').onclick=()=>{const b=document.getElementById('chalBox'),t=document.getElementById('chalOpen');b.hidden=!b.hidden;t.classList.toggle('on',!b.hidden);if(!b.hidden){b.scrollIntoView({behavior:'smooth',block:'center'});const n=document.getElementById('chalName');if(n&&!n.hidden&&!n.value)n.focus();}};
 // ---------- What's new: short player-friendly notes on the latest version (technical log: CHANGELOG.md)
-const WHATSNEW={v:'0.84.1',news:'0.84.1',date:'10.10.2026',items:[   // news: edition of the items; a release without new items keeps it, so the news dot does not light up again
-  ['soccer','Охайніший підсумок сезону','Значки біля бомбардира й гравця сезону стоять рівно, довге ім’я переноситься поруч, а не під значок. У Telegram під час сезону телефон вібрує лише на перемогах.'],
-  ['calendar-star','Виклик дня живіше','Підійшов гравець під умову: цифра прокручується, смужка заповнюється, а блок умови більше не смикається. Умову виконано — галочка й зелений колір.'],
-  ['soccer-field','Плавніший драфт','Лічильник складу відраховує, витрачена перекрутка гасне, а підсвічене місце на полі блимає двічі й завмирає.'],
-  ['trophy','Спокійніші трофеї','Нові трофеї з’являються по черзі, полиск — лише в найрідкіснішого. Тема перемикається м’яким переходом.']]};
+const WHATSNEW={v:'0.85',news:'0.85',date:'10.10.2026',items:[   // news: edition of the items; a release without new items keeps it, so the news dot does not light up again
+  ['account-circle','Твої цифри','На твоїй сторінці — який ти тренер: твій рекорд, твоя 11-ка на полі, бомбардир і улюбленець, гравці «на один сезон», очки за режимами й клуби. Торкнись гравця на полі — побачиш, скільки з ним перемог. Бачиш лише ти, з п’яти сезонів.']]};
 function openNews(){screenTag('news');const box=document.getElementById('viewBox');document.getElementById('viewTitle').textContent=`Що нового · версія ${WHATSNEW.v}`;
   document.getElementById('viewBody').innerHTML=`<div class="news">${WHATSNEW.items.map(([e,h,d])=>`<div class="ni">${ic(e,'lg')}<div><b>${esc(h)}</b><p>${esc(d)}</p></div></div>`).join('')}</div>`;
   box.hidden=false;lsSet('upl30_news_seen',WHATSNEW.news||WHATSNEW.v);document.getElementById('newsDot').hidden=true;}

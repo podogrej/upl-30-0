@@ -10,6 +10,7 @@
 #    per-player counters, no new direct anon writes; a DB with name collisions and a DB with the old v059 are brought to the rules.
 #  - v060_one_player.sql (twice): "is this you?" prompt on second sign-in, answer only from the same sign-in, merge with log and rollback (unmerge_players),
 #    "andré" reserved for the admin (rerun of v059 leaves it alone), news email (rules, private, erased with the account), show_r, season pick on the player page.
+#  - v085_player_numbers.sql (twice): player_numbers own seasons only, offers closed for anon, "rejected" from 10 seasons, erased on delete_player.
 #  - v061_leagues.sql (twice): 11×11 leagues: create/join only when signed in, codes, attempt scoring (verified season, league rules and era, attempt limit), "by place" and "sum" tables, best/last attempt, my leagues.
 #  DB is UTF8 with locale C (lower() leaves Cyrillic alone, the worst case; the name key does its own transliteration).
 # Needs Postgres binaries (/usr/lib/postgresql/*/bin). Run from repo root: bash tools/tests/setup.sh   (KEEP=1: keep the DB running)
@@ -636,6 +637,53 @@ $P -d t1 -q -c "update fl_leagues set deleted_at = now() where id = '$V81'"
 chk "v081: видалену лігу не відкрити за посиланням" authenticated "
   begin j := fl_join('$L3', '$SEC', '$V81'); assert false, 'вступив у видалену'; exception when sqlstate '22023' then assert sqlerrm = 'fl_none', sqlerrm; end;" ',"sub":"'$U3'"'
 $P -d t1 -q -c "update fl_leagues set deleted_at = null where id = '$V81'"
+# ===== v085: "Your numbers" (player_numbers) and wheel offers (season_offers) =====
+for pass in 1 2; do
+  if $P -d t1 -f "$ROOT/sql/v085_player_numbers.sql" >/dev/null 2>"$D/err"; then ok "запуск $pass: v085_player_numbers.sql"; else bad "запуск $pass: v085_player_numbers.sql — $(grep -v NOTICE "$D/err" | head -3)"; fi
+done
+NDEV=aaaaaaaa-0000-4000-a000-000000000085
+chk "v085: season_offers закрита для anon (читання й запис)" anon "
+  begin perform 1 from season_offers; assert false, 'читає'; exception when insufficient_privilege then null; end;
+  begin insert into season_offers(season_id, off) values (1, '[]'); assert false, 'пише'; exception when insufficient_privilege then null; end;"
+$P -d t1 -q >/dev/null 2>"$D/err" <<SQL || bad "v085: тестові сезони — $(head -3 "$D/err")"
+select player_hello('$NDEV', '$SEC');
+insert into seasons(device_id, mode, format, formation, w, d, l, pts, place, gf, ga, xi)
+select '$NDEV', 'normal', case when k = 6 then 'anti' else 'classic' end, '4-4-2', 20, 5, 5, 65, 2, 60, 30,
+       (select jsonb_agg(jsonb_build_object('id', case when i = 0 and k = 1 then 'solo' else 'p' || i end, 'n', 'Гравець ' || i, 'slot', 'CB',
+                                            'c', case when i < 6 then 'Динамо (Київ)' else 'Дніпро' end, 'r0', 70 + i * 2, 'g', i % 3) order by i)
+          from generate_series(0, 10) i)
+  from generate_series(1, 6) k;
+insert into seasons(device_id, mode, format, formation, w, d, l, pts, place, gf, ga, practice, xi)
+values ('$NDEV', 'practice', 'classic', '4-4-2', 30, 0, 0, 90, 1, 90, 0, true, '[{"id":"prac"}]');
+SQL
+chk "v085: player_numbers — лише свої сезони, без тренувань, 11-ка, ключові гравці, «один раз»" anon "
+  j := player_numbers('$NDEV', '$SEC');
+  assert (j->>'n')::int = 6 and (j->>'na')::int = 5 and (j->>'w')::int = 100 and (j->>'best')::int = 65, 'record ' || j::text;
+  assert (j->'fm'->>'f') = '4-4-2' and (j->'fm'->>'k')::int = 6, 'fm';
+  assert (select count(*) from json_array_elements(j->'xi') x where (x->>'i')::int = 0) = 2, 'xi candidates';
+  assert (j->>'uniq')::int = 12 and (j->>'once')::int = 1 and j->'once_n'->>0 = 'Гравець 0', 'once';
+  assert (j->'pl'->'p1'->>'k')::int = 6 and (j->'pl'->'p1'->>'wa')::int = 100 and (j->'pl'->'p1'->>'ka')::int = 5, 'pl';
+  assert j->'top'->>'k' is not null and j->'top'->>'dog' = 'p2' and (j->>'cl_n')::int = 2, 'top ' || (j->'top')::text;
+  assert not exists (select 1 from json_array_elements(j->'xi') x where x->>'id' = 'prac'), 'тренування';
+  assert (j->>'off_n')::int = 0 and j->>'rej' is null, 'rej без даних';"
+chk "v085: player_numbers з чужим секретом — відмова" anon "
+  begin j := player_numbers('$NDEV', 'attacker-attacker-attacker'); assert false, 'віддав'; exception when sqlstate '28000' then null; end;"
+$P -d t1 -q -c "insert into season_offers(season_id, player_id, off) select id, player_id, jsonb_build_array(jsonb_build_array('p0', 'never'), '[\"p1\"]') from seasons where device_id = '$NDEV' and not practice limit 5 on conflict do nothing" >/dev/null 2>"$D/err" || bad "v085: offers — $(head -2 "$D/err")"
+chk "v085: «Відхилені» — порожньо, поки менше 10 сезонів з пропозиціями" anon "
+  j := player_numbers('$NDEV', '$SEC'); assert (j->>'off_n')::int = 5 and j->>'rej' is null, j::text;"
+$P -d t1 -q >/dev/null 2>"$D/err" <<SQL || bad "v085: ще сезони — $(head -3 "$D/err")"
+insert into seasons(device_id, mode, format, formation, w, d, l, pts, place, gf, ga, xi)
+select '$NDEV', 'normal', 'classic', '4-3-3', 10, 10, 10, 40, 8, 30, 30, '[{"id":"p1","n":"Гравець 1"}]' from generate_series(1, 6);
+insert into season_offers(season_id, player_id, off) select id, player_id, jsonb_build_array(jsonb_build_array('p1', 'never')) from seasons s
+ where device_id = '$NDEV' and not practice and not exists (select 1 from season_offers o where o.season_id = s.id);
+SQL
+chk "v085: «Відхилені» — кого пропонували й ніколи не взяв" anon "
+  j := player_numbers('$NDEV', '$SEC');
+  assert (j->>'off_n')::int = 12 and j->'rej'->0->>'id' = 'never' and (j->'rej'->0->>'k')::int = 12 and json_array_length(j->'rej') = 1, (j->'rej')::text;"
+chk "v085: delete_player стирає пропозиції" anon "
+  j := delete_player('$NDEV', '$SEC'); assert (j->>'ok')::boolean, j::text;"
+chk "v085: після видалення пропозицій немає" postgres "
+  perform 1; assert not exists (select 1 from season_offers o join seasons s on s.id = o.season_id where s.device_id = '$NDEV'), 'лишились';"
 # upgrade from the earlier test-DB version: rows with old statuses must not break the re-run
 $P -d t1 -q -c "alter table channel_posts drop constraint channel_posts_status_chk; insert into channel_posts(text, publish_at, status) values ('old-a', now(), 'approved'), ('old-s', now(), 'skipped');" >/dev/null 2>&1
 if $P -d t1 -f "$ROOT/sql/v06997_channel_posts.sql" >/dev/null 2>"$D/err"; then ok "v06997 поверх старої версії (approved/skipped)"; else bad "v06997 поверх старої версії — $(grep -v NOTICE "$D/err" | head -3)"; fi

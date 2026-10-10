@@ -29,6 +29,7 @@ function openPlayer(u){
   u=u&&/^[a-z2-9]{8}$/.test(u)?u:null;
   const own=!u||!!(PLAYER&&PLAYER.public_id===u);
   document.getElementById('viewBox').hidden=true;
+  if(NM){NM.sel=-1;NM.all=false;}
   PP={u:own?(PLAYER&&PLAYER.public_id)||null:u,own,prof:null,f:'all',s:'rare',all:false,hist:null,loading:true,lg:null};   // lg: "My leagues" request, once per open
   go(6);ppUrl(own?null:u);ppRender();ppLoad(PP);
   if(ONLINE&&!TR_PCT)trLoadPct().then(()=>{if(PP&&CUR_SEC===6)ppRenderCab();});
@@ -74,9 +75,10 @@ function ppRender(){
     const rest=[p.win_pct!=null?`${p.win_pct}% перемог у матчах`:'',`сезонів 30-0: ${numOr0(p.perfect)}`,streak||own?`серія драфту дня: ${numOr0(streak)}`:''].filter(Boolean).join(' · ');
     const tile=(n,l,hot)=>wait?`<div class="tile${hot?' hot':''}"><b><i class="sk num"></i></b><span>${l}</span></div>`:ppTile(n,l,hot);
     h+=`<div class="pp-big3 pp-tiles">${tile(seasons,plUk(numOr0(seasons),'сезон','сезони','сезонів'))}${tile(p.champions,'чемпіонств')}${tile(best,'рекорд, очок',true)}</div><p class="pp-rest">${wait?'<i class="sk w80"></i>':rest}</p>`;
-    const fc=p.fav_club&&p.fav_club.pct>=15?p.fav_club:null,fp=p.fav_player&&p.fav_player.k>1?p.fav_player:null;
+    const nmOn=own&&nmFull(p),fc=!nmOn&&p.fav_club&&p.fav_club.pct>=15?p.fav_club:null,fp=!nmOn&&p.fav_player&&p.fav_player.k>1?p.fav_player:null;   // own page with 5+ seasons: "Your numbers" replaces these rows
     if(fc||fp)h+=`<div class="pp-fav">${fc?`<div>${ic('heart')}<div><span class="k">Улюблений клуб</span><b>${esc(fc.c)}</b></div><span class="v">${numOr0(fc.pct)}% вибору</span></div>`:''}${fp?`<div>${ic('account-circle')}<div><span class="k">Найчастіший гравець</span><b>${esc(fp.n)}</b></div><span class="v">×${numOr0(fp.k)}</span></div>`:''}</div>`;
     h+=`<div id="ppCab"></div>`;
+    if(own&&ONLINE&&PLAYER)h+=`<div id="ppNums"></div>`;   // "Your numbers" (src/numbers.js)
     if(own)h+=ppXiHtml(p);
     if(own)h+=`<details class="pp-hist" id="ppHist"><summary>Останні сезони${p.seasons?` (${Math.min(10,p.seasons)} з ${p.seasons})`:''}</summary><div id="ppHistList">${skBox(`<div class="pp-list">${skN(3,()=>'<div class="pp-row h"><span class="d"><i class="sk"></i></span><div class="t"><b><i class="sk w60"></i></b><span><i class="sk w40"></i></span></div><span class="n"><i class="sk num"></i></span><i class="sk w20"></i></div>')}</div>`)}</div></details>`;
     else h+=`<div class="pp-sec"><h3>Історія</h3></div><div class="pp-lock">${icon('eye-off')}Історію сезонів бачить лише ${esc(name)}</div>`;
@@ -85,6 +87,7 @@ function ppRender(){
   if(own&&ONLINE)h+=ppSettingsHtml();
   el.innerHTML=h;
   if(!p.deleted)ppRenderCab();
+  if(own&&!p.deleted){nmRender();if(!st.loading&&st.prof)nmLoad(p.seasons||0);}
   if(own&&ONLINE&&!p.deleted)ppLeagues();
   ppWire();
 }
