@@ -16,6 +16,7 @@ tools: Read, Grep, Glob, Bash
    - браузерные тесты по теме изменения: `node tools/tests/<имя>.js` (какие — по диффу: изменённый экран или режим, тест версии, если он есть, `news` при правке «Що нового», `faq_anim` при правке FAQ и т. п.);
    - `node tools/tests/determinism.js` и `node tools/tests/scenarios.js` — если менялись симуляция, рейтинги, движок (`lib/engine.js`), версия или общий код страницы;
    - `bash tools/tests/setup.sh` — если менялся SQL;
+   - `node tools/tests/line_height.js`, `icon_align.js`, `emoji_layout.js` — **всегда**, если менялись стили или разметка (`src/template.html`, `src/*.js` с HTML): межстрочный интервал и иконки — правило DECISIONS п. 17, его нарушение — проблема, а не стиль;
    - полный `bash tools/tests/all.sh` (≈20 минут) — только если изменение задевает многое (общие стили, `go()`, сборка) или основной агент об этом попросил.
    Браузерные тесты работают на Playwright с Chromium из `/opt/pw-browsers`. Если `tools/node_modules` нет: `cd tools && npm install --no-audit --no-fund` (браузер не скачивать).
    Упавший тест перезапусти отдельно (`node tools/tests/<имя>.js`), чтобы показать вывод. «Нестабильный тест» — не причина: если упал один раз из нескольких, это тоже проблема, опиши, при каких условиях.
