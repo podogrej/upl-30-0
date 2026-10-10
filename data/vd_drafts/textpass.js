@@ -1,4 +1,4 @@
-// text pass: stories with data facts, tasks start with «Додай», short bonus labels, typography
+// text pass: stories with data facts, tasks start with the same verb, short bonus labels, typography
 const ST={
 '2026-08-01':'У першому турі Карпати розгромили Кривбас у гостях — 4:1.',
 '2026-08-03':'Ярославу Ракицькому — 37. За Шахтар центрбек зіграв 226 матчів в УПЛ і десять разів став чемпіоном.',
