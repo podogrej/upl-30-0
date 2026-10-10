@@ -1484,7 +1484,7 @@ function nmCls(n){const l=cardName(n).length;return l>=12?' xl':l>=10?' long':''
 const NICK={'w:1979-03-30:timoschuk':'пітух'};const nickOf=id=>NICK[id]?` <span class="nick">(${NICK[id]})</span>`:'';
 // club colors on the chip: CLUB_COLORS {code:[c1,c2,c3]} injected by build.py from data/club_colors.csv; club without colors gets a neutral chip (CSS default)
 const CLUB_COLORS=/*__CLUB_COLORS__*/{};
-const CLUB_CODE={};for(const c of DATA.clubs)CLUB_CODE[c.n]=c.c;
+const CLUB_CODE={};for(const c of DATA.clubs)if(!(c.n in CLUB_CODE))CLUB_CODE[c.n]=c.c;   // first club with the name wins (a live-season rename must not take an old club's name)
 const ccOf=p=>p.cc||CLUB_CODE[p.club]||CLUB_CODE[p.c]||p.c;   // draft: cc; 5x5: club (name) and c (code); saved season: c (name)
 function relLum(h){const v=parseInt(h.slice(1),16);return [v>>16&255,v>>8&255,v&255].map(x=>{x/=255;return x<=0.03928?x/12.92:Math.pow((x+0.055)/1.055,2.4);}).reduce((a,x,i)=>a+x*[0.2126,0.7152,0.0722][i],0);}
 function contrast(a,b){const x=relLum(a),y=relLum(b);return (Math.max(x,y)+0.05)/(Math.min(x,y)+0.05);}

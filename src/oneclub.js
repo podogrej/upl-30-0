@@ -3,9 +3,9 @@
 const CLUB_REC=/*__CLUB_REC__*/{};
 const OC_FILTERS=[['all','Усі'],['todo','Не почато'],['start','Почато'],['done','Пройдено']];
 let OC_FILTER='all',OC_LIST=null;
-// clubs A-Z with their latest name and number of UPL seasons
+// clubs A-Z with their latest completed-season name and number of UPL seasons
 function ocClubs(){if(OC_LIST)return OC_LIST;const m={};
-  for(const c of DATA.clubs){const e=m[c.c]||(m[c.c]={c:c.c,n:c.n,y:c.y,k:0});e.k++;if(c.y>=e.y){e.y=c.y;e.n=c.n;}}
+  for(const c of DATA.clubs){const e=m[c.c]||(m[c.c]={c:c.c,n:c.n,y:c.y,k:0});e.k++;if(c.y>=e.y){e.y=c.y;if(!isLive(c.y))e.n=c.n;}}
   return OC_LIST=Object.values(m).sort((a,b)=>a.n.localeCompare(b.n,'uk'));}
 // player records per club {code:{b,w,n}}; best results saved before this key existed count as one season
 function ocMine(){const m={...(lsGet('upl30_clubrec')||{})};
