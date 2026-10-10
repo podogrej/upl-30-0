@@ -120,8 +120,8 @@ revoke execute on function public.fl_get(text) from public;
 grant execute on function public.fl_get(text) to anon, authenticated;
 
 -- 3. Telegram identity -----------------------------------------------------------------------------------------------
--- An account created by /api/auth (admin API, email_confirm) has no password, a confirmed email and only the email identity.
--- A self sign-up with the same service address has a password (signUp) or an unconfirmed email (magic link it can't receive).
+-- An account created by /api/auth (admin API, email_confirm) is confirmed without a confirmation mail and has only the email identity.
+-- A self sign-up with the same service address gets a confirmation mail it can't receive (confirmation_sent_at set, email unconfirmed).
 create or replace function public.tg_server_made(p_uid uuid) returns boolean language sql stable security definer set search_path = public as $$
   select exists (select 1 from auth.users u
                   where u.id = p_uid and u.email ~ '^tg-\d{1,20}@users\.upl-30-0\.vercel\.app$'
