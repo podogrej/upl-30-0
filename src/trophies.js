@@ -1,7 +1,8 @@
 // ---------- TROPHIES: visible (condition known), secret (count only), milestones by season count; repeatable ones have an xN counter
 const PERSON={};   // person_id -> {main, nat, by, clubs:Set}; clubs is one Set shared by the whole person (duplicate id and canonical, DATA.alias)
 {const CL={};for(const c of DATA.clubs)for(const p of c.pl){const k=canon(p[5]);const cl=CL[k]||(CL[k]=new Set());const q=PERSON[p[5]]||(PERSON[p[5]]={main:p[6],nat:p[10],by:p[11],clubs:cl});cl.add(c.c);}}
-const CLUBS_NOW=new Set(DATA.clubs.filter(c=>c.y===Math.max(...DATA.clubs.map(x=>x.y))).map(c=>c.c));
+const LAST_DONE=Math.max(...DATA.clubs.filter(c=>!isLive(c.y)).map(c=>c.y));   // last finished season (the trophy text names it)
+const CLUBS_NOW=new Set(DATA.clubs.filter(c=>c.y===LAST_DONE).map(c=>c.c));
 const UA=0;   // DATA.nats[0] = Ukraine
 const TR_KINDS=[["base","Основні"],["friends","З друзями"],["secret","Секретні"]];   // colors and filters use only these three classes (trKind)
 const surname=n=>{const t=String(n).split(' ');return t[t.length-1];};

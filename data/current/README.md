@@ -5,3 +5,6 @@
 ## Заявки клубов: squads_2026.csv
 Источник: Transfermarkt, страницы `kader` (saison_id=2026, `plus/1`), собрано 2026-10-09 скриптом `collect_squads.py <кэш>` -> `squads_2026.csv` (club_slug, player_id, tm_id, name; все числящиеся в заявке, даже без матчей). Покрытие: 16 клубов, 399 игроков, 333 сопоставлено с пулом (`tm:<id>`); slug клубов как в `apps_2026.csv` (fc-kharkiv оставлен как есть).
 Заявки обновляются дважды в сезон: после закрытия летнего и зимнего трансферных окон.
+
+## Живой сезон в пуле: add_live_season.py (0.83)
+`python3 data/current/add_live_season.py --profiles <кэш>` — профили TM новых людей (год рождения, гражданство, нога, позиции) в `new_people_2026.csv`; колонку `name_uk` заполняем вручную по правилам `data/names/INSTRUCTIONS.md` (`conf=check` — сомнительные). Затем `python3 data/current/add_live_season.py` — клуб-сезоны 2026/27 в `src/pool.json` из `live_ratings_2026.csv` (рейтинги по турам ограничены `LIVE_ROUNDS_CAP = 85` до зимнего обновления), силы атаки/обороны — из `data/matches/upl_matches.csv`. Перезапуск безопасен: карточки 2026 пересобираются целиком. Матчи из `lib/vd_current.json` «Виклик дня» больше не добавляет: сезон в пуле, матчи берутся оттуда; заявки — по-прежнему из `vd_current.json`.

@@ -25,8 +25,11 @@ const A=E.DATA.alias||{},canon=id=>A[id]||id,IDX=V.vdIndex(E.DATA,CUR);
   const zero=[];for(const c of E.DATA.clubs)for(const p of c.pl)if(p[3]<1)zero.push([c.c,p[5]]);
   const real=(c,id)=>E.DATA.clubs.filter(x=>x.c===c).reduce((a,x)=>a+x.pl.filter(p=>canon(p[5])===canon(id)).reduce((b,p)=>b+p[3],0),0);   // apps from rows with matches only
   T.check(zero.length===5&&zero.every(([c,id])=>((IDX[canon(id)]||{clubs:{}}).clubs[c]||0)===real(c,id)&&(real(c,id)>0||!((IDX[canon(id)]||{clubs:{}}).clubs[c]>=1))),`у пулі ${zero.length} рядків з 0 матчів, жоден не робить гравцем клубу`);
-  const kar=IDX[canon('tm:59322')],kar0=V.vdIndex(E.DATA)[canon('tm:59322')];
-  T.check(kar0&&!kar0.clubs['shakhtar-donetsk']&&V.vdMatch({type:'club',params:{club:'shakhtar-donetsk'}},kar,'DF')&&!!kar.clubs['dynamo-kyiv'],'поточний сезон: Караваєв (лише 2026/27 за Шахтар) — гравець Шахтаря, і далі гравець Динамо');
+  // live season 2026/27 is in the pool: its apps come from the pool, lib/vd_current.json apps are not added on top
+  const kar=IDX[canon('tm:59322')],kar0=V.vdIndex(E.DATA)[canon('tm:59322')],karLive=((E.DATA.clubs.find(x=>x.y===2026&&x.c==='shakhtar-donetsk')||{pl:[]}).pl.find(p=>canon(p[5])===canon('tm:59322'))||[])[3];
+  T.check(karLive>=1&&kar.clubs['shakhtar-donetsk']===karLive&&kar0.apps===kar.apps&&V.vdMatch({type:'club',params:{club:'shakhtar-donetsk'}},kar,'DF')&&!!kar.clubs['dynamo-kyiv'],'живий сезон: Караваєв (2026/27 за Шахтар) — гравець Шахтаря з пулу, матчі не подвоюються, і далі гравець Динамо');
+  const sh26=E.DATA.clubs.find(x=>x.y===2026&&x.c==='shakhtar-donetsk');
+  T.check(E.DATA.seasons[2026].status==='live'&&!E.YEARS16.includes(2026)&&E.YEARS16.includes(2025)&&sh26.pos===1&&Math.abs(sh26.w-Math.exp(0.04*(sh26.q-85))*0.8)<1e-9,'живий сезон: не суперник (YEARS16), на колесі без бонусу ×1,5 за місце');
   const kov=IDX[canon('tm:120211')],ch0={type:'club',params:{club:'chornomorets-odesa'}};
   T.check(kov&&!(kov.clubs['chornomorets-odesa']>=1)&&V.vdMatch(ch0,kov,'DF')&&!V.vdMatch(ch0,V.vdIndex(E.DATA,{apps:CUR.apps})[canon('tm:120211')],'DF')&&V.vdMatch({type:'clubs_count_min',params:{n:3}},kov,'DF')===(Object.keys(kov.clubs).length>=3),'заявка 2026/27: Коваль (без матчів за Чорноморець) — гравець Чорноморця, матчів і клубів «зіграв за» не додає');
   T.check(!Object.keys(CUR.apps).some(c=>!E.DATA.clubs.some(x=>x.c===c)),'поточний сезон: усі клуби — slug пулу (ФК Харків 2026 = Металіст 1925)');
@@ -215,8 +218,10 @@ async function siteChecks(b){
   T.check(/\bdone\b/.test(dn.c)&&/Новий виклик через \d+ г \d+ хв/.test(dn.t)&&/9\/11/.test(dn.t)&&/Переглянути/.test(dn.t),'головна: виконано — таймер до нового виклику');
   await o.pg.screenshot({path:path.join(OUT,'v080_home_done.png')});
   await o.pg.click('#vdCard');await o.pg.waitForTimeout(500);
+  const MN=['Січень','Лютий','Березень','Квітень','Травень','Червень','Липень','Серпень','Вересень','Жовтень','Листопад','Грудень'];
+  const PAST=LIST.filter(c=>c.day<'2026-10-12'),ARCH_MONTHS=[...new Set(PAST.map(c=>c.day.slice(0,7)))].sort().reverse().map(k=>MN[+k.slice(5,7)-1]+' '+k.slice(0,4));
   const ar=await o.pg.evaluate(()=>({tiles:[...document.querySelectorAll('#vdArch .tc')].map(t=>t.dataset.day+':'+t.querySelector('.tc-r').textContent),secs:[...document.querySelectorAll('#vdArch .vsec')].map(x=>x.textContent)}));
-  T.check(await secOf(o.pg)==='s10'&&ar.tiles.length===4&&/^2026-10-12:9\/11/.test(ar.tiles[0])&&ar.tiles.slice(1).every(t=>/Пропущено/.test(t))&&ar.secs.join()==='Сьогодні,Жовтень 2026','архів: сьогодні вгорі, минулі дні за місяцями («Пропущено»)');
+  T.check(await secOf(o.pg)==='s10'&&ar.tiles.length===1+PAST.length&&/^2026-10-12:9\/11/.test(ar.tiles[0])&&ar.tiles.slice(1).every(t=>/Пропущено/.test(t))&&ar.secs.join()===['Сьогодні',...ARCH_MONTHS].join(),'архів: сьогодні вгорі, минулі дні за місяцями («Пропущено»)');
   await o.pg.screenshot({path:path.join(OUT,'v080_archive_phone_dark.png'),fullPage:true});
   await o.pg.click('#vdArch .tc[data-day="2026-10-10"]');await o.pg.waitForTimeout(500);
   const late=await o.pg.evaluate(()=>({late:window.__dbg.S.vd&&window.__dbg.S.vd.late,ev:window.__dbg.S.slots.filter(s=>s.player).map(s=>s.player.name).join(),b:document.getElementById('vdBrief').textContent}));

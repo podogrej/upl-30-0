@@ -1,7 +1,9 @@
 // Sheets and skeletons: every dialog is a bottom sheet on a phone (spring in, blurred dim backdrop, grabber, swipe down, back/Escape/backdrop close,
 // focus in and back to the trigger), a centered card on iPad, instant under reduced motion; loading states are shimmer skeletons with the final layout.
 // Screenshots: tools/tests/out/v076_*.png.   Run from repo root: node tools/tests/v076.js [screenshot dir]
-const path=require('path'),fs=require('fs');const {ROOT,launch,openPage}=require('./_page.js');const {makeDB,openSite,checker}=require('./_site.js');
+const path=require('path'),fs=require('fs');const {ROOT,launch,openPage:openPage0}=require('./_page.js');
+// the news sheet is the test subject: pad it to 4 items so drag thresholds do not depend on the current release notes
+const openPage=async o=>{const r=await openPage0(o);await r.pg.evaluate(()=>{const v=document.getElementById('viewBody');new MutationObserver(()=>{const n=v.querySelector('.news');if(n)while(n.children.length<4)n.append(n.children[0].cloneNode(true));}).observe(v,{childList:true});});return r;};const {makeDB,openSite,checker}=require('./_site.js');
 const OUT=process.argv[2]||path.join(ROOT,'tools','tests','out');fs.mkdirSync(OUT,{recursive:true});
 const shot=(pg,n,full)=>pg.screenshot({path:path.join(OUT,`v076_${n}.png`),fullPage:!!full});
 const theme=(pg,t)=>pg.evaluate(t=>document.documentElement.setAttribute('data-theme',t),t);
