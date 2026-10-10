@@ -441,6 +441,78 @@ td .sub .sk{height:18px;border-radius:var(--r-pill)}
 .pp-fav .v{font-family:var(--font-mono);font-size:var(--fs-caption);color:var(--muted)}
 .pp-sec{display:flex;align-items:baseline;justify-content:space-between;gap:var(--sp-2);margin:var(--sp-5) 0 var(--sp-3)}
 .pp-sec h3{margin:0}.pp-sec .best{font-size:var(--fs-caption)}
+/* "Your numbers" on the own player page (src/numbers.js); the XI uses the game's .pitch and .slot */
+.nm{margin-top:var(--sp-7)}
+.nm>h2{margin:0 0 var(--sp-3);font-size:var(--fs-title3)}
+.nm-verdict{margin:0;font:var(--wt-bold) var(--fs-title2)/var(--lh-snug) var(--font-display);letter-spacing:var(--ls-tight);text-wrap:balance;max-width:24ch}
+.nm-verdict em{font-style:normal;color:var(--amber2)}
+:root[data-theme="light"] .nm-verdict em{color:var(--amber)}
+.nm-basis{margin:var(--sp-2) 0 0;font-size:var(--fs-footnote);line-height:var(--lh-sub);color:var(--ink2)}
+.nm h3{margin-block:var(--sp-6) var(--sp-3)}
+.nm .pp-sec{margin-block:var(--sp-6) var(--sp-3)}
+.nm .pp-sec h3{margin:0}
+.nm-card{border:1px solid var(--line);border-radius:var(--r-md);background:var(--surface);box-shadow:var(--sh-1);padding:var(--sp-4)}
+.nm-sub{margin:0 0 var(--sp-3);font-size:var(--fs-footnote);font-weight:var(--wt-bold);color:var(--ink2);line-height:var(--lh-sub)}
+.nm-div{border:0;border-top:1px solid var(--line);margin:var(--sp-4) 0}
+.nm-note{margin:var(--sp-3) 0 0;font-size:var(--fs-caption);line-height:var(--lh-sub);color:var(--muted)}
+/* record */
+.nm-rec-top{display:flex;align-items:baseline;gap:var(--sp-3)}
+.nm-rec-top b{font:var(--wt-black) var(--fs-large)/var(--lh-tight) var(--font-display);letter-spacing:var(--ls-tight);font-variant-numeric:tabular-nums}
+.nm-rec-top span{font-size:var(--fs-footnote);color:var(--ink2);line-height:var(--lh-sub)}
+.nm-wdl{display:flex;height:10px;border-radius:var(--r-pill);overflow:hidden;gap:2px;margin:var(--sp-3) 0 var(--sp-2)}
+.nm-wdl i{display:block;height:100%}.nm-wdl .w{background:var(--win)}.nm-wdl .d{background:var(--draw)}.nm-wdl .l{background:var(--loss)}
+.nm-wdl-l{display:flex;justify-content:space-between;font-size:var(--fs-caption);line-height:var(--lh-sub);color:var(--ink2);font-variant-numeric:tabular-nums}
+.nm-wdl-l b{color:var(--ink);font-weight:var(--wt-bold)}
+.nm-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--sp-3);margin-top:var(--sp-4);padding-top:var(--sp-4);border-top:1px solid var(--line)}
+.nm-stats div{min-width:0}.nm-stats b{display:block;font:var(--wt-bold) var(--fs-title3)/var(--lh-tight) var(--font-display);font-variant-numeric:tabular-nums;letter-spacing:var(--ls-tight)}
+.nm-stats span{display:block;margin-top:var(--sp-1);font-size:var(--fs-caption);line-height:var(--lh-sub);color:var(--muted)}
+.nm-pc{margin-top:var(--sp-3);border:1px solid var(--line);border-radius:var(--r-md);background:var(--surface);padding:var(--sp-4);animation:nmin var(--dur-3) var(--ease-out) both}
+@keyframes nmin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.nm-pc{animation:none}}
+.nm-pc-h{display:flex;align-items:baseline;justify-content:space-between;gap:var(--sp-3)}
+.nm-pc-h b{font:var(--wt-bold) var(--fs-headline)/var(--lh-snug) var(--font-display);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nm-pc-h span{font-size:var(--fs-caption);color:var(--muted);white-space:nowrap}
+.nm-pc-g{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--sp-2);margin-top:var(--sp-3)}
+.nm-pc-g b{display:block;font:var(--wt-bold) var(--fs-title3)/var(--lh-tight) var(--font-display);font-variant-numeric:tabular-nums}
+.nm-pc-g span{display:block;margin-top:var(--sp-1);font-size:var(--fs-caption);line-height:var(--lh-sub);color:var(--muted)}
+.nm-pc-d{margin:var(--sp-3) 0 0;padding-top:var(--sp-3);border-top:1px solid var(--line);font-size:var(--fs-footnote);line-height:var(--lh-sub);color:var(--ink2)}
+.nm-pc-d b{color:var(--ink);font-weight:var(--wt-bold)}
+.nm-pc-d strong{font-weight:var(--wt-bold);color:var(--win)}.nm-pc-d strong.neg{color:var(--loss)}
+/* rows */
+.nm-rows{border:1px solid var(--line);border-radius:var(--r-md);background:var(--surface);overflow:hidden;box-shadow:var(--sh-1)}
+.nm-row{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:var(--sp-3);align-items:center;padding:var(--sp-3) var(--sp-4);min-height:56px}
+.nm-row+.nm-row{border-top:1px solid var(--line)}
+.nm-row .ic{color:var(--muted)}
+.nm-row .k{display:block;font-size:var(--fs-caption);color:var(--ink2);font-weight:var(--wt-bold);line-height:var(--lh-sub)}
+.nm-row b{display:block;font-size:var(--fs-body);font-weight:var(--wt-bold);line-height:var(--lh-snug);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nm-row small{display:block;font-size:var(--fs-caption);color:var(--muted);line-height:var(--lh-sub)}
+.nm-row .n{font:var(--wt-bold) var(--fs-title3)/var(--lh-tight) var(--font-display);font-variant-numeric:tabular-nums;text-align:right}
+.nm-row .n small{margin-top:2px}
+/* once */
+.nm-once{display:grid;grid-template-columns:auto minmax(0,1fr);gap:var(--sp-4);align-items:center}
+.nm-once b{font:var(--wt-black) var(--fs-numeral)/var(--lh-tight) var(--font-display);letter-spacing:var(--ls-tight);font-variant-numeric:tabular-nums}
+.nm-once p{margin:0;font-size:var(--fs-footnote);line-height:var(--lh-sub);color:var(--ink2)}
+.nm-chips{display:flex;flex-wrap:wrap;gap:var(--sp-2);margin-top:var(--sp-3)}
+.nm-chips .chip{font-family:var(--font-body)}
+.nm-more{display:inline-flex;align-items:center;min-height:44px;margin-top:var(--sp-1);padding:0;border:0;background:none;color:var(--ink2);font:var(--wt-bold) var(--fs-footnote)/1 var(--font-body);cursor:pointer}
+/* bars */
+.nm-bars{display:grid;gap:var(--sp-3)}
+.nm-bar{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:var(--sp-1) var(--sp-3);align-items:baseline}
+.nm-bar>span{font-size:var(--fs-footnote);line-height:var(--lh-sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nm-bar>b{font:var(--wt-bold) var(--fs-footnote)/var(--lh-sub) var(--font-body);font-variant-numeric:tabular-nums}
+.nm-bar>b small{font-weight:var(--wt-regular);color:var(--muted);font-size:var(--fs-caption);margin-left:var(--sp-1)}
+.nm-bar>i{grid-column:1/-1;display:block;height:6px;border-radius:var(--r-pill);background:var(--bg2);overflow:hidden}
+.nm-bar>i u{display:block;height:100%;border-radius:inherit;background:var(--amber);text-decoration:none}
+.nm-bar.dim>i u{background:color-mix(in srgb,var(--amber) 55%,var(--bg2))}
+.nm-fold{margin-top:var(--sp-2)}.nm-fold summary{list-style:none;display:flex;align-items:center;min-height:44px;cursor:pointer;font:var(--wt-bold) var(--fs-footnote)/1 var(--font-body);color:var(--ink2)}
+.nm-fold summary::-webkit-details-marker{display:none}
+.nm-fold .nm-bars{margin-top:var(--sp-2)}
+.nm-low{margin:0;font:var(--wt-bold) var(--fs-headline)/var(--lh-snug) var(--font-display)}
+@media (min-width:640px){
+ .nm-two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:var(--sp-5);align-items:start}
+}
+.nm-pitch-cap{margin:var(--sp-2) auto 0;max-width:460px;font-size:var(--fs-caption);line-height:var(--lh-sub);color:var(--muted)}
+.nm-row .t{min-width:0}
 .pp-bar{height:4px;border-radius:var(--r-xs);background:var(--line);overflow:hidden;margin:calc(var(--sp-1) * -1) 0 var(--sp-3)}.pp-bar i{display:block;height:100%;background:var(--amber)}
 .pp-filt{display:grid;grid-template-columns:repeat(auto-fit,minmax(0,1fr));gap:var(--sp-2);margin-bottom:var(--sp-2)}.pp-filt .chip.chip{display:grid;justify-items:center;gap:var(--sp-0h);min-width:0;padding:var(--sp-2) var(--sp-1);white-space:nowrap;line-height:var(--lh-snug);text-align:center}.pp-filt .chip i{font-size:var(--fs-caption2)}   /* four filters as equal buttons in one row, count under the label */
 .pp-filt .chip{flex:none;cursor:pointer;font-weight:var(--wt-bold)}.pp-filt .chip i{font-style:normal;color:var(--muted)}
@@ -1237,7 +1309,7 @@ h3,.sec0,#s1 .sec0,.pgh,.trleg .h{font-size:var(--fs-footnote);font-weight:var(-
   <div class="acts"><button class="ft-send" id="fbSend" type="submit">Надіслати</button><button class="ft-cancel" id="fbCancel" type="button">Скасувати</button></div></form>
 <div class="ft-done" id="fbDone" hidden><b>✓</b><span>Дякуємо! Прочитаємо найближчим часом</span></div>
 <div class="ft-pills"><button class="ft-pill" id="fbBtn" type="button"><!--i:mail-->Відгук і баги</button><a class="ft-pill" id="ftBot" href="https://t.me/upl30_bot" target="_blank" rel="noopener"><!--i:telegram-->Telegram-бот</a></div>
-<div class="foot ft-small"><a href="#" id="newsBtn">Що нового у версії 0.84.1<b id="newsDot" hidden></b></a><a href="privacy.html">Конфіденційність</a><a href="terms.html">Умови використання</a></div>
+<div class="foot ft-small"><a href="#" id="newsBtn">Що нового у версії 0.85<b id="newsDot" hidden></b></a><a href="privacy.html">Конфіденційність</a><a href="terms.html">Умови використання</a></div>
 <div class="foot ft-copy">© 2026 30-0 УПЛ · неофіційний фан-проєкт <a href="#" id="themeBtn" class="thm" role="switch" aria-checked="false" aria-label="Світла тема"></a></div>
 <p class="ft-legal">30-0 УПЛ — незалежний фан-проєкт: футбольний драфт і симулятор сезону. Він не пов'язаний з Українською Прем'єр-лігою, Українською асоціацією футболу, клубами, футболістами, їхніми об'єднаннями чи іншими організаціями й не схвалений ними. Назви клубів, імена футболістів, рейтинги, статистику й дані сезонів використано лише з інформаційною та довідковою метою. Офіційні логотипи, емблеми та фото футболістів не використовуються. Усі торговельні марки належать їхнім власникам.</p>
 <div class="ft-cred">Шрифт KyivType Sans © Дмитро Растворцев (айдентика Києва)<br>Іконки: Material Design Icons (Apache 2.0), логотип Telegram — Font Awesome Free (CC BY 4.0)</div>
@@ -1420,7 +1492,7 @@ function streakInfo(){const st=lsGet("upl30_streak")||{};const y=dayAdd(DAY,-1),
 function streakUpdate(){const st=lsGet("upl30_streak")||{};const y=dayAdd(DAY,-1),y2=dayAdd(DAY,-2);let count=1,freezeWeek=st.freezeWeek,used=false;
   if(st.last===DAY)count=st.count||1;else if(st.last===y)count=(st.count||0)+1;else if(st.last===y2&&st.freezeWeek!==weekKey(DAY)){count=(st.count||0)+1;freezeWeek=weekKey(DAY);used=true;}
   lsSet("upl30_streak",{last:DAY,count,freezeWeek,best:Math.max(st.best||0,count)});return {count,used};}
-function newSlots(f){S.pickOpts=null;S.locking=false;S.lockTok=(S.lockTok||0)+1;S.showREver=false;S.locked=false;S.pre=null;S.srv=null;S.year=null;return FORMATIONS[f].slots.map(slot=>({slot,pos:GROUP_OF[slot],player:null}));}
+function newSlots(f){S.pickOpts=null;S.offNow=new Set();S.locking=false;S.lockTok=(S.lockTok||0)+1;S.showREver=false;S.locked=false;S.pre=null;S.srv=null;S.year=null;return FORMATIONS[f].slots.map(slot=>({slot,pos:GROUP_OF[slot],player:null}));}
 function openSlots(){return S.slots.filter(s=>!s.player);}
 function bestSlot(p){let best=null;for(const s of openSlots()){const r=effRating(p,s.slot);if(r!=null&&(!best||r>best.r))best={s,r};}return best;}
 function eligible(cs){const anti=S.format==="anti";return cs.pl.filter(p=>!S.taken.has(canon(p[5]))&&(!anti||p[3]>=ANTI_MIN_APPS)&&bestSlot(p));}
@@ -1787,6 +1859,7 @@ function renderWheel(){
   sq.classList.toggle('nor',!show);
   const anti=S.format==='anti';const list=[...cs.pl].map(p=>({p,ok:isOk(cs,p)})).sort((a,b)=>(b.ok-a.ok)||(anti?a.p[0].localeCompare(b.p[0],'uk'):sortR?b.p[2]-a.p[2]:(b.p[3]-a.p[3]||b.p[4]-a.p[4])));
   let sep=false;const nOk=list.filter(x=>x.ok).length,nOff=list.length-nOk;
+  S.offNow=S.offNow||new Set();for(const x of list)if(x.ok)S.offNow.add(x.p[5]);   // wheel offers for this pick (sent with the season, /api/save off)
   document.getElementById('sqTop').hidden=false;document.getElementById('sqCnt').textContent=`Гравці · ${nOk}`;
   for(const {p,ok} of list){if(!ok&&!sep){sep=true;const h=document.createElement('div');h.className='offhd';h.textContent=S.taken.size?`Не підходять під вільні позиції (${nOff}) — переставте когось у складі, щоб відкрити`:`Не підходять під вільні позиції (${nOff})`;sq.appendChild(h);}   // list is expanded immediately
     // matches, goals, assists and clean sheets hidden; sorted by matches; rating only via toggle; multiple positions as buttons on the right of the row
@@ -1824,9 +1897,11 @@ function posBox(p,row){const opts=posOpts(p),box=document.createElement('div');b
 // no blank screen or smooth jump (flicker when picking from the bottom of the list): immediately, same frame, wheel button at the bottom of the screen
 function keepScroll(fn){fn();const z=document.getElementById('spinZone');if(!z||!z.offsetParent)return;const r=z.getBoundingClientRect();
   if(r.bottom>innerHeight-8||r.top<0)window.scrollTo({top:Math.max(0,scrollY+r.bottom-innerHeight+16),behavior:'instant'});}
+// offered ids since the previous pick, picked one first; max 64 (server limit)
+function offTake(id){const a=[id,...[...(S.offNow||[])].filter(x=>x!==id)].slice(0,64);S.offNow=new Set();return a;}
 function place(p,s){
   const r=effRating(p,s.slot),fly0=flySrc(p);
-  s.player={name:p[0],pos:GROUP_OF[s.slot],slot:s.slot,main:p[6],alts:p[7],r,r0:p[2],apps:p[3],goals:p[4],ast:p[8],cs:p[9],nat:p[10],by:p[11],cc:S.wheel.c,id:p[5],club:S.wheel.n,y:S.wheel.y};S.taken.add(canon(p[5]));S.wheel=null;S.move=null;S.pending=null;keepScroll(renderDraft);haptic('light');
+  s.player={name:p[0],pos:GROUP_OF[s.slot],slot:s.slot,main:p[6],alts:p[7],r,r0:p[2],apps:p[3],goals:p[4],ast:p[8],cs:p[9],nat:p[10],by:p[11],cc:S.wheel.c,id:p[5],club:S.wheel.n,y:S.wheel.y,off:offTake(p[5])};S.taken.add(canon(p[5]));S.wheel=null;S.move=null;S.pending=null;keepScroll(renderDraft);haptic('light');
   {const ix=S.slots.indexOf(s),sl=document.querySelectorAll('#pitch .slot')[ix],disc=sl&&sl.querySelector('.disc');if(disc&&!LESS_MOTION()&&!flyTo(fly0,ix))restartAnim(disc,'land0');}   // name chip flies to the slot, else short landing only
   {const n=S.slots.filter(x=>x.player).length,seen=lsGet('upl30_hint_move')||0;if(n===2&&seen<2){const h=document.getElementById('moveHint');h.hidden=false;h.textContent='Порада: кнопка «Переставити гравців» під полем дозволяє поміняти позиції.';lsSet('upl30_hint_move',seen+1);}}
   if(S.slots.every(x=>x.player))setTimeout(S.vd?vdComplete:lockDraft,0);   // squad complete (daily challenge: required condition first): ratings, forecast and Play season immediately; progress bar in preBox while computing
@@ -2549,7 +2624,8 @@ function logSeason(r){
   if(S.league)row.fl_id=S.league.id;   // friend league attempt is credited by the server after verification
   // season is saved and verified by the server (/api/save, device secret); this season's new trophies travel in the same request
   const tro=r.tro&&r.tro.fresh.length?r.tro.fresh:null;
-  saveApi('season',{row,trophies:tro||undefined}).then(j=>{r.rowId=j.id;verifiedUi(r,j);flAfterSave(r,j);if(j.verified===true&&lgFree(row))lgStale();if(tro){if(j.tr!==true)trSync(tro);trSrvStale();}})
+  const off=S.slots.map(s=>s.player&&s.player.off),offOk=off.every((a,i)=>Array.isArray(a)&&a.includes(row.xi[i].id));   // resumed drafts may lack early offers: send none then
+  saveApi('season',{row,trophies:tro||undefined,off:offOk?off:undefined}).then(j=>{r.rowId=j.id;verifiedUi(r,j);flAfterSave(r,j);if(j.verified===true&&lgFree(row))lgStale();if(tro){if(j.tr!==true)trSync(tro);trSrvStale();}})
     .catch(e=>{if(e.status===429){r.slow=e.message;verifiedUi(r,{});}if(tro)trSync(tro);console.warn('save',e);});
 }
 // season that chat leagues count (server rule: api/_league.js leagueFree): classic free play, normal level, all years
@@ -2880,6 +2956,7 @@ function openPlayer(u){
   u=u&&/^[a-z2-9]{8}$/.test(u)?u:null;
   const own=!u||!!(PLAYER&&PLAYER.public_id===u);
   document.getElementById('viewBox').hidden=true;
+  if(NM){NM.sel=-1;NM.all=false;}
   PP={u:own?(PLAYER&&PLAYER.public_id)||null:u,own,prof:null,f:'all',s:'rare',all:false,hist:null,loading:true,lg:null};   // lg: "My leagues" request, once per open
   go(6);ppUrl(own?null:u);ppRender();ppLoad(PP);
   if(ONLINE&&!TR_PCT)trLoadPct().then(()=>{if(PP&&CUR_SEC===6)ppRenderCab();});
@@ -2925,9 +3002,10 @@ function ppRender(){
     const rest=[p.win_pct!=null?`${p.win_pct}% перемог у матчах`:'',`сезонів 30-0: ${numOr0(p.perfect)}`,streak||own?`серія драфту дня: ${numOr0(streak)}`:''].filter(Boolean).join(' · ');
     const tile=(n,l,hot)=>wait?`<div class="tile${hot?' hot':''}"><b><i class="sk num"></i></b><span>${l}</span></div>`:ppTile(n,l,hot);
     h+=`<div class="pp-big3 pp-tiles">${tile(seasons,plUk(numOr0(seasons),'сезон','сезони','сезонів'))}${tile(p.champions,'чемпіонств')}${tile(best,'рекорд, очок',true)}</div><p class="pp-rest">${wait?'<i class="sk w80"></i>':rest}</p>`;
-    const fc=p.fav_club&&p.fav_club.pct>=15?p.fav_club:null,fp=p.fav_player&&p.fav_player.k>1?p.fav_player:null;
+    const nmOn=own&&nmFull(p),fc=!nmOn&&p.fav_club&&p.fav_club.pct>=15?p.fav_club:null,fp=!nmOn&&p.fav_player&&p.fav_player.k>1?p.fav_player:null;   // own page with 5+ seasons: "Your numbers" replaces these rows
     if(fc||fp)h+=`<div class="pp-fav">${fc?`<div>${ic('heart')}<div><span class="k">Улюблений клуб</span><b>${esc(fc.c)}</b></div><span class="v">${numOr0(fc.pct)}% вибору</span></div>`:''}${fp?`<div>${ic('account-circle')}<div><span class="k">Найчастіший гравець</span><b>${esc(fp.n)}</b></div><span class="v">×${numOr0(fp.k)}</span></div>`:''}</div>`;
     h+=`<div id="ppCab"></div>`;
+    if(own&&ONLINE&&PLAYER)h+=`<div id="ppNums"></div>`;   // "Your numbers" (src/numbers.js)
     if(own)h+=ppXiHtml(p);
     if(own)h+=`<details class="pp-hist" id="ppHist"><summary>Останні сезони${p.seasons?` (${Math.min(10,p.seasons)} з ${p.seasons})`:''}</summary><div id="ppHistList">${skBox(`<div class="pp-list">${skN(3,()=>'<div class="pp-row h"><span class="d"><i class="sk"></i></span><div class="t"><b><i class="sk w60"></i></b><span><i class="sk w40"></i></span></div><span class="n"><i class="sk num"></i></span><i class="sk w20"></i></div>')}</div>`)}</div></details>`;
     else h+=`<div class="pp-sec"><h3>Історія</h3></div><div class="pp-lock">${icon('eye-off')}Історію сезонів бачить лише ${esc(name)}</div>`;
@@ -2936,6 +3014,7 @@ function ppRender(){
   if(own&&ONLINE)h+=ppSettingsHtml();
   el.innerHTML=h;
   if(!p.deleted)ppRenderCab();
+  if(own&&!p.deleted){nmRender();if(!st.loading&&st.prof)nmLoad(p.seasons||0);}
   if(own&&ONLINE&&!p.deleted)ppLeagues();
   ppWire();
 }
@@ -3107,6 +3186,108 @@ async function acctWipe(){try{if(SB&&SESSION)await SB.auth.signOut();}catch(e){}
 function plink(r){const n=pname(r),u=r&&r.players&&r.players.public_id;return u&&/^[a-z2-9]{8}$/.test(u)?`<a class="plink" href="?u=${u}" data-u="${u}">${esc(n)}</a>`:esc(n);}
 // ?u=... link opened: other (or own) player page
 if(ONLINE){const m=/[?&]u=([a-z2-9]{8})(?:&|$)/.exec(location.search);if(m)setTimeout(()=>openPlayer(m[1]),0);}
+// ---------- "Your numbers" (docs/tvoi_tsyfry_plan.md): own player page only. One RPC player_numbers(device, secret),
+// cached in upl30_nums {pid, at, n, d}; refetched when the season count changed or the cache is older than NM_TTL.
+const NM_MIN=5;   // fewer seasons: a neutral line instead of conclusions
+const NM_TTL=10*6e4;
+const NM_CHIPS=8;   // "one season and never again": names shown before "Show all"
+let NM=null;   // {pid, d, at, n, loading, err, sel, all}
+const nmPct=(a,b)=>b?Math.round(100*a/b):0;
+const nmDec=v=>(Math.round(v*10)/10).toLocaleString('uk-UA');
+// full section only with enough seasons and a working RPC; then the old "favourite club / player" rows go
+function nmFull(p){if(NM&&NM.err)return false;const n=NM&&NM.d?NM.d.n:p&&p.seasons;return (n||0)>=NM_MIN;}
+async function nmLoad(seasons){
+  if(!ONLINE||!PLAYER||!PLAYER.id)return;
+  if(!NM||NM.pid!==PLAYER.id){const c=lsGet('upl30_nums');NM={pid:PLAYER.id,sel:-1,all:false,...(c&&c.pid===PLAYER.id?{d:c.d,at:c.at,n:c.n}:{})};}
+  const now=Date.now();if(NM.loading||(NM.d&&NM.n===seasons&&now-NM.at<NM_TTL)||(NM.try&&NM.try.n===seasons&&now-NM.try.at<NM_TTL))return;
+  const st=NM;st.loading=true;st.try={n:seasons,at:now};   // one request per season count and TTL, failures included
+  if(!st.d)nmRender();   // skeleton while the first answer is on its way
+  try{const d=await playerRpc('player_numbers');if(d&&typeof d==='object'){Object.assign(st,{d,at:Date.now(),n:seasons,err:false});lsSet('upl30_nums',{pid:st.pid,at:st.at,n:seasons,d});}}
+  catch(e){st.err=!st.d;}
+  st.loading=false;
+  if(NM===st&&PP&&PP.own&&CUR_SEC===6)ppRender();}
+// player name by pool id ("rejected" stores ids only)
+let NM_NAMES=null;
+function nmName(id){if(!NM_NAMES){NM_NAMES={};for(const c of DATA.clubs)for(const p of c.pl)NM_NAMES[p[5]]=p[0];}return NM_NAMES[id]||NM_NAMES[canon(id)]||'';}
+// verdict: first rule that fires (thresholds from docs/tvoi_tsyfry_plan.md, section 4)
+function nmVerdict(d){
+  const once=nmPct(d.once,d.uniq),tp=d.pl[d.top.k],top=tp?nmPct(tp.k,d.n):0,fm=d.fm?nmPct(d.fm.k,d.n):0,dog=d.rn?d.dog/d.rn:0,avg=+d.avg||0,cl=d.cl[0],clp=cl?nmPct(cl.k,d.xin):0;
+  if(once>=50)return `Ти не збираєш склад, а влаштовуєш перегляд: <em>${once}%</em> гравців ти взяв лише раз.`;
+  if(top>=40)return `Твій незмінний гравець — ${esc(cardName(tp.n))}: він у <em>${top}%</em> твоїх складів.`;
+  if(fm>=80)return `Ти не змінюєш схему: <em>${fm}%</em> сезонів — ${esc(d.fm.f)}.`;
+  if(dog>=0.35)return `Ти віриш у невідомих: кожен <em>${Math.round(1/dog)}-й</em> гравець у твоєму складі має рейтинг до 80.`;
+  if(avg>=86)return `Тобі потрібні лише зірки: середній рейтинг твоїх гравців <em>${nmDec(avg)}</em>.`;
+  if(d.cl_n>=45&&d.n>=20)return `Ти збираєш склад з усієї ліги: <em>${d.cl_n}</em> різних клубів.`;
+  if(clp>=25)return `Твоє серце — ${esc(cl.c)}: <em>${clp}%</em> гравців звідти.`;
+  return `Ти граєш по-різному: ${d.n} ${plUk(d.n,'сезон','сезони','сезонів')} — і жодної явної звички.`;}
+// "Your XI": per slot the most frequent player in the favourite formation, each player once (greedy by count)
+function nmXi(d){const F=FORMATIONS[d.fm&&d.fm.f];if(!F)return null;const out=new Array(F.slots.length).fill(null),used=new Set();
+  for(const c of [...d.xi].sort((a,b)=>b.k-a.k||a.i-b.i))if(c.i<out.length&&!out[c.i]&&!used.has(c.id)&&d.pl[c.id]){out[c.i]=c.id;used.add(c.id);}
+  return {F,ids:out};}
+const nmBar=(l,v,sub,pct,dim)=>`<div class="nm-bar${dim?' dim':''}"><span>${l}</span><b>${v}${sub?`<small>${sub}</small>`:''}</b><i><u style="width:${Math.max(2,Math.round(pct))}%"></u></i></div>`;
+const nmSea=n=>`${fmtN(n)} ${plUk(n,'сезон','сезони','сезонів')}`;
+function nmHtml(){
+  const d=NM&&NM.d,h2='<h2>Твої цифри</h2>';
+  if(!d)return NM&&NM.loading?`<section class="nm" id="nmSec" aria-busy="true">${h2}<p class="nm-verdict"><i class="sk w60"></i></p></section>`:'';
+  if(d.n<NM_MIN)return `<section class="nm" id="nmSec">${h2}<p class="nm-low">Зіграй ще кілька сезонів, і ми розкажемо, який ти тренер.</p><p class="nm-basis">${d.n?`Поки є ${nmSea(d.n)}, а для висновків потрібно п'ять.`:'Для висновків потрібно п\'ять сезонів.'}</p></section>`;
+  const games=d.w+d.d+d.l,pl=id=>d.pl[id]||{};
+  let h=`<section class="nm" id="nmSec">${h2}<p class="nm-verdict">${nmVerdict(d)}</p><p class="nm-basis">За ${nmSea(d.n)} у твоїх складах ${plUk(d.uniq,'був','було','було')} ${fmtN(d.uniq)} ${plUk(d.uniq,'різний гравець','різні гравці','різних гравців')}.</p><div class="nm-two"><div>`;
+  // record
+  if(games)h+=`<div class="pp-sec"><h3>Твій рекорд</h3><span class="best">${nmSea(d.n)}</span></div><div class="nm-card">
+    <div class="nm-rec-top"><b>${nmPct(d.w,games)}%</b><span>матчів ти виграв</span></div>
+    <div class="nm-wdl" role="img" aria-label="Перемог ${fmtN(d.w)}, нічиїх ${fmtN(d.d)}, поразок ${fmtN(d.l)}"><i class="w" style="flex:${d.w}"></i><i class="d" style="flex:${d.d}"></i><i class="l" style="flex:${d.l}"></i></div>
+    <div class="nm-wdl-l"><span><b>${fmtN(d.w)}</b> В</span><span><b>${fmtN(d.d)}</b> Н</span><span><b>${fmtN(d.l)}</b> П</span></div>
+    <div class="nm-stats"><div><b>${nmDec(d.pts/d.na)}</b><span>очок за сезон</span></div><div><b>${Math.round(d.gf/d.na)}</b><span>голів за сезон</span></div><div><b>${d.best!=null?d.best:'—'}</b><span>найкращий сезон</span></div></div>
+    ${d.na<d.n?'<p class="nm-note">Без антисезону: там мета — програти.</p>':''}</div>`;
+  // XI on the game's pitch
+  const X=nmXi(d);
+  if(X){const G=pitchGeo(d.fm.f);
+    h+=`<div class="pp-sec"><h3>Твоя 11-ка</h3><span class="best">${esc(d.fm.f)} · ${nmPct(d.fm.k,d.n)}% сезонів</span></div><div class="pitch" id="nmPitch">${PITCH_MK}${X.F.slots.map((sl,i)=>{const id=X.ids[i],q=id&&pl(id),pt=G.pts[i];
+      if(!q)return `<div class="slot empty ${GROUP_OF[sl]}" style="left:${pt.x}%;top:${pt.y}%">${slotInner(sl,null,{})}</div>`;
+      return `<div class="slot filled ${GROUP_OF[sl]}${NM.sel===i?' moving':''}" style="left:${pt.x}%;top:${pt.y}%" data-nm="${i}" role="button" tabindex="0" aria-pressed="${NM.sel===i}" aria-label="${esc(q.n)}: ${nmSea(q.k)} у складі">${slotInner(sl,{name:q.n,id,club:q.c},{pill:`<span class="pill avg">${q.k}</span>`})}</div>`;}).join('')}</div>
+      <p class="nm-pitch-cap">Число біля кружка — у скількох сезонах гравець був у твоєму складі. Торкнись гравця, щоб побачити більше.</p><div id="nmCard">${nmCardHtml(d,X)}</div>`;}
+  h+='</div><div>';
+  // key players
+  const row=(icn,k,id,sub,n,nsub)=>{const q=pl(id);return q.n?`<div class="nm-row">${ic(icn)}<div class="t"><span class="k">${k}</span><b>${esc(q.n)}</b><small>${sub(q)}</small></div><div class="n">${n(q)}${nsub?`<small>${nsub(q)}</small>`:''}</div></div>`:'';};
+  const winW=q=>q.ka?`${nmPct(q.wa,30*q.ka)}% перемог з ним`:'';
+  const rows=row('soccer','Бомбардир',d.top.g,q=>`${fmtN(q.g)} ${plUk(q.g,'гол','голи','голів')} за ${nmSea(q.k)}`,q=>fmtN(q.g))+
+    row('heart','Найчастіший',d.top.k,q=>`у ${nmPct(q.k,d.n)}% твоїх складів`,q=>fmtN(q.k),q=>plUk(q.k,'сезон','сезони','сезонів'))+
+    row('lightning-bolt','Твій андердог',d.top.dog,q=>[`рейтинг ${esc(String(q.r0))}`,`${fmtN(q.g)} ${plUk(q.g,'гол','голи','голів')}`,winW(q)].filter(Boolean).join(' · '),q=>fmtN(q.k),q=>plUk(q.k,'сезон','сезони','сезонів'));
+  if(rows)h+=`<div class="pp-sec"><h3>Ключові гравці</h3></div><div class="nm-rows">${rows}</div>`;
+  // rejected (needs logged wheel offers; the server sends it only with enough of them)
+  const rej=(d.rej||[]).map(r=>({...r,n:nmName(r.id)})).filter(r=>r.n);
+  if(rej.length)h+=`<div class="pp-sec"><h3>Відхилені</h3><span class="best">з ${nmSea(d.off_n)}</span></div><div class="nm-rows">${rej.map(r=>`<div class="nm-row">${ic('ferris-wheel')}<div class="t"><b>${esc(r.n)}</b></div><div class="n">${fmtN(r.k)}<small>${plUk(r.k,'раз','рази','разів')}</small></div></div>`).join('')}</div><p class="nm-note">Колесо пропонувало їх найчастіше, а ти не взяв жодного разу.</p>`;
+  // one season and never again
+  if(d.once){const names=d.once_n||[],shown=NM.all?names:names.slice(0,NM_CHIPS),more=d.once-shown.length;
+    h+=`<div class="pp-sec"><h3>Один сезон і більше ніколи</h3></div><div class="nm-card"><div class="nm-once"><b>${nmPct(d.once,d.uniq)}%</b><p>гравців, які були у твоєму складі, ти брав лише один раз: ${fmtN(d.once)} із ${fmtN(d.uniq)}.</p></div>
+      <div class="nm-chips">${shown.map(n=>`<span class="chip" title="${esc(n)}">${esc(cardName(n))}</span>`).join('')}</div>
+      ${!NM.all&&names.length>shown.length?`<button class="nm-more" type="button" id="nmAll">Показати всіх ${fmtN(d.once)}</button>`:NM.all&&more>0?`<p class="nm-note">і ще ${fmtN(more)}</p>`:''}</div>`;}
+  // points by mode and clubs
+  const md=(d.modes||[]).filter(m=>m.k>0),mx=Math.max(1,...md.map(m=>Math.abs(m.pts))),c0=d.cl[0]?d.cl[0].k:1;
+  const lab=b=>(PP_BUCKETS.find(x=>x[0]===b)||[0,b])[1];
+  const club=(c,i)=>nmBar(esc(c.c),nmPct(c.k,d.xin)+'%','',100*c.k/c0,i>0);
+  const restK=d.xin-d.cl.reduce((a,c)=>a+c.k,0);
+  if(md.length||d.cl.length)h+=`<div class="pp-sec"><h3>Очки й клуби</h3></div><div class="nm-card">
+    ${md.length?`<p class="nm-sub">Очки за режимами</p><div class="nm-bars">${md.map((m,i)=>nmBar(esc(lab(m.b)),fmtN(m.pts),nmSea(m.k),100*Math.abs(m.pts)/mx,i>0)).join('')}</div>`:''}
+    ${md.length&&d.cl.length?'<hr class="nm-div">':''}
+    ${d.cl.length?`<p class="nm-sub">Звідки твої гравці</p><div class="nm-bars">${d.cl.slice(0,5).map(club).join('')}</div>
+    ${d.cl_n>5?`<details class="nm-fold"><summary>Ще ${d.cl_n-5} ${plUk(d.cl_n-5,'клуб','клуби','клубів')}</summary><div class="nm-bars">${d.cl.slice(5).map(c=>club(c,1)).join('')}${restK>0?nmBar('Інші клуби',nmPct(restK,d.xin)+'%','',100*restK/c0,1):''}</div></details>`:''}`:''}</div>`;
+  return h+'</div></div></section>';}
+// card of the tapped XI player, under the pitch (one at a time)
+function nmCardHtml(d,X){const id=NM.sel>=0&&X.ids[NM.sel];if(!id)return '';const q=d.pl[id],games=30*q.ka,rest=30*(d.na-q.ka);
+  const w=games?nmPct(q.wa,games):null,wo=rest>0?nmPct(d.w-q.wa,rest):null,df=w!=null&&wo!=null?w-wo:null;
+  return `<div class="nm-pc" role="status"><div class="nm-pc-h"><b>${esc(q.n)}</b><span>${[q.slot&&POSNAME[q.slot]||'',q.r0!=null?`рейтинг ${esc(String(q.r0))}`:''].filter(Boolean).join(' · ')}</span></div>
+    <div class="nm-pc-g"><div><b>${fmtN(q.k)}</b><span>${plUk(q.k,'сезон','сезони','сезонів')} у складі</span></div><div><b>${fmtN(q.g)}</b><span>${plUk(q.g,'гол','голи','голів')} за тебе</span></div><div><b>${nmPct(q.k,d.n)}%</b><span>твоїх сезонів</span></div></div>
+    ${w!=null?`<p class="nm-pc-d">Перемог з ним <b>${w}%</b>${wo!=null?`, без нього <b>${wo}%</b> <strong class="${df<0?'neg':''}">${df>0?'+':df<0?'−':''}${Math.abs(df)} п.п.</strong>`:''}</p>`:''}</div>`;}
+function nmRender(){const el=document.getElementById('ppNums');if(!el)return;el.innerHTML=nmHtml();nmWire();}
+function nmWire(){
+  document.querySelectorAll('#nmPitch [data-nm]').forEach(s=>{const tap=()=>{NM.sel=NM.sel===+s.dataset.nm?-1:+s.dataset.nm;nmSel();};
+    s.onclick=tap;s.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();tap();}else if(e.key==='Escape'&&NM.sel>=0){NM.sel=-1;nmSel();}};});
+  const a=document.getElementById('nmAll');if(a)a.onclick=()=>{NM.all=true;nmRender();};}
+// selection changes only the slot state and the card, the pitch is not redrawn
+function nmSel(){const X=NM.d&&nmXi(NM.d);if(!X)return;
+  document.querySelectorAll('#nmPitch [data-nm]').forEach(s=>{const on=+s.dataset.nm===NM.sel;s.classList.toggle('moving',on);s.setAttribute('aria-pressed',String(on));});
+  const c=document.getElementById('nmCard');if(c)c.innerHTML=nmCardHtml(NM.d,X);haptic('select');}
 
 // ---------- Leagues with friends: 11x11 and 5x5. Spec: docs/leagues_online.md, mockups docs/mockups/lg_1_list ... lg_6_match5.
 // A league sets shared rules (duration, attempts, counted attempts, points per round, rerolls, ratings, era); each day is a round; each player has own wheel.
@@ -4092,11 +4273,8 @@ function drawCard(r){   // card in site style: UPL navy background, UPL.TV gradi
 }
 document.getElementById('chalOpen').onclick=()=>{const b=document.getElementById('chalBox'),t=document.getElementById('chalOpen');b.hidden=!b.hidden;t.classList.toggle('on',!b.hidden);if(!b.hidden){b.scrollIntoView({behavior:'smooth',block:'center'});const n=document.getElementById('chalName');if(n&&!n.hidden&&!n.value)n.focus();}};
 // ---------- What's new: short player-friendly notes on the latest version (technical log: CHANGELOG.md)
-const WHATSNEW={v:'0.84.1',news:'0.84.1',date:'10.10.2026',items:[   // news: edition of the items; a release without new items keeps it, so the news dot does not light up again
-  ['soccer','Охайніший підсумок сезону','Значки біля бомбардира й гравця сезону стоять рівно, довге ім’я переноситься поруч, а не під значок. У Telegram під час сезону телефон вібрує лише на перемогах.'],
-  ['calendar-star','Виклик дня живіше','Підійшов гравець під умову: цифра прокручується, смужка заповнюється, а блок умови більше не смикається. Умову виконано — галочка й зелений колір.'],
-  ['soccer-field','Плавніший драфт','Лічильник складу відраховує, витрачена перекрутка гасне, а підсвічене місце на полі блимає двічі й завмирає.'],
-  ['trophy','Спокійніші трофеї','Нові трофеї з’являються по черзі, полиск — лише в найрідкіснішого. Тема перемикається м’яким переходом.']]};
+const WHATSNEW={v:'0.85',news:'0.85',date:'10.10.2026',items:[   // news: edition of the items; a release without new items keeps it, so the news dot does not light up again
+  ['account-circle','Твої цифри','На твоїй сторінці — який ти тренер: твій рекорд, твоя 11-ка на полі, бомбардир і улюбленець, гравці «на один сезон», очки за режимами й клуби. Торкнись гравця на полі — побачиш, скільки з ним перемог. Бачиш лише ти, з п’яти сезонів.']]};
 function openNews(){screenTag('news');const box=document.getElementById('viewBox');document.getElementById('viewTitle').textContent=`Що нового · версія ${WHATSNEW.v}`;
   document.getElementById('viewBody').innerHTML=`<div class="news">${WHATSNEW.items.map(([e,h,d])=>`<div class="ni">${ic(e,'lg')}<div><b>${esc(h)}</b><p>${esc(d)}</p></div></div>`).join('')}</div>`;
   box.hidden=false;lsSet('upl30_news_seen',WHATSNEW.news||WHATSNEW.v);document.getElementById('newsDot').hidden=true;}

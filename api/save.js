@@ -3,6 +3,8 @@
 // Row owner comes from the device binding in the DB (player_id trigger); Telegram only from a verified Mini App signature (tg_init).
 //   kind 'season'      {row, trophies?} -> season + immediate verification (as /api/verify) -> {id, verified, note, tr?}; trophies: new unlocks of this season
 //                                         (same as kind 'trophies', saves a request; tr = true when written)
+//                                         off?: wheel offers, 11 arrays of player ids aligned with row.xi (each contains its picked player);
+//                                         stored in season_offers (no anon access), invalid ones are dropped without failing the season
 //   kind 'trophies'    {ids:[...]}     -> first trophy unlocks -> {ok}
 //   kind 'challenge'   {row}           -> friend challenge -> {id}
 //   kind 'chal_result' {row}           -> accepted challenge result -> {ok}
@@ -25,6 +27,19 @@ const xiItem = x => ({ n: str(x.n, 60), id: str(x.id, 60), slot: str(x.slot, 4),
 const tblItem = t => ({ n: str(t.n, 60), w: int(t.w, 0, 30), d: int(t.d, 0, 30), l: int(t.l, 0, 30), gf: int(t.gf, 0, 999), ga: int(t.ga, 0, 999), pts: int(t.pts, 0, 90), me: !!t.me });
 const dayRe = /^\d{4}-\d{2}-\d{2}$/;
 const trophyIds = a => [...new Set((Array.isArray(a) ? a : []).map(String))].filter(t => /^[A-Za-z0-9_]{1,24}$/.test(t)).slice(0, 100);
+
+// wheel offers: exactly one list per xi slot, ids in pool format, each list contains the player picked for that slot
+const OFF_ID = /^[A-Za-z0-9:._-]{1,40}$/, OFF_MAX = 64;
+function offersOf(off, xi) {
+  if (!Array.isArray(off) || !Array.isArray(xi) || off.length !== xi.length || off.length !== 11) return null;
+  const out = [];
+  for (let i = 0; i < off.length; i++) {
+    const a = off[i], id = xi[i] && xi[i].id;
+    if (!Array.isArray(a) || !a.length || a.length > OFF_MAX || !a.every(v => typeof v === 'string' && OFF_ID.test(v)) || !a.includes(id)) return null;
+    out.push([...new Set(a)]);
+  }
+  return out;
+}
 
 function seasonRow(r) {
   const sc = score(r); if (!sc) return null;
@@ -52,7 +67,7 @@ async function insert(table, row, qs = '', prefer = 'return=representation') {
 
 const putTrophies = (ids, device_id, tg) => insert('trophies', ids.map(trophy => ({ device_id, trophy, ...tg })), '?on_conflict=device_id,trophy', 'resolution=ignore-duplicates,return=minimal');
 
-module.exports = async (req, res) => {
+const handler = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
   let stage = 'body';
   try {
@@ -72,8 +87,10 @@ module.exports = async (req, res) => {
       if (!ins || !ins.id) return res.status(500).json({ error: 'no id' });
       stage = 'verify';
       const ids = trophyIds(b.trophies);
-      const [v, tr] = await Promise.all([verifyById(ins.id, ins), ids.length ? putTrophies(ids, device_id, tg).then(() => true, () => false) : undefined]);
-      return res.status(200).json({ id: ins.id, verified: v.verified, note: v.note, fl: v.fl, tr });
+      const off = b.off != null ? offersOf(b.off, row.xi) : null;
+      const putOff = off ? insert('season_offers', { season_id: ins.id, player_id: ins.player_id || null, off }, '', 'return=minimal').then(() => true, () => false) : undefined;
+      const [v, tr, of] = await Promise.all([verifyById(ins.id, ins), ids.length ? putTrophies(ids, device_id, tg).then(() => true, () => false) : undefined, putOff]);
+      return res.status(200).json({ id: ins.id, verified: v.verified, note: v.note, fl: v.fl, tr, off: of });
     }
     if (b.kind === 'trophies') {   // 5x5, retro awards, older tabs
       const ids = trophyIds(b.ids);
@@ -100,3 +117,5 @@ module.exports = async (req, res) => {
     res.status(500).json({ error: `crash at ${stage}: ${String(e && e.message || e).slice(0, 160)}` });
   }
 };
+module.exports = handler;
+module.exports.offersOf = offersOf;

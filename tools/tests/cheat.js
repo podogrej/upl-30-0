@@ -6,7 +6,7 @@
 const path = require('path'), crypto = require('crypto');
 const ROOT = path.join(__dirname, '..', '..');
 process.env.SUPABASE_SERVICE_KEY = 'svc'; process.env.TG_TOKEN = '123:TEST'; process.env.CRON_SECRET = 'cron-secret-0123456789';
-const DB = { season_seeds: [], seasons: [], daily_results: [], challenges: [], challenge_results: [], trophies: [], league_results: [], leagues: [], league_members: [], league_boards: [] }; let sid = 0;
+const DB = { season_seeds: [], seasons: [], daily_results: [], challenges: [], challenge_results: [], trophies: [], league_results: [], leagues: [], league_members: [], league_boards: [], season_offers: [] }; let sid = 0; let OFF_TABLE = true;
 // Supabase storage (backups), Telegram (getChatMember), rate_hit counter
 const STORE = {}, MEMBERS = {}, RATE = {}, MIGRATED = {}; let RATE_ON = false;
 const jres = j => ({ ok: true, status: 200, json: async () => j, text: async () => JSON.stringify(j) });
@@ -44,6 +44,7 @@ global.fetch = async (url, o = {}) => {
   if (m === 'POST' && t === 'season_seeds') { const b = JSON.parse(o.body); if (b.daily && b.official && DB.season_seeds.some(x => x.official && x.daily && x.device_id === b.device_id && x.day === b.day)) return err(409, { code: '23505', message: 'duplicate key value violates unique constraint "season_seeds_official_uq"' }); }
   if (m === 'POST' && t !== 'season_seeds' && t !== 'daily_results' && !u.searchParams.get('on_conflict')) {   // rows written by /api/save
     const list = [].concat(JSON.parse(o.body));
+    if (t === 'season_offers' && !OFF_TABLE) return err(404, { code: 'PGRST205', message: "Could not find the table 'public.season_offers' in the schema cache" });   // 0.85 SQL not applied yet
     if (t === 'seasons' && !ERA_COL && list.some(b => 'era' in b)) return err(400, { code: 'PGRST204', message: "Could not find the 'era' column of 'seasons' in the schema cache" });   // simulate DB without the era column
     for (const b of list) { if (t === 'seasons') b.id = 1000 + DB.seasons.length; if (t === 'challenges' && DB.challenges.some(x => x.id === b.id)) return err(409, { code: '23505' }); DB[t].push(b); }
     return { ok: true, status: 201, text: async () => JSON.stringify(list) };
@@ -259,6 +260,24 @@ function honestXi(formation) {
   const noCol = await call(saveH, { kind: 'season', device_id: me, secret: mySecret, row: { ...season, era: 'y2010' } });
   ok('save: без колонки era сезон однаково записано', noCol.c === 200 && DB.seasons.length === nE + 1 && !('era' in DB.seasons[nE]), `${noCol.c} ${noCol.j.error || ''}`);
   ERA_COL = true;
+  // wheel offers (0.85): 11 lists aligned with xi, each with its picked player; anything else is dropped, the season is saved anyway
+  const offOk = xi.map((x, i) => [x.id, 'w:1990-01-01:other' + i]);
+  const offSave = async off => { const n = DB.season_offers.length, r = await call(saveH, { kind: 'season', device_id: me, secret: mySecret, row: season, off }); return { r, added: DB.season_offers.slice(n) }; };
+  { const { r, added } = await offSave(offOk);
+    ok('save: пропозиції колеса записано окремо (season_offers), з id сезону', r.c === 200 && r.j.off === true && added.length === 1 && added[0].season_id === r.j.id && JSON.stringify(added[0].off) === JSON.stringify(offOk)); }
+  { const { r, added } = await offSave(offOk.map(a => [...a, a[0]]));
+    ok('save: дублікати в пропозиціях прибрано', r.j.off === true && added.length === 1 && added[0].off.every(a => a.length === 2)); }
+  for (const [name, off] of [['сміття (рядок)', 'garbage'], ['сміття (числа)', offOk.map(() => [1, 2])], ['не 11 списків', offOk.slice(0, 10)], ['порожній список', offOk.map((a, i) => i === 3 ? [] : a)],
+    ['завеликий список (65)', offOk.map((a, i) => i === 0 ? [a[0], ...Array.from({ length: 64 }, (_, k) => 'w:1990-01-01:x' + k)] : a)], ['завеликий id', offOk.map((a, i) => i === 0 ? [a[0], 'x'.repeat(41)] : a)],
+    ['чужі символи в id', offOk.map((a, i) => i === 0 ? [a[0], '<script>'] : a)], ['без обраного гравця', offOk.map((a, i) => i === 5 ? ['w:1990-01-01:nobody'] : a)], ['обраний не в своєму слоті', [offOk[1], offOk[0], ...offOk.slice(2)]]]) {
+    const { r, added } = await offSave(off);
+    ok(`save: пропозиції «${name}» відкинуто, сезон записано`, r.c === 200 && !!r.j.id && r.j.off !== true && added.length === 0, `${r.c} off=${r.j.off}`);
+  }
+  { const n = DB.season_offers.length, r = await call(saveH, { kind: 'season', device_id: me, secret: mySecret, row: season });
+    ok('save: без поля off нічого не пишеться в season_offers', r.c === 200 && r.j.off === undefined && DB.season_offers.length === n); }
+  OFF_TABLE = false;
+  { const { r } = await offSave(offOk); ok('save: без таблиці season_offers (SQL 0.85 ще не виконано) сезон однаково записано', r.c === 200 && !!r.j.id && r.j.off === false, `${r.c} ${r.j.error || ''}`); }
+  OFF_TABLE = true;
   const tr = await call(saveH, { kind: 'trophies', device_id: me, secret: mySecret, ids: ['nice', 'nice', 'bad id!', 'x'.repeat(40)] });
   ok('save: трофеї — лише коректні id, без дублів', tr.c === 200 && DB.trophies.filter(x => x.device_id === me).map(x => x.trophy).join() === 'nice');
   ok('save: трофей у чужий пристрій — 401', (await call(saveH, { kind: 'trophies', device_id: victim, secret: 'attacker-secret-0123456789', ids: ['hack'] })).c === 401 && !DB.trophies.some(x => x.device_id === victim));
