@@ -123,6 +123,8 @@ const order=pg=>pg.$$eval('#ppCab .tro.on[data-tr]',es=>es.map(e=>e.dataset.tr))
  await pg.screenshot({path:path.join(MOCK,'player_page_059_other.png'),fullPage:true});
  await pg.click('#homeBtn');await pg.waitForTimeout(200);T.check(!/u=/.test(await pg.evaluate(()=>location.search)),'«Головна» прибирає ?u= з адреси');
  T.check(!A.errs.length,'без входу: помилок на сторінці немає '+A.errs.join(' | '));
+ const base=A.log.filter(x=>/^GET \/rest\/v1\/(seasons|challenges|challenge_results|players|daily_results|trophies|leagues|league_results)$/.test(x));
+ T.check(!base.length&&A.log.includes('GET /rest/v1/seasons_pub'),'0.87: таблиця й історія читають seasons_pub, не таблиці з особистими даними '+[...new Set(base)].join(', '));
  // ===== 2. direct ?u=... link and unknown player
  const B=await openSite({b,db,api,query:'?u=vitya234',wait:1500});
  T.check(await B.pg.$eval('#s6',e=>!e.hidden)&&(await B.pg.textContent('#ppName'))==='vitia','посилання ?u=vitya234 відкриває сторінку гравця');

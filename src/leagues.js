@@ -187,14 +187,14 @@ function fl5DraftHtml(){const d=FL.data,t=FL.d5,cs=t.cs,n=t.slots.filter(s=>s.pl
   return `<div class="fl-head"><h1>Твоя п'ятірка ${flBadge('5')}</h1><p class="muted">Ліга «${esc(d.name)}» · воротар і четверо польових, кожен — у своїй лінії</p></div>
     ${n===0?`<div class="sec0">Схема</div><div class="f5forms fl5f">${Object.keys(F5_FORMS).map(k=>`<button class="f5f${t.form===k?' on':''}" data-f5form="${k}"><b>${k}</b><small>${F5_FORMS[k].tag}</small></button>`).join('')}</div>`:`<p class="fl5st"><b>${esc(t.form)}</b> ${esc(F5_FORMS[t.form].tag)} · <b>${n}</b> з 5</p>`}
     <div class="fl5d">${f5Pitch(t)}
-    ${full?`<div class="fl5send"><button class="primary big0" id="fl5Send">Відправити склад</button><p class="muted" id="flMsg" style="font-size:var(--fs-footnote);text-align:center">Після відправки змінити не можна. Склади суперників відкриті.</p></div>`
+    ${full?`<div class="fl5send"><button class="primary big0" id="fl5Send">Відправити склад</button><p class="muted" id="flMsg" style="font-size:var(--fs-footnote);text-align:center">Після відправки змінити не можна. Склади суперників побачиш після турніру.</p></div>`
       :`<div class="wheel" style="margin-top:var(--sp-3)"><div class="reels"><div class="reel"><div class="strip"><div class="club">${cs?`<i class="cdot" style="${clubPal(cs.c)}"></i>${esc(cs.n)}`:'Гравців немає'}</div></div></div><div class="reel"><div class="strip"><div class="season">${cs?seasonLabel(cs.y):''}</div></div></div></div>
       <p class="why0">Потрібні: ${[...need].map(s=>F5_L[s]).join(', ')}${cs?` · ${placeNote(cs)||'місце клубу в тому сезоні: '+cs.pos}`:''}</p>
       ${t.rerolls>0?`<div class="rr"><span class="lbl"><span>Перекрутити колесо</span><span class="rrn">залишилось <b>${t.rerolls}</b></span></span><span class="seg"><button id="fl5Rr">Інший клуб і сезон</button></span></div>`:''}
       <div class="squad">${list.map(p=>`<div class="plrow"><button class="pl" data-p5="${esc(p[5])}"><span class="pos ${f5G(p)}">${F5_L[f5G(p)]}</span><span class="nm">${esc(p[0])}</span><span class="rt"></span></button></div>`).join('')}</div></div>`}</div>
     <button class="ghost" id="fl5Back" style="margin-top:var(--sp-4)">До ліги</button>`;}
 // 5x5 league page: entry -> tournament -> summary
-// squad shown by line from the keeper, surnames only
+// squad shown by line from the keeper, surnames only; before the tournament fl_get sends rivals without form/xi
 const fl5Xi=xi=>`<div class="fl5xi">${['GK','DF','MF','FW'].map(g=>{const ps=xi.filter(x=>x.slot===g);return ps.length?`<div><i class="pos ${g}">${F5_L[g]}</i>${ps.map(x=>esc(String(x.name||'').split(' ').pop())).join(' · ')}</div>`:'';}).join('')}</div>`;
 // time left until entry deadline; last 15 minutes highlighted
 function fl5Left(d){const ms=new Date(d.deadline)-new Date(d.now||Date.now());if(!(ms>0))return '';const m=Math.ceil(ms/60000),h=Math.floor(m/60),mm=m%60;
@@ -224,7 +224,7 @@ function fl5LeagueHtml(){const d=FL.data,me=PLAYER&&PLAYER.public_id,member=flMe
     out+=`<div class="sec0">${res.table?'Плей-оф':'Матчі'}</div><div class="fl5ms">${po.map(([m,k])=>mrow(m,k)).join('')}</div>`;
     if(res.table)out+=`<details class="tip" style="margin-top:var(--sp-2)"><summary>Матчі групи</summary><div class="fl5ms">${res.matches.map((m,k)=>[m,k]).filter(([m])=>m.stage==='group').map(([m,k])=>mrow(m,k)).join('')}</div></details>`;}
   const waiting=d.board.filter(b=>!d.fives.some(f=>f.u===b.u));
-  out+=`<div class="sec0">Склади <span>${d.fives.length}</span></div><div class="fl5teams">${d.fives.map(f=>`<div class="fl5t${f.u===me?' me':''}"><b>${esc(f.name)}</b> <span class="muted mono">${esc(f.form)}</span>${fl5Xi(f.xi||[])}</div>`).join('')}
+  out+=`<div class="sec0">Склади <span>${d.fives.length}</span></div><div class="fl5teams">${d.fives.map(f=>`<div class="fl5t${f.u===me?' me':''}"><b>${esc(f.name)}</b> ${Array.isArray(f.xi)?`<span class="muted mono">${esc(f.form)}</span>${fl5Xi(f.xi)}`:'<span class="muted">склад готовий</span>'}</div>`).join('')}
     ${!res?waiting.map(b=>`<div class="fl5t off"><b>${esc(b.name)}</b> <span class="muted">збирає склад…</span></div>`).join(''):''}</div>`;
   const link=flLink(d.id),open=!res&&!fl5Due(d),shareBtn=cls=>`<button class="${cls}" id="flShare">${icon('share-variant')}<span>Поділитися</span></button>`;
   // fewer than 3 members: invite right under the status card as the main action; otherwise a compact share button in the header

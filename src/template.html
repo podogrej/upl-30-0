@@ -1293,7 +1293,7 @@ h3,.sec0,#s1 .sec0,.pgh,.trleg .h{font-size:var(--fs-footnote);font-weight:var(-
   <div class="acts"><button class="ft-send" id="fbSend" type="submit">Надіслати</button><button class="ft-cancel" id="fbCancel" type="button">Скасувати</button></div></form>
 <div class="ft-done" id="fbDone" hidden><b>✓</b><span>Дякуємо! Прочитаємо найближчим часом</span></div>
 <div class="ft-pills"><button class="ft-pill" id="fbBtn" type="button"><!--i:mail-->Відгук і баги</button><a class="ft-pill" id="ftBot" href="https://t.me/upl30_bot" target="_blank" rel="noopener"><!--i:telegram-->Telegram-бот</a></div>
-<div class="foot ft-small"><a href="#" id="newsBtn">Що нового у версії 0.86<b id="newsDot" hidden></b></a><a href="privacy.html">Конфіденційність</a><a href="terms.html">Умови використання</a></div>
+<div class="foot ft-small"><a href="#" id="newsBtn">Що нового у версії 0.87<b id="newsDot" hidden></b></a><a href="privacy.html">Конфіденційність</a><a href="terms.html">Умови використання</a></div>
 <div class="foot ft-copy">© 2026 30-0 УПЛ · неофіційний фан-проєкт <a href="#" id="themeBtn" class="thm" role="switch" aria-checked="false" aria-label="Світла тема"></a></div>
 <p class="ft-legal">30-0 УПЛ — незалежний фан-проєкт: футбольний драфт і симулятор сезону. Він не пов'язаний з Українською Прем'єр-лігою, Українською асоціацією футболу, клубами, футболістами, їхніми об'єднаннями чи іншими організаціями й не схвалений ними. Назви клубів, імена футболістів, рейтинги, статистику й дані сезонів використано лише з інформаційною та довідковою метою. Офіційні логотипи, емблеми та фото футболістів не використовуються. Усі торговельні марки належать їхнім власникам.</p>
 <div class="ft-cred">Шрифт KyivType Sans © Дмитро Растворцев (айдентика Києва)<br>Іконки: Material Design Icons (Apache 2.0), логотип Telegram — Font Awesome Free (CC BY 4.0)</div>
@@ -2404,19 +2404,18 @@ const BOARDS={
 const CLUBN={};for(const c of DATA.clubs)CLUBN[c.c]=c.n;
 // name from the player profile (players); nickname copy only for old rows without a player; lower case only (DECISIONS item 2)
 const pname=r=>String((r&&r.players&&(r.players.name||r.players.anon_name))||(r&&r.nickname)||'анонім').toLowerCase();
-const PL_SEL=['players(name,anon_name,public_id)','players(name,anon_name)'];   // public_id requires newer SQL; fallback without it
-async function sbGetFallback(qs){let err;for(const q of qs){try{return await sbGet(q);}catch(e){err=e;}}throw err;}
 // overall leaderboard: only seasons since the reset (docs/plan_069_reset.md); older ones stay in the DB and on player pages.
 // null = all time (one-line revert). Daily table, leagues and player page unchanged
 const BOARD_FROM=null,BOARD_FROM_TXT='';   // disabled; to enable: ISO date + display text, e.g. '2026-10-01T21:00:00Z' and a localized date
-function boardQ(b,v39,pl,v60,v61){const B=BOARDS[b];
-  const sel='id,device_id,nickname,w,d,l,pts,place,gf,ga,formation,mode,club,created_at'+(v60?',show_r':'')+(v39?',player_id,'+(pl||PL_SEL[1]):'');
-  const ord=v39?(B.asc?'pts.asc,place.desc,gd.asc,gf.asc,created_at.asc':'pts.desc,place.asc,gd.desc,gf.desc,created_at.asc'):(B.asc?'pts.asc,place.desc':'pts.desc,place.asc,ga.asc,gf.desc');
-  return `seasons?select=${sel}&${B.q}&practice=is.false&verified=is.true${BOARD_FROM?'&created_at=gte.'+BOARD_FROM:''}${v39?'&competition=eq.upl':''}${v61?'&fl_id=is.null':''}&order=${ord}&limit=50`;}
+// seasons_pub: public view without personal columns (sql/v087_data_protection.sql); players = {name, anon_name, public_id}
+function boardQ(b){const B=BOARDS[b];
+  const sel='id,nickname,w,d,l,pts,place,gf,ga,formation,mode,club,created_at,show_r,player_id,players';
+  const ord=B.asc?'pts.asc,place.desc,gd.asc,gf.asc,created_at.asc':'pts.desc,place.asc,gd.desc,gf.desc,created_at.asc';
+  return `seasons_pub?select=${sel}&${B.q}&practice=is.false&verified=is.true${BOARD_FROM?'&created_at=gte.'+BOARD_FROM:''}&competition=eq.upl&in_fl=is.false&order=${ord}&limit=50`;}
 function boardHtml(rows,b){
   if(!rows.length)return `<p class="muted">Поки що порожньо${BOARD_FROM?`: з ${BOARD_FROM_TXT} таблиця почалась заново`:''}. Зіграй сезон — він з\'явиться тут після перевірки сервером.</p>`;
-  const me=deviceId(),pid=PLAYER&&PLAYER.id;
-  return `<div class="tbl clickable"><table><tr><th>#</th><th>Гравець</th><th class="num">В-Н-П</th><th class="num">Г</th><th class="num">О</th></tr>`+rows.map((r,i)=>`<tr data-q="id=eq.${numOr0(r.id)}"${(pid&&r.player_id===pid)||r.device_id===me?' class="me"':''}><td class="num">${i+1}</td><td class="nm"><span class="nmt">${plink(r)}${r.w===30?' <span class="lv lv-p">30-0</span>':''}</span><div class="sub"><span>${esc(r.formation)}</span>${lvChip(r.mode)}${r.show_r?'<span class="lv lv-r" title="У драфті були відкриті рейтинги гравців">рейтинги відкриті</span>':''}${b==='oneclub'&&r.club?`<span>${esc(CLUBN[r.club]||r.club)}</span>`:''}</div></td><td class="num">${numOr0(r.w)}-${numOr0(r.d)}-${numOr0(r.l)}</td><td class="num">${numOr0(r.gf)}:${numOr0(r.ga)}</td><td class="num"><b>${numOr0(r.pts)}</b></td></tr>`).join('')+`</table></div><p class="muted" style="font-size:var(--fs-caption);margin-top:var(--sp-2)">${BOARD_FROM?`Сезони з ${BOARD_FROM_TXT}; старі — на сторінках гравців. `:''}Лише сезони, перевірені сервером. Рівні очки: місце в сезоні → різниця м'ячів → забиті → хто раніше. Тап по рядку — склад, по імені — сторінка гравця.</p>`;}
+  const pid=PLAYER&&PLAYER.id;
+  return `<div class="tbl clickable"><table><tr><th>#</th><th>Гравець</th><th class="num">В-Н-П</th><th class="num">Г</th><th class="num">О</th></tr>`+rows.map((r,i)=>`<tr data-q="id=eq.${numOr0(r.id)}"${pid&&r.player_id===pid?' class="me"':''}><td class="num">${i+1}</td><td class="nm"><span class="nmt">${plink(r)}${r.w===30?' <span class="lv lv-p">30-0</span>':''}</span><div class="sub"><span>${esc(r.formation)}</span>${lvChip(r.mode)}${r.show_r?'<span class="lv lv-r" title="У драфті були відкриті рейтинги гравців">рейтинги відкриті</span>':''}${b==='oneclub'&&r.club?`<span>${esc(CLUBN[r.club]||r.club)}</span>`:''}</div></td><td class="num">${numOr0(r.w)}-${numOr0(r.d)}-${numOr0(r.l)}</td><td class="num">${numOr0(r.gf)}:${numOr0(r.ga)}</td><td class="num"><b>${numOr0(r.pts)}</b></td></tr>`).join('')+`</table></div><p class="muted" style="font-size:var(--fs-caption);margin-top:var(--sp-2)">${BOARD_FROM?`Сезони з ${BOARD_FROM_TXT}; старі — на сторінках гравців. `:''}Лише сезони, перевірені сервером. Рівні очки: місце в сезоні → різниця м'ячів → забиті → хто раніше. Тап по рядку — склад, по імені — сторінка гравця.</p>`;}
 // skeletons: same layout as the loaded content, no text while loading
 const skBox=h=>`<div class="sk-box" role="status" aria-busy="true" aria-label="Завантаження">${h}</div>`;
 const skN=(n,f)=>Array.from({length:n},(_,i)=>f(i)).join('');
@@ -2436,7 +2435,7 @@ const BOARD_CACHE={};
 let BOARD_PRE=null;   // {b, p, at}: request started on touch, used once by the open that follows
 const PRE_MS=5e3;
 function boardFetch(b){const c=BOARD_CACHE[b];if(c&&c.p)return c.p;
-  const p=sbGetFallback([boardQ(b,true,PL_SEL[0],true,true),boardQ(b,true,PL_SEL[0],true),boardQ(b,true,PL_SEL[0]),boardQ(b,true,PL_SEL[1]),boardQ(b,false)])
+  const p=sbGet(boardQ(b))
     .then(rows=>{BOARD_CACHE[b]={rows,at:Date.now()};return rows;}).catch(e=>{if(BOARD_CACHE[b])delete BOARD_CACHE[b].p;throw e;});
   BOARD_CACHE[b]={...(c||{}),p};return p;}
 function boardStale(){for(const k in BOARD_CACHE)delete BOARD_CACHE[k];}   // own new season: next open fetches fresh data
@@ -2474,7 +2473,7 @@ function viewHtml(s){
     ${tb.length?`<h3>Турнірна таблиця</h3><div class="tbl"><table><tr><th>#</th><th>Команда</th><th class="num">В</th><th class="num">Н</th><th class="num">П</th><th class="num">Г</th><th class="num">О</th></tr>${tb.map((t,i)=>`<tr${t.me?' class="me"':''}><td class="num">${i+1}</td><td>${esc(t.n)}</td><td class="num">${t.w}</td><td class="num">${t.d}</td><td class="num">${t.l}</td><td class="num">${t.gf}:${t.ga}</td><td class="num"><b>${t.pts}</b></td></tr>`).join('')}</table></div>`:''}`;
 }
 async function openView(q){screenTag('view');const box=document.getElementById('viewBox'),body=document.getElementById('viewBody');box.hidden=false;document.getElementById('viewTitle').textContent='Склад';body.innerHTML=skView();
-  try{const rows=await sbGetFallback([...PL_SEL.map(pl=>`seasons?select=*,${pl}&${q}&limit=1`),`seasons?select=*&${q}&limit=1`]);body.innerHTML=rows.length?viewHtml(rows[0]):'<p class="muted">Склад для цього результату не збережено.</p>';}catch(e){body.innerHTML='<p class="muted">Не вдалося завантажити.</p>';}}
+  try{const rows=await sbGet(`seasons_pub?select=*&${q}&limit=1`);body.innerHTML=rows.length?viewHtml(rows[0]):'<p class="muted">Склад для цього результату не збережено.</p>';}catch(e){body.innerHTML='<p class="muted">Не вдалося завантажити.</p>';}}
 // result link: ?s=<id> from /r/<id> (messenger preview) opens this squad immediately
 if(ONLINE){const sid=(new URLSearchParams(location.search).get('s')||'').replace(/\D/g,'');if(sid)setTimeout(()=>openView('id=eq.'+sid),0);}
 // Trophies: trophy cabinet on own player page (filters, rarity); without the site (file://) the old dialog
@@ -2649,9 +2648,8 @@ function drawCard(r){   // card in site style: UPL navy background, UPL.TV gradi
 }
 document.getElementById('chalOpen').onclick=()=>{const b=document.getElementById('chalBox'),t=document.getElementById('chalOpen');b.hidden=!b.hidden;t.classList.toggle('on',!b.hidden);if(!b.hidden){b.scrollIntoView({behavior:'smooth',block:'center'});const n=document.getElementById('chalName');if(n&&!n.hidden&&!n.value)n.focus();}};
 // ---------- What's new: short player-friendly notes on the latest version (technical log: CHANGELOG.md)
-const WHATSNEW={v:'0.86',news:'0.86',date:'10.10.2026',items:[   // news: edition of the items; a release without new items keeps it, so the news dot does not light up again
-  ['trophy','18 нових трофеїв','10 перемог поспіль, сезон без поразок на виїзді, троє гравців по 15+ голів, друге коло на 12 очок краще за перше, 7:1 і не тільки. Майже всі — лише для складу з гравців різних клубів. Шукай у «Трофеях».'],
-  ['star','Старі трофеї по-новому','«Розбили, як Бог черепаху» тепер звуться «Хокейний рахунок». «Укрпошта» — рідше: тепер за вінгера чи атакувального півзахисника з менш ніж 3 асистами. А секретні трофеї антисезону стали досяжнішими.']]};
+const WHATSNEW={v:'0.87',news:'0.87',date:'10.10.2026',items:[   // news: edition of the items; a release without new items keeps it, so the news dot does not light up again
+  ['eye-off','Ліга 5×5: склади суперників — після турніру','Поки триває збір, видно лише, хто вже надіслав склад. Самі п’ятірки суперників відкриваються, коли турнір зіграно, тож підглянути й підлаштуватися не вийде.']]};
 function openNews(){screenTag('news');const box=document.getElementById('viewBox');document.getElementById('viewTitle').textContent=`Що нового · версія ${WHATSNEW.v}`;
   document.getElementById('viewBody').innerHTML=`<div class="news">${WHATSNEW.items.map(([e,h,d])=>`<div class="ni">${ic(e,'lg')}<div><b>${esc(h)}</b><p>${esc(d)}</p></div></div>`).join('')}</div>`;
   box.hidden=false;lsSet('upl30_news_seen',WHATSNEW.news||WHATSNEW.v);document.getElementById('newsDot').hidden=true;}

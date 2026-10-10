@@ -19,17 +19,24 @@ function makeDB(cfg={},rpc={}){
   const SKIP=new Set(['select','order','limit','offset','apikey','on_conflict']);
   const where=u=>[...u.searchParams].filter(([k])=>!SKIP.has(k));
   const out=(status,j)=>({status,body:j==null?'':JSON.stringify(j)});
+  // public views (sql/v087_data_protection.sql): base table rows without personal columns, player name as json "players"
+  const PII=['device_id','tg_user_id','tg_name','user_id','seed_id','fl_id','verify_note'];
+  const view=(base,hide)=>({base,hide,row:r=>{const o={...r};hide.forEach(k=>delete o[k]);if(base==='seasons')o.in_fl=r.fl_id!=null;
+    const p=DB.players&&DB.players.find(x=>x.id===r.player_id);o.players=p?{name:p.name,anon_name:p.anon_name,public_id:p.public_id}:null;return o;}});
+  const VIEWS={seasons_pub:view('seasons',[...PII,'seed']),challenges_pub:view('challenges',PII),challenge_results_pub:view('challenge_results',PII)};
+  const DEF_RPC={my_seasons:a=>(DB.seasons||[]).filter(r=>r.device_id===a.p_device).sort((x,y)=>x.id-y.id).map(VIEWS.seasons_pub.row)};
   function handle(method,url,body,headers={}){
     const u=new URL(url);const parts=u.pathname.split('/');const t=parts.pop();const prefer=String(headers.prefer||headers.Prefer||'');
-    if(parts.pop()==='rpc'){const f=rpc[t];if(!f)return out(404,{message:'no rpc '+t});const r=f(body?JSON.parse(body):{},headers);return r&&r.status?r:out(200,r==null?{}:r);}
-    if(!DB[t])return method==='GET'?out(200,[]):out(201,null);
-    const C=cfg[t]||{},f=where(u),match=r=>f.every(([k,v])=>test(r,k,v));
-    const bad=k=>C.cols&&!C.cols.includes(k)&&k!=='id'&&k!=='created_at';
+    if(parts.pop()==='rpc'){const f=rpc[t]||DEF_RPC[t];if(!f)return out(404,{message:'no rpc '+t});const r=f(body?JSON.parse(body):{},headers);return r&&r.status?r:out(200,r==null?{}:r);}
+    const V=VIEWS[t];if(V&&method!=='GET')return out(405,{message:'view is read-only'});
+    if(!DB[V?V.base:t])return method==='GET'?out(200,[]):out(201,null);
+    const C=V?{}:cfg[t]||{},f=where(u),match=r=>f.every(([k,v])=>test(r,k,v));
+    const bad=k=>V?V.hide.includes(k):C.cols&&!C.cols.includes(k)&&k!=='id'&&k!=='created_at';
     const sel=u.searchParams.get('select')||'';const ord=(u.searchParams.get('order')||'').split(',').filter(Boolean).map(x=>x.split('.')[0]);
     if(method==='GET'){const miss=[...f.map(([k])=>k),...ord,...sel.split(',').filter(x=>x&&x!=='*'&&!x.includes('('))].find(bad);
       if(miss)return out(400,{code:'42703',message:`column ${t}.${miss} does not exist`});
-      if(/players\(/.test(sel)&&!DB.players)return out(400,{code:'PGRST200',message:`Could not find a relationship between '${t}' and 'players' in the schema cache`});
-      let rows=DB[t].filter(match);
+      if(/players\(/.test(sel)&&(V||!DB.players))return out(400,{code:'PGRST200',message:`Could not find a relationship between '${t}' and 'players' in the schema cache`});
+      let rows=(V?DB[V.base].map(V.row):DB[t]).filter(match);
       if(/players\(/.test(sel))rows=rows.map(r=>{const p=DB.players.find(x=>x.id===r.player_id);return {...r,players:p?{name:p.name,anon_name:p.anon_name,public_id:p.public_id}:null};});const o=u.searchParams.get('order');
       if(o)for(const p of o.split(',').reverse()){const [c,d]=p.split('.');rows=[...rows].sort((a,b)=>(a[c]>b[c]?1:a[c]<b[c]?-1:0)*(d==='desc'?-1:1));}
       const off=u.searchParams.get('offset');if(off)rows=rows.slice(+off);const lim=u.searchParams.get('limit');if(lim)rows=rows.slice(0,+lim);return out(200,rows);}

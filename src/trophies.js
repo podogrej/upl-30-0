@@ -230,7 +230,7 @@ async function trLoadPct(){if(!ONLINE)return null;const c=lsGet('upl30_tr_pct');
 // one-off retroactive awarding from this device's log
 async function trRetro(){
   if(!ONLINE)return;deviceId();if(lsGet("upl30_tr_retro"))return;   // a device created just now has no seasons: deviceId() sets the flag
-  try{const rows=await sbGet(`seasons?device_id=eq.${deviceId()}&select=*&order=id.asc&limit=1000`);
+  try{const rows=await playerRpc('my_seasons');
     const s=trStore();const fresh=[];const today=kyivDate();
     for(const row of rows){if(row.practice||row.mode==='practice')continue;s.seasons++;if(row.day)s.dailies++;
       for(const id of trEval(trCtxRow(row))){const t=trDef(id);const e=s.t[id]||(s.t[id]={n:0,at:(row.created_at||today).slice(0,10)});if(!e.n)fresh.push(id);e.n++;}}

@@ -36,9 +36,8 @@ async function chalCopy(){
 function chalParam(){const m=/[?&]c=([A-Za-z0-9]{6,12})/.exec(location.search);if(m)return m[1];const sp=TG&&TG.initDataUnsafe&&TG.initDataUnsafe.start_param||'';const t=/^c([A-Za-z0-9]{6,12})$/.exec(sp);return t?t[1]:null;}
 async function chalLoad(force){
   if(!ONLINE)return;const id=chalParam();if(!id||(!force&&CHAL&&CHAL.id===id))return;
-  try{const rows=await sbGetFallback([...PL_SEL.map(pl=>`challenges?id=eq.${id}&select=*,${pl}`),`challenges?id=eq.${id}&select=*`]);if(!rows.length)return;CHAL=rows[0];
-    const rq=sel=>`challenge_results?challenge_id=eq.${id}&select=${sel}&order=pts.desc&limit=20`,base='name,pts,w,d,l,place,created_at';
-    CHAL.results=await sbGetFallback([...PL_SEL.map(pl=>rq(base+','+pl)),rq(base)]).catch(()=>[]);
+  try{const rows=await sbGet(`challenges_pub?id=eq.${id}&select=*`);if(!rows.length)return;CHAL=rows[0];
+    CHAL.results=await sbGet(`challenge_results_pub?challenge_id=eq.${id}&select=name,pts,w,d,l,place,created_at,players&order=pts.desc&limit=20`).catch(()=>[]);
     renderChal();}catch(e){}
 }
 function renderChal(){

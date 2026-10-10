@@ -172,8 +172,10 @@ async function ppShareCab(got,n,total){try{await document.fonts.ready;}catch(e){
 const PP_MODE_DOT={classic:'var(--amber)',pick:'var(--mf)',daily:'var(--df)',derby:'var(--fw)',oneclub:'var(--mf)',anti:'var(--muted)',legends:'var(--gk)'};
 async function ppHistLoad(more){
   const st=PP,el=document.getElementById('ppHistList');if(!el||!st)return;const off=more&&st.hist?st.hist.rows.length:0;
-  const sel='id,created_at,day,mode,format,club,w,d,l,pts,place';const by=PLAYER&&PLAYER.id?`player_id=eq.${PLAYER.id}`:`device_id=eq.${deviceId()}`;
-  let rows=[];try{rows=await sbGetFallback([`seasons?select=${sel}&${by}&practice=is.false&order=created_at.desc&limit=10&offset=${off}`,`seasons?select=${sel}&device_id=eq.${deviceId()}&practice=is.false&order=created_at.desc&limit=10&offset=${off}`]);}catch(e){if(!off){el.innerHTML='<p class="muted">Історія зараз недоступна.</p>';return;}}
+  const sel='id,created_at,day,mode,format,club,w,d,l,pts,place';
+  // without a player id (hello failed): this device's seasons via my_seasons (device secret)
+  let rows=[];try{rows=PLAYER&&PLAYER.id?await sbGet(`seasons_pub?select=${sel}&player_id=eq.${PLAYER.id}&practice=is.false&order=created_at.desc&limit=10&offset=${off}`)
+    :(await playerRpc('my_seasons')).filter(r=>!r.practice).reverse().slice(off,off+10);}catch(e){if(!off){el.innerHTML='<p class="muted">Історія зараз недоступна.</p>';return;}}
   if(PP!==st)return;st.hist={rows:[...(off&&st.hist?st.hist.rows:[]),...rows],more:rows.length===10};
   const lab=r=>r.day?'Драфт дня':r.mode==='pick'?'Вибір сезону':(PP_BUCKETS.find(b=>b[0]===r.format)||[0,r.format])[1];
   el.innerHTML=st.hist.rows.length?`<div class="pp-list">${st.hist.rows.map(r=>`<div class="pp-row h" data-sid="${numOr0(r.id)}" role="button" tabindex="0"><span class="d">${fmtShort(r.day||r.created_at)}</span><div class="t"><b><i class="mdot" style="background:${PP_MODE_DOT[r.day?'daily':r.mode==='pick'?'pick':r.format]||'var(--muted)'}"></i>${esc(lab(r))}</b><span>${numOr0(r.place)} місце · ${numOr0(r.w)}-${numOr0(r.d)}-${numOr0(r.l)}</span></div><span class="n">${numOr0(r.pts)}<small>оч</small></span>${icon('chevron-right')}</div>`).join('')}</div>${st.hist.more?'<button class="ghost wbtn" id="ppMore" style="margin-top:var(--sp-2)">Ще 10 сезонів</button>':''}`:'<p class="muted">Ще немає зіграних сезонів.</p>';
