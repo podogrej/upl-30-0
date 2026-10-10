@@ -4299,7 +4299,7 @@ function drawCard(r){   // card in site style: UPL navy background, UPL.TV gradi
 document.getElementById('chalOpen').onclick=()=>{const b=document.getElementById('chalBox'),t=document.getElementById('chalOpen');b.hidden=!b.hidden;t.classList.toggle('on',!b.hidden);if(!b.hidden){b.scrollIntoView({behavior:'smooth',block:'center'});const n=document.getElementById('chalName');if(n&&!n.hidden&&!n.value)n.focus();}};
 // ---------- What's new: short player-friendly notes on the latest version (technical log: CHANGELOG.md)
 const WHATSNEW={v:'0.86',news:'0.86',date:'10.10.2026',items:[   // news: edition of the items; a release without new items keeps it, so the news dot does not light up again
-  ['trophy','18 нових трофеїв','10 перемог поспіль, сезон без поразок на виїзді, троє гравців по 15+ голів, друге коло на 12 очок краще за перше, 7:1 і не тільки. Їх дають у класиці та виклику дня, шукай у «Трофеях».'],
+  ['trophy','18 нових трофеїв','10 перемог поспіль, сезон без поразок на виїзді, троє гравців по 15+ голів, друге коло на 12 очок краще за перше, 7:1 і не тільки. Майже всі — лише для складу з гравців різних клубів. Шукай у «Трофеях».'],
   ['star','Старі трофеї по-новому','«Розбили, як Бог черепаху» тепер звуться «Хокейний рахунок». «Укрпошта» — рідше: тепер за вінгера чи атакувального півзахисника з менш ніж 3 асистами. А секретні трофеї антисезону стали досяжнішими.']]};
 function openNews(){screenTag('news');const box=document.getElementById('viewBox');document.getElementById('viewTitle').textContent=`Що нового · версія ${WHATSNEW.v}`;
   document.getElementById('viewBody').innerHTML=`<div class="news">${WHATSNEW.items.map(([e,h,d])=>`<div class="ni">${ic(e,'lg')}<div><b>${esc(h)}</b><p>${esc(d)}</p></div></div>`).join('')}</div>`;
