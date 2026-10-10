@@ -251,6 +251,9 @@ function renderNewTro(r){
   // rare new trophy (rare/epic/legendary by player share, or secret) appears with an effect, like a rare card
   const tierOf=t=>{const x=typeof trTier==='function'?trTier(t):null;return x&&x[1]!=='common'?x:null;};
   const rareCls=t=>{const x=tierOf(t);return x?` rarein rt-${x[1]}`:t.sec?' rarein rt-secret':'';};
+  // only the rarest new trophy gets the shine (lowest player share; a secret one without a share counts as rarest); others keep the rarity colour
+  const rk=t=>{const p=typeof trPct==='function'?trPct(t.id):null;return p!=null&&!t.sec?p:t.sec?-1:1e9;};
+  const top=nw.filter(t=>tierOf(t)||t.sec).sort((x,y)=>rk(x)-rk(y))[0];
   const rareTag=t=>{const x=tierOf(t);return x?`<em class="rtag rt-${x[1]}">${x[2]}</em>`:'';};
   // first 6 as big cards (new first, then repeats), 7th onward smaller in a row; repeats without the xN note
   const list=[...nw,...rep],big=list.slice(0,6),small=list.slice(6),isNew=t=>fresh.has(t.id);
@@ -259,7 +262,7 @@ function renderNewTro(r){
   const tok=++NT_TOK,n1=trCountAll(),n0=Math.max(0,n1-cIdx.size),STEP=180,HALF=380,LAND=640,anim=nw.length>0&&!LESS_MOTION();
   if(nw.length&&!anim){const rare=nw.some(t=>tierOf(t)||t.sec);setTimeout(()=>{if(rare)haptic('heavy');setTimeout(()=>haptic('success'),rare?140:0);},600);}   // reduced motion: haptics only
   el.hidden=false;el.innerHTML=`<div class="kicker${nw.length?' trk':''}" style="margin-bottom:var(--sp-2)"><span>${nw.length&&!rep.length?(nw.length>1?'Нові трофеї':'Новий трофей'):'Трофеї сезону'}</span>${cIdx.size?`<span class="trtot">Зібрано <b id="trTotN">${anim?n0:n1}</b></span>`:''}</div><div class="trg">`
-    +big.map((t,k)=>`<div class="tro k-${trKind(t)} on${isNew(t)?(anim?' open':' pop')+' new'+rareCls(t):' pop'}${t.sec?' sec':''}" style="${isNew(t)?`--od:${k*STEP}ms`:`animation-delay:${(anim?nw.length*STEP:0)+k*80}ms`}"><span class="tri">${trBadge(t,true)}${isNew(t)&&anim?'<span class="tseal" aria-hidden="true"></span>':''}</span><div class="trt"><b>${esc(t.n)}</b>${trQ(t)}<span>${esc(t.d)}</span>${isNew(t)?(t.sec?'<em class="trsx">секретний!</em>':'')+rareTag(t):''}</div></div>`).join('')+`</div>`
+    +big.map((t,k)=>`<div class="tro k-${trKind(t)} on${isNew(t)?(anim?' open':' pop')+' new'+rareCls(t):' pop'}${t.sec?' sec':''}${t===top?' top':''}" style="${isNew(t)?`--od:${k*STEP}ms`:`animation-delay:${(anim?nw.length*STEP:0)+k*60}ms`}"><span class="tri">${trBadge(t,true)}${isNew(t)&&anim?'<span class="tseal" aria-hidden="true"></span>':''}</span><div class="trt"><b>${esc(t.n)}</b>${trQ(t)}<span>${esc(t.d)}</span>${isNew(t)?(t.sec?'<em class="trsx">секретний!</em>':'')+rareTag(t):''}</div>${t===top?'<span class="shine" aria-hidden="true"></span>':''}</div>`).join('')+`</div>`
     +(small.length?`<div class="trrep" style="margin-top:var(--sp-2)">`+small.map(t=>`<span class="trchip${t.sec?' sec':''}" title="${esc(t.d)}">${trBadge(t,true)}<b>${esc(t.n)}</b></span>`).join('')+`</div>`:'');
   if(anim){el.classList.add('wait');const go=()=>{if(tok!==NT_TOK)return;el.classList.remove('wait');
       nw.forEach((t,j)=>{const rare=!!(tierOf(t)||t.sec),d=Math.min(j,5)*STEP;setTimeout(()=>{if(tok===NT_TOK)haptic(rare?'heavy':'medium');},d+HALF);

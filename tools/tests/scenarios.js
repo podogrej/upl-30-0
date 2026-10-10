@@ -11,7 +11,7 @@ const fail=[];const check=(ok,msg)=>{if(!ok)fail.push(msg);};
  console.log('версії: підвал',v1,'рушій',v2,'WHATSNEW',v3);check(v1&&v1===v2&&v2===v3,'версії не збігаються');
  check(await pg.evaluate(()=>document.documentElement.dataset.theme)==='dark','за замовчуванням не темна тема');
  await pg.screenshot({path:path.join(OUT,'home.png'),fullPage:true});
- await pg.click('#themeBtn');check(await pg.evaluate(()=>document.documentElement.dataset.theme)==='light','перемикач теми не працює');
+ await pg.click('#themeBtn');check(await pg.waitForFunction(()=>document.documentElement.dataset.theme==='light',null,{timeout:2000}).then(()=>true,()=>false),'перемикач теми не працює');   // cross-fade: the theme flips in the view transition callback, one frame later
  await pg.reload();await pg.waitForTimeout(500);check(await pg.evaluate(()=>document.documentElement.dataset.theme)==='light','тема не запам\'яталась');
  await pg.screenshot({path:path.join(OUT,'home_light.png')});await pg.click('#themeBtn');
  // show-ratings toggle: off by default, can be enabled mid-draft, doesn't change order, persists to the next spin
