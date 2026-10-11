@@ -1,9 +1,8 @@
-# Automated checks on every push to test and main and every pull request to main. Same as running bash tools/tests/all.sh locally,
+# Automated checks on every pull request to main (pushes alone run nothing: each commit used to be checked twice, as push and as PR).
+# A PR that changes only documents (*.md, docs/, LICENSE) runs just the scope job, so checks stays required but costs a minute. Same as running bash tools/tests/all.sh locally,
 # split into 4 parallel parts (SHARD), plus the screen comparison with main (visual); the job named checks (required on main) passes only when all of them passed.
 name: Перевірки
 on:
-  push:
-    branches: [test, main]
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -11,7 +10,25 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'push' }}   # audit P2-19: never cancel PR checks
 jobs:
+  scope:
+    runs-on: ubuntu-24.04
+    outputs:
+      code: ${{ steps.d.outputs.code }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - id: d
+        name: Що змінено
+        run: |
+          base="${{ github.event.pull_request.base.sha }}"
+          if [ -z "$base" ]; then echo "code=true" >> "$GITHUB_OUTPUT"; exit 0; fi
+          files=$(git diff --name-only "$base" HEAD)
+          echo "$files"
+          if [ -n "$files" ] && ! echo "$files" | grep -qvE '^(docs/.*|.*\.md|LICENSE)$'; then echo "code=false" >> "$GITHUB_OUTPUT"; else echo "code=true" >> "$GITHUB_OUTPUT"; fi
   part:
+    needs: scope
+    if: needs.scope.outputs.code == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     strategy:
@@ -45,7 +62,8 @@ jobs:
   # screens look like prod: the same shooter (HEAD copy of visual_diff.js and helpers) photographs main and this build, then compares;
   # a changed screen must be listed in tools/tests/visual_expect.json for the current version
   visual:
-    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/test' || github.event_name == 'workflow_dispatch'
+    needs: scope
+    if: needs.scope.outputs.code == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
@@ -78,11 +96,13 @@ jobs:
           path: tools/tests/out/visual/
           retention-days: 7
   checks:
-    needs: [part, visual]
+    needs: [scope, part, visual]
     if: always()
     runs-on: ubuntu-24.04
     steps:
       - name: Усі частини пройшли
         run: |
+          [ "${{ needs.scope.result }}" = success ] || { echo "scope: ${{ needs.scope.result }}"; exit 1; }
+          if [ "${{ needs.scope.outputs.code }}" = false ]; then echo "documents only"; exit 0; fi
           [ "${{ needs.part.result }}" = success ] || { echo "part: ${{ needs.part.result }}"; exit 1; }
           case "${{ needs.visual.result }}" in success|skipped) ;; *) echo "visual: ${{ needs.visual.result }}"; exit 1;; esac
