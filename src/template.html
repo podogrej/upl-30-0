@@ -522,8 +522,8 @@ td .sub .sk{height:18px;border-radius:var(--r-pill)}
 .tro.on[class*="k-"] .tre{background:color-mix(in srgb,var(--kc) 22%,var(--bg2))}
 .tro.on[class*="k-"] .trt b{background:none;color:var(--ink)}
 /* rarity: 4px rail inside the card + title and word in the tier colour; badge is a neutral round plate. Rail (rr) and text (rt) tokens per theme */
-:root{--nm-go:#868da8;--nm-dim:#4f5a80;--nm-rr-rare:#1f6fe5;--nm-rt-rare:#1a5fcb;--nm-rr-epic:#8a3ff0;--nm-rt-epic:#6d28c4;--nm-rr-legend:#946900;--nm-rt-legend:#7a5a00;--nm-rr-secret:#d8177b;--nm-rt-secret:#c21a6f;--nm-rr-common:#8b95b8;--nm-rt-common:#4a5578}
-:root[data-theme="dark"]{--nm-go:#7b86ab;--nm-dim:#9aa5c8;--nm-rr-rare:#3584ee;--nm-rt-rare:#78a8f2;--nm-rr-epic:#ab72f6;--nm-rt-epic:#bb96f6;--nm-rr-legend:#c4920a;--nm-rt-legend:#dba926;--nm-rr-secret:#ea4a88;--nm-rt-secret:#f27aae;--nm-rr-common:#5b6b9e;--nm-rt-common:#b9c2de}
+:root{--nm-go:#868da8;--nm-dim:#4f5a80;--nm-rr-rare:#1f6fe5;--nm-rt-rare:#1a5fcb;--nm-rr-epic:#8a3ff0;--nm-rt-epic:#6d28c4;--nm-rr-legend:#946900;--nm-rt-legend:#7a5a00;--nm-rr-secret:#d8177b;--nm-rt-secret:#c21a6f;--nm-rr-common:#8b95b8;--nm-rt-common:#4a5578;--nm-bd-common:#6a7393}
+:root[data-theme="dark"]{--nm-go:#7b86ab;--nm-dim:#9aa5c8;--nm-rr-rare:#3584ee;--nm-rt-rare:#78a8f2;--nm-rr-epic:#ab72f6;--nm-rt-epic:#bb96f6;--nm-rr-legend:#c4920a;--nm-rt-legend:#dba926;--nm-rr-secret:#ea4a88;--nm-rt-secret:#f27aae;--nm-rr-common:#5b6b9e;--nm-rt-common:#b9c2de;--nm-bd-common:#5b6b9e}
 #ppCab .tro{position:relative;grid-template-columns:44px minmax(0,1fr) auto;column-gap:var(--sp-3);padding-left:var(--sp-5)}
 #ppCab .tro::before{content:"";position:absolute;left:var(--sp-2);top:var(--sp-3);bottom:var(--sp-3);width:4px;border-radius:var(--r-pill);background:var(--nm-rr-common);opacity:.7}
 #ppCab .tro.rt-rare{--rr:var(--nm-rr-rare);--rt:var(--nm-rt-rare)}#ppCab .tro.rt-epic{--rr:var(--nm-rr-epic);--rt:var(--nm-rt-epic)}#ppCab .tro.rt-legend{--rr:var(--nm-rr-legend);--rt:var(--nm-rt-legend)}#ppCab .tro.rt-secret{--rr:var(--nm-rr-secret);--rt:var(--nm-rt-secret)}
@@ -544,6 +544,18 @@ td .sub .sk{height:18px;border-radius:var(--r-pill)}
 :root[data-theme="light"] #ppCab .tro:not(.on) .tri{position:relative}
 :root[data-theme="light"] #ppCab .tro:not(.on) .tri::before{content:"";position:absolute;left:0;top:50%;width:44px;height:44px;margin-top:-22px;border-radius:50%;background:#dde1ee}
 :root[data-theme="light"] #ppCab .tro:not(.on) .tre{position:relative;background:none}:root[data-theme="light"] #ppCab .tro:not(.on) .tre.off{opacity:1;filter:grayscale(1) brightness(.55)}   /* light theme: separate darker plate (unfiltered), dark grayscale icon on it */
+/* locked vs earned: earned = rarity-tinted fill + check badge on the icon plate; locked = flat card; two groups with headings */
+#ppCab .nm-gh{grid-column:1/-1;display:flex;align-items:baseline;gap:var(--sp-2);margin:var(--sp-3) 0 var(--sp-0h);color:var(--ink2)}
+#ppCab .nm-gh:first-child{margin-top:0}#ppCab .nm-gh i{font-style:normal;font-weight:var(--wt-regular);color:var(--muted)}
+#ppCab .nm-gh::after{content:"";flex:1;height:1px;background:var(--line);align-self:center}
+.nm-vh{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+#ppCab .tro:not(.on){background:transparent;box-shadow:inset 0 0 0 1px var(--line)}
+#ppCab .tro:not(.on) .trt b{font-weight:var(--wt-regular)}
+#ppCab .tro.on{background:linear-gradient(120deg,color-mix(in srgb,var(--rr,var(--nm-rr-common)) 18%,var(--surface)),var(--surface) 75%);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--rr,var(--nm-rr-common)) 40%,transparent)}
+:root[data-theme="dark"] #ppCab .tro.on{background:linear-gradient(120deg,color-mix(in oklab,var(--rt,var(--nm-rt-common)) 12%,var(--surface)),var(--surface) 75%);box-shadow:inset 0 0 0 1px color-mix(in oklab,var(--rt,var(--nm-rt-common)) 35%,transparent)}
+#ppCab .tro.on .tri{position:relative}
+#ppCab .tro.on .tri::after{content:"";position:absolute;right:-2px;bottom:-2px;width:16px;height:16px;border-radius:50%;background:var(--rr,var(--nm-bd-common)) var(--nm-ic-check) center/10px no-repeat;box-shadow:0 0 0 2px var(--surface)}
+:root{--nm-ic-check:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23fff' d='M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z'/%3E%3C/svg%3E")}
 .trleg{display:grid;gap:var(--sp-2);margin:var(--sp-0h) 0 var(--sp-3);padding:var(--sp-3) var(--sp-4);border-radius:var(--r-lg);background:var(--card);font-size:var(--fs-caption);color:var(--ink2)}
 .trleg .h{font-size:var(--fs-caption);color:var(--muted);text-transform:uppercase;letter-spacing:var(--ls-caps)}.trleg .row{display:flex;flex-wrap:wrap;gap:var(--sp-1) var(--sp-3);margin:0;align-items:center}
 .trleg .it{display:inline-flex;align-items:center;gap:var(--sp-2);white-space:nowrap}.trleg .nm-lgr{display:grid;grid-template-columns:repeat(3,auto);justify-content:space-between;gap:var(--sp-2)}.trleg .nm-lgr .it{flex-direction:column;align-items:flex-start;gap:var(--sp-1)}.trleg .nm-lgr .nm-rl{width:14px;height:4px}   /* legend: three equal columns, swatch/diamonds above the word */.trleg .sw{width:22px;height:14px;border-radius:var(--r-xs);flex:none;background:linear-gradient(120deg,color-mix(in srgb,var(--kc) 45%,var(--surface)),var(--surface));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--kc) 55%,transparent)}
@@ -1318,7 +1330,7 @@ h3,.sec0,#s1 .sec0,.pgh,.trleg .h{font-size:var(--fs-footnote);font-weight:var(-
   <div class="acts"><button class="ft-send" id="fbSend" type="submit">Надіслати</button><button class="ft-cancel" id="fbCancel" type="button">Скасувати</button></div></form>
 <div class="ft-done" id="fbDone" hidden><b>✓</b><span>Дякуємо! Прочитаємо найближчим часом</span></div>
 <div class="ft-pills"><button class="ft-pill" id="fbBtn" type="button"><!--i:mail-->Відгук і баги</button><a class="ft-pill" id="ftBot" href="https://t.me/upl30_bot" target="_blank" rel="noopener"><!--i:telegram-->Telegram-бот</a></div>
-<div class="foot ft-small"><a href="#" id="newsBtn">Що нового у версії 0.88.2<b id="newsDot" hidden></b></a><a href="privacy.html">Конфіденційність</a><a href="terms.html">Умови використання</a></div>
+<div class="foot ft-small"><a href="#" id="newsBtn">Що нового у версії 0.89<b id="newsDot" hidden></b></a><a href="privacy.html">Конфіденційність</a><a href="terms.html">Умови використання</a></div>
 <div class="foot ft-copy">© 2026 30-0 УПЛ · неофіційний фан-проєкт <a href="#" id="themeBtn" class="thm" role="switch" aria-checked="false" aria-label="Світла тема"></a></div>
 <p class="ft-legal">30-0 УПЛ — незалежний фан-проєкт: футбольний драфт і симулятор сезону. Він не пов'язаний з Українською Прем'єр-лігою, Українською асоціацією футболу, клубами, футболістами, їхніми об'єднаннями чи іншими організаціями й не схвалений ними. Назви клубів, імена футболістів, рейтинги, статистику й дані сезонів використано лише з інформаційною та довідковою метою. Офіційні логотипи, емблеми та фото футболістів не використовуються. Усі торговельні марки належать їхнім власникам.</p>
 <div class="ft-cred">Шрифт KyivType Sans © Дмитро Растворцев (айдентика Києва)<br>Іконки: Material Design Icons (Apache 2.0), логотип Telegram — Font Awesome Free (CC BY 4.0)</div>
@@ -2673,11 +2685,11 @@ function drawCard(r){   // card in site style: UPL navy background, UPL.TV gradi
 }
 document.getElementById('chalOpen').onclick=()=>{const b=document.getElementById('chalBox'),t=document.getElementById('chalOpen');b.hidden=!b.hidden;t.classList.toggle('on',!b.hidden);if(!b.hidden){b.scrollIntoView({behavior:'smooth',block:'center'});const n=document.getElementById('chalName');if(n&&!n.hidden&&!n.value)n.focus();}};
 // ---------- What's new: short player-friendly notes on the latest version (technical log: CHANGELOG.md)
-const WHATSNEW={v:'0.88.2',news:'0.88.2',date:'11.10.2026',items:[   // news: edition of the items; a release without new items keeps it, so the news dot does not light up again
-  ['trophy','18 мемних трофеїв','«Постав хоч мого кота Аватара», «Агуерооо!», «Сіууу!», «Маємо те, що маємо», «Може я тоже хочу шоколадку», «Як рак свисне», «Будьмо!» і ще одинадцять. Умови — у «Трофеях».'],
-  ['star','Дві нові назви','«Друге дихання» тепер зветься «Don’t push the horses», а «З грязі в князі» — «5000 до 1». Умови ті самі, здобуті трофеї лишаються.'],
-  ['account-circle','Короткі назви клубів скрізь','Клуби підписані коротко, як у грі («Дніпро», «Карпати»), і в «Твоїх цифрах», і в «Один клуб», таблицях, перегляді сезону та 5×5.'],
-  ['trophy','Трофеї та сторінка гравця','«1 чемпіонство», «3 чемпіонства» — тепер правильно. На вузьких екранах позначка рідкості трофея стоїть над назвою й не перекриває її. Трофей, якого ще ні в кого не було, підписаний «ти серед перших».']]};
+const WHATSNEW={v:'0.89',news:'0.89',date:'11.10.2026',items:[   // news: edition of the items; a release without new items keeps it, so the news dot does not light up again
+  ['trophy','Новий вигляд трофеїв','Рідкість видно одразу: кольорова смужка й підпис «Рідкісний», «Епічний», «Легендарний». Відкриті трофеї з галочкою й кольором, ще не відкриті — окремою групою нижче. Секретні тепер рожеві.'],
+  ['shield-star','«Один клуб» — трофеї з назвою клубу','За рекорди клубу — «Найкращий сезон в історії Динамо» і «Найгірший сезон в історії Динамо» (і так для кожного клубу). Інших трофеїв у цьому режимі немає, а вже здобуті лишаються.'],
+  ['account-circle','Акуратніші налаштування','Стрілка тільки там, де щось відкривається, ↗ — перехід у Telegram. Довге ім’я чи назва команди більше не ламають рядок.'],
+  ['bookshelf','Оновлені відповіді','«Питання та відповіді», конфіденційність і умови переписані під нинішню гру; в умовах з’явився розділ про авторські права.']]};
 function openNews(){screenTag('news');const box=document.getElementById('viewBox');document.getElementById('viewTitle').textContent=`Що нового · версія ${WHATSNEW.v}`;
   document.getElementById('viewBody').innerHTML=`<div class="news">${WHATSNEW.items.map(([e,h,d])=>`<div class="ni">${ic(e,'lg')}<div><b>${esc(h)}</b><p>${esc(d)}</p></div></div>`).join('')}</div>`;
   box.hidden=false;lsSet('upl30_news_seen',WHATSNEW.news||WHATSNEW.v);document.getElementById('newsDot').hidden=true;}
