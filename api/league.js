@@ -38,6 +38,13 @@ module.exports = async (req, res) => {
       const day = L.kyivDate();
       // card=1: home card (today + counters, no standings history); otherwise all rows once for both today and standings
       const card = String(req.query.card || '') === '1';
+      const view = await L.leagueView(chat, day, card);
+      if (view) {
+        res.setHeader('Cache-Control', 'public, s-maxage=30, stale-while-revalidate=300');
+        const out = { title: view.title, day, today: view.today, members: view.members };
+        if (!card) out.standings = view.standings;
+        return res.status(200).json(out);
+      }
       const [[lg], rows, memberRows] = await Promise.all([
         L.sb(`leagues?chat_id=eq.${chat}&select=title`).then(x => x || []),
         card ? L.sb(`league_results?chat_id=eq.${chat}&day=eq.${day}&select=${L.RES_COLS}`).then(x => L.onlyVerified(x || [])) : L.leagueRows(chat),

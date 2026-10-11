@@ -48,10 +48,11 @@ module.exports = async (req, res) => {
     for (const chat_id of chats) {
       if ((flags[chat_id] || {}).summary_sent) continue;
       // the league history already holds today's rows (checked once, by the same rules): today's list is cut from it
-      const hist = await L.leagueRows(chat_id);
-      const list = hist.filter(r => String(r.day).slice(0, 10) === day).sort(L.sortRes);
+      let list, st;
+      const view = await L.leagueView(chat_id, day);   // one call; rows older than the DB function take the paged path below
+      if (view) { list = view.today; st = view.standings; }
+      else { const hist = await L.leagueRows(chat_id); list = hist.filter(r => String(r.day).slice(0, 10) === day).sort(L.sortRes); st = L.standingsOf(hist); }
       if (!list.length) continue;
-      const st = L.standingsOf(hist);
       const win = list[0], ws = st.find(s => s.name === win.name);
       // keep messages short: no trophies and no "new wheel tomorrow" line
       let t = `<b>🌙 Підсумок дня №${L.dayNo(day)} — ліга «${L.esc(titles[chat_id] || '')}»</b>\n\n`;

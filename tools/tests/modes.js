@@ -44,6 +44,6 @@ const clubsOf=pg=>pg.evaluate(()=>[...new Set(window.__dbg.S.slots.map(s=>s.play
  // daily challenge: the condition met -> the season plays (classic, normal), the attempt and its score are kept
  await playSeason(pg,'vd',0,0);
  const vd=await pg.evaluate(()=>{const S=window.__dbg.S;return {m:S.mode,f:S.format,sc:S.result.vd&&S.result.vd.score,st:JSON.parse(localStorage.getItem('upl30_vd_2026-10-12')||'{}')};});
- T.check(vd.m==='normal'&&vd.f==='classic'&&vd.sc>=1&&vd.st.used===1&&vd.st.best===vd.sc,`виклик дня: сезон — класика «Звичайний», спроба 1 з 5, рахунок ${vd.sc}/11 збережено`);
+ T.check(vd.m==='normal'&&vd.f==='classic'&&vd.sc>=1&&vd.st.used===1&&vd.st.best===vd.sc,`виклик дня: сезон — класика «Звичайний», спроба 1 з 3, рахунок ${vd.sc}/11 збережено`);
  T.check(!errs.length,'помилок на сторінці немає '+errs.join(' | '));
  await b.close();process.exit(T.done());})();

@@ -141,8 +141,8 @@ async function finish(dev, pid, day, ch, b, late) {
 }
 
 // b.vd: 'start' | 'finish' | 'mine'; device checked here (secret required)
-async function handle(b) {
-  const d = await deviceOk(b.device_id, b.secret);
+async function handle(b, checked) {
+  const d = checked || await deviceOk(b.device_id, b.secret);   // checked: result of api_gate in /api/seed
   if (d.status) return [d.status, { error: d.error }];
   const dev = String(b.device_id).toLowerCase();
   if (b.vd === 'mine') {

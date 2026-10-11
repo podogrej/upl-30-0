@@ -5,7 +5,7 @@
 // Without a secret (legacy clients): only until step 2 (sql/v054_close_writes.sql -> legacy_writes_open() = false).
 // Body with `vd`: daily challenge attempts, handled by api/_vd.js.
 const crypto = require('crypto');
-const { sb, deviceOk, legacyOpen, body, kyivDate, uuidRe, rateLimit } = require('./_device.js');
+const { sb, legacyOpen, body, kyivDate, uuidRe, gate } = require('./_device.js');
 // retry of an official daily attempt: same squad and year, not played yet
 const sameAttempt = (p, b) => !!p && p.used_by == null && p.xi_hash === xiHash(b.xi) && (p.year == null || p.year === (+b.year || null));
 const xiHash = xi => crypto.createHash('sha256').update(xi.map(x => `${x.id}|${x.slot}|${x.c}|${x.y}`).join(';')).digest('hex');
@@ -18,16 +18,17 @@ module.exports = async (req, res) => {
     if (!uuidRe.test(String(b.device_id || ''))) return res.status(400).json({ error: 'device_id?' });
     if (b.vd) {   // daily challenge attempts (api/_vd.js): start, finish (squad -> score and season seed), own results
       stage = 'vd';
-      if (await rateLimit(req, res, 'seed', b.device_id)) return;
-      const [code, j] = await require('./_vd.js').handle(b);
+      const g = await gate(req, res, 'seed', b.device_id, b.secret);
+      if (g.done) return;
+      const [code, j] = await require('./_vd.js').handle(b, g.dev);
       return res.status(code).json(j);
     }
     if (!Array.isArray(b.xi) || b.xi.length !== 11) return res.status(400).json({ error: 'xi?' });
-    stage = 'rate';
-    if (await rateLimit(req, res, 'seed', b.device_id)) return;
-    stage = 'device';
+    stage = 'gate';
+    const g = await gate(req, res, 'seed', b.device_id, b.secret);
+    if (g.done) return;
     if (b.secret != null) {
-      const d = await deviceOk(b.device_id, b.secret);
+      const d = g.dev;
       if (d.status && !d.fallback) return res.status(d.status).json({ error: d.error });   // fallback: SQL 0.53 not applied, legacy behaviour
     } else if (!(await legacyOpen())) return res.status(401).json({ error: 'secret?' });
     const day = kyivDate();
