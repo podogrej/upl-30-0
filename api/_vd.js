@@ -110,8 +110,9 @@ async function start(dev, pid, day, ch) {
 async function seedFor(seed, row, b) {
   const h = xiHash(row.xi || []);
   if (!row.gate_ok || seed.used_by != null || !Array.isArray(b.xi) || xiHash(b.xi.map(x => ({ id: String(x.id), slot: String(x.slot), c: String(x.c), y: +x.y }))) !== h) return {};
-  if (!seed.xi_hash) await sb(`season_seeds?id=eq.${seed.id}&used_by=is.null&xi_hash=eq.`, { method: 'PATCH', prefer: 'return=minimal', body: { xi_hash: h } });
-  const [cur] = await sb(`season_seeds?id=eq.${seed.id}&select=xi_hash,used_by,seed`) || [];
+  let cur = seed.xi_hash === h ? seed : null;   // already stored by an earlier call: nothing to write or read back
+  if (!cur && !seed.xi_hash) [cur] = await sb(`season_seeds?id=eq.${seed.id}&used_by=is.null&xi_hash=eq.&select=xi_hash,used_by,seed`, { method: 'PATCH', prefer: 'return=representation', body: { xi_hash: h } }) || [];
+  if (!cur) [cur] = await sb(`season_seeds?id=eq.${seed.id}&select=xi_hash,used_by,seed`) || [];   // a parallel call won the write: its XI decides
   return cur && cur.xi_hash === h && cur.used_by == null ? { seed_id: seed.id, seed: +cur.seed } : {};
 }
 async function finish(dev, pid, day, ch, b, late) {
@@ -127,10 +128,12 @@ async function finish(dev, pid, day, ch, b, late) {
     have = ev.have; need = ev.need;
     const ins = { day, device_id: dev, player_id: pid || null, attempt: n, gate_ok: ev.gate, score: ev.score, seed_id: seed.id, late,
       xi: b.xi.map(x => ({ id: String(x.id), slot: String(x.slot), c: String(x.c), y: +x.y })) };
-    try { await sb('vd_results', { method: 'POST', prefer: 'return=minimal', body: ins }); row = ins; }
-    catch (e) { if (!dup(e)) throw e; }   // a parallel finish stored its XI first: that row decides
-    st = await state(devs, day);
-    row = st.res.find(r => r.device_id === dev && +r.attempt === n) || row;
+    try { await sb('vd_results', { method: 'POST', prefer: 'return=minimal', body: ins }); row = ins; st.res.push(ins); }
+    catch (e) {
+      if (!dup(e)) throw e;   // a parallel finish stored its XI first: that row decides
+      st = await state(devs, day);
+      row = st.res.find(r => r.device_id === dev && +r.attempt === n) || row;
+    }
   }
   const out = { attempt: n, gate: !!row.gate_ok, score: row.score, have, need, late: row.late == null ? late : !!row.late };
   Object.assign(out, await seedFor(seed, row, b));   // also a retry after a timed-out PATCH

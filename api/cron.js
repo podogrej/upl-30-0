@@ -25,17 +25,36 @@ module.exports = async (req, res) => {
     const rows = await L.sbAll(`league_results?day=eq.${day}&select=chat_id&order=chat_id.asc,tg_user_id.asc`);
     const chats = [...new Set(rows.map(r => r.chat_id))];
     const done = [];
+    const add = (d, n) => new Date(Date.UTC(+d.slice(0, 4), +d.slice(5, 7) - 1, +d.slice(8, 10)) + n * 864e5).toISOString().slice(0, 10);
+    // Sunday weekly summary (Mon-Sun, Kyiv): points total and day wins. Rows are read up front so boards and titles of all chats come in one batch
+    const wd = (new Date(Date.UTC(+day.slice(0, 4), +day.slice(5, 7) - 1, +day.slice(8, 10))).getUTCDay() + 6) % 7;
+    const isWeek = wd === 6 || (req.query && req.query.week === '1');
+    const byChat = {}; let weekErr = null;
+    if (isWeek) {
+      try {
+        const wrows = await L.onlyVerified(await L.sbAll(`league_results?day=gte.${add(day, -wd)}&day=lte.${day}&select=chat_id,day,tg_user_id,name,pts,gf,ga,created_at,season_id&order=day.asc,chat_id.asc,tg_user_id.asc`));
+        for (const r of wrows) (byChat[r.chat_id] = byChat[r.chat_id] || []).push(r);
+      } catch (e) { weekErr = e; }   // thrown after the daily summaries have gone out
+    }
+    // flags and titles of every involved chat: two requests per 50 chats instead of two per chat
+    const flags = {}, titles = {};
+    const involved = [...new Set([...chats, ...Object.keys(byChat)].map(String))];
+    for (let i = 0; i < involved.length; i += 50) {
+      const part = involved.slice(i, i + 50).join(',');
+      for (const b of await L.sb(`league_boards?day=eq.${day}&chat_id=in.(${part})&select=chat_id,summary_sent,weekly_sent`) || []) flags[b.chat_id] = b;
+      for (const l of await L.sb(`leagues?chat_id=in.(${part})&select=chat_id,title`) || []) titles[l.chat_id] = l.title;
+    }
+    const medal = ['🥇', '🥈', '🥉'];
     for (const chat_id of chats) {
-      const [b] = await L.sb(`league_boards?chat_id=eq.${chat_id}&day=eq.${day}&select=summary_sent`) || [];
-      if (b && b.summary_sent) continue;
-      const [lg] = await L.sb(`leagues?chat_id=eq.${chat_id}&select=title`) || [];
-      const list = (await L.onlyVerified(await L.sb(`league_results?chat_id=eq.${chat_id}&day=eq.${day}&select=*`) || [])).sort(L.sortRes);
+      if ((flags[chat_id] || {}).summary_sent) continue;
+      // the league history already holds today's rows (checked once, by the same rules): today's list is cut from it
+      const hist = await L.leagueRows(chat_id);
+      const list = hist.filter(r => String(r.day).slice(0, 10) === day).sort(L.sortRes);
       if (!list.length) continue;
-      const st = await L.standings(chat_id);
+      const st = L.standingsOf(hist);
       const win = list[0], ws = st.find(s => s.name === win.name);
-      const medal = ['🥇', '🥈', '🥉'];
       // keep messages short: no trophies and no "new wheel tomorrow" line
-      let t = `<b>🌙 Підсумок дня №${L.dayNo(day)} — ліга «${L.esc(lg ? lg.title : '')}»</b>\n\n`;
+      let t = `<b>🌙 Підсумок дня №${L.dayNo(day)} — ліга «${L.esc(titles[chat_id] || '')}»</b>\n\n`;
       t += list.map((r, i) => `${medal[i] || (i + 1) + '.'} ${L.esc(r.name)} — <b>${r.pts}</b> (${r.w}-${r.d}-${r.l}, ${r.gf}:${r.ga})`).join('\n');
       t += `\n\n👑 Переможець дня: <b>${L.esc(win.name)}</b>${ws && ws.wins > 1 ? ` (уже ${ws.wins}-й раз)` : ''}`;
       if (st.length > 1) t += `\n\n<b>Залік ліги</b> (перемоги в днях): ` + st.slice(0, 8).map(s => `${L.esc(s.name)} ${s.wins}`).join(' · ');
@@ -43,33 +62,23 @@ module.exports = async (req, res) => {
       await L.sb('league_boards?on_conflict=chat_id,day', { method: 'POST', prefer: 'resolution=merge-duplicates,return=minimal', body: { chat_id, day, summary_sent: true } });
       done.push(chat_id);
     }
-    // Sunday weekly summary (Mon-Sun, Kyiv): points total and day wins
     const weekly = [];
-    const wd = (new Date(Date.UTC(+day.slice(0, 4), +day.slice(5, 7) - 1, +day.slice(8, 10))).getUTCDay() + 6) % 7;
-    if (wd === 6 || (req.query && req.query.week === '1')) {
-      const add = (d, n) => new Date(Date.UTC(+d.slice(0, 4), +d.slice(5, 7) - 1, +d.slice(8, 10)) + n * 864e5).toISOString().slice(0, 10);
-      const from = add(day, -wd);
-      const wrows = await L.onlyVerified(await L.sbAll(`league_results?day=gte.${from}&day=lte.${day}&select=chat_id,day,tg_user_id,name,pts,gf,ga,created_at,season_id&order=day.asc,chat_id.asc,tg_user_id.asc`));
-      const byChat = {}; for (const r of wrows) (byChat[r.chat_id] = byChat[r.chat_id] || []).push(r);
-      for (const [chat_id, rows] of Object.entries(byChat)) {
-        const [b] = await L.sb(`league_boards?chat_id=eq.${chat_id}&day=eq.${day}&select=weekly_sent`) || [];
-        if (b && b.weekly_sent) continue;
-        const [lg] = await L.sb(`leagues?chat_id=eq.${chat_id}&select=title`) || [];
-        const byDay = {}; for (const r of rows) (byDay[r.day] = byDay[r.day] || []).push(r);
-        const st = {};
-        for (const list of Object.values(byDay)) { list.sort(L.sortRes); list.forEach((r, i) => { const s = st[r.tg_user_id] || (st[r.tg_user_id] = { name: r.name, pts: 0, days: 0, wins: 0 }); s.pts += r.pts; s.days++; s.name = r.name; if (i === 0) s.wins++; }); }
-        const tab = Object.values(st).sort((a, b) => b.pts - a.pts || b.wins - a.wins);
-        const medal = ['🥇', '🥈', '🥉'];
-        // league created mid-week: period starts from its first day, not Monday
-        const first = rows.reduce((m, r) => (String(r.day) < m ? String(r.day) : m), day);
-        let t = `<b>📅 Підсумок тижня ${L.dayShort(first)}–${L.dayShort(day)} — ліга «${L.esc(lg ? lg.title : '')}»</b>\n(сума очків за всі дні тижня)\n\n`;
-        t += tab.map((s, i) => `${medal[i] || (i + 1) + '.'} ${L.esc(s.name)} — <b>${s.pts}</b> за ${s.days} ${plUk(s.days, 'день', 'дні', 'днів')}${s.wins ? `, перемог: ${s.wins}` : ''}`).join('\n');
-        t += `\n\n🏅 Гравець тижня: <b>${L.esc(tab[0].name)}</b>`;
-        await L.tg('sendMessage', { chat_id, text: t, parse_mode: 'HTML', reply_markup: L.playKb(chat_id), disable_web_page_preview: true });
-        await L.sb('league_boards?on_conflict=chat_id,day', { method: 'POST', prefer: 'resolution=merge-duplicates,return=minimal', body: { chat_id, day, weekly_sent: true } });
-        weekly.push(chat_id);
-      }
+    for (const [chat_id, rows] of Object.entries(byChat)) {
+      if ((flags[chat_id] || {}).weekly_sent) continue;
+      const byDay = {}; for (const r of rows) (byDay[r.day] = byDay[r.day] || []).push(r);
+      const st = {};
+      for (const list of Object.values(byDay)) { list.sort(L.sortRes); list.forEach((r, i) => { const s = st[r.tg_user_id] || (st[r.tg_user_id] = { name: r.name, pts: 0, days: 0, wins: 0 }); s.pts += r.pts; s.days++; s.name = r.name; if (i === 0) s.wins++; }); }
+      const tab = Object.values(st).sort((a, b) => b.pts - a.pts || b.wins - a.wins);
+      // league created mid-week: period starts from its first day, not Monday
+      const first = rows.reduce((m, r) => (String(r.day) < m ? String(r.day) : m), day);
+      let t = `<b>📅 Підсумок тижня ${L.dayShort(first)}–${L.dayShort(day)} — ліга «${L.esc(titles[chat_id] || '')}»</b>\n(сума очків за всі дні тижня)\n\n`;
+      t += tab.map((s, i) => `${medal[i] || (i + 1) + '.'} ${L.esc(s.name)} — <b>${s.pts}</b> за ${s.days} ${plUk(s.days, 'день', 'дні', 'днів')}${s.wins ? `, перемог: ${s.wins}` : ''}`).join('\n');
+      t += `\n\n🏅 Гравець тижня: <b>${L.esc(tab[0].name)}</b>`;
+      await L.tg('sendMessage', { chat_id, text: t, parse_mode: 'HTML', reply_markup: L.playKb(chat_id), disable_web_page_preview: true });
+      await L.sb('league_boards?on_conflict=chat_id,day', { method: 'POST', prefer: 'resolution=merge-duplicates,return=minimal', body: { chat_id, day, weekly_sent: true } });
+      weekly.push(chat_id);
     }
+    if (weekErr) throw weekErr;
     // opt-in evening notifications (one message per player): after the group summaries; failure doesn't break them
     let notify = null;
     try { notify = await N.sendEvening(day); } catch (e) { notify = { error: String(e && e.message || e).slice(0, 120) }; }
