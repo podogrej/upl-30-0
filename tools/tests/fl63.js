@@ -3,17 +3,18 @@
 // tournament finished, champion, matches -> match: score, events, watch live; guest via link sees squads and the sign-in-to-join prompt.
 // DB and RPC are in memory (SQL: bash tools/tests/setup.sh). Screenshots: tools/tests/out/fl63_*.png. Run from repo root: node tools/tests/fl63.js
 const path=require('path'),fs=require('fs');const {ROOT,launch,makeDB,openSite,checker}=require('./_site.js');
-const {play}=require(path.join(ROOT,'api','fl5.js'));
+const {play}=require(path.join(ROOT,'api','fl5.js'));const E=require(path.join(ROOT,'lib','engine.js'));
 const OUT=path.join(ROOT,'tools','tests','out');fs.mkdirSync(OUT,{recursive:true});
 const T=checker('ліги 5×5');
 function mkDB(){
   const players=[{id:'p-me',name:'andre',anon_name:'calm_owl',public_id:'andr2345'},{id:'p-v',name:'vitia',anon_name:'brave_fox',public_id:'vitya234'}];
   const leagues=[],members=[],fives=[],calls=[];
   const js=p=>({id:p.id,name:p.name,anon_name:p.anon_name,public_id:p.public_id,name_next:null,contact_email:null,news_optin:false});
-  const get=id=>{const L=leagues.find(x=>x.id===id);if(!L)return null;const pub=pid=>players.find(p=>p.id===pid);
+  // as fl_get (sql/v087): before the result rivals come without form/xi (the viewer is p-me); full=true is fl_get_full (server)
+  const get=(id,full)=>{const L=leagues.find(x=>x.id===id);if(!L)return null;const pub=pid=>players.find(p=>p.id===pid);
     return {...L,now:new Date().toISOString(),over:!!L.result,owner:'andr2345',tour:[],
       board:members.filter(m=>m.l===id).map(m=>({u:pub(m.p).public_id,name:pub(m.p).name,total:0,wins:0,best:null,played:0})),
-      fives:fives.filter(f=>f.l===id).map(f=>({u:pub(f.p).public_id,name:pub(f.p).name,form:f.form,xi:f.xi}))};};
+      fives:fives.filter(f=>f.l===id).map(f=>full||L.result||f.p==='p-me'?{u:pub(f.p).public_id,name:pub(f.p).name,form:f.form,xi:f.xi}:{u:pub(f.p).public_id,name:pub(f.p).name})};};
   const rpc={
     player_hello:()=>js(players[0]),link_account:()=>({...js(players[0]),merge_offer:null}),trophy_stats:()=>({players:2,t:{}}),
     player_profile:()=>({public_id:'andr2345',name:'andre',anon:false,since:'2026-09-02T10:00:00Z',seasons:3,champions:1,perfect:0,best_classic:70,win_pct:60,best:{},worst:{},trophies:[],streak_best:0,streak_now:0}),
@@ -27,7 +28,7 @@ function mkDB(){
   db.DB.players=players;global.fetch=db.fetch;
   return {db,leagues,members,fives,calls,get};}
 (async()=>{const b=await launch();const M=mkDB();const {db}=M;let played=0;
- const api={'/api/fl5':async req=>{const L=M.get(req.body.id);if(L&&!L.result&&new Date(L.deadline)<=new Date()){const lg=M.leagues.find(x=>x.id===L.id);lg.result=await play(L);played++;}return {json:M.get(req.body.id)};},
+ const api={'/api/fl5':async req=>{const L=M.get(req.body.id);if(L&&!L.result&&new Date(L.deadline)<=new Date()){const lg=M.leagues.find(x=>x.id===L.id);lg.result=await play(M.get(L.id,true));played++;}return {json:M.get(req.body.id)};},
    '/api/seed':async()=>({json:{seed:1,seed_id:'s1'}})};
  const A=await openSite({b,db,api,signed:true,viewport:{width:390,height:844},wait:1500});const pg=A.pg;
  const ipad=async(name,fn)=>{await pg.setViewportSize({width:1000,height:1400});await pg.waitForTimeout(200);const r=fn?await pg.evaluate(fn):null;await pg.screenshot({path:path.join(OUT,name),fullPage:true});await pg.setViewportSize({width:390,height:844});await pg.waitForTimeout(150);return r;};
@@ -59,8 +60,9 @@ function mkDB(){
  // second member submits a squad with the same players (each has their own wheel)
  const L=M.leagues[0];M.members.push({l:L.id,p:'p-v'});M.fives.push({l:L.id,p:'p-v',form:'2-2',xi:xi.map(x=>({...x}))});
  await pg.click('#flBack');await pg.waitForTimeout(400);await pg.click(`[data-l="${L.id}"]`);await pg.waitForTimeout(600);
- T.check(/Зібрали 2 з 2/.test(await pg.textContent('#fl'))&&!!await pg.$('#fl5Start'),'лобі: «Зібрали 2 з 2», у творця — «Почати зараз»; склади відкриті');
- T.check((await pg.$$('#fl .fl5t')).length===2&&/vitia/.test(await pg.textContent('#fl .fl5teams')),'склади суперників відкриті');
+ T.check(/Зібрали 2 з 2/.test(await pg.textContent('#fl'))&&!!await pg.$('#fl5Start'),'лобі: «Зібрали 2 з 2», у творця — «Почати зараз»');
+ const riv=await pg.$eval('#fl .fl5t:not(.me)',e=>({t:e.textContent,xi:!!e.querySelector('.fl5xi')}));
+ T.check((await pg.$$('#fl .fl5t')).length===2&&/vitia/.test(riv.t)&&/склад готовий/.test(riv.t)&&!riv.xi,'0.87: склад суперника до турніру прихований («склад готовий»), свій видно');
  const xiL=await pg.$$eval('#fl .fl5t.me .fl5xi>div',es=>es.map(e=>e.textContent));
  T.check(xiL.length===3&&/^ВР/.test(xiL[0])&&/^ЗХ.+ · /.test(xiL[1])&&/^НП.+ · /.test(xiL[2]),'0.69: склад — по лініях від воротаря: '+xiL.join(' | '));
  await pg.screenshot({path:path.join(OUT,'fl63_lobby.png'),fullPage:true});
@@ -95,7 +97,9 @@ function mkDB(){
  // 8-team tournament: group, semis, final - server engine called directly
  {const many={...M.get(L.id),fives:Array.from({length:8},(_,k)=>({u:'u'+k,name:'T'+k,form:'2-2',xi})),id:'abcdef',deadline:'2026-10-01T10:00:00Z'};const r=await play(many);
   T.check(r.table.length===8&&r.matches.filter(m=>m.stage==='sf').length===2&&r.matches.filter(m=>m.stage==='final').length===1&&r.matches.filter(m=>m.stage==='group').length===28,'8 учасників: 28 матчів групи, 2 півфінали, фінал');
-  const r2=await play(many);T.check(JSON.stringify(r)===JSON.stringify(r2),'той самий seed — той самий турнір (однаково для всіх)');
+  const r2=await play(many,r.seed);T.check(JSON.stringify(r)===JSON.stringify(r2),'той самий seed (result.seed) — той самий турнір: перевіряється');
+  const seeds=new Set();for(let k=0;k<5;k++)seeds.add((await play(many)).seed);
+  T.check(seeds.size>1&&!seeds.has(E.hashStr(`${many.id}|${many.deadline}`)>>>0),'seed турніру випадковий (не з коду ліги й дедлайну) '+[...seeds].join(','));
   const bad={...many,fives:[{u:'x',name:'X',form:'2-2',xi:xi.map((x,i)=>i?x:{...x,slot:x.slot==='GK'?'FW':'GK'})},...many.fives.slice(0,1)]};const r3=await play(bad);
   T.check(r3.cancelled&&r3.bad[0]==='x','склад з неправильною лінією відкинуто → менше 2 — ліга скасована');}
  // guest via link

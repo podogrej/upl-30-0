@@ -1,18 +1,17 @@
 // 30-0 UPL: result link with messenger preview: /r/<season id> (vercel.json -> /api/r?id=<id>)
 // Serves a tiny page with og:title / og:description / og:image (Telegram, WhatsApp, Viber render a card) and redirects to the site,
-// which opens that squad (?s=<id>). Reads only public season fields with the publishable key, like the site. Env: SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY (test).
+// which opens that squad (?s=<id>). Reads only public season fields (seasons_pub) with the publishable key, like the site. Env: SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY (test).
 const { SB_URL, plUk } = require('./_lib.js');
 const SB_KEY = (process.env.SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_pEszTOPsCHLgpiPpwB4JKg_SS-X07hY').trim();   // publishable key, same as on the site
 const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const FMT = { classic: 'Класика', derby: 'Класичне дербі', oneclub: 'Один клуб', anti: 'Антисезон', legends: 'Ліга легенд' };
 
+// seasons_pub: public view without personal columns (sql/v087_data_protection.sql)
 async function season(id) {
-  for (const sel of ['id,w,d,l,pts,place,gf,ga,format,mode,players(name,anon_name)', 'id,w,d,l,pts,place,gf,ga,format,mode']) {
-    try {
-      const r = await fetch(`${SB_URL}/rest/v1/seasons?select=${sel}&id=eq.${id}&limit=1`, { headers: { apikey: SB_KEY } });
-      if (r.ok) { const j = await r.json(); return j[0] || null; }
-    } catch (e) { /* fall back to a simpler query */ }
-  }
+  try {
+    const r = await fetch(`${SB_URL}/rest/v1/seasons_pub?select=id,w,d,l,pts,place,gf,ga,format,mode,players&id=eq.${id}&limit=1`, { headers: { apikey: SB_KEY } });
+    if (r.ok) { const j = await r.json(); return j[0] || null; }
+  } catch (e) { console.error('r', e.message); }
   return null;
 }
 

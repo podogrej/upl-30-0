@@ -40,12 +40,23 @@ module.exports = async (req, res) => {
     u = { id: r0.tg_id, first_name: r0.first_name, last_name: r0.last_name, username: r0.username };
   } else u = b.initData ? checkMiniApp(b.initData, token) : null;   // Telegram login widget is no longer supported
   if (!u || !u.id) return res.status(401).json({ error: 'bad telegram signature' });
-  const email = `tg-${u.id}@users.upl-30-0.vercel.app`;   // service address, no mail is sent; do NOT switch to the new domain: Telegram accounts are looked up by it
+  const tgId = Number(u.id);
+  if (!Number.isSafeInteger(tgId) || tgId <= 0) return res.status(401).json({ error: 'bad telegram signature' });
+  const email = `tg-${tgId}@users.upl-30-0.vercel.app`;   // service address, no mail is sent; do NOT switch to the new domain: Telegram accounts are looked up by it
   const name = [u.first_name, u.last_name].filter(Boolean).join(' ') || u.username || 'Гравець';
   const meta = { tg_id: u.id, tg_name: name, tg_username: u.username || null, full_name: name };
-  stage = 'create user';
-  const cu = await admin('users', { email, email_confirm: true, user_metadata: meta });   // if the user exists Supabase returns an error; that's expected
-  if (cu.status === 401 || cu.status === 403) return res.status(500).json({ error: 'Supabase не прийняв SUPABASE_SERVICE_KEY (потрібен secret key sb_secret_…)', status: cu.status });
+  // identity: app_metadata.tg_id (admin-only). An existing account with this service email is used only if tg_auth_user says
+  // it belongs to this tg id; a self sign-up with the same email (pre-registration) is refused (sql/v087_data_protection.sql)
+  stage = 'account';
+  const owner = () => sbRest('rpc/tg_auth_user', { method: 'POST', body: { p_tg: tgId } });
+  let st = await owner();
+  if (st === 'none') {
+    stage = 'create user';
+    const cu = await admin('users', { email, email_confirm: true, user_metadata: meta, app_metadata: { tg_id: String(tgId) } });   // a parallel create gets "already exists": checked again below
+    if (cu.status === 401 || cu.status === 403) return res.status(500).json({ error: 'Supabase не прийняв SUPABASE_SERVICE_KEY (потрібен secret key sb_secret_…)', status: cu.status });
+    st = await owner();
+  }
+  if (st !== 'ok') { console.error('auth: account refused', tgId, st); return res.status(403).json({ error: 'tg_account' }); }
   stage = 'generate link';
   const { status, j } = await admin('generate_link', { type: 'magiclink', email });
   const token_hash = j.hashed_token || (j.properties && j.properties.hashed_token);

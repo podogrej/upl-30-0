@@ -11,6 +11,7 @@
 #  - v060_one_player.sql (twice): "is this you?" prompt on second sign-in, answer only from the same sign-in, merge with log and rollback (unmerge_players),
 #    "andré" reserved for the admin (rerun of v059 leaves it alone), news email (rules, private, erased with the account), show_r, season pick on the player page.
 #  - v085_player_numbers.sql (twice): player_numbers own seasons only, offers closed for anon, "rejected" from 10 seasons, erased on delete_player.
+#  - v087_data_protection.sql (twice): PII-free views and my_seasons, 5×5 lineups hidden until the result, tg id from app_metadata only (pre-registered accounts refused).
 #  - v061_leagues.sql (twice): 11×11 leagues: create/join only when signed in, codes, attempt scoring (verified season, league rules and era, attempt limit), "by place" and "sum" tables, best/last attempt, my leagues.
 #  DB is UTF8 with locale C (lower() leaves Cyrillic alone, the worst case; the name key does its own transliteration).
 # Needs Postgres binaries (/usr/lib/postgresql/*/bin). Run from repo root: bash tools/tests/setup.sh   (KEEP=1: keep the DB running)
@@ -690,6 +691,104 @@ if $P -d t1 -f "$ROOT/sql/v06997_channel_posts.sql" >/dev/null 2>"$D/err"; then 
 chk "v06997: старі статуси approved → pending_approval, skipped → rejected" postgres "
   assert (select status from channel_posts where text = 'old-a') = 'pending_approval' and (select status from channel_posts where text = 'old-s') = 'rejected', 'старі статуси';
   assert exists (select 1 from pg_constraint where conname = 'channel_posts_status_chk'), 'перевірка статусу є';"
+# ===== v087: PII-free read paths, 5×5 lineups hidden until the result, Telegram identity in app_metadata =====
+# auth users before the backfill: server-made (random password, confirmed, no confirmation mail, before the cutoff), self sign-ups with the same service email
+T1=87000000-0000-4000-a000-000000000901; T2=87000000-0000-4000-a000-000000000902; T3=87000000-0000-4000-a000-000000000903; T4=87000000-0000-4000-a000-000000000904
+$P -d t1 -q >/dev/null 2>"$D/err" <<SQL || bad "v087: тестові акаунти — $(head -3 "$D/err")"
+insert into auth.users(id, email, encrypted_password, email_confirmed_at, confirmation_sent_at, created_at, raw_app_meta_data) values
+  ('$T1', 'tg-901@users.upl-30-0.vercel.app', '\$2a\$10\$serverrandom', now(), null, '2026-10-01', '{"provider":"email","providers":["email"]}'),
+  ('$T2', 'tg-902@users.upl-30-0.vercel.app', '\$2a\$10\$attackerhash', now(), now(), '2026-10-01', '{"provider":"email","providers":["email"]}'),
+  ('$T3', 'tg-903@users.upl-30-0.vercel.app', '', null, null, '2026-10-01', '{"provider":"email","providers":["email"]}'),
+  ('$T4', 'tg-904@users.upl-30-0.vercel.app', null, now(), null, '2026-10-01', '{"provider":"email","providers":["email"]}');
+insert into auth.identities(user_id, provider) values ('$T1', 'email'), ('$T2', 'email'), ('$T3', 'email'), ('$T4', 'email'), ('$T4', 'google');
+SQL
+for pass in 1 2; do
+  if $P -d t1 -f "$ROOT/sql/v087_data_protection.sql" >/dev/null 2>"$D/err"; then ok "запуск $pass: v087_data_protection.sql"; else bad "запуск $pass: v087_data_protection.sql — $(grep -v NOTICE "$D/err" | head -3)"; fi
+done
+chk "v087: у seasons_pub, challenges_pub, challenge_results_pub немає особистих колонок" postgres "
+  assert not exists (select 1 from information_schema.columns where table_schema = 'public' and table_name in ('seasons_pub', 'challenges_pub', 'challenge_results_pub')
+    and column_name in ('device_id', 'tg_user_id', 'tg_name', 'user_id', 'seed_id', 'chat_id', 'created_by', 'email', 'secret_hash', 'verify_note', 'fl_id')), 'особисті колонки';
+  assert not exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'seasons_pub' and column_name = 'seed'), 'seed сезону';
+  assert (select count(*) from information_schema.columns where table_schema = 'public' and table_name = 'seasons_pub' and column_name in ('xi', 'tbl', 'players', 'player_id', 'in_fl', 'show_r')) = 6, 'потрібні колонки';"
+chk "v087: anon читає seasons_pub (усі сезони, ім'я гравця), старий шлях 0.86 (seasons) ще працює" anon "
+  assert (select count(*) from seasons_pub) > 0 and (select count(*) from seasons_pub) = (select count(*) from seasons), 'кількість';
+  assert exists (select 1 from seasons_pub where players->>'anon_name' is not null), 'players';
+  assert exists (select 1 from seasons_pub where in_fl) and exists (select 1 from seasons_pub where not in_fl), 'in_fl';
+  assert (select count(*) from challenges_pub) = (select count(*) from challenges) and (select count(*) from challenge_results_pub) = (select count(*) from challenge_results), 'виклики';"
+chk "v087: представлення лише для читання (anon/authenticated не пишуть через них)" anon "
+  assert (select bool_and(not has_table_privilege(r, v, p)) from unnest(array['anon', 'authenticated']) r, unnest(array['seasons_pub', 'challenges_pub', 'challenge_results_pub']) v,
+          unnest(array['insert', 'update', 'delete', 'truncate']) p), 'права на запис';
+  assert has_table_privilege('authenticated', 'seasons_pub', 'select'), 'читання';"
+chk "v087: my_seasons — лише сезони свого пристрою, без device_id; чужий секрет — відмова" anon "
+  j := my_seasons('$DEV', '$SEC');
+  assert json_array_length(j) = (select count(*) from seasons where device_id = '$DEV') and json_array_length(j) > 0, 'кількість ' || json_array_length(j);
+  assert j->0->>'device_id' is null and j->0->>'tg_user_id' is null and j->0->>'seed' is null and (j->0)::jsonb ? 'w', 'колонки';
+  begin j := my_seasons('$DEV', 'attacker-attacker-attacker'); assert false, 'віддав чужі'; exception when sqlstate '28000' then null; end;"
+chk "v087: 5×5 — нова ліга, обидва склади" authenticated "
+  j := fl_create5('$MX', '$SEC', 'Кубок 087', 3, 1, 'show', 'all');" ',"sub":"'$UG'"'
+F87=$($P -d t1 -tAc "select id from fl_leagues where name = 'Кубок 087' order by created_at desc limit 1")
+chk "v087: друг вступає й надсилає склад — бачить свій склад" authenticated "
+  j := fl_join('$L3', '$SEC', '$F87'); j := fl5_submit('$L3', '$SEC', '$F87', '1-2-1', '$XI');
+  assert json_array_length(j->'fives') = 1 and j->'fives'->0->>'form' = '1-2-1' and json_array_length(j->'fives'->0->'xi') = 5, j::text;" ',"sub":"'$U3'"'
+chk "v087: творець надсилає свій — бачить лише свій склад і кількість (чужий без xi/form)" authenticated "
+  j := fl5_submit('$MX', '$SEC', '$F87', '2-2', '$XI');
+  assert (j->>'fives_n')::int = 2 and json_array_length(j->'fives') = 2, j::text;
+  assert (select count(*) from jsonb_array_elements(j::jsonb->'fives') f where f ? 'xi') = 1 and (select f->>'form' from jsonb_array_elements(j::jsonb->'fives') f where f ? 'xi') = '2-2', 'лише свій ' || j::text;
+  assert (select count(*) from json_array_elements(j->'fives') f where f->>'name' is not null and f->>'u' is not null) = 2, 'хто надіслав';" ',"sub":"'$UG'"'
+chk "v087: anon до турніру не бачить жодного складу; fl_get_full закрита для anon/authenticated" anon "
+  j := fl_get('$F87'); assert (j->>'fives_n')::int = 2 and not exists (select 1 from jsonb_array_elements(j::jsonb->'fives') f where f ? 'xi'), j::text;
+  assert (select count(*) from jsonb_array_elements(j::jsonb->'fives') f where f ? 'form') = 2, 'схема видна (0.86 не покаже undefined)';
+  begin j := fl_get_full('$F87'); assert false, 'anon fl_get_full'; exception when insufficient_privilege then null; end;
+  assert not has_function_privilege('authenticated', 'fl_get_full(text)', 'execute'), 'authenticated fl_get_full';"
+chk "v087: сервер 0.86 (service_role, fl_get) під час викладки бачить усі склади" service_role "
+  j := fl_get('$F87'); assert (select count(*) from jsonb_array_elements(j::jsonb->'fives') f where f ? 'xi') = 2, j::text;"
+chk "v087: сервер бачить усі склади (fl_get_full); після турніру — усі склади відкриті для всіх" postgres "
+  assert (select count(*) from jsonb_array_elements(fl_get_full('$F87')::jsonb->'fives') f where f ? 'xi') = 2, 'full';
+  update fl_leagues set deadline = now() - interval '1 minute' where id = '$F87';
+  assert fl5_store('$F87', '{\"v\":1,\"champ\":0}'), 'store';
+  perform 1;"
+chk "v087: після турніру anon бачить усі склади" anon "
+  j := fl_get('$F87'); assert (select count(*) from jsonb_array_elements(j::jsonb->'fives') f where f ? 'xi') = 2 and j->'fives_n' is null, j::text;"
+chk "v087: ліга 11×11 — fl_get без змін" anon "
+  j := fl_get('$FLID'); assert j->>'fmt' = '11' and json_array_length(j->'fives') = 0 and j->'fives_n' is null, j::text;"
+chk "v087: tg id у app_metadata — лише для акаунтів сервера (без пароля, пошта підтверджена, лише вхід поштою)" postgres "
+  assert (select raw_app_meta_data->>'tg_id' from auth.users where id = '$T1') = '901', 'сервер: 901';
+  assert (select raw_app_meta_data->>'tg_id' from auth.users where id = '$T2') is null, 'з паролем (signUp) — без tg_id';
+  assert (select raw_app_meta_data->>'tg_id' from auth.users where id = '$T3') is null, 'непідтверджена пошта — без tg_id';
+  assert (select raw_app_meta_data->>'tg_id' from auth.users where id = '$T4') is null, 'з Google — без tg_id';
+  assert (select raw_app_meta_data->>'provider' from auth.users where id = '$T1') = 'email', 'інші поля app_metadata лишились';"
+chk "v087: tg_auth_user — лише сервер; ok / bad / none" postgres "
+  assert tg_auth_user(901) = 'ok' and tg_auth_user(902) = 'bad' and tg_auth_user(903) = 'bad' and tg_auth_user(904) = 'bad' and tg_auth_user(905) = 'none', 'статуси';
+  assert not has_function_privilege('anon', 'tg_auth_user(bigint)', 'execute') and not has_function_privilege('authenticated', 'tg_auth_user(bigint)', 'execute'), 'права';
+  assert not has_function_privilege('anon', 'tg_server_made(uuid)', 'execute'), 'tg_server_made';
+  insert into auth.users(id, email, encrypted_password, email_confirmed_at, confirmation_sent_at, created_at, raw_app_meta_data) values ('87000000-0000-4000-a000-000000000906', 'tg-906@users.upl-30-0.vercel.app', 'x', now(), null, '2026-10-11', '{}');
+  assert tg_auth_user(906) = 'ok', 'акаунт від попереднього сервера';
+  insert into auth.users(id, email, encrypted_password, email_confirmed_at, confirmation_sent_at, created_at, raw_app_meta_data) values ('87000000-0000-4000-a000-000000000907', 'tg-907@users.upl-30-0.vercel.app', 'x', now(), null, '2026-10-13', '{}');
+  assert tg_auth_user(907) = 'bad', 'після виходу 0.87 акаунт без tg_id — чужий';
+  assert (select raw_app_meta_data->>'tg_id' from auth.users where email like 'tg-906@%') = '906', 'акаунт від попереднього сервера — отримав tg_id';
+  update auth.users set raw_app_meta_data = '{\"tg_id\":\"999\"}' where id = '$T4';
+  assert tg_auth_user(904) = 'bad', 'tg_id іншого користувача';"
+A87=aaaaaaaa-0000-4000-a000-000000000902; G87=aaaaaaaa-0000-4000-a000-000000000901
+$P -d t1 -c "select player_hello('$A87', '$SEC'), player_hello('$G87', '$SEC')" >/dev/null
+chk "v087: заздалегідь зареєстрований акаунт (tg-902 з паролем) не отримує Telegram-привʼязку" authenticated "
+  k := link_account('$A87', '$SEC');" ',"sub":"'$T2'"'
+chk "v087: справжній акаунт Telegram (tg-901) отримує привʼязку" authenticated "
+  k := link_account('$G87', '$SEC');" ',"sub":"'$T1'"'
+chk "v087: link_account бере tg лише з app_metadata" postgres "
+  assert not exists (select 1 from player_links where kind = 'tg' and key = '902'), 'tg 902 привʼязано за email';
+  assert exists (select 1 from player_links where kind = 'tg' and key = '901' and player_id = (select player_id from player_links where kind = 'auth' and key = '$T1')), 'tg 901';"
+# step 2 (sql/v088_revoke_pii_step2.sql, run in prod later): checked here so it never breaks the 0.87 read paths
+for pass in 1 2; do
+  if $P -d t1 -tA -f "$ROOT/sql/v088_revoke_pii_step2.sql" >"$D/out" 2>"$D/err" && [ ! -s "$D/out" ]; then ok "запуск $pass: v088_revoke_pii_step2.sql (крок 2)"; else bad "запуск $pass: v088_revoke_pii_step2.sql — $(grep -v NOTICE "$D/err" | head -3) $(head -3 "$D/out")"; fi
+done
+chk "крок 2: anon не читає seasons, players, league_results; seasons_pub, виклики, my_seasons, fl_get і профіль працюють" anon "
+  begin perform 1 from seasons limit 1; assert false, 'seasons'; exception when insufficient_privilege then null; end;
+  begin perform 1 from players limit 1; assert false, 'players'; exception when insufficient_privilege then null; end;
+  begin perform 1 from league_results limit 1; assert false, 'league_results'; exception when insufficient_privilege then null; end;
+  assert (select count(*) from seasons_pub) > 0 and exists (select 1 from seasons_pub where players is not null), 'seasons_pub';
+  perform 1 from challenges_pub; perform 1 from challenge_results_pub;
+  assert json_array_length(my_seasons('$DEV', '$SEC')) > 0, 'my_seasons';
+  assert fl_get('$F87') is not null and (trophy_stats())::text is not null and (game_stats())::text is not null, 'RPC';"
 echo "база: $D (порт $PORT)"
 [ $FAIL = 0 ] && echo "SQL: УСЕ ГАРАЗД ($N перевірок)" || echo "SQL: ПРОБЛЕМИ $FAIL/$N"
 exit $((FAIL>0))

@@ -13,8 +13,17 @@ const jres = j => ({ ok: true, status: 200, json: async () => j, text: async () 
 // DB: device secrets (device_ok), step-2 switch, unique official daily attempt
 const SECRETS = {}; let LEGACY_OPEN = true, SQL053 = true, ERA_COL = true;
 const err = (status, j) => ({ ok: false, status, text: async () => JSON.stringify(j) });
+// Supabase Auth (api/auth.js): accounts by service email; tg_auth_user as in sql/v087 (made = created by our server, no password)
+const AUTH = {}, LINKS = [];
 global.fetch = async (url, o = {}) => {
   const u = new URL(url); const t = u.pathname.split('/').pop(); const m = o.method || 'GET';
+  if (u.pathname.startsWith('/auth/v1/admin/')) {
+    const a = JSON.parse(o.body || '{}'), tg = (/^tg-(\d+)@/.exec(a.email || '') || [])[1];
+    if (t === 'users') { if (AUTH[tg]) return err(422, { msg: 'already registered' }); AUTH[tg] = { made: true, app: a.app_metadata || {}, user: a.user_metadata || {} }; return jres({ id: 'u' + tg }); }
+    if (t === 'generate_link') { LINKS.push(tg); return jres({ hashed_token: 'h' + tg }); }
+  }
+  if (t === 'tg_auth_user') { const x = AUTH[JSON.parse(o.body).p_tg]; const tg = String(JSON.parse(o.body).p_tg);
+    const v = !x ? 'none' : x.app.tg_id ? (x.app.tg_id === tg ? 'ok' : 'bad') : x.made ? ((x.app.tg_id = tg), 'ok') : 'bad'; return jres(v); }
   if (u.hostname === 'api.telegram.org') {
     const a = JSON.parse(o.body || '{}');
     if (t === 'getChatMember' && MIGRATED[a.chat_id]) return jres({ ok: false, description: 'Bad Request: group chat was upgraded to a supergroup chat', parameters: { migrate_to_chat_id: MIGRATED[a.chat_id] } });   // 0.69.4
@@ -375,6 +384,21 @@ function honestXi(formation) {
   await call(leagueH, { initData: initData({ id: 506, first_name: 'U506' }, 'g' + OLD) });
   ok('ліга: повторний перехід за старою кнопкою — без дублів', DB.leagues.filter(l => String(l.chat_id) === String(NEW)).length === 1 && DB.league_members.filter(x => String(x.chat_id) === String(NEW) && String(x.tg_user_id) === '506').length === 1);
   ok('ліга: підробний підпис — 401', (await call(leagueH, { initData: initData({ id: 501 }, 'g' + CHAT).replace(/hash=[0-9a-f]+/, 'hash=00') })).c === 401);
+
+  // ===== Telegram sign-in (V-4): identity in app_metadata; a pre-registered account with the service email is refused =====
+  const authH = require(path.join(ROOT, 'api', 'auth.js'));
+  const login = id => callReq(authH, { method: 'POST', body: { initData: initData({ id, first_name: 'T' + id }, '') } });
+  const l1 = await login(7001);
+  ok('auth: новий гравець — акаунт з app_metadata.tg_id, вхід видано', l1.c === 200 && l1.j.token_hash === 'h7001' && AUTH[7001].app.tg_id === '7001', `${l1.c} ${JSON.stringify(AUTH[7001])}`);
+  ok('auth: повторний вхід — той самий акаунт', (await login(7001)).c === 200 && LINKS.filter(x => x === '7001').length === 2);
+  AUTH[7002] = { made: false, app: { provider: 'email' } };   // attacker: signUp with tg-7002@… and a password before the victim
+  const l2 = await login(7002);
+  ok('auth: заздалегідь зареєстрований акаунт з цією поштою — 403, вхід не видано', l2.c === 403 && !LINKS.includes('7002') && !AUTH[7002].app.tg_id, `${l2.c} ${JSON.stringify(l2.j)}`);
+  AUTH[7003] = { made: true, app: { provider: 'email' } };   // created by the previous server version (no tg_id yet)
+  ok('auth: акаунт від попереднього сервера без tg_id — вхід, tg_id дописано', (await login(7003)).c === 200 && AUTH[7003].app.tg_id === '7003');
+  AUTH[7004] = { made: true, app: { tg_id: '9999' } };
+  ok('auth: tg_id іншої людини — 403', (await login(7004)).c === 403 && !LINKS.includes('7004'));
+  ok('auth: підробний підпис — 401', (await callReq(authH, { method: 'POST', body: { initData: initData({ id: 7001 }, '').replace(/hash=[0-9a-f]+/, 'hash=00') } })).c === 401);
 
   // ===== rate limiting -> 429 =====
   RATE_ON = true;

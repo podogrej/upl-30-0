@@ -11,6 +11,54 @@
 - Номер версии в подвале и `VERSION` в `lib/engine.js` должны совпадать: сервер проверяет сезон только той версией движка, которой он сыгран. Поэтому `index.html` и `lib/engine.js` всегда заливаются вместе.
 - При каждом выпуске обновляется `WHATSNEW` — это текст для игроков о последней версии.
 
+## 0.87 «Захист даних» — 10.10.2026
+
+Пять пунктов из проверки безопасности (`docs/review_2026-10-10_security.md`), остальное отложено (BACKLOG «Відкладено»). Симуляция та же (`lib/engine.js` отличается только `VERSION`), правило — DECISIONS п. 22.
+
+**Игра**
+- Таблица «За весь час», просмотр сезона (`?s=`), история на своей странице и «Виклик другу» читают представления `seasons_pub`, `challenges_pub`, `challenge_results_pub` вместо таблиц (`src/template.html`, `src/player.js`, `src/challenge.js`). Имя игрока — колонка `players` вместо встраивания `players(...)`; лига с друзьями — `in_fl=is.false` вместо `fl_id=is.null`; «моя строка» в таблице — только по `player_id` (раньше ещё по `device_id`). Убраны запасные запросы для старого SQL (`PL_SEL`, `sbGetFallback`).
+- Разовая выдача трофеев по старым сезонам устройства и история без `PLAYER` — через `my_seasons(device, secret)` (`src/trophies.js`, `src/player.js`).
+- Лига 5×5: до турнира чужие составы приходят без схемы и игроков — в лобби «<ім'я> склад готовий», подсказка при отправке «Склади суперників побачиш після турніру» (`src/leagues.js`).
+- Clarity (`src/build.py`, `<head>`): не грузится в Telegram Mini App (`#tgWebApp…`, `sessionStorage.__telegram__initParams`, `TelegramWebviewProxy`); при `#access_token`/`#refresh_token` в адресе ждёт, пока сайт заберёт вход (до 10 с), остаток стирает `history.replaceState` и только потом грузит Clarity.
+- `WHATSNEW` 0.87 (новая серия): «Ліга 5×5: склади суперників — після турніру».
+
+**Сервер**
+- `api/auth.js` (В-4): перед входом спрашивает базу `tg_auth_user(tg)`: `none` — создаёт аккаунт с `app_metadata.tg_id`, `ok` — вход, `bad` — 403 `tg_account` и `console.error` (аккаунт с этой почтой занят не нашим сервером). Регистрация по почте в Supabase остаётся включённой (решение владельца).
+- `api/fl5.js` (В-1): seed турнира — `crypto.randomInt` (в `result.seed`, проверяемость остаётся; `play(L, seed)`), составы для игры — из `fl_get_full`.
+- `api/r.js`: превью `/r/<id>` читает `seasons_pub`.
+- `vercel.json`: для всех адресов `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy: camera=(), microphone=(), geolocation=()`, `Strict-Transport-Security: max-age=63072000; includeSubDomains`, `Content-Security-Policy: frame-ancestors 'self' https://web.telegram.org https://*.telegram.org` (без других директив; без `X-Frame-Options` — Telegram Web встраивает Mini App во фрейм).
+- `PREV_VERSIONS = ['0.86', '0.85.2', '0.85.1']`.
+
+**SQL** — `sql/v087_data_protection.sql` (только добавляет, повторный запуск безвреден, сайт 0.86 работает: ни одно право не снято)
+- Представления `seasons_pub`, `challenges_pub`, `challenge_results_pub` (`security_invoker = off`, anon/authenticated — только `select`); `my_seasons(device, secret)`.
+- `fl_get_full` (тело `fl_get` из 0.81, только `service_role`); `fl_get` — та же JSON, но для 5×5 без результата чужие составы без `form`/`xi`, свой (по `auth.uid()`) целиком, плюс `fives_n`. Вкладки 0.86 в лобби покажут чужие составы пустыми — это и нужно.
+- `tg_server_made(uid)`: аккаунт создан нашим сервером = служебная почта, нет пароля, почта подтверждена, нет входов кроме почты. Самостоятельная регистрация с такой почтой либо с паролем (`signUp`), либо с неподтверждённой почтой (ссылку на `users.upl-30-0.vercel.app` получить нельзя) — такие не проходят.
+- Перенос: таким аккаунтам без `tg_id` пишется `raw_app_meta_data.tg_id` из почты; `tg_auth_user(tg)` (только сервер) — то же на лету для аккаунтов, созданных старым сервером между SQL и выкладкой.
+- `link_account`: tg id только из `raw_app_meta_data->>'tg_id'`, шаблон почты больше не читается.
+- Шаг 2 — `sql/v088_revoke_pii_step2.sql`: **не выполнять в этом выпуске** (BACKLOG, через 7 дней).
+
+**Проверки**
+- `setup.sh`: v087 дважды; нет личных колонок в представлениях, только чтение; `my_seasons` чужим секретом — отказ; 5×5 — anon и соперник не видят составов до турнира, после — видят все, `fl_get_full` закрыта; перенос `tg_id` только для аккаунтов сервера; заранее зарегистрированный аккаунт (`tg-902` с паролем) не получает tg-привязку; шаг 2 локально не ломает чтение 0.87.
+- `cheat.js`: вход Telegram — новый аккаунт с `tg_id`, заранее зарегистрированный — 403, аккаунт старого сервера — дописан `tg_id`, чужой `tg_id` — 403.
+- `fl63.js`: лобби прячет состав соперника; seed турнира случайный и воспроизводится по `result.seed`. `player_page.js`: сайт не читает таблицы с личными данными. Новые `clarity.js`, `headers.js` (быстрый набор `all.sh`). Заглушка `_site.js` знает представления (личные колонки — 400), `stub.sql` — колонки `auth.users` и `auth.identities`.
+- `visual_expect.json` 0.87: только `news` (новый список «Що нового»).
+
+**Залить**
+1. `sql/v087_data_protection.sql` — тестовая база, проверка, потом основная, проверка (**до** мержа: новый сервер без `tg_auth_user` не пустит в Telegram-вход, новый клиент без представлений не покажет таблицы). Проверка:
+   ```sql
+   select to_regclass('public.seasons_pub') is not null and to_regclass('public.challenges_pub') is not null and to_regclass('public.challenge_results_pub') is not null views,
+          to_regprocedure('public.my_seasons(uuid,text)') is not null and to_regprocedure('public.fl_get_full(text)') is not null and to_regprocedure('public.tg_auth_user(bigint)') is not null fns,
+          not has_function_privilege('anon', 'public.tg_auth_user(bigint)', 'execute') and not has_function_privilege('anon', 'public.fl_get_full(text)', 'execute')
+          and not has_table_privilege('anon', 'public.seasons_pub', 'insert') closed;
+   select count(*) total, count(*) filter (where raw_app_meta_data->>'tg_id' is not null) with_tg_id,
+          count(*) filter (where raw_app_meta_data->>'tg_id' is null) without_tg_id
+     from auth.users where email like 'tg-%@users.upl-30-0.vercel.app';
+   ```
+   Ожидается: `true, true, true`; `without_tg_id = 0`. Если не 0 — эти аккаунты не прошли признак «создан сервером» (пароль, неподтверждённая почта или Google-вход): разобрать до мержа, иначе их владельцы не войдут через Telegram.
+2. Затем `sql/check_schema.sql` в основной базе.
+3. Панель Supabase: ничего не меняем (регистрация по почте остаётся включённой).
+4. Ветка `test` → PR в `main`.
+
 ## 0.86 — 10.10.2026
 
 - После tester: в тексте «Поділитися» названия трофеев в «» (у трио запятые в названии); значки 1:7/7:1 — 🥁/🥨 вместо флагов (на Windows флаги показываются буквами); тест `surge2` ловит сдвиг границы кругов; в DECISIONS п. 21 — исключение для «Укрпошти».
