@@ -15,8 +15,8 @@ function ctx({log,pl,place=6,pts,gf,ga,top=[],lead15=false,nat=-1,age=26,format=
   const W=log.filter(m=>m.res==='W').length,D=log.filter(m=>m.res==='D').length,L=log.length-W-D;
   pts=pts??3*W+D;
   const table=Array.from({length:16},(_,i)=>({id:i===place-1?'USER':'t'+i,pts:i===place-1?pts:(top[i]??Math.max(0,60-3*i))}));
-  const snap=Array.from({length:16},(_,i)=>({id:i===0&&lead15?'USER':'t'+i}));if(!lead15)snap[5].id='USER';
-  const r={W,D,L,pts,place,gf:gf??log.reduce((a,m)=>a+m.ug,0),ga:ga??log.reduce((a,m)=>a+m.og,0),xp:40,table,snaps:Array.from({length:30},()=>snap),log:log.map((m,k)=>({rd:k+1,...m}))};
+  const snapAt=k=>{const sn=Array.from({length:16},(_,i)=>({id:'t'+i}));sn[lead15&&k===14?0:5].id='USER';return sn;};   // leader only after round 15
+  const r={W,D,L,pts,place,gf:gf??log.reduce((a,m)=>a+m.ug,0),ga:ga??log.reduce((a,m)=>a+m.og,0),xp:40,table,snaps:Array.from({length:30},(_,k)=>snapAt(k)),log:log.map((m,k)=>({rd:k+1,...m}))};
   pl=pl||SLOTS.map(slot=>({slot,g:0,a:0}));
   return {r,xi:pl.map((p,k)=>({id:'x'+k,name:'Гравець '+k,slot:p.slot,nat,by:2010-age,cc:'c'+k,y:2010,r0:75})),pl:pl.map((p,k)=>({id:'x'+k,rt:6.5,form:0,...p})),format,mode,reveal:false};
 }
@@ -53,6 +53,7 @@ both('choco',ctx({place:2,pts:70,top:[71]}),ctx({place:2,pts:70,top:[72]}),'др
 T.check(!has('choco',ctx({place:2,pts:70,top:[70]})),'choco: друге при рівних очках — ні');
 both('batya',ctx({place:1,age:30}),ctx({place:1,age:29}),'чемпіон, середній вік 30 — так, 29 — ні');
 T.check(!has('batya',ctx({place:2,age:33})),'batya: вік 33, але друге місце — ні');
+const y29=ctx({place:1,age:30});y29.xi[0].by=2010-24;T.check(!has('batya',y29),'batya: середній вік 29,45 (десятеро по 30, один 24) — ні');
 const noBy=ctx({place:1,age:35});noBy.xi[0].by=0;T.check(!has('batya',noBy),'batya: невідомий рік народження — ні');
 both('dance',ctx({gf:90}),ctx({gf:89}),'90 голів — так, 89 — ні');
 both('wedding',ctx({log:set(draws,4,M(5,3))}),ctx({log:set(draws,4,M(4,3))}),'матч 5:3 — так, 4:3 — ні');
