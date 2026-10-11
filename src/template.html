@@ -1872,7 +1872,7 @@ function renderPre(grow){
   const avg=xi.reduce((s,x)=>s+baseR(x),0)/11;
   const sea=seasonOf(S.year);const last=sea&&sea.teams[sea.teams.length-1];const lg=LEAGUE_NAME[S.year];
   const opp=lg?`<p>${lg}: ${sea.teams.slice(0,-1).map(t=>esc(shortTeam(t[1]))).join(', ')}. ${S.year===LEAGUE_CULT?'Кожен клуб — із середньою силою за свою історію в УПЛ.':'Кожен клуб — у сезоні з найсильнішим складом (середній рейтинг 11 найкращих гравців).'}</p>`
-    :`<p>Справжня УПЛ ${seasonLabel(S.year)}. Твоя 11-ка займе місце «${esc(last?last[1]:'')}», що тоді фінішував останнім.</p>`;
+    :`<p>Справжня УПЛ ${seasonLabel(S.year)}. Твоя 11-ка займе місце «${esc(last?shortTeam(last[1]):'')}», що тоді фінішував останнім.</p>`;
   const oppD=`<details class="tip"><summary>Суперники — ${lg||'УПЛ '+seasonLabel(S.year)}</summary>${opp}</details>`;
   if(!open){el.innerHTML=`<div class="kicker">Склад зафіксовано</div><p class="muted cap">Лише пам'ять: рейтинги й прогноз не показуються.</p>${oppD}`;return;}
   const pl=(S.pre.pl||[]).slice().sort((a,b)=>a-b);const med=pl.length?pl[Math.floor(pl.length/2)]:0;
@@ -2082,8 +2082,8 @@ async function playSeason(year){
   document.getElementById('table').innerHTML=`<tr><th></th><th>Команда</th><th class="num">І</th><th class="num">В</th><th class="num">Н</th><th class="num">П</th><th class="num">Голи</th><th class="num">РМ</th><th class="num">О</th><th class="num">xG</th><th class="num">xGA</th><th class="num">Г−xG</th></tr>`+r.table.map((t,i)=>`<tr class="${ZONE(i+1,r.table.length)}${t.id==='USER'?' me':''}"><td class="num">${i+1}</td><td>${esc(shortTeam(t.n))}</td><td class="num">${t.w+t.d+t.l}</td><td class="num">${t.w}</td><td class="num">${t.d}</td><td class="num">${t.l}</td><td class="num">${t.gf}:${t.ga}</td><td class="num">${sg(t.gf-t.ga)}</td><td class="num"><b>${t.pts}</b>${lk(t)}</td><td class="num">${f1(t.xg)}</td><td class="num">${f1(t.xga)}</td><td class="num">${(t.gf-t.xg>=0?'+':'')+(t.gf-t.xg).toFixed(1)}</td></tr>`).join('');
   // general regulations live in FAQ; here only what concerns your season
   let tn='';
-  if(r.tie)tn=`Ти ${r.tie.above?'вище':'нижче'} за «${r.tie.opp}» при однаковій кількості очок: вирішив показник «${r.tie.why}». `;
-  if(r.golden){const g=r.golden;tn=`Золотий матч: ${g.a} — ${g.b} ${g.ga}:${g.gb}${g.pen?` (пен. ${g.pen[0]}:${g.pen[1]})`:''}, переміг ${g.wu ? 'ти' : '«'+g.winner+'»'} ${g.how}. `+tn;}
+  if(r.tie)tn=`Ти ${r.tie.above?'вище':'нижче'} за «${shortTeam(r.tie.opp)}» при однаковій кількості очок: вирішив показник «${r.tie.why}». `;
+  if(r.golden){const g=r.golden;tn=`Золотий матч: ${shortTeam(g.a)} — ${shortTeam(g.b)} ${g.ga}:${g.gb}${g.pen?` (пен. ${g.pen[0]}:${g.pen[1]})`:''}, переміг ${g.wu ? 'ти' : '«'+shortTeam(g.winner)+'»'} ${g.how}. `+tn;}
   const tnEl=document.getElementById('tieNote');tnEl.textContent=tn;tnEl.hidden=!tn;
   {const ds=r.table.map(t=>({t,d:dOf(t)})),lo=ds.reduce((a,b)=>b.d<a.d?b:a),hi=ds.reduce((a,b)=>b.d>a.d?b:a),pt=d=>`${Math.abs(d)} ${plUk(Math.abs(d),'очко','очки','очок')}`;
     const ln=[lo.d<=-LUCK_MARK?`«${shortTeam(lo.t.n)}» провалив сезон: −${pt(lo.d)} від очікуваного.`:'',hi.d>=LUCK_MARK?`«${shortTeam(hi.t.n)}» — сюрприз сезону: +${pt(hi.d)} понад очікуване.`:''].filter(Boolean).join(' ');
@@ -2401,7 +2401,7 @@ const BOARDS={
   oneclub:{name:'Один клуб',q:'format=eq.oneclub',note:'Найкращий XI одного клубу. Складність дуже залежить від клубу.'},
   anti:{hidden:true,name:'Антисезон',q:'format=eq.anti',asc:true,note:'Навпаки: чим менше очок, тим вище. Мета — 0-30.'},
   legends:{hidden:true,name:'Ліга легенд',q:'format=eq.legends',note:'Суперники — 15 культових клубів, кожен у сезоні з найсильнішим складом. Тут 30-0 майже неможливе.'}};
-const CLUBN={};for(const c of DATA.clubs)CLUBN[c.c]=c.n;
+const CLUBN={};for(const c of DATA.clubs)CLUBN[c.c]=shortTeam(c.n);   // code -> short name for display
 // name from the player profile (players); nickname copy only for old rows without a player; lower case only (DECISIONS item 2)
 const pname=r=>String((r&&r.players&&(r.players.name||r.players.anon_name))||(r&&r.nickname)||'анонім').toLowerCase();
 // overall leaderboard: only seasons since the reset (docs/plan_069_reset.md); older ones stay in the DB and on player pages.
@@ -2470,7 +2470,7 @@ function viewHtml(s){
     <h3>Склад</h3>${pitchHtml(s.formation,xi)}
     ${mvp?`<p style="margin:var(--sp-2) 0 0">${em('star','sm')}Гравець сезону: <b>${esc(mvp.n)}</b> · ${Number(mvp.rt).toFixed(2)}</p>`:''}
     <div class="tbl"><table><tr><th>Гравець</th><th class="num">Оцінка</th><th class="num" title="Голи">Г</th><th class="num" title="Асисти">А</th><th class="num">Рейт.</th><th class="num">Форма</th></tr>${[...xi].sort((a,b)=>(b.rt||0)-(a.rt||0)).map(p=>`<tr><td class="pn"><div class="pnr">${lineDot(p.slot)}<span>${esc(p.n)}</span></div></td><td class="num"><b style="color:${rc(p.rt||0)}">${p.rt!=null?Number(p.rt).toFixed(2):'—'}</b></td><td class="num">${p.g||0}</td><td class="num">${p.a||0}</td><td class="num">${numOr0(baseR(p))}</td><td class="num" style="color:${p.f>=3?'var(--win)':p.f<=-3?'var(--loss)':'inherit'}">${p.f>0?'+':''}${p.f||0}</td></tr>`).join('')}</table></div>${LINE_KEY}
-    ${tb.length?`<h3>Турнірна таблиця</h3><div class="tbl"><table><tr><th>#</th><th>Команда</th><th class="num">В</th><th class="num">Н</th><th class="num">П</th><th class="num">Г</th><th class="num">О</th></tr>${tb.map((t,i)=>`<tr${t.me?' class="me"':''}><td class="num">${i+1}</td><td>${esc(t.n)}</td><td class="num">${t.w}</td><td class="num">${t.d}</td><td class="num">${t.l}</td><td class="num">${t.gf}:${t.ga}</td><td class="num"><b>${t.pts}</b></td></tr>`).join('')}</table></div>`:''}`;
+    ${tb.length?`<h3>Турнірна таблиця</h3><div class="tbl"><table><tr><th>#</th><th>Команда</th><th class="num">В</th><th class="num">Н</th><th class="num">П</th><th class="num">Г</th><th class="num">О</th></tr>${tb.map((t,i)=>`<tr${t.me?' class="me"':''}><td class="num">${i+1}</td><td>${esc(t.me?t.n:shortTeam(t.n))}</td><td class="num">${t.w}</td><td class="num">${t.d}</td><td class="num">${t.l}</td><td class="num">${t.gf}:${t.ga}</td><td class="num"><b>${t.pts}</b></td></tr>`).join('')}</table></div>`:''}`;
 }
 async function openView(q){screenTag('view');const box=document.getElementById('viewBox'),body=document.getElementById('viewBody');box.hidden=false;document.getElementById('viewTitle').textContent='Склад';body.innerHTML=skView();
   try{const rows=await sbGet(`seasons_pub?select=*&${q}&limit=1`);body.innerHTML=rows.length?viewHtml(rows[0]):'<p class="muted">Склад для цього результату не збережено.</p>';}catch(e){body.innerHTML='<p class="muted">Не вдалося завантажити.</p>';}}
@@ -2557,11 +2557,11 @@ document.addEventListener('click',e=>{const a=e.target.closest&&e.target.closest
 /*__VYKLYK__*/
 // ---------- share
 function gridOf(r){const m={W:"🟩",D:"🟨",L:"🟥"};let s="";r.log.forEach((x,i)=>{s+=m[x.res];if(i%10===9&&i<r.log.length-1)s+="\n";});return s;}
-// e.g. 'One club: Karpaty (Lviv) / ', 'Derby / '; empty for classic
+// e.g. 'One club: Karpaty / ', 'Derby / '; empty for classic
 // difficulty label for captions; anti-season internally uses Hardcore (removed from the picker): not shown
 function modeName(){return S.format==='anti'?'Лише пам\'ять':MODES[S.mode].name;}
 function fmtLabel(){const e=eraOf(),era=e==='all'?'':ERAS[e].name+' · ';   // e.g. 'Since 2010s / '
-  if(S.format==='classic')return era;if(S.format==='oneclub')return `${FORMATS.oneclub.name}: ${(DATA.clubs.find(c=>c.c===S.club)||{}).n||''} · `;return FORMATS[S.format].name+' · '+era;}
+  if(S.format==='classic')return era;if(S.format==='oneclub')return `${FORMATS.oneclub.name}: ${(ocClubs().find(c=>c.c===S.club)||{}).n||''} · `;return FORMATS[S.format].name+' · '+era;}
 // result link: /r/<id> is a page with messenger preview (api/r.js) that redirects to the site and opens this squad
 const shareUrl=r=>location.origin.startsWith('http')?location.origin+(r&&r.rowId?'/r/'+r.rowId:'/'):SITE;
 function shareTextOf(r,noLink,noGrid){   // noGrid: caption for the card; squares are already drawn on it
