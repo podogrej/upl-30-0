@@ -120,6 +120,7 @@ const order=pg=>pg.$$eval('#ppCab .tro.on[data-tr]',es=>es.map(e=>e.dataset.tr))
  T.check(!(await pg.$('#ppNameIn'))&&!(await pg.$('.pp-warn'))&&/Історію сезонів бачить лише vitia/.test(await pg.textContent('.pp-lock')),'чужа: без налаштувань і попередження, історію не видно');
  T.check(await pg.$$eval('#ppCab .tro.on.sec',es=>es.length===1&&/Секретний трофей/.test(es[0].textContent)&&!/Гроші/.test(es[0].textContent)),'чужий секретний трофей, якого в мене немає, — без назви');
  T.check(/Чорноморець/.test(await pg.textContent('.pp-fav'))&&!/\(/.test(await pg.textContent('.pp-fav .k + b'))&&(await pg.$$eval('.pp-tiles .tile b',bs=>bs.map(b=>b.textContent))).slice(0,3).join()==='2,1,77','чужа: плитки 2 сезони, 1 чемпіонство, 77 очок; улюблений клуб коротко, без міста');
+ { const t2=(await pg.$$eval('.pp-tiles .tile',e=>e.map(x=>x.textContent)))[1]||'';T.check(/1\s*чемпіонство(?![а-яіїє])/.test(t2)&&!/чемпіонств(?![а-яіїє])/.test(t2),'чужа: «1 чемпіонство» з відмінюванням: '+t2); }
  await pg.screenshot({path:path.join(MOCK,'player_page_059_other.png'),fullPage:true});
  await pg.click('#homeBtn');await pg.waitForTimeout(200);T.check(!/u=/.test(await pg.evaluate(()=>location.search)),'«Головна» прибирає ?u= з адреси');
  T.check(!A.errs.length,'без входу: помилок на сторінці немає '+A.errs.join(' | '));
