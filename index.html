@@ -544,20 +544,26 @@ td .sub .sk{height:18px;border-radius:var(--r-pill)}
 .tro.k-base:not(.on),.tro.k-friends:not(.on),.tro.k-secret:not(.on){background:color-mix(in srgb,var(--kc) 5%,var(--surface));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--kc) 18%,var(--line))}
 .tro.on[class*="k-"] .tre{background:color-mix(in srgb,var(--kc) 22%,var(--bg2))}
 .tro.on[class*="k-"] .trt b{background:none;color:var(--ink)}
-/* rarity: coloured word + 1-3 diamonds in the meta line; ring around the badge only for epic and legendary */
-:root{--nm-gold:#a87a00;--nm-rare-t:#1a5fcb;--nm-epic-t:#c21a6f;--nm-gold-t:#8a6200}
-:root[data-theme="dark"]{--nm-gold:#FFD60A;--nm-rare-t:#6aa5ff;--nm-epic-t:#ff7ab8;--nm-gold-t:#FFD60A}
-.tro .trt .trp{display:block}.tro .trt .trp span{font-size:inherit;color:inherit}.nm-sg,.nm-sg>*{white-space:nowrap}.nm-sg:not(:last-child)::after{content:" ·"}
+/* rarity: coloured word + 1-3 diamonds on the first meta row; ring (inset, same circle for all badges) only for epic and legendary */
+:root{--nm-gold:#a87a00;--nm-rare-t:#1a5fcb;--nm-epic-t:#c21a6f;--nm-gold-t:#7d6420;--nm-dim:#4f5a80}
+:root[data-theme="dark"]{--nm-gold:#FFD60A;--nm-rare-t:#6aa5ff;--nm-epic-t:#ff7ab8;--nm-gold-t:#FFD60A;--nm-dim:#9aa5c8}
+#ppCab .tro{column-gap:var(--sp-3)}
+#ppCab .tro .tre{width:40px;height:40px;font-size:22px}
+#ppCab .tro .trt b,#ppCab .tro .trt>span{color:var(--nm-dim)}#ppCab .tro.on .trt b{color:var(--ink)}#ppCab .tro.on .trt>span:not(.trp){color:var(--ink2)}
+#ppCab .tro .trt .trp{display:flex;flex-wrap:wrap;column-gap:var(--sp-3);row-gap:0;font-size:var(--fs-caption);color:var(--nm-dim)}
+#ppCab .tro .trt .trp span{font-size:inherit;color:inherit}.nm-sg,.nm-sg>*{white-space:nowrap}.nm-sg-r{flex-basis:100%}   /* rarity on its own row: equal card heights, no orphan segments */
 .nm-rw{display:inline-flex;align-items:center;gap:var(--sp-1);font-weight:var(--wt-bold)}.nm-pips{display:inline-flex;gap:3px}
 .nm-rp{display:block;width:6px;height:6px;transform:rotate(45deg);background:currentColor;border-radius:1px}
-.tro .trt .trp .nm-rw-rare,.trleg .nm-rw-rare{color:var(--nm-rare-t)}.tro .trt .trp .nm-rw-epic,.trleg .nm-rw-epic{color:var(--nm-epic-t)}.tro .trt .trp .nm-rw-legend,.trleg .nm-rw-legend{color:var(--nm-gold-t)}
-.tro:not(.on) .nm-rw{opacity:.7}
-.tro.rt-epic .tre,.tro.rt-legend .tre{width:36px;height:36px;font-size:var(--fs-title3)}   /* ring is drawn inside the badge box, never outside the icon column */
-.tro.rt-epic .tre{box-shadow:inset 0 0 0 1.5px var(--r-epic)}
-.tro.rt-legend .tre{box-shadow:inset 0 0 0 2px var(--nm-gold)}
+#ppCab .tro .trt .trp .nm-rw-rare,.trleg .nm-rw-rare{color:var(--nm-rare-t)}#ppCab .tro .trt .trp .nm-rw-epic,.trleg .nm-rw-epic{color:var(--nm-epic-t)}#ppCab .tro .trt .trp .nm-rw-legend,.trleg .nm-rw-legend{color:var(--nm-gold-t)}
+#ppCab .tro:not(.on) .nm-pips{opacity:.8}
+#ppCab .tro .trn{align-self:start;padding-top:3px;font:var(--wt-bold) var(--fs-footnote)/var(--lh-snug) var(--font-body);color:var(--nm-dim)}
+#ppCab .tro.rt-epic .tre{box-shadow:inset 0 0 0 2px var(--r-epic)}
+#ppCab .tro.rt-legend .tre{box-shadow:inset 0 0 0 2px var(--nm-gold)}
+:root[data-theme="dark"] #ppCab .tro.on .tre{background:rgba(255,255,255,.08)}:root[data-theme="dark"] #ppCab .tro:not(.on) .tre{background:rgba(255,255,255,.055)}   /* unowned plate ends up at ~.03 after the .off opacity */
+#ppCab .tro:not(.on) .tre.off{opacity:.55}
 .trleg{display:grid;gap:var(--sp-2);margin:var(--sp-0h) 0 var(--sp-3);padding:var(--sp-3) var(--sp-4);border-radius:var(--r-lg);background:var(--card);font-size:var(--fs-caption);color:var(--ink2)}
 .trleg .h{font-size:var(--fs-caption);color:var(--muted);text-transform:uppercase;letter-spacing:var(--ls-caps)}.trleg .row{display:flex;flex-wrap:wrap;gap:var(--sp-1) var(--sp-3);margin:0;align-items:center}
-.trleg .it{display:inline-flex;align-items:center;gap:var(--sp-2);white-space:nowrap}.trleg .sw{width:22px;height:14px;border-radius:var(--r-xs);flex:none;background:linear-gradient(120deg,color-mix(in srgb,var(--kc) 45%,var(--surface)),var(--surface));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--kc) 55%,transparent)}
+.trleg .it{display:inline-flex;align-items:center;gap:var(--sp-2);white-space:nowrap}.trleg .nm-lgr{display:grid;grid-template-columns:repeat(3,auto);justify-content:space-between;gap:var(--sp-2)}.trleg .nm-lgr .it,.trleg .nm-lgr .nm-rw{flex-direction:column;align-items:flex-start;gap:var(--sp-1)}   /* legend: three equal columns, swatch/diamonds above the word */.trleg .sw{width:22px;height:14px;border-radius:var(--r-xs);flex:none;background:linear-gradient(120deg,color-mix(in srgb,var(--kc) 45%,var(--surface)),var(--surface));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--kc) 55%,transparent)}
 .pp-list{border:1px solid var(--line);border-radius:var(--r-md);background:var(--surface);overflow:hidden}
 .fl-hero{text-align:center;display:grid;justify-items:center;gap:var(--sp-2);margin:var(--sp-4) 0 var(--sp-2)}.fl-hero h1,.fl-head h1{font-family:var(--font-display);margin:0;font-size:var(--fs-title1);line-height:var(--lh-tight);letter-spacing:var(--ls-tight)}.fl-hero p{margin:0;color:var(--ink2)}   /* iPad: button and text centered */
 .fl-head{display:grid;gap:var(--sp-1);margin:var(--sp-4) 0 var(--sp-3)}.fl-head p{margin:0;font-size:var(--fs-footnote)}.fl-badge{font-style:normal;font-family:var(--font-mono,monospace);font-size:var(--fs-footnote);vertical-align:middle;border:1px solid var(--df);color:var(--df);border-radius:var(--r-sm);padding:var(--sp-0h) var(--sp-2)}
@@ -590,8 +596,8 @@ a.fl-row{text-decoration:none}
 .pp-cabout{display:grid;gap:var(--sp-2);margin:var(--sp-2) 0 var(--sp-1)}.pp-cabout img{width:100%;max-width:360px;border-radius:var(--r-md);border:1px solid var(--line)}
 .pp-row{display:grid;grid-template-columns:auto 1fr auto;gap:var(--sp-2);align-items:center;padding:var(--sp-3) var(--sp-3);min-height:48px;cursor:pointer}
 .pp-row+.pp-row{border-top:1px solid var(--line)}@media (hover:hover) and (pointer:fine){.pp-row:hover{background:color-mix(in srgb,var(--ink) 4%,transparent)}}
-.pp-row .t{min-width:0}.pp-row .t b{display:block;font-size:var(--fs-body);font-weight:var(--wt-bold);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pp-row .t span{display:block;font-size:var(--fs-caption);color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.pp-k{font-style:normal;font-size:var(--fs-caption2);font-weight:var(--wt-bold);color:var(--muted)}.pp-k.best{color:var(--win)}.pp-k.worst{color:var(--loss)}
+.pp-row .t{min-width:0}.pp-row .t b{display:block;font-size:var(--fs-body);font-weight:var(--wt-bold);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pp-row .t span{display:block;font-size:var(--fs-caption);color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pp-row .t span:has(>.nm-sg){display:flex;flex-wrap:wrap;column-gap:var(--sp-3);white-space:normal;overflow:visible}.pp-row .t .nm-sg{font-style:normal;max-width:100%;overflow:hidden;text-overflow:ellipsis}   /* XI details wrap by segment instead of being cut */
+.pp-k{margin-left:6px;font-style:normal;font-size:var(--fs-caption2);font-weight:var(--wt-bold);color:var(--muted)}.pp-k.best{color:var(--win)}.pp-k.worst{color:var(--loss)}
 .pp-row .n{font-family:var(--font-display);font-weight:var(--wt-bold);font-size:var(--fs-headline);font-variant-numeric:tabular-nums;text-align:right}.pp-row .n small{font-family:var(--font-body);font-size:var(--fs-caption2);color:var(--muted);font-weight:var(--wt-bold);margin-left:var(--sp-0h)}
 .pp-row .n.g{color:var(--amber)}
 .pp-row.h{grid-template-columns:44px 1fr auto}.pp-row.h .d{font-family:var(--font-mono);font-size:var(--fs-caption);color:var(--muted);line-height:var(--lh-snug)}
@@ -606,16 +612,16 @@ details.pp-hist[open]>summary{margin-bottom:var(--sp-3)}
 a.set-r{text-decoration:none}
 .set-r+.set-r{border-top:1px solid var(--line2)}@media (hover:hover) and (pointer:fine){.set-r:hover{background:color-mix(in srgb,var(--ink) 4%,transparent)}}
 .set-r .k{flex:1;min-width:0;font-weight:var(--wt-bold)}.set-r .k small{display:block;overflow-wrap:anywhere;font-weight:var(--wt-medium);color:var(--muted);font-size:var(--fs-caption);margin-top:var(--sp-0h)}
-.set-r .v{color:var(--ink2);max-width:46%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.set-r .v.mu{color:var(--muted)}
+.set-r .v{color:var(--ink);max-width:46%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.set-r .v.mu{color:var(--nm-dim)}
 .set-r.who{cursor:default}
 /* clickable text rows: no chevron, the title is underlined with a hairline; solid 2px while pressed */
-.nm-lk{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:.22em;text-decoration-color:color-mix(in srgb,currentColor 50%,transparent)}
-.pp-row:active .nm-lk,.set-r:active .nm-lk{text-decoration-color:currentColor;text-decoration-thickness:2px}@media (hover:hover) and (pointer:fine){.set-r.who:hover{background:none}}
+.nm-lk{text-decoration:underline;text-decoration-thickness:1.5px;text-underline-offset:3px;text-decoration-skip-ink:auto;text-decoration-color:color-mix(in srgb,currentColor 45%,transparent)}.nm-ext{width:12px;height:12px;margin-left:var(--sp-1);fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;vertical-align:-1px}
+.pp-row:active .nm-lk,.set-r:active .nm-lk,.pp-row:focus-visible .nm-lk,.set-r:focus-visible .nm-lk{text-decoration-color:currentColor;text-decoration-thickness:2px}@media (hover:hover) and (pointer:fine){.set-r.who:hover{background:none}}
 .set-ic{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;flex:none;background:#fff}.set-ic .ico{width:18px;height:18px}.set-ic.g .ico{color:#4285f4}.set-ic.t{background:#2aabee}.set-ic.t .ico{color:#fff}
 input.sw{appearance:none;-webkit-appearance:none;flex:none;width:46px;height:28px;border-radius:var(--r-lg);background:var(--line);position:relative;cursor:pointer;margin:0;transition:background var(--dur-2) var(--ease-out)}
 input.sw::after{content:"";position:absolute;left:3px;top:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:transform var(--dur-2) var(--spring)}
 input.sw:checked{background:var(--win)}input.sw:checked::after{transform:translateX(18px)}
-#ppSet .pp-sec{margin-top:var(--sp-5)}#ppSetMsg{margin:var(--sp-2) var(--sp-0h) 0}#ppSet .pp-del{display:block;margin:var(--sp-4) auto 0}
+#ppSet .pp-sec{margin-top:var(--sp-5)}#ppSetMsg{margin:var(--sp-2) var(--sp-0h) 0}#ppSet .pp-del{display:block;margin:var(--sp-4) auto 0;min-height:44px;padding:var(--sp-3) var(--sp-4)}
 .sheet0-box{display:grid;gap:var(--sp-2);align-content:start;overflow-y:auto;overscroll-behavior:contain;max-width:560px;background:var(--surface);padding-bottom:calc(var(--sp-5) + env(safe-area-inset-bottom,0px))}
 @media (min-width:600px){.sheet0-box{max-width:460px}}
 .sheet0-bar{display:flex;justify-content:space-between;align-items:center}.sheet0-bar h3{margin:0;font:var(--wt-black) var(--fs-title3) var(--font-display)}
@@ -3086,8 +3092,8 @@ function ppRender(){
 }
 // best and worst XI per mode (own page only)
 const PP_BUCKETS=[['classic','Класика','trophy'],['pick','Вибір сезону','calendar-check'],['daily','Драфт дня','calendar-star'],['derby','Дербі','lightning-bolt'],['oneclub','Один клуб','heart'],['anti','Антисезон','arrow-down-bold'],['legends','Ліга легенд','crown']];
-function ppXiRow(x,kind,label,icn){if(!x)return '';const sub=[`${numOr0(x.place)} місце`,`${numOr0(x.w)}-${numOr0(x.d)}-${numOr0(x.l)}`,esc(x.formation||''),x.avg!=null?`сер. ${esc(String(x.avg))}`:'',x.club&&CLUBN[x.club]?esc(CLUBN[x.club]):''].filter(Boolean).join(' · ');
-  return `<div class="pp-row" data-sid="${numOr0(x.id)}" role="button" tabindex="0">${ic(icn)}<div class="t"><b><u class="nm-lk">${label}</u> <em class="pp-k ${kind}">${kind==='best'?'найкращий':'найгірший'}</em></b><span>${sub}</span></div><span class="n${kind==='best'?' g':''}">${numOr0(x.pts)}<small>оч</small></span></div>`;}
+function ppXiRow(x,kind,label,icn){if(!x)return '';const sub=[`${numOr0(x.place)} місце`,`${numOr0(x.w)}-${numOr0(x.d)}-${numOr0(x.l)}`,esc(x.formation||''),x.avg!=null?`сер. ${esc(String(x.avg))}`:'',x.club&&CLUBN[x.club]?esc(CLUBN[x.club]):''].filter(Boolean).map(v=>`<i class="nm-sg">${v}</i>`).join('');
+  return `<div class="pp-row" data-sid="${numOr0(x.id)}" role="button" tabindex="0">${ic(icn)}<div class="t"><b><u class="nm-lk">${label}</u><em class="pp-k ${kind}">${kind==='best'?'найкращий':'найгірший'}</em></b><span>${sub}</span></div><span class="n${kind==='best'?' g':''}">${numOr0(x.pts)}<small>оч</small></span></div>`;}
 function ppXiHtml(p){const b=p.best||{},w=p.worst||{};const rows=PP_BUCKETS.map(([k,l,i])=>ppXiRow(b[k],'best',l,i)+ppXiRow(w[k],'worst',l,i)).join('');
   return rows?`<div class="pp-sec"><h3>Найкращий і найгірший XI</h3></div><div class="pp-list">${rows}</div>`:'';}
 // trophy cabinet: filter by section (N/M), sort by rarity / recent
@@ -3107,9 +3113,9 @@ function ppRenderCab(){
   const card=t=>{const e=have[t.id];
     if(!own&&t.sec&&e&&!(mine[t.id]&&mine[t.id].n))return `<div class="tro k-secret on sec"><span class="tri">${trBadge({id:'secret',cat:'secret'},true)}</span><div class="trt"><b>Секретний трофей</b><span>Відкрий його сам, щоб дізнатися, за що він</span><span class="trp">секретний${e.at?' · '+fmtShort(e.at):''}</span></div></div>`;
     const tier=trTier(t),p=trPct(t.id);
-    const rw=tr=>`<span class="nm-sg"><span class="nm-rw nm-rw-${tr[1]}"><span class="nm-pips" aria-hidden="true">${'<i class="nm-rp"></i>'.repeat(tr[1]==='rare'?1:tr[1]==='epic'?2:3)}</span>${tr[2]}</span></span>`;
-    const segs=[t.sec?'секретний':'',p!=null&&!t.sec?(p===0?(e?(own?'ти серед перших':'серед перших'):'ще ніхто не відкрив'):`є в ${p<1?'&lt;1':Math.round(p)}% гравців`):'',e&&e.at?fmtShort(e.at):''].filter(Boolean).map(x=>`<span class="nm-sg">${x}</span>`);
-    if(tier)segs.unshift(tier[1]==='common'?`<span class="nm-sg">${tier[2]}</span>`:rw(tier));   // rarity first: coloured word + diamonds, common is plain
+    const rw=tr=>`<span class="nm-sg nm-sg-r"><span class="nm-rw nm-rw-${tr[1]}"><span class="nm-pips" aria-hidden="true">${'<i class="nm-rp"></i>'.repeat(tr[1]==='rare'?1:tr[1]==='epic'?2:3)}</span>${tr[2]}</span></span>`;
+    const segs=[t.sec?'секретний':'',p!=null&&!t.sec?(p===0?(e?(own?'ти серед перших':'серед перших'):'ще ніхто не відкрив'):`${p<1?'&lt;1':Math.round(p)}% гравців`):'',e&&e.at?fmtShort(e.at):''].filter(Boolean).map((x,i)=>`<span class="nm-sg${t.sec&&!i?' nm-sg-r':''}">${x}</span>`);
+    if(tier)segs.unshift(tier[1]==='common'?`<span class="nm-sg nm-sg-r">${tier[2]}</span>`:rw(tier));   // rarity first: coloured word + diamonds, common is plain
     const sk=trBusy()&&!t.sec?'<i class="sk"></i>':'';
     return `<div class="tro k-${trKind(t)}${e?' on':''}${t.sec?' sec':''}${tier&&e?' rt-'+tier[1]:''}" data-tr="${esc(t.id)}"><span class="tri">${trBadge(t,!!e)}</span><div class="trt"><b>${esc(t.n)}</b>${trQ(t)}<span>${esc(t.d)}</span>${segs.length||sk?`<span class="trp">${segs.join(' ')}${sk?(segs.length?' ':'')+sk:''}</span>`:''}</div>${e&&e.n>1?`<span class="trn">×${e.n}</span>`:''}</div>`;};
   const cnt=c=>{const l=LIVE.filter(t=>inCat(t,c));return `${l.filter(got).length}/${l.length}`;};
@@ -3118,7 +3124,7 @@ function ppRenderCab(){
     ${own&&n?`<button class="ghost wbtn" id="ppCabShare">${ic('bookshelf','sm')}Поділитися шафою</button><div id="ppCabOut" hidden class="pp-cabout"><img id="ppCabImg" alt="Шафа трофеїв"><div class="row"><button class="primary" id="ppCabSend" hidden>${ic('share-variant','sm')}Поділитися</button><span class="muted" id="ppCabMsg" style="font-size:var(--fs-footnote)"></span></div></div>`:''}
     ${st.all?`<div class="pp-filt" role="tablist">${cats.filter(([c])=>c==='all'||LIVE.some(t=>inCat(t,c))).map(([c,l])=>`<button class="chip${st.f===c?' onc':''}" data-f="${c}" role="tab" aria-selected="${st.f===c}">${l} <i>${cnt(c)}</i></button>`).join('')}</div>
     <div class="seg pp-sort"><button data-s="rare" class="${st.s==='rare'?'on':''}">За рідкістю</button><button data-s="recent" class="${st.s==='recent'?'on':''}">Нещодавні</button></div>`:''}
-    ${st.all&&shown.length?`<div class="trleg"><div class="h">Колір картки — клас трофея</div><div class="row">${[['base','Основний'],['friends','З друзями'],['secret','Секретний']].map(([k,l])=>`<span class="it k-${k}"><i class="sw"></i>${l}</span>`).join('')}</div><div class="h">Рідкість</div><div class="row">${RARITY.slice(1).map(([,k,l])=>`<span class="it"><span class="nm-rw nm-rw-${k}"><span class="nm-pips" aria-hidden="true">${'<i class="nm-rp"></i>'.repeat(k==='rare'?1:k==='epic'?2:3)}</span>${l.toLowerCase()}</span></span>`).join('')}</div></div>`:''}
+    ${st.all&&shown.length?`<div class="trleg"><div class="h">Колір картки — клас трофея</div><div class="row nm-lgr">${[['base','Основний'],['friends','З друзями'],['secret','Секретний']].map(([k,l])=>`<span class="it k-${k}"><i class="sw"></i>${l}</span>`).join('')}</div><div class="h">Рідкість</div><div class="row nm-lgr">${RARITY.slice(1).map(([,k,l])=>`<span class="it"><span class="nm-rw nm-rw-${k}"><span class="nm-pips" aria-hidden="true">${'<i class="nm-rp"></i>'.repeat(k==='rare'?1:k==='epic'?2:3)}</span>${l}</span></span>`).join('')}</div></div>`:''}
     ${shown.length?`<div class="trg">${shown.map(card).join('')}</div>`:`<p class="pp-empty">${own?'Тут поки порожньо — зіграй сезон.':'Поки жодного трофея.'}</p>`}
     ${secOff&&own&&st.all?`<p class="trsec"><span>+${secOff} ${plUk(secOff,'секретний трофей чекає','секретні трофеї чекають','секретних трофеїв чекають')}</span>${icon('eye')}</p>`:''}
     ${own&&st.all?`<div class="row pp-ms">${MILESTONES.map(([k,,nm])=>{const e=have['ms'+k];return `<span class="chip ms${e?' onc':''}">${trBadge({id:'ms'+k,cat:'milestone'},!!e)}${nm}${!e&&trStore().seasons<k?` · ${trStore().seasons}/${k}`:''}</span>`;}).join('')}</div>`:''}
@@ -3187,7 +3193,7 @@ function ppSettingsHtml(){
   h+=ppRow('ppRowTeam','Назва команди','на полі й у картці',team||'Твоя 11-ка',!team);
   if(PLAYER&&'contact_email' in PLAYER){h+=ppRow('ppRowMail','Пошта для новин','видно лише тобі',mail||'не вказано',!mail);
     h+=`<label class="set-r tg"><span class="k">Новини 30-0<small>великі оновлення, не частіше разу на місяць</small></span><input type="checkbox" role="switch" class="sw" id="ppNews"${PLAYER.news_optin?' checked':''}></label>`;}
-  if(TG_BOT)h+=`<a class="set-r" id="ppNotify" href="https://t.me/${TG_BOT}?start=notify" target="_blank" rel="noopener"><span class="k"><u class="nm-lk">Сповіщення в Telegram</u><small>підсумок дня в лігах і нагадування про серію — вмикаєш у боті</small></span></a>`;   // opt-in lives in the bot (/notify), off by default
+  if(TG_BOT)h+=`<a class="set-r" id="ppNotify" href="https://t.me/${TG_BOT}?start=notify" target="_blank" rel="noopener"><span class="k"><u class="nm-lk">Сповіщення в Telegram</u><svg class="nm-ext" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 9l6-6M4 3h5v5"/></svg><small>підсумок дня в лігах і нагадування про серію — вмикаєш у боті</small></span></a>`;   // opt-in lives in the bot (/notify), off by default
   h+=`</div><p class="pp-hint" id="ppSetMsg" hidden></p><div class="pp-sec"><h3>Акаунт</h3></div><div class="set-card">`;
   if(SESSION){const em=via==='Google'?(SESSION.user.email||''):acctName();
     h+=`<div class="set-r who"><i class="set-ic ${via==='Google'?'g':'t'}">${icon(via==='Google'?'google':'telegram')}</i><span class="k">Увійшов через ${via}<small>${esc(em)}</small></span></div>`+

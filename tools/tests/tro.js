@@ -33,7 +33,7 @@ const DEV='aaaaaaaa-0000-4000-a000-000000000001';
  await pg.evaluate(()=>{document.getElementById('homeBtn').click();window.__dbg.openTrophies();});await pg.waitForTimeout(600);
  const cab=(await pg.textContent('#viewBody')).replace(/\s+/g,' ');
  T.check(/Відкрито \d+ з \d+ · зіграно сезонів: 3/.test(cab),'шафа: '+cab.slice(0,60));
- T.check(/Чемпіони.*є в 30% гравців/.test(cab),'шафа: «Чемпіони — є в 30% гравців» з trophy_stats');
+ T.check(/Чемпіони.*30% гравців/.test(cab),'шафа: «Чемпіони — є в 30% гравців» з trophy_stats');
  await pg.screenshot({path:path.join(OUT,'tro_cabinet.png')});
  T.check(!errs.length,'помилок на сторінці немає '+errs.join(' | '));
  await b.close();process.exit(T.done());})();

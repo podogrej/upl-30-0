@@ -74,7 +74,7 @@ const order=pg=>pg.$$eval('#ppCab .tro.on[data-tr]',es=>es.map(e=>e.dataset.tr))
  // cabinet: rarity
  await pg.waitForTimeout(300);
  T.check(JSON.stringify(await order(pg))===JSON.stringify(['unbeaten','top3','champ']),'сортування «за рідкістю»: '+(await order(pg)).join(','));
- T.check(await pg.$eval('#ppCab .tro[data-tr="unbeaten"]',e=>e.classList.contains('rt-epic')&&!!e.querySelector('.trp .nm-rw-epic')&&e.querySelector('.nm-rw-epic').textContent==='Епічний'&&e.querySelectorAll('.nm-rw-epic .nm-rp').length===2&&/є в 2% гравців/.test(e.querySelector('.trp').textContent))   // rarity word and diamonds in the meta line
+ T.check(await pg.$eval('#ppCab .tro[data-tr="unbeaten"]',e=>e.classList.contains('rt-epic')&&!!e.querySelector('.trp .nm-rw-epic')&&e.querySelector('.nm-rw-epic').textContent==='Епічний'&&e.querySelectorAll('.nm-rw-epic .nm-rp').length===2&&/2% гравців/.test(e.querySelector('.trp').textContent))   // rarity word and diamonds in the meta line
    &&await pg.$eval('#ppCab .tro[data-tr="top3"]',e=>e.classList.contains('rt-rare')&&e.querySelectorAll('.nm-rw-rare .nm-rp').length===1)&&await pg.$eval('#ppCab .tro[data-tr="champ"]',e=>/Звичайний/.test(e.textContent)&&!e.querySelector('.nm-rp')),'рівні рідкості: епічний 2% — слово й 2 ромби, рідкісний 10% — 1 ромб, звичайний 60% — слово без ромбів');
  T.check(await pg.$$eval('#ppCab .gem',e=>e.length)===0,'плашки .gem у шафі більше немає');
  // card colour: only three classes
@@ -93,11 +93,13 @@ const order=pg=>pg.$$eval('#ppCab .tro.on[data-tr]',es=>es.map(e=>e.dataset.tr))
    const sh=getComputedStyle(t).boxShadow;const ext=/inset/.test(sh)?0:12;const gap=q.left-(a.right+ext);
    const out=[...c.querySelectorAll('*')].filter(e=>{const r=e.getBoundingClientRect();return r.width&&(r.left<R.left-0.5||r.right>R.right+0.5||r.top<R.top-0.5||r.bottom>R.bottom+0.5);}).length;
    return gap<8||out?`${c.dataset.tr||'leg'} gap ${gap.toFixed(1)} out ${out}`:'';}).filter(Boolean));
+  {const g=await pg.$$eval('#ppCab .tro[data-tr]',cs=>cs.map(c=>{const t=c.querySelector('.tre').getBoundingClientRect(),x=c.querySelector('.trt').getBoundingClientRect(),m=c.querySelector('.trp');return [Math.round(t.width),Math.round(t.height),Math.round(x.left-t.right),m?parseFloat(getComputedStyle(m).fontSize):12];}));
+   T.check(g.length>3&&g.every(v=>v[0]===40&&v[1]===40&&v[2]===12&&v[3]>=12),`значки однакові (40px), зазор до тексту 12px, мета ≥12px: ${th} ${w}px ${JSON.stringify(g[0])}`);}
   if(process.env.SHOTS&&w<500){fs.mkdirSync(process.env.SHOTS,{recursive:true});
    {const c=await pg.evaluate(()=>{const cs=[...document.querySelectorAll('#ppCab .trg .tro')],f=cs[0].getBoundingClientRect(),l=cs[Math.min(5,cs.length-1)].getBoundingClientRect();return {y:f.top+scrollY-70,h:l.bottom-f.top+80};});
     await pg.screenshot({path:path.join(process.env.SHOTS,`cabinet_${w}_${th}.png`),fullPage:true,clip:{x:0,y:Math.max(0,c.y),width:w,height:c.h}});}
    for(const [i,c] of (await pg.$$('#ppCab .tro.rt-epic, #ppCab .tro.rt-legend')).entries())await c.screenshot({path:path.join(process.env.SHOTS,`ring${i}_${w}_${th}.png`)});
-   await pg.evaluate(()=>{const row=(k,l,sub,n)=>`<div class="pp-row" role="button" tabindex="0"><i class="ic"><svg class="ico" viewBox="0 0 24 24"><path d="M12 2l3 7h7l-5.5 4.5L18.5 21 12 17l-6.5 4 2-7.5L2 9h7z"/></svg></i><div class="t"><b><u class="nm-lk">${l}</u> <em class="pp-k ${k}">${k==='best'?'найкращий':'найгірший'}</em></b><span>${sub}</span></div><span class="n${k==='best'?' g':''}">${n}<small>оч</small></span></div>`;
+   await pg.evaluate(()=>{const row=(k,l,sub,n)=>`<div class="pp-row" role="button" tabindex="0"><i class="ic"><svg class="ico" viewBox="0 0 24 24"><path d="M12 2l3 7h7l-5.5 4.5L18.5 21 12 17l-6.5 4 2-7.5L2 9h7z"/></svg></i><div class="t"><b><u class="nm-lk">${l}</u><em class="pp-k ${k}">${k==='best'?'найкращий':'найгірший'}</em></b><span>${sub.split(' · ').map(v=>`<i class="nm-sg">${v}</i>`).join('')}</span></div><span class="n${k==='best'?' g':''}">${n}<small>оч</small></span></div>`;
     const x=document.createElement('div');x.id='nmXiShot';x.innerHTML='<div class="pp-sec"><h3>Найкращий і найгірший XI</h3></div><div class="pp-list">'+row('best','Класика','1 місце · 29-1-0 · 4-3-3 · сер. 91 · Динамо Київ',88)+row('worst','Вибір сезону','14 місце · 8-7-15 · 4-4-2',31)+'</div>';document.getElementById('ppCab').before(x);});
    await pg.locator('#nmXiShot').screenshot({path:path.join(process.env.SHOTS,`xi_${w}_${th}.png`)});await pg.evaluate(()=>document.getElementById('nmXiShot').remove());
    await pg.locator('#ppSet').screenshot({path:path.join(process.env.SHOTS,`settings_${w}_${th}.png`)});
