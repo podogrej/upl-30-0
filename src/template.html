@@ -1628,19 +1628,20 @@ const NICK={'w:1979-03-30:timoschuk':'пітух'};const nickOf=id=>NICK[id]?` <
 // club colors on the chip: CLUB_COLORS {code:[c1,c2,c3]} injected by build.py from data/club_colors.csv; club without colors gets a neutral chip (CSS default)
 const CLUB_COLORS=/*__CLUB_COLORS__*/{};
 const CLUB_CODE={};for(const c of DATA.clubs)if(!(c.n in CLUB_CODE))CLUB_CODE[c.n]=c.c;   // first club with the name wins (a live-season rename must not take an old club's name)
-const ccOf=p=>p.cc||CLUB_CODE[p.club]||CLUB_CODE[p.c]||p.c;   // draft: cc; 5x5: club (name) and c (code); saved season: c (name)
+const CLUB_CODE_Y={};for(const c of DATA.clubs)CLUB_CODE_Y[c.n+'|'+c.y]=c.c;   // exact club+season name -> code (same display name in two clubs)
+const ccOf=p=>p.cc||CLUB_CODE_Y[p.club+'|'+p.y]||CLUB_CODE[p.club]||CLUB_CODE[p.c]||p.c;   // draft: cc; 5x5: club (name) and c (code); saved season: c (name)
 function relLum(h){const v=parseInt(h.slice(1),16);return [v>>16&255,v>>8&255,v&255].map(x=>{x/=255;return x<=0.03928?x/12.92:Math.pow((x+0.055)/1.055,2.4);}).reduce((a,x,i)=>a+x*[0.2126,0.7152,0.0722][i],0);}
 function contrast(a,b){const x=relLum(a),y=relLum(b);return (Math.max(x,y)+0.05)/(Math.min(x,y)+0.05);}
 const PAL={};
-function clubPal(code){if(code in PAL)return PAL[code];const c=CLUB_COLORS[code];if(!c||!c[0])return PAL[code]='';
+function clubPal(code,y){const k=y&&(code+'@'+y in CLUB_COLORS)?code+'@'+y:code;if(k in PAL)return PAL[k];const c=CLUB_COLORS[k];if(!c||!c[0])return PAL[k]='';
   const [c1,c2,c3]=c;const tx=[c2,c3].find(x=>x&&contrast(x,c1)>=3.2)||(contrast('#ffffff',c1)>=contrast('#111111',c1)?'#fff':'#111');
-  return PAL[code]=`--c1:${c1};--c2:${c2||c1};--ct:${tx}`;}
+  return PAL[k]=`--c1:${c1};--c2:${c2||c1};--ct:${tx}`;}
 /*__ONECLUB__*/
 const rtCol=v=>v>=95?'#b8860b':v>=90?'#1f9d55':v>=85?'#2f6db5':'#6b7280';
 const rPill=(v,reveal)=>`<span class="pill r${reveal?' reveal':''}" style="--pc:${rtCol(v)}">${v}</span>`;   // player rating (base only, DECISIONS item 15)
 const avgPill=t=>`<span class="pill avg" title="Середня оцінка за сезон">${t}</span>`;
 // chip: circle (position, pill, p.ev = quiet daily challenge event mark), surname, club and season; o.pill = pill, o.r0 = overall rating in the club line (season summary)
-function chipInner(pos,p,o){const disc=`<div class="disc"${p?` style="${clubPal(ccOf(p))}"`:''}><span class="pos">${pos}</span>${o.pill||''}${p&&p.ev?`<span class="evg" aria-hidden="true">${esc(p.ev)}</span>`:''}</div>`;if(!p)return disc;const n=p.name||p.n;
+function chipInner(pos,p,o){const disc=`<div class="disc"${p?` style="${clubPal(ccOf(p),p.y)}"`:''}><span class="pos">${pos}</span>${o.pill||''}${p&&p.ev?`<span class="evg" aria-hidden="true">${esc(p.ev)}</span>`:''}</div>`;if(!p)return disc;const n=p.name||p.n;
   return disc+`<div class="nm${nmCls(n)}" title="${esc(n)}">${esc(cardName(n))}${nickOf(p.id)}</div><div class="club${o.r0!=null?' hr':''}"><span class="ct">${esc(clubShort(p.club||p.c))}${p.y?' '+SEA_SHORT(p.y):''}${o.r0!=null?' · ':''}</span>${o.r0!=null?`<span class="r0" title="Загальний рейтинг">${o.r0}</span>`:''}</div>`;}
 function slotInner(slot,p,o){return chipInner(POSNAME[slot],p,o);}
 function renderPitch(el,slots,withClub){
@@ -1788,7 +1789,7 @@ function renderWheel(){
   {const row=document.getElementById('showRRow');row.hidden=sortR||!ratingsOpen()||S.format==='anti';document.getElementById('antiHint').hidden=S.format!=='anti';document.getElementById('showR').checked=!!S.showR;}
   // club colors persist after the reel stops; repaint only on change, otherwise the Ratings toggle made the name and season pulse
   const setStrip=(sel,html)=>{const el=document.querySelector(sel);if(el.innerHTML!==html)el.innerHTML=html;};
-  setStrip('#reelClub .strip',`<div class="club"><i class="cdot" style="${clubPal(cs.c)}"></i>${esc(shortTeam(cs.n))}</div>`);   // short name: the full one did not fit on phone
+  setStrip('#reelClub .strip',`<div class="club"><i class="cdot" style="${clubPal(cs.c,cs.y)}"></i>${esc(shortTeam(cs.n))}</div>`);   // short name: the full one did not fit on phone
   setStrip('#reelYear .strip',`<div class="season">${seasonLabel(cs.y)}</div>`);document.querySelector('.reels').classList.remove('one');
   document.getElementById('wHint').textContent=(placeNote(cs,1)||`Місце клубу в тому сезоні: ${cs.pos}`)+(S.format==='anti'?` · лише гравці з ${ANTI_MIN_APPS}+ матчами`:'');
   const rr=document.getElementById('rerollRow');rr.style.visibility='visible';document.getElementById('rerollClub').hidden=document.getElementById('rerollBtn').hidden=S.format==='oneclub';   // one-club: club stays, only the season changes
