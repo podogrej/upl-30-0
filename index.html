@@ -1666,7 +1666,7 @@ function renderOc(){const el=document.getElementById('oc');const m=ocMine(),list
   const n=list.filter(k=>CLUB_REC[k.c]).length;
   el.innerHTML=`<h1>Один клуб</h1><p class="lead">Обери клуб і збери XI лише з тих, хто за нього грав в УПЛ.</p>
 <details><summary>Як це працює</summary><p>Колесо дає тільки сезони обраного клубу, гравців береш лише з них. Сезон — 30 турів.</p><p>У кожного клубу свої рекорди в УПЛ: найкращий і найгірший сезон за очками. Побий обидва — і клуб пройдено. Новачки рекордів ще не мають.</p></details>
-<details><summary>Трофеї режиму</summary><ul><li>🏅 <b>Кращий сезон в історії клубу</b> — набери більше очок, ніж клуб будь-коли в УПЛ.</li><li>🪦 <b>Гірший сезон в історії клубу</b> — набери менше очок, ніж у найгіршому сезоні клубу.</li><li>✓ <b>Пройдено</b> — обидва рекорди клубу побиті.</li></ul></details>
+<details><summary>Трофеї режиму</summary><ul><li>🏅 <b>Кращий сезон в історії клубу</b> — набери більше очок, ніж клуб будь-коли в УПЛ.</li><li>🪦 <b>Гірший сезон в історії клубу</b> — набери менше очок, ніж у найгіршому сезоні клубу.</li><li>✓ <b>Пройдено</b> — обидва рекорди клубу побиті.</li></ul><p>Інших трофеїв у цьому режимі немає: тут змагаєшся лише з історією клубу.</p></details>
 <div class="occ" id="ocCnt"><span>🏅 ${r}/${n} ${plUk(n,'рекорд','рекорди','рекордів')}</span><span>🪦 ${w}/${n} найгірших</span><span class="${d?'ok':''}">✓ ${d} ${plUk(d,'клуб','клуби','клубів')} пройдено</span></div>
 <div class="seg ocf" id="ocSeg" role="radiogroup" aria-label="Фільтр клубів">${OC_FILTERS.map(([f,t])=>`<button type="button" role="radio" data-f="${f}">${t}</button>`).join('')}</div>
 <div class="ocg" id="ocGrid">${list.map(k=>ocTile(k,m)).join('')}</div>`;
@@ -2201,7 +2201,7 @@ const TROPHIES=[
   {id:"hardchamp",i:"🔥",n:"Без права на помилку",d:"Стань чемпіоном у режимі «Складний»",cat:"modes",rep:1,t:c=>c.mode==='hard'&&notAnti(c)&&c.r.place===1},
   {id:"hcchamp",i:"🙈",n:"Кіт у мішку",d:"Стань чемпіоном у «Хардкорі» (режиму вже немає)",cat:"modes",rep:1,gone:1,t:c=>c.mode==='hardcore'&&notAnti(c)&&c.r.place===1},
   {id:"derbychamp",i:"⚡",n:"Класика жанру",d:"Стань чемпіоном у «Класичному дербі» (режим зараз недоступний)",cat:"modes",rep:1,gone:1,t:c=>c.format==='derby'&&c.r.place===1},
-  {id:"oneclubchamp",i:"❤️",n:"Два кольори",d:"Стань чемпіоном у режимі «Один клуб»",cat:"modes",rep:1,t:c=>c.format==='oneclub'&&c.r.place===1},
+  {id:"oneclubchamp",i:"❤️",n:"Два кольори",d:"Стань чемпіоном у режимі «Один клуб»",cat:"modes",gone:1,rep:1,t:c=>c.format==='oneclub'&&c.r.place===1},
   {id:"antilast",i:"⬇️",n:"Нижче плінтуса",d:"Антисезон: фініш останнім",cat:"modes",rep:1,t:c=>c.format==='anti'&&c.r.place===16},
   {id:"anti0",i:"🪦",n:"Нуль без палички",d:"Антисезон: програй усі 30 матчів",cat:"modes",t:c=>c.format==='anti'&&c.r.L===30},
   {id:"antidry",i:"🥖",n:"Сухий пайок",d:"Антисезон: забий 5 голів або менше",cat:"modes",t:c=>c.format==='anti'&&c.r.gf<=5},
@@ -2341,22 +2341,27 @@ const TROPHIES=[
   {id:"crayfish",i:"🦞",n:"Як рак свисне",d:"Перша перемога — лише після 10-го туру",cat:"season",rep:1,t:c=>notAnti(c)&&full(c)&&firstW(c)>=10},
   {id:"budmo",i:"🥂",n:"Будьмо!",d:"10 гравців забили щонайменше по 2 голи за сезон",cat:"players",rep:1,t:c=>notAnti(c)&&mixed(c)&&c.pl.filter(p=>(p.g||0)>=2).length>=10},
 ];
+// one club: only the club's own records (best / worst UPL season by points); ids ob_/ow_ + club code, shown once earned;
+// name starts with the club, so the club name needs no declension
+if(typeof CLUB_REC!=='undefined')for(const k of ocClubs()){const rec=CLUB_REC[k.c];if(!rec)continue;const id=k.c.replace(/-/g,'_');
+  TROPHIES.push({id:'ob_'+id,i:"🏅",n:`${k.n} — найкращий сезон в історії`,d:`«Один клуб»: набери більше ${rec[0]} очок — рекорду клубу в УПЛ (${seasonLabel(rec[1])})`,cat:"modes",rep:1,oc:k.c,t:c=>c.format==='oneclub'&&c.club===k.c&&c.r.pts>rec[0]},
+    {id:'ow_'+id,i:"🪦",n:`${k.n} — найгірший сезон в історії`,d:`«Один клуб»: набери менше ${rec[3]} очок — найгіршого сезону клубу в УПЛ (${seasonLabel(rec[4])})`,cat:"modes",rep:1,oc:k.c,t:c=>c.format==='oneclub'&&c.club===k.c&&c.r.pts<rec[3]});}
 const MILESTONES=[[1,"🌱","Перший сезон"],[5,"⚽","5 сезонів"],[10,"🎫","10 сезонів"],[25,"🎗️","25 сезонів"],[50,"🥇","Півсотні"],[100,"💯","Клуб 100"],[250,"🏛️","250 сезонів"]];
 function trStore(){const s=lsGet("upl30_tr")||{};s.t=s.t||{};s.seasons=s.seasons||0;s.dailies=s.dailies||0;return s;}
 function trStreak(){return streakInfo().count;}
 // season context -> trophies earned (no write)
-function trEval(c){const got=[];for(const t of TROPHIES){if(t.t){let ok=false;try{ok=!!t.t(c);}catch(e){}if(ok)got.push(t.id);}}return got;}
+function trEval(c){const got=[];for(const t of TROPHIES){if(c.format==="oneclub"&&!t.oc)continue;if(t.t){let ok=false;try{ok=!!t.t(c);}catch(e){}if(ok)got.push(t.id);}}return got;}
 function trCtxNow(r){
   const m=MODES[S.mode];
   const xi=S.slots.map(s=>{const p=s.player;const q=PERSON[p.id]||{};return {name:p.name,id:p.id,slot:s.slot,main:p.main,r0:p.r0,r:p.r,nat:p.nat??q.nat??-1,by:p.by||q.by||0,cc:p.cc||(DATA.clubs.find(x=>x.n===p.club&&x.y===p.y)||{}).c,y:p.y};});
   const pl=r.players.map(p=>({...p,r0:(xi.find(x=>x.id===p.id)||{}).r0||p.r}));
-  return {r,xi,pl,mode:S.mode,format:S.format,reveal:!!(m.reveal||m.showRatings)};
+  return {r,xi,pl,mode:S.mode,format:S.format,club:S.format==='oneclub'?S.club:null,reveal:!!(m.reveal||m.showRatings)};
 }
 function trCtxRow(row){   // from a seasons log row (for retroactive awarding)
   const xi=(row.xi||[]).map(p=>{const q=PERSON[p.id]||{};const cc=(DATA.clubs.find(x=>x.n===p.c&&x.y===p.y)||{}).c;return {name:p.n,id:p.id,slot:p.slot,main:q.main,r0:p.r0??p.r,r:p.r,nat:q.nat??-1,by:q.by||0,cc,y:p.y};});
   const pl=(row.xi||[]).map(p=>({id:p.id,slot:p.slot,g:p.g||0,a:p.a||0,rt:p.rt||0,form:p.f||0,r0:p.r0??p.r}));
   const r={W:row.w,D:row.d,L:row.l,pts:row.pts,place:row.place,gf:row.gf,ga:row.ga,xp:row.xp??row.pts,golden:!!row.golden};
-  const m=MODES[row.mode]||{};return {r,xi,pl,mode:row.mode,format:row.format,reveal:!!(m.reveal||m.showRatings)};
+  const m=MODES[row.mode]||{};return {r,xi,pl,mode:row.mode,format:row.format,club:row.format==='oneclub'?row.club:null,reveal:!!(m.reveal||m.showRatings)};
 }
 // record a season into the collection; returns {got:[ids], fresh:[new ids]}; sync:false - the caller sends fresh ids itself (with the season)
 function trAward(c,{daily,sync=true}={}){
@@ -2420,7 +2425,7 @@ async function openTrophies(){screenTag('trophies');
   const box=document.getElementById('viewBox'),body=document.getElementById('viewBody');document.getElementById('viewTitle').textContent='Трофеї';box.hidden=false;
   const draw=()=>{const s=trStore();const st={streak:trStreak(),dailies:s.dailies};
     const pctOf=id=>TR_PCT&&TR_PCT.players>=10?100*((TR_PCT.t||{})[id]||0)/TR_PCT.players:null;
-    const got=t=>s.t[t.id]&&s.t[t.id].n;const LIVE=TROPHIES.filter(t=>!t.gone||got(t));const total=LIVE.length,have=LIVE.filter(got).length;
+    const got=t=>s.t[t.id]&&s.t[t.id].n;const LIVE=TROPHIES.filter(t=>!(t.gone||t.oc)||got(t));const total=LIVE.length,have=LIVE.filter(got).length;
     let h=`<p class="muted" style="margin:0">Відкрито ${have} з ${total} · зіграно сезонів: ${s.seasons}</p>`;
     for(const [kind,title] of TR_KINDS){const list=LIVE.filter(t=>trKind(t)===kind&&(!t.sec||(s.t[t.id]&&s.t[t.id].n)));
       const hiddenN=TROPHIES.filter(t=>trKind(t)===kind&&t.sec&&!(s.t[t.id]&&s.t[t.id].n)).length;
@@ -2826,7 +2831,7 @@ document.addEventListener('click',e=>{const sm=e.target.closest('summary');const
 const LEVEL={normal:['Звичайний','lv-n'],hard:['Складний','lv-h'],hardcore:['Хардкор','lv-x'],daily:['Драфт дня','lv-d'],pick:['Вибір сезону','lv-s'],practice:['Тренування','lv-n']};
 const lvChip=m=>{const l=LEVEL[m];return l&&m!=='normal'&&m!=='practice'?`<b class="lvt ${l[1]}">${l[0]}</b>`:'';};   // plain word, only for non-default modes
 const BOARDS={
-  main:{name:'Загальна',q:'format=eq.classic&mode=in.(normal,hard,hardcore,daily,pick)',note:PICK_ON?'Класика, драфт дня й «Вибір сезону».':'Класика й драфт дня.'},
+  main:{name:'Загальна',q:'format=eq.classic&mode=in.(normal,hard,hardcore,daily,pick)',note:PICK_ON?'Класика, виклик дня й «Вибір сезону».':'Класика й виклик дня.'},
   derby:{hidden:true,name:'Дербі',q:'format=eq.derby',note:'Лише «Динамо» і «Шахтар». Тут 30-0 приблизно вдесятеро легше, ніж у класиці, тому таблиця окрема.'},
   oneclub:{name:'Один клуб',q:'format=eq.oneclub',note:'Найкращий XI одного клубу. Складність дуже залежить від клубу.'},
   anti:{hidden:true,name:'Антисезон',q:'format=eq.anti',asc:true,note:'Навпаки: чим менше очок, тим вище. Мета — 0-30.'},
@@ -3083,7 +3088,7 @@ function ppXiHtml(p){const b=p.best||{},w=p.worst||{};const rows=PP_BUCKETS.map(
 function ppRenderCab(){
   const el=document.getElementById('ppCab');if(!el||!PP)return;const st=PP,own=st.own,have=ppHave();
   const mine=trStore().t;const got=t=>!!have[t.id];
-  const LIVE=TROPHIES.filter(t=>!t.gone||got(t));const total=LIVE.length,n=LIVE.filter(got).length;
+  const LIVE=TROPHIES.filter(t=>!(t.gone||t.oc)||got(t));const total=LIVE.length,n=LIVE.filter(got).length;
   const cats=[['all','Усі'],...TR_KINDS];
   const inCat=(t,c)=>c==='all'||trKind(t)===c;   // filters use the same three classes as colors
   let list=LIVE.filter(t=>inCat(t,st.f));
@@ -4591,7 +4596,7 @@ function f5Render(){
 
 document.getElementById('f5Open').onclick=f5Start;
 // audit P2-5: only what tests use; drawCard for card checks, simulate/rerun for fast determinism
-window.__dbg={go,place,em,haptic,seasonHaptic,renderNewTro,TROPHIES,CLUB_REC,ocMine,ocAfter,renderOc,renderOcRes,openOc,acctMerge,get BEST(){return BEST;},get VT_N(){return VT_N;},ic,seasonLabel,boardFetch,boardStale,BOARD_FROM,setFmt,lgRender,lgStale,openTables,boardHtml,oppYear,champModal,drawCard,chalNewGame,LEAGUE_CULT,LEAGUE_LEGENDS,openTrophies,renderNewTro,renderWheel,posOpts,eraOf,ptsWord,viewHtml,renderPitch,pitchHtml,f5Pitch,F5_FORMS,cardName,clubShort,simulate,shareTextOf,trCtxNow,trAward,trStore,FORMATIONS,GROUP_OF,DATA,TROPHIES,trEval,PERSON,effRating,get S(){return S;},vdOpen,vdEval,vdIndex,vdIdx,VD_LIST,renderVdCard,openVdArchive,vdSt,rerun(seed,year,xi){rnd=mulberry32(seed);const r=simulate(xi||S.slots.map(s=>s.player),MODES[S.mode],year);rnd=Math.random;return {W:r.W,D:r.D,L:r.L,gf:r.gf,ga:r.ga,place:r.place};}};
+window.__dbg={go,place,em,haptic,seasonHaptic,renderNewTro,TROPHIES,CLUB_REC,trEval,ocMine,ocAfter,renderOc,renderOcRes,openOc,acctMerge,get BEST(){return BEST;},get VT_N(){return VT_N;},ic,seasonLabel,boardFetch,boardStale,BOARD_FROM,setFmt,lgRender,lgStale,openTables,boardHtml,oppYear,champModal,drawCard,chalNewGame,LEAGUE_CULT,LEAGUE_LEGENDS,openTrophies,renderNewTro,renderWheel,posOpts,eraOf,ptsWord,viewHtml,renderPitch,pitchHtml,f5Pitch,F5_FORMS,cardName,clubShort,simulate,shareTextOf,trCtxNow,trAward,trStore,FORMATIONS,GROUP_OF,DATA,TROPHIES,trEval,PERSON,effRating,get S(){return S;},vdOpen,vdEval,vdIndex,vdIdx,VD_LIST,renderVdCard,openVdArchive,vdSt,rerun(seed,year,xi){rnd=mulberry32(seed);const r=simulate(xi||S.slots.map(s=>s.player),MODES[S.mode],year);rnd=Math.random;return {W:r.W,D:r.D,L:r.L,gf:r.gf,ga:r.ga,place:r.place};}};
 // Telegram script was requested by the first inline script: init now if it already loaded, otherwise on its load
 if(ONLINE){window.__tgCb=tgInit;if(window.__tgOk)tgInit();}
 })();

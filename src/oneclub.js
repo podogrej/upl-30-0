@@ -32,7 +32,7 @@ function renderOc(){const el=document.getElementById('oc');const m=ocMine(),list
   const n=list.filter(k=>CLUB_REC[k.c]).length;
   el.innerHTML=`<h1>Один клуб</h1><p class="lead">Обери клуб і збери XI лише з тих, хто за нього грав в УПЛ.</p>
 <details><summary>Як це працює</summary><p>Колесо дає тільки сезони обраного клубу, гравців береш лише з них. Сезон — 30 турів.</p><p>У кожного клубу свої рекорди в УПЛ: найкращий і найгірший сезон за очками. Побий обидва — і клуб пройдено. Новачки рекордів ще не мають.</p></details>
-<details><summary>Трофеї режиму</summary><ul><li>🏅 <b>Кращий сезон в історії клубу</b> — набери більше очок, ніж клуб будь-коли в УПЛ.</li><li>🪦 <b>Гірший сезон в історії клубу</b> — набери менше очок, ніж у найгіршому сезоні клубу.</li><li>✓ <b>Пройдено</b> — обидва рекорди клубу побиті.</li></ul></details>
+<details><summary>Трофеї режиму</summary><ul><li>🏅 <b>Кращий сезон в історії клубу</b> — набери більше очок, ніж клуб будь-коли в УПЛ.</li><li>🪦 <b>Гірший сезон в історії клубу</b> — набери менше очок, ніж у найгіршому сезоні клубу.</li><li>✓ <b>Пройдено</b> — обидва рекорди клубу побиті.</li></ul><p>Інших трофеїв у цьому режимі немає: тут змагаєшся лише з історією клубу.</p></details>
 <div class="occ" id="ocCnt"><span>🏅 ${r}/${n} ${plUk(n,'рекорд','рекорди','рекордів')}</span><span>🪦 ${w}/${n} найгірших</span><span class="${d?'ok':''}">✓ ${d} ${plUk(d,'клуб','клуби','клубів')} пройдено</span></div>
 <div class="seg ocf" id="ocSeg" role="radiogroup" aria-label="Фільтр клубів">${OC_FILTERS.map(([f,t])=>`<button type="button" role="radio" data-f="${f}">${t}</button>`).join('')}</div>
 <div class="ocg" id="ocGrid">${list.map(k=>ocTile(k,m)).join('')}</div>`;

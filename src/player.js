@@ -101,7 +101,7 @@ function ppXiHtml(p){const b=p.best||{},w=p.worst||{};const rows=PP_BUCKETS.map(
 function ppRenderCab(){
   const el=document.getElementById('ppCab');if(!el||!PP)return;const st=PP,own=st.own,have=ppHave();
   const mine=trStore().t;const got=t=>!!have[t.id];
-  const LIVE=TROPHIES.filter(t=>!t.gone||got(t));const total=LIVE.length,n=LIVE.filter(got).length;
+  const LIVE=TROPHIES.filter(t=>!(t.gone||t.oc)||got(t));const total=LIVE.length,n=LIVE.filter(got).length;
   const cats=[['all','Усі'],...TR_KINDS];
   const inCat=(t,c)=>c==='all'||trKind(t)===c;   // filters use the same three classes as colors
   let list=LIVE.filter(t=>inCat(t,st.f));
