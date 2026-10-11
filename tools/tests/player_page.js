@@ -159,6 +159,9 @@ const order=pg=>pg.$$eval('#ppCab .tro.on[data-tr]',es=>es.map(e=>e.dataset.tr))
  await D.pg.click('#acctBtn');await D.pg.waitForTimeout(700);
  T.check((await D.pg.textContent('#ppName'))==='oleh'&&!(await D.pg.$('.pp-warn'))&&/Увійшов через Telegram/.test(await D.pg.textContent('#ppSet')),'з входом: ім\'я з Telegram «Олег» → «oleh» (транслітерує база), без попередження, «Вийти»');
  T.check(await D.pg.$$eval('#ppSet .set-r',r=>{const f=x=>[...r].find(e=>e.id===x);return !!f('ppRowName').querySelector(':scope > .nm-go .ico')&&!!f('ppRowTeam').querySelector(':scope > .nm-go .ico')&&!r.some(e=>e.querySelector('u'))&&(!f('ppOut')||!f('ppOut').querySelector('.nm-go'));})&&(!(await D.pg.$('#ppNotify'))||!!(await D.pg.$('#ppNotify .nm-go svg.nm-ext'))),'налаштування: стрілка «›» у рядках правки, ↗ у Telegram, Вийти без стрілки, без підкреслення');
+ await D.pg.setViewportSize({width:320,height:800});
+ T.check(await D.pg.evaluate(()=>{const r=document.getElementById('ppRowName'),v=r.querySelector('.v'),k=r.querySelector('.k'),g=r.querySelector('.nm-go');v.textContent='abcdefghij_klmnopqrst';const R=r.getBoundingClientRect(),V=v.getBoundingClientRect(),G=g.getBoundingClientRect(),K=k.getBoundingClientRect();return r.scrollWidth<=r.clientWidth+1&&V.width<=R.width*0.45+1&&G.right<=R.right&&K.right<=V.left&&v.scrollWidth>v.clientWidth;}),'довгий нік (20 символів) на 320: значення обрізається з «…», рядок і стрілка не виходять, колонка назви не заходить на значення');
+ await D.pg.setViewportSize({width:390,height:844});
  await D.pg.screenshot({path:path.join(MOCK,'player_page_059_own.png'),fullPage:true});
  await D.pg.click('#ppDel');T.check(await D.pg.$eval('#ppDelBox',e=>!e.hidden),'«Видалити акаунт…» питає підтвердження');
  await D.pg.locator('#ppSet').screenshot({path:path.join(OUT,'pp_delete.png')});
