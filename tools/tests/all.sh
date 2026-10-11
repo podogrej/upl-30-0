@@ -8,7 +8,7 @@
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"; cd "$ROOT" || exit 1
 LOG=$(mktemp -d); FAIL=(); PASS=0
 step(){ local name="$1"; shift; local t=$SECONDS
-  if "$@" >"$LOG/$PASS.log" 2>&1; then echo "✓ $name ($((SECONDS-t)) с)"; else echo "✗ $name ($((SECONDS-t)) с)"; tail -25 "$LOG/$PASS.log" | sed 's/^/    /'; FAIL+=("$name"); fi
+  if "$@" >"$LOG/$PASS.log" 2>&1; then echo "✓ $name ($((SECONDS-t)) с)"; else echo "✗ $name ($((SECONDS-t)) с)"; grep -m 10 '✗' "$LOG/$PASS.log" | sed 's/^/  ! /'; tail -25 "$LOG/$PASS.log" | sed 's/^/    /'; FAIL+=("$name"); fi
   PASS=$((PASS+1)); }
 # 1. index.html, lib/engine.js, lib/five_core.js, lib/vd_core.js are generated: rebuild and verify the committed copies are up to date
 GEN="index.html lib/engine.js lib/five_core.js lib/vd_core.js pool.*.js"; BEFORE=$(md5sum $GEN)
@@ -37,7 +37,7 @@ wait
 for t in $UI; do [ -f "$LOG/ui_$t.rc" ] || continue
   name="тест $t"; [ "$t" = determinism ] && name="детермінізм"; [ "$t" = scenarios ] && name="сценарії"
   d=$(( $(cat "$LOG/ui_$t.end") - ${T0[$t]} ))
-  if [ "$(cat "$LOG/ui_$t.rc")" = 0 ]; then echo "✓ $name ($d с)"; else echo "✗ $name ($d с)"; tail -25 "$LOG/ui_$t.log" | sed 's/^/    /'; FAIL+=("$name"); fi
+  if [ "$(cat "$LOG/ui_$t.rc")" = 0 ]; then echo "✓ $name ($d с)"; else echo "✗ $name ($d с)"; grep -m 10 '✗' "$LOG/ui_$t.log" | sed 's/^/  ! /'; tail -25 "$LOG/ui_$t.log" | sed 's/^/    /'; FAIL+=("$name"); fi
   PASS=$((PASS+1))
 done
 if [ "$SK" != 1 ]; then :; elif [ -n "$FAST" ] && [[ " $ONLY " != *" sql "* ]]; then echo "· SQL: FAST без ONLY=sql — пропускаю"; elif ls -d /usr/lib/postgresql/*/bin >/dev/null 2>&1; then step "SQL у Postgres (setup.sh)" bash tools/tests/setup.sh; else echo "· SQL: немає Postgres — пропускаю"; fi
