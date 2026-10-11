@@ -75,6 +75,7 @@ const noHScroll=pg=>pg.evaluate(()=>document.documentElement.scrollWidth<=innerW
   T.check(await pg.$$eval('#nmSec .nm-chips .chip',e=>e.length)===300&&/і ще 26/.test(await pg.textContent('#nmSec .nm-once ~ .nm-note')),'розгорнуто: 300 імен і «і ще 26»');
   T.check(/Класика/.test(await pg.textContent('#nmSec .nm-bars'))&&!/Вибір сезону/.test(await pg.textContent('#nmSec')),'очки за режимами — лише режими з даних (без прихованого вибору сезону)');
   T.check(await pg.$$eval('#nmSec .nm-fold .nm-bar',e=>e.length)>0&&/Ще 33 клуби/.test(await pg.textContent('#nmSec .nm-fold summary')),'клуби: топ-5 і «Ще 33 клуби»');
+  { const cn=await pg.$$eval('#nmSec .nm-sub ~ .nm-bars',e=>e.slice(-1).flatMap(b=>[...b.querySelectorAll(':scope > .nm-bar')].map(x=>x.textContent)));T.check(cn.length===5&&!cn.some(t=>/\(/.test(t)),'клуби — короткі назви, як у грі (без міста в дужках): '+cn.slice(0,3).join(' | ')); }
   T.check(await noHScroll(pg),'390: без горизонтальної прокрутки');
   T.check(CALLS===1,'один запит player_numbers на відкриття: '+CALLS);
   // cache: reopening the page within TTL and same season count does not ask again

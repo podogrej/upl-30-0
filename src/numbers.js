@@ -30,7 +30,7 @@ function nmVerdict(d){
   if(dog>=0.35)return `Ти віриш у невідомих: кожен <em>${Math.round(1/dog)}-й</em> гравець у твоєму складі має рейтинг до 80.`;
   if(avg>=86)return `Тобі потрібні лише зірки: середній рейтинг твоїх гравців <em>${nmDec(avg)}</em>.`;
   if(d.cl_n>=45&&d.n>=20)return `Ти збираєш склад з усієї ліги: <em>${d.cl_n}</em> різних клубів.`;
-  if(clp>=25)return `Твоє серце — ${esc(cl.c)}: <em>${clp}%</em> гравців звідти.`;
+  if(clp>=25)return `Твоє серце — ${esc(shortTeam(cl.c))}: <em>${clp}%</em> гравців звідти.`;
   return `Ти граєш по-різному: ${d.n} ${plUk(d.n,'сезон','сезони','сезонів')} — і жодної явної звички.`;}
 // "Your XI": per slot the most frequent player in the favourite formation, each player once (greedy by count)
 function nmXi(d){const F=FORMATIONS[d.fm&&d.fm.f];if(!F)return null;const out=new Array(F.slots.length).fill(null),used=new Set();
@@ -77,7 +77,7 @@ function nmHtml(){
   // points by mode and clubs
   const md=(d.modes||[]).filter(m=>m.k>0),mx=Math.max(1,...md.map(m=>Math.abs(m.pts))),c0=d.cl[0]?d.cl[0].k:1;
   const lab=b=>(PP_BUCKETS.find(x=>x[0]===b)||[0,b])[1];
-  const club=(c,i)=>nmBar(esc(c.c),nmPct(c.k,d.xin)+'%','',100*c.k/c0,i>0);
+  const club=(c,i)=>nmBar(esc(shortTeam(c.c)),nmPct(c.k,d.xin)+'%','',100*c.k/c0,i>0);
   const restK=d.xin-d.cl.reduce((a,c)=>a+c.k,0);
   if(md.length||d.cl.length)h+=`<div class="pp-sec"><h3>Очки й клуби</h3></div><div class="nm-card">
     ${md.length?`<p class="nm-sub">Очки за режимами</p><div class="nm-bars">${md.map((m,i)=>nmBar(esc(lab(m.b)),fmtN(m.pts),nmSea(m.k),100*Math.abs(m.pts)/mx,i>0)).join('')}</div>`:''}
