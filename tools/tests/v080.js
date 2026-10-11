@@ -50,9 +50,9 @@ const A=E.DATA.alias||{},canon=id=>A[id]||id,IDX=V.vdIndex(E.DATA,CUR);
 }
 
 // ---- B. server
-const SECRETS={};
-const db=makeDB({seasons:{auto:'id',onInsert:r=>{r.verified=null;}},season_seeds:{},vd_results:{auto:'id',uq:[['day','device_id','attempt']]},daily_results:{auto:'id'},trophies:{pk:['device_id','trophy']},challenges:{}},
-  {device_ok:a=>{if(SECRETS[a.p_device]==null)SECRETS[a.p_device]=a.p_secret;return SECRETS[a.p_device]===a.p_secret?'p-'+a.p_device.slice(0,4):{status:403,body:JSON.stringify({code:'28000',message:'device secret'})};},rate_hit:()=>true,
+const SECRETS={},PLAYER_OF={};
+const db=makeDB({seasons:{auto:'id',onInsert:r=>{r.verified=null;}},season_seeds:{},vd_results:{auto:'id',uq:[['day','device_id','attempt']]},player_links:{},daily_results:{auto:'id'},trophies:{pk:['device_id','trophy']},challenges:{}},
+  {device_ok:a=>{if(SECRETS[a.p_device]==null)SECRETS[a.p_device]=a.p_secret;return SECRETS[a.p_device]===a.p_secret?(PLAYER_OF[a.p_device]||'p-'+a.p_device.slice(0,4)):{status:403,body:JSON.stringify({code:'28000',message:'device secret'})};},rate_hit:()=>true,
    vd_mine:a=>{const by={};for(const r of db.DB.vd_results.filter(r=>r.device_id===a.p_device)){const d=by[r.day]||(by[r.day]={c_day:r.day,best:null,attempts:0,gate_any:false});d.attempts++;if(r.gate_ok){d.gate_any=true;d.best=Math.max(d.best??-1,r.score);}}return Object.values(by);}});
 let FAIL_PATCH=0;const xiH=xi=>require(path.join(ROOT,'api','_vd.js')).xiHash(sq(xi));
 global.fetch=async(url,o={})=>{const m=o.method||'GET';
@@ -133,6 +133,29 @@ async function serverChecks(){
   T.check(yf.json.late===true&&db.DB.vd_results.find(r=>r.device_id===dev&&r.day===YDAY).late===true,'архів: спроба за вчора позначена late (не в серію)');
   const mine=await call({vd:'mine'});
   T.check(mine.status===200&&mine.json.days.find(d=>d.day===TODAY).attempts===5,'свої результати для архіву (vd_mine)');
+  // 5 attempts per PLAYER: phone and iPad (two devices of one player) share them; best and archive count both
+  {const P1='p-shared',a=crypto.randomUUID(),b=crypto.randomUUID();PLAYER_OF[a]=PLAYER_OF[b]=P1;
+   db.DB.player_links.push({kind:'device',key:a,player_id:P1},{kind:'device',key:b,player_id:P1});
+   const cl=(d,x)=>callApi(seedH,{device_id:d,secret,...x}),dn=[a,b];
+   const sa=await cl(a,{vd:'start',day:TODAY}),sb2=await cl(b,{vd:'start',day:TODAY});
+   T.check(sa.json.attempt===1&&sb2.json.attempt===1&&sb2.json.seed_id===sa.json.seed_id&&db.DB.season_seeds.filter(x=>x.vd_day===TODAY&&[a,b].includes(x.device_id)).length===1,'два пристрої одного гравця: відкрита спроба з першого переходить на другий (той самий seed, не друга спроба)');
+   const stale=await cl(a,{vd:'finish',day:TODAY,attempt:1,formation:'4-4-2',xi:sq(buildXi(0,sa.json.seed_id))});
+   T.check(stale.status===400,'старий пристрій уже не може завершити перенесену спробу');
+   let cur=sb2,k=1;
+   for(;k<=5;k++){const d=dn[k%2];const st=k===1?cur:await cl(d,{vd:'start',day:TODAY});if(st.status!==200)break;
+     const f=await cl(d,{vd:'finish',day:TODAY,attempt:st.json.attempt,formation:'4-4-2',xi:sq(buildXi(0,st.json.seed_id))});if(f.status!==200)break;}
+   const six=await cl(a,{vd:'start',day:TODAY}),sixB=await cl(b,{vd:'start',day:TODAY});
+   const seeds=db.DB.season_seeds.filter(x=>x.vd_day===TODAY&&[a,b].includes(x.device_id)),res=db.DB.vd_results.filter(r=>r.day===TODAY&&[a,b].includes(r.device_id));
+   T.check(k===6&&six.status===409&&sixB.status===409&&six.json.used===5&&seeds.length===5&&res.length===5&&new Set(seeds.map(x=>x.vd_attempt)).size===5&&seeds.every(x=>x.player_id===P1),`усього 5 спроб на двох пристроях (не 10): шоста — 409 з обох, номери 1..5 різні, player_id записано (k=${k})`);
+   T.check(seeds.some(x=>x.device_id===a)&&seeds.some(x=>x.device_id===b)&&res.every(r=>r.player_id===P1),'спроби справді розподілені по обох пристроях');
+   const ma=await cl(a,{vd:'mine'}),mb=await cl(b,{vd:'mine'}),da=ma.json.days.find(x=>x.day===TODAY);
+   T.check(da&&da.attempts===5&&JSON.stringify(ma.json)===JSON.stringify(mb.json),'архів («мої результати») однаковий з обох пристроїв і містить усі 5 спроб');
+   // counted attempt on the second device: best/gate come from either device
+   const P2='p-shared2',c=crypto.randomUUID(),d2=crypto.randomUUID();PLAYER_OF[c]=PLAYER_OF[d2]=P2;db.DB.player_links.push({kind:'device',key:c,player_id:P2},{kind:'device',key:d2,player_id:P2});
+   const c1=await cl(c,{vd:'start',day:TODAY}),cf=await cl(c,{vd:'finish',day:TODAY,attempt:1,formation:'4-4-2',xi:sq(buildXi(0,c1.json.seed_id))});
+   const d1=await cl(d2,{vd:'start',day:TODAY}),df=await cl(d2,{vd:'finish',day:TODAY,attempt:d1.json.attempt,formation:'4-4-2',xi:sq(buildXi(2,d1.json.seed_id))});
+   T.check(d1.json.attempt===2&&d1.json.used===1&&df.json.gate===true&&df.json.used===2&&df.json.best===df.json.score&&df.json.seed,`зарахована спроба на другому пристрої: номер 2, спроб 2, краща ${df.json.best}`);
+  }
   // older 0.79.2 tab: different ratings since 0.82, so the season is 'not verified' (null), not 'forged'
   const D=E.dailySetupFor(TODAY),dv=crypto.randomUUID();E.setFormat('classic');const dxi=[],u=new Set();
   for(const slot of E.FORMATIONS[D.formation].slots){let pick=null;for(const i of D.seq){const c=E.DATA.clubs[i];for(const p of c.pl){if(u.has(canon(p[5])))continue;const r=E.effRating(p,slot);if(r!=null){pick={c,p,r};break;}}if(pick)break;}

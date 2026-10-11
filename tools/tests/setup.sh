@@ -600,6 +600,15 @@ chk "v080: спроби 1..5, одна на номер; спроба seed — о
   insert into season_seeds(device_id, xi_hash, seed, day, vd_day, vd_attempt) values ('$VDEV', '', 1, '2026-10-12', '2026-10-12', 1);
   begin insert into season_seeds(device_id, xi_hash, seed, day, vd_day, vd_attempt) values ('$VDEV', '', 2, '2026-10-12', '2026-10-12', 1); assert false, 'двічі seed спроби'; exception when unique_violation then null; end;
   assert (select best from vd_mine('$VDEV', null) where c_day = '2026-10-12') = 6 and (select attempts from vd_mine('$VDEV', null) where c_day = '2026-10-12') = 3, 'vd_mine';"
+# ===== v089: challenge attempts per player (season_seeds.player_id, one attempt number per player and day) =====
+for pass in 1 2; do
+  if $P -d t1 -f "$ROOT/sql/v089_vd_per_player.sql" >/dev/null 2>"$D/err"; then ok "запуск $pass: v089_vd_per_player.sql"; else bad "запуск $pass: v089_vd_per_player.sql — $(grep -v NOTICE "$D/err" | head -3)"; fi
+done
+chk "v089: номер спроби — один на гравця й день (два пристрої не беруть той самий); старі рядки без player_id не заважають" postgres "
+  insert into season_seeds(device_id, player_id, xi_hash, seed, day, vd_day, vd_attempt) values ('$VDEV', 'dddddddd-0000-4000-a000-000000000089', '', 11, '2026-10-13', '2026-10-13', 1);
+  begin insert into season_seeds(device_id, player_id, xi_hash, seed, day, vd_day, vd_attempt) values ('dddddddd-0000-4000-a000-000000000090', 'dddddddd-0000-4000-a000-000000000089', '', 12, '2026-10-13', '2026-10-13', 1); assert false, 'той самий номер у гравця'; exception when unique_violation then null; end;
+  insert into season_seeds(device_id, player_id, xi_hash, seed, day, vd_day, vd_attempt) values ('dddddddd-0000-4000-a000-000000000090', 'dddddddd-0000-4000-a000-000000000089', '', 13, '2026-10-13', '2026-10-13', 2);
+  insert into season_seeds(device_id, xi_hash, seed, day, vd_day, vd_attempt) values ('dddddddd-0000-4000-a000-000000000091', '', 14, '2026-10-13', '2026-10-13', 1), ('dddddddd-0000-4000-a000-000000000092', '', 15, '2026-10-13', '2026-10-13', 1);"
 # ===== v081: leave a league / delete own friends league (marked, never removed) =====
 for pass in 1 2; do
   if $P -d t1 -f "$ROOT/sql/v081_leave_leagues.sql" >/dev/null 2>"$D/err"; then ok "запуск $pass: v081_leave_leagues.sql"; else bad "запуск $pass: v081_leave_leagues.sql — $(grep -v NOTICE "$D/err" | head -3)"; fi
