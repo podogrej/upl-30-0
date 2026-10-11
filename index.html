@@ -556,11 +556,14 @@ td .sub .sk{height:18px;border-radius:var(--r-pill)}
 .nm-rp{display:block;width:6px;height:6px;transform:rotate(45deg);background:currentColor;border-radius:1px}
 #ppCab .tro .trt .trp .nm-rw-rare,.trleg .nm-rw-rare{color:var(--nm-rare-t)}#ppCab .tro .trt .trp .nm-rw-epic,.trleg .nm-rw-epic{color:var(--nm-epic-t)}#ppCab .tro .trt .trp .nm-rw-legend,.trleg .nm-rw-legend{color:var(--nm-gold-t)}
 #ppCab .tro:not(.on) .nm-pips{opacity:.8}
-#ppCab .tro .trn{align-self:start;padding-top:3px;font:var(--wt-bold) var(--fs-footnote)/var(--lh-snug) var(--font-body);color:var(--nm-dim)}
+#ppCab .tro .trn{align-self:start;padding-top:3px;font:var(--wt-bold) 14px/var(--lh-snug) var(--font-body);color:var(--nm-dim)}
 #ppCab .tro.rt-epic .tre{box-shadow:inset 0 0 0 2px var(--r-epic)}
 #ppCab .tro.rt-legend .tre{box-shadow:inset 0 0 0 2px var(--nm-gold)}
 :root[data-theme="dark"] #ppCab .tro.on .tre{background:rgba(255,255,255,.08)}:root[data-theme="dark"] #ppCab .tro:not(.on) .tre{background:rgba(255,255,255,.055)}   /* unowned plate ends up at ~.03 after the .off opacity */
 #ppCab .tro:not(.on) .tre.off{opacity:.55}
+:root[data-theme="light"] #ppCab .tro:not(.on) .tri{position:relative}
+:root[data-theme="light"] #ppCab .tro:not(.on) .tri::before{content:"";position:absolute;left:0;top:50%;width:40px;height:40px;margin-top:-20px;border-radius:50%;background:#dde1ee}
+:root[data-theme="light"] #ppCab .tro:not(.on) .tre{position:relative;background:none}:root[data-theme="light"] #ppCab .tro:not(.on) .tre.off{opacity:1;filter:grayscale(1) brightness(.55)}   /* light theme: separate darker plate (unfiltered), dark grayscale icon on it */
 .trleg{display:grid;gap:var(--sp-2);margin:var(--sp-0h) 0 var(--sp-3);padding:var(--sp-3) var(--sp-4);border-radius:var(--r-lg);background:var(--card);font-size:var(--fs-caption);color:var(--ink2)}
 .trleg .h{font-size:var(--fs-caption);color:var(--muted);text-transform:uppercase;letter-spacing:var(--ls-caps)}.trleg .row{display:flex;flex-wrap:wrap;gap:var(--sp-1) var(--sp-3);margin:0;align-items:center}
 .trleg .it{display:inline-flex;align-items:center;gap:var(--sp-2);white-space:nowrap}.trleg .nm-lgr{display:grid;grid-template-columns:repeat(3,auto);justify-content:space-between;gap:var(--sp-2)}.trleg .nm-lgr .it,.trleg .nm-lgr .nm-rw{flex-direction:column;align-items:flex-start;gap:var(--sp-1)}   /* legend: three equal columns, swatch/diamonds above the word */.trleg .sw{width:22px;height:14px;border-radius:var(--r-xs);flex:none;background:linear-gradient(120deg,color-mix(in srgb,var(--kc) 45%,var(--surface)),var(--surface));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--kc) 55%,transparent)}
@@ -596,7 +599,7 @@ a.fl-row{text-decoration:none}
 .pp-cabout{display:grid;gap:var(--sp-2);margin:var(--sp-2) 0 var(--sp-1)}.pp-cabout img{width:100%;max-width:360px;border-radius:var(--r-md);border:1px solid var(--line)}
 .pp-row{display:grid;grid-template-columns:auto 1fr auto;gap:var(--sp-2);align-items:center;padding:var(--sp-3) var(--sp-3);min-height:48px;cursor:pointer}
 .pp-row+.pp-row{border-top:1px solid var(--line)}@media (hover:hover) and (pointer:fine){.pp-row:hover{background:color-mix(in srgb,var(--ink) 4%,transparent)}}
-.pp-row .t{min-width:0}.pp-row .t b{display:block;font-size:var(--fs-body);font-weight:var(--wt-bold);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pp-row .t span{display:block;font-size:var(--fs-caption);color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pp-row .t span:has(>.nm-sg){display:flex;flex-wrap:wrap;column-gap:var(--sp-3);white-space:normal;overflow:visible}.pp-row .t .nm-sg{font-style:normal;max-width:100%;overflow:hidden;text-overflow:ellipsis}   /* XI details wrap by segment instead of being cut */
+.pp-row .t{min-width:0}.pp-row .t b{display:block;font-size:var(--fs-body);font-weight:var(--wt-bold);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pp-row .t span{display:block;font-size:var(--fs-caption);color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pp-row .t span:has(>.nm-sg){display:flex;flex-wrap:wrap;column-gap:var(--sp-1);white-space:normal;overflow:visible}.pp-row .t .nm-sg:not(:first-child)::before{content:"\00b7\00a0"}.pp-row .t .nm-sg{font-style:normal;max-width:100%;overflow:hidden;text-overflow:ellipsis}   /* XI details wrap by segment instead of being cut */
 .pp-k{margin-left:6px;font-style:normal;font-size:var(--fs-caption2);font-weight:var(--wt-bold);color:var(--muted)}.pp-k.best{color:var(--win)}.pp-k.worst{color:var(--loss)}
 .pp-row .n{font-family:var(--font-display);font-weight:var(--wt-bold);font-size:var(--fs-headline);font-variant-numeric:tabular-nums;text-align:right}.pp-row .n small{font-family:var(--font-body);font-size:var(--fs-caption2);color:var(--muted);font-weight:var(--wt-bold);margin-left:var(--sp-0h)}
 .pp-row .n.g{color:var(--amber)}
@@ -620,7 +623,7 @@ a.set-r{text-decoration:none}
 .set-ic{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;flex:none;background:#fff}.set-ic .ico{width:18px;height:18px}.set-ic.g .ico{color:#4285f4}.set-ic.t{background:#2aabee}.set-ic.t .ico{color:#fff}
 input.sw{appearance:none;-webkit-appearance:none;flex:none;width:46px;height:28px;border-radius:var(--r-lg);background:var(--line);position:relative;cursor:pointer;margin:0;transition:background var(--dur-2) var(--ease-out)}
 input.sw::after{content:"";position:absolute;left:3px;top:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:transform var(--dur-2) var(--spring)}
-input.sw:checked{background:var(--win)}input.sw:checked::after{transform:translateX(18px)}
+input.sw:checked{background:var(--win)}:root[data-theme="light"] input.sw:not(:checked){background:#8a94b8}   /* off track 3:1 on white */input.sw:checked::after{transform:translateX(18px)}
 #ppSet .pp-sec{margin-top:var(--sp-5)}#ppSetMsg{margin:var(--sp-2) var(--sp-0h) 0}#ppSet .pp-del{display:block;margin:var(--sp-4) auto 0;min-height:44px;padding:var(--sp-3) var(--sp-4)}
 .sheet0-box{display:grid;gap:var(--sp-2);align-content:start;overflow-y:auto;overscroll-behavior:contain;max-width:560px;background:var(--surface);padding-bottom:calc(var(--sp-5) + env(safe-area-inset-bottom,0px))}
 @media (min-width:600px){.sheet0-box{max-width:460px}}
