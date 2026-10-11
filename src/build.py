@@ -6,6 +6,8 @@ tpl=open('template.html').read().replace('/*__ICONS__*/',open('icons.js').read()
 # club colors (data/club_colors.csv, code = c in pool.json) -> CLUB_COLORS {code:[c1,c2,c3]}; clubs without c1 are skipped (neutral chip)
 import csv,json
 _cc={r['code']:[r['c1'],r['c2'],r['c3']] for r in csv.DictReader(open('../data/club_colors.csv',encoding='utf-8')) if r['c1']}
+# season-specific override (rebranded club): key 'code@year'
+_cc.update({r['code']+'@'+r['year']:[r['c1'],r['c2'],r['c3']] for r in csv.DictReader(open('../data/club_colors_season.csv',encoding='utf-8'))})
 assert '/*__CLUB_COLORS__*/{}' in tpl
 tpl=tpl.replace('/*__CLUB_COLORS__*/{}',json.dumps(_cc,separators=(',',':')))
 # club records for One club (data/data/standings.csv + data/fixes/standings_*.csv override by season+club; final tables, deductions applied) -> CLUB_REC {code:[best pts,year,games,worst pts,year,games]}
