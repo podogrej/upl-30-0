@@ -269,7 +269,7 @@ function renderTrBtn(){const n=trCountAll();const b=document.getElementById('trC
 // card color: only three classes: base, friends, secret
 function trKind(t){return t.sec||t.cat==='secret'?'secret':t.cat==='friends'?'friends':'base';}
 function trCard(t,e,pct,prog){
-  const got=e&&e.n;const p=pct!=null?`<span class="trp">${pct===0?'ще ніхто не відкрив':`є в ${pct<1?'<1':Math.round(pct)}% гравців`}</span>`:'';
+  const got=e&&e.n;const p=pct!=null?`<span class="trp">${pct===0?(got?'ти серед перших':'ще ніхто не відкрив'):`є в ${pct<1?'<1':Math.round(pct)}% гравців`}</span>`:'';
   const pr=!got&&prog?`<span class="trp">${Math.min(prog[0],prog[1])}/${prog[1]}</span>`:'';
   return `<div class="tro k-${trKind(t)}${got?' on':''}${t.sec?' sec':''}"><span class="tri">${trBadge(t,got)}</span><div class="trt"><b>${esc(t.n)}</b>${trQ(t)}<span>${esc(t.d)}</span>${p}${pr}</div>${got&&e.n>1?`<span class="trn">×${e.n}</span>`:''}</div>`;
 }

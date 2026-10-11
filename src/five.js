@@ -108,7 +108,7 @@ function f5Render(){
     const list=cs?[...cs.pl].map(p=>({p,ok:!f5Taken(team).has(canon(p[5]))&&need.has(f5G(p))})).sort((a,b)=>(b.ok-a.ok)||(b.p[3]-a.p[3])):[];
     el.innerHTML=`<div class="row" style="justify-content:space-between;margin-block:var(--sp-4) var(--sp-2)"><div>${f5Head(team)} <span class="muted mono">${5-f5Open(team).length}/5 · ${team.form}</span></div><span class="muted mono">${f.mode==='turns'?`хід ${f.pick+1}/${total}`:''}</span></div>
       ${f5Pitch(team)}
-      <div class="wheel" style="margin-top:var(--sp-3)"><div class="reels"><div class="reel"><div class="strip"><div class="club">${cs?esc(cs.n):''}</div></div></div><div class="reel"><div class="strip"><div class="season">${cs?seasonLabel(cs.y):''}</div></div></div></div>
+      <div class="wheel" style="margin-top:var(--sp-3)"><div class="reels"><div class="reel"><div class="strip"><div class="club">${cs?esc(shortTeam(cs.n)):''}</div></div></div><div class="reel"><div class="strip"><div class="season">${cs?seasonLabel(cs.y):''}</div></div></div></div>
       <div class="row" style="justify-content:space-between"><span class="muted">${cs?(placeNote(cs,1)||cs.pos+' місце в тому сезоні')+' · потрібні: '+[...need].map(s=>F5_L[s]).join(', '):''}</span>${team.rerolls>0?`<button class="ghost" id="f5Rr">Перекрутити (${team.rerolls})</button>`:''}</div>
       <div class="sqHead noast"><span></span><span></span><span><b>Матчі</b><i>Мат</i></span><span><b>Голи</b><i>Гол</i></span><span></span><span class="h"></span></div><div class="squad noast" id="f5Sq"></div></div>`;
     const sq=document.getElementById('f5Sq');let sep=false;
