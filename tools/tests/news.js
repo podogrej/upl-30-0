@@ -26,6 +26,7 @@ const OUT=process.argv[2]||path.join(ROOT,'tools','tests','out');fs.mkdirSync(OU
  mode='ok';await pg.waitForTimeout(3500);
  const body=(await pg.textContent('#viewBody')).replace(/\s+/g,' ');await pg.click('#viewClose');const page=(await pg.textContent('#pp')).replace(/\s+/g,' ');
  T.check(/Ти увійшов як Андрій через Telegram/.test(body)&&/Увійшов через Telegram/.test(page),`увійшов: ${body.slice(0,60)}; сторінка: «Увійшов через Telegram»`);
+ const delay=new Function(fs.readFileSync(path.join(ROOT,'src','account.js'),'utf8').match(/function acctBotDelay[^\n]*/)[0]+';return acctBotDelay;')();let polls=0;for(let t=0;t<600e3;polls++)t+=delay(t);T.check(polls>=40&&polls<=70,`темп опитування входу: ${polls} запитів за 10 хв (було 240)`);
  const n=auth.length;await pg.waitForTimeout(3000);T.check(auth.length===n,'після входу опитування зупинилось');
  T.check(!errs.length,'помилок на сторінці немає '+errs.join(' | '));
  await b.close();process.exit(T.done());})();

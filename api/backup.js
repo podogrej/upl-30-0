@@ -2,11 +2,15 @@
 // Using SUPABASE_SERVICE_KEY, reads all important tables in pages of 1000 rows and gzips on the fly (streaming,
 // only compressed data held in memory), then stores one YYYY-MM-DD.json.gz (Kyiv date) in the PRIVATE Supabase bucket "backups"
 // (SQL: sql/v055_backups.sql). A same-day rerun overwrites the file.
+// Self-check right after the upload: the file is read back, compared byte for byte, unzipped, parsed, and the rows per table are compared
+// with what was dumped. A mismatch or any failure is sent to the admin in Telegram (TG_ERRORS_CHAT, else TG_CARDS_CHAT, else OWNER_TG_ID);
+// old files are not pruned after a failed check.
 // Retention: last 14 daily files + Monday files for 8 weeks; older ones are deleted.
 // Access: only with "Authorization: Bearer <CRON_SECRET>" (Vercel Cron sends it); without the env var -> 401.
 // File format: {"made":..., "source":..., "tables":{"players":[...], ...}, "counts":{...}}; restore: tools/backup/restore_plan.md.
 const zlib = require('zlib'), crypto = require('crypto');
 const { SB_URL, sb, env, kyivDate } = require('./_lib.js');
+const { tg } = require('./_league.js');
 const BUCKET = 'backups', PAGE = 1000, KEEP_DAYS = 14, KEEP_MONDAY_WEEKS = 8;
 const CARDS = 'cards', CARDS_KEEP_DAYS = 7;   // audit P2-20: Telegram cards (api/card.js, folders YYYY-MM-DD); Telegram fetches them immediately, a week is ample
 // table -> sort order (primary key). Single-column key: keyset pagination ("after last"), otherwise offset
@@ -97,6 +101,36 @@ function toDelete(names, today) {
   });
 }
 
+// file as stored (authenticated read of a private bucket)
+async function readBack(path) {
+  const k = env('SUPABASE_SERVICE_KEY');
+  const r = await fetch(`${SB_URL}/storage/v1/object/${path}`, { headers: { apikey: k, Authorization: `Bearer ${k}` } });
+  if (!r.ok) throw new Error(`storage ${r.status}: ${(await r.text()).slice(0, 100)}`);
+  return Buffer.from(await r.arrayBuffer());
+}
+const sha = b => crypto.createHash('sha256').update(b).digest('hex');
+// problems in the stored copy compared with what was sent and dumped ([] = fine)
+function checkCopy(stored, sent, counts) {
+  const bad = [];
+  if (stored.length !== sent.length || sha(stored) !== sha(sent)) bad.push(`файл у сховищі відрізняється від надісланого (${stored.length} Б замість ${sent.length})`);
+  let dump = null;
+  try { dump = JSON.parse(zlib.gunzipSync(stored).toString('utf8')); } catch (e) { bad.push(`файл не розпаковується або не читається: ${String(e.message).slice(0, 80)}`); return bad; }
+  for (const T of TABLES) {
+    const want = counts[T.t] == null ? 0 : counts[T.t], rows = dump.tables && dump.tables[T.t];
+    if (!Array.isArray(rows)) bad.push(`${T.t}: таблиці немає у файлі`);
+    else if (rows.length !== want) bad.push(`${T.t}: у файлі ${rows.length} рядків, вивантажено ${want}`);
+  }
+  return bad;
+}
+// message to the admin through the same bot as the other service messages; false when no chat is configured or Telegram refuses
+async function alertOwner(text) {
+  const chat = env('TG_ERRORS_CHAT') || env('TG_CARDS_CHAT') || env('OWNER_TG_ID');
+  if (!chat || !env('TG_TOKEN')) return false;
+  try { const r = await tg('sendMessage', { chat_id: chat, text, parse_mode: 'HTML', disable_web_page_preview: true }); return !!(r && r.ok); }
+  catch (e) { console.error('backup: alert failed', e.message); return false; }
+}
+const esc = x => String(x).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+
 module.exports = async (req, res) => {
   const cronSecret = env('CRON_SECRET');
   const auth = String((req.headers && req.headers.authorization) || '');
@@ -135,6 +169,17 @@ module.exports = async (req, res) => {
     const buf = Buffer.concat(parts);
     stage = 'upload';
     await storage(`object/${BUCKET}/${name}`, { method: 'POST', body: buf, headers: { 'Content-Type': 'application/gzip', 'x-upsert': 'true' } });
+    stage = 'verify';
+    let stored = null;
+    for (let i = 0; i < 2 && !stored; i++) {   // one retry: the object may need a moment to become readable
+      try { stored = await readBack(`${BUCKET}/${name}`); } catch (e) { if (i) throw e; await new Promise(r => setTimeout(r, 1500)); }
+    }
+    const problems = checkCopy(stored, buf, counts);
+    if (problems.length) {
+      console.error('backup check failed', JSON.stringify(problems));
+      const told = await alertOwner(`<b>⚠️ Резервна копія ${esc(day)} не пройшла перевірку</b>\n${problems.slice(0, 8).map(x => '• ' + esc(x)).join('\n')}\n\nСтарі копії не чіпав. Запусти копію ще раз або напиши Claude.`);
+      return res.status(500).json({ error: 'backup check failed', file: `${BUCKET}/${name}`, problems, told });
+    }
     stage = 'retention';
     const list = await storage(`object/list/${BUCKET}`, { method: 'POST', body: JSON.stringify({ prefix: '', limit: 1000, offset: 0, sortBy: { column: 'name', order: 'asc' } }), headers: { 'Content-Type': 'application/json' } }) || [];
     const del = toDelete(list.map(o => o.name), day);
@@ -143,13 +188,15 @@ module.exports = async (req, res) => {
     let cardsDeleted = 0;
     try { await sb(`client_errors?at=lt.${new Date(Date.now() - 30 * 864e5).toISOString()}`, { method: 'DELETE' }); } catch (e) { if (e.status !== 404) console.warn('backup: client_errors cleanup', e.message.slice(0, 120)); }   // client error reports: keep 30 days
     try { cardsDeleted = await cleanCards(day); } catch (e) { console.warn('backup: cards cleanup', e.message.slice(0, 120)); }   // backup is already saved; card cleanup failure must not fail it
-    const out = { ok: true, file: `${BUCKET}/${name}`, bytes: buf.length, counts, deleted: del, cardsDeleted, ms: Date.now() - t0 };
+    const out = { ok: true, verified: true, file: `${BUCKET}/${name}`, bytes: buf.length, counts, deleted: del, cardsDeleted, ms: Date.now() - t0 };
     console.log('backup', JSON.stringify(out));
     res.status(200).json(out);
   } catch (e) {
     console.error('backup failed at', stage, e && e.message);
+    await alertOwner(`<b>⚠️ Резервна копія не вдалась</b>\nКрок: ${esc(stage)}\n${esc(String(e && e.message || e).slice(0, 200))}`);
     res.status(500).json({ error: `crash at ${stage}: ${String(e && e.message || e).slice(0, 180)}` });
   }
 };
 module.exports.toDelete = toDelete;
+module.exports.checkCopy = checkCopy;
 module.exports.TABLES = TABLES;

@@ -92,13 +92,18 @@ async function acctTelegram(payload,silent){
 // ---------- bot sign-in: browser creates a one-time token, player presses Start in @upl30_bot, page polls for confirmation
 function acctBotToken(){const a=new Uint8Array(16);crypto.getRandomValues(a);const t=[...a].map(b=>b.toString(16).padStart(2,'0')).join('');lsSet('upl30_login_tok',{t,at:Date.now()});return t;}
 function acctBotPending(){const o=lsGet('upl30_login_tok');return o&&o.t&&Date.now()-o.at<10*60e3?o.t:null;}
-let BOT_POLL=null;
-function acctBotPoll(){if(BOT_POLL||SESSION)return;const tick=async()=>{const t=acctBotPending();if(!t||SESSION){clearInterval(BOT_POLL);BOT_POLL=null;return;}
-    const res=await acctTelegram({login_token:t},true);
-    if(res==='ok'){clearInterval(BOT_POLL);BOT_POLL=null;lsSet('upl30_login_tok',null);ACCT_MSG='Готово — ти увійшов через Telegram.';if(!document.getElementById('viewBox').hidden)openAcct();}
-    else if(res!=='pending'&&/крок [234]/.test(ACCT_ERR||'')){clearInterval(BOT_POLL);BOT_POLL=null;lsSet('upl30_login_tok',null);ACCT_MSG='Вхід через Telegram не вдався — '+ACCT_ERR;openAcct();}};
-  BOT_POLL=setInterval(tick,2500);tick();}
-document.addEventListener('visibilitychange',()=>{if(!document.hidden&&acctBotPending()&&!SESSION){clearInterval(BOT_POLL);BOT_POLL=null;acctBotPoll();}});
+let BOT_POLL=null,BOT_GEN=0;
+// poll pace: every 3 s for the first 30 s, every 6 s up to 2 min, then every 15 s (about 57 requests in the 10 minutes the token lives); no request while the page is hidden
+function acctBotDelay(ms){return ms<30e3?3000:ms<120e3?6000:15000;}
+function acctBotStop(){BOT_GEN++;clearTimeout(BOT_POLL);BOT_POLL=null;}
+function acctBotPoll(){if(BOT_POLL||SESSION)return;const g=++BOT_GEN;BOT_POLL=1;
+  const tick=async()=>{const t=acctBotPending();if(!t||SESSION){acctBotStop();return;}
+    if(!document.hidden){const res=await acctTelegram({login_token:t},true);if(g!==BOT_GEN)return;
+      if(res==='ok'){acctBotStop();lsSet('upl30_login_tok',null);ACCT_MSG='Готово — ти увійшов через Telegram.';if(!document.getElementById('viewBox').hidden)openAcct();return;}
+      if(res!=='pending'&&/крок [234]/.test(ACCT_ERR||'')){acctBotStop();lsSet('upl30_login_tok',null);ACCT_MSG='Вхід через Telegram не вдався — '+ACCT_ERR;openAcct();return;}}
+    BOT_POLL=setTimeout(tick,acctBotDelay(Date.now()-(lsGet('upl30_login_tok')||{at:Date.now()}).at));};
+  tick();}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&acctBotPending()&&!SESSION){acctBotStop();acctBotPoll();}});
 async function acctLogout(){if(SB)await SB.auth.signOut();SESSION=null;ACCT_MSG='Ти вийшов. Прогрес на цьому пристрої лишився.';renderAcct();if(CUR_SEC===6&&PP&&PP.own)ppRender();else openAcct();}
 // ---------- PLAYER: one person = one player. Device and sign-ins (Google/Telegram) are linked to it in the DB.
 // Name lives in the player profile: rename propagates to all tables. Without a name: persistent anonymous one (e.g. silent_owl).

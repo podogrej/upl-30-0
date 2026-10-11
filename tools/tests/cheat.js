@@ -8,7 +8,7 @@ const ROOT = path.join(__dirname, '..', '..');
 process.env.SUPABASE_SERVICE_KEY = 'svc'; process.env.TG_TOKEN = '123:TEST'; process.env.CRON_SECRET = 'cron-secret-0123456789';
 const DB = { season_seeds: [], seasons: [], daily_results: [], challenges: [], challenge_results: [], trophies: [], league_results: [], leagues: [], league_members: [], league_boards: [], season_offers: [] }; let sid = 0; let OFF_TABLE = true;
 // Supabase storage (backups), Telegram (getChatMember), rate_hit counter
-const STORE = {}, MEMBERS = {}, RATE = {}, MIGRATED = {}; let RATE_ON = false;
+const STORE = {}, MEMBERS = {}, RATE = {}, MIGRATED = {}; let RATE_ON = false, TAMPER = null; const TGMSG = [];
 const jres = j => ({ ok: true, status: 200, json: async () => j, text: async () => JSON.stringify(j) });
 // DB: device secrets (device_ok), step-2 switch, unique official daily attempt
 const SECRETS = {}; let LEGACY_OPEN = true, SQL053 = true, ERA_COL = true;
@@ -28,12 +28,14 @@ global.fetch = async (url, o = {}) => {
     const a = JSON.parse(o.body || '{}');
     if (t === 'getChatMember' && MIGRATED[a.chat_id]) return jres({ ok: false, description: 'Bad Request: group chat was upgraded to a supergroup chat', parameters: { migrate_to_chat_id: MIGRATED[a.chat_id] } });   // 0.69.4
     if (t === 'getChatMember') { const st = (MEMBERS[a.chat_id] || {})[a.user_id]; return jres(st ? { ok: true, result: { status: st, is_member: st !== 'left' } } : { ok: false, description: 'Bad Request: user not found' }); }
+    if (t === 'sendMessage') TGMSG.push(a);
     return jres({ ok: true, result: { message_id: 1 } });
   }
   if (u.pathname.startsWith('/storage/v1/')) {
     const rest = u.pathname.slice('/storage/v1/'.length);
     if (m === 'POST' && rest.startsWith('object/list/backups')) return jres(Object.keys(STORE).sort().map(name => ({ name })));
     if (m === 'DELETE' && rest === 'object/backups') { JSON.parse(o.body).prefixes.forEach(n => { delete STORE[n]; }); return jres([]); }
+    if (m === 'GET' && rest.startsWith('object/backups/')) { let f = STORE[decodeURIComponent(rest.slice('object/backups/'.length))]; if (f && TAMPER) f = TAMPER(f); return f ? { ok: true, status: 200, arrayBuffer: async () => f.buffer.slice(f.byteOffset, f.byteOffset + f.length), text: async () => '' } : err(404, { message: 'not found' }); }
     if (m === 'POST' && rest.startsWith('object/backups/')) { STORE[decodeURIComponent(rest.slice('object/backups/'.length))] = Buffer.from(o.body); return jres({ Key: rest }); }
     return err(400, { message: 'storage?' });
   }
@@ -350,6 +352,24 @@ function honestXi(formation) {
   ok('backup: лишились 14 днів + понеділки за 8 тижнів, старші видалено, чужі файли не чіпаємо', keep.every(n => STORE[n]) && drop.every(n => !STORE[n]), `видалено ${(bk.j.deleted || []).join(', ')}`);
   const bk2 = await callReq(backupH, { headers: { authorization: 'Bearer ' + process.env.CRON_SECRET } });
   ok('backup: повторний запуск того ж дня — перезапис, без помилок', bk2.c === 200 && Object.keys(STORE).filter(n => n.startsWith(today)).length === 1);
+  // self-check after the upload: a good copy passes silently; a damaged one fails with a message to the admin and nothing is pruned
+  ok('backup: перевірка копії після запису пройшла, власнику нічого не надсилали', bk.j.verified === true && !TGMSG.length, JSON.stringify(TGMSG[0] || ''));
+  { const fresh = dAgo(nonMondayAgo(14)) + '.json.gz'; STORE[fresh] = Buffer.from('old');
+    process.env.TG_ERRORS_CHAT = '4242';
+    TAMPER = f => { const d = JSON.parse(zlib.gunzipSync(f)); d.tables.seasons.pop(); return zlib.gzipSync(JSON.stringify(d)); };   // one row lost on the way back, size differs
+    const bad1 = await callReq(backupH, { headers: { authorization: 'Bearer ' + process.env.CRON_SECRET } });
+    ok('backup: у файлі бракує рядка — 500, у повідомленні таблиця і числа, копії не чистяться', bad1.c === 500 && bad1.j.told === true && bad1.j.problems.some(x => /seasons: у файлі \d+ рядків, вивантажено \d+/.test(x))
+      && TGMSG.length === 1 && TGMSG[0].chat_id === '4242' && /не пройшла перевірку/.test(TGMSG[0].text) && /seasons/.test(TGMSG[0].text) && !!STORE[fresh], JSON.stringify(bad1.j.problems));
+    TGMSG.length = 0;
+    TAMPER = f => f.subarray(0, Math.floor(f.length / 2));   // truncated file
+    const bad2 = await callReq(backupH, { headers: { authorization: 'Bearer ' + process.env.CRON_SECRET } });
+    ok('backup: обірваний файл — не розпаковується, 500 і повідомлення', bad2.c === 500 && bad2.j.problems.some(x => /не розпаковується|не читається/.test(x)) && TGMSG.length === 1, JSON.stringify(bad2.j.problems));
+    TGMSG.length = 0; TAMPER = null; delete STORE[fresh];
+    const keepGet = global.fetch; global.fetch = async (url, o = {}) => (String(url).includes('/storage/v1/object/backups/') && (o.method || 'GET') === 'GET' ? err(500, { message: 'down' }) : keepGet(url, o));
+    const bad3 = await callReq(backupH, { headers: { authorization: 'Bearer ' + process.env.CRON_SECRET } });
+    global.fetch = keepGet;
+    ok('backup: сховище не віддає файл — 500 на кроці verify і повідомлення', bad3.c === 500 && /verify/.test(bad3.j.error) && TGMSG.length === 1 && /Крок: verify/.test(TGMSG[0].text), JSON.stringify(bad3.j));
+    TGMSG.length = 0; delete process.env.TG_ERRORS_CHAT; }
 
   // ===== Telegram group leagues: join only as a group member (audit B1) =====
   const leagueH = require(path.join(ROOT, 'api', 'league.js'));
