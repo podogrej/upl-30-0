@@ -28,6 +28,7 @@ grant execute on function public.api_gate(text, text, uuid, text, int, int) to s
 
 -- 2. league view. Same rules as api/_league.js onlyVerified/standingsOf: rows from 2026-10-01 count only with a verified, non-practice season
 --    of the same Telegram user whose day matches (own day, or the Kyiv date of saving = row day or the day before); numbers come from the season.
+--    Rows before 2026-10-01 are shown as written (no season join), as in the JS.
 --    Names come from the player profile (via the Telegram link), else from the row.
 --    p_card: today's rows and counters only (no standings). Order of a day: points, goal difference, goals, earlier first.
 create or replace function public.league_view(p_chat bigint, p_day date default null, p_card boolean default false, p_limit int default 100)
@@ -38,12 +39,12 @@ begin
   if not found then return null; end if;
   select count(*) into v_members from league_members where chat_id = p_chat and left_at is null;
   with rows_ as (
-    select r.day, r.tg_user_id, coalesce(nullif(p.name, ''), p.anon_name, r.name) as nm, p.public_id as pub,
+    select r.day, r.tg_user_id, coalesce(nullif(p.name, ''), nullif(p.anon_name, ''), r.name) as nm, p.public_id as pub,
            case when s.id is not null then s.w else r.w end as w, case when s.id is not null then s.d else r.d end as dr, case when s.id is not null then s.l else r.l end as l,
            case when s.id is not null then s.w * 3 + s.d else r.pts end as pts,
            case when s.id is not null then s.gf else r.gf end as gf, case when s.id is not null then s.ga else r.ga end as ga, r.created_at
       from league_results r
-      left join seasons s on s.id = r.season_id and s.verified is true and s.practice = false
+      left join seasons s on s.id = r.season_id and r.day >= date '2026-10-01' and s.verified is true and s.practice = false
            and (s.tg_user_id is null or s.tg_user_id = r.tg_user_id)
            and (case when s.day is not null then s.day = r.day
                      else (s.created_at at time zone 'Europe/Kyiv')::date in (r.day, r.day + 1) end)
