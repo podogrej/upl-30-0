@@ -227,8 +227,10 @@ function trAward(c,{daily,sync=true}={}){
   const add=id=>{const e=s.t[id]||(s.t[id]={n:0,at:today});if(!e.n)fresh.push(id);e.n++;};
   for(const id of got)add(id);   // all trophies per season are repeatable: xN counter
   const ctxS={streak:trStreak(),dailies:s.dailies};
-  for(const t of TROPHIES)if(t.st&&t.st(ctxS)&&!(s.t[t.id]&&s.t[t.id].n)){add(t.id);got.push(t.id);}
-  for(const [k] of MILESTONES)if(s.seasons===k){add('ms'+k);got.push('ms'+k);}
+  const has=id=>s.t[id]&&s.t[id].n;
+  if(c.format!=='oneclub'){   // one club awards only its club record trophies; a milestone passed there comes with the next other season
+    for(const t of TROPHIES)if(t.st&&t.st(ctxS)&&!has(t.id)){add(t.id);got.push(t.id);}
+    for(const [k] of MILESTONES)if(s.seasons>=k&&!has('ms'+k)){add('ms'+k);got.push('ms'+k);}}
   lsSet("upl30_tr",s);if(fresh.length&&sync)trSync(fresh);
   return {got,fresh};
 }

@@ -64,7 +64,7 @@ for(const d of [TODAY,YDAY]){const i=LIST.findIndex(c=>c.day===d);if(i>=0)LIST.s
 LIST.push({...ILS,day:TODAY},{...ILS,day:YDAY});   // same module object as api/_vd.js uses
 // squad: event player on his card, `sh` Shakhtar players, the rest neither Shakhtar nor Brazilian.
 // sid: attempt seed id -> cards from the attempt wheel (first entries, as api/_vd.js checks); Shakhtar off the wheel only if the wheel has none
-const wheelSet=sid=>new Set(E.wheelSeq(E.hashStr(String(sid)+'|wheel')).slice(0,20));
+const wheelSet=sid=>new Set(E.wheelSeq(E.hashStr(String(sid)+'|wheel')).slice(0,require(path.join(ROOT,'api','_vd.js')).VD_WHEEL_WIN));   // same window as the server
 function buildXi(sh,sid){E.setFormat('classic');const F=E.FORMATIONS['4-4-2'].slots,ev=V.vdEventCard(ILS,E.DATA),used=new Set([canon(ev.p[5])]),out=[];let evSlot=null,best=-1;
   const W=sid?wheelSet(sid):null,onW=c=>!W||W.has(E.DATA.clubs.indexOf(c));
   F.forEach((s,i)=>{const r=E.effRating(ev.p,s);if(r!=null&&r>best){best=r;evSlot=i;}});
