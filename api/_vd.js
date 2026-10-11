@@ -1,6 +1,6 @@
 // 30-0 UPL: daily challenge attempts ("_" prefix: not a route). Called from /api/seed when the body has `vd`
 // (Vercel Hobby allows 12 functions, so no separate endpoint).
-//   vd 'start'  {day}                      -> open attempt (or a new one, at most VD_ATTEMPTS per player (all his devices) and day): {attempt, used, seed_id}
+//   vd 'start'  {day}                      -> open attempt (or a new one, at most VD_ATTEMPTS per player (all their devices) and day): {attempt, used, seed_id}
 //   vd 'finish' {day, attempt, xi, formation} -> server computes the required condition and the score from the squad (lib/vd_core.js),
 //                                            writes vd_results; condition met -> the attempt's season seed {seed_id, seed}, else the attempt burns
 //   vd 'mine'   {from?}                    -> own best per day (vd_mine) for the archive

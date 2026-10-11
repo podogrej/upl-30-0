@@ -160,7 +160,7 @@ async function handleUpdate(u) {
   const cmd = text.startsWith('/') ? text.split(/[\s@]/)[0].toLowerCase() : '', args = text.split(/\s+/).slice(1);
   if (cmd === '/whoami') { await say(m.chat.id, `Твій Telegram ID: ${m.from && m.from.id}`); return true; }
   if (cmd === '/start' && isPrivate && args[0] === 'ch_daily') {
-    await say(m.chat.id, '🎯 Виклик дня — збери склад під умову дня: 5 спроб, рахується краща. Тисни «Грати»!', { reply_markup: { inline_keyboard: [[{ text: '▶️ Грати', web_app: { url: SITE } }]] } });
+    await say(m.chat.id, '🎯 Виклик дня — збери склад під умову дня: 3 спроби, рахується краща. Тисни «Грати»!', { reply_markup: { inline_keyboard: [[{ text: '▶️ Грати', web_app: { url: SITE } }]] } });
     return true;
   }
   if (!['/post', '/queue', '/auto'].includes(cmd)) return false;
@@ -209,7 +209,7 @@ async function autoPosts(now = new Date()) {
   const have = new Set((await L.sb(`app_marks?key=in.(${keys.map(encodeURIComponent).join(',')})&select=key`) || []).map(m => m.key));
   if (have.has('ch_auto_off')) return made;
   if (wantDaily && !have.has(`ch_daily:${tday}`) && await once(`ch_daily:${tday}`)) {
-    const text = `<b>🎯 Виклик дня · ${L.dayShort(tday)}</b>\n<b>${esc(vd.title)}</b>\n${esc(vd.story)}\n\n${esc(vd.task)} 5 спроб, рахується краща.\n\n<a href="${DAILY_LINK()}">Зіграти виклик дня →</a>`;
+    const text = `<b>🎯 Виклик дня · ${L.dayShort(tday)}</b>\n<b>${esc(vd.title)}</b>\n${esc(vd.story)}\n\n${esc(vd.task)} 3 спроби, рахується краща.\n\n<a href="${DAILY_LINK()}">Зіграти виклик дня →</a>`;
     const p = await insertAuto(`ch_daily:${tday}`, { text, publish_at: laterOf(kyivToUtc(tk.y, tk.m, tk.d, ...DAILY_AT), now).toISOString(), status: 'draft', source: 'auto' });
     if (p) made.push(p.id);
   }
