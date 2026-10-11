@@ -17,7 +17,7 @@ const {makeDB,openSite,checker}=require('./_site.js');
      other:trEval(ctx('oneclub','shakhtar-donetsk',rec[0]+1,1)),classic:trEval(ctx('classic',null,90,1)),
      twoColors:(TROPHIES.find(t=>t.id==='oneclubchamp')||{}).gone};});
  T.check(r.name==='Найкращий сезон в історії «Динамо»'&&r.wname==='Найгірший сезон в історії «Динамо»','назви: «'+r.name+'», «'+r.wname+'»');
- T.check(r.shakh==='Найкращий сезон в історії «Шахтаря»'&&r.met==='Найгірший сезон в історії донецького «Металурга»','відмінювання: «'+r.shakh+'», «'+r.met+'»');
+ T.check(r.shakh==='Найкращий сезон в історії «Шахтаря»'&&r.met==='Найгірший сезон в історії «Металурга Д.»','відмінювання: «'+r.shakh+'», «'+r.met+'»');
  T.check(!r.noGen.length,'родовий відмінок є для кожного клубу з рекордами '+r.noGen.join(','));
  T.check(r.nOc===2*r.nRec&&r.nOc>40,`по два трофеї на кожен клуб з історією: ${r.nOc} на ${r.nRec} клубів`);
  T.check(!r.long.length&&!r.dup,'id проходять перевірку сервера й не повторюються '+r.long.join(','));
