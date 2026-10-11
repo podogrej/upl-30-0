@@ -3057,7 +3057,7 @@ function ppRender(){
     const tile=(n,l,hot)=>wait?`<div class="tile${hot?' hot':''}"><b><i class="sk num"></i></b><span>${l}</span></div>`:ppTile(n,l,hot);
     h+=`<div class="pp-big3 pp-tiles">${tile(seasons,plUk(numOr0(seasons),'сезон','сезони','сезонів'))}${tile(p.champions,'чемпіонств')}${tile(best,'рекорд, очок',true)}</div><p class="pp-rest">${wait?'<i class="sk w80"></i>':rest}</p>`;
     const nmOn=own&&nmFull(p),fc=!nmOn&&p.fav_club&&p.fav_club.pct>=15?p.fav_club:null,fp=!nmOn&&p.fav_player&&p.fav_player.k>1?p.fav_player:null;   // own page with 5+ seasons: "Your numbers" replaces these rows
-    if(fc||fp)h+=`<div class="pp-fav">${fc?`<div>${ic('heart')}<div><span class="k">Улюблений клуб</span><b>${esc(fc.c)}</b></div><span class="v">${numOr0(fc.pct)}% вибору</span></div>`:''}${fp?`<div>${ic('account-circle')}<div><span class="k">Найчастіший гравець</span><b>${esc(fp.n)}</b></div><span class="v">×${numOr0(fp.k)}</span></div>`:''}</div>`;
+    if(fc||fp)h+=`<div class="pp-fav">${fc?`<div>${ic('heart')}<div><span class="k">Улюблений клуб</span><b>${esc(shortTeam(fc.c))}</b></div><span class="v">${numOr0(fc.pct)}% вибору</span></div>`:''}${fp?`<div>${ic('account-circle')}<div><span class="k">Найчастіший гравець</span><b>${esc(fp.n)}</b></div><span class="v">×${numOr0(fp.k)}</span></div>`:''}</div>`;
     h+=`<div id="ppCab"></div>`;
     if(own&&ONLINE&&PLAYER)h+=`<div id="ppNums"></div>`;   // "Your numbers" (src/numbers.js)
     if(own)h+=ppXiHtml(p);
