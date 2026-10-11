@@ -1316,7 +1316,7 @@ h3,.sec0,#s1 .sec0,.pgh,.trleg .h{font-size:var(--fs-footnote);font-weight:var(-
   <div class="acts"><button class="ft-send" id="fbSend" type="submit">Надіслати</button><button class="ft-cancel" id="fbCancel" type="button">Скасувати</button></div></form>
 <div class="ft-done" id="fbDone" hidden><b>✓</b><span>Дякуємо! Прочитаємо найближчим часом</span></div>
 <div class="ft-pills"><button class="ft-pill" id="fbBtn" type="button"><!--i:mail-->Відгук і баги</button><a class="ft-pill" id="ftBot" href="https://t.me/upl30_bot" target="_blank" rel="noopener"><!--i:telegram-->Telegram-бот</a></div>
-<div class="foot ft-small"><a href="#" id="newsBtn">Що нового у версії 0.87<b id="newsDot" hidden></b></a><a href="privacy.html">Конфіденційність</a><a href="terms.html">Умови використання</a></div>
+<div class="foot ft-small"><a href="#" id="newsBtn">Що нового у версії 0.88<b id="newsDot" hidden></b></a><a href="privacy.html">Конфіденційність</a><a href="terms.html">Умови використання</a></div>
 <div class="foot ft-copy">© 2026 30-0 УПЛ · неофіційний фан-проєкт <a href="#" id="themeBtn" class="thm" role="switch" aria-checked="false" aria-label="Світла тема"></a></div>
 <p class="ft-legal">30-0 УПЛ — незалежний фан-проєкт: футбольний драфт і симулятор сезону. Він не пов'язаний з Українською Прем'єр-лігою, Українською асоціацією футболу, клубами, футболістами, їхніми об'єднаннями чи іншими організаціями й не схвалений ними. Назви клубів, імена футболістів, рейтинги, статистику й дані сезонів використано лише з інформаційною та довідковою метою. Офіційні логотипи, емблеми та фото футболістів не використовуються. Усі торговельні марки належать їхнім власникам.</p>
 <div class="ft-cred">Шрифт KyivType Sans © Дмитро Растворцев (айдентика Києва)<br>Іконки: Material Design Icons (Apache 2.0), логотип Telegram — Font Awesome Free (CC BY 4.0)</div>
@@ -2158,6 +2158,9 @@ const homeL=c=>LOG(c).filter(m=>m.home&&m.res==='L').length;
 const full=c=>LOG(c).length===30;   // full match log (old log rows have none)
 const goalsDesc=c=>c.pl.map(p=>p.g||0).sort((a,b)=>b-a);   // goals per player, highest first
 const runMax=(c,ok)=>{let k=0,b=0;for(const m of LOG(c)){k=ok(m)?k+1:0;if(k>b)b=k;}return b;};   // longest run of matches meeting ok
+const TBL=c=>c.r.table||[];   // final table, top first (live season only; log rows have none)
+const ptsAt=(c,i)=>(TBL(c)[i]||{}).pts;   // points of the team at table position i (0 = champion)
+const firstW=c=>LOG(c).findIndex(m=>m.res==='W');   // index of the first win, -1 if none
 const halfGain=c=>{let d=0;LOG(c).forEach((m,k)=>{const p=m.res==='W'?3:m.res==='D'?1:0;d+=k<15?-p:p;});return d;};   // points in matches 16-30 minus points in 1-15
 // surnames of Ukrainian MPs (convocations 2-9) present in the pool: data/trophies/rada.py
 const RADA=new Set("абрамов аваков авраменко акопян аксьонов алексєєв андрієвський анненков арабаджи артеменко бабак бабенко бабич бабій бакай балашов балицький баранов безсмертний безуглий близнюк богдан боднар боженко бойко бойчук бондар бондаренко бондарчук боровик буряк білецький білий білик білоус білоцерковець ванат васильєв василів ващук власов вознюк волинець волков волошин гаврилов гавриш гармаш герасименко геращенко гетьман глущенко головатий головко голуб гончар гончаренко горбенко горбунов гордєєв гордієнко горобець гошовський грановський грачов гриценко грищенко гудима гузенко гуменюк гурін гусак давидов даниленко данченко даценко дем'янчук демченко денисенко деркач дмитренко дмитрук довгий домбровський донець дорохов дудка діденко дідик жданов жук заблоцький загоруйко задорожний запорожець заставний захарченко заєць зейналов зозуля зуб зубов зуєв зінкевич зінченко кабанов кабаченко калюжний камінський каплієнко капустян капустін карабута касьянов качур кириленко киричок клименко климець клімов коваленко коваль ковальов ковальчук кожевников кожушко козак козаков козаченко козир козловський козуб колесніченко колєв комар кондратенко кондратюк кононов корнійчук корнієнко король костенко костюк кравець кравцов кравченко кравчук кривенко криворучко кривошеєв крячко кріль кудря кузнєцов кулаков кулик курило кучер кучеренко кучерук кісельов лаба лавриненко ларін левченко лелюк леонов литвин литвиненко лозинський лозінський лук'янчук лукаш лукашук луньов луценко ляшенко літвінов мазур мазуренко майборода макаренко малишев мальцев мамчур марков мартиненко мартинюк марченко марчук матвєєв матвійчук матвієнко матківський матюха мельник мельниченко мельничук мисик михайленко мкртчян мокан мороз морозенко морозов москвін моісеєнко мулик мухін мхітарян мірошник мірошниченко мірошніченко місюра міщенко нагорняк наконечний нестеренко новак новіков носенко ніколаєнко овчаренко олійник омельченко омельчук омельянович онищенко опанасенко орлов остапенко павленко павлов павлюк павліш паламарчук парасків пастух петрик петров пилипенко пилипчук писаренко подоляк поляков поліщук пономаренко пономарьов попов портнов потапов потімков присяжнюк приходько продан прокопенко прокопчук проценко пташник пінчук піскун радченко рева ременюк рибак рибалка рижук романовський романчук романюк руденко савенко савка савченко савчук садовий саламаха салій самойленко сафронов сахно семенюк сидоренко сидорчук силантьєв симоненко синенко синиця сирота ситник сич скорик скороход скрипка скрипник славов слободян смірнов соколов соломатін сорока степаненко степанов степанюк стойко стоян суркіс суслов сушко таран таранов тарасенко тарасов тарасюк тищенко ткаченко ткачук товт тодоров толочко топалов трегубов третьяков трухін тістик унгурян федоренко федоров федорук федорчук фомін фірсов хлань хоменко царенко целих циба цимбалюк цкітішвілі чайка черненко черняк черній чорний чумак чумаченко шандра шаповалов шахов швець шевченко шевчук шершун шестаков шибко шинкаренко шпак шульга юрченко юшко яблонський якименко яковенко янковський яровенко ярош яценко яцик євтушок ємельянов ємець єремеєв єрмак єрохін єфремов єфімов єщенко іваненко іванов ігнатенко ісаєв ісаєнко іщенко".split(' '));
@@ -2226,7 +2229,7 @@ const TROPHIES=[
   {id:"ghosts",i:"👻",n:"Тіні забутих клубів",d:"Усі 11 — з клубів, яких немає в УПЛ 2025/26",cat:"secret",sec:1,t:c=>c.xi.every(x=>!CLUBS_NOW.has(x.cc))},
   {id:"crimea",i:"🌊",n:"Кримський рейс",d:"3+ гравці «Таврії» чи «Севастополя»",cat:"secret",sec:1,t:c=>c.xi.filter(x=>x.cc==='tavriya-simferopol'||x.cc==='sevastopol').length>=3},
   {id:"cross",i:"🔀",n:"Ні нашим, ні вашим",d:"Двоє гравців, які грали і за «Динамо», і за «Шахтар»",cat:"secret",sec:1,t:c=>c.xi.filter(x=>{const q=PERSON[x.id];return q&&q.clubs.has('dynamo-kyiv')&&q.clubs.has('shakhtar-donetsk');}).length>=2},
-  {id:"mediocre",i:"🧢",n:"З грязі в князі",d:"Чемпіон із середнім рейтингом складу нижче 78",cat:"secret",sec:1,t:c=>c.reveal&&notAnti(c)&&c.r.place===1&&c.xi.reduce((s,x)=>s+x.r0,0)/c.xi.length<78},
+  {id:"mediocre",i:"🧢",n:"5000 до 1",d:"Чемпіон із середнім рейтингом складу нижче 78",cat:"secret",sec:1,t:c=>c.reveal&&notAnti(c)&&c.r.place===1&&c.xi.reduce((s,x)=>s+x.r0,0)/c.xi.length<78},
   {id:"cursed",i:"🧿",n:"Прокляття xG",d:"xP 70+, але не чемпіон",cat:"secret",sec:1,t:c=>notAnti(c)&&c.r.xp>=70&&c.r.place>1},
   {id:"heist",i:"💰",n:"Пограбування",d:"Чемпіон з xP нижче 55",cat:"secret",sec:1,t:c=>notAnti(c)&&c.r.place===1&&c.r.xp<55},
   {id:"fairy",i:"✨",n:"Сила в єдності",d:"Усі 11 гравців провели сезон у плюсовій формі (+1 і вище)",cat:"secret",sec:1,t:c=>c.pl.length===11&&c.pl.every(p=>p.form>=1)},
@@ -2304,7 +2307,7 @@ const TROPHIES=[
   {id:"wins10",i:"🚄",n:"Інтерсіті без зупинок",d:"10 перемог поспіль",cat:"season",rep:1,t:c=>notAnti(c)&&mixed(c)&&runMax(c,m=>m.res==='W')>=10},
   {id:"unbeat20",i:"💪",n:"Нас не подолати",d:"20 матчів поспіль без поразок",cat:"season",rep:1,t:c=>notAnti(c)&&mixed(c)&&runMax(c,m=>m.res!=='L')>=20},
   {id:"awayfort",i:"🛋️",n:"Почувайтеся як вдома",d:"Жодної поразки на виїзді за сезон",cat:"season",rep:1,t:c=>notAnti(c)&&mixed(c)&&full(c)&&LOG(c).every(m=>m.home||m.res!=='L')},
-  {id:"surge2",i:"📈",n:"Друге дихання",d:"У другому колі (матчі 16–30) набери на 12+ очок більше, ніж у першому",cat:"season",rep:1,t:c=>notAnti(c)&&mixed(c)&&full(c)&&halfGain(c)>=12},
+  {id:"surge2",i:"📈",n:"Don't push the horses",d:"У другому колі (матчі 16–30) набери на 12+ очок більше, ніж у першому",cat:"season",rep:1,t:c=>notAnti(c)&&mixed(c)&&full(c)&&halfGain(c)>=12},
   {id:"fade2",i:"🌸",n:"Весняне загострення",d:"У другому колі (матчі 16–30) набери на 12+ очок менше, ніж у першому",cat:"season",rep:1,t:c=>notAnti(c)&&mixed(c)&&full(c)&&halfGain(c)<=-12},
   {id:"nil5",i:"🥱",n:"Нудьга",d:"5+ нічиїх 0:0 за сезон",cat:"season",rep:1,t:c=>notAnti(c)&&mixed(c)&&LOG(c).filter(m=>m.ug===0&&m.og===0).length>=5},
   {id:"cs18",i:"🔒",n:"Ворота на замку",d:"18+ матчів без пропущених голів",cat:"season",rep:1,t:c=>notAnti(c)&&mixed(c)&&LOG(c).filter(m=>m.og===0).length>=18},
@@ -2316,6 +2319,26 @@ const TROPHIES=[
   {id:"trio12",i:"🔱",n:"Бейленко, Бенземенко, Роналденко",d:"Троє гравців забили 12+ голів за сезон",cat:"players",rep:1,t:c=>notAnti(c)&&mixed(c)&&goalsDesc(c)[2]>=12},
   {id:"trio15",i:"💫",n:"Мессієнко, Суаресенко, Неймаренко",d:"Троє гравців забили 15+ голів за сезон",cat:"players",rep:1,t:c=>notAnti(c)&&mixed(c)&&goalsDesc(c)[2]>=15},
   {id:"dfgoals12",i:"🪖",n:"Оборона — найкращий напад",d:"Захисники разом забили 12+ голів за сезон",cat:"players",rep:1,t:c=>notAnti(c)&&mixed(c)&&c.pl.filter(p=>GROUP_OF[p.slot]==='DF').reduce((a,p)=>a+(p.g||0),0)>=12},
+  // memes batch: conditions from the season log, final table and squad (goal minutes are cosmetic, never used);
+  // mixed(c) where one club gets it several times more often than classic (tools/trophy_freq.js, DECISIONS 21)
+  {id:"avatar",i:"🐈",n:"Постав хоч мого кота Аватара",q:"Леоненко",d:"Стань чемпіоном, вигравши 8+ матчів 1:0",cat:"season",rep:1,t:c=>notAnti(c)&&c.r.place===1&&LOG(c).filter(m=>m.ug===1&&m.og===0).length>=8},
+  {id:"punish",i:"⛈️",n:"Таке чувство, що Бог нас наказує за щось",q:"Кополовець",d:"5 поразок поспіль",cat:"season",rep:1,t:c=>notAnti(c)&&runMax(c,m=>m.res==='L')>=5},
+  {id:"merzost",i:"🤢",n:"Це мєрзость",d:"Поразка з різницею 5+ м'ячів",cat:"season",rep:1,t:c=>notAnti(c)&&LOG(c).some(m=>m.og-m.ug>=5)},
+  {id:"mayemo",i:"🤷",n:"Маємо те, що маємо",d:"Фініш на 8-му місці",cat:"season",rep:1,t:c=>notAnti(c)&&c.r.place===8},
+  {id:"choco",i:"🍫",n:"Може я тоже хочу шоколадку",d:"Друге місце з відставанням в 1 очко",cat:"season",rep:1,t:c=>notAnti(c)&&c.r.place===2&&ptsAt(c,0)-c.r.pts===1},
+  {id:"batya",i:"🧔",n:"Батя на розслабоні",d:"Стань чемпіоном із середнім віком складу 30+",cat:"season",rep:1,t:c=>notAnti(c)&&c.r.place===1&&c.xi.every(x=>x.by)&&c.xi.reduce((s,x)=>s+x.y-x.by,0)/c.xi.length>=30},
+  {id:"dance",i:"💃",n:"Дикі танці",d:"Забий 90+ голів за сезон",cat:"season",rep:1,t:c=>notAnti(c)&&mixed(c)&&c.r.gf>=90},
+  {id:"wedding",i:"💒",n:"Скажене весілля",d:"Матч, у якому забили 8+ голів на двох",cat:"season",rep:1,t:c=>notAnti(c)&&mixed(c)&&LOG(c).some(m=>m.ug+m.og>=8)},
+  {id:"notkept",i:"🫗",n:"Що маємо — не бережемо",d:"Лідер після першого кола (15 турів), а в підсумку без медалей",cat:"season",rep:1,t:c=>notAnti(c)&&c.r.place>3&&((c.r.snaps||[])[14]||[])[0]?.id==='USER'},
+  {id:"kozaky",i:"⚔️",n:"Як козаки у футбол грали",d:"Стань чемпіоном, коли всі 11 гравців — українці",cat:"season",rep:1,t:c=>notAnti(c)&&c.r.place===1&&c.xi.every(x=>x.nat===UA)},
+  {id:"aguero",i:"🗣️",n:"Агуерооо!",d:"Стань чемпіоном з тими ж очками, що й у другого місця",cat:"season",rep:1,t:c=>notAnti(c)&&c.r.place===1&&ptsAt(c,1)===c.r.pts},
+  {id:"siuu",i:"🙌",n:"Сіууу!",d:"Гравець забиває 30+ голів за сезон",cat:"players",rep:1,t:c=>notAnti(c)&&mixed(c)&&c.pl.some(p=>p.g>=30)},
+  {id:"tikitaka",i:"🔁",n:"Тікі-така",d:"6+ гравців віддали по 5+ асистів",cat:"players",rep:1,t:c=>notAnti(c)&&mixed(c)&&c.pl.filter(p=>(p.a||0)>=5).length>=6},
+  {id:"metal",i:"🎸",n:"Хеві-метал футбол",d:"Забий 50+ і пропусти 35+ голів за сезон",cat:"season",rep:1,t:c=>notAnti(c)&&c.r.gf>=50&&c.r.ga>=35},
+  {id:"seaside",i:"🏖️",n:"Ти де? А я на морі",d:"Стань чемпіоном з відривом 10+ очок",cat:"season",rep:1,t:c=>notAnti(c)&&mixed(c)&&c.r.place===1&&c.r.pts-ptsAt(c,1)>=10},
+  {id:"hop",i:"🦘",n:"Не кажи «гоп», поки не перескочиш",d:"Виграй перші 5 матчів, а фінішуй нижче 3-го місця",cat:"season",rep:1,t:c=>notAnti(c)&&c.r.place>3&&full(c)&&LOG(c).slice(0,5).every(m=>m.res==='W')},
+  {id:"crayfish",i:"🦞",n:"Як рак свисне",d:"Перша перемога — лише після 10-го туру",cat:"season",rep:1,t:c=>notAnti(c)&&full(c)&&firstW(c)>=10},
+  {id:"budmo",i:"🥂",n:"Будьмо!",d:"10 гравців забили щонайменше по 2 голи за сезон",cat:"players",rep:1,t:c=>notAnti(c)&&mixed(c)&&c.pl.filter(p=>(p.g||0)>=2).length>=10},
 ];
 const MILESTONES=[[1,"🌱","Перший сезон"],[5,"⚽","5 сезонів"],[10,"🎫","10 сезонів"],[25,"🎗️","25 сезонів"],[50,"🥇","Півсотні"],[100,"💯","Клуб 100"],[250,"🏛️","250 сезонів"]];
 function trStore(){const s=lsGet("upl30_tr")||{};s.t=s.t||{};s.seasons=s.seasons||0;s.dailies=s.dailies||0;return s;}
@@ -4305,8 +4328,9 @@ function drawCard(r){   // card in site style: UPL navy background, UPL.TV gradi
 }
 document.getElementById('chalOpen').onclick=()=>{const b=document.getElementById('chalBox'),t=document.getElementById('chalOpen');b.hidden=!b.hidden;t.classList.toggle('on',!b.hidden);if(!b.hidden){b.scrollIntoView({behavior:'smooth',block:'center'});const n=document.getElementById('chalName');if(n&&!n.hidden&&!n.value)n.focus();}};
 // ---------- What's new: short player-friendly notes on the latest version (technical log: CHANGELOG.md)
-const WHATSNEW={v:'0.87',news:'0.87',date:'10.10.2026',items:[   // news: edition of the items; a release without new items keeps it, so the news dot does not light up again
-  ['eye-off','Ліга 5×5: склади суперників — після турніру','Поки триває збір, видно лише, хто вже надіслав склад. Самі п’ятірки суперників відкриваються, коли турнір зіграно, тож підглянути й підлаштуватися не вийде.']]};
+const WHATSNEW={v:'0.88',news:'0.88',date:'11.10.2026',items:[   // news: edition of the items; a release without new items keeps it, so the news dot does not light up again
+  ['trophy','18 мемних трофеїв','«Постав хоч мого кота Аватара», «Агуерооо!», «Сіууу!», «Маємо те, що маємо», «Може я тоже хочу шоколадку», «Як рак свисне», «Будьмо!» і ще одинадцять. Умови — у «Трофеях».'],
+  ['star','Дві нові назви','«Друге дихання» тепер зветься «Don’t push the horses», а «З грязі в князі» — «5000 до 1». Умови ті самі, здобуті трофеї лишаються.']]};
 function openNews(){screenTag('news');const box=document.getElementById('viewBox');document.getElementById('viewTitle').textContent=`Що нового · версія ${WHATSNEW.v}`;
   document.getElementById('viewBody').innerHTML=`<div class="news">${WHATSNEW.items.map(([e,h,d])=>`<div class="ni">${ic(e,'lg')}<div><b>${esc(h)}</b><p>${esc(d)}</p></div></div>`).join('')}</div>`;
   box.hidden=false;lsSet('upl30_news_seen',WHATSNEW.news||WHATSNEW.v);document.getElementById('newsDot').hidden=true;}
