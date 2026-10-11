@@ -1,5 +1,5 @@
 // One club (0.89): only the club's own records give trophies there ("best/worst season in the history of <club>", ids ob_/ow_ + code);
-// every other trophy and "Два кольори" are not awarded in one club; club trophies are hidden in the cabinet until earned.
+// every other trophy and the two-colour trophy are not awarded in one club; club trophies are hidden in the cabinet until earned.
 // Run from repo root: node tools/tests/trophies089.js
 const {makeDB,openSite,checker}=require('./_site.js');
 (async()=>{const T=checker('trophies089');

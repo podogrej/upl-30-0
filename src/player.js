@@ -94,7 +94,7 @@ function ppRender(){
 // best and worst XI per mode (own page only)
 const PP_BUCKETS=[['classic','Класика','trophy'],['pick','Вибір сезону','calendar-check'],['daily','Драфт дня','calendar-star'],['derby','Дербі','lightning-bolt'],['oneclub','Один клуб','heart'],['anti','Антисезон','arrow-down-bold'],['legends','Ліга легенд','crown']];
 function ppXiRow(x,kind,label,icn){if(!x)return '';const sub=[`${numOr0(x.place)} місце`,`${numOr0(x.w)}-${numOr0(x.d)}-${numOr0(x.l)}`,esc(x.formation||''),x.avg!=null?`сер. ${esc(String(x.avg))}`:'',x.club&&CLUBN[x.club]?esc(CLUBN[x.club]):''].filter(Boolean).join(' · ');
-  return `<div class="pp-row" data-sid="${numOr0(x.id)}" role="button" tabindex="0">${ic(icn)}<div class="t"><b>${label} <em class="pp-k ${kind}">${kind==='best'?'найкращий':'найгірший'}</em></b><span>${sub}</span></div><span class="n${kind==='best'?' g':''}">${numOr0(x.pts)}<small>оч</small></span>${icon('chevron-right')}</div>`;}
+  return `<div class="pp-row" data-sid="${numOr0(x.id)}" role="button" tabindex="0">${ic(icn)}<div class="t"><b><u class="nm-lk">${label}</u> <em class="pp-k ${kind}">${kind==='best'?'найкращий':'найгірший'}</em></b><span>${sub}</span></div><span class="n${kind==='best'?' g':''}">${numOr0(x.pts)}<small>оч</small></span></div>`;}
 function ppXiHtml(p){const b=p.best||{},w=p.worst||{};const rows=PP_BUCKETS.map(([k,l,i])=>ppXiRow(b[k],'best',l,i)+ppXiRow(w[k],'worst',l,i)).join('');
   return rows?`<div class="pp-sec"><h3>Найкращий і найгірший XI</h3></div><div class="pp-list">${rows}</div>`:'';}
 // trophy cabinet: filter by section (N/M), sort by rarity / recent
@@ -114,16 +114,18 @@ function ppRenderCab(){
   const card=t=>{const e=have[t.id];
     if(!own&&t.sec&&e&&!(mine[t.id]&&mine[t.id].n))return `<div class="tro k-secret on sec"><span class="tri">${trBadge({id:'secret',cat:'secret'},true)}</span><div class="trt"><b>Секретний трофей</b><span>Відкрий його сам, щоб дізнатися, за що він</span><span class="trp">секретний${e.at?' · '+fmtShort(e.at):''}</span></div></div>`;
     const tier=trTier(t),p=trPct(t.id);
-    const gem=e&&tier&&tier[1]!=='common';   // rarity from "rare" up: badge on the right, not inline
-    const meta=[t.sec?'секретний':tier&&!gem?tier[2]:'',p!=null&&!t.sec?(p===0?(e?(own?'ти серед перших':'серед перших'):'ще ніхто не відкрив'):`є в ${p<1?'<1':Math.round(p)}% гравців`):'',e&&e.at?fmtShort(e.at):''].filter(Boolean).join(' · ');
-    return `<div class="tro k-${trKind(t)}${e?' on':''}${t.sec?' sec':''}${tier&&e?' rt-'+tier[1]:''}" data-tr="${esc(t.id)}"><span class="tri">${trBadge(t,!!e)}</span><div class="trt"><b>${esc(t.n)}</b>${trQ(t)}<span>${esc(t.d)}</span>${meta||trBusy()&&!t.sec?`<span class="trp">${meta}${trBusy()&&!t.sec?(meta?' · ':'')+'<i class="sk"></i>':''}</span>`:''}</div>${gem?`<em class="gem rt-${tier[1]}">${tier[2]}</em>`:''}${e&&e.n>1?`<span class="trn">×${e.n}</span>`:''}</div>`;};
+    const rw=tr=>`<span class="nm-sg"><span class="nm-rw nm-rw-${tr[1]}"><span class="nm-pips" aria-hidden="true">${'<i class="nm-rp"></i>'.repeat(tr[1]==='rare'?1:tr[1]==='epic'?2:3)}</span>${tr[2]}</span></span>`;
+    const segs=[t.sec?'секретний':'',p!=null&&!t.sec?(p===0?(e?(own?'ти серед перших':'серед перших'):'ще ніхто не відкрив'):`є в ${p<1?'&lt;1':Math.round(p)}% гравців`):'',e&&e.at?fmtShort(e.at):''].filter(Boolean).map(x=>`<span class="nm-sg">${x}</span>`);
+    if(tier)segs.unshift(tier[1]==='common'?`<span class="nm-sg">${tier[2]}</span>`:rw(tier));   // rarity first: coloured word + diamonds, common is plain
+    const sk=trBusy()&&!t.sec?'<i class="sk"></i>':'';
+    return `<div class="tro k-${trKind(t)}${e?' on':''}${t.sec?' sec':''}${tier&&e?' rt-'+tier[1]:''}" data-tr="${esc(t.id)}"><span class="tri">${trBadge(t,!!e)}</span><div class="trt"><b>${esc(t.n)}</b>${trQ(t)}<span>${esc(t.d)}</span>${segs.length||sk?`<span class="trp">${segs.join(' ')}${sk?(segs.length?' ':'')+sk:''}</span>`:''}</div>${e&&e.n>1?`<span class="trn">×${e.n}</span>`:''}</div>`;};
   const cnt=c=>{const l=LIVE.filter(t=>inCat(t,c));return `${l.filter(got).length}/${l.length}`;};
   // order: cards -> "+N secret" -> milestones -> collapse; secret row centered, badge aligned with text
   el.innerHTML=`<div class="pp-sec"><h3>Трофеї</h3><span class="best">Відкрито ${n} з ${total}</span></div><div class="pp-bar"><i style="width:${total?Math.round(100*n/total):0}%"></i></div>
     ${own&&n?`<button class="ghost wbtn" id="ppCabShare">${ic('bookshelf','sm')}Поділитися шафою</button><div id="ppCabOut" hidden class="pp-cabout"><img id="ppCabImg" alt="Шафа трофеїв"><div class="row"><button class="primary" id="ppCabSend" hidden>${ic('share-variant','sm')}Поділитися</button><span class="muted" id="ppCabMsg" style="font-size:var(--fs-footnote)"></span></div></div>`:''}
     ${st.all?`<div class="pp-filt" role="tablist">${cats.filter(([c])=>c==='all'||LIVE.some(t=>inCat(t,c))).map(([c,l])=>`<button class="chip${st.f===c?' onc':''}" data-f="${c}" role="tab" aria-selected="${st.f===c}">${l} <i>${cnt(c)}</i></button>`).join('')}</div>
     <div class="seg pp-sort"><button data-s="rare" class="${st.s==='rare'?'on':''}">За рідкістю</button><button data-s="recent" class="${st.s==='recent'?'on':''}">Нещодавні</button></div>`:''}
-    ${st.all&&shown.length?`<div class="trleg"><div class="h">Колір картки — клас трофея</div><div class="row">${[['base','Основний'],['friends','З друзями'],['secret','Секретний']].map(([k,l])=>`<span class="it k-${k}"><i class="sw"></i>${l}</span>`).join('')}</div><div class="h">Значок праворуч — рідкість</div><div class="row">${RARITY.slice(1).map(([,k,l])=>`<em class="gem rt-${k}">${l}</em>`).join('')}</div></div>`:''}
+    ${st.all&&shown.length?`<div class="trleg"><div class="h">Колір картки — клас трофея</div><div class="row">${[['base','Основний'],['friends','З друзями'],['secret','Секретний']].map(([k,l])=>`<span class="it k-${k}"><i class="sw"></i>${l}</span>`).join('')}</div><div class="h">Рідкість</div><div class="row">${RARITY.slice(1).map(([,k,l])=>`<span class="it"><span class="nm-rw nm-rw-${k}"><span class="nm-pips" aria-hidden="true">${'<i class="nm-rp"></i>'.repeat(k==='rare'?1:k==='epic'?2:3)}</span>${l.toLowerCase()}</span></span>`).join('')}</div></div>`:''}
     ${shown.length?`<div class="trg">${shown.map(card).join('')}</div>`:`<p class="pp-empty">${own?'Тут поки порожньо — зіграй сезон.':'Поки жодного трофея.'}</p>`}
     ${secOff&&own&&st.all?`<p class="trsec"><span>+${secOff} ${plUk(secOff,'секретний трофей чекає','секретні трофеї чекають','секретних трофеїв чекають')}</span>${icon('eye')}</p>`:''}
     ${own&&st.all?`<div class="row pp-ms">${MILESTONES.map(([k,,nm])=>{const e=have['ms'+k];return `<span class="chip ms${e?' onc':''}">${trBadge({id:'ms'+k,cat:'milestone'},!!e)}${nm}${!e&&trStore().seasons<k?` · ${trStore().seasons}/${k}`:''}</span>`;}).join('')}</div>`:''}
@@ -178,12 +180,12 @@ async function ppHistLoad(more){
     :(await playerRpc('my_seasons')).filter(r=>!r.practice).reverse().slice(off,off+10);}catch(e){if(!off){el.innerHTML='<p class="muted">Історія зараз недоступна.</p>';return;}}
   if(PP!==st)return;st.hist={rows:[...(off&&st.hist?st.hist.rows:[]),...rows],more:rows.length===10};
   const lab=r=>r.day?'Драфт дня':r.mode==='pick'?'Вибір сезону':(PP_BUCKETS.find(b=>b[0]===r.format)||[0,r.format])[1];
-  el.innerHTML=st.hist.rows.length?`<div class="pp-list">${st.hist.rows.map(r=>`<div class="pp-row h" data-sid="${numOr0(r.id)}" role="button" tabindex="0"><span class="d">${fmtShort(r.day||r.created_at)}</span><div class="t"><b><i class="mdot" style="background:${PP_MODE_DOT[r.day?'daily':r.mode==='pick'?'pick':r.format]||'var(--muted)'}"></i>${esc(lab(r))}</b><span>${numOr0(r.place)} місце · ${numOr0(r.w)}-${numOr0(r.d)}-${numOr0(r.l)}</span></div><span class="n">${numOr0(r.pts)}<small>оч</small></span>${icon('chevron-right')}</div>`).join('')}</div>${st.hist.more?'<button class="ghost wbtn" id="ppMore" style="margin-top:var(--sp-2)">Ще 10 сезонів</button>':''}`:'<p class="muted">Ще немає зіграних сезонів.</p>';
+  el.innerHTML=st.hist.rows.length?`<div class="pp-list">${st.hist.rows.map(r=>`<div class="pp-row h" data-sid="${numOr0(r.id)}" role="button" tabindex="0"><span class="d">${fmtShort(r.day||r.created_at)}</span><div class="t"><b><i class="mdot" style="background:${PP_MODE_DOT[r.day?'daily':r.mode==='pick'?'pick':r.format]||'var(--muted)'}"></i>${esc(lab(r))}</b><span>${numOr0(r.place)} місце · ${numOr0(r.w)}-${numOr0(r.d)}-${numOr0(r.l)}</span></div><span class="n">${numOr0(r.pts)}<small>оч</small></span></div>`).join('')}</div>${st.hist.more?'<button class="ghost wbtn" id="ppMore" style="margin-top:var(--sp-2)">Ще 10 сезонів</button>':''}`:'<p class="muted">Ще немає зіграних сезонів.</p>';
   const m=document.getElementById('ppMore');if(m)m.onclick=()=>{m.disabled=true;ppHistLoad(true);};
 }
 // settings (own page only): shown expanded, list of rows like "Name > andré";
 // tap opens a bottom sheet with a field and Save (ppSheet). Separate Account block: sign-in method, sign out; at the bottom: delete account
-const ppRow=(id,k,sub,v,muted)=>`<button class="set-r" id="${id}"><span class="k">${k}<small>${sub}</small></span><span class="v${muted?' mu':''}">${esc(v)}</span>${icon('chevron-right')}</button>`;
+const ppRow=(id,k,sub,v,muted)=>`<button class="set-r" id="${id}"><span class="k"><u class="nm-lk">${k}</u><small>${sub}</small></span><span class="v${muted?' mu':''}">${esc(v)}</span></button>`;
 function ppSettingsHtml(){
   const via=SESSION?((SESSION.user.app_metadata&&SESSION.user.app_metadata.provider)==='google'?'Google':'Telegram'):'';
   const team=lsGet('upl30_team')||'',mail=PLAYER&&PLAYER.contact_email||'';
@@ -192,12 +194,12 @@ function ppSettingsHtml(){
   h+=ppRow('ppRowTeam','Назва команди','на полі й у картці',team||'Твоя 11-ка',!team);
   if(PLAYER&&'contact_email' in PLAYER){h+=ppRow('ppRowMail','Пошта для новин','видно лише тобі',mail||'не вказано',!mail);
     h+=`<label class="set-r tg"><span class="k">Новини 30-0<small>великі оновлення, не частіше разу на місяць</small></span><input type="checkbox" role="switch" class="sw" id="ppNews"${PLAYER.news_optin?' checked':''}></label>`;}
-  if(TG_BOT)h+=`<a class="set-r" id="ppNotify" href="https://t.me/${TG_BOT}?start=notify" target="_blank" rel="noopener"><span class="k">Сповіщення в Telegram<small>підсумок дня в лігах і нагадування про серію — вмикаєш у боті</small></span>${icon('chevron-right')}</a>`;   // opt-in lives in the bot (/notify), off by default
+  if(TG_BOT)h+=`<a class="set-r" id="ppNotify" href="https://t.me/${TG_BOT}?start=notify" target="_blank" rel="noopener"><span class="k"><u class="nm-lk">Сповіщення в Telegram</u><small>підсумок дня в лігах і нагадування про серію — вмикаєш у боті</small></span></a>`;   // opt-in lives in the bot (/notify), off by default
   h+=`</div><p class="pp-hint" id="ppSetMsg" hidden></p><div class="pp-sec"><h3>Акаунт</h3></div><div class="set-card">`;
   if(SESSION){const em=via==='Google'?(SESSION.user.email||''):acctName();
     h+=`<div class="set-r who"><i class="set-ic ${via==='Google'?'g':'t'}">${icon(via==='Google'?'google':'telegram')}</i><span class="k">Увійшов через ${via}<small>${esc(em)}</small></span></div>`+
-       `<button class="set-r" id="ppOut">${ic('logout')}<span class="k">Вийти</span>${icon('chevron-right')}</button>`;}
-  else h+=`<button class="set-r" id="ppLogin2"><span class="k">Увійти<small>щоб трофеї, рекорди й серія були на всіх пристроях</small></span>${icon('chevron-right')}</button>`;
+       `<button class="set-r" id="ppOut">${ic('logout')}<span class="k"><u class="nm-lk">Вийти</u></span></button>`;}
+  else h+=`<button class="set-r" id="ppLogin2"><span class="k"><u class="nm-lk">Увійти</u><small>щоб трофеї, рекорди й серія були на всіх пристроях</small></span></button>`;
   h+=`</div>`;
   if(PLAYER)h+=`<button class="pp-del" id="ppDel">${SESSION?'Видалити акаунт…':'Видалити мої дані…'}</button><div id="ppDelBox" hidden class="pp-delbox"><p>Ім'я, вхід і прив'язку цього пристрою буде стерто назавжди. Результати лишаться в таблицях під анонімним іменем, але вже не будуть пов’язані з тобою. Трофеї й серія на цьому пристрої теж зникнуть.</p><div class="row"><button class="danger" id="ppDelYes">Так, видалити</button><button class="ghost" id="ppDelNo">Скасувати</button></div><p class="muted" id="ppDelMsg" style="margin:0"></p></div>`;
   return h+`</div>`;}

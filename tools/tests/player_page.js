@@ -74,8 +74,9 @@ const order=pg=>pg.$$eval('#ppCab .tro.on[data-tr]',es=>es.map(e=>e.dataset.tr))
  // cabinet: rarity
  await pg.waitForTimeout(300);
  T.check(JSON.stringify(await order(pg))===JSON.stringify(['unbeaten','top3','champ']),'сортування «за рідкістю»: '+(await order(pg)).join(','));
- T.check(await pg.$eval('#ppCab .tro[data-tr="unbeaten"]',e=>e.classList.contains('rt-epic')&&e.querySelector('.gem.rt-epic').textContent==='Епічний'&&/є в 2% гравців/.test(e.querySelector('.trp').textContent)&&!/Епічний/.test(e.querySelector('.trp').textContent))   // rarity shown as an icon on the right
-   &&await pg.$eval('#ppCab .tro[data-tr="top3"]',e=>e.classList.contains('rt-rare')&&!!e.querySelector('.gem.rt-rare'))&&await pg.$eval('#ppCab .tro[data-tr="champ"]',e=>/Звичайний/.test(e.textContent)),'рівні рідкості: епічний 2%, рідкісний 10% — значком; звичайний 60% — текстом');
+ T.check(await pg.$eval('#ppCab .tro[data-tr="unbeaten"]',e=>e.classList.contains('rt-epic')&&!!e.querySelector('.trp .nm-rw-epic')&&e.querySelector('.nm-rw-epic').textContent==='Епічний'&&e.querySelectorAll('.nm-rw-epic .nm-rp').length===2&&/є в 2% гравців/.test(e.querySelector('.trp').textContent))   // rarity word and diamonds in the meta line
+   &&await pg.$eval('#ppCab .tro[data-tr="top3"]',e=>e.classList.contains('rt-rare')&&e.querySelectorAll('.nm-rw-rare .nm-rp').length===1)&&await pg.$eval('#ppCab .tro[data-tr="champ"]',e=>/Звичайний/.test(e.textContent)&&!e.querySelector('.nm-rp')),'рівні рідкості: епічний 2% — слово й 2 ромби, рідкісний 10% — 1 ромб, звичайний 60% — слово без ромбів');
+ T.check(await pg.$$eval('#ppCab .gem',e=>e.length)===0,'плашки .gem у шафі більше немає');
  // card colour: only three classes
  T.check(await pg.$$eval('#ppCab .tro',l=>l.length>0&&l.every(e=>['k-base','k-friends','k-secret'].filter(k=>e.classList.contains(k)).length===1)),'трофеї: кожна картка — рівно один із трьох класів (основний, з друзями, секретний)');
  T.check(await pg.$$eval('#ppCab .tro.sec.rt-legend, #ppCab .tro.sec.rt-epic, #ppCab .tro.sec.rt-rare',e=>e.length)===0,'секретні трофеї без рівня рідкості');
@@ -85,6 +86,24 @@ const order=pg=>pg.$$eval('#ppCab .tro.on[data-tr]',es=>es.map(e=>e.dataset.tr))
  // filters: All plus the three classes only
  {const fs=await pg.$$eval('#ppCab [data-f]',es=>es.map(e=>e.dataset.f+':'+e.textContent.trim()));
   T.check(fs.length===4&&/^all:Усі/.test(fs[0])&&/^base:Основні/.test(fs[1])&&/^friends:З друзями/.test(fs[2])&&/^secret:Секретні/.test(fs[3]),'фільтри: Усі + Основні / З друзями / Секретні — '+fs.join(' | '));}
+ // ring geometry: the ring (badge box plus its shadow) stays 8px+ away from the text and no card child leaves the card
+ for(const th of ['dark','light'])for(const w of [320,390,820]){
+  await pg.setViewportSize({width:w,height:900});await pg.evaluate(t=>{document.documentElement.dataset.theme=t;const c=document.querySelector('#ppCab .tro[data-tr="top3"]');if(c&&!document.getElementById('nmLegCard')){const k=c.cloneNode(true);k.id='nmLegCard';k.className=k.className.replace('rt-rare','rt-legend');c.parentNode.appendChild(k);}},th);await pg.waitForTimeout(150);
+  const bad=await pg.$$eval('#ppCab .tro.rt-epic, #ppCab .tro.rt-legend',cs=>cs.map(c=>{const t=c.querySelector('.tre'),x=c.querySelector('.trt'),R=c.getBoundingClientRect(),a=t.getBoundingClientRect(),q=x.getBoundingClientRect();
+   const sh=getComputedStyle(t).boxShadow;const ext=/inset/.test(sh)?0:12;const gap=q.left-(a.right+ext);
+   const out=[...c.querySelectorAll('*')].filter(e=>{const r=e.getBoundingClientRect();return r.width&&(r.left<R.left-0.5||r.right>R.right+0.5||r.top<R.top-0.5||r.bottom>R.bottom+0.5);}).length;
+   return gap<8||out?`${c.dataset.tr||'leg'} gap ${gap.toFixed(1)} out ${out}`:'';}).filter(Boolean));
+  if(process.env.SHOTS&&w<500){fs.mkdirSync(process.env.SHOTS,{recursive:true});
+   {const c=await pg.evaluate(()=>{const cs=[...document.querySelectorAll('#ppCab .trg .tro')],f=cs[0].getBoundingClientRect(),l=cs[Math.min(5,cs.length-1)].getBoundingClientRect();return {y:f.top+scrollY-70,h:l.bottom-f.top+80};});
+    await pg.screenshot({path:path.join(process.env.SHOTS,`cabinet_${w}_${th}.png`),fullPage:true,clip:{x:0,y:Math.max(0,c.y),width:w,height:c.h}});}
+   for(const [i,c] of (await pg.$$('#ppCab .tro.rt-epic, #ppCab .tro.rt-legend')).entries())await c.screenshot({path:path.join(process.env.SHOTS,`ring${i}_${w}_${th}.png`)});
+   await pg.evaluate(()=>{const row=(k,l,sub,n)=>`<div class="pp-row" role="button" tabindex="0"><i class="ic"><svg class="ico" viewBox="0 0 24 24"><path d="M12 2l3 7h7l-5.5 4.5L18.5 21 12 17l-6.5 4 2-7.5L2 9h7z"/></svg></i><div class="t"><b><u class="nm-lk">${l}</u> <em class="pp-k ${k}">${k==='best'?'найкращий':'найгірший'}</em></b><span>${sub}</span></div><span class="n${k==='best'?' g':''}">${n}<small>оч</small></span></div>`;
+    const x=document.createElement('div');x.id='nmXiShot';x.innerHTML='<div class="pp-sec"><h3>Найкращий і найгірший XI</h3></div><div class="pp-list">'+row('best','Класика','1 місце · 29-1-0 · 4-3-3 · сер. 91 · Динамо Київ',88)+row('worst','Вибір сезону','14 місце · 8-7-15 · 4-4-2',31)+'</div>';document.getElementById('ppCab').before(x);});
+   await pg.locator('#nmXiShot').screenshot({path:path.join(process.env.SHOTS,`xi_${w}_${th}.png`)});await pg.evaluate(()=>document.getElementById('nmXiShot').remove());
+   await pg.locator('#ppSet').screenshot({path:path.join(process.env.SHOTS,`settings_${w}_${th}.png`)});
+   await pg.locator('#s6').screenshot({path:path.join(process.env.SHOTS,`player_${w}_${th}.png`)});}
+  T.check(bad.length===0,`кільце значка не заходить на текст (≥8px) і нічого не виходить за картку: ${th} ${w}px ${bad.join('; ')}`);}
+ await pg.setViewportSize({width:390,height:844});await pg.evaluate(()=>{document.documentElement.dataset.theme='dark';const k=document.getElementById('nmLegCard');if(k)k.remove();});
  await pg.click('#ppCab [data-f="base"]');await pg.waitForTimeout(100);
  const shown=await pg.$$eval('#ppCab .tro',es=>es.map(e=>e.className));const chip=await pg.textContent('#ppCab [data-f="base"]');
  T.check(shown.length>0&&shown.every(c=>/\bk-base\b/.test(c))&&/Основні \d+\/\d+/.test(chip),`фільтр «Основні»: ${shown.length} карток, «${chip}»`);
@@ -108,6 +127,7 @@ const order=pg=>pg.$$eval('#ppCab .tro.on[data-tr]',es=>es.map(e=>e.dataset.tr))
  await pg.evaluate(()=>document.getElementById('homeBtn').click());await pg.click('#acctBtn');await pg.waitForTimeout(600);
  await pg.click('#ppHist summary');await pg.waitForTimeout(400);
  T.check(/Останні сезони \(1 з 1\)/.test(await pg.textContent('#ppHist summary'))&&(await pg.$$('#ppHistList .pp-row')).length===1,'«Останні сезони (1 з 1)» розгортаються за тапом');
+ T.check(await pg.$$eval('#ppHistList .pp-row',r=>r.every(x=>!x.querySelector(':scope > svg'))),'рядки історії сезонів: без стрілки «›»');
  T.check(/Класика.*найкращий/.test((await pg.textContent('.pp-list')).replace(/\s+/g,' ')),'«Найкращий і найгірший XI»: класика');
  await pg.screenshot({path:path.join(MOCK,'player_page_059_guest.png'),fullPage:true});
  // board -> another player's page
@@ -136,6 +156,7 @@ const order=pg=>pg.$$eval('#ppCab .tro.on[data-tr]',es=>es.map(e=>e.dataset.tr))
  const D=await openSite({b,db,api,tg,hash:'#tgWebAppData=x',init:INIT,viewport:{width:390,height:844},wait:2000});
  await D.pg.click('#acctBtn');await D.pg.waitForTimeout(700);
  T.check((await D.pg.textContent('#ppName'))==='oleh'&&!(await D.pg.$('.pp-warn'))&&/Увійшов через Telegram/.test(await D.pg.textContent('#ppSet')),'з входом: ім\'я з Telegram «Олег» → «oleh» (транслітерує база), без попередження, «Вийти»');
+ T.check(await D.pg.$$eval('#ppSet .set-r',r=>r.length>0&&r.every(x=>!x.querySelector(':scope > svg')))&&await D.pg.$$eval('#ppSet .set-r:not(.who):not(.tg) .k',k=>k.length>0&&k.every(x=>!!x.querySelector('u.nm-lk'))),'налаштування: без стрілки «›», назви рядків підкреслені');
  await D.pg.screenshot({path:path.join(MOCK,'player_page_059_own.png'),fullPage:true});
  await D.pg.click('#ppDel');T.check(await D.pg.$eval('#ppDelBox',e=>!e.hidden),'«Видалити акаунт…» питає підтвердження');
  await D.pg.locator('#ppSet').screenshot({path:path.join(OUT,'pp_delete.png')});

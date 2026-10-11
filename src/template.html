@@ -504,7 +504,6 @@ td .sub .sk{height:18px;border-radius:var(--r-pill)}
 .seg.pp-sort,.seg.fl-tabs{display:grid;grid-template-columns:1fr 1fr;padding:var(--sp-1);border-radius:var(--r-md);background:var(--bg2);border:1px solid var(--line);margin-bottom:var(--sp-3)}
 .seg.pp-sort button,.seg.fl-tabs button{border:0;background:none;color:var(--ink2);padding:var(--sp-2);font-size:var(--fs-body);border-radius:var(--r-sm)}
 .seg.pp-sort button.on,.seg.fl-tabs button.on{background:var(--ink);color:var(--bg);font-weight:var(--wt-bold)}
-.tro.rt-rare{border-color:#0A84FF}.tro.rt-epic{border-color:#BF5AF2}
 /* new rare trophy in the season summary: rarity colour for the halo; the shine sweeps once, only on the rarest one (.top) */
 .tro.rarein{--rc:var(--amber);position:relative}
 .tro.rarein.rt-rare{--rc:#0A84FF}.tro.rarein.rt-epic{--rc:#BF5AF2}.tro.rarein.rt-legend{--rc:#FFD60A}.tro.rarein.rt-secret{--rc:var(--amber)}
@@ -513,7 +512,6 @@ td .sub .sk{height:18px;border-radius:var(--r-pill)}
 @keyframes raresweep{from{transform:translateX(-130%) rotate(18deg)}to{transform:translateX(300%) rotate(18deg)}}
 .rtag{display:inline-block;margin-top:var(--sp-1);font-style:normal;font-size:var(--fs-caption2);font-weight:var(--wt-bold);text-transform:uppercase;letter-spacing:var(--ls-caps)}.rtag.rt-rare{color:#0A84FF}.rtag.rt-epic{color:#BF5AF2}.rtag.rt-legend{color:#d4a800}
 @media (prefers-reduced-motion:reduce){.tro .shine{display:none}.tro.rarein{box-shadow:0 0 0 1px var(--rc)}}
-.tro.rt-legend{border-color:#FFD60A;box-shadow:0 0 0 1px #FFD60A inset,0 0 14px color-mix(in srgb,#FFD60A 25%,transparent)}
 .tro.rt-rare .trp,.tro.rt-epic .trp,.tro.rt-legend .trp{color:var(--ink2)}
 /* card tinted by class (main, with friends, secret); rarity as an icon on the right */
 :root{--k-base:#5a6aa8;--k-friends:#0e98b8;--k-secret:#7c3aed;--r-rare:#1f6fe5;--r-epic:#d61f7d}
@@ -523,12 +521,19 @@ td .sub .sk{height:18px;border-radius:var(--r-pill)}
 .tro.k-base:not(.on),.tro.k-friends:not(.on),.tro.k-secret:not(.on){background:color-mix(in srgb,var(--kc) 5%,var(--surface));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--kc) 18%,var(--line))}
 .tro.on[class*="k-"] .tre{background:color-mix(in srgb,var(--kc) 22%,var(--bg2))}
 .tro.on[class*="k-"] .trt b{background:none;color:var(--ink)}
-.gem{font:var(--wt-black) var(--fs-caption2)/1 var(--font-body);letter-spacing:var(--ls-caps);text-transform:uppercase;padding:var(--sp-1) var(--sp-2);border-radius:var(--r-pill);color:#fff;font-style:normal;white-space:nowrap}
-.gem.rt-rare{background:var(--r-rare)}.gem.rt-epic{background:var(--r-epic)}.gem.rt-legend{background:var(--grad)}
-.tro>.gem{grid-column:3;grid-row:1;align-self:start;justify-self:end}.tro>.gem~.trn{grid-column:3;grid-row:1;align-self:end}
-@media (max-width:420px){.tro:has(>.gem)>.tri{grid-row:1/span 2}.tro:has(>.gem)>.trt{grid-column:2;grid-row:2}.tro>.gem{grid-column:2;grid-row:1;justify-self:start}.tro>.gem~.trn{grid-row:2;align-self:start}}   /* narrow: rarity tag above the title, the title gets the full width */
+/* rarity: coloured word + 1-3 diamonds in the meta line; ring around the badge only for epic and legendary */
+:root{--nm-gold:#a87a00;--nm-rare-t:#1a5fcb;--nm-epic-t:#c21a6f;--nm-gold-t:#8a6200}
+:root[data-theme="dark"]{--nm-gold:#FFD60A;--nm-rare-t:#6aa5ff;--nm-epic-t:#ff7ab8;--nm-gold-t:#FFD60A}
+.tro .trt .trp{display:block}.tro .trt .trp span{font-size:inherit;color:inherit}.nm-sg,.nm-sg>*{white-space:nowrap}.nm-sg:not(:last-child)::after{content:" ·"}
+.nm-rw{display:inline-flex;align-items:center;gap:var(--sp-1);font-weight:var(--wt-bold)}.nm-pips{display:inline-flex;gap:3px}
+.nm-rp{display:block;width:6px;height:6px;transform:rotate(45deg);background:currentColor;border-radius:1px}
+.tro .trt .trp .nm-rw-rare,.trleg .nm-rw-rare{color:var(--nm-rare-t)}.tro .trt .trp .nm-rw-epic,.trleg .nm-rw-epic{color:var(--nm-epic-t)}.tro .trt .trp .nm-rw-legend,.trleg .nm-rw-legend{color:var(--nm-gold-t)}
+.tro:not(.on) .nm-rw{opacity:.7}
+.tro.rt-epic .tre,.tro.rt-legend .tre{width:36px;height:36px;font-size:var(--fs-title3)}   /* ring is drawn inside the badge box, never outside the icon column */
+.tro.rt-epic .tre{box-shadow:inset 0 0 0 1.5px var(--r-epic)}
+.tro.rt-legend .tre{box-shadow:inset 0 0 0 2px var(--nm-gold)}
 .trleg{display:grid;gap:var(--sp-2);margin:var(--sp-0h) 0 var(--sp-3);padding:var(--sp-3) var(--sp-4);border-radius:var(--r-lg);background:var(--card);font-size:var(--fs-caption);color:var(--ink2)}
-.trleg .h{font-size:var(--fs-caption);color:var(--muted);text-transform:uppercase;letter-spacing:var(--ls-caps)}.trleg .row{display:flex;flex-wrap:wrap;gap:var(--sp-2) var(--sp-4);margin:0;align-items:center}
+.trleg .h{font-size:var(--fs-caption);color:var(--muted);text-transform:uppercase;letter-spacing:var(--ls-caps)}.trleg .row{display:flex;flex-wrap:wrap;gap:var(--sp-1) var(--sp-3);margin:0;align-items:center}
 .trleg .it{display:inline-flex;align-items:center;gap:var(--sp-2);white-space:nowrap}.trleg .sw{width:22px;height:14px;border-radius:var(--r-xs);flex:none;background:linear-gradient(120deg,color-mix(in srgb,var(--kc) 45%,var(--surface)),var(--surface));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--kc) 55%,transparent)}
 .pp-list{border:1px solid var(--line);border-radius:var(--r-md);background:var(--surface);overflow:hidden}
 .fl-hero{text-align:center;display:grid;justify-items:center;gap:var(--sp-2);margin:var(--sp-4) 0 var(--sp-2)}.fl-hero h1,.fl-head h1{font-family:var(--font-display);margin:0;font-size:var(--fs-title1);line-height:var(--lh-tight);letter-spacing:var(--ls-tight)}.fl-hero p{margin:0;color:var(--ink2)}   /* iPad: button and text centered */
@@ -560,14 +565,13 @@ a.fl-row{text-decoration:none}
 .fl-invc{display:grid;grid-template-columns:minmax(0,1fr);gap:var(--sp-2);margin-top:var(--sp-3);padding:var(--sp-4);border:1px solid var(--line);border-radius:var(--r-lg);background:var(--surface)}.fl-invc>b{font-family:var(--font-display);font-size:var(--fs-headline)}.fl-invc p{margin:0}.fl-invc .fl-inv button{min-height:48px}
 .fl-inv{display:flex;gap:var(--sp-2)}.fl-inv input{flex:1;min-width:0;font:inherit;font-family:var(--font-mono,monospace);font-size:var(--fs-headline);padding:var(--sp-3) var(--sp-3);border:1px solid var(--line);border-radius:var(--r-md);background:var(--surface);color:var(--ink)}.fl-inv button{padding:0 var(--sp-4);display:inline-flex;align-items:center;gap:var(--sp-2);font-weight:var(--wt-bold)}
 .pp-cabout{display:grid;gap:var(--sp-2);margin:var(--sp-2) 0 var(--sp-1)}.pp-cabout img{width:100%;max-width:360px;border-radius:var(--r-md);border:1px solid var(--line)}
-.pp-row{display:grid;grid-template-columns:auto 1fr auto auto;gap:var(--sp-2);align-items:center;padding:var(--sp-3) var(--sp-3);min-height:48px;cursor:pointer}
+.pp-row{display:grid;grid-template-columns:auto 1fr auto;gap:var(--sp-2);align-items:center;padding:var(--sp-3) var(--sp-3);min-height:48px;cursor:pointer}
 .pp-row+.pp-row{border-top:1px solid var(--line)}@media (hover:hover) and (pointer:fine){.pp-row:hover{background:color-mix(in srgb,var(--ink) 4%,transparent)}}
 .pp-row .t{min-width:0}.pp-row .t b{display:block;font-size:var(--fs-body);font-weight:var(--wt-bold);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pp-row .t span{display:block;font-size:var(--fs-caption);color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pp-k{font-style:normal;font-size:var(--fs-caption2);font-weight:var(--wt-bold);color:var(--muted)}.pp-k.best{color:var(--win)}.pp-k.worst{color:var(--loss)}
 .pp-row .n{font-family:var(--font-display);font-weight:var(--wt-bold);font-size:var(--fs-headline);font-variant-numeric:tabular-nums;text-align:right}.pp-row .n small{font-family:var(--font-body);font-size:var(--fs-caption2);color:var(--muted);font-weight:var(--wt-bold);margin-left:var(--sp-0h)}
 .pp-row .n.g{color:var(--amber)}
-.pp-row>.ico{width:18px;height:18px;fill:var(--muted)}
-.pp-row.h{grid-template-columns:44px 1fr auto 18px}.pp-row.h .d{font-family:var(--font-mono);font-size:var(--fs-caption);color:var(--muted);line-height:var(--lh-snug)}
+.pp-row.h{grid-template-columns:44px 1fr auto}.pp-row.h .d{font-family:var(--font-mono);font-size:var(--fs-caption);color:var(--muted);line-height:var(--lh-snug)}
 .mdot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:var(--sp-2);vertical-align:1px}
 .pp-empty{font-size:var(--fs-footnote);color:var(--muted)}
 details.pp-hist{margin-top:var(--sp-5)}details.pp-hist>summary{font-family:var(--font-display);font-weight:var(--wt-bold);font-size:var(--fs-body);letter-spacing:var(--ls-caps);text-transform:uppercase;color:var(--ink2);cursor:pointer}
@@ -580,7 +584,10 @@ a.set-r{text-decoration:none}
 .set-r+.set-r{border-top:1px solid var(--line2)}@media (hover:hover) and (pointer:fine){.set-r:hover{background:color-mix(in srgb,var(--ink) 4%,transparent)}}
 .set-r .k{flex:1;min-width:0;font-weight:var(--wt-bold)}.set-r .k small{display:block;overflow-wrap:anywhere;font-weight:var(--wt-medium);color:var(--muted);font-size:var(--fs-caption);margin-top:var(--sp-0h)}
 .set-r .v{color:var(--ink2);max-width:46%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.set-r .v.mu{color:var(--muted)}
-.set-r>.ico{width:20px;height:20px;color:var(--muted);flex:none}.set-r.who{cursor:default}@media (hover:hover) and (pointer:fine){.set-r.who:hover{background:none}}
+.set-r.who{cursor:default}
+/* clickable text rows: no chevron, the title is underlined with a hairline; solid 2px while pressed */
+.nm-lk{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:.22em;text-decoration-color:color-mix(in srgb,currentColor 50%,transparent)}
+.pp-row:active .nm-lk,.set-r:active .nm-lk{text-decoration-color:currentColor;text-decoration-thickness:2px}@media (hover:hover) and (pointer:fine){.set-r.who:hover{background:none}}
 .set-ic{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;flex:none;background:#fff}.set-ic .ico{width:18px;height:18px}.set-ic.g .ico{color:#4285f4}.set-ic.t{background:#2aabee}.set-ic.t .ico{color:#fff}
 input.sw{appearance:none;-webkit-appearance:none;flex:none;width:46px;height:28px;border-radius:var(--r-lg);background:var(--line);position:relative;cursor:pointer;margin:0;transition:background var(--dur-2) var(--ease-out)}
 input.sw::after{content:"";position:absolute;left:3px;top:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:transform var(--dur-2) var(--spring)}
@@ -720,16 +727,15 @@ button.go0{max-width:none;margin-top:var(--sp-5)}
 .btns0{display:grid;gap:var(--sp-2);width:min(100%,420px)}.btns0 .big0{max-width:none;min-height:54px;margin:0}
 .links0{display:flex;gap:var(--sp-4);justify-content:center;margin-top:var(--sp-3)}
 .links0 button{border:0;background:none;padding:var(--sp-1) var(--sp-0h);color:var(--ink2);font:var(--wt-medium) var(--fs-footnote) var(--font-body);text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--line)}
-/* mode tiles: tinted icon circle on the left, title and short caption, chevron on phones */
+/* mode tiles: tinted icon circle on the left, title and short caption */
 #s1{--t-fl:#33c9e6;--t-pick:#a970ff;--t-club:#ff8a3d;--t-board:#3d8bff;--t-tr:#f5c542}
 :root[data-theme="light"] #s1{--t-fl:#0e98b8;--t-pick:#7c3aed;--t-club:#e2620f;--t-board:#1f6fe5;--t-tr:#b98300}
 .tile1[data-k="fl"]{--tc:var(--t-fl)}.tile1[data-k="pick"]{--tc:var(--t-pick)}.tile1[data-k="club"]{--tc:var(--t-club)}.tile1[data-k="board"]{--tc:var(--t-board)}.tile1[data-k="tr"]{--tc:var(--t-tr)}
 .tiles0{display:grid;grid-template-columns:1fr;gap:var(--sp-2)}
-button.tile1{display:grid;grid-template-columns:44px minmax(0,1fr) auto;align-items:center;column-gap:var(--sp-4);min-height:72px;margin:0;padding:var(--sp-3) var(--sp-4) var(--sp-3) var(--sp-3);border:0;border-radius:var(--r-lg);background:var(--card);color:var(--ink);text-align:left;font-family:var(--font-body);cursor:pointer}
+button.tile1{display:grid;grid-template-columns:44px minmax(0,1fr);align-items:center;column-gap:var(--sp-4);min-height:72px;margin:0;padding:var(--sp-3) var(--sp-4) var(--sp-3) var(--sp-3);border:0;border-radius:var(--r-lg);background:var(--card);color:var(--ink);text-align:left;font-family:var(--font-body);cursor:pointer}
 button.tile1>.ic{width:44px;height:44px;margin:0;border-radius:var(--r-md);background:color-mix(in srgb,var(--tc) 16%,transparent);color:var(--ink)}button.tile1>.ic .ico{width:26px;height:26px}   /* soft tinted plate, icon in text color for contrast */
 .tile1>span{display:grid;gap:var(--sp-1);min-width:0}.tile1 b{font-size:var(--fs-headline);font-weight:var(--wt-bold);line-height:var(--lh-snug)}
 .tile1 small{font-size:var(--fs-footnote);font-weight:var(--wt-medium);color:var(--ink2)}
-.tile1 .chev{font-style:normal;color:var(--muted);font-size:var(--fs-title3)}
 /* One club: list page (s8), club card (setup), record block (summary) */
 #oc h1{font:var(--wt-black) var(--fs-title1)/var(--lh-tight) var(--font-display);margin:var(--sp-4) 0 var(--sp-1);letter-spacing:var(--ls-tight)}
 #oc .lead{color:var(--ink2);margin:0 0 var(--sp-3)}
@@ -768,7 +774,7 @@ button.tile1>.ic{width:44px;height:44px;margin:0;border-radius:var(--r-md);backg
 .ocr h3{margin:var(--sp-1) 0;font-size:var(--fs-title3)}
 .ocr p{margin:0;color:var(--ink2)}.ocr .ft{margin-top:var(--sp-2);font-size:var(--fs-footnote)}
 .ocnote{margin:0;color:var(--ink2);font-size:var(--fs-footnote)}
-@media (min-width:700px){.tiles0.m3{grid-template-columns:repeat(3,1fr)}.tiles0.m2{grid-template-columns:1fr 1fr}button.tile1{grid-template-columns:44px minmax(0,1fr);min-height:80px}.tile1 .chev{display:none}}
+@media (min-width:700px){.tiles0.m3{grid-template-columns:repeat(3,1fr)}.tiles0.m2{grid-template-columns:1fr 1fr}button.tile1{min-height:80px}}
 #s1 .sec0{margin:var(--sp-6) var(--sp-0h) var(--sp-3);font:var(--wt-bold) var(--fs-caption)/1 var(--font-body);letter-spacing:var(--ls-caps)}
 #s1>.sec0,#s1>.tiles0,#s1>.faqbox0{width:min(100%,640px);margin-inline:auto}#s1>.sec0{padding-inline:var(--sp-0h)}   /* one column with the Play button and the daily card on wide screens */
 /* FAQ: one collapsed card */
@@ -1123,17 +1129,17 @@ h3,.sec0,#s1 .sec0,.pgh,.trleg .h{font-size:var(--fs-footnote);font-weight:var(-
     <div class="daily" id="chalCard" hidden></div>
     <div class="sec0">Інші режими</div>
     <div class="tiles0 m2" id="modeTiles">
-      <button class="tile1" id="flOpen" data-k="fl"><!--i:account-group--><span><b>Ліга з друзями</b><small>Посилання в чат</small></span><i class="chev" aria-hidden="true">›</i></button>
+      <button class="tile1" id="flOpen" data-k="fl"><!--i:account-group--><span><b>Ліга з друзями</b><small>Посилання в чат</small></span></button>
       <!-- season pick is hidden (PICK_ON, ?pick=1); code and saved seasons are kept -->
-      <button class="tile1" id="pickOpen" data-k="pick" data-pick hidden><!--i:calendar-check--><span><b>Вибір сезону</b><small>Сезон обираєш сам</small></span><i class="chev" aria-hidden="true">›</i></button>
-      <button class="tile1" id="clubOpen" data-k="club"><!--i:shield-star--><span><b>Один клуб</b><small>Найкращий XI клубу</small></span><i class="chev" aria-hidden="true">›</i></button>
+      <button class="tile1" id="pickOpen" data-k="pick" data-pick hidden><!--i:calendar-check--><span><b>Вибір сезону</b><small>Сезон обираєш сам</small></span></button>
+      <button class="tile1" id="clubOpen" data-k="club"><!--i:shield-star--><span><b>Один клуб</b><small>Найкращий XI клубу</small></span></button>
     </div>
     <!-- 5x5 on one phone is hidden until 5x5 online ships; code is kept -->
     <button class="row0" id="f5Open" hidden><!--i:account-group--><span><b>5×5 на одному телефоні</b></span></button>
     <div class="sec0">Результати</div>
     <div class="tiles0 m2">
-      <button class="tile1" id="tablesOpen" data-k="board"><!--i:format-list-numbered--><span><b>Таблиці</b><small>За весь час · Мої чати</small></span><i class="chev" aria-hidden="true">›</i></button>
-      <button class="tile1" id="trBtn" data-k="tr"><!--i:trophy--><span><b>Трофеї</b><small id="trCount">Зібрані нагороди</small></span><i class="chev" aria-hidden="true">›</i></button>
+      <button class="tile1" id="tablesOpen" data-k="board"><!--i:format-list-numbered--><span><b>Таблиці</b><small>За весь час · Мої чати</small></span></button>
+      <button class="tile1" id="trBtn" data-k="tr"><!--i:trophy--><span><b>Трофеї</b><small id="trCount">Зібрані нагороди</small></span></button>
     </div>
     <details class="faqbox0" id="faqBox"><summary>Питання та відповіді</summary>
     <div class="faq0">
