@@ -10,7 +10,7 @@
 //   kind 'chal_result' {row}           -> accepted challenge result -> {ok}
 // Daily challenge result is not written here: the server writes it from the verified season (api/verify.js, syncDaily).
 // 503 {fallback:true}: DB has no device_ok yet (SQL 0.53 not applied). Clients 0.73.1+ do not write directly any more (sql/v054_close_writes.sql).
-const { sb, deviceOk, tgUser, body, rateLimit } = require('./_device.js');
+const { sb, gate, tgUser, body } = require('./_device.js');
 const { verifyById } = require('./verify.js');
 
 const int = (v, lo, hi) => { const n = Number(v); return Number.isInteger(n) && n >= lo && n <= hi ? n : null; };
@@ -72,10 +72,10 @@ const handler = async (req, res) => {
   let stage = 'body';
   try {
     const b = body(req);
-    stage = 'rate';
-    if (await rateLimit(req, res, 'save', b.device_id)) return;
-    stage = 'device';
-    const dev = await deviceOk(b.device_id, b.secret);
+    stage = 'gate';
+    const g = await gate(req, res, 'save', b.device_id, b.secret == null ? '' : b.secret);   // secret is required here
+    if (g.done) return;
+    const dev = g.dev;
     if (dev.status) return res.status(dev.status).json({ error: dev.error, fallback: dev.fallback || undefined });
     const device_id = String(b.device_id), tg = tgUser(b.tg_init) || {};
     const r = b.row || {};

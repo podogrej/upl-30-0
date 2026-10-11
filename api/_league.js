@@ -77,6 +77,14 @@ function standingsOf(rows) {
 const RES_COLS = 'day,tg_user_id,name,w,d,l,pts,gf,ga,created_at,season_id';
 // all league rows (newest days first) for standings; today's rows are part of it. Paged: one request returns at most 1000 rows
 const leagueRows = chat_id => sbAll(`league_results?chat_id=eq.${chat_id}&select=${RES_COLS}&order=day.desc,tg_user_id.asc`).then(onlyVerified);
+// League card and standings in ONE call (rpc league_view, sql/v0891_audit_c.sql): {title, day, members, today, standings?}.
+// undefined = the function is not in the DB yet, no such league or an odd answer: the caller uses the row-by-row path.
+async function leagueView(chat_id, day, card = false) {
+  try {
+    const r = await sb('rpc/league_view', { method: 'POST', body: { p_chat: +chat_id, p_day: day, p_card: !!card, p_limit: 100 } });
+    return r && typeof r === 'object' && Array.isArray(r.today) ? r : undefined;
+  } catch (e) { if (e.status !== 404 && !/PGRST202|Could not find the function/.test(e.body || '')) console.warn('league_view', e.message); return undefined; }
+}
 async function standings(chat_id) { return standingsOf(await leagueRows(chat_id)); }
 
 async function boardText(chat_id, day) {
@@ -193,7 +201,7 @@ async function migrateLeague(from, to) {
   return true;
 }
 
-return { SB_URL, env, esc, tg, sb, sbAll, kyivDate, migrateLeague, dayNo, dayShort, checkMiniApp, nameOf, playUrl, playKb, RULE, sortRes, cmpRes, onlyVerified, DAY_N, leagueFree, devicesOf, dayBest, putBest, creditSeason, standings, standingsOf, leagueRows, RES_COLS, boardText, upsertBoard };
+return { SB_URL, env, esc, tg, sb, sbAll, kyivDate, migrateLeague, dayNo, dayShort, checkMiniApp, nameOf, playUrl, playKb, RULE, sortRes, cmpRes, onlyVerified, DAY_N, leagueFree, devicesOf, dayBest, putBest, creditSeason, standings, standingsOf, leagueRows, leagueView, RES_COLS, boardText, upsertBoard };
 })();
 
 module.exports = L;

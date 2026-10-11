@@ -39,6 +39,7 @@ async function handleUpdate(u) {
   return false;
 }
 
+const MARK_BATCH = 50;   // players per mark request
 const STREAK_DAYS = 400;   // look-back for the streak length in the message (longer streaks show as 400)
 const chunks = (a, n = 100) => { const out = []; for (let i = 0; i < a.length; i += n) out.push(a.slice(i, i + n)); return out; };
 const all = q => L.sbAll(q);   // every row: paged by 1000
@@ -86,18 +87,22 @@ async function sendEvening(day) {
   const vsel = `vd_results?day=gte.${from}&gate_ok=is.true&late=is.false&select=id,day,player_id&order=id.asc`;
   for (const part of chunks([...new Set(Object.values(pidOf))])) rows.push(...await all(`${vsel}&player_id=in.(${part.join(',')})`).catch(() => []));
   for (const id of ids) daysOf[id] = new Set(rows.filter(r => String(r.tg_user_id) === String(id) || (pidOf[id] && r.player_id === pidOf[id])).map(r => String(r.day).slice(0, 10)));
-  for (const id of ids) {
-    const lg = mine[id] || [], risk = streakAtRisk(daysOf[id], day);
-    if (!lg.length && !risk) continue;
-    const marked = ((await L.sb('app_marks?on_conflict=key', { method: 'POST', prefer: 'resolution=ignore-duplicates,return=representation', body: { key: `nt:${day}:${id}` } })) || []).length > 0;
-    if (!marked) continue;
-    let t = `<b>🌙 Твій день №${L.dayNo(day)}</b>`;
-    if (lg.length) t += '\n\n' + lg.map(x => `«${L.esc(x.title)}» — <b>${x.place}</b> з ${x.n} · ${x.pts} оч. (${x.w}-${x.d}-${x.l})`).join('\n');
-    if (risk) t += `\n\n🔥 Серія ${risk} дн. під загрозою — виконай виклик дня до півночі за Києвом.`;
-    const r = await L.tg('sendMessage', { chat_id: id, text: t, parse_mode: 'HTML', disable_web_page_preview: true,
-      reply_markup: { inline_keyboard: [[{ text: '▶️ Грати', web_app: { url: 'https://upl30.com.ua/' } }], [{ text: '🔕 Вимкнути сповіщення', callback_data: 'nt:off' }]] } });
-    if (r && r.ok) out.sent++;
-    else if (r && r.error_code === 403) { await setOn(id, false); out.off++; }
+  // who has something to say; marks (nt:<day>:<tg id>) are claimed in batches before sending: one request claims up to MARK_BATCH players,
+  // and only those whose mark was new get a message (a parallel or repeated run claims nothing twice)
+  const todo = ids.map(id => ({ id, lg: mine[id] || [], risk: streakAtRisk(daysOf[id], day) })).filter(x => x.lg.length || x.risk);
+  for (const part of chunks(todo, MARK_BATCH)) {
+    const got = (await L.sb('app_marks?on_conflict=key', { method: 'POST', prefer: 'resolution=ignore-duplicates,return=representation', body: part.map(x => ({ key: `nt:${day}:${x.id}` })) })) || [];
+    const fresh = new Set(got.map(m => m.key));
+    for (const { id, lg, risk } of part) {
+      if (!fresh.has(`nt:${day}:${id}`)) continue;
+      let t = `<b>🌙 Твій день №${L.dayNo(day)}</b>`;
+      if (lg.length) t += '\n\n' + lg.map(x => `«${L.esc(x.title)}» — <b>${x.place}</b> з ${x.n} · ${x.pts} оч. (${x.w}-${x.d}-${x.l})`).join('\n');
+      if (risk) t += `\n\n🔥 Серія ${risk} дн. під загрозою — виконай виклик дня до півночі за Києвом.`;
+      const r = await L.tg('sendMessage', { chat_id: id, text: t, parse_mode: 'HTML', disable_web_page_preview: true,
+        reply_markup: { inline_keyboard: [[{ text: '▶️ Грати', web_app: { url: 'https://upl30.com.ua/' } }], [{ text: '🔕 Вимкнути сповіщення', callback_data: 'nt:off' }]] } });
+      if (r && r.ok) out.sent++;
+      else if (r && r.error_code === 403) { await setOn(id, false); out.off++; }
+    }
   }
   return out;
 }

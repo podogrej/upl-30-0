@@ -18,7 +18,8 @@ const count=(log,re)=>log.filter(k=>re.test(k)).length;
 const SECRETS={};
 function serverDB(){
   const db=makeDB({seasons:{auto:'id'},season_seeds:{auto:'id'},daily_results:{auto:'id'},trophies:{pk:['device_id','trophy']},challenges:{}},
-    {device_ok:a=>{if(SECRETS[a.p_device]==null)SECRETS[a.p_device]=a.p_secret;return SECRETS[a.p_device]===a.p_secret?'p-1':{status:403,body:JSON.stringify({code:'28000',message:'device secret'})};},rate_hit:()=>true});
+    {device_ok:a=>{if(SECRETS[a.p_device]==null)SECRETS[a.p_device]=a.p_secret;return SECRETS[a.p_device]===a.p_secret?'p-1':{status:403,body:JSON.stringify({code:'28000',message:'device secret'})};},rate_hit:()=>true,
+    api_gate:a=>{if(a.p_secret==null)return {rate:true,player:null,err:null};if(SECRETS[a.p_device]==null)SECRETS[a.p_device]=a.p_secret;return SECRETS[a.p_device]===a.p_secret?{rate:true,player:'p-1',err:null}:{rate:true,player:null,err:'secret'};}});
   const log=[];
   global.fetch=async(url,o={})=>{const m=o.method||'GET';log.push(keyOf(m,url)+(m==='POST'&&/on_conflict/.test(url)?' upsert':''));
     if(m==='POST'&&/\/season_seeds/.test(url)){const b=JSON.parse(o.body);if(b.official&&db.DB.season_seeds.some(x=>x.official&&x.daily&&x.device_id===b.device_id&&x.day===b.day))
@@ -63,7 +64,7 @@ async function serverChecks(){
    T.check(count(log,/daily_results/)===1&&count(log,/PATCH daily_results/)===0,'сезон дня: результат дня одним upsert, без PATCH');
    const seedRow=db.DB.season_seeds.find(x=>x.id===s1.json.seed_id),dr=db.DB.daily_results.filter(x=>x.device_id===dev);
    T.check(+seedRow.used_by===+sv.json.id&&dr.length===1&&dr[0].verified===true&&dr[0].pts===q.pts&&dr[0].nickname==='tester',`seed used_by = сезон, у таблиці дня один перевірений рядок (${dr.length}, ${dr[0]&&dr[0].pts} оч.)`);
-   T.check(log.length===9,`сезон дня зі збереженням трофеїв: ${log.length} запитів до бази (до 0.78 — 10, і ще 4 на окремий запит трофеїв)`);
+   T.check(log.length===7,`сезон дня зі збереженням трофеїв: ${log.length} запитів до бази (до 0.78 — 10, і ще 4 на окремий запит трофеїв; api_gate: ліміт і секрет одним викликом)`);
    // repeated verify keeps the name in the row (anonymised after deletion) and rewrites numbers
    dr[0].nickname='calm_owl';dr[0].pts=90;log.length=0;await callApi(verH,{season_id:sv.json.id});
    T.check(dr[0].nickname==='calm_owl'&&dr[0].pts===q.pts&&count(log,/PATCH daily_results/)===1,'повторний verify: числа переписано, ім\'я в рядку не чіпаємо');

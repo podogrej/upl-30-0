@@ -600,6 +600,15 @@ chk "v080: спроби 1..5, одна на номер; спроба seed — о
   insert into season_seeds(device_id, xi_hash, seed, day, vd_day, vd_attempt) values ('$VDEV', '', 1, '2026-10-12', '2026-10-12', 1);
   begin insert into season_seeds(device_id, xi_hash, seed, day, vd_day, vd_attempt) values ('$VDEV', '', 2, '2026-10-12', '2026-10-12', 1); assert false, 'двічі seed спроби'; exception when unique_violation then null; end;
   assert (select best from vd_mine('$VDEV', null) where c_day = '2026-10-12') = 6 and (select attempts from vd_mine('$VDEV', null) where c_day = '2026-10-12') = 3, 'vd_mine';"
+# ===== v089: challenge attempts per player (season_seeds.player_id, one attempt number per player and day) =====
+for pass in 1 2; do
+  if $P -d t1 -f "$ROOT/sql/v089_vd_per_player.sql" >/dev/null 2>"$D/err"; then ok "запуск $pass: v089_vd_per_player.sql"; else bad "запуск $pass: v089_vd_per_player.sql — $(grep -v NOTICE "$D/err" | head -3)"; fi
+done
+chk "v089: номер спроби — один на гравця й день (два пристрої не беруть той самий); старі рядки без player_id не заважають" postgres "
+  insert into season_seeds(device_id, player_id, xi_hash, seed, day, vd_day, vd_attempt) values ('$VDEV', 'dddddddd-0000-4000-a000-000000000089', '', 11, '2026-10-13', '2026-10-13', 1);
+  begin insert into season_seeds(device_id, player_id, xi_hash, seed, day, vd_day, vd_attempt) values ('dddddddd-0000-4000-a000-000000000090', 'dddddddd-0000-4000-a000-000000000089', '', 12, '2026-10-13', '2026-10-13', 1); assert false, 'той самий номер у гравця'; exception when unique_violation then null; end;
+  insert into season_seeds(device_id, player_id, xi_hash, seed, day, vd_day, vd_attempt) values ('dddddddd-0000-4000-a000-000000000090', 'dddddddd-0000-4000-a000-000000000089', '', 13, '2026-10-13', '2026-10-13', 2);
+  insert into season_seeds(device_id, xi_hash, seed, day, vd_day, vd_attempt) values ('dddddddd-0000-4000-a000-000000000091', '', 14, '2026-10-13', '2026-10-13', 1), ('dddddddd-0000-4000-a000-000000000092', '', 15, '2026-10-13', '2026-10-13', 1);"
 # ===== v081: leave a league / delete own friends league (marked, never removed) =====
 for pass in 1 2; do
   if $P -d t1 -f "$ROOT/sql/v081_leave_leagues.sql" >/dev/null 2>"$D/err"; then ok "запуск $pass: v081_leave_leagues.sql"; else bad "запуск $pass: v081_leave_leagues.sql — $(grep -v NOTICE "$D/err" | head -3)"; fi
@@ -789,6 +798,57 @@ chk "крок 2: anon не читає seasons, players, league_results; seasons_
   perform 1 from challenges_pub; perform 1 from challenge_results_pub;
   assert json_array_length(my_seasons('$DEV', '$SEC')) > 0, 'my_seasons';
   assert fl_get('$F87') is not null and (trophy_stats())::text is not null and (game_stats())::text is not null, 'RPC';"
+# audit package C (sql/v0891_audit_c.sql): api_gate and league_view, server only
+for pass in 1 2; do
+  if $P -d t1 -f "$ROOT/sql/v0891_audit_c.sql" >/dev/null 2>"$D/err"; then ok "запуск $pass: v0891_audit_c.sql"; else bad "запуск $pass: v0891_audit_c.sql — $(grep -v NOTICE "$D/err" | head -3)"; fi
+done
+GDEV=eeeeeeee-0000-4000-a000-000000000891; GSEC=0123456789abcdef0123456789abcdef
+chk "api_gate і league_view: anon та authenticated не викликають" anon "
+  begin perform api_gate('t', '1.1.1.1', '$GDEV', null, 5, 20); assert false, 'api_gate'; exception when insufficient_privilege then null; end;
+  begin perform league_view(-9001); assert false, 'league_view'; exception when insufficient_privilege then null; end;"
+chk "api_gate: ліміт пристрою й IP, секрет перевіряється лише в межах ліміту" service_role "
+  j := api_gate('gt', '9.9.9.9', '$GDEV', '$GSEC', 3, 12);
+  assert (j->>'rate')::boolean and j->>'err' is null and (j->>'player') is not null, 'перший виклик ' || j::text;
+  assert (api_gate('gt', '9.9.9.9', '$GDEV', '$GSEC', 3, 12)->>'player') = (j->>'player'), 'той самий гравець';
+  k := api_gate('gt', '9.9.9.9', '$GDEV', 'attacker-attacker-attacker', 3, 12);
+  assert (k->>'rate')::boolean and k->>'err' = 'secret' and (k->>'player') is null, 'чужий секрет ' || k::text;
+  k := api_gate('gt', '9.9.9.9', '$GDEV', '$GSEC', 3, 12);
+  assert not (k->>'rate')::boolean and k->>'err' is null, 'четвертий виклик за хвилину — ліміт ' || k::text;
+  k := api_gate('gt2', '9.9.9.8', null, null, 3, 2);
+  k := api_gate('gt2', '9.9.9.8', null, null, 3, 2); k := api_gate('gt2', '9.9.9.8', null, null, 3, 2);
+  assert not (k->>'rate')::boolean, 'ліміт IP без пристрою';
+  k := api_gate('gt3', '9.9.9.7', '$GDEV', null, 5, 20);
+  assert (k->>'rate')::boolean and (k->>'player') is null, 'без секрету — лише лічильники';"
+$P -d t1 >/dev/null 2>"$D/err" <<SQL && ok "league_view: дані для перевірки" || bad "league_view: дані — $(grep -v NOTICE "$D/err" | head -2)"
+do \$\$ declare d0 date := (now() at time zone 'Europe/Kyiv')::date; pa uuid; s1 bigint; s2 bigint; s3 bigint; s4 bigint; s5 bigint; begin
+  insert into leagues(chat_id, title) values (-9001, 'Тест') on conflict do nothing;
+  insert into league_members(chat_id, tg_user_id, name) values (-9001, 7001, 'A'), (-9001, 7002, 'B') on conflict do nothing;
+  insert into league_members(chat_id, tg_user_id, name, left_at) values (-9001, 7009, 'gone', now()) on conflict do nothing;
+  insert into players(anon_name) values ('silent_owl') returning id into pa;
+  insert into player_links(kind, key, player_id) values ('tg', '7001', pa);
+  insert into seasons(device_id, mode, format, formation, w, d, l, pts, place, gf, ga, tg_user_id, day) values ('$GDEV', 'normal', 'classic', '4-4-2', 20, 5, 5, 65, 2, 50, 20, 7001, d0) returning id into s1;
+  insert into seasons(device_id, mode, format, formation, w, d, l, pts, place, gf, ga, tg_user_id, day) values ('$GDEV', 'normal', 'classic', '4-4-2', 18, 6, 6, 60, 3, 40, 25, 7002, d0) returning id into s2;
+  insert into seasons(device_id, mode, format, formation, w, d, l, pts, place, gf, ga, tg_user_id, day) values ('$GDEV', 'normal', 'classic', '4-4-2', 30, 0, 0, 90, 1, 90, 0, 7003, d0) returning id into s3;
+  insert into seasons(device_id, mode, format, formation, w, d, l, pts, place, gf, ga, tg_user_id, day) values ('$GDEV', 'normal', 'classic', '4-4-2', 22, 4, 4, 70, 1, 55, 20, 7002, d0 - 1) returning id into s4;
+  insert into seasons(device_id, mode, format, formation, w, d, l, pts, place, gf, ga, tg_user_id, day) values ('$GDEV', 'normal', 'classic', '4-4-2', 10, 5, 15, 35, 9, 30, 40, 7001, d0 - 1) returning id into s5;
+  perform set_config('request.jwt.claims', '{"role":"service_role"}', true);
+  update seasons set verified = true where id in (s1, s2, s4, s5);   -- s3 stays unverified
+  insert into league_results(chat_id, day, tg_user_id, name, w, d, l, pts, gf, ga, season_id) values
+    (-9001, d0, 7001, 'a-row', 1, 1, 1, 99, 1, 1, s1), (-9001, d0, 7002, 'Bob', 18, 6, 6, 60, 40, 25, s2), (-9001, d0, 7003, 'Cheat', 30, 0, 0, 90, 90, 0, s3),
+    (-9001, d0 - 1, 7002, 'Bob', 22, 4, 4, 70, 55, 20, s4), (-9001, d0 - 1, 7001, 'a-row', 10, 5, 15, 35, 30, 40, s5),
+    (-9001, d0, 7002, 'x', 0, 0, 0, 0, 0, 0, null) on conflict do nothing;
+end \$\$;
+SQL
+chk "league_view: непідтверджені рядки відкинуто, цифри з сезону, імена з профілю, порядок дня" service_role "
+  j := league_view(-9001)::json;
+  assert j->>'title' = 'Тест' and (j->>'members')::int = 2, 'шапка ' || j::text;
+  assert json_array_length(j->'today') = 2, 'сьогодні 2 рядки, є ' || (j->'today')::text;
+  assert j->'today'->0->>'name' = 'silent_owl' and (j->'today'->0->>'pts')::int = 65 and (j->'today'->0->>'w')::int = 20 and j->'today'->0->>'u' is not null, 'перший ' || (j->'today'->0)::text;
+  assert j->'today'->1->>'name' = 'Bob' and (j->'today'->1->>'pts')::int = 60, 'другий';
+  assert json_array_length(j->'standings') = 2 and (select sum((x->>'wins')::int) from json_array_elements(j->'standings') x) = 2, 'підсумки ' || (j->'standings')::text;
+  assert j->'standings'->0->>'name' = 'Bob' and (j->'standings'->0->>'wins')::int = 1 and (j->'standings'->0->>'days')::int = 2 and (j->'standings'->0->>'pts')::int = 130, 'Bob: 1 перемога, 2 дні, 130 очок, а є ' || (j->'standings'->0)::text;
+  assert (league_view(-9001, null, true)::jsonb) ? 'standings' is false and jsonb_array_length((league_view(-9001, null, true))->'today') = 2, 'картка без підсумків';
+  assert league_view(-1234) is null, 'невідома ліга';"
 echo "база: $D (порт $PORT)"
 [ $FAIL = 0 ] && echo "SQL: УСЕ ГАРАЗД ($N перевірок)" || echo "SQL: ПРОБЛЕМИ $FAIL/$N"
 exit $((FAIL>0))

@@ -160,7 +160,7 @@ async function handleUpdate(u) {
   const cmd = text.startsWith('/') ? text.split(/[\s@]/)[0].toLowerCase() : '', args = text.split(/\s+/).slice(1);
   if (cmd === '/whoami') { await say(m.chat.id, `Твій Telegram ID: ${m.from && m.from.id}`); return true; }
   if (cmd === '/start' && isPrivate && args[0] === 'ch_daily') {
-    await say(m.chat.id, '🎯 Виклик дня — збери склад під умову дня: 5 спроб, рахується краща. Тисни «Грати»!', { reply_markup: { inline_keyboard: [[{ text: '▶️ Грати', web_app: { url: SITE } }]] } });
+    await say(m.chat.id, '🎯 Виклик дня — збери склад під умову дня: 3 спроби, рахується краща. Тисни «Грати»!', { reply_markup: { inline_keyboard: [[{ text: '▶️ Грати', web_app: { url: SITE } }]] } });
     return true;
   }
   if (!['/post', '/queue', '/auto'].includes(cmd)) return false;
@@ -199,16 +199,21 @@ async function insertAuto(key, body) { try { const [p] = await L.sb('channel_pos
 const laterOf = (at, now) => new Date(Math.max(+at, +now));   // already past -> ask the admin on the next run
 async function autoPosts(now = new Date()) {
   const made = [];
-  if ((await L.sb('app_marks?key=eq.ch_auto_off&select=key') || []).length) return made;
   const k = kyivParts(now), day = `${k.y}-${pad(k.m)}-${pad(k.d)}`;
   const tk = kyivParts(new Date(+kyivToUtc(k.y, k.m, k.d, 12, 0) + 864e5)), tday = `${tk.y}-${pad(tk.m)}-${pad(tk.d)}`;   // tomorrow in Kyiv
   const vd = (require('../lib/challenges.json') || []).find(x => x.day === tday);   // announcement only for a day with a challenge
-  if (vd && k.H >= DAILY_PREP_H && await once(`ch_daily:${tday}`)) {
-    const text = `<b>🎯 Виклик дня · ${L.dayShort(tday)}</b>\n<b>${esc(vd.title)}</b>\n${esc(vd.story)}\n\n${esc(vd.task)} 5 спроб, рахується краща.\n\n<a href="${DAILY_LINK()}">Зіграти виклик дня →</a>`;
+  // time windows: outside them no request is made. Inside, one read tells whether auto posts are off and which marks already exist
+  const wantDaily = !!vd && k.H >= DAILY_PREP_H, wantWeekly = k.wd === 0 && k.H >= WEEKLY_PREP_H;
+  if (!wantDaily && !wantWeekly) return made;
+  const keys = ['ch_auto_off', ...(wantDaily ? [`ch_daily:${tday}`] : []), ...(wantWeekly ? [`ch_week:${day}`] : [])];
+  const have = new Set((await L.sb(`app_marks?key=in.(${keys.map(encodeURIComponent).join(',')})&select=key`) || []).map(m => m.key));
+  if (have.has('ch_auto_off')) return made;
+  if (wantDaily && !have.has(`ch_daily:${tday}`) && await once(`ch_daily:${tday}`)) {
+    const text = `<b>🎯 Виклик дня · ${L.dayShort(tday)}</b>\n<b>${esc(vd.title)}</b>\n${esc(vd.story)}\n\n${esc(vd.task)} 3 спроби, рахується краща.\n\n<a href="${DAILY_LINK()}">Зіграти виклик дня →</a>`;
     const p = await insertAuto(`ch_daily:${tday}`, { text, publish_at: laterOf(kyivToUtc(tk.y, tk.m, tk.d, ...DAILY_AT), now).toISOString(), status: 'draft', source: 'auto' });
     if (p) made.push(p.id);
   }
-  if (k.wd === 0 && k.H >= WEEKLY_PREP_H && await once(`ch_week:${day}`)) {   // Monday: last week's summary (Mon-Sun, Kyiv)
+  if (wantWeekly && !have.has(`ch_week:${day}`) && await once(`ch_week:${day}`)) {   // Monday: last week's summary (Mon-Sun, Kyiv)
     const to = kyivToUtc(k.y, k.m, k.d, 0, 0), from = new Date(+to - 7 * 864e5);
     const rows = [];   // Supabase returns at most 1000 rows per request -> paginate (as in api/backup.js)
     for (let off = 0; ; off += 1000) {
@@ -239,11 +244,13 @@ async function runChannel(now = new Date()) {
   if (!owner) { out.off = 'не задано OWNER_TG_ID'; return out; }
   if (tag === 't' && /qruhcbwycrnfgzzdbljr/.test(L.SB_URL)) { out.off = 'тестовий сайт дивиться в основну базу (немає SUPABASE_URL тестової) — нічого не роблю'; return out; }
   try { out.auto = await autoPosts(now); } catch (e) { out.autoError = String(e.message).slice(0, 160); }
-  for (const d of await L.sb(`channel_posts?status=eq.draft&publish_at=lte.${encodeURIComponent(now.toISOString())}&select=id&order=publish_at.asc&limit=10`) || [])
+  // one read for both jobs: drafts waiting for the admin and posts claimed for publishing without a Telegram message id (few rows, so no time filter in the query)
+  const pend = await L.sb('channel_posts?tg_message_id=is.null&error=is.null&status=in.(draft,published)&select=id,status,publish_at,published_at&order=publish_at.asc&limit=100') || [];
+  for (const d of pend.filter(x => x.status === 'draft' && Date.parse(x.publish_at) <= +now).slice(0, 10))
     if (await askOwner(L.sb, owner, tag, d.id)) out.asked++;
   // claimed for publishing but tg_message_id missing (handler died between status change and Telegram): tell the admin once
   const stale = new Date(+now - 15 * 6e4).toISOString();
-  for (const d of await L.sb(`channel_posts?status=eq.published&tg_message_id=is.null&error=is.null&published_at=lt.${encodeURIComponent(stale)}&select=id`) || []) {
+  for (const d of pend.filter(x => x.status === 'published' && x.published_at && Date.parse(x.published_at) < Date.parse(stale))) {
     const [p] = await L.sb(`channel_posts?id=eq.${d.id}&tg_message_id=is.null&error=is.null`, { method: 'PATCH', prefer: 'return=representation', body: { error: 'не підтверджено: публікація обірвалась' } }) || [];
     if (p) await say(owner, `❓ ${label(tag)}Пост #${p.id}: публікація не підтвердилась. Перевір канал; якщо поста немає — додай його ще раз.`);
   }

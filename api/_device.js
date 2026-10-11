@@ -53,5 +53,22 @@ async function rateLimit(req, res, name, device) {
   res.status(429).json({ error: RATE_MSG, rate: true });
   return true;
 }
+// Rate limit + device secret in ONE DB call (api_gate, sql/v0891_audit_c.sql). Without the function (or on any odd answer) the old
+// two-step path runs: rateLimit, then deviceOk. secret == null: counters only (dev is null). Returns {done: true} when 429/400 is already sent,
+// else {dev} shaped like deviceOk's result (or null without a secret).
+async function gate(req, res, name, device, secret) {
+  const legacy = async () => (await rateLimit(req, res, name, device)) ? { done: true } : { dev: secret == null ? null : await deviceOk(device, secret) };
+  const okSecret = secret == null || (typeof secret === 'string' && secret.length >= 16 && secret.length <= 200);
+  if (!uuidRe.test(String(device || '')) || !okSecret) return legacy();
+  let r;
+  try { r = await sb('rpc/api_gate', { method: 'POST', body: { p_name: name, p_ip: ipOf(req), p_device: String(device).toLowerCase(), p_secret: secret == null ? null : secret, p_limit: LIMITS[name], p_ip_limit: LIMITS[name] * IP_X } }); }
+  catch (e) { if (!missingFn(e)) console.warn('gate', e.message); return legacy(); }
+  if (!r || typeof r !== 'object' || typeof r.rate !== 'boolean') return legacy();
+  if (!r.rate) { res.status(429).json({ error: RATE_MSG, rate: true }); return { done: true }; }
+  if (secret == null) return { dev: null };
+  if (r.err === 'secret') return { dev: { status: 401, error: 'device secret' } };
+  if (r.err === 'device') return { dev: { status: 400, error: 'device?' } };
+  return { dev: { player: r.player } };
+}
 const body = req => { let b = req.body || {}; if (typeof b === 'string') b = JSON.parse(b); return b; };
-module.exports = { sb, deviceOk, legacyOpen, tgUser, body, kyivDate, uuidRe, env, rateLimit, RATE_MSG, LIMITS };
+module.exports = { sb, deviceOk, legacyOpen, tgUser, body, kyivDate, uuidRe, env, rateLimit, gate, RATE_MSG, LIMITS };

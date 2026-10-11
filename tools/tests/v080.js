@@ -1,6 +1,6 @@
 // 0.80 daily challenge (vd_*). A. rules (lib/vd_core.js): "played for club" = a UPL club-season row with apps >= 1 (zero-app rows ignored),
 // event player never counts for the required condition but always scores, parts need separate players.
-// B. server (api/_vd.js via /api/seed, real handlers + in-memory DB): attempt issue and resume, burn on a missed condition, 5 attempts per day,
+// B. server (api/_vd.js via /api/seed, real handlers + in-memory DB): attempt issue and resume, burn on a missed condition, 3 attempts per day,
 // score computed by the server (a forged one is ignored), archive day is late, future day refused, counted attempt -> season verified and linked,
 // not credited to chat leagues; an older 0.79.2 tab's daily draft season is still verified.
 // C. site (file://, offline): home card states, no hints in the wheel list, event player on the pitch, not-counted screen, result block, archive;
@@ -50,9 +50,9 @@ const A=E.DATA.alias||{},canon=id=>A[id]||id,IDX=V.vdIndex(E.DATA,CUR);
 }
 
 // ---- B. server
-const SECRETS={};
-const db=makeDB({seasons:{auto:'id',onInsert:r=>{r.verified=null;}},season_seeds:{},vd_results:{auto:'id',uq:[['day','device_id','attempt']]},daily_results:{auto:'id'},trophies:{pk:['device_id','trophy']},challenges:{}},
-  {device_ok:a=>{if(SECRETS[a.p_device]==null)SECRETS[a.p_device]=a.p_secret;return SECRETS[a.p_device]===a.p_secret?'p-'+a.p_device.slice(0,4):{status:403,body:JSON.stringify({code:'28000',message:'device secret'})};},rate_hit:()=>true,
+const SECRETS={},PLAYER_OF={};
+const db=makeDB({seasons:{auto:'id',onInsert:r=>{r.verified=null;}},season_seeds:{},vd_results:{auto:'id',uq:[['day','device_id','attempt']]},player_links:{},daily_results:{auto:'id'},trophies:{pk:['device_id','trophy']},challenges:{}},
+  {device_ok:a=>{if(SECRETS[a.p_device]==null)SECRETS[a.p_device]=a.p_secret;return SECRETS[a.p_device]===a.p_secret?(PLAYER_OF[a.p_device]||'p-'+a.p_device.slice(0,4)):{status:403,body:JSON.stringify({code:'28000',message:'device secret'})};},rate_hit:()=>true,
    vd_mine:a=>{const by={};for(const r of db.DB.vd_results.filter(r=>r.device_id===a.p_device)){const d=by[r.day]||(by[r.day]={c_day:r.day,best:null,attempts:0,gate_any:false});d.attempts++;if(r.gate_ok){d.gate_any=true;d.best=Math.max(d.best??-1,r.score);}}return Object.values(by);}});
 let FAIL_PATCH=0;const xiH=xi=>require(path.join(ROOT,'api','_vd.js')).xiHash(sq(xi));
 global.fetch=async(url,o={})=>{const m=o.method||'GET';
@@ -126,13 +126,36 @@ async function serverChecks(){
   // remaining attempts burn, then no more
   for(let k=0;k<6;k++){const s=await call({vd:'start',day:TODAY});if(s.status!==200)break;await fin(s.json.attempt,buildXi(0,s.json.seed_id));}
   const s6=await call({vd:'start',day:TODAY});
-  T.check(s6.status===409&&s6.json.used===5&&db.DB.vd_results.filter(r=>r.device_id===dev&&r.day===TODAY).length===5&&s6.json.best>=f2.json.score,`5 спроб на день: шостої немає (409), краща ${s6.json.best}/11`);
-  T.check(db.DB.season_seeds.filter(s=>s.device_id===dev&&s.vd_day===TODAY).length===5,'у season_seeds рівно 5 спроб');
+  T.check(s6.status===409&&s6.json.used===3&&db.DB.vd_results.filter(r=>r.device_id===dev&&r.day===TODAY).length===3&&s6.json.best>=f2.json.score,`3 спроби на день: четвертої немає (409), краща ${s6.json.best}/11`);
+  T.check(db.DB.season_seeds.filter(s=>s.device_id===dev&&s.vd_day===TODAY).length===3,'у season_seeds рівно 3 спроби');
   // archive: yesterday is late
   const y1=await call({vd:'start',day:YDAY});const yf=await fin(y1.json.attempt,buildXi(2,y1.json.seed_id),{day:YDAY});
   T.check(yf.json.late===true&&db.DB.vd_results.find(r=>r.device_id===dev&&r.day===YDAY).late===true,'архів: спроба за вчора позначена late (не в серію)');
   const mine=await call({vd:'mine'});
-  T.check(mine.status===200&&mine.json.days.find(d=>d.day===TODAY).attempts===5,'свої результати для архіву (vd_mine)');
+  T.check(mine.status===200&&mine.json.days.find(d=>d.day===TODAY).attempts===3,'свої результати для архіву (vd_mine)');
+  // 3 attempts per PLAYER: phone and iPad (two devices of one player) share them; best and archive count both
+  {const P1='p-shared',a=crypto.randomUUID(),b=crypto.randomUUID();PLAYER_OF[a]=PLAYER_OF[b]=P1;
+   db.DB.player_links.push({kind:'device',key:a,player_id:P1},{kind:'device',key:b,player_id:P1});
+   const cl=(d,x)=>callApi(seedH,{device_id:d,secret,...x}),dn=[a,b];
+   const sa=await cl(a,{vd:'start',day:TODAY}),sb2=await cl(b,{vd:'start',day:TODAY});
+   T.check(sa.json.attempt===1&&sb2.json.attempt===1&&sb2.json.seed_id===sa.json.seed_id&&db.DB.season_seeds.filter(x=>x.vd_day===TODAY&&[a,b].includes(x.device_id)).length===1,'два пристрої одного гравця: відкрита спроба з першого переходить на другий (той самий seed, не друга спроба)');
+   const stale=await cl(a,{vd:'finish',day:TODAY,attempt:1,formation:'4-4-2',xi:sq(buildXi(0,sa.json.seed_id))});
+   T.check(stale.status===400,'старий пристрій уже не може завершити перенесену спробу');
+   let cur=sb2,k=1;
+   for(;k<=3;k++){const d=dn[k%2];const st=k===1?cur:await cl(d,{vd:'start',day:TODAY});if(st.status!==200)break;
+     const f=await cl(d,{vd:'finish',day:TODAY,attempt:st.json.attempt,formation:'4-4-2',xi:sq(buildXi(0,st.json.seed_id))});if(f.status!==200)break;}
+   const six=await cl(a,{vd:'start',day:TODAY}),sixB=await cl(b,{vd:'start',day:TODAY});
+   const seeds=db.DB.season_seeds.filter(x=>x.vd_day===TODAY&&[a,b].includes(x.device_id)),res=db.DB.vd_results.filter(r=>r.day===TODAY&&[a,b].includes(r.device_id));
+   T.check(k===4&&six.status===409&&sixB.status===409&&six.json.used===3&&seeds.length===3&&res.length===3&&new Set(seeds.map(x=>x.vd_attempt)).size===3&&seeds.every(x=>x.player_id===P1),`усього 3 спроби на двох пристроях (не 6): четверта — 409 з обох, номери 1..3 різні, player_id записано (k=${k})`);
+   T.check(seeds.some(x=>x.device_id===a)&&seeds.some(x=>x.device_id===b)&&res.every(r=>r.player_id===P1),'спроби справді розподілені по обох пристроях');
+   const ma=await cl(a,{vd:'mine'}),mb=await cl(b,{vd:'mine'}),da=ma.json.days.find(x=>x.day===TODAY);
+   T.check(da&&da.attempts===3&&JSON.stringify(ma.json)===JSON.stringify(mb.json),'архів («мої результати») однаковий з обох пристроїв і містить усі 3 спроби');
+   // counted attempt on the second device: best/gate come from either device
+   const P2='p-shared2',c=crypto.randomUUID(),d2=crypto.randomUUID();PLAYER_OF[c]=PLAYER_OF[d2]=P2;db.DB.player_links.push({kind:'device',key:c,player_id:P2},{kind:'device',key:d2,player_id:P2});
+   const c1=await cl(c,{vd:'start',day:TODAY}),cf=await cl(c,{vd:'finish',day:TODAY,attempt:1,formation:'4-4-2',xi:sq(buildXi(0,c1.json.seed_id))});
+   const d1=await cl(d2,{vd:'start',day:TODAY}),df=await cl(d2,{vd:'finish',day:TODAY,attempt:d1.json.attempt,formation:'4-4-2',xi:sq(buildXi(2,d1.json.seed_id))});
+   T.check(d1.json.attempt===2&&d1.json.used===1&&df.json.gate===true&&df.json.used===2&&df.json.best===df.json.score&&df.json.seed,`зарахована спроба на другому пристрої: номер 2, спроб 2, краща ${df.json.best}`);
+  }
   // older 0.79.2 tab: different ratings since 0.82, so the season is 'not verified' (null), not 'forged'
   const D=E.dailySetupFor(TODAY),dv=crypto.randomUUID();E.setFormat('classic');const dxi=[],u=new Set();
   for(const slot of E.FORMATIONS[D.formation].slots){let pick=null;for(const i of D.seq){const c=E.DATA.clubs[i];for(const p of c.pl){if(u.has(canon(p[5])))continue;const r=E.effRating(p,slot);if(r!=null){pick={c,p,r};break;}}if(pick)break;}
@@ -180,7 +203,7 @@ async function siteChecks(b){
   const d=await o.pg.evaluate(()=>{const S=window.__dbg.S;return {n:S.slots.filter(s=>s.player).length,ev:S.slots.filter(s=>s.player&&s.player.ev).map(s=>s.player.name),marks:document.querySelectorAll('#pitch .evg').length,
     brief:document.getElementById('vdBrief').textContent,note:document.querySelectorAll('#vdBrief .rqx .cnote').length,label:document.getElementById('modeLabel').textContent,rr:S.rerolls};});
   T.check(d.n===1&&d.ev.join()==='Ілсіньйо'&&d.marks===1,'гравець події вже на полі, тиха позначка лише на його кружку');
-  T.check(/Обовʼязково/.test(d.brief)&&/0\/2/.test(d.brief)&&/Спроба1з5/.test(d.brief.replace(/\s+/g,''))&&/Бразильці/.test(d.brief)&&d.rr===2&&d.note===1&&!/Поки нікого/.test(d.brief),'бриф: умова з лічильником 0/2, підпис «гравець клубу» в блоці умови, без «Поки нікого», бонус, спроба 1 з 5, 2 перекрутки: '+d.brief);
+  T.check(/Обовʼязково/.test(d.brief)&&/0\/2/.test(d.brief)&&/Спроба1з3/.test(d.brief.replace(/\s+/g,''))&&/Бразильці/.test(d.brief)&&d.rr===2&&d.note===1&&!/Поки нікого/.test(d.brief),'бриф: умова з лічильником 0/2, підпис «гравець клубу» в блоці умови, без «Поки нікого», бонус, спроба 1 з 3, 2 перекрутки: '+d.brief);
   await o.pg.screenshot({path:path.join(OUT,'v080_draft_phone_dark.png'),fullPage:true});
   await o.pg.click('#spinBtn');await o.pg.waitForSelector('#squad .pl:not([disabled])',{timeout:8000});
   const list=await o.pg.evaluate(()=>{const sq=document.getElementById('squad');return {txt:sq.textContent,cls:[...new Set([...sq.querySelectorAll('*')].map(e=>e.className).filter(Boolean))]};});
@@ -197,13 +220,13 @@ async function siteChecks(b){
   // not counted: avoid Shakhtar
   o=await page(b);await o.pg.click('#vdCard');await o.pg.waitForTimeout(500);await draft(o.pg,'avoid');
   const f=await o.pg.evaluate(()=>({t:document.getElementById('vdFail').textContent,st:JSON.parse(localStorage.getItem('upl30_vd_2026-10-12')),res:window.__dbg.S.result}));
-  T.check(await secOf(o.pg)==='s11'&&/Не зараховано/.test(f.t)&&/Бракує ще двох гравців Шахтаря/.test(f.t)&&!/Що далі/.test(f.t)&&/Спроба 2 з 5/.test(f.t)&&!f.res,'умову не виконано: «Не зараховано», чому, без блоку «Що далі», спроба 2 з 5, сезон не грався: '+f.t.slice(0,300));
+  T.check(await secOf(o.pg)==='s11'&&/Не зараховано/.test(f.t)&&/Бракує ще двох гравців Шахтаря/.test(f.t)&&!/Що далі/.test(f.t)&&/Спроба 2 з 3/.test(f.t)&&!f.res,'умову не виконано: «Не зараховано», чому, без блоку «Що далі», спроба 2 з 3, сезон не грався: '+f.t.slice(0,300));
   T.check(await o.pg.evaluate(()=>document.querySelectorAll('#vdFail .gate .cnote').length===1&&/зіграв за нього хоча б один матч в УПЛ або є в його заявці на сезон.2026\/27/.test(document.querySelector('#vdFail .gate .cnote').textContent)),'«Не зараховано»: підпис «гравець клубу — матч в УПЛ або заявка на сезон» у блоці умови');
   T.check(/Для умови/.test(f.t)&&/Бонус/.test(f.t)&&/Не підійшли/.test(f.t)&&f.st.used===1&&f.st.best===null,'розбір складу: для умови, бонус, не підійшли; спроба записана');
   await o.pg.screenshot({path:path.join(OUT,'v080_fail_phone_dark.png'),fullPage:true});
   // next attempt counts: prefer Shakhtar -> forecast -> season -> result block
   await o.pg.click('#vdAgain');await o.pg.waitForTimeout(500);
-  T.check(await o.pg.evaluate(()=>window.__dbg.S.vd.attempt)===2,'кнопка «Спроба 2 з 5» відкриває нову спробу');
+  T.check(await o.pg.evaluate(()=>window.__dbg.S.vd.attempt)===2,'кнопка «Спроба 2 з 3» відкриває нову спробу');
   await draft(o.pg,'prefer');await o.pg.waitForSelector('#simBtn:not([hidden])');await o.pg.click('#simBtn');await o.pg.waitForSelector('#skipBtn:visible',{timeout:15000});await o.pg.click('#skipBtn');await o.pg.waitForTimeout(1200);
   const r=await o.pg.evaluate(()=>({t:document.getElementById('vdRes').textContent,h:document.getElementById('vdRes').hidden,sc:window.__dbg.S.result.vd.score,share:window.__dbg.shareTextOf(window.__dbg.S.result,true,true),st:JSON.parse(localStorage.getItem('upl30_vd_2026-10-12'))}));
   T.check(!r.h&&new RegExp(`${r.sc} з 11 гравців`).test(r.t)&&/Виклик зараховано/.test(r.t)&&r.st.best===r.sc&&r.st.used===2,`виклик зараховано: блок над сезоном, ${r.sc}/11, краща спроба збережена`);
@@ -212,8 +235,8 @@ async function siteChecks(b){
   await o.pg.evaluate(()=>window.__dbg.go(1));await o.pg.waitForTimeout(300);
   T.check(/\bprogress\b/.test(await o.pg.$eval('#vdCard',e=>e.className))&&/краща спроба/.test(await o.pg.textContent('#vdCard')),'головна: у процесі — краща спроба й медаль');
   await o.ctx.close();
-  // done: 5 attempts or 11/11 -> timer, card opens the archive; local limit
-  o=await page(b,{ls:{'upl30_vd_2026-10-12':{used:5,best:9,tries:[]}}});
+  // done: 3 attempts or 11/11 -> timer, card opens the archive; local limit
+  o=await page(b,{ls:{'upl30_vd_2026-10-12':{used:3,best:9,tries:[]}}});
   const dn=await o.pg.evaluate(()=>({c:document.getElementById('vdCard').className,t:document.getElementById('vdBox').textContent}));
   T.check(/\bdone\b/.test(dn.c)&&/Новий виклик через \d+ г \d+ хв/.test(dn.t)&&/9\/11/.test(dn.t)&&/Переглянути/.test(dn.t),'головна: виконано — таймер до нового виклику');
   await o.pg.screenshot({path:path.join(OUT,'v080_home_done.png')});
