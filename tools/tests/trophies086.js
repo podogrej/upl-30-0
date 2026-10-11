@@ -28,7 +28,7 @@ const goals=g=>['GK','CB','CB','LB','RB','CM','CM','CAM','LW','RW','ST'].map((sl
 // new trophies: ids, names, categories
 const NEW={rout8:'Як на тренуванні',conc12:'Моурінью задоволений',champ75:'Поза конкуренцією',scorer20:'Голеадор',trio12:'Бейленко, Бенземенко, Роналденко',
   trio15:'Мессієнко, Суаресенко, Неймаренко',duo15:'Шева й Інзагі',wins10:'Інтерсіті без зупинок',unbeat20:'Нас не подолати',awayfort:'Почувайтеся як вдома',
-  surge2:'Друге дихання',fade2:'Весняне загострення',dfgoals12:'Оборона — найкращий напад',nil5:'Нудьга',cs18:'Ворота на замку',fourth:'Перший за бортом',
+  surge2:"Don't push the horses",fade2:'Весняне загострення',dfgoals12:'Оборона — найкращий напад',nil5:'Нудьга',cs18:'Ворота на замку',fourth:'Перший за бортом',
   loss17:'Вийшов бразилити',win71:'Вийшов німити'};
 T.check(Object.entries(NEW).every(([id,n])=>tr(id)&&tr(id).n===n&&tr(id).rep===1&&!tr(id).sec&&tr(id).i&&tr(id).d),'18 нових трофеїв: назви, емодзі, опис, rep, не секретні');
 T.check(new Set(TROPHIES.map(t=>t.id)).size===TROPHIES.length,'id трофеїв унікальні');
