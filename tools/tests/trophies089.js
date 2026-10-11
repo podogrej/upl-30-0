@@ -12,11 +12,13 @@ const {makeDB,openSite,checker}=require('./_site.js');
    const ctx=(format,club,pts,place)=>({r:{W:30,D:0,L:0,pts,place,gf:90,ga:0,xp:80,log,table:[],snaps:[]},xi,pl,mode:'normal',format,club,reveal:true});
    const ids=TROPHIES.map(t=>t.id);
    return {rec,id,name:(TROPHIES.find(t=>t.id==='ob_'+id)||{}).n,wname:(TROPHIES.find(t=>t.id==='ow_'+id)||{}).n,
-     nOc:TROPHIES.filter(t=>t.oc).length,nRec:Object.keys(CLUB_REC).length,long:ids.filter(i=>!/^[A-Za-z0-9_]{1,24}$/.test(i)),dup:ids.length-new Set(ids).size,
+     nOc:TROPHIES.filter(t=>t.oc).length,noGen:Object.keys(CLUB_REC).filter(c=>!window.__dbg.OC_GEN[c]),shakh:(TROPHIES.find(t=>t.id==='ob_shakhtar_donetsk')||{}).n,met:(TROPHIES.find(t=>t.id==='ow_metalurh_donetsk')||{}).n,nRec:Object.keys(CLUB_REC).length,long:ids.filter(i=>!/^[A-Za-z0-9_]{1,24}$/.test(i)),dup:ids.length-new Set(ids).size,
      best:trEval(ctx('oneclub',code,rec[0]+1,1)),eq:trEval(ctx('oneclub',code,rec[0],1)),worst:trEval(ctx('oneclub',code,rec[3]-1,16)),
      other:trEval(ctx('oneclub','shakhtar-donetsk',rec[0]+1,1)),classic:trEval(ctx('classic',null,90,1)),
      twoColors:(TROPHIES.find(t=>t.id==='oneclubchamp')||{}).gone};});
- T.check(r.name==='Динамо — найкращий сезон в історії'&&r.wname==='Динамо — найгірший сезон в історії','назви: «'+r.name+'», «'+r.wname+'»');
+ T.check(r.name==='Найкращий сезон в історії «Динамо»'&&r.wname==='Найгірший сезон в історії «Динамо»','назви: «'+r.name+'», «'+r.wname+'»');
+ T.check(r.shakh==='Найкращий сезон в історії «Шахтаря»'&&r.met==='Найгірший сезон в історії донецького «Металурга»','відмінювання: «'+r.shakh+'», «'+r.met+'»');
+ T.check(!r.noGen.length,'родовий відмінок є для кожного клубу з рекордами '+r.noGen.join(','));
  T.check(r.nOc===2*r.nRec&&r.nOc>40,`по два трофеї на кожен клуб з історією: ${r.nOc} на ${r.nRec} клубів`);
  T.check(!r.long.length&&!r.dup,'id проходять перевірку сервера й не повторюються '+r.long.join(','));
  T.check(JSON.stringify(r.best)===JSON.stringify(['ob_'+r.id]),'«Один клуб», рекорд побито: лише клубний трофей, нічого іншого — '+r.best.join(','));
@@ -29,6 +31,6 @@ const {makeDB,openSite,checker}=require('./_site.js');
  const cab=await pg.evaluate(()=>{const s={seasons:3,dailies:0,t:{ob_dynamo_kyiv:{n:1,at:'2026-10-11'}}};localStorage.setItem('upl30_tr',JSON.stringify(s));return true;});
  await pg.evaluate(()=>window.__dbg.openTrophies());await pg.waitForTimeout(500);
  const txt=await pg.textContent('#viewBody');
- T.check(/Динамо — найкращий сезон в історії/.test(txt)&&!/Динамо — найгірший/.test(txt)&&!/Шахтар — /.test(txt),'шафа: отриманий клубний трофей видно, неотримані клубні сховані');
+ T.check(/Найкращий сезон в історії «Динамо»/.test(txt)&&!/Найгірший сезон в історії «Динамо»/.test(txt)&&!/«Шахтаря»/.test(txt),'шафа: отриманий клубний трофей видно, неотримані клубні сховані');
  T.check(!errs.length,'без помилок у консолі '+errs.join(' | '));
  await b.close();process.exit(T.done());})();
