@@ -1,0 +1,42 @@
+// One club (0.89): only the club's own records give trophies there ("best/worst season in the history of <club>", ids ob_/ow_ + code);
+// every other trophy and the two-colour trophy are not awarded in one club; club trophies are hidden in the cabinet until earned.
+// Run from repo root: node tools/tests/trophies089.js
+const {makeDB,openSite,checker}=require('./_site.js');
+(async()=>{const T=checker('trophies089');
+ const {b,pg,errs}=await openSite({db:makeDB({}),api:{},viewport:{width:390,height:900}});
+ const r=await pg.evaluate(()=>{const {TROPHIES,CLUB_REC,trEval}=window.__dbg;
+   const code='dynamo-kyiv',rec=CLUB_REC[code],id=code.replace(/-/g,'_');
+   const log=Array.from({length:30},(_,k)=>({rd:k+1,home:k%2===0,ug:3,og:0,res:'W'}));
+   const pl=['GK','CB','CB','LB','RB','CM','CM','CAM','LW','RW','ST'].map((slot,k)=>({id:'x'+k,slot,g:k===10?35:6,a:6,rt:7,form:0}));
+   const xi=pl.map((p,k)=>({id:p.id,name:'Гравець '+k,slot:p.slot,nat:0,by:1970,cc:code,y:2000,r0:90}));
+   const ctx=(format,club,pts,place)=>({r:{W:30,D:0,L:0,pts,place,gf:90,ga:0,xp:80,log,table:[],snaps:[]},xi,pl,mode:'normal',format,club,reveal:true});
+   const ids=TROPHIES.map(t=>t.id);
+   return {rec,id,name:(TROPHIES.find(t=>t.id==='ob_'+id)||{}).n,wname:(TROPHIES.find(t=>t.id==='ow_'+id)||{}).n,
+     nOc:TROPHIES.filter(t=>t.oc).length,noGen:Object.keys(CLUB_REC).filter(c=>!window.__dbg.OC_GEN[c]),shakh:(TROPHIES.find(t=>t.id==='ob_shakhtar_donetsk')||{}).n,met:(TROPHIES.find(t=>t.id==='ow_metalurh_donetsk')||{}).n,nRec:Object.keys(CLUB_REC).length,long:ids.filter(i=>!/^[A-Za-z0-9_]{1,24}$/.test(i)),dup:ids.length-new Set(ids).size,
+     best:trEval(ctx('oneclub',code,rec[0]+1,1)),eq:trEval(ctx('oneclub',code,rec[0],1)),worst:trEval(ctx('oneclub',code,rec[3]-1,16)),
+     other:trEval(ctx('oneclub','shakhtar-donetsk',rec[0]+1,1)),classic:trEval(ctx('classic',null,90,1)),
+     twoColors:(TROPHIES.find(t=>t.id==='oneclubchamp')||{}).gone};});
+ T.check(r.name==='Найкращий сезон в історії «Динамо»'&&r.wname==='Найгірший сезон в історії «Динамо»','назви: «'+r.name+'», «'+r.wname+'»');
+ T.check(r.shakh==='Найкращий сезон в історії «Шахтаря»'&&r.met==='Найгірший сезон в історії «Металурга Д.»','відмінювання: «'+r.shakh+'», «'+r.met+'»');
+ T.check(!r.noGen.length,'родовий відмінок є для кожного клубу з рекордами '+r.noGen.join(','));
+ T.check(r.nOc===2*r.nRec&&r.nOc>40,`по два трофеї на кожен клуб з історією: ${r.nOc} на ${r.nRec} клубів`);
+ T.check(!r.long.length&&!r.dup,'id проходять перевірку сервера й не повторюються '+r.long.join(','));
+ T.check(JSON.stringify(r.best)===JSON.stringify(['ob_'+r.id]),'«Один клуб», рекорд побито: лише клубний трофей, нічого іншого — '+r.best.join(','));
+ T.check(!r.eq.length,'рівно рекорд — ні');
+ T.check(JSON.stringify(r.worst)===JSON.stringify(['ow_'+r.id]),'найгірший сезон: лише клубний трофей — '+r.worst.join(','));
+ T.check(!r.other.some(i=>i.endsWith('_dynamo_kyiv')),'інший клуб не дає трофеїв Динамо');
+ T.check(!r.classic.some(i=>/^o[bw]_/.test(i))&&r.classic.length>3,'класика: звичайні трофеї є, клубних немає ('+r.classic.length+')');
+ T.check(r.twoColors===1,'«Два кольори» більше не видається новим (gone), отримані лишаються');
+ // cabinet: club trophies hidden until earned
+ const cab=await pg.evaluate(()=>{const s={seasons:3,dailies:0,t:{ob_dynamo_kyiv:{n:1,at:'2026-10-11'}}};localStorage.setItem('upl30_tr',JSON.stringify(s));return true;});
+ await pg.evaluate(()=>window.__dbg.openTrophies());await pg.waitForTimeout(500);
+ const txt=await pg.textContent('#viewBody');
+ T.check(/Найкращий сезон в історії «Динамо»/.test(txt)&&!/Найгірший сезон в історії «Динамо»/.test(txt)&&!/«Шахтаря»/.test(txt),'шафа: отриманий клубний трофей видно, неотримані клубні сховані');
+ T.check(!errs.length,'без помилок у консолі '+errs.join(' | '));
+ const ms=await pg.evaluate(()=>{const {trAward,CLUB_REC}=window.__dbg;localStorage.setItem('upl30_tr',JSON.stringify({seasons:4,dailies:0,t:{ms1:{n:1,at:'2026-10-01'}}}));
+   const log=Array.from({length:30},(_,k)=>({rd:k+1,home:k%2===0,ug:1,og:1,res:'D'}));
+   const ctx=format=>({r:{W:0,D:30,L:0,pts:30,place:8,gf:30,ga:30,xp:40,log,table:[],snaps:[]},xi:[],pl:[],mode:'normal',format,club:format==='oneclub'?'dynamo-kyiv':null,reveal:true});
+   const a=trAward(ctx('oneclub'),{sync:false}),b2=trAward(ctx('classic'),{sync:false});return {oc:a.got,cl:b2.got};});
+ T.check(!ms.oc.some(id=>/^ms/.test(id)),'«Один клуб»: віха «5 сезонів» не видається — '+ms.oc.join(','));
+ T.check(ms.cl.includes('ms5'),'віха, пройдена в «Один клуб», приходить з наступним сезоном в іншому режимі — '+ms.cl.join(','));
+ await b.close();process.exit(T.done());})();

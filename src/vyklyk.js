@@ -49,7 +49,7 @@ function renderVdCard(){const box=document.getElementById('vdBox');if(!box)retur
   const m=st.best!=null&&vdMedal(st.best),[em,tt]=vdSplit(ch.title);
   const res=st.best!=null?`<span class="evr"><span class="mm" aria-hidden="true">${m?m.e:ic('check-circle')}</span><b>${st.best}/11</b><span>краща спроба</span></span>`
     :st.used?`<span class="evr no"><span>Не зараховано · ${done?'спроби закінчились':`спроба ${st.used} з ${VD_ATTEMPTS}`}</span></span>`:'';
-  box.innerHTML=`<button class="evc ${k}" id="vdCard" type="button"><span class="e1"><span class="lb">Виклик дня</span><span class="af">${af}${ic('chevron-right')}</span></span>`
+  box.innerHTML=`<button class="evc ${k}" id="vdCard" type="button"><span class="e1"><span class="lb">Виклик дня</span><span class="af">${af}</span></span>`
     +`<span class="e2">${em?`<span class="em" aria-hidden="true">${em}</span>`:''}<span>${esc(tt)}</span></span><span class="e3">${esc(ch.task)}</span>${res}<span class="e4">${vdMedals(st.best)}</span>`
     +(done?`<span class="evt">${ic('timer-sand')}<span id="vdLeft">Новий виклик через ${vdLeft()}</span></span>`:'')+`</button>`;
   document.getElementById('vdCard').onclick=()=>done?openVdArchive():vdOpen(VD_DAY,'#vdCard');}

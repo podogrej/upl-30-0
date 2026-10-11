@@ -527,7 +527,6 @@ td .sub .sk{height:18px;border-radius:var(--r-pill)}
 .seg.pp-sort,.seg.fl-tabs{display:grid;grid-template-columns:1fr 1fr;padding:var(--sp-1);border-radius:var(--r-md);background:var(--bg2);border:1px solid var(--line);margin-bottom:var(--sp-3)}
 .seg.pp-sort button,.seg.fl-tabs button{border:0;background:none;color:var(--ink2);padding:var(--sp-2);font-size:var(--fs-body);border-radius:var(--r-sm)}
 .seg.pp-sort button.on,.seg.fl-tabs button.on{background:var(--ink);color:var(--bg);font-weight:var(--wt-bold)}
-.tro.rt-rare{border-color:#0A84FF}.tro.rt-epic{border-color:#BF5AF2}
 /* new rare trophy in the season summary: rarity colour for the halo; the shine sweeps once, only on the rarest one (.top) */
 .tro.rarein{--rc:var(--amber);position:relative}
 .tro.rarein.rt-rare{--rc:#0A84FF}.tro.rarein.rt-epic{--rc:#BF5AF2}.tro.rarein.rt-legend{--rc:#FFD60A}.tro.rarein.rt-secret{--rc:var(--amber)}
@@ -536,23 +535,53 @@ td .sub .sk{height:18px;border-radius:var(--r-pill)}
 @keyframes raresweep{from{transform:translateX(-130%) rotate(18deg)}to{transform:translateX(300%) rotate(18deg)}}
 .rtag{display:inline-block;margin-top:var(--sp-1);font-style:normal;font-size:var(--fs-caption2);font-weight:var(--wt-bold);text-transform:uppercase;letter-spacing:var(--ls-caps)}.rtag.rt-rare{color:#0A84FF}.rtag.rt-epic{color:#BF5AF2}.rtag.rt-legend{color:#d4a800}
 @media (prefers-reduced-motion:reduce){.tro .shine{display:none}.tro.rarein{box-shadow:0 0 0 1px var(--rc)}}
-.tro.rt-legend{border-color:#FFD60A;box-shadow:0 0 0 1px #FFD60A inset,0 0 14px color-mix(in srgb,#FFD60A 25%,transparent)}
 .tro.rt-rare .trp,.tro.rt-epic .trp,.tro.rt-legend .trp{color:var(--ink2)}
 /* card tinted by class (main, with friends, secret); rarity as an icon on the right */
-:root{--k-base:#5a6aa8;--k-friends:#0e98b8;--k-secret:#7c3aed;--r-rare:#1f6fe5;--r-epic:#d61f7d}
-:root[data-theme="dark"]{--k-base:#8fa0d8;--k-friends:#33c9e6;--k-secret:#a970ff;--r-rare:#3d8bff;--r-epic:#ff4fa3}
+:root{--k-base:#5a6aa8;--k-friends:#0e98b8;--k-secret:#d8177b}
+:root[data-theme="dark"]{--k-base:#8fa0d8;--k-friends:#33c9e6;--k-secret:#ff5aa0}
 .k-base{--kc:var(--k-base)}.k-friends{--kc:var(--k-friends)}.k-secret{--kc:var(--k-secret)}
 .tro.on.k-base,.tro.on.k-friends,.tro.on.k-secret{background:linear-gradient(120deg,color-mix(in srgb,var(--kc) 22%,var(--surface)),var(--surface) 70%);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--kc) 45%,transparent)}
 .tro.k-base:not(.on),.tro.k-friends:not(.on),.tro.k-secret:not(.on){background:color-mix(in srgb,var(--kc) 5%,var(--surface));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--kc) 18%,var(--line))}
 .tro.on[class*="k-"] .tre{background:color-mix(in srgb,var(--kc) 22%,var(--bg2))}
 .tro.on[class*="k-"] .trt b{background:none;color:var(--ink)}
-.gem{font:var(--wt-black) var(--fs-caption2)/1 var(--font-body);letter-spacing:var(--ls-caps);text-transform:uppercase;padding:var(--sp-1) var(--sp-2);border-radius:var(--r-pill);color:#fff;font-style:normal;white-space:nowrap}
-.gem.rt-rare{background:var(--r-rare)}.gem.rt-epic{background:var(--r-epic)}.gem.rt-legend{background:var(--grad)}
-.tro>.gem{grid-column:3;grid-row:1;align-self:start;justify-self:end}.tro>.gem~.trn{grid-column:3;grid-row:1;align-self:end}
-@media (max-width:420px){.tro:has(>.gem)>.tri{grid-row:1/span 2}.tro:has(>.gem)>.trt{grid-column:2;grid-row:2}.tro>.gem{grid-column:2;grid-row:1;justify-self:start}.tro>.gem~.trn{grid-row:2;align-self:start}}   /* narrow: rarity tag above the title, the title gets the full width */
+/* rarity: 4px rail inside the card + title and word in the tier colour; badge is a neutral round plate. Rail (rr) and text (rt) tokens per theme */
+:root{--nm-go:#868da8;--nm-dim:#4f5a80;--nm-rr-rare:#1f6fe5;--nm-rt-rare:#1a5fcb;--nm-rr-epic:#8a3ff0;--nm-rt-epic:#6d28c4;--nm-rr-legend:#946900;--nm-rt-legend:#7a5a00;--nm-rr-secret:#d8177b;--nm-rt-secret:#c21a6f;--nm-rr-common:#8b95b8;--nm-rt-common:#4a5578;--nm-bd-common:#6a7393}
+:root[data-theme="dark"]{--nm-go:#7b86ab;--nm-dim:#9aa5c8;--nm-rr-rare:#3584ee;--nm-rt-rare:#78a8f2;--nm-rr-epic:#ab72f6;--nm-rt-epic:#bb96f6;--nm-rr-legend:#c4920a;--nm-rt-legend:#dba926;--nm-rr-secret:#ea4a88;--nm-rt-secret:#f27aae;--nm-rr-common:#5b6b9e;--nm-rt-common:#b9c2de;--nm-bd-common:#5b6b9e}
+#ppCab .tro{position:relative;grid-template-columns:44px minmax(0,1fr) auto;column-gap:var(--sp-3);padding-left:var(--sp-5)}
+#ppCab .tro::before{content:"";position:absolute;left:var(--sp-2);top:var(--sp-3);bottom:var(--sp-3);width:4px;border-radius:var(--r-pill);background:var(--nm-rr-common);opacity:.7}
+#ppCab .tro.rt-rare{--rr:var(--nm-rr-rare);--rt:var(--nm-rt-rare)}#ppCab .tro.rt-epic{--rr:var(--nm-rr-epic);--rt:var(--nm-rt-epic)}#ppCab .tro.rt-legend{--rr:var(--nm-rr-legend);--rt:var(--nm-rt-legend)}#ppCab .tro.rt-secret{--rr:var(--nm-rr-secret);--rt:var(--nm-rt-secret)}
+#ppCab .tro.rt-rare::before,#ppCab .tro.rt-epic::before,#ppCab .tro.rt-legend::before,#ppCab .tro.rt-secret::before{background:var(--rr);opacity:1}
+#ppCab .tro:not(.on)::before{opacity:.8}   /* muted but still >=3:1 */
+#ppCab .tro .tre{width:44px;height:44px;font-size:22px}
+#ppCab .tro .trt b,#ppCab .tro .trt>span{color:var(--nm-dim)}#ppCab .tro.on .trt b{color:var(--ink)}#ppCab .tro.on .trt>span:not(.trp){color:var(--ink2)}
+#ppCab .tro.on.rt-rare .trt b,#ppCab .tro.on.rt-epic .trt b,#ppCab .tro.on.rt-legend .trt b,#ppCab .tro.on.rt-secret .trt b{color:var(--rt)}
+#ppCab .tro .trt .trp{display:flex;flex-wrap:wrap;column-gap:var(--sp-3);row-gap:0;font-size:var(--fs-caption);color:var(--nm-dim)}
+#ppCab .tro .trt .trp span{font-size:inherit;color:inherit}.nm-sg,.nm-sg>*{white-space:nowrap}.nm-sg-r{flex-basis:100%}   /* rarity word on its own row: equal card heights, no orphan segments */
+.nm-rw{font-weight:var(--wt-bold)}
+#ppCab .tro .trt .trp .nm-rw-rare,.trleg .nm-rw-rare{color:var(--nm-rt-rare)}#ppCab .tro .trt .trp .nm-rw-epic,.trleg .nm-rw-epic{color:var(--nm-rt-epic)}#ppCab .tro .trt .trp .nm-rw-legend,.trleg .nm-rw-legend{color:var(--nm-rt-legend)}#ppCab .tro .trt .trp .nm-rw-secret{color:var(--nm-rt-secret)}
+#ppCab .tro .trt .trp .nm-rw-common{color:var(--nm-rt-common);font-weight:var(--wt-regular)}
+.nm-rl{display:block;width:4px;height:14px;border-radius:var(--r-pill);flex:none}.nm-rl-rare{background:var(--nm-rr-rare)}.nm-rl-epic{background:var(--nm-rr-epic)}.nm-rl-legend{background:var(--nm-rr-legend)}
+#ppCab .tro .trn{align-self:start;padding-top:3px;font:var(--wt-bold) 14px/var(--lh-snug) var(--font-body);color:var(--nm-dim)}
+:root[data-theme="dark"] #ppCab .tro.on .tre{background:rgba(255,255,255,.08)}:root[data-theme="dark"] #ppCab .tro:not(.on) .tre{background:rgba(255,255,255,.055)}   /* unowned plate ends up at ~.03 after the .off opacity */
+#ppCab .tro:not(.on) .tre.off{opacity:.55}
+:root[data-theme="light"] #ppCab .tro:not(.on) .tri{position:relative}
+:root[data-theme="light"] #ppCab .tro:not(.on) .tri::before{content:"";position:absolute;left:0;top:50%;width:44px;height:44px;margin-top:-22px;border-radius:50%;background:#dde1ee}
+:root[data-theme="light"] #ppCab .tro:not(.on) .tre{position:relative;background:none}:root[data-theme="light"] #ppCab .tro:not(.on) .tre.off{opacity:1;filter:grayscale(1) brightness(.55)}   /* light theme: separate darker plate (unfiltered), dark grayscale icon on it */
+/* locked vs earned: earned = rarity-tinted fill + check badge on the icon plate; locked = flat card; two groups with headings */
+#ppCab .nm-gh{grid-column:1/-1;display:flex;align-items:baseline;gap:var(--sp-2);margin:var(--sp-3) 0 var(--sp-0h);color:var(--ink2)}
+#ppCab .nm-gh:first-child{margin-top:0}#ppCab .nm-gh i{font-style:normal;font-weight:var(--wt-regular);color:var(--muted)}
+#ppCab .nm-gh::after{content:"";flex:1;height:1px;background:var(--line);align-self:center}
+.nm-vh{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+#ppCab .tro:not(.on){background:transparent;box-shadow:inset 0 0 0 1px var(--line)}
+#ppCab .tro:not(.on) .trt b{font-weight:var(--wt-regular)}
+#ppCab .tro.on{background:linear-gradient(120deg,color-mix(in srgb,var(--rr,var(--nm-rr-common)) 18%,var(--surface)),var(--surface) 75%);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--rr,var(--nm-rr-common)) 40%,transparent)}
+:root[data-theme="dark"] #ppCab .tro.on{background:linear-gradient(120deg,color-mix(in oklab,var(--rt,var(--nm-rt-common)) 12%,var(--surface)),var(--surface) 75%);box-shadow:inset 0 0 0 1px color-mix(in oklab,var(--rt,var(--nm-rt-common)) 35%,transparent)}
+#ppCab .tro.on .tri{position:relative}
+#ppCab .tro.on .tri::after{content:"";position:absolute;right:-2px;bottom:-2px;width:16px;height:16px;border-radius:50%;background:var(--rr,var(--nm-bd-common)) var(--nm-ic-check) center/10px no-repeat;box-shadow:0 0 0 2px var(--surface)}
+:root{--nm-ic-check:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23fff' d='M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z'/%3E%3C/svg%3E")}
 .trleg{display:grid;gap:var(--sp-2);margin:var(--sp-0h) 0 var(--sp-3);padding:var(--sp-3) var(--sp-4);border-radius:var(--r-lg);background:var(--card);font-size:var(--fs-caption);color:var(--ink2)}
-.trleg .h{font-size:var(--fs-caption);color:var(--muted);text-transform:uppercase;letter-spacing:var(--ls-caps)}.trleg .row{display:flex;flex-wrap:wrap;gap:var(--sp-2) var(--sp-4);margin:0;align-items:center}
-.trleg .it{display:inline-flex;align-items:center;gap:var(--sp-2);white-space:nowrap}.trleg .sw{width:22px;height:14px;border-radius:var(--r-xs);flex:none;background:linear-gradient(120deg,color-mix(in srgb,var(--kc) 45%,var(--surface)),var(--surface));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--kc) 55%,transparent)}
+.trleg .h{font-size:var(--fs-caption);color:var(--muted);text-transform:uppercase;letter-spacing:var(--ls-caps)}.trleg .row{display:flex;flex-wrap:wrap;gap:var(--sp-1) var(--sp-3);margin:0;align-items:center}
+.trleg .it{display:inline-flex;align-items:center;gap:var(--sp-2);white-space:nowrap}.trleg .nm-lgr{display:grid;grid-template-columns:repeat(3,auto);justify-content:space-between;gap:var(--sp-2)}.trleg .nm-lgr .it{flex-direction:column;align-items:flex-start;gap:var(--sp-1)}.trleg .nm-lgr .nm-rl{width:14px;height:4px}   /* legend: three equal columns, swatch/diamonds above the word */.trleg .sw{width:22px;height:14px;border-radius:var(--r-xs);flex:none;background:linear-gradient(120deg,color-mix(in srgb,var(--kc) 45%,var(--surface)),var(--surface));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--kc) 55%,transparent)}
 .pp-list{border:1px solid var(--line);border-radius:var(--r-md);background:var(--surface);overflow:hidden}
 .fl-hero{text-align:center;display:grid;justify-items:center;gap:var(--sp-2);margin:var(--sp-4) 0 var(--sp-2)}.fl-hero h1,.fl-head h1{font-family:var(--font-display);margin:0;font-size:var(--fs-title1);line-height:var(--lh-tight);letter-spacing:var(--ls-tight)}.fl-hero p{margin:0;color:var(--ink2)}   /* iPad: button and text centered */
 .fl-head{display:grid;gap:var(--sp-1);margin:var(--sp-4) 0 var(--sp-3)}.fl-head p{margin:0;font-size:var(--fs-footnote)}.fl-badge{font-style:normal;font-family:var(--font-mono,monospace);font-size:var(--fs-footnote);vertical-align:middle;border:1px solid var(--df);color:var(--df);border-radius:var(--r-sm);padding:var(--sp-0h) var(--sp-2)}
@@ -585,12 +614,11 @@ a.fl-row{text-decoration:none}
 .pp-cabout{display:grid;gap:var(--sp-2);margin:var(--sp-2) 0 var(--sp-1)}.pp-cabout img{width:100%;max-width:360px;border-radius:var(--r-md);border:1px solid var(--line)}
 .pp-row{display:grid;grid-template-columns:auto 1fr auto auto;gap:var(--sp-2);align-items:center;padding:var(--sp-3) var(--sp-3);min-height:48px;cursor:pointer}
 .pp-row+.pp-row{border-top:1px solid var(--line)}@media (hover:hover) and (pointer:fine){.pp-row:hover{background:color-mix(in srgb,var(--ink) 4%,transparent)}}
-.pp-row .t{min-width:0}.pp-row .t b{display:block;font-size:var(--fs-body);font-weight:var(--wt-bold);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pp-row .t span{display:block;font-size:var(--fs-caption);color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pp-row .t{min-width:0}.pp-row .t b{display:block;font-size:var(--fs-body);font-weight:var(--wt-bold);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pp-row .t span{display:block;font-size:var(--fs-caption);color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pp-row .t span:has(>.nm-sg){display:flex;flex-wrap:wrap;column-gap:var(--sp-1);white-space:normal;overflow:visible}.pp-row .t .nm-sg{flex-basis:100%}.pp-row .t .nm-sg{font-style:normal;max-width:100%;overflow:hidden;text-overflow:ellipsis}   /* XI details wrap by segment instead of being cut */
 .pp-k{font-style:normal;font-size:var(--fs-caption2);font-weight:var(--wt-bold);color:var(--muted)}.pp-k.best{color:var(--win)}.pp-k.worst{color:var(--loss)}
 .pp-row .n{font-family:var(--font-display);font-weight:var(--wt-bold);font-size:var(--fs-headline);font-variant-numeric:tabular-nums;text-align:right}.pp-row .n small{font-family:var(--font-body);font-size:var(--fs-caption2);color:var(--muted);font-weight:var(--wt-bold);margin-left:var(--sp-0h)}
 .pp-row .n.g{color:var(--amber)}
-.pp-row>.ico{width:18px;height:18px;fill:var(--muted)}
-.pp-row.h{grid-template-columns:44px 1fr auto 18px}.pp-row.h .d{font-family:var(--font-mono);font-size:var(--fs-caption);color:var(--muted);line-height:var(--lh-snug)}
+.pp-row.h{grid-template-columns:44px 1fr auto auto}.pp-row.h .d{font-family:var(--font-mono);font-size:var(--fs-caption);color:var(--muted);line-height:var(--lh-snug)}
 .mdot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:var(--sp-2);vertical-align:1px}
 .pp-empty{font-size:var(--fs-footnote);color:var(--muted)}
 details.pp-hist{margin-top:var(--sp-5)}details.pp-hist>summary{font-family:var(--font-display);font-weight:var(--wt-bold);font-size:var(--fs-body);letter-spacing:var(--ls-caps);text-transform:uppercase;color:var(--ink2);cursor:pointer}
@@ -601,21 +629,24 @@ details.pp-hist[open]>summary{margin-bottom:var(--sp-3)}
 .set-r{display:flex;align-items:center;gap:var(--sp-3);width:100%;min-height:56px;padding:var(--sp-3) var(--sp-4);border:0;border-radius:0;background:none;color:var(--ink);font:inherit;text-align:left;cursor:pointer}
 a.set-r{text-decoration:none}
 .set-r+.set-r{border-top:1px solid var(--line2)}@media (hover:hover) and (pointer:fine){.set-r:hover{background:color-mix(in srgb,var(--ink) 4%,transparent)}}
-.set-r .k{flex:1;min-width:0;font-weight:var(--wt-bold)}.set-r .k small{display:block;overflow-wrap:anywhere;font-weight:var(--wt-medium);color:var(--muted);font-size:var(--fs-caption);margin-top:var(--sp-0h)}
-.set-r .v{color:var(--ink2);max-width:46%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.set-r .v.mu{color:var(--muted)}
-.set-r>.ico{width:20px;height:20px;color:var(--muted);flex:none}.set-r.who{cursor:default}@media (hover:hover) and (pointer:fine){.set-r.who:hover{background:none}}
+.set-r .k{flex:1;min-width:0;font-weight:var(--wt-bold)}.set-r .k small{display:block;text-wrap:balance;overflow-wrap:anywhere;font-weight:var(--wt-medium);color:var(--muted);font-size:var(--fs-caption);margin-top:var(--sp-0h)}
+.set-r .v{color:var(--ink);max-width:45%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.set-r .v.mu{color:var(--nm-dim)}
+.set-r.who{cursor:default}
+/* quiet chevron (or arrow out) on the right, only on rows that open a screen or an edit; sign in/out rows use the accent colour instead */
+.nm-go{display:inline-grid;place-items:center;width:16px;height:16px;flex:none;color:var(--nm-go)}.nm-go .ico{width:16px;height:16px}.nm-ext{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}.set-r:has(>.nm-go){gap:var(--sp-2)}.pp-row:has(>.nm-go) .t b{white-space:normal;overflow:visible}.pp-row .pp-k{white-space:nowrap}.pp-row .nm-nw{display:block;font-style:normal;white-space:nowrap}.pp-row .pp-k{display:block}   /* best/worst tag always on its own line */.set-r.nm-act{color:var(--amber2)}.set-r.nm-act .k{color:inherit}
+@media (hover:hover) and (pointer:fine){.set-r.who:hover{background:none}}
 .set-ic{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;flex:none;background:#fff}.set-ic .ico{width:18px;height:18px}.set-ic.g .ico{color:#4285f4}.set-ic.t{background:#2aabee}.set-ic.t .ico{color:#fff}
 input.sw{appearance:none;-webkit-appearance:none;flex:none;width:46px;height:28px;border-radius:var(--r-lg);background:var(--line);position:relative;cursor:pointer;margin:0;transition:background var(--dur-2) var(--ease-out)}
 input.sw::after{content:"";position:absolute;left:3px;top:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:transform var(--dur-2) var(--spring)}
-input.sw:checked{background:var(--win)}input.sw:checked::after{transform:translateX(18px)}
-#ppSet .pp-sec{margin-top:var(--sp-5)}#ppSetMsg{margin:var(--sp-2) var(--sp-0h) 0}#ppSet .pp-del{display:block;margin:var(--sp-4) auto 0}
+input.sw:checked{background:var(--win)}:root[data-theme="light"] input.sw:not(:checked){background:#8a94b8}   /* off track 3:1 on white */input.sw:checked::after{transform:translateX(18px)}
+#ppSet .pp-sec{margin-top:var(--sp-5)}#ppSetMsg{margin:var(--sp-2) var(--sp-0h) 0}#ppSet .pp-del{display:block;margin:var(--sp-4) auto 0;min-height:44px;padding:var(--sp-3) var(--sp-4)}
 .sheet0-box{display:grid;gap:var(--sp-2);align-content:start;overflow-y:auto;overscroll-behavior:contain;max-width:560px;background:var(--surface);padding-bottom:calc(var(--sp-5) + env(safe-area-inset-bottom,0px))}
 @media (min-width:600px){.sheet0-box{max-width:460px}}
 .sheet0-bar{display:flex;justify-content:space-between;align-items:center}.sheet0-bar h3{margin:0;font:var(--wt-black) var(--fs-title3) var(--font-display)}
 .sheet0-box input{font:var(--fs-headline) var(--font-body);padding:var(--sp-3);border:1px solid var(--line);border-radius:var(--r-md);background:var(--bg);color:var(--ink);width:100%}
 .sheet0-box .big0{max-width:none}
 @media (prefers-reduced-motion:reduce){input.sw,input.sw::after{transition:none}}
-.pp-del{border:0;background:none;color:var(--loss);font-weight:var(--wt-bold);font-size:var(--fs-footnote);padding:var(--sp-2) 0;justify-self:start}
+.pp-del{border:0;background:none;color:var(--loss);font-weight:var(--wt-medium);font-size:var(--fs-caption);padding:var(--sp-2) 0;justify-self:start}
 .pp-delbox{display:grid;gap:var(--sp-2);border:1px solid color-mix(in srgb,var(--loss) 50%,var(--line));border-radius:var(--r-md);padding:var(--sp-3) var(--sp-3)}.pp-delbox p{margin:0;font-size:var(--fs-footnote)}
 button.danger{background:var(--loss);border-color:var(--loss);color:#fff}
 .pp-warn{display:grid;gap:var(--sp-2);margin-top:var(--sp-4);padding:var(--sp-3);border:1px solid color-mix(in srgb,var(--amber) 55%,var(--line));border-radius:var(--r-md);background:color-mix(in srgb,var(--amber) 9%,var(--surface))}
@@ -743,16 +774,15 @@ button.go0{max-width:none;margin-top:var(--sp-5)}
 .btns0{display:grid;gap:var(--sp-2);width:min(100%,420px)}.btns0 .big0{max-width:none;min-height:54px;margin:0}
 .links0{display:flex;gap:var(--sp-4);justify-content:center;margin-top:var(--sp-3)}
 .links0 button{border:0;background:none;padding:var(--sp-1) var(--sp-0h);color:var(--ink2);font:var(--wt-medium) var(--fs-footnote) var(--font-body);text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--line)}
-/* mode tiles: tinted icon circle on the left, title and short caption, chevron on phones */
+/* mode tiles: tinted icon circle on the left, title and short caption */
 #s1{--t-fl:#33c9e6;--t-pick:#a970ff;--t-club:#ff8a3d;--t-board:#3d8bff;--t-tr:#f5c542}
 :root[data-theme="light"] #s1{--t-fl:#0e98b8;--t-pick:#7c3aed;--t-club:#e2620f;--t-board:#1f6fe5;--t-tr:#b98300}
 .tile1[data-k="fl"]{--tc:var(--t-fl)}.tile1[data-k="pick"]{--tc:var(--t-pick)}.tile1[data-k="club"]{--tc:var(--t-club)}.tile1[data-k="board"]{--tc:var(--t-board)}.tile1[data-k="tr"]{--tc:var(--t-tr)}
 .tiles0{display:grid;grid-template-columns:1fr;gap:var(--sp-2)}
-button.tile1{display:grid;grid-template-columns:44px minmax(0,1fr) auto;align-items:center;column-gap:var(--sp-4);min-height:72px;margin:0;padding:var(--sp-3) var(--sp-4) var(--sp-3) var(--sp-3);border:0;border-radius:var(--r-lg);background:var(--card);color:var(--ink);text-align:left;font-family:var(--font-body);cursor:pointer}
+button.tile1{display:grid;grid-template-columns:44px minmax(0,1fr);align-items:center;column-gap:var(--sp-4);min-height:72px;margin:0;padding:var(--sp-3) var(--sp-4) var(--sp-3) var(--sp-3);border:0;border-radius:var(--r-lg);background:var(--card);color:var(--ink);text-align:left;font-family:var(--font-body);cursor:pointer}
 button.tile1>.ic{width:44px;height:44px;margin:0;border-radius:var(--r-md);background:color-mix(in srgb,var(--tc) 16%,transparent);color:var(--ink)}button.tile1>.ic .ico{width:26px;height:26px}   /* soft tinted plate, icon in text color for contrast */
 .tile1>span{display:grid;gap:var(--sp-1);min-width:0}.tile1 b{font-size:var(--fs-headline);font-weight:var(--wt-bold);line-height:var(--lh-snug)}
 .tile1 small{font-size:var(--fs-footnote);font-weight:var(--wt-medium);color:var(--ink2)}
-.tile1 .chev{font-style:normal;color:var(--muted);font-size:var(--fs-title3)}
 /* One club: list page (s8), club card (setup), record block (summary) */
 #oc h1{font:var(--wt-black) var(--fs-title1)/var(--lh-tight) var(--font-display);margin:var(--sp-4) 0 var(--sp-1);letter-spacing:var(--ls-tight)}
 #oc .lead{color:var(--ink2);margin:0 0 var(--sp-3)}
@@ -791,7 +821,7 @@ button.tile1>.ic{width:44px;height:44px;margin:0;border-radius:var(--r-md);backg
 .ocr h3{margin:var(--sp-1) 0;font-size:var(--fs-title3)}
 .ocr p{margin:0;color:var(--ink2)}.ocr .ft{margin-top:var(--sp-2);font-size:var(--fs-footnote)}
 .ocnote{margin:0;color:var(--ink2);font-size:var(--fs-footnote)}
-@media (min-width:700px){.tiles0.m3{grid-template-columns:repeat(3,1fr)}.tiles0.m2{grid-template-columns:1fr 1fr}button.tile1{grid-template-columns:44px minmax(0,1fr);min-height:80px}.tile1 .chev{display:none}}
+@media (min-width:700px){.tiles0.m3{grid-template-columns:repeat(3,1fr)}.tiles0.m2{grid-template-columns:1fr 1fr}button.tile1{min-height:80px}}
 #s1 .sec0{margin:var(--sp-6) var(--sp-0h) var(--sp-3);font:var(--wt-bold) var(--fs-caption)/1 var(--font-body);letter-spacing:var(--ls-caps)}
 #s1>.sec0,#s1>.tiles0,#s1>.faqbox0{width:min(100%,640px);margin-inline:auto}#s1>.sec0{padding-inline:var(--sp-0h)}   /* one column with the Play button and the daily card on wide screens */
 /* FAQ: one collapsed card */
@@ -1146,37 +1176,43 @@ h3,.sec0,#s1 .sec0,.pgh,.trleg .h{font-size:var(--fs-footnote);font-weight:var(-
     <div class="daily" id="chalCard" hidden></div>
     <div class="sec0">Інші режими</div>
     <div class="tiles0 m2" id="modeTiles">
-      <button class="tile1" id="flOpen" data-k="fl"><!--i:account-group--><span><b>Ліга з друзями</b><small>Посилання в чат</small></span><i class="chev" aria-hidden="true">›</i></button>
+      <button class="tile1" id="flOpen" data-k="fl"><!--i:account-group--><span><b>Ліга з друзями</b><small>Посилання в чат</small></span></button>
       <!-- season pick is hidden (PICK_ON, ?pick=1); code and saved seasons are kept -->
-      <button class="tile1" id="pickOpen" data-k="pick" data-pick hidden><!--i:calendar-check--><span><b>Вибір сезону</b><small>Сезон обираєш сам</small></span><i class="chev" aria-hidden="true">›</i></button>
-      <button class="tile1" id="clubOpen" data-k="club"><!--i:shield-star--><span><b>Один клуб</b><small>Найкращий XI клубу</small></span><i class="chev" aria-hidden="true">›</i></button>
+      <button class="tile1" id="pickOpen" data-k="pick" data-pick hidden><!--i:calendar-check--><span><b>Вибір сезону</b><small>Сезон обираєш сам</small></span></button>
+      <button class="tile1" id="clubOpen" data-k="club"><!--i:shield-star--><span><b>Один клуб</b><small>Найкращий XI клубу</small></span></button>
     </div>
     <!-- 5x5 on one phone is hidden until 5x5 online ships; code is kept -->
     <button class="row0" id="f5Open" hidden><!--i:account-group--><span><b>5×5 на одному телефоні</b></span></button>
     <div class="sec0">Результати</div>
     <div class="tiles0 m2">
-      <button class="tile1" id="tablesOpen" data-k="board"><!--i:format-list-numbered--><span><b>Таблиці</b><small>За весь час · Мої чати</small></span><i class="chev" aria-hidden="true">›</i></button>
-      <button class="tile1" id="trBtn" data-k="tr"><!--i:trophy--><span><b>Трофеї</b><small id="trCount">Зібрані нагороди</small></span><i class="chev" aria-hidden="true">›</i></button>
+      <button class="tile1" id="tablesOpen" data-k="board"><!--i:format-list-numbered--><span><b>Таблиці</b><small>За весь час · Мої чати</small></span></button>
+      <button class="tile1" id="trBtn" data-k="tr"><!--i:trophy--><span><b>Трофеї</b><small id="trCount">Зібрані нагороди</small></span></button>
     </div>
     <details class="faqbox0" id="faqBox"><summary>Питання та відповіді</summary>
     <div class="faq0">
       <!-- FAQ: reconcile with the game before every x.x9 version (CLAUDE.md) -->
-      <details id="howQ"><summary>Як грати?</summary><ol class="how0"><li>Тисни «Грати» або картку «Виклик дня».</li><li>Крути колесо: воно дає клуб і сезон. Тапни гравця — під ним з'являться кнопки позицій, тапни потрібну. Помилився — «Переставити гравців» під полем.</li><li>Зібрав 11 — дивись прогноз (рейтинги, xP, шанси) і грай 30 турів.</li></ol></details>
-      <details id="calcQ"><summary>Як рахується гра?</summary><p>Рейтинг кожного гравця рахується за його сезон: голи й асисти за матч, частка зіграних матчів, місце команди, пропущені та сухі матчі для воротарів. Порівняння йде всередині сезону та позиції, тож зірки 90-х і 2020-х стоять поруч.</p><p>Кожен матч розігрується як два пуассонівські потоки голів. Атака твоєї команди складається з нападу й півзахисту, оборона — з воротаря, захисту й півзахисту. Суперники — «Ліга легенд»: 15 клубів, що зробили історію УПЛ, кожен у сезоні з найсильнішим складом (середній рейтинг 11 найкращих гравців; лише сезони ліги на 16 команд). Домашнє поле дає невелику перевагу; форма гравців коливається від сезону до сезону й від матчу до матчу; гравці одного клубу дають «хімію».</p><p class="muted">Рейтинги розрахункові й ще будуть донастроюватися.</p></details>
-      <details><summary>Звідки рейтинги гравців?</summary><p>Рейтинг рахується окремо за кожен сезон: голи, асисти, частка зіграних матчів, успіх команди, для оборонців — пропущені й сухі матчі. Гравця порівнюють лише з гравцями його лінії в тому самому сезоні, тому 90-ті й 2020-ті стоять поруч. Зверху — клас гравця: збірна, єврокубки, трансфери й нагороди. Він додається лише за сильний сезон і слабшає після 30 років, тож 90+ мають лише справжні зірки в найкращі роки. Кілька матчів за сезон — низький рейтинг, навіть у зірки.</p></details>
-      <details><summary>Чому рейтинги приховані під час драфту?</summary><p>Щоб грала пам'ять і футбольне чуття, а не таблиця. Рейтинги відкриваються, щойно ти зібрав 11 гравців, — перед сезоном. Хочеш бачити одразу — увімкни в драфті «Рейтинги», але тоді в таблиці поруч з результатом буде позначка «рейтинги відкриті».</p></details>
-      <details><summary>Хто суперники?</summary><p>«Ліга легенд»: 15 клубів, що зробили історію УПЛ, — кожен у сезоні з найсильнішим складом. Твоя 11-ка займає 16-те місце в цій лізі й грає з кожним двічі.</p></details>
-      <details><summary>Гравець не на своїй позиції</summary><p>Гравця можна поставити на його позиції й на суміжні: атакувального півзахисника — у центр поля, опорного — у центр поля чи в захист, вінгера — крайнім півзахисником свого флангу. Що далі від рідної позиції — то трохи слабше він грає. Рейтинг у картці не змінюється, різниця працює лише в симуляції.</p></details>
+      <details id="howQ"><summary>Як грати?</summary><ol class="how0"><li>Тисни «Грати» (обери роки, схему й складність) або картку «Виклик дня».</li><li>Крути колесо: воно дає клуб і сезон. Не подобається — перекрути (у «Звичайному» — двічі за драфт). Тапни гравця й постав його кнопкою позиції під ним або тапом по підсвіченому місцю на полі. Помилився — «Переставити гравців» під полем.</li><li>Зібрав 11 — дивись прогноз (рейтинги, xP, шанси) і грай 30 турів.</li></ol></details>
+      <details><summary>Що змінюють роки, схема й складність?</summary><p>«Роки» звужують колесо до однієї епохи — 90-ті, 2000-ні, 2010-ті чи 2020-ті; суперники ті самі. Схема — розстановка, під яку збираєш 11. «Звичайний» дає 2 перекручування колеса, «Складний» — жодного, і склад оцінюється суворіше, а в таблиці біля результату — позначка «Складний». «Виклик дня», виклик другу й ліги чатів — завжди на всі роки.</p></details>
+      <details id="calcQ"><summary>Як рахується гра?</summary><p>Кожен матч розігрується як два пуассонівські потоки голів. Атака твоєї команди — це напад і півзахист, оборона — воротар, захист і півзахист; сила кожного гравця — його рейтинг за той сезон (див. «Звідки рейтинги гравців?»). Домашнє поле дає невелику перевагу, форма гравців коливається від сезону до сезону й від матчу до матчу, а гравці одного клубу дають «хімію». Тож той самий склад щоразу грає трохи інакше: буває і «сезон-диво», і провал.</p><p>Ти займаєш 16-те місце в лізі з 15 суперників (див. «Хто суперники?») і граєш з кожним двічі — 30 турів.</p><p class="muted">Рейтинги розрахункові й ще будуть донастроюватися.</p></details>
+      <details><summary>Звідки рейтинги гравців?</summary><p>Рейтинг рахується окремо за кожен сезон: голи, асисти, частка зіграних матчів, успіх команди, для оборонців — пропущені й сухі матчі. Гравця порівнюють лише з гравцями його лінії в тому самому сезоні, тому 90-ті й 2020-ті стоять поруч. Зверху — клас гравця: збірна, єврокубки, трансфери й нагороди. Він додається лише за сильний сезон і слабшає після 30 років, тож 90+ мають лише справжні зірки в найкращі роки. Кілька матчів за сезон — низький рейтинг, навіть у зірки. Сезон 2026/27 ще триває: у більшості гравців рейтинг поки взято з минулого сезону, в інших — за зіграними турами, і він не вищий за 85.</p></details>
+      <details><summary>Що за сезон 2026/27 на колесі?</summary><p>Поточний сезон УПЛ теж на колесі: склади нинішні, рейтинги — з минулого сезону або за зіграними турами (не вище 85). Замість місця клубу — «сезон триває, зараз N-е місце». Серед суперників його немає, а дані оновлюються разом із заявками.</p></details>
+      <details><summary>Чому рейтинги приховані під час драфту?</summary><p>Щоб грала пам'ять і футбольне чуття, а не таблиця. Рейтинги відкриваються, щойно ти зібрав 11 гравців, — перед сезоном. Хочеш бачити одразу — увімкни в драфті «Рейтинги», але тоді в таблиці поруч з результатом буде позначка «рейтинги відкриті». У лізі з друзями творець може обрати гру «На пам'ять» — тоді перемикача немає.</p></details>
+      <details><summary>Хто суперники?</summary><p>«Ліга легенд»: 15 клубів, що зробили історію УПЛ, — кожен у сезоні з найсильнішим складом (за середнім рейтингом 11 найкращих гравців). Так у «Грати», «Виклику дня», лігах і виклику другу. В «Одному клубі» суперники — «Ліга культових клубів»: ті самі 15 клубів, але кожен із середньою силою за всю свою історію в УПЛ. Твоя 11-ка займає 16-те місце й грає з кожним двічі. Повний список — перед сезоном, у рядку «Суперники».</p></details>
+      <details><summary>Гравець не на своїй позиції</summary><p>Гравця можна поставити на його позиції й на суміжні: атакувального півзахисника — у центр поля, опорного — у центр поля чи в захист, вінгера — крайнім півзахисником свого флангу. Що далі від рідної позиції — то трохи слабше він грає. Важить і сильна нога: крайній захисник не на своєму фланзі грає трохи слабше, а вінгер з «оберненою» ногою (лівша справа, правша зліва) — трохи сильніше. Рейтинг у картці не змінюється, різниця працює лише в симуляції.</p></details>
       <details><summary>Що таке «хімія»?</summary><p>Троє й більше гравців одного клубу грають разом краще, а якщо вони ще й з одного сезону — ще трохи краще. Бонус видно перед сезоном у рядку «Хімія».</p></details>
-      <details><summary>Що таке xP, шанси й «везіння»?</summary><p>xP — скільки очок твій склад у середньому набирає проти цих суперників за 300 симуляцій сезону. Шанси (чемпіон, Ліга чемпіонів, єврокубки, виліт) — як часто він так фінішує в цих симуляціях. Навіть у скромного складу є шанс на «сезон-диво», а в сильного — рідкісний «золотий сезон», коли все йде в ворота й 30 перемог із 30 стають реальними. Суперники теж щоразу грають по-різному: буває, що фаворити провалюють сезон. xG — очікувані голи. Везіння — різниця між набраними очками й xP. Після сезону поруч із результатом — прогноз місця й вердикт: «Усе за сценарієм», «Краще за прогноз» чи «Провал сезону».</p></details>
+      <details><summary>Що таке xP, шанси й «везіння»?</summary><p>xP — скільки очок твій склад у середньому набирає проти цих суперників за 300 симуляцій сезону. Шанси (чемпіон, Ліга чемпіонів, єврокубки, виліт) — як часто він так фінішує в цих симуляціях. Навіть у скромного складу є шанс на «сезон-диво», а в сильного — рідкісний «золотий сезон», коли все йде в ворота й 30 перемог із 30 стають реальними. Суперники теж щоразу грають по-різному: буває, що фаворити провалюють сезон. xG — очікувані голи. Везіння — різниця між набраними очками й xP. Після сезону поруч із результатом — прогноз місця й вердикт — від «Перевершили себе» до «Провал сезону».</p></details>
       <details><summary>Як визначаються місця при рівності очок?</summary><p>За регламентом УПЛ: очки в особистих зустрічах → різниця м'ячів в особистих → забиті в особистих → загальна різниця м'ячів → загальна кількість забитих. За 1-ше місце — «золотий матч», за інші — жереб.</p></details>
-      <details id="vdQ"><summary>Що таке «Виклик дня»?</summary><p>Щодня — нова умова на склад, привʼязана до події: день народження, матч, історія УПЛ. Збери 11 гравців так, щоб виконати обовʼязкову умову, — тоді сезон зіграється, а виклик зарахується. Рахунок — скільки з 11 гравців підходять під умову чи бонус: 4 — бронза, 6 — срібло, 9 — золото, 11 — «Ідеально». На день 5 спроб, рахується краща; без умови спроба згорає. «Гравець клубу» — той, хто зіграв за клуб хоча б один матч в УПЛ або є в його заявці на поточний сезон. Пропущені дні можна зіграти в архіві, але серію тримає лише виклик у свій день: один пропущений день на тиждень прощається (заморозка).</p></details>
+      <details id="vdQ"><summary>Що таке «Виклик дня»?</summary><p>Щодня — нова умова на склад, прив'язана до події: день народження, матч, історія УПЛ. Якщо в події є гравець, він уже стоїть у складі й іде в залік. Збери решту так, щоб виконати обов'язкову умову, — тоді сезон зіграється, а виклик зарахується; не виконав — спроба згорає. Рахунок — скільки з 11 гравців підходять під умову чи бонус: 4 — бронза, 6 — срібло, 9 — золото, 11 — «Ідеально».</p><p>На день — 5 спроб, рахується краща. Збираєш, як у «Грати»: «Звичайний», 2 перекручування, усі роки. «Гравець клубу» — той, хто зіграв за клуб хоча б один матч в УПЛ або є в його заявці на поточний сезон. Сезон виклику йде в таблицю «За весь час», але не в ліги чатів.</p></details>
+      <details><summary>Що за вогник у шапці?</summary><p>Це серія «Виклику дня»: скільки днів поспіль ти зарахував виклик саме в його день. Один пропущений день на тиждень прощається. Пропущені дні можна зіграти в «Архіві викликів» на головній, але в серію вони не йдуть. За серію даються трофеї, тож щоб не загубити її при зміні телефона, увійди.</p></details>
       <details data-pick hidden><summary>Що таке «Вибір сезону»?</summary><p>Колесо дає лише клуб, а сезон обираєш сам — з трьох випадкових сезонів цього клубу. Перекручувань немає, назад не повернешся. Результат іде в загальну таблицю з позначкою режиму.</p></details>
-      <details><summary>Що таке «Один клуб»?</summary><p>Обираєш клуб — і збираєш найкращу 11-ку з усіх його сезонів в УПЛ. Колесо дає лише сезони цього клубу. У кожного клубу свої рекорди: набери більше очок, ніж клуб у найкращому сезоні, і менше, ніж у найгіршому, — і клуб пройдено. Складність дуже залежить від клубу, тому таблиця окрема.</p></details>
-      <details><summary>Як грати з друзями?</summary><p>«Ліга з друзями» на головній: створи лігу й надішли посилання в чат. 11×11 — ліга на кілька днів: щодня спроба, очки сумуються. 5×5 — турнір: кожен збирає п'ятірку, а коли збір закінчиться, п'ятірки грають одна з одною. У Telegram-чаті додай бота @upl30_bot, зроби його адміністратором і напиши /league — буде ліга чату. Щодня в лігу йде найкращий сезон із перших трьох спроб у «Грати» (класика, звичайна складність, усі роки; спроба зараховується, щойно запущено сезон, навіть якщо його не дограно); таблиці твоїх чатів — у «Таблиці» → «Мої чати». А ще — кнопка «Кинути виклик другу» після сезону. «Поділитися» надсилає картку з результатом прямо в чат.</p></details>
-      <details><summary>Чи треба реєструватися?</summary><p>Ні. Вхід через Google або Telegram потрібен, щоб трофеї, серія й рекорди не загубилися й були на всіх пристроях. Ім'я одне на всі таблиці — змінити його можна в «Налаштуваннях» на своїй сторінці (тап по аватарці вгорі). Увійшов і через Google, і через Telegram — гра запитає «Це ти?» і об'єднає історію.</p></details>
-      <details><summary>Що ви збираєте?</summary><p>Анонімно дивимося, куди натискають, щоб покращувати гру (Microsoft Clarity). Якщо увійдеш — ім'я та ідентифікатор входу. Пошту — лише якщо сам впишеш її на своїй сторінці для новин. Паролів не бачимо. Усе своє можна стерти кнопкою «Видалити акаунт» на своїй сторінці. <a href="privacy.html">Докладніше</a>.</p></details>
-      <details><summary>Звідки дані?</summary><p>Склади, матчі, голи та підсумкові таблиці всіх сезонів Вищої ліги й Прем'єр-ліги 1992–2026 з відкритих джерел. Асисти — з 2012/13 і за 2021/22, сухі матчі до 2012 — оцінка за командною статистикою (≈).</p></details>
+      <details><summary>Що таке «Один клуб»?</summary><p>Обираєш клуб — і збираєш найкращу 11-ку з усіх його сезонів в УПЛ: колесо дає лише сезони цього клубу. Суперники — «Ліга культових клубів». У кожного клубу два рекорди: набери більше очок, ніж клуб у найкращому сезоні, і менше, ніж у найгіршому, — і клуб пройдено. За кожен рекорд — трофей із назвою клубу («Найкращий сезон в історії Динамо», «Найгірший сезон в історії Динамо»). Інших трофеїв у цьому режимі немає, а вже здобуті лишаються. Складність дуже залежить від клубу, тому таблиця окрема.</p></details>
+      <details><summary>Як отримати трофеї?</summary><p>Трофеї даються за сезон: місце, рахунки, серії матчів, бомбардирів, склад (клуби, епохи, земляки) і ще багато чого. Умови відкритих трофеїв — у «Трофеях», а секретні відкриваються, лише коли їх здобудеш. Колір картки — клас трофея (основний, з друзями, секретний), слово під описом — рідкість, тобто частка гравців, які його вже мають: рідкісний — менше 20%, епічний — менше 5%, легендарний — менше 1%. Деякі трофеї можна здобувати знову — тоді на картці лічильник ×N.</p></details>
+      <details><summary>Що таке «Твої цифри»?</summary><p>Розділ на твоїй сторінці, коли зіграно 5 сезонів і більше: твій стиль гри, рекорд, «Твоя 11-ка» з гравців, яких ти береш найчастіше, ключові гравці, ті, кого колесо пропонувало, а ти не брав, і клуби, з яких ти збираєш склад. Бачиш його лише ти.</p></details>
+      <details><summary>Як грати з друзями?</summary><p>«Ліга з друзями» на головній: створи лігу, задай правила й надішли посилання в чат. Для ліг потрібен вхід через Google або Telegram. 11×11 — ліга на 1, 3 чи 7 днів: щодня тур з однією чи трьома спробами, очки сумуються або даються за місце в турі. 5×5 — турнір до 10 гравців: кожен збирає п'ятірку, склади суперників видно лише після турніру, а коли збір закінчиться, п'ятірки грають одна з одною. Внизу сторінки ліги творець може її видалити, а учасник — вийти; кілька секунд дію можна скасувати кнопкою «Повернути».</p><p>Ще простіше — «Кинути виклик другу» після сезону: друг крутить те саме колесо з тією самою схемою, хто набере більше очок. «Поділитися» надсилає картку з результатом прямо в чат.</p></details>
+      <details><summary>Як працює ліга в Telegram-чаті?</summary><p>Додай бота @upl30_bot у групу, зроби його адміністратором (досить права закріплювати повідомлення) і напиши /league — бот створить лігу й закріпить табло. Відкривай гру кнопкою під табло. Щодня в лігу йде найкращий сезон із твоїх перших трьох спроб у «Грати» (класика, «Звичайний», усі роки) на всіх пристроях разом; спроба зараховується, щойно запущено сезон, навіть якщо його не дограно. Увечері бот підбиває підсумок: хто виграв день. Таблиці твоїх чатів — у «Таблиці» → «Мої чати», там же можна вийти з ліги чату.</p></details>
+      <details><summary>Чи треба реєструватися?</summary><p>Ні, грати можна й так. Вхід через Google або Telegram потрібен для ліг з друзями й щоб трофеї, серія та рекорди не загубилися й були на всіх пристроях. Ім'я одне на всі таблиці й ліги: латиницею, змінити його можна раз на 30 днів у «Налаштуваннях» на своїй сторінці (тап по аватарці вгорі). Увійшов і через Google, і через Telegram — гра запитає «Це ти?» і об'єднає історію.</p></details>
+      <details><summary>Що ви збираєте?</summary><p>Анонімно дивимося, куди натискають, щоб покращувати гру (Microsoft Clarity; у Telegram її немає). Зберігаємо зіграні сезони й трофеї, а якщо увійдеш — ім'я та ідентифікатор входу. Пошту — лише якщо сам впишеш її на своїй сторінці для новин. Паролів не бачимо. Іншим видно твоє ім'я, результати й склади в таблицях і лігах, шафу трофеїв і улюблений клуб; історію сезонів і «Твої цифри» бачиш лише ти. Усе своє можна стерти кнопкою «Видалити акаунт…» у «Налаштуваннях» на своїй сторінці. <a href="privacy.html">Докладніше</a>.</p></details>
+      <details><summary>Звідки дані?</summary><p>Склади, матчі, голи та підсумкові таблиці всіх сезонів Вищої ліги й Прем'єр-ліги з 1992/93 з відкритих джерел, а поточний сезон 2026/27 — за зіграними турами. Асисти — з 2012/13 і за 2021/22, сухі матчі до 2012 — оцінка за командною статистикою (≈). Дати народження, громадянство й сильна нога — з профілів гравців; заявки клубів оновлюємо після кожного трансферного вікна.</p></details>
     </div>
     </details>
   </section>
@@ -1317,7 +1353,7 @@ h3,.sec0,#s1 .sec0,.pgh,.trleg .h{font-size:var(--fs-footnote);font-weight:var(-
   <div class="acts"><button class="ft-send" id="fbSend" type="submit">Надіслати</button><button class="ft-cancel" id="fbCancel" type="button">Скасувати</button></div></form>
 <div class="ft-done" id="fbDone" hidden><b>✓</b><span>Дякуємо! Прочитаємо найближчим часом</span></div>
 <div class="ft-pills"><button class="ft-pill" id="fbBtn" type="button"><!--i:mail-->Відгук і баги</button><a class="ft-pill" id="ftBot" href="https://t.me/upl30_bot" target="_blank" rel="noopener"><!--i:telegram-->Telegram-бот</a></div>
-<div class="foot ft-small"><a href="#" id="newsBtn">Що нового у версії 0.88.2<b id="newsDot" hidden></b></a><a href="privacy.html">Конфіденційність</a><a href="terms.html">Умови використання</a></div>
+<div class="foot ft-small"><a href="#" id="newsBtn">Що нового у версії 0.89<b id="newsDot" hidden></b></a><a href="privacy.html">Конфіденційність</a><a href="terms.html">Умови використання</a></div>
 <div class="foot ft-copy">© 2026 30-0 УПЛ · неофіційний фан-проєкт <a href="#" id="themeBtn" class="thm" role="switch" aria-checked="false" aria-label="Світла тема"></a></div>
 <p class="ft-legal">30-0 УПЛ — незалежний фан-проєкт: футбольний драфт і симулятор сезону. Він не пов'язаний з Українською Прем'єр-лігою, Українською асоціацією футболу, клубами, футболістами, їхніми об'єднаннями чи іншими організаціями й не схвалений ними. Назви клубів, імена футболістів, рейтинги, статистику й дані сезонів використано лише з інформаційною та довідковою метою. Офіційні логотипи, емблеми та фото футболістів не використовуються. Усі торговельні марки належать їхнім власникам.</p>
 <div class="ft-cred">Шрифт KyivType Sans © Дмитро Растворцев (айдентика Києва)<br>Іконки: Material Design Icons (Apache 2.0), логотип Telegram — Font Awesome Free (CC BY 4.0)</div>
@@ -1656,7 +1692,7 @@ const ocSeasons=n=>`${n} ${plUk(n,'сезон','сезони','сезонів')}
 // record from a season of other length or with 2 points per win (1992/93, 1993/94) gets a footnote
 const ocOdd=(y,g)=>g!==30||y<=1993;
 function ocTile(k,m){const st=ocState(k.c,m),rec=CLUB_REC[k.c];
-  const right=st.s==='done'?'<span class="ocdone">✓ Пройдено</span>':(st.b||st.w)?`<span class="ocbd">${st.b?'<i title="Кращий сезон в історії клубу">🏅</i>':''}${st.w?'<i title="Гірший сезон в історії клубу">🪦</i>':''}</span>`:'';
+  const right=st.s==='done'?'<span class="ocdone">✓ Пройдено</span>':(st.b||st.w)?`<span class="ocbd">${st.b?'<i title="Найкращий сезон в історії клубу">🏅</i>':''}${st.w?'<i title="Найгірший сезон в історії клубу">🪦</i>':''}</span>`:'';
   return `<button type="button" class="oct${st.s==='done'?' cmp':''}${right?' bdg':''}" data-c="${esc(k.c)}" data-s="${st.s}" style="${ocPal(k.c)}">${right}<small>${rec?ocSeasons(k.k):'новачок'}</small><b>${esc(k.n)}</b></button>`;}
 function ocFilter(){const g=document.getElementById('ocGrid');if(!g)return;
   for(const t of g.children)t.hidden=OC_FILTER!=='all'&&t.dataset.s!==OC_FILTER;
@@ -1666,7 +1702,7 @@ function renderOc(){const el=document.getElementById('oc');const m=ocMine(),list
   const n=list.filter(k=>CLUB_REC[k.c]).length;
   el.innerHTML=`<h1>Один клуб</h1><p class="lead">Обери клуб і збери XI лише з тих, хто за нього грав в УПЛ.</p>
 <details><summary>Як це працює</summary><p>Колесо дає тільки сезони обраного клубу, гравців береш лише з них. Сезон — 30 турів.</p><p>У кожного клубу свої рекорди в УПЛ: найкращий і найгірший сезон за очками. Побий обидва — і клуб пройдено. Новачки рекордів ще не мають.</p></details>
-<details><summary>Трофеї режиму</summary><ul><li>🏅 <b>Кращий сезон в історії клубу</b> — набери більше очок, ніж клуб будь-коли в УПЛ.</li><li>🪦 <b>Гірший сезон в історії клубу</b> — набери менше очок, ніж у найгіршому сезоні клубу.</li><li>✓ <b>Пройдено</b> — обидва рекорди клубу побиті.</li></ul></details>
+<details><summary>Трофеї режиму</summary><ul><li>🏅 <b>Найкращий сезон в історії клубу</b> — набери більше очок, ніж клуб будь-коли в УПЛ.</li><li>🪦 <b>Найгірший сезон в історії клубу</b> — набери менше очок, ніж у найгіршому сезоні клубу.</li><li>✓ <b>Пройдено</b> — обидва рекорди клубу побиті.</li></ul><p>Інших трофеїв у цьому режимі немає: тут змагаєшся лише з історією клубу.</p></details>
 <div class="occ" id="ocCnt"><span>🏅 ${r}/${n} ${plUk(n,'рекорд','рекорди','рекордів')}</span><span>🪦 ${w}/${n} найгірших</span><span class="${d?'ok':''}">✓ ${d} ${plUk(d,'клуб','клуби','клубів')} пройдено</span></div>
 <div class="seg ocf" id="ocSeg" role="radiogroup" aria-label="Фільтр клубів">${OC_FILTERS.map(([f,t])=>`<button type="button" role="radio" data-f="${f}">${t}</button>`).join('')}</div>
 <div class="ocg" id="ocGrid">${list.map(k=>ocTile(k,m)).join('')}</div>`;
@@ -1702,7 +1738,7 @@ function renderOcRes(r){const el=document.getElementById('ocRes');const o=r&&r.o
   else{const best=o.pts>rec[0],worst=o.pts<rec[3];
     if(!best&&!worst)h=`<p class="ocnote">${esc(k.n)}: рекорд клубу — ${rec[0]} оч. (${seasonLabel(rec[1])}), найгірший — ${rec[3]} (${seasonLabel(rec[4])}).</p>`;
     else{const left=a.s==='done'?(o.before.s!=='done'?'✓ Клуб пройдено: обидва рекорди побиті!':'Клуб уже пройдено.'):a.b?`Залишився найгірший сезон: менше ${rec[3]} оч.`:`Залишився рекорд: більше ${rec[0]} оч.`;
-      h=`<div class="ocr"><div class="big" aria-hidden="true">${best?'🏅':'🪦'}</div><small>${esc(k.n)}</small><h3>${best?'Кращий сезон в історії клубу!':'Гірший сезон в історії клубу!'}</h3>`
+      h=`<div class="ocr"><div class="big" aria-hidden="true">${best?'🏅':'🪦'}</div><small>${esc(k.n)}</small><h3>${best?'Найкращий сезон в історії клубу!':'Найгірший сезон в історії клубу!'}</h3>`
        +`<p><b>${o.pts} ${ptsWord(o.pts)}</b> — ${best?'більше':'менше'}, ніж клуб набирав будь-коли в УПЛ (${best?rec[0]:rec[3]}, ${seasonLabel(best?rec[1]:rec[4])}).</p><p class="ft">${left}</p></div>`;}}
   el.innerHTML=h;el.hidden=false;}
 
@@ -2201,7 +2237,7 @@ const TROPHIES=[
   {id:"hardchamp",i:"🔥",n:"Без права на помилку",d:"Стань чемпіоном у режимі «Складний»",cat:"modes",rep:1,t:c=>c.mode==='hard'&&notAnti(c)&&c.r.place===1},
   {id:"hcchamp",i:"🙈",n:"Кіт у мішку",d:"Стань чемпіоном у «Хардкорі» (режиму вже немає)",cat:"modes",rep:1,gone:1,t:c=>c.mode==='hardcore'&&notAnti(c)&&c.r.place===1},
   {id:"derbychamp",i:"⚡",n:"Класика жанру",d:"Стань чемпіоном у «Класичному дербі» (режим зараз недоступний)",cat:"modes",rep:1,gone:1,t:c=>c.format==='derby'&&c.r.place===1},
-  {id:"oneclubchamp",i:"❤️",n:"Два кольори",d:"Стань чемпіоном у режимі «Один клуб»",cat:"modes",rep:1,t:c=>c.format==='oneclub'&&c.r.place===1},
+  {id:"oneclubchamp",i:"❤️",n:"Два кольори",d:"Стань чемпіоном у режимі «Один клуб»",cat:"modes",gone:1,rep:1,t:c=>c.format==='oneclub'&&c.r.place===1},
   {id:"antilast",i:"⬇️",n:"Нижче плінтуса",d:"Антисезон: фініш останнім",cat:"modes",rep:1,t:c=>c.format==='anti'&&c.r.place===16},
   {id:"anti0",i:"🪦",n:"Нуль без палички",d:"Антисезон: програй усі 30 матчів",cat:"modes",t:c=>c.format==='anti'&&c.r.L===30},
   {id:"antidry",i:"🥖",n:"Сухий пайок",d:"Антисезон: забий 5 голів або менше",cat:"modes",t:c=>c.format==='anti'&&c.r.gf<=5},
@@ -2341,22 +2377,27 @@ const TROPHIES=[
   {id:"crayfish",i:"🦞",n:"Як рак свисне",d:"Перша перемога — лише після 10-го туру",cat:"season",rep:1,t:c=>notAnti(c)&&full(c)&&firstW(c)>=10},
   {id:"budmo",i:"🥂",n:"Будьмо!",d:"10 гравців забили щонайменше по 2 голи за сезон",cat:"players",rep:1,t:c=>notAnti(c)&&mixed(c)&&c.pl.filter(p=>(p.g||0)>=2).length>=10},
 ];
+// one club: only the club's own records (best / worst UPL season by points); ids ob_/ow_ + club code, shown once earned;
+const OC_GEN={"arsenal-kyiv":"«Арсенала»","borysfen-boryspil":"«Борисфена»","bukovyna-chernivtsi":"«Буковини»","veres-rivne":"«Вереса»","volyn-lutsk":"«Волині»","vorskla-poltava":"«Ворскли»","hoverla-uzhhorod":"«Говерли»","desna-chernihiv":"«Десни»","dynamo-kyiv":"«Динамо»","dnipro":"«Дніпра»","zirka-kropyvnytskyi":"«Зірки»","zorya-luhansk":"«Зорі»","inhulets-petrove":"«Інгульця»","karpaty-lviv":"«Карпат»","kolos-kovalivka":"«Колоса»","kremin-kremenchuk":"«Кременя»","kryvbas":"«Кривбасу»","livyi-bereh-kyiv":"«Лівого Берега»","lnz-cherkasy":"ЛНЗ","mariupol":"«Маріуполя»","metalist-kharkiv":"«Металіста»","metalist-1925":"«Металіста 1925»","metalurh-donetsk":"«Металурга Д.»","metalurh-zaporizhzhia":"«Металурга З.»","minaj":"«Миная»","naftovyk-okhtyrka":"«Нафтовика-Укрнафти»","nyva-vinnytsia":"«Ниви В.»","nyva-ternopil":"«Ниви Т.»","obolon-kyiv":"«Оболоні»","oleksandriya":"«Олександрії»","olimpik-donetsk":"«Олімпіка»","polissya-zhytomyr":"«Полісся»","prykarpattia":"«Прикарпаття»","pfk-lviv":"ПФК «Львів»","rukh-lviv":"«Руху»","sevastopol":"«Севастополя»","dnipro-1":"«Дніпра-1»","mykolaiv":"«Миколаєва»","stal-alchevsk":"«Сталі А.»","stal-kamianske":"«Сталі К.»","tavriya-simferopol":"«Таврії»","temp-shepetivka":"«Темпу»","torpedo-zaporizhzhia":"«Торпедо»","fc-lviv-2008":"ФК «Львів»","fc-kharkiv":"ФК «Харків»","cska-kyiv":"ЦСКА","chornomorets-odesa":"«Чорноморця»","shakhtar-donetsk":"«Шахтаря»"};   // club code -> genitive for "the history of <club>"; every club with records must be here (trophies089)
+if(typeof CLUB_REC!=='undefined')for(const k of ocClubs()){const rec=CLUB_REC[k.c];if(!rec)continue;const id=k.c.replace(/-/g,'_');
+  TROPHIES.push({id:'ob_'+id,i:"🏅",n:`Найкращий сезон в історії ${OC_GEN[k.c]||'«'+k.n+'»'}`,d:`«Один клуб»: набери більше ${rec[0]} очок — рекорду клубу в УПЛ (${seasonLabel(rec[1])})`,cat:"modes",rep:1,oc:k.c,t:c=>c.format==='oneclub'&&c.club===k.c&&c.r.pts>rec[0]},
+    {id:'ow_'+id,i:"🪦",n:`Найгірший сезон в історії ${OC_GEN[k.c]||'«'+k.n+'»'}`,d:`«Один клуб»: набери менше ${rec[3]} очок — найгіршого сезону клубу в УПЛ (${seasonLabel(rec[4])})`,cat:"modes",rep:1,oc:k.c,t:c=>c.format==='oneclub'&&c.club===k.c&&c.r.pts<rec[3]});}
 const MILESTONES=[[1,"🌱","Перший сезон"],[5,"⚽","5 сезонів"],[10,"🎫","10 сезонів"],[25,"🎗️","25 сезонів"],[50,"🥇","Півсотні"],[100,"💯","Клуб 100"],[250,"🏛️","250 сезонів"]];
 function trStore(){const s=lsGet("upl30_tr")||{};s.t=s.t||{};s.seasons=s.seasons||0;s.dailies=s.dailies||0;return s;}
 function trStreak(){return streakInfo().count;}
 // season context -> trophies earned (no write)
-function trEval(c){const got=[];for(const t of TROPHIES){if(t.t){let ok=false;try{ok=!!t.t(c);}catch(e){}if(ok)got.push(t.id);}}return got;}
+function trEval(c){const got=[];for(const t of TROPHIES){if(c.format==="oneclub"&&!t.oc)continue;if(t.t){let ok=false;try{ok=!!t.t(c);}catch(e){}if(ok)got.push(t.id);}}return got;}
 function trCtxNow(r){
   const m=MODES[S.mode];
   const xi=S.slots.map(s=>{const p=s.player;const q=PERSON[p.id]||{};return {name:p.name,id:p.id,slot:s.slot,main:p.main,r0:p.r0,r:p.r,nat:p.nat??q.nat??-1,by:p.by||q.by||0,cc:p.cc||(DATA.clubs.find(x=>x.n===p.club&&x.y===p.y)||{}).c,y:p.y};});
   const pl=r.players.map(p=>({...p,r0:(xi.find(x=>x.id===p.id)||{}).r0||p.r}));
-  return {r,xi,pl,mode:S.mode,format:S.format,reveal:!!(m.reveal||m.showRatings)};
+  return {r,xi,pl,mode:S.mode,format:S.format,club:S.format==='oneclub'?S.club:null,reveal:!!(m.reveal||m.showRatings)};
 }
 function trCtxRow(row){   // from a seasons log row (for retroactive awarding)
   const xi=(row.xi||[]).map(p=>{const q=PERSON[p.id]||{};const cc=(DATA.clubs.find(x=>x.n===p.c&&x.y===p.y)||{}).c;return {name:p.n,id:p.id,slot:p.slot,main:q.main,r0:p.r0??p.r,r:p.r,nat:q.nat??-1,by:q.by||0,cc,y:p.y};});
   const pl=(row.xi||[]).map(p=>({id:p.id,slot:p.slot,g:p.g||0,a:p.a||0,rt:p.rt||0,form:p.f||0,r0:p.r0??p.r}));
   const r={W:row.w,D:row.d,L:row.l,pts:row.pts,place:row.place,gf:row.gf,ga:row.ga,xp:row.xp??row.pts,golden:!!row.golden};
-  const m=MODES[row.mode]||{};return {r,xi,pl,mode:row.mode,format:row.format,reveal:!!(m.reveal||m.showRatings)};
+  const m=MODES[row.mode]||{};return {r,xi,pl,mode:row.mode,format:row.format,club:row.format==='oneclub'?row.club:null,reveal:!!(m.reveal||m.showRatings)};
 }
 // record a season into the collection; returns {got:[ids], fresh:[new ids]}; sync:false - the caller sends fresh ids itself (with the season)
 function trAward(c,{daily,sync=true}={}){
@@ -2365,8 +2406,10 @@ function trAward(c,{daily,sync=true}={}){
   const add=id=>{const e=s.t[id]||(s.t[id]={n:0,at:today});if(!e.n)fresh.push(id);e.n++;};
   for(const id of got)add(id);   // all trophies per season are repeatable: xN counter
   const ctxS={streak:trStreak(),dailies:s.dailies};
-  for(const t of TROPHIES)if(t.st&&t.st(ctxS)&&!(s.t[t.id]&&s.t[t.id].n)){add(t.id);got.push(t.id);}
-  for(const [k] of MILESTONES)if(s.seasons===k){add('ms'+k);got.push('ms'+k);}
+  const has=id=>s.t[id]&&s.t[id].n;
+  if(c.format!=='oneclub'){   // one club awards only its club record trophies; a milestone passed there comes with the next other season
+    for(const t of TROPHIES)if(t.st&&t.st(ctxS)&&!has(t.id)){add(t.id);got.push(t.id);}
+    for(const [k] of MILESTONES)if(s.seasons>=k&&!has('ms'+k)){add('ms'+k);got.push('ms'+k);}}
   lsSet("upl30_tr",s);if(fresh.length&&sync)trSync(fresh);
   return {got,fresh};
 }
@@ -2420,7 +2463,7 @@ async function openTrophies(){screenTag('trophies');
   const box=document.getElementById('viewBox'),body=document.getElementById('viewBody');document.getElementById('viewTitle').textContent='Трофеї';box.hidden=false;
   const draw=()=>{const s=trStore();const st={streak:trStreak(),dailies:s.dailies};
     const pctOf=id=>TR_PCT&&TR_PCT.players>=10?100*((TR_PCT.t||{})[id]||0)/TR_PCT.players:null;
-    const got=t=>s.t[t.id]&&s.t[t.id].n;const LIVE=TROPHIES.filter(t=>!t.gone||got(t));const total=LIVE.length,have=LIVE.filter(got).length;
+    const got=t=>s.t[t.id]&&s.t[t.id].n;const LIVE=TROPHIES.filter(t=>!(t.gone||t.oc)||got(t));const total=LIVE.length,have=LIVE.filter(got).length;
     let h=`<p class="muted" style="margin:0">Відкрито ${have} з ${total} · зіграно сезонів: ${s.seasons}</p>`;
     for(const [kind,title] of TR_KINDS){const list=LIVE.filter(t=>trKind(t)===kind&&(!t.sec||(s.t[t.id]&&s.t[t.id].n)));
       const hiddenN=TROPHIES.filter(t=>trKind(t)===kind&&t.sec&&!(s.t[t.id]&&s.t[t.id].n)).length;
@@ -2826,7 +2869,7 @@ document.addEventListener('click',e=>{const sm=e.target.closest('summary');const
 const LEVEL={normal:['Звичайний','lv-n'],hard:['Складний','lv-h'],hardcore:['Хардкор','lv-x'],daily:['Драфт дня','lv-d'],pick:['Вибір сезону','lv-s'],practice:['Тренування','lv-n']};
 const lvChip=m=>{const l=LEVEL[m];return l&&m!=='normal'&&m!=='practice'?`<b class="lvt ${l[1]}">${l[0]}</b>`:'';};   // plain word, only for non-default modes
 const BOARDS={
-  main:{name:'Загальна',q:'format=eq.classic&mode=in.(normal,hard,hardcore,daily,pick)',note:PICK_ON?'Класика, драфт дня й «Вибір сезону».':'Класика й драфт дня.'},
+  main:{name:'Загальна',q:'format=eq.classic&mode=in.(normal,hard,hardcore,daily,pick)',note:PICK_ON?'Класика, виклик дня й «Вибір сезону».':'Класика й виклик дня.'},
   derby:{hidden:true,name:'Дербі',q:'format=eq.derby',note:'Лише «Динамо» і «Шахтар». Тут 30-0 приблизно вдесятеро легше, ніж у класиці, тому таблиця окрема.'},
   oneclub:{name:'Один клуб',q:'format=eq.oneclub',note:'Найкращий XI одного клубу. Складність дуже залежить від клубу.'},
   anti:{hidden:true,name:'Антисезон',q:'format=eq.anti',asc:true,note:'Навпаки: чим менше очок, тим вище. Мета — 0-30.'},
@@ -3050,7 +3093,7 @@ function ppRender(){
   const best=p.best_classic!=null?p.best_classic:(own&&BEST.classic?BEST.classic.pts:null);
   const streak=own?Math.max(si.best||0,p.streak_best||0):p.streak_best;
   let h='';
-  if(guest)h+=`<div class="pp-warn"><div class="h">${icon('alert-outline')}Усе зберігається лише на цьому пристрої</div><p>Очистиш кеш браузера чи Telegram, зміниш телефон, браузер або пристрій — і трофеї, рекорди та серія драфту дня зникнуть. Результати в таблицях залишаться, але не будуть пов’язані з тобою.</p><div class="row"><button class="primary" id="ppLogin">Увійти</button></div></div>`;
+  if(guest)h+=`<div class="pp-warn"><div class="h">${icon('alert-outline')}Усе зберігається лише на цьому пристрої</div><p>Очистиш кеш браузера чи Telegram, зміниш телефон, браузер або пристрій — і трофеї, рекорди та серія зникнуть. Результати в таблицях залишаться, але не будуть пов’язані з тобою.</p><div class="row"><button class="primary" id="ppLogin">Увійти</button></div></div>`;
   h+=`<div class="pp-head">${avatarSvg(seed,64)}<div style="min-width:0"><div class="pp-name"><h1 id="ppName">${wait&&!name?'<i class="sk w60"></i>':esc(name)}</h1>${own&&ONLINE&&PLAYER?`<button id="ppEdit" title="Змінити ім'я" aria-label="Змінити ім'я">${icon('pencil')}</button>`:''}</div><div class="pp-since">${p.since?'грає з '+fmtLong(p.since):st.loading?'<i class="sk w40"></i>':''}</div></div></div>`;
   if(p.deleted)h+=`<p class="muted" style="margin-top:var(--sp-4)">Гравець видалив акаунт. Його результати лишились у таблицях під анонімним іменем.</p>`;
   else{
@@ -3075,15 +3118,16 @@ function ppRender(){
 }
 // best and worst XI per mode (own page only)
 const PP_BUCKETS=[['classic','Класика','trophy'],['pick','Вибір сезону','calendar-check'],['daily','Драфт дня','calendar-star'],['derby','Дербі','lightning-bolt'],['oneclub','Один клуб','heart'],['anti','Антисезон','arrow-down-bold'],['legends','Ліга легенд','crown']];
-function ppXiRow(x,kind,label,icn){if(!x)return '';const sub=[`${numOr0(x.place)} місце`,`${numOr0(x.w)}-${numOr0(x.d)}-${numOr0(x.l)}`,esc(x.formation||''),x.avg!=null?`сер. ${esc(String(x.avg))}`:'',x.club&&CLUBN[x.club]?esc(CLUBN[x.club]):''].filter(Boolean).join(' · ');
-  return `<div class="pp-row" data-sid="${numOr0(x.id)}" role="button" tabindex="0">${ic(icn)}<div class="t"><b>${label} <em class="pp-k ${kind}">${kind==='best'?'найкращий':'найгірший'}</em></b><span>${sub}</span></div><span class="n${kind==='best'?' g':''}">${numOr0(x.pts)}<small>оч</small></span>${icon('chevron-right')}</div>`;}
+function ppXiRow(x,kind,label,icn){if(!x)return '';const grp=a=>a.filter(Boolean).join(' · ');   // two fixed groups, the second on its own line: no separator ever starts or ends a line
+  const sub=[grp([`${numOr0(x.place)} місце`,`${numOr0(x.w)}-${numOr0(x.d)}-${numOr0(x.l)}`,esc(x.formation||'')]),grp([x.avg!=null?`сер. ${esc(String(x.avg))}`:'',x.club&&CLUBN[x.club]?esc(CLUBN[x.club]):''])].filter(Boolean).map(v=>`<i class="nm-sg">${v}</i>`).join('');
+  return `<div class="pp-row" data-sid="${numOr0(x.id)}" role="button" tabindex="0">${ic(icn)}<div class="t"><b><i class="nm-nw">${label}</i><em class="pp-k ${kind}">${kind==='best'?'найкращий':'найгірший'}</em></b><span>${sub}</span></div><span class="n${kind==='best'?' g':''}">${numOr0(x.pts)}<small>оч</small></span><span class="nm-go" aria-hidden="true">${icon('chevron-right')}</span></div>`;}
 function ppXiHtml(p){const b=p.best||{},w=p.worst||{};const rows=PP_BUCKETS.map(([k,l,i])=>ppXiRow(b[k],'best',l,i)+ppXiRow(w[k],'worst',l,i)).join('');
   return rows?`<div class="pp-sec"><h3>Найкращий і найгірший XI</h3></div><div class="pp-list">${rows}</div>`:'';}
 // trophy cabinet: filter by section (N/M), sort by rarity / recent
 function ppRenderCab(){
   const el=document.getElementById('ppCab');if(!el||!PP)return;const st=PP,own=st.own,have=ppHave();
   const mine=trStore().t;const got=t=>!!have[t.id];
-  const LIVE=TROPHIES.filter(t=>!t.gone||got(t));const total=LIVE.length,n=LIVE.filter(got).length;
+  const LIVE=TROPHIES.filter(t=>!(t.gone||t.oc)||got(t));const total=LIVE.length,n=LIVE.filter(got).length;
   const cats=[['all','Усі'],...TR_KINDS];
   const inCat=(t,c)=>c==='all'||trKind(t)===c;   // filters use the same three classes as colors
   let list=LIVE.filter(t=>inCat(t,st.f));
@@ -3094,19 +3138,21 @@ function ppRenderCab(){
   off.sort((a,b)=>rk(a)-rk(b));
   const cards=[...on,...off];const shown=st.all?cards:on;   // collapsed: unlocked only
   const card=t=>{const e=have[t.id];
-    if(!own&&t.sec&&e&&!(mine[t.id]&&mine[t.id].n))return `<div class="tro k-secret on sec"><span class="tri">${trBadge({id:'secret',cat:'secret'},true)}</span><div class="trt"><b>Секретний трофей</b><span>Відкрий його сам, щоб дізнатися, за що він</span><span class="trp">секретний${e.at?' · '+fmtShort(e.at):''}</span></div></div>`;
+    if(!own&&t.sec&&e&&!(mine[t.id]&&mine[t.id].n))return `<div class="tro k-secret on sec rt-secret"><span class="tri">${trBadge({id:'secret',cat:'secret'},true)}</span><div class="trt"><b>Секретний трофей</b><span>Відкрий його сам, щоб дізнатися, за що він</span><span class="trp"><span class="nm-sg nm-sg-r"><span class="nm-rw nm-rw-secret">Секретний</span></span>${e.at?`<span class="nm-sg">${fmtShort(e.at)}</span>`:''}</span></div></div>`;
     const tier=trTier(t),p=trPct(t.id);
-    const gem=e&&tier&&tier[1]!=='common';   // rarity from "rare" up: badge on the right, not inline
-    const meta=[t.sec?'секретний':tier&&!gem?tier[2]:'',p!=null&&!t.sec?(p===0?(e?(own?'ти серед перших':'серед перших'):'ще ніхто не відкрив'):`є в ${p<1?'<1':Math.round(p)}% гравців`):'',e&&e.at?fmtShort(e.at):''].filter(Boolean).join(' · ');
-    return `<div class="tro k-${trKind(t)}${e?' on':''}${t.sec?' sec':''}${tier&&e?' rt-'+tier[1]:''}" data-tr="${esc(t.id)}"><span class="tri">${trBadge(t,!!e)}</span><div class="trt"><b>${esc(t.n)}</b>${trQ(t)}<span>${esc(t.d)}</span>${meta||trBusy()&&!t.sec?`<span class="trp">${meta}${trBusy()&&!t.sec?(meta?' · ':'')+'<i class="sk"></i>':''}</span>`:''}</div>${gem?`<em class="gem rt-${tier[1]}">${tier[2]}</em>`:''}${e&&e.n>1?`<span class="trn">×${e.n}</span>`:''}</div>`;};
+    const word=(k,l)=>`<span class="nm-sg nm-sg-r"><span class="nm-rw nm-rw-${k}">${l}</span></span>`;
+    const segs=[p!=null&&!t.sec?(p===0?(e?(own?'ти серед перших':'серед перших'):'ще ніхто не відкрив'):`${p<1?'&lt;1':Math.round(p)}% гравців`):'',e&&e.at?fmtShort(e.at):''].filter(Boolean).map(x=>`<span class="nm-sg">${x}</span>`);
+    if(t.sec)segs.unshift(word('secret','Секретний'));else if(tier)segs.unshift(word(tier[1],tier[2]));   // rarity word on its own row, coloured by tier (secret has its own colour)
+    const sk=trBusy()&&!t.sec?'<i class="sk"></i>':'';
+    return `<div class="tro k-${trKind(t)}${e?' on':''}${t.sec?' sec':''}${t.sec?' rt-secret':tier?' rt-'+tier[1]:''}" data-tr="${esc(t.id)}"><span class="tri">${trBadge(t,!!e)}</span><div class="trt"><b>${esc(t.n)}<span class="nm-vh">. ${e?'Відкрито':'Ще не відкрито'}</span></b>${trQ(t)}<span>${esc(t.d)}</span>${segs.length||sk?`<span class="trp">${segs.join(' ')}${sk?(segs.length?' ':'')+sk:''}</span>`:''}</div>${e&&e.n>1?`<span class="trn">×${e.n}</span>`:''}</div>`;};
   const cnt=c=>{const l=LIVE.filter(t=>inCat(t,c));return `${l.filter(got).length}/${l.length}`;};
   // order: cards -> "+N secret" -> milestones -> collapse; secret row centered, badge aligned with text
   el.innerHTML=`<div class="pp-sec"><h3>Трофеї</h3><span class="best">Відкрито ${n} з ${total}</span></div><div class="pp-bar"><i style="width:${total?Math.round(100*n/total):0}%"></i></div>
     ${own&&n?`<button class="ghost wbtn" id="ppCabShare">${ic('bookshelf','sm')}Поділитися шафою</button><div id="ppCabOut" hidden class="pp-cabout"><img id="ppCabImg" alt="Шафа трофеїв"><div class="row"><button class="primary" id="ppCabSend" hidden>${ic('share-variant','sm')}Поділитися</button><span class="muted" id="ppCabMsg" style="font-size:var(--fs-footnote)"></span></div></div>`:''}
     ${st.all?`<div class="pp-filt" role="tablist">${cats.filter(([c])=>c==='all'||LIVE.some(t=>inCat(t,c))).map(([c,l])=>`<button class="chip${st.f===c?' onc':''}" data-f="${c}" role="tab" aria-selected="${st.f===c}">${l} <i>${cnt(c)}</i></button>`).join('')}</div>
     <div class="seg pp-sort"><button data-s="rare" class="${st.s==='rare'?'on':''}">За рідкістю</button><button data-s="recent" class="${st.s==='recent'?'on':''}">Нещодавні</button></div>`:''}
-    ${st.all&&shown.length?`<div class="trleg"><div class="h">Колір картки — клас трофея</div><div class="row">${[['base','Основний'],['friends','З друзями'],['secret','Секретний']].map(([k,l])=>`<span class="it k-${k}"><i class="sw"></i>${l}</span>`).join('')}</div><div class="h">Значок праворуч — рідкість</div><div class="row">${RARITY.slice(1).map(([,k,l])=>`<em class="gem rt-${k}">${l}</em>`).join('')}</div></div>`:''}
-    ${shown.length?`<div class="trg">${shown.map(card).join('')}</div>`:`<p class="pp-empty">${own?'Тут поки порожньо — зіграй сезон.':'Поки жодного трофея.'}</p>`}
+    ${st.all&&shown.length?`<div class="trleg"><div class="h">Колір картки — клас трофея</div><div class="row nm-lgr">${[['base','Основний'],['friends','З друзями'],['secret','Секретний']].map(([k,l])=>`<span class="it k-${k}"><i class="sw"></i>${l}</span>`).join('')}</div><div class="h">Рідкість</div><div class="row nm-lgr">${RARITY.slice(1).map(([,k,l])=>`<span class="it"><i class="nm-rl nm-rl-${k}" aria-hidden="true"></i><span class="nm-rw nm-rw-${k}">${l}</span></span>`).join('')}</div></div>`:''}
+    ${shown.length?`<div class="trg">${st.all&&on.length&&off.length?`<h3 class="nm-gh">Відкриті <i>${on.length}</i></h3>${on.map(card).join('')}<h3 class="nm-gh">Ще не відкриті <i>${off.length}</i></h3>${off.map(card).join('')}`:shown.map(card).join('')}</div>`:`<p class="pp-empty">${own?'Тут поки порожньо — зіграй сезон.':'Поки жодного трофея.'}</p>`}
     ${secOff&&own&&st.all?`<p class="trsec"><span>+${secOff} ${plUk(secOff,'секретний трофей чекає','секретні трофеї чекають','секретних трофеїв чекають')}</span>${icon('eye')}</p>`:''}
     ${own&&st.all?`<div class="row pp-ms">${MILESTONES.map(([k,,nm])=>{const e=have['ms'+k];return `<span class="chip ms${e?' onc':''}">${trBadge({id:'ms'+k,cat:'milestone'},!!e)}${nm}${!e&&trStore().seasons<k?` · ${trStore().seasons}/${k}`:''}</span>`;}).join('')}</div>`:''}
     ${cards.length>shown.length||st.all?`<button class="link0 pp-all" id="ppCabAll">${st.all?'Згорнути ▴':`Усі трофеї · ${total} ▾`}</button>`:''}`;
@@ -3160,12 +3206,12 @@ async function ppHistLoad(more){
     :(await playerRpc('my_seasons')).filter(r=>!r.practice).reverse().slice(off,off+10);}catch(e){if(!off){el.innerHTML='<p class="muted">Історія зараз недоступна.</p>';return;}}
   if(PP!==st)return;st.hist={rows:[...(off&&st.hist?st.hist.rows:[]),...rows],more:rows.length===10};
   const lab=r=>r.day?'Драфт дня':r.mode==='pick'?'Вибір сезону':(PP_BUCKETS.find(b=>b[0]===r.format)||[0,r.format])[1];
-  el.innerHTML=st.hist.rows.length?`<div class="pp-list">${st.hist.rows.map(r=>`<div class="pp-row h" data-sid="${numOr0(r.id)}" role="button" tabindex="0"><span class="d">${fmtShort(r.day||r.created_at)}</span><div class="t"><b><i class="mdot" style="background:${PP_MODE_DOT[r.day?'daily':r.mode==='pick'?'pick':r.format]||'var(--muted)'}"></i>${esc(lab(r))}</b><span>${numOr0(r.place)} місце · ${numOr0(r.w)}-${numOr0(r.d)}-${numOr0(r.l)}</span></div><span class="n">${numOr0(r.pts)}<small>оч</small></span>${icon('chevron-right')}</div>`).join('')}</div>${st.hist.more?'<button class="ghost wbtn" id="ppMore" style="margin-top:var(--sp-2)">Ще 10 сезонів</button>':''}`:'<p class="muted">Ще немає зіграних сезонів.</p>';
+  el.innerHTML=st.hist.rows.length?`<div class="pp-list">${st.hist.rows.map(r=>`<div class="pp-row h" data-sid="${numOr0(r.id)}" role="button" tabindex="0"><span class="d">${fmtShort(r.day||r.created_at)}</span><div class="t"><b><i class="mdot" style="background:${PP_MODE_DOT[r.day?'daily':r.mode==='pick'?'pick':r.format]||'var(--muted)'}"></i>${esc(lab(r))}</b><span>${numOr0(r.place)} місце · ${numOr0(r.w)}-${numOr0(r.d)}-${numOr0(r.l)}</span></div><span class="n">${numOr0(r.pts)}<small>оч</small></span><span class="nm-go" aria-hidden="true">${icon('chevron-right')}</span></div>`).join('')}</div>${st.hist.more?'<button class="ghost wbtn" id="ppMore" style="margin-top:var(--sp-2)">Ще 10 сезонів</button>':''}`:'<p class="muted">Ще немає зіграних сезонів.</p>';
   const m=document.getElementById('ppMore');if(m)m.onclick=()=>{m.disabled=true;ppHistLoad(true);};
 }
 // settings (own page only): shown expanded, list of rows like "Name > andré";
 // tap opens a bottom sheet with a field and Save (ppSheet). Separate Account block: sign-in method, sign out; at the bottom: delete account
-const ppRow=(id,k,sub,v,muted)=>`<button class="set-r" id="${id}"><span class="k">${k}<small>${sub}</small></span><span class="v${muted?' mu':''}">${esc(v)}</span>${icon('chevron-right')}</button>`;
+const ppRow=(id,k,sub,v,muted)=>`<button class="set-r" id="${id}"><span class="k">${k}<small>${sub}</small></span><span class="v${muted?' mu':''}">${esc(v)}</span><span class="nm-go" aria-hidden="true">${icon('chevron-right')}</span></button>`;
 function ppSettingsHtml(){
   const via=SESSION?((SESSION.user.app_metadata&&SESSION.user.app_metadata.provider)==='google'?'Google':'Telegram'):'';
   const team=lsGet('upl30_team')||'',mail=PLAYER&&PLAYER.contact_email||'';
@@ -3174,12 +3220,12 @@ function ppSettingsHtml(){
   h+=ppRow('ppRowTeam','Назва команди','на полі й у картці',team||'Твоя 11-ка',!team);
   if(PLAYER&&'contact_email' in PLAYER){h+=ppRow('ppRowMail','Пошта для новин','видно лише тобі',mail||'не вказано',!mail);
     h+=`<label class="set-r tg"><span class="k">Новини 30-0<small>великі оновлення, не частіше разу на місяць</small></span><input type="checkbox" role="switch" class="sw" id="ppNews"${PLAYER.news_optin?' checked':''}></label>`;}
-  if(TG_BOT)h+=`<a class="set-r" id="ppNotify" href="https://t.me/${TG_BOT}?start=notify" target="_blank" rel="noopener"><span class="k">Сповіщення в Telegram<small>підсумок дня в лігах і нагадування про серію — вмикаєш у боті</small></span>${icon('chevron-right')}</a>`;   // opt-in lives in the bot (/notify), off by default
+  if(TG_BOT)h+=`<a class="set-r" id="ppNotify" href="https://t.me/${TG_BOT}?start=notify" target="_blank" rel="noopener"><span class="k">Сповіщення в Telegram<small>підсумок дня в лігах і нагадування про серію — вмикаєш у боті</small></span><span class="nm-go" aria-hidden="true"><svg class="nm-ext" viewBox="0 0 12 12"><path d="M3 9l6-6M4 3h5v5"/></svg></span></a>`;   // opt-in lives in the bot (/notify), off by default
   h+=`</div><p class="pp-hint" id="ppSetMsg" hidden></p><div class="pp-sec"><h3>Акаунт</h3></div><div class="set-card">`;
   if(SESSION){const em=via==='Google'?(SESSION.user.email||''):acctName();
     h+=`<div class="set-r who"><i class="set-ic ${via==='Google'?'g':'t'}">${icon(via==='Google'?'google':'telegram')}</i><span class="k">Увійшов через ${via}<small>${esc(em)}</small></span></div>`+
-       `<button class="set-r" id="ppOut">${ic('logout')}<span class="k">Вийти</span>${icon('chevron-right')}</button>`;}
-  else h+=`<button class="set-r" id="ppLogin2"><span class="k">Увійти<small>щоб трофеї, рекорди й серія були на всіх пристроях</small></span>${icon('chevron-right')}</button>`;
+       `<button class="set-r nm-act" id="ppOut">${ic('logout')}<span class="k">Вийти</span></button>`;}
+  else h+=`<button class="set-r nm-act" id="ppLogin2"><span class="k">Увійти<small>щоб трофеї, рекорди й серія були на всіх пристроях</small></span></button>`;
   h+=`</div>`;
   if(PLAYER)h+=`<button class="pp-del" id="ppDel">${SESSION?'Видалити акаунт…':'Видалити мої дані…'}</button><div id="ppDelBox" hidden class="pp-delbox"><p>Ім'я, вхід і прив'язку цього пристрою буде стерто назавжди. Результати лишаться в таблицях під анонімним іменем, але вже не будуть пов’язані з тобою. Трофеї й серія на цьому пристрої теж зникнуть.</p><div class="row"><button class="danger" id="ppDelYes">Так, видалити</button><button class="ghost" id="ppDelNo">Скасувати</button></div><p class="muted" id="ppDelMsg" style="margin:0"></p></div>`;
   return h+`</div>`;}
@@ -3803,7 +3849,7 @@ function openAcct(){screenTag('account');
   const box=document.getElementById('viewBox'),body=document.getElementById('viewBody');document.getElementById('viewTitle').textContent='Акаунт';box.hidden=false;
   const msg=ACCT_MSG?`<p class="note">${esc(ACCT_MSG)}</p>`:'';
   if(SESSION){viewMode('');const u=SESSION.user;const via=(u.app_metadata&&u.app_metadata.provider)==='google'?'Google':(u.email||'').endsWith('@users.upl-30-0.vercel.app')?'Telegram':'пошту';
-    body.innerHTML=`${msg}<p style="margin:0">Ти увійшов як <b>${esc(acctName())}</b> через ${via}.</p><p class="muted" style="margin:0">Трофеї, серія, рекорди й нік зберігаються в акаунті й доступні на будь-якому пристрої та в Telegram.</p><div class="row"><button class="ghost" id="acctOut">Вийти</button></div>`;
+    body.innerHTML=`${msg}<p style="margin:0">Ти увійшов як <b>${esc(acctName())}</b> через ${via}.</p><p class="muted" style="margin:0">Трофеї, серія, рекорди й ім'я зберігаються в акаунті й доступні на будь-якому пристрої та в Telegram.</p><div class="row"><button class="ghost" id="acctOut">Вийти</button></div>`;
     document.getElementById('acctOut').onclick=acctLogout;return;}
   // compact sheet: title, purpose, two big buttons, play without sign-in; phone: bottom sheet, iPad: centered
   viewMode('login');
@@ -4098,7 +4144,7 @@ function renderVdCard(){const box=document.getElementById('vdBox');if(!box)retur
   const m=st.best!=null&&vdMedal(st.best),[em,tt]=vdSplit(ch.title);
   const res=st.best!=null?`<span class="evr"><span class="mm" aria-hidden="true">${m?m.e:ic('check-circle')}</span><b>${st.best}/11</b><span>краща спроба</span></span>`
     :st.used?`<span class="evr no"><span>Не зараховано · ${done?'спроби закінчились':`спроба ${st.used} з ${VD_ATTEMPTS}`}</span></span>`:'';
-  box.innerHTML=`<button class="evc ${k}" id="vdCard" type="button"><span class="e1"><span class="lb">Виклик дня</span><span class="af">${af}${ic('chevron-right')}</span></span>`
+  box.innerHTML=`<button class="evc ${k}" id="vdCard" type="button"><span class="e1"><span class="lb">Виклик дня</span><span class="af">${af}</span></span>`
     +`<span class="e2">${em?`<span class="em" aria-hidden="true">${em}</span>`:''}<span>${esc(tt)}</span></span><span class="e3">${esc(ch.task)}</span>${res}<span class="e4">${vdMedals(st.best)}</span>`
     +(done?`<span class="evt">${ic('timer-sand')}<span id="vdLeft">Новий виклик через ${vdLeft()}</span></span>`:'')+`</button>`;
   document.getElementById('vdCard').onclick=()=>done?openVdArchive():vdOpen(VD_DAY,'#vdCard');}
@@ -4329,11 +4375,11 @@ function drawCard(r){   // card in site style: UPL navy background, UPL.TV gradi
 }
 document.getElementById('chalOpen').onclick=()=>{const b=document.getElementById('chalBox'),t=document.getElementById('chalOpen');b.hidden=!b.hidden;t.classList.toggle('on',!b.hidden);if(!b.hidden){b.scrollIntoView({behavior:'smooth',block:'center'});const n=document.getElementById('chalName');if(n&&!n.hidden&&!n.value)n.focus();}};
 // ---------- What's new: short player-friendly notes on the latest version (technical log: CHANGELOG.md)
-const WHATSNEW={v:'0.88.2',news:'0.88.2',date:'11.10.2026',items:[   // news: edition of the items; a release without new items keeps it, so the news dot does not light up again
-  ['trophy','18 мемних трофеїв','«Постав хоч мого кота Аватара», «Агуерооо!», «Сіууу!», «Маємо те, що маємо», «Може я тоже хочу шоколадку», «Як рак свисне», «Будьмо!» і ще одинадцять. Умови — у «Трофеях».'],
-  ['star','Дві нові назви','«Друге дихання» тепер зветься «Don’t push the horses», а «З грязі в князі» — «5000 до 1». Умови ті самі, здобуті трофеї лишаються.'],
-  ['account-circle','Короткі назви клубів скрізь','Клуби підписані коротко, як у грі («Дніпро», «Карпати»), і в «Твоїх цифрах», і в «Один клуб», таблицях, перегляді сезону та 5×5.'],
-  ['trophy','Трофеї та сторінка гравця','«1 чемпіонство», «3 чемпіонства» — тепер правильно. На вузьких екранах позначка рідкості трофея стоїть над назвою й не перекриває її. Трофей, якого ще ні в кого не було, підписаний «ти серед перших».']]};
+const WHATSNEW={v:'0.89',news:'0.89',date:'11.10.2026',items:[   // news: edition of the items; a release without new items keeps it, so the news dot does not light up again
+  ['trophy','Новий вигляд трофеїв','Рідкість видно одразу: кольорова смужка й підпис «Рідкісний», «Епічний», «Легендарний». Відкриті трофеї з галочкою й кольором, ще не відкриті — окремою групою нижче. Секретні тепер рожеві.'],
+  ['shield-star','«Один клуб» — трофеї з назвою клубу','За рекорди клубу — «Найкращий сезон в історії Динамо» і «Найгірший сезон в історії Динамо» (і так для кожного клубу). Інших трофеїв у цьому режимі немає, а вже здобуті лишаються.'],
+  ['account-circle','Акуратніші налаштування','Стрілка тільки там, де щось відкривається, а перехід у Telegram позначено окремим значком. Довге ім’я чи назва команди більше не ламають рядок.'],
+  ['bookshelf','Оновлені відповіді','«Питання та відповіді», конфіденційність і умови переписані під нинішню гру; в умовах з’явився розділ про авторські права.']]};
 function openNews(){screenTag('news');const box=document.getElementById('viewBox');document.getElementById('viewTitle').textContent=`Що нового · версія ${WHATSNEW.v}`;
   document.getElementById('viewBody').innerHTML=`<div class="news">${WHATSNEW.items.map(([e,h,d])=>`<div class="ni">${ic(e,'lg')}<div><b>${esc(h)}</b><p>${esc(d)}</p></div></div>`).join('')}</div>`;
   box.hidden=false;lsSet('upl30_news_seen',WHATSNEW.news||WHATSNEW.v);document.getElementById('newsDot').hidden=true;}
@@ -4591,7 +4637,7 @@ function f5Render(){
 
 document.getElementById('f5Open').onclick=f5Start;
 // audit P2-5: only what tests use; drawCard for card checks, simulate/rerun for fast determinism
-window.__dbg={go,place,em,haptic,seasonHaptic,renderNewTro,TROPHIES,CLUB_REC,ocMine,ocAfter,renderOc,renderOcRes,openOc,acctMerge,get BEST(){return BEST;},get VT_N(){return VT_N;},ic,seasonLabel,boardFetch,boardStale,BOARD_FROM,setFmt,lgRender,lgStale,openTables,boardHtml,oppYear,champModal,drawCard,chalNewGame,LEAGUE_CULT,LEAGUE_LEGENDS,openTrophies,renderNewTro,renderWheel,posOpts,eraOf,ptsWord,viewHtml,renderPitch,pitchHtml,f5Pitch,F5_FORMS,cardName,clubShort,simulate,shareTextOf,trCtxNow,trAward,trStore,FORMATIONS,GROUP_OF,DATA,TROPHIES,trEval,PERSON,effRating,get S(){return S;},vdOpen,vdEval,vdIndex,vdIdx,VD_LIST,renderVdCard,openVdArchive,vdSt,rerun(seed,year,xi){rnd=mulberry32(seed);const r=simulate(xi||S.slots.map(s=>s.player),MODES[S.mode],year);rnd=Math.random;return {W:r.W,D:r.D,L:r.L,gf:r.gf,ga:r.ga,place:r.place};}};
+window.__dbg={go,place,em,haptic,seasonHaptic,renderNewTro,TROPHIES,CLUB_REC,trEval,ppXiRow,OC_GEN,ocMine,ocAfter,renderOc,renderOcRes,openOc,acctMerge,get BEST(){return BEST;},get VT_N(){return VT_N;},ic,seasonLabel,boardFetch,boardStale,BOARD_FROM,setFmt,lgRender,lgStale,openTables,boardHtml,oppYear,champModal,drawCard,chalNewGame,LEAGUE_CULT,LEAGUE_LEGENDS,openTrophies,renderNewTro,renderWheel,posOpts,eraOf,ptsWord,viewHtml,renderPitch,pitchHtml,f5Pitch,F5_FORMS,cardName,clubShort,simulate,shareTextOf,trCtxNow,trAward,trStore,FORMATIONS,GROUP_OF,DATA,TROPHIES,trEval,PERSON,effRating,get S(){return S;},vdOpen,vdEval,vdIndex,vdIdx,VD_LIST,renderVdCard,openVdArchive,vdSt,rerun(seed,year,xi){rnd=mulberry32(seed);const r=simulate(xi||S.slots.map(s=>s.player),MODES[S.mode],year);rnd=Math.random;return {W:r.W,D:r.D,L:r.L,gf:r.gf,ga:r.ga,place:r.place};}};
 // Telegram script was requested by the first inline script: init now if it already loaded, otherwise on its load
 if(ONLINE){window.__tgCb=tgInit;if(window.__tgOk)tgInit();}
 })();

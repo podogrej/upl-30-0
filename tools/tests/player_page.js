@@ -74,8 +74,9 @@ const order=pg=>pg.$$eval('#ppCab .tro.on[data-tr]',es=>es.map(e=>e.dataset.tr))
  // cabinet: rarity
  await pg.waitForTimeout(300);
  T.check(JSON.stringify(await order(pg))===JSON.stringify(['unbeaten','top3','champ']),'сортування «за рідкістю»: '+(await order(pg)).join(','));
- T.check(await pg.$eval('#ppCab .tro[data-tr="unbeaten"]',e=>e.classList.contains('rt-epic')&&e.querySelector('.gem.rt-epic').textContent==='Епічний'&&/є в 2% гравців/.test(e.querySelector('.trp').textContent)&&!/Епічний/.test(e.querySelector('.trp').textContent))   // rarity shown as an icon on the right
-   &&await pg.$eval('#ppCab .tro[data-tr="top3"]',e=>e.classList.contains('rt-rare')&&!!e.querySelector('.gem.rt-rare'))&&await pg.$eval('#ppCab .tro[data-tr="champ"]',e=>/Звичайний/.test(e.textContent)),'рівні рідкості: епічний 2%, рідкісний 10% — значком; звичайний 60% — текстом');
+ T.check(await pg.$eval('#ppCab .tro[data-tr="unbeaten"]',e=>e.classList.contains('rt-epic')&&e.querySelector('.trp .nm-rw-epic').textContent==='Епічний'&&!e.querySelector('.nm-rp')&&/2% гравців/.test(e.querySelector('.trp').textContent)&&getComputedStyle(e,'::before').width==='4px'&&getComputedStyle(e.querySelector('.trt b')).color===getComputedStyle(e.querySelector('.nm-rw-epic')).color)   // rail 4px, title and word in the tier colour
+   &&await pg.$eval('#ppCab .tro[data-tr="top3"]',e=>e.classList.contains('rt-rare')&&e.querySelector('.nm-rw-rare').textContent==='Рідкісний')&&await pg.$eval('#ppCab .tro[data-tr="champ"]',e=>/Звичайний/.test(e.textContent)&&!e.querySelector('.nm-rp')),'рівні рідкості: епічний 2%, рідкісний 10% — слово і колір назви; звичайний 60% — слово без кольору');
+ T.check(await pg.$$eval('#ppCab .gem, #ppCab .nm-rp, #ppCab .nm-pips',e=>e.length)===0,'у шафі немає плашки .gem і ромбів');
  // card colour: only three classes
  T.check(await pg.$$eval('#ppCab .tro',l=>l.length>0&&l.every(e=>['k-base','k-friends','k-secret'].filter(k=>e.classList.contains(k)).length===1)),'трофеї: кожна картка — рівно один із трьох класів (основний, з друзями, секретний)');
  T.check(await pg.$$eval('#ppCab .tro.sec.rt-legend, #ppCab .tro.sec.rt-epic, #ppCab .tro.sec.rt-rare',e=>e.length)===0,'секретні трофеї без рівня рідкості');
@@ -85,6 +86,26 @@ const order=pg=>pg.$$eval('#ppCab .tro.on[data-tr]',es=>es.map(e=>e.dataset.tr))
  // filters: All plus the three classes only
  {const fs=await pg.$$eval('#ppCab [data-f]',es=>es.map(e=>e.dataset.f+':'+e.textContent.trim()));
   T.check(fs.length===4&&/^all:Усі/.test(fs[0])&&/^base:Основні/.test(fs[1])&&/^friends:З друзями/.test(fs[2])&&/^secret:Секретні/.test(fs[3]),'фільтри: Усі + Основні / З друзями / Секретні — '+fs.join(' | '));}
+ // geometry: rail, badge and text keep their distances (8px+) and no card child leaves the card
+ for(const th of ['dark','light'])for(const w of [320,390,820]){
+  await pg.setViewportSize({width:w,height:900});await pg.evaluate(t=>{document.documentElement.dataset.theme=t;const c=document.querySelector('#ppCab .tro[data-tr="top3"]');if(c&&!document.getElementById('nmLegCard')){const k=c.cloneNode(true);k.id='nmLegCard';k.className=k.className.replace('rt-rare','rt-legend');c.parentNode.appendChild(k);}},th);await pg.waitForTimeout(150);
+  const bad=await pg.$$eval('#ppCab .tro[class*="rt-"]',cs=>cs.map(c=>{const t=c.querySelector('.tre'),x=c.querySelector('.trt'),R=c.getBoundingClientRect(),a=t.getBoundingClientRect(),q=x.getBoundingClientRect();
+   const gap=q.left-a.right,railGap=a.left-(R.left+12);
+   const out=[...c.querySelectorAll('*')].filter(e=>{const r=e.getBoundingClientRect();return r.width&&(r.left<R.left-0.5||r.right>R.right+0.5||r.top<R.top-0.5||r.bottom>R.bottom+0.5);}).length;
+   return gap<8||railGap<8||out?`${c.dataset.tr||'leg'} gap ${gap.toFixed(1)} rail ${railGap.toFixed(1)} out ${out}`:'';}).filter(Boolean));
+  {const g=await pg.$$eval('#ppCab .tro[data-tr]',cs=>cs.map(c=>{const t=c.querySelector('.tre').getBoundingClientRect(),x=c.querySelector('.trt').getBoundingClientRect(),m=c.querySelector('.trp');return [Math.round(t.width),Math.round(t.height),Math.round(x.left-t.right),m?parseFloat(getComputedStyle(m).fontSize):12];}));
+   T.check(g.length>3&&g.every(v=>v[0]===44&&v[1]===44&&v[2]===12&&v[3]>=12),`значки однакові (44px), зазор до тексту 12px, мета ≥12px: ${th} ${w}px ${JSON.stringify(g[0])}`);}
+  if(process.env.SHOTS&&w<500){fs.mkdirSync(process.env.SHOTS,{recursive:true});
+   {const c=await pg.evaluate(()=>{const cs=[...document.querySelectorAll('#ppCab .trg .tro')],f=cs[0].getBoundingClientRect(),l=cs[Math.min(5,cs.length-1)].getBoundingClientRect();return {y:f.top+scrollY-70,h:l.bottom-f.top+80};});
+    await pg.screenshot({path:path.join(process.env.SHOTS,`cabinet_${w}_${th}.png`),fullPage:true,clip:{x:0,y:Math.max(0,c.y),width:w,height:c.h}});}
+   for(const [i,c] of (await pg.$$('#ppCab .tro[class*="rt-"]')).slice(0,12).entries())await c.screenshot({path:path.join(process.env.SHOTS,`card${i}_${w}_${th}.png`)});
+   await pg.evaluate(()=>{const R=window.__dbg.ppXiRow;   // real row markup
+    const x=document.createElement('div');x.id='nmXiShot';x.innerHTML='<div class="pp-sec"><h3>Найкращий і найгірший XI</h3></div><div class="pp-list">'+R({id:1,place:1,w:29,d:1,l:0,formation:'4-3-3',avg:91,club:'dynamo-kyiv',pts:88},'best','Класика','trophy')+R({id:2,place:14,w:8,d:7,l:15,formation:'4-4-2',pts:31},'worst','Вибір сезону','calendar-check')+'</div>';document.getElementById('ppCab').before(x);});
+   await pg.locator('#nmXiShot').screenshot({path:path.join(process.env.SHOTS,`xi_${w}_${th}.png`)});await pg.evaluate(()=>document.getElementById('nmXiShot').remove());
+   await pg.locator('#ppSet').screenshot({path:path.join(process.env.SHOTS,`settings_${w}_${th}.png`)});
+   await pg.locator('#s6').screenshot({path:path.join(process.env.SHOTS,`player_${w}_${th}.png`)});}
+  T.check(bad.length===0,`рейка й значок ≥8px від тексту/краю, нічого не виходить за картку і нічого не виходить за картку: ${th} ${w}px ${bad.join('; ')}`);}
+ await pg.setViewportSize({width:390,height:844});await pg.evaluate(()=>{document.documentElement.dataset.theme='dark';const k=document.getElementById('nmLegCard');if(k)k.remove();});
  await pg.click('#ppCab [data-f="base"]');await pg.waitForTimeout(100);
  const shown=await pg.$$eval('#ppCab .tro',es=>es.map(e=>e.className));const chip=await pg.textContent('#ppCab [data-f="base"]');
  T.check(shown.length>0&&shown.every(c=>/\bk-base\b/.test(c))&&/Основні \d+\/\d+/.test(chip),`фільтр «Основні»: ${shown.length} карток, «${chip}»`);
@@ -108,6 +129,7 @@ const order=pg=>pg.$$eval('#ppCab .tro.on[data-tr]',es=>es.map(e=>e.dataset.tr))
  await pg.evaluate(()=>document.getElementById('homeBtn').click());await pg.click('#acctBtn');await pg.waitForTimeout(600);
  await pg.click('#ppHist summary');await pg.waitForTimeout(400);
  T.check(/Останні сезони \(1 з 1\)/.test(await pg.textContent('#ppHist summary'))&&(await pg.$$('#ppHistList .pp-row')).length===1,'«Останні сезони (1 з 1)» розгортаються за тапом');
+ T.check(await pg.$$eval('#ppHistList .pp-row',r=>r.length>0&&r.every(x=>!!x.querySelector(':scope > .nm-go .ico')&&!x.querySelector('u'))),'рядки історії сезонів: тиха стрілка «›» справа, без підкреслення');
  T.check(/Класика.*найкращий/.test((await pg.textContent('.pp-list')).replace(/\s+/g,' ')),'«Найкращий і найгірший XI»: класика');
  await pg.screenshot({path:path.join(MOCK,'player_page_059_guest.png'),fullPage:true});
  // board -> another player's page
@@ -136,6 +158,10 @@ const order=pg=>pg.$$eval('#ppCab .tro.on[data-tr]',es=>es.map(e=>e.dataset.tr))
  const D=await openSite({b,db,api,tg,hash:'#tgWebAppData=x',init:INIT,viewport:{width:390,height:844},wait:2000});
  await D.pg.click('#acctBtn');await D.pg.waitForTimeout(700);
  T.check((await D.pg.textContent('#ppName'))==='oleh'&&!(await D.pg.$('.pp-warn'))&&/Увійшов через Telegram/.test(await D.pg.textContent('#ppSet')),'з входом: ім\'я з Telegram «Олег» → «oleh» (транслітерує база), без попередження, «Вийти»');
+ T.check(await D.pg.$$eval('#ppSet .set-r',r=>{const f=x=>[...r].find(e=>e.id===x);return !!f('ppRowName').querySelector(':scope > .nm-go .ico')&&!!f('ppRowTeam').querySelector(':scope > .nm-go .ico')&&!r.some(e=>e.querySelector('u'))&&(!f('ppOut')||!f('ppOut').querySelector('.nm-go'));})&&(!(await D.pg.$('#ppNotify'))||!!(await D.pg.$('#ppNotify .nm-go svg.nm-ext'))),'налаштування: стрілка «›» у рядках правки, ↗ у Telegram, Вийти без стрілки, без підкреслення');
+ await D.pg.setViewportSize({width:320,height:800});
+ T.check(await D.pg.evaluate(()=>{const r=document.getElementById('ppRowName'),v=r.querySelector('.v'),k=r.querySelector('.k'),g=r.querySelector('.nm-go');v.textContent='abcdefghij_klmnopqrst';const R=r.getBoundingClientRect(),V=v.getBoundingClientRect(),G=g.getBoundingClientRect(),K=k.getBoundingClientRect();return r.scrollWidth<=r.clientWidth+1&&V.width<=R.width*0.45+1&&G.right<=R.right&&K.right<=V.left&&v.scrollWidth>v.clientWidth;}),'довгий нік (20 символів) на 320: значення обрізається з «…», рядок і стрілка не виходять, колонка назви не заходить на значення');
+ await D.pg.setViewportSize({width:390,height:844});
  await D.pg.screenshot({path:path.join(MOCK,'player_page_059_own.png'),fullPage:true});
  await D.pg.click('#ppDel');T.check(await D.pg.$eval('#ppDelBox',e=>!e.hidden),'«Видалити акаунт…» питає підтвердження');
  await D.pg.locator('#ppSet').screenshot({path:path.join(OUT,'pp_delete.png')});
@@ -151,4 +177,7 @@ const order=pg=>pg.$$eval('#ppCab .tro.on[data-tr]',es=>es.map(e=>e.dataset.tr))
  const lg=await callApi(require(path.join(ROOT,'api','league.js')),null,'GET',{chat:'-1'});
  const names=(lg.json.today||[]).map(r=>r.name+(r.u?'@'+r.u:''));
  T.check(names.join()==='vitia@vitya234,Без профілю','табло ліги: '+names.join(', '));
+ if(process.env.SHOTS){await pg.setViewportSize({width:390,height:900});await pg.evaluate(()=>{document.getElementById('homeBtn').click();});await pg.waitForTimeout(600);
+  for(const th of ['dark','light']){await pg.evaluate(t=>{document.documentElement.dataset.theme=t;},th);await pg.waitForTimeout(200);await pg.screenshot({path:path.join(process.env.SHOTS,`home_390_${th}.png`),fullPage:true});}
+}
  await b.close();process.exit(T.done());})();

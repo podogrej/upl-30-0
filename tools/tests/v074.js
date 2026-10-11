@@ -50,7 +50,7 @@ function mkDB(n,fmt5){
  T.check(!ab.sec.includes('Про гру та дані')&&!ab.box&&!/Про гру та дані/.test(ab.txt),'головна: блоку «Про гру та дані» немає');
  T.check(ab.faq.some(s=>/Як рахується гра/.test(s)),'«Питання та відповіді»: є «Як рахується гра»');
  await pg.evaluate(()=>{document.getElementById('faqBox').open=true;document.getElementById('calcQ').open=true;});
- const calc=await pg.$eval('#calcQ',e=>e.innerText);T.check(/пуассонівські/.test(calc)&&/Ліга легенд/.test(calc)&&/хімію/.test(calc),'«Як рахується гра» містить опис рейтингів і симуляції');
+ const calc=await pg.$eval('#calcQ',e=>e.innerText);T.check(/пуассонівські/.test(calc)&&/16-те місце/.test(calc)&&/хімію/.test(calc),'«Як рахується гра» містить опис рейтингів і симуляції');
  // tap targets: FAQ rows, footer links, theme toggle
  const tg=await pg.evaluate(()=>{const H=sel=>[...document.querySelectorAll(sel)].filter(e=>e.getBoundingClientRect().width>0).map(e=>({t:(e.textContent||e.id).trim().slice(0,22),h:Math.round(e.getBoundingClientRect().height)}));
    const th=document.getElementById('themeBtn');th.scrollIntoView({block:'center'});const r=th.getBoundingClientRect(),cx=(r.left+r.right)/2,top=document.elementFromPoint(cx,r.top-9),bot=document.elementFromPoint(cx,r.bottom+9);

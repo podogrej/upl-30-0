@@ -59,10 +59,10 @@ const OUT=path.join(ROOT,'tools','tests','out');
  // record block: Vorskla best 58 -> 70
  await pg.evaluate(()=>{window.__dbg.renderOcRes({oc:window.__dbg.ocAfter('vorskla-poltava',70)});document.getElementById('ocRes').scrollIntoView();});
  const V=await pg.textContent('#ocRes');
- T.check(/Кращий сезон в історії клубу!/.test(V)&&/70 очок — більше, ніж клуб набирав будь-коли в УПЛ \(58, 1996\/97\)/.test(V)&&/Залишився найгірший сезон: менше 23 оч\./.test(V),'блок рекорду: '+V);
+ T.check(/Найкращий сезон в історії клубу!/.test(V)&&/70 очок — більше, ніж клуб набирав будь-коли в УПЛ \(58, 1996\/97\)/.test(V)&&/Залишився найгірший сезон: менше 23 оч\./.test(V),'блок рекорду: '+V);
  await pg.locator('#ocRes').screenshot({path:path.join(OUT,'oc72_result.png')});
  await pg.evaluate(()=>window.__dbg.renderOcRes({oc:window.__dbg.ocAfter('vorskla-poltava',10)}));
- T.check(/Гірший сезон в історії клубу!/.test(await pg.textContent('#ocRes'))&&/Клуб пройдено/.test(await pg.textContent('#ocRes')),'найгірший сезон і «Клуб пройдено»');
+ T.check(/Найгірший сезон в історії клубу!/.test(await pg.textContent('#ocRes'))&&/Клуб пройдено/.test(await pg.textContent('#ocRes')),'найгірший сезон і «Клуб пройдено»');
  // sync merge: best of both devices
  const M=await pg.evaluate(()=>window.__dbg.acctMerge({upl30_clubrec:{'dynamo-kyiv':{b:70,w:40,n:5}}},{upl30_clubrec:{'dynamo-kyiv':{b:80,w:45,n:2},'zorya-luhansk':{b:50,w:50,n:1}}}).upl30_clubrec);
  T.check(M['dynamo-kyiv'].b===80&&M['dynamo-kyiv'].w===40&&M['dynamo-kyiv'].n===5&&M['zorya-luhansk'],'синхронізація: краще з двох пристроїв');

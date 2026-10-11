@@ -58,7 +58,7 @@ const TROPHIES=[
   {id:"hardchamp",i:"🔥",n:"Без права на помилку",d:"Стань чемпіоном у режимі «Складний»",cat:"modes",rep:1,t:c=>c.mode==='hard'&&notAnti(c)&&c.r.place===1},
   {id:"hcchamp",i:"🙈",n:"Кіт у мішку",d:"Стань чемпіоном у «Хардкорі» (режиму вже немає)",cat:"modes",rep:1,gone:1,t:c=>c.mode==='hardcore'&&notAnti(c)&&c.r.place===1},
   {id:"derbychamp",i:"⚡",n:"Класика жанру",d:"Стань чемпіоном у «Класичному дербі» (режим зараз недоступний)",cat:"modes",rep:1,gone:1,t:c=>c.format==='derby'&&c.r.place===1},
-  {id:"oneclubchamp",i:"❤️",n:"Два кольори",d:"Стань чемпіоном у режимі «Один клуб»",cat:"modes",rep:1,t:c=>c.format==='oneclub'&&c.r.place===1},
+  {id:"oneclubchamp",i:"❤️",n:"Два кольори",d:"Стань чемпіоном у режимі «Один клуб»",cat:"modes",gone:1,rep:1,t:c=>c.format==='oneclub'&&c.r.place===1},
   {id:"antilast",i:"⬇️",n:"Нижче плінтуса",d:"Антисезон: фініш останнім",cat:"modes",rep:1,t:c=>c.format==='anti'&&c.r.place===16},
   {id:"anti0",i:"🪦",n:"Нуль без палички",d:"Антисезон: програй усі 30 матчів",cat:"modes",t:c=>c.format==='anti'&&c.r.L===30},
   {id:"antidry",i:"🥖",n:"Сухий пайок",d:"Антисезон: забий 5 голів або менше",cat:"modes",t:c=>c.format==='anti'&&c.r.gf<=5},
@@ -198,22 +198,27 @@ const TROPHIES=[
   {id:"crayfish",i:"🦞",n:"Як рак свисне",d:"Перша перемога — лише після 10-го туру",cat:"season",rep:1,t:c=>notAnti(c)&&full(c)&&firstW(c)>=10},
   {id:"budmo",i:"🥂",n:"Будьмо!",d:"10 гравців забили щонайменше по 2 голи за сезон",cat:"players",rep:1,t:c=>notAnti(c)&&mixed(c)&&c.pl.filter(p=>(p.g||0)>=2).length>=10},
 ];
+// one club: only the club's own records (best / worst UPL season by points); ids ob_/ow_ + club code, shown once earned;
+const OC_GEN={"arsenal-kyiv":"«Арсенала»","borysfen-boryspil":"«Борисфена»","bukovyna-chernivtsi":"«Буковини»","veres-rivne":"«Вереса»","volyn-lutsk":"«Волині»","vorskla-poltava":"«Ворскли»","hoverla-uzhhorod":"«Говерли»","desna-chernihiv":"«Десни»","dynamo-kyiv":"«Динамо»","dnipro":"«Дніпра»","zirka-kropyvnytskyi":"«Зірки»","zorya-luhansk":"«Зорі»","inhulets-petrove":"«Інгульця»","karpaty-lviv":"«Карпат»","kolos-kovalivka":"«Колоса»","kremin-kremenchuk":"«Кременя»","kryvbas":"«Кривбасу»","livyi-bereh-kyiv":"«Лівого Берега»","lnz-cherkasy":"ЛНЗ","mariupol":"«Маріуполя»","metalist-kharkiv":"«Металіста»","metalist-1925":"«Металіста 1925»","metalurh-donetsk":"«Металурга Д.»","metalurh-zaporizhzhia":"«Металурга З.»","minaj":"«Миная»","naftovyk-okhtyrka":"«Нафтовика-Укрнафти»","nyva-vinnytsia":"«Ниви В.»","nyva-ternopil":"«Ниви Т.»","obolon-kyiv":"«Оболоні»","oleksandriya":"«Олександрії»","olimpik-donetsk":"«Олімпіка»","polissya-zhytomyr":"«Полісся»","prykarpattia":"«Прикарпаття»","pfk-lviv":"ПФК «Львів»","rukh-lviv":"«Руху»","sevastopol":"«Севастополя»","dnipro-1":"«Дніпра-1»","mykolaiv":"«Миколаєва»","stal-alchevsk":"«Сталі А.»","stal-kamianske":"«Сталі К.»","tavriya-simferopol":"«Таврії»","temp-shepetivka":"«Темпу»","torpedo-zaporizhzhia":"«Торпедо»","fc-lviv-2008":"ФК «Львів»","fc-kharkiv":"ФК «Харків»","cska-kyiv":"ЦСКА","chornomorets-odesa":"«Чорноморця»","shakhtar-donetsk":"«Шахтаря»"};   // club code -> genitive for "the history of <club>"; every club with records must be here (trophies089)
+if(typeof CLUB_REC!=='undefined')for(const k of ocClubs()){const rec=CLUB_REC[k.c];if(!rec)continue;const id=k.c.replace(/-/g,'_');
+  TROPHIES.push({id:'ob_'+id,i:"🏅",n:`Найкращий сезон в історії ${OC_GEN[k.c]||'«'+k.n+'»'}`,d:`«Один клуб»: набери більше ${rec[0]} очок — рекорду клубу в УПЛ (${seasonLabel(rec[1])})`,cat:"modes",rep:1,oc:k.c,t:c=>c.format==='oneclub'&&c.club===k.c&&c.r.pts>rec[0]},
+    {id:'ow_'+id,i:"🪦",n:`Найгірший сезон в історії ${OC_GEN[k.c]||'«'+k.n+'»'}`,d:`«Один клуб»: набери менше ${rec[3]} очок — найгіршого сезону клубу в УПЛ (${seasonLabel(rec[4])})`,cat:"modes",rep:1,oc:k.c,t:c=>c.format==='oneclub'&&c.club===k.c&&c.r.pts<rec[3]});}
 const MILESTONES=[[1,"🌱","Перший сезон"],[5,"⚽","5 сезонів"],[10,"🎫","10 сезонів"],[25,"🎗️","25 сезонів"],[50,"🥇","Півсотні"],[100,"💯","Клуб 100"],[250,"🏛️","250 сезонів"]];
 function trStore(){const s=lsGet("upl30_tr")||{};s.t=s.t||{};s.seasons=s.seasons||0;s.dailies=s.dailies||0;return s;}
 function trStreak(){return streakInfo().count;}
 // season context -> trophies earned (no write)
-function trEval(c){const got=[];for(const t of TROPHIES){if(t.t){let ok=false;try{ok=!!t.t(c);}catch(e){}if(ok)got.push(t.id);}}return got;}
+function trEval(c){const got=[];for(const t of TROPHIES){if(c.format==="oneclub"&&!t.oc)continue;if(t.t){let ok=false;try{ok=!!t.t(c);}catch(e){}if(ok)got.push(t.id);}}return got;}
 function trCtxNow(r){
   const m=MODES[S.mode];
   const xi=S.slots.map(s=>{const p=s.player;const q=PERSON[p.id]||{};return {name:p.name,id:p.id,slot:s.slot,main:p.main,r0:p.r0,r:p.r,nat:p.nat??q.nat??-1,by:p.by||q.by||0,cc:p.cc||(DATA.clubs.find(x=>x.n===p.club&&x.y===p.y)||{}).c,y:p.y};});
   const pl=r.players.map(p=>({...p,r0:(xi.find(x=>x.id===p.id)||{}).r0||p.r}));
-  return {r,xi,pl,mode:S.mode,format:S.format,reveal:!!(m.reveal||m.showRatings)};
+  return {r,xi,pl,mode:S.mode,format:S.format,club:S.format==='oneclub'?S.club:null,reveal:!!(m.reveal||m.showRatings)};
 }
 function trCtxRow(row){   // from a seasons log row (for retroactive awarding)
   const xi=(row.xi||[]).map(p=>{const q=PERSON[p.id]||{};const cc=(DATA.clubs.find(x=>x.n===p.c&&x.y===p.y)||{}).c;return {name:p.n,id:p.id,slot:p.slot,main:q.main,r0:p.r0??p.r,r:p.r,nat:q.nat??-1,by:q.by||0,cc,y:p.y};});
   const pl=(row.xi||[]).map(p=>({id:p.id,slot:p.slot,g:p.g||0,a:p.a||0,rt:p.rt||0,form:p.f||0,r0:p.r0??p.r}));
   const r={W:row.w,D:row.d,L:row.l,pts:row.pts,place:row.place,gf:row.gf,ga:row.ga,xp:row.xp??row.pts,golden:!!row.golden};
-  const m=MODES[row.mode]||{};return {r,xi,pl,mode:row.mode,format:row.format,reveal:!!(m.reveal||m.showRatings)};
+  const m=MODES[row.mode]||{};return {r,xi,pl,mode:row.mode,format:row.format,club:row.format==='oneclub'?row.club:null,reveal:!!(m.reveal||m.showRatings)};
 }
 // record a season into the collection; returns {got:[ids], fresh:[new ids]}; sync:false - the caller sends fresh ids itself (with the season)
 function trAward(c,{daily,sync=true}={}){
@@ -222,8 +227,10 @@ function trAward(c,{daily,sync=true}={}){
   const add=id=>{const e=s.t[id]||(s.t[id]={n:0,at:today});if(!e.n)fresh.push(id);e.n++;};
   for(const id of got)add(id);   // all trophies per season are repeatable: xN counter
   const ctxS={streak:trStreak(),dailies:s.dailies};
-  for(const t of TROPHIES)if(t.st&&t.st(ctxS)&&!(s.t[t.id]&&s.t[t.id].n)){add(t.id);got.push(t.id);}
-  for(const [k] of MILESTONES)if(s.seasons===k){add('ms'+k);got.push('ms'+k);}
+  const has=id=>s.t[id]&&s.t[id].n;
+  if(c.format!=='oneclub'){   // one club awards only its club record trophies; a milestone passed there comes with the next other season
+    for(const t of TROPHIES)if(t.st&&t.st(ctxS)&&!has(t.id)){add(t.id);got.push(t.id);}
+    for(const [k] of MILESTONES)if(s.seasons>=k&&!has('ms'+k)){add('ms'+k);got.push('ms'+k);}}
   lsSet("upl30_tr",s);if(fresh.length&&sync)trSync(fresh);
   return {got,fresh};
 }
@@ -277,7 +284,7 @@ async function openTrophies(){screenTag('trophies');
   const box=document.getElementById('viewBox'),body=document.getElementById('viewBody');document.getElementById('viewTitle').textContent='Трофеї';box.hidden=false;
   const draw=()=>{const s=trStore();const st={streak:trStreak(),dailies:s.dailies};
     const pctOf=id=>TR_PCT&&TR_PCT.players>=10?100*((TR_PCT.t||{})[id]||0)/TR_PCT.players:null;
-    const got=t=>s.t[t.id]&&s.t[t.id].n;const LIVE=TROPHIES.filter(t=>!t.gone||got(t));const total=LIVE.length,have=LIVE.filter(got).length;
+    const got=t=>s.t[t.id]&&s.t[t.id].n;const LIVE=TROPHIES.filter(t=>!(t.gone||t.oc)||got(t));const total=LIVE.length,have=LIVE.filter(got).length;
     let h=`<p class="muted" style="margin:0">Відкрито ${have} з ${total} · зіграно сезонів: ${s.seasons}</p>`;
     for(const [kind,title] of TR_KINDS){const list=LIVE.filter(t=>trKind(t)===kind&&(!t.sec||(s.t[t.id]&&s.t[t.id].n)));
       const hiddenN=TROPHIES.filter(t=>trKind(t)===kind&&t.sec&&!(s.t[t.id]&&s.t[t.id].n)).length;
