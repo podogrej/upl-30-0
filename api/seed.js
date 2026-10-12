@@ -6,9 +6,9 @@
 // Body with `vd`: daily challenge attempts, handled by api/_vd.js.
 const crypto = require('crypto');
 const { sb, legacyOpen, body, kyivDate, uuidRe, gate } = require('./_device.js');
+const { xiHash, fail } = require('./_lib.js');
 // retry of an official daily attempt: same squad and year, not played yet
 const sameAttempt = (p, b) => !!p && p.used_by == null && p.xi_hash === xiHash(b.xi) && (p.year == null || p.year === (+b.year || null));
-const xiHash = xi => crypto.createHash('sha256').update(xi.map(x => `${x.id}|${x.slot}|${x.c}|${x.y}`).join(';')).digest('hex');
 
 module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
@@ -61,6 +61,6 @@ module.exports = async (req, res) => {
     }
     res.status(200).json({ seed_id: ins && ins.id, seed, official });
   } catch (e) {
-    res.status(500).json({ error: `crash at ${stage}: ${String(e && e.message || e).slice(0, 160)}` });
+    fail(res, `seed ${stage}`, e);
   }
 };

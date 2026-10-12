@@ -1,8 +1,7 @@
 // 30-0 UPL: shared by /api/save and /api/seed ("_" prefix: not a route, Vercel does not expose it).
 // Device ownership: the browser sends device_id and the device secret (upl30_dsecret); the DB checks the secret with device_ok,
 // callable only by the server (service_role). The player comes from the device binding in the DB, never from the browser.
-const { SB_URL, env, sb, kyivDate, miniApp } = require('./_lib.js');
-const uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const { env, sb, kyivDate, miniApp, body, uuidRe } = require('./_lib.js');
 
 // function not in DB yet (SQL 0.53 not applied): PostgREST 404 / PGRST202
 const missingFn = e => e && (e.status === 404 || /PGRST202|Could not find the function/.test(e.body || ''));
@@ -37,7 +36,7 @@ function tgUser(initData) {
 // so spoofing device_id doesn't help. Without device_id: IP only. On DB error or missing SQL 0.55, let the request through
 // (availability over counting).
 const RATE_MSG = 'Забагато запитів за хвилину. Зачекай трохи й спробуй ще раз.';
-const LIMITS = { seed: 20, save: 40, verify: 30, card: 10, auth: 60, fl5: 30, err: 10, fb: 5 };   // requests per minute per device (per IP: IP_X times more). fb: footer feedback form; err: client error reports; fl5: every 5x5 league member opens the page after the draft closes; auth: bot login polls every 2.5 s
+const LIMITS = { seed: 20, save: 40, verify: 30, card: 10, auth: 60, fl5: 30, err: 10, fb: 5, league: 60 };   // requests per minute per device (per IP: IP_X times more). fb: footer feedback form; err: client error reports; league: group league page reads (CDN caches most); fl5: every 5x5 league member opens the page after the draft closes; auth: bot login polls every 2.5 s
 const IP_X = 4;
 const ipOf = req => String((req.headers && (req.headers['x-forwarded-for'] || req.headers['x-real-ip'])) || '').split(',')[0].trim().slice(0, 64) || 'unknown';
 async function rateHit(key, limit) {
@@ -53,11 +52,19 @@ async function rateLimit(req, res, name, device) {
   res.status(429).json({ error: RATE_MSG, rate: true });
   return true;
 }
-// Rate limit + device secret in ONE DB call (api_gate, sql/v0891_audit_c.sql). Without the function (or on any odd answer) the old
-// two-step path runs: rateLimit, then deviceOk. secret == null: counters only (dev is null). Returns {done: true} when 429/400 is already sent,
-// else {dev} shaped like deviceOk's result (or null without a secret).
+// Rate limit + device secret in ONE DB call (api_gate, sql/v0891_audit_c.sql, order fixed in sql/v090_gate_order.sql). Order: IP counter,
+// secret check, device counter only after the secret is OK (a wrong secret must not push the real device into 429).
+// Without the function (or on any odd answer) the old multi-call path runs in the same order. secret == null: counters only.
+// Returns {done: true} when 429/400 is already sent, else {dev} shaped like deviceOk's result (or null without a secret).
 async function gate(req, res, name, device, secret) {
-  const legacy = async () => (await rateLimit(req, res, name, device)) ? { done: true } : { dev: secret == null ? null : await deviceOk(device, secret) };
+  const legacy = async () => {
+    const dev = uuidRe.test(String(device || '')) ? String(device).toLowerCase() : null;
+    if (!(await rateHit(`${name}:ip:${ipOf(req)}`, dev ? LIMITS[name] * IP_X : LIMITS[name]))) { res.status(429).json({ error: RATE_MSG, rate: true }); return { done: true }; }
+    let d = null;
+    if (secret != null) { d = await deviceOk(device, secret); if (d.status && !d.fallback) return { dev: d }; }
+    if (dev && !(await rateHit(`${name}:d:${dev}`, LIMITS[name]))) { res.status(429).json({ error: RATE_MSG, rate: true }); return { done: true }; }
+    return { dev: d };
+  };
   const okSecret = secret == null || (typeof secret === 'string' && secret.length >= 16 && secret.length <= 200);
   if (!uuidRe.test(String(device || '')) || !okSecret) return legacy();
   let r;
@@ -70,5 +77,4 @@ async function gate(req, res, name, device, secret) {
   if (r.err === 'device') return { dev: { status: 400, error: 'device?' } };
   return { dev: { player: r.player } };
 }
-const body = req => { let b = req.body || {}; if (typeof b === 'string') b = JSON.parse(b); return b; };
 module.exports = { sb, deviceOk, legacyOpen, tgUser, body, kyivDate, uuidRe, env, rateLimit, gate, RATE_MSG, LIMITS };

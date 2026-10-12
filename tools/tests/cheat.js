@@ -114,6 +114,23 @@ function honestXi(formation) {
   const foot = xi.find(x => ['LB', 'RB', 'LW', 'RW'].includes(x.slot));
   await tamper('чесний сезон', r => {}, true);
   await tamper('seed reused', r => {}, false);
+  // two parallel verifications of seasons that share one seed (both read used_by = null): the atomic claim lets exactly one through
+  { const sr = await call(seedH, { device_id: device, xi, formation, mode: 'normal', format: 'classic', year });
+    const q = E.run({ xi: SX(xi), mode: 'normal', format: 'classic', year, seed: sr.j.seed });
+    const mk = () => { const r = JSON.parse(JSON.stringify(legit)); r.id = DB.seasons.length + 1; r.verified = null; Object.assign(r, { seed: sr.j.seed, seed_id: sr.j.seed_id, w: q.W, d: q.D, l: q.L, pts: q.pts, place: q.place, gf: q.gf, ga: q.ga }); DB.seasons.push(r); return r; };
+    const ra = mk(), rb = mk();
+    const [xa, xb] = await Promise.all([call(verH, { season_id: ra.id }), call(verH, { season_id: rb.id })]);
+    const won = [xa, xb].filter(x => x.j.verified === true), lost = [xa, xb].filter(x => x.j.verified === false);
+    const seedRow = DB.season_seeds.find(x => x.id === sr.j.seed_id);
+    const okRace = won.length === 1 && lost.length === 1 && /seed уже використано/.test(lost[0].j.note) && seedRow && [ra.id, rb.id].includes(+seedRow.used_by) && DB.seasons.filter(x => x.verified === true && x.seed_id === sr.j.seed_id).length === 1;
+    if (!okRace) bad++;
+    console.log(`${okRace ? '✓' : '✗'} два сезони на один seed одночасно: один перевірено, другий «seed уже використано» (${xa.j.verified}/${xb.j.verified}, ${xa.j.note} / ${xb.j.note})`);
+    DB.seasons.forEach(x => { if (x.seed_id === sr.j.seed_id) x.verified = null; });
+    const again = await call(verH, { season_id: won.length ? (xa.j.verified === true ? ra.id : rb.id) : ra.id });
+    const okAgain = again.j.verified === true;
+    if (!okAgain) bad++;
+    console.log(`${okAgain ? '✓' : '✗'} повторна перевірка того самого сезону, що взяв seed, лишається чинною (${again.j.verified})`);
+  }
   await tamper('рейтинг піднято до 99', r => { r.xi[0].r = 99; }, false);
   await tamper('рейтинг без штрафу/ноги (r = базовий)', r => { const x = r.xi.find(q => q.r !== q.r0); if (x) x.r = x.r0; else r.xi[0].r += 1; }, false);
   await tamper('очки завищено', r => { r.w += 1; r.d -= 1; r.pts += 2; }, false);

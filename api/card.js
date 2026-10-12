@@ -9,7 +9,7 @@
 //   First choice is the service channel TG_CARDS_CHAT (see cachePhoto); no env var or channel failure -> bucket.
 const crypto = require('crypto');
 const { rateLimit } = require('./_device.js');   // rate limiting
-const { SB_URL, env, miniApp } = require('./_lib.js');
+const { SB_URL, env, miniApp, body, fail } = require('./_lib.js');
 async function storeCard(buf, ext) {   // -> public card URL or null
   const key = env('SUPABASE_SERVICE_KEY'); if (!key) return null;
   const path = `${new Date().toISOString().slice(0, 10)}/${crypto.randomBytes(9).toString('hex')}.${ext}`;
@@ -47,9 +47,9 @@ module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
   let stage = 'config';
   try {
-    const token = env('TG_TOKEN'); if (!token) return res.status(500).json({ error: 'TG_TOKEN не задано' });
+    const token = env('TG_TOKEN'); if (!token) return fail(res, 'card', new Error('TG_TOKEN is not set'));
     stage = 'body';
-    let b = req.body || {}; if (typeof b === 'string') b = JSON.parse(b);
+    const b = body(req);
     stage = 'rate';
     if (await rateLimit(req, res, 'card')) return;   // per IP
     stage = 'signature';
@@ -100,6 +100,6 @@ module.exports = async (req, res) => {
     fetch(`https://api.telegram.org/bot${token}/deleteMessage`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: u.id, message_id: j.result.message_id }) }).catch(() => {});
     res.status(200).json(await prepare(token, u, { photo_file_id: fileId }, b.caption));
   } catch (e) {
-    res.status(500).json({ error: `crash at ${stage}: ${String(e && e.message || e).slice(0, 160)}` });
+    fail(res, `card ${stage}`, e);
   }
 };

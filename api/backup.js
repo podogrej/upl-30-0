@@ -42,6 +42,11 @@ const TABLES = [
   { t: 'tg_notify', order: 'tg_user_id', key: 'tg_user_id' },   // sql/v070.sql
   { t: 'vd_results', order: 'id', key: 'id' },   // sql/v080_vyklyk_dnia.sql: daily challenge attempts
   { t: 'season_offers', order: 'season_id', key: 'season_id' },   // sql/v085_player_numbers.sql: wheel offers
+  // friends leagues (sql/v061_leagues.sql, v063_fives.sql)
+  { t: 'fl_leagues', order: 'id', key: 'id' },
+  { t: 'fl_members', order: 'league_id,player_id' },
+  { t: 'fl_entries', order: 'league_id,player_id,day,try_n' },
+  { t: 'fl_fives', order: 'league_id,player_id' },
 ];
 const safeEq = (a, b) => { const x = Buffer.from(String(a)), y = Buffer.from(String(b)); return x.length === y.length && crypto.timingSafeEqual(x, y); };
 const q = v => encodeURIComponent(typeof v === 'string' && /[,.()"]/.test(v) ? `"${v.replace(/"/g, '\\"')}"` : String(v));

@@ -4,16 +4,18 @@
 // No browser: DB and Telegram are faked. Run from repo root: node tools/tests/cron_summary.js
 const path=require('path');const {checker}=require('./_site.js');
 process.env.SUPABASE_SERVICE_KEY='svc';process.env.TG_TOKEN='123:T';process.env.CRON_SECRET='cs';
-const CHAT=-100500,SENT=[];
+const CHAT=-100500,SENT=[];let TGOK=true;
 // Sunday 2026-10-04; league created Thursday 10-01 → week 09-28..10-04 counts results from 10-01 only
 const R=[];let id=1;
 const add=(day,uid,name,w,d,l,gf,ga)=>R.push({id:id,chat_id:CHAT,day,tg_user_id:uid,name,season_id:id++,w,d,l,gf,ga,pts:w*3+d,created_at:day+'T10:00:00Z',trophies:['Чемпіони','✨Дует Лобановського']});
 for(const day of ['2026-10-01','2026-10-02','2026-10-03','2026-10-04']){add(day,1,'Андрій',20,5,5,60,20);add(day,2,'Вітя',15,5,10,45,35);add(day,3,'Ігор',10,10,10,40,40);add(day,4,'Слава',5,5,20,25,60);}
+// Monday 2026-10-05: 35 players (list is cut to 30 lines)
+for(let u=100;u<135;u++)add('2026-10-05',u,'Гравець'+u,30-(u-100)%25,0,0,50,10);
 const SEAS=Object.fromEntries(R.map(r=>[r.season_id,{id:r.season_id,day:r.day,tg_user_id:r.tg_user_id,w:r.w,d:r.d,l:r.l,gf:r.gf,ga:r.ga,place:1}]));
 const BOARDS={};
 const f=(q,k)=>{const m=new RegExp('[?&]'+k+'=([^&]+)').exec(q);return m?decodeURIComponent(m[1]):null;};
 global.fetch=async(url,o={})=>{const u=String(url),m=o.method||'GET';const J=(s,j)=>({ok:s<300,status:s,json:async()=>j,text:async()=>j==null?'':JSON.stringify(j)});
-  if(u.includes('api.telegram.org')){SENT.push(JSON.parse(o.body||'{}'));return J(200,{ok:true,result:{message_id:1}});}
+  if(u.includes('api.telegram.org')){SENT.push(JSON.parse(o.body||'{}'));return TGOK?J(200,{ok:true,result:{message_id:1}}):J(403,{ok:false,description:'Forbidden: bot was kicked'});}
   const q=u.split('/rest/v1/')[1]||'';const t=q.split('?')[0];
   if(t==='league_results'){let rows=R;const c=f(q,'chat_id'),d=f(q,'day'),g=/day=gte\.([\d-]+)/.exec(q),l=/day=lte\.([\d-]+)/.exec(q);
     if(c)rows=rows.filter(r=>String(r.chat_id)===c.replace('eq.',''));if(d&&d.startsWith('eq.'))rows=rows.filter(r=>r.day===d.slice(3));
@@ -36,4 +38,14 @@ const run=query=>new Promise(r=>H({query,headers:{authorization:'Bearer cs'}},{c
   T.check(wk&&!/Новий тиждень/.test(wk.text),'тиждень: без «Новий тиждень — з понеділка»');
   console.log('--- день ---\n'+(day&&day.text)+'\n--- тиждень ---\n'+(wk&&wk.text));
   SENT.length=0;const r2=await run({day:'2026-10-04'});T.check(!SENT.some(s=>/Підсумок/.test(s.text)),'повторний запуск того ж дня — без дублів');
+  // Telegram refuses: no "sent" flag, error logged, next run sends; list capped at 30 lines
+  SENT.length=0;TGOK=false;const errs=[],ce=console.error;console.error=(...a)=>errs.push(a.join(' '));
+  const f1=await run({day:'2026-10-05'});console.error=ce;
+  T.check(f1.c===200&&f1.j.summaries===0&&!BOARDS['2026-10-05'],'Telegram відмовив: прапорця «надіслано» немає, підсумків 0 '+JSON.stringify(f1.j));
+  T.check(errs.some(e=>/bot was kicked/.test(e)),'Telegram відмовив: причина в журналі сервера');
+  TGOK=true;SENT.length=0;const f2=await run({day:'2026-10-05'});
+  const big=SENT.find(s=>/Підсумок дня/.test(s.text));
+  T.check(f2.j.summaries===1&&BOARDS['2026-10-05']&&BOARDS['2026-10-05'].summary_sent===true,'повторний запуск після відмови — надіслано, прапорець стоїть');
+  const lines=big.text.split('\n').filter(l=>/^(🥇|🥈|🥉|\d+\.) /.test(l));
+  T.check(lines.length===30&&/…і ще 5/.test(big.text)&&big.text.length<4096,'35 гравців: у таблиці 30 рядків і «…і ще 5», повідомлення '+big.text.length+' символів');
   process.exit(T.done());})();

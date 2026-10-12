@@ -114,7 +114,7 @@ const handler = async (req, res) => {
     }
     res.status(400).json({ error: 'kind?' });
   } catch (e) {
-    res.status(500).json({ error: `crash at ${stage}: ${String(e && e.message || e).slice(0, 160)}` });
+    fail(res, `save ${stage}`, e);
   }
 };
 module.exports = handler;

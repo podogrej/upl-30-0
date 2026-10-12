@@ -21,7 +21,7 @@ if (target && dump.source && target.replace(/\/+$/, '') === String(dump.source).
 // parents first (order does not matter with replica role, but a partial run then still makes sense)
 const ORDER = ['players', 'player_links', 'app_marks', 'seasons', 'daily_results', 'trophies', 'challenges', 'challenge_results', 'leagues', 'league_members',
   'league_results', 'league_boards', 'season_seeds', 'f5_rooms', 'f5_players', 'f5_picks', 'player_contacts', 'merge_offers', 'merge_log', 'name_reserved',
-  'feedback', 'channel_posts', 'tg_notify', 'vd_results', 'season_offers', 'user_state'];
+  'feedback', 'channel_posts', 'tg_notify', 'vd_results', 'season_offers', 'fl_leagues', 'fl_members', 'fl_entries', 'fl_fives', 'user_state'];
 const names = Object.keys(dump.tables), unknown = names.filter(t => !ORDER.includes(t));
 const todo = [...ORDER, ...unknown].filter(t => dump.tables[t] && (t !== 'user_state' || flag('--with-user-state')));
 const MAX_ROWS = 500, MAX_BYTES = 1.5e6, TAG = '$bk_json$';
