@@ -492,6 +492,39 @@ td .sub .sk{height:18px;border-radius:var(--r-pill)}
 .nm-fold summary::-webkit-details-marker{display:none}
 .nm-fold .nm-bars{margin-top:var(--sp-2)}
 .nm-low{margin:0;font:var(--wt-bold) var(--fs-headline)/var(--lh-snug) var(--font-display)}
+/* milestones timeline, Club 100, "took N of M", share */
+.nm-ms{list-style:none;margin:0;padding:0}
+.nm-ms-i{position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:var(--sp-3);align-items:baseline;padding:var(--sp-2) 0 var(--sp-2) var(--sp-5)}
+.nm-ms-i::before{content:"";position:absolute;left:0;top:calc(var(--sp-2) + 7px);width:9px;height:9px;border-radius:50%;background:var(--ink2);z-index:1}
+.nm-ms-i::after{content:"";position:absolute;left:4px;top:0;bottom:0;width:1px;background:var(--line)}
+.nm-ms-i:first-child::after{top:calc(var(--sp-2) + 11px)}.nm-ms-i:last-child::after{bottom:calc(100% - var(--sp-2) - 11px)}
+.nm-ms-i:only-child::after{display:none}
+.nm-ms-i b{display:block;font-size:var(--fs-body);font-weight:var(--wt-bold);line-height:var(--lh-snug)}
+.nm-ms-i small{display:block;font-size:var(--fs-caption);line-height:var(--lh-sub);color:var(--muted)}
+.nm-ms-i time{font-size:var(--fs-footnote);line-height:var(--lh-sub);color:var(--ink2);font-variant-numeric:tabular-nums;white-space:nowrap}
+.nm-ms-c b{font-weight:var(--wt-medium);color:var(--ink2)}.nm-ms-c::before{width:7px;height:7px;left:1px;top:calc(var(--sp-2) + 8px);background:var(--muted)}
+.nm-ms-next b{color:var(--muted);font-weight:var(--wt-medium)}
+.nm-ms-next::before{background:var(--surface);box-shadow:inset 0 0 0 1.5px var(--muted)}
+.nm-r100{grid-template-columns:minmax(0,1fr) auto}
+.nm-pc-o{margin:var(--sp-3) 0 0;padding-top:var(--sp-3);border-top:1px solid var(--line)}
+.nm-pc-o p{margin:0;font-size:var(--fs-footnote);line-height:var(--lh-sub);color:var(--ink2)}.nm-pc-o b{color:var(--ink);font-weight:var(--wt-bold)}
+.nm-pc-o i{display:block;height:6px;margin-top:var(--sp-2);border-radius:var(--r-pill);background:var(--bg2);overflow:hidden}
+.nm-pc-o u{display:block;height:100%;border-radius:inherit;background:var(--amber);text-decoration:none}
+.nm-share{display:inline-flex;align-items:center;gap:var(--sp-2);min-height:44px;margin-top:var(--sp-1);padding:0;border:0;background:none;color:var(--ink2);font:var(--wt-bold) var(--fs-footnote)/1 var(--font-body);cursor:pointer}
+.nm-out{margin-top:var(--sp-3)}.nm-out img{display:block;width:100%;max-width:360px;height:auto;aspect-ratio:4/5;border-radius:var(--r-md);border:1px solid var(--line)}
+.nm-out .row{margin-top:var(--sp-3);align-items:center}.nm-out .muted{font-size:var(--fs-footnote);line-height:var(--lh-sub)}
+/* tap targets >=44px: real size where the layout allows, invisible hit area (::before) where a taller box would shift the screen */
+.links0 button{position:relative}.links0 button::before,.pp-name button::before,#restartBtn::before{content:"";position:absolute}
+.links0 button::before{inset:-10px -6px}
+.pp-name button{position:relative}.pp-name button::before{inset:-6px}
+#restartBtn{position:relative}#restartBtn::before{inset:-5px -2px}
+#viewClose,#nudgeLater{min-height:44px}
+.seg.ocf button,.seg.era button{min-height:44px}
+.wbtn{min-height:44px}
+#ppCab .tro:not(:has(.trn)){grid-template-columns:44px minmax(0,1fr)}
+#ppCab .tro .trt b{text-wrap:balance}
+.nm-pc-h{flex-wrap:wrap;row-gap:var(--sp-0h)}.nm-pc-h b{flex:1 1 auto}
+
 @media (min-width:640px){
  .nm-two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:var(--sp-5);align-items:start}
 }
@@ -1785,7 +1818,7 @@ function spin(mode){if(S.mode!=='pick')document.querySelector('.reels').classLis
 function alertNoCands(){document.getElementById('wheel').hidden=false;document.querySelector('#reelClub .strip').innerHTML='<div class="club">Гравців більше немає</div>';document.querySelector('#reelYear .strip').innerHTML='<div class="season"></div>';document.getElementById('squad').innerHTML='<p class="muted">У цьому клубі закінчились гравці на вільні позиції. Спробуй іншу схему.</p>';}
 function renderWheel(){
   const cs=S.wheel;const sortR=MODES[S.mode].showRatings;const show=sortR||!!S.showR;
-  // Show ratings: off by default, lasts until the end of the draft; does not change player order. Not available in Hardcore and anti-season
+  // Show ratings: off by default, lasts until the end of the draft; with ratings on the list is sorted by rating. Not available in Hardcore and anti-season
   {const row=document.getElementById('showRRow');row.hidden=sortR||!ratingsOpen()||S.format==='anti';document.getElementById('antiHint').hidden=S.format!=='anti';document.getElementById('showR').checked=!!S.showR;}
   // club colors persist after the reel stops; repaint only on change, otherwise the Ratings toggle made the name and season pulse
   const setStrip=(sel,html)=>{const el=document.querySelector(sel);if(el.innerHTML!==html)el.innerHTML=html;};
@@ -1796,12 +1829,12 @@ function renderWheel(){
   rr.hidden=S.rerolls<=0;document.getElementById('rerollCnt').textContent=S.rerolls;
   const sq=document.getElementById('squad');sq.innerHTML='';
   sq.classList.toggle('nor',!show);
-  const anti=S.format==='anti';const list=[...cs.pl].map(p=>({p,ok:isOk(cs,p)})).sort((a,b)=>(b.ok-a.ok)||(anti?a.p[0].localeCompare(b.p[0],'uk'):sortR?b.p[2]-a.p[2]:(b.p[3]-a.p[3]||b.p[4]-a.p[4])));
+  const anti=S.format==='anti';const list=[...cs.pl].map(p=>({p,ok:isOk(cs,p)})).sort((a,b)=>(b.ok-a.ok)||(anti?a.p[0].localeCompare(b.p[0],'uk'):show?(b.p[2]-a.p[2]||b.p[3]-a.p[3]||b.p[4]-a.p[4]):(b.p[3]-a.p[3]||b.p[4]-a.p[4])));
   let sep=false;const nOk=list.filter(x=>x.ok).length,nOff=list.length-nOk;
   S.offNow=S.offNow||new Set();for(const x of list)if(x.ok)S.offNow.add(x.p[5]);   // wheel offers for this pick (sent with the season, /api/save off)
   document.getElementById('sqTop').hidden=false;document.getElementById('sqCnt').textContent=`Гравці · ${nOk}`;
   for(const {p,ok} of list){if(!ok&&!sep){sep=true;const h=document.createElement('div');h.className='offhd';h.textContent=S.taken.size?`Не підходять під вільні позиції (${nOff}) — переставте когось у складі, щоб відкрити`:`Не підходять під вільні позиції (${nOff})`;sq.appendChild(h);}   // list is expanded immediately
-    // matches, goals, assists and clean sheets hidden; sorted by matches; rating only via toggle; multiple positions as buttons on the right of the row
+    // matches, goals, assists and clean sheets hidden; sorted by rating when ratings are shown (toggle or practice), otherwise by matches; multiple positions as buttons on the right of the row
     const row=document.createElement('div');row.className='plrow'+(ok?'':' off')+(S.pending===p?' on':'');
     const b=document.createElement('button');b.className='pl'+(S.pending===p?' on':'');b.disabled=!ok;b.dataset.id=p[5];
     b.innerHTML=`<span class="pos ${GROUP_OF[p[6]]||p[1]}" title="${POSFULL[p[6]]}">${POSNAME[p[6]]}</span><span class="nm" title="${POSFULL[p[6]]}">${esc(p[0])}${nickOf(p[5])}${S.pending===p?'':altTags(p)}</span><span class="rt">${show?p[2]:''}</span>`;

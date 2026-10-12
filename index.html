@@ -515,6 +515,39 @@ td .sub .sk{height:18px;border-radius:var(--r-pill)}
 .nm-fold summary::-webkit-details-marker{display:none}
 .nm-fold .nm-bars{margin-top:var(--sp-2)}
 .nm-low{margin:0;font:var(--wt-bold) var(--fs-headline)/var(--lh-snug) var(--font-display)}
+/* milestones timeline, Club 100, "took N of M", share */
+.nm-ms{list-style:none;margin:0;padding:0}
+.nm-ms-i{position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:var(--sp-3);align-items:baseline;padding:var(--sp-2) 0 var(--sp-2) var(--sp-5)}
+.nm-ms-i::before{content:"";position:absolute;left:0;top:calc(var(--sp-2) + 7px);width:9px;height:9px;border-radius:50%;background:var(--ink2);z-index:1}
+.nm-ms-i::after{content:"";position:absolute;left:4px;top:0;bottom:0;width:1px;background:var(--line)}
+.nm-ms-i:first-child::after{top:calc(var(--sp-2) + 11px)}.nm-ms-i:last-child::after{bottom:calc(100% - var(--sp-2) - 11px)}
+.nm-ms-i:only-child::after{display:none}
+.nm-ms-i b{display:block;font-size:var(--fs-body);font-weight:var(--wt-bold);line-height:var(--lh-snug)}
+.nm-ms-i small{display:block;font-size:var(--fs-caption);line-height:var(--lh-sub);color:var(--muted)}
+.nm-ms-i time{font-size:var(--fs-footnote);line-height:var(--lh-sub);color:var(--ink2);font-variant-numeric:tabular-nums;white-space:nowrap}
+.nm-ms-c b{font-weight:var(--wt-medium);color:var(--ink2)}.nm-ms-c::before{width:7px;height:7px;left:1px;top:calc(var(--sp-2) + 8px);background:var(--muted)}
+.nm-ms-next b{color:var(--muted);font-weight:var(--wt-medium)}
+.nm-ms-next::before{background:var(--surface);box-shadow:inset 0 0 0 1.5px var(--muted)}
+.nm-r100{grid-template-columns:minmax(0,1fr) auto}
+.nm-pc-o{margin:var(--sp-3) 0 0;padding-top:var(--sp-3);border-top:1px solid var(--line)}
+.nm-pc-o p{margin:0;font-size:var(--fs-footnote);line-height:var(--lh-sub);color:var(--ink2)}.nm-pc-o b{color:var(--ink);font-weight:var(--wt-bold)}
+.nm-pc-o i{display:block;height:6px;margin-top:var(--sp-2);border-radius:var(--r-pill);background:var(--bg2);overflow:hidden}
+.nm-pc-o u{display:block;height:100%;border-radius:inherit;background:var(--amber);text-decoration:none}
+.nm-share{display:inline-flex;align-items:center;gap:var(--sp-2);min-height:44px;margin-top:var(--sp-1);padding:0;border:0;background:none;color:var(--ink2);font:var(--wt-bold) var(--fs-footnote)/1 var(--font-body);cursor:pointer}
+.nm-out{margin-top:var(--sp-3)}.nm-out img{display:block;width:100%;max-width:360px;height:auto;aspect-ratio:4/5;border-radius:var(--r-md);border:1px solid var(--line)}
+.nm-out .row{margin-top:var(--sp-3);align-items:center}.nm-out .muted{font-size:var(--fs-footnote);line-height:var(--lh-sub)}
+/* tap targets >=44px: real size where the layout allows, invisible hit area (::before) where a taller box would shift the screen */
+.links0 button{position:relative}.links0 button::before,.pp-name button::before,#restartBtn::before{content:"";position:absolute}
+.links0 button::before{inset:-10px -6px}
+.pp-name button{position:relative}.pp-name button::before{inset:-6px}
+#restartBtn{position:relative}#restartBtn::before{inset:-5px -2px}
+#viewClose,#nudgeLater{min-height:44px}
+.seg.ocf button,.seg.era button{min-height:44px}
+.wbtn{min-height:44px}
+#ppCab .tro:not(:has(.trn)){grid-template-columns:44px minmax(0,1fr)}
+#ppCab .tro .trt b{text-wrap:balance}
+.nm-pc-h{flex-wrap:wrap;row-gap:var(--sp-0h)}.nm-pc-h b{flex:1 1 auto}
+
 @media (min-width:640px){
  .nm-two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:var(--sp-5);align-items:start}
 }
@@ -1891,7 +1924,7 @@ function spin(mode){if(S.mode!=='pick')document.querySelector('.reels').classLis
 function alertNoCands(){document.getElementById('wheel').hidden=false;document.querySelector('#reelClub .strip').innerHTML='<div class="club">Гравців більше немає</div>';document.querySelector('#reelYear .strip').innerHTML='<div class="season"></div>';document.getElementById('squad').innerHTML='<p class="muted">У цьому клубі закінчились гравці на вільні позиції. Спробуй іншу схему.</p>';}
 function renderWheel(){
   const cs=S.wheel;const sortR=MODES[S.mode].showRatings;const show=sortR||!!S.showR;
-  // Show ratings: off by default, lasts until the end of the draft; does not change player order. Not available in Hardcore and anti-season
+  // Show ratings: off by default, lasts until the end of the draft; with ratings on the list is sorted by rating. Not available in Hardcore and anti-season
   {const row=document.getElementById('showRRow');row.hidden=sortR||!ratingsOpen()||S.format==='anti';document.getElementById('antiHint').hidden=S.format!=='anti';document.getElementById('showR').checked=!!S.showR;}
   // club colors persist after the reel stops; repaint only on change, otherwise the Ratings toggle made the name and season pulse
   const setStrip=(sel,html)=>{const el=document.querySelector(sel);if(el.innerHTML!==html)el.innerHTML=html;};
@@ -1902,12 +1935,12 @@ function renderWheel(){
   rr.hidden=S.rerolls<=0;document.getElementById('rerollCnt').textContent=S.rerolls;
   const sq=document.getElementById('squad');sq.innerHTML='';
   sq.classList.toggle('nor',!show);
-  const anti=S.format==='anti';const list=[...cs.pl].map(p=>({p,ok:isOk(cs,p)})).sort((a,b)=>(b.ok-a.ok)||(anti?a.p[0].localeCompare(b.p[0],'uk'):sortR?b.p[2]-a.p[2]:(b.p[3]-a.p[3]||b.p[4]-a.p[4])));
+  const anti=S.format==='anti';const list=[...cs.pl].map(p=>({p,ok:isOk(cs,p)})).sort((a,b)=>(b.ok-a.ok)||(anti?a.p[0].localeCompare(b.p[0],'uk'):show?(b.p[2]-a.p[2]||b.p[3]-a.p[3]||b.p[4]-a.p[4]):(b.p[3]-a.p[3]||b.p[4]-a.p[4])));
   let sep=false;const nOk=list.filter(x=>x.ok).length,nOff=list.length-nOk;
   S.offNow=S.offNow||new Set();for(const x of list)if(x.ok)S.offNow.add(x.p[5]);   // wheel offers for this pick (sent with the season, /api/save off)
   document.getElementById('sqTop').hidden=false;document.getElementById('sqCnt').textContent=`Гравці · ${nOk}`;
   for(const {p,ok} of list){if(!ok&&!sep){sep=true;const h=document.createElement('div');h.className='offhd';h.textContent=S.taken.size?`Не підходять під вільні позиції (${nOff}) — переставте когось у складі, щоб відкрити`:`Не підходять під вільні позиції (${nOff})`;sq.appendChild(h);}   // list is expanded immediately
-    // matches, goals, assists and clean sheets hidden; sorted by matches; rating only via toggle; multiple positions as buttons on the right of the row
+    // matches, goals, assists and clean sheets hidden; sorted by rating when ratings are shown (toggle or practice), otherwise by matches; multiple positions as buttons on the right of the row
     const row=document.createElement('div');row.className='plrow'+(ok?'':' off')+(S.pending===p?' on':'');
     const b=document.createElement('button');b.className='pl'+(S.pending===p?' on':'');b.disabled=!ok;b.dataset.id=p[5];
     b.innerHTML=`<span class="pos ${GROUP_OF[p[6]]||p[1]}" title="${POSFULL[p[6]]}">${POSNAME[p[6]]}</span><span class="nm" title="${POSFULL[p[6]]}">${esc(p[0])}${nickOf(p[5])}${S.pending===p?'':altTags(p)}</span><span class="rt">${show?p[2]:''}</span>`;
@@ -3166,14 +3199,31 @@ function ppRenderCab(){
 // in Telegram: bot sends the image to DM (api/card), otherwise long-press the image
 const CAB_COL={base:'#8fa0d8',friends:'#33c9e6',secret:'#a970ff'};   // cabinet image uses the same three classes as the page
 let CAB_CANVAS=null;
-async function ppShareCab(got,n,total){try{await document.fonts.ready;}catch(e){}
-  const W=1080,H=1350,c=document.createElement('canvas');c.width=W;c.height=H;CAB_CANVAS=c;const g=c.getContext('2d');
-  const DISP='"KyivType Sans", sans-serif',BODY=DISP,MONO=DISP;   // 0.69.1: KyivType Sans
+// share cards (cabinet, numbers): common 1080x1350 base, and the common "show / send" part
+const PP_CARD={W:1080,H:1350,F:'"KyivType Sans", sans-serif'};
+function ppCardBase(sub){const {W,H,F}=PP_CARD,c=document.createElement('canvas');c.width=W;c.height=H;const g=c.getContext('2d');
   const grd=g.createLinearGradient(0,0,0,H);grd.addColorStop(0,'#0b1430');grd.addColorStop(1,'#24124a');g.fillStyle=grd;g.fillRect(0,0,W,H);
   g.strokeStyle='rgba(255,255,255,.12)';g.lineWidth=4;g.strokeRect(40,40,W-80,H-80);
-  g.fillStyle='#ffffff';g.font=`900 40px ${DISP}`;g.fillText('30-0',80,122);const lw=g.measureText('30-0 ').width;g.fillStyle='#ff5aa0';g.fillText('УПЛ',80+lw,122);
-  g.fillStyle='#b3aea4';g.font=`600 28px ${MONO}`;g.fillText('ШАФА ТРОФЕЇВ',80,178);
-  g.fillStyle='#ffffff';let fs=64;const nm=myName();g.font=`800 ${fs}px ${DISP}`;while(g.measureText(nm).width>W-160&&fs>34){fs-=2;g.font=`800 ${fs}px ${DISP}`;}g.fillText(nm,80,262);
+  g.fillStyle='#ffffff';g.font=`900 40px ${F}`;g.fillText('30-0',80,122);const lw=g.measureText('30-0 ').width;g.fillStyle='#ff5aa0';g.fillText('УПЛ',80+lw,122);
+  g.fillStyle='#b3aea4';g.font=`600 28px ${F}`;g.fillText(sub,80,178);
+  g.fillStyle='#ffffff';let fs=64;const nm=myName();g.font=`800 ${fs}px ${F}`;while(g.measureText(nm).width>W-160&&fs>34){fs-=2;g.font=`800 ${fs}px ${F}`;}g.fillText(nm,80,262);
+  g.fillStyle='#8f9bc4';g.font=`500 24px ${F}`;g.fillText('Збери свою 11-ку · '+SITE_HOST,80,H-62);
+  return {c,g};}
+// shows the card in <pre>Out/Img and wires <pre>Send (Telegram chat, system share sheet, or press-and-hold hint)
+function ppCardOut(c,pre,text,file,block){
+  const $=k=>document.getElementById(pre+k),out=$('Out'),img=$('Img'),send=$('Send'),msg=$('Msg');if(!out)return;
+  img.src=c.toDataURL('image/png');out.hidden=false;msg.textContent='';
+  const inTg=!!(ONLINE&&TG&&TG.initData);let canFile=false;
+  try{canFile=!inTg&&!!navigator.canShare&&navigator.canShare({files:[new File([new Blob(['x'],{type:'image/png'})],'x.png',{type:'image/png'})]});}catch(e){}
+  send.hidden=!(inTg||canFile);send.innerHTML=inTg?`${ic('telegram','sm')}Надіслати мені в Telegram`:`${ic('share-variant','sm')}Поділитися`;
+  if(!inTg&&!canFile)msg.textContent='Натисни й утримуй картинку, щоб зберегти її або поділитися.';
+  send.onclick=()=>{
+    if(inTg){send.disabled=true;msg.textContent='Надсилаємо…';_fetch('/api/card',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({initData:TG.initData,image:c.toDataURL('image/jpeg',0.9),caption:text})})
+      .then(r=>r.json().catch(()=>({}))).then(j=>{msg.textContent=j.ok?`Готово — картинка в чаті з @${TG_BOT}.`:j.need_start?`Спочатку відкрий чат з @${TG_BOT} і натисни «Start».`:'Не вдалося надіслати.';}).catch(()=>{msg.textContent='Не вдалося надіслати: немає зв’язку.';}).finally(()=>{send.disabled=false;});return;}
+    c.toBlob(bl=>{navigator.share({files:[new File([bl],file,{type:'image/png'})],text}).catch(e=>{if(e&&e.name!=='AbortError')msg.textContent='Не вдалося відкрити меню «Поділитися».';});},'image/png');};
+  out.scrollIntoView({behavior:'smooth',block});}
+async function ppShareCab(got,n,total){try{await document.fonts.ready;}catch(e){}
+  const {W,H,F:BODY}=PP_CARD,{c,g}=ppCardBase('ШАФА ТРОФЕЇВ');CAB_CANVAS=c;
   g.fillStyle='#ff5aa0';g.font=`700 34px ${BODY}`;g.fillText(`Відкрито ${n} з ${total}`,80,318);
   g.fillStyle='rgba(255,255,255,.08)';g.fillRect(80,340,W-160,14);g.fillStyle='#ff5aa0';g.fillRect(80,340,(W-160)*(total?n/total:0),14);
   const list=got.slice(0,12),cols=3,cw=(W-160)/cols,ch=222,y0=400;
@@ -3184,18 +3234,7 @@ async function ppShareCab(got,n,total){try{await document.fonts.ready;}catch(e){
     g.textBaseline='alphabetic';g.fillStyle='#ffffff';let f2=28;g.font=`700 ${f2}px ${BODY}`;let tn=t.n;while(g.measureText(tn).width>cw-20&&f2>20){f2-=1;g.font=`700 ${f2}px ${BODY}`;}
     while(g.measureText(tn).width>cw-20&&tn.length>4)tn=tn.slice(0,-2)+'…';g.fillText(tn,cx,cy+R+46);g.textAlign='left';});
   if(got.length>12){g.fillStyle='#b3aea4';g.font=`600 28px ${BODY}`;g.fillText(`і ще ${got.length-12}`,80,y0+4*ch-10);}
-  g.fillStyle='#8f9bc4';g.font=`500 24px ${BODY}`;g.fillText('Збери свою 11-ку · '+SITE_HOST,80,H-62);
-  const out=document.getElementById('ppCabOut'),img=document.getElementById('ppCabImg'),send=document.getElementById('ppCabSend'),msg=document.getElementById('ppCabMsg');if(!out)return;
-  img.src=c.toDataURL('image/png');out.hidden=false;msg.textContent='';
-  const inTg=!!(ONLINE&&TG&&TG.initData);let canFile=false;
-  try{canFile=!inTg&&!!navigator.canShare&&navigator.canShare({files:[new File([new Blob(['x'],{type:'image/png'})],'x.png',{type:'image/png'})]});}catch(e){}
-  send.hidden=!(inTg||canFile);send.innerHTML=inTg?`${ic('telegram','sm')}Надіслати мені в Telegram`:`${ic('share-variant','sm')}Поділитися`;
-  if(!inTg&&!canFile)msg.textContent='Натисни й утримуй картинку, щоб зберегти її або поділитися.';
-  send.onclick=()=>{const text=`🏆 Моя шафа трофеїв у 30-0 УПЛ: ${n} з ${total}`;
-    if(inTg){send.disabled=true;msg.textContent='Надсилаємо…';_fetch('/api/card',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({initData:TG.initData,image:c.toDataURL('image/jpeg',0.9),caption:text})})
-      .then(r=>r.json().catch(()=>({}))).then(j=>{msg.textContent=j.ok?`Готово — картинка в чаті з @${TG_BOT}.`:j.need_start?`Спочатку відкрий чат з @${TG_BOT} і натисни «Start».`:'Не вдалося надіслати.';}).catch(()=>{msg.textContent='Не вдалося надіслати: немає зв’язку.';}).finally(()=>{send.disabled=false;});return;}
-    c.toBlob(bl=>{navigator.share({files:[new File([bl],'30-0-trophies.png',{type:'image/png'})],text}).catch(e=>{if(e&&e.name!=='AbortError')msg.textContent='Не вдалося відкрити меню «Поділитися».';});},'image/png');};
-  out.scrollIntoView({behavior:'smooth',block:'center'});
+  ppCardOut(c,'ppCab',`🏆 Моя шафа трофеїв у 30-0 УПЛ: ${n} з ${total}`,'30-0-trophies.png','center');
 }
 // history: last 10 seasons, "10 more" on tap
 const PP_MODE_DOT={classic:'var(--amber)',pick:'var(--mf)',daily:'var(--df)',derby:'var(--fw)',oneclub:'var(--mf)',anti:'var(--muted)',legends:'var(--gk)'};
@@ -3294,6 +3333,10 @@ if(ONLINE){const m=/[?&]u=([a-z2-9]{8})(?:&|$)/.exec(location.search);if(m)setTi
 // cached in upl30_nums {pid, at, n, d}; refetched when the season count changed or the cache is older than NM_TTL.
 const NM_MIN=5;   // fewer seasons: a neutral line instead of conclusions
 const NM_TTL=10*6e4;
+const NM_C100=3;   // Club 100: rows before "Show all"
+const NM_C100_MAX=15;   // expanded list cap
+const NM_OFF_MIN=5;   // "took N of M" needs at least this many offers of the player
+const NM_SEASON_MS=[10,25,50,100,250,500,1000];
 const NM_CHIPS=8;   // "one season and never again": names shown before "Show all"
 let NM=null;   // {pid, d, at, n, loading, err, sel, all}
 const nmPct=(a,b)=>b?Math.round(100*a/b):0;
@@ -3330,12 +3373,30 @@ function nmXi(d){const F=FORMATIONS[d.fm&&d.fm.f];if(!F)return null;const out=ne
   return {F,ids:out};}
 const nmBar=(l,v,sub,pct,dim)=>`<div class="nm-bar${dim?' dim':''}"><span>${l}</span><b>${v}${sub?`<small>${sub}</small>`:''}</b><i><u style="width:${Math.max(2,Math.round(pct))}%"></u></i></div>`;
 const nmSea=n=>`${fmtN(n)} ${plUk(n,'сезон','сезони','сезонів')}`;
+
+const nmDate=iso=>{const s=String(iso||'').slice(0,10);return s.length===10?`${s.slice(8)}.${s.slice(5,7)}.${s.slice(0,4)}`:'';};
+// milestones: server gives d.ms [{k:'first'|'champ'|'perfect'|'rel'|'s', s?, n (season ordinal), at}] oldest first; round-number seasons are added here
+function nmMsHtml(d){
+  if(!Array.isArray(d.ms)||!d.ms.length)return '';
+  const T={first:'Перший сезон',champ:'Перший титул',perfect:'Перший 30-0',rel:'Перший виліт'};
+  const li=(t,sub,at,iso,c)=>`<li class="nm-ms-i${c?' '+c:''}"><div><b>${t}</b>${sub?`<small>${sub}</small>`:''}</div>${at?`<time datetime="${esc(String(iso).slice(0,10))}">${at}</time>`:''}</li>`;
+  const rows=d.ms.filter(m=>m&&(m.k==='s'?m.s:T[m.k])).map(m=>m.k==='s'?li(`${fmtN(m.s)}-й сезон`,'',nmDate(m.at),m.at,'nm-ms-c'):li(T[m.k]||'',m.k==='first'?'':`сезон ${fmtN(m.n)}`,nmDate(m.at),m.at)).join('');
+  const nx=NM_SEASON_MS.find(k=>k>d.n),next=nx?`<li class="nm-ms-i nm-ms-next"><div><b>${fmtN(nx)}-й сезон</b><small>ще ${fmtN(nx-d.n)}</small></div></li>`:'';
+  return `<div class="pp-sec"><h3>Віхи</h3></div><div class="nm-card"><ol class="nm-ms">${rows}${next}</ol></div>`;}
+// Club 100: players with 100+ played matches in the own XIs (m from the server), hidden when there are none
+function nmC100Html(d){
+  const L=(d.c100||[]).filter(r=>r.m>=100&&r.n);if(!L.length)return '';const tot=Math.max(+d.c100_n||0,L.length);
+  const shown=NM.c100?L.slice(0,NM_C100_MAX):L.slice(0,NM_C100),rest=tot-shown.length;
+  const row=r=>`<div class="nm-row nm-r100"><div class="t"><b>${esc(r.n)}</b><small>${[r.c?esc(shortTeam(r.c)):'',r.slot&&POSNAME[r.slot]||''].filter(Boolean).join(' · ')}</small></div><div class="n">${fmtN(r.m)}</div></div>`;
+  return `<div class="pp-sec"><h3>Клуб 100</h3><span class="best">${fmtN(tot)} ${plUk(tot,'гравець','гравці','гравців')}</span></div><div class="nm-rows">${shown.map(row).join('')}</div>
+    <p class="nm-note">Матчів у твоєму складі з кожним із них${NM.c100&&rest>0?`; і ще ${fmtN(rest)}`:''}.</p>${!NM.c100&&shown.length<L.length?`<button class="nm-more" type="button" id="nmC100">Показати ще ${fmtN(Math.min(L.length,NM_C100_MAX)-shown.length)}</button>`:''}`;}
 function nmHtml(){
   const d=NM&&NM.d,h2='<h2>Твої цифри</h2>';
   if(!d)return NM&&NM.loading?`<section class="nms" id="nmSec" aria-busy="true">${h2}<p class="nm-verdict"><i class="sk w60"></i></p></section>`:'';
   if(d.n<NM_MIN)return `<section class="nms" id="nmSec">${h2}<p class="nm-low">Зіграй ще кілька сезонів, і ми розкажемо, який ти тренер.</p><p class="nm-basis">${d.n?`Поки є ${nmSea(d.n)}, а для висновків потрібно п'ять.`:'Для висновків потрібно п\'ять сезонів.'}</p></section>`;
   const games=d.w+d.d+d.l,pl=id=>d.pl[id]||{};
-  let h=`<section class="nms" id="nmSec">${h2}<p class="nm-verdict">${nmVerdict(d)}</p><p class="nm-basis">За ${nmSea(d.n)} у твоїх складах ${plUk(d.uniq,'був','було','було')} ${fmtN(d.uniq)} ${plUk(d.uniq,'різний гравець','різні гравці','різних гравців')}.</p><div class="nm-two"><div>`;
+  let h=`<section class="nms" id="nmSec">${h2}<p class="nm-verdict">${nmVerdict(d)}</p><p class="nm-basis">За ${nmSea(d.n)} у твоїх складах ${plUk(d.uniq,'був','було','було')} ${fmtN(d.uniq)} ${plUk(d.uniq,'різний гравець','різні гравці','різних гравців')}.</p>
+    <button class="nm-share" type="button" id="nmShare">${ic('share-variant','sm')}Поділитися цифрами</button><div id="nmOut" hidden class="nm-out"><img id="nmImg" alt="Картка «Твої цифри»"><div class="row"><button class="primary" id="nmSend" hidden></button><span class="muted" id="nmMsg"></span></div></div><div class="nm-two"><div>`;
   // record
   if(games)h+=`<div class="pp-sec"><h3>Твій рекорд</h3><span class="best">${nmSea(d.n)}</span></div><div class="nm-card">
     <div class="nm-rec-top"><b>${nmPct(d.w,games)}%</b><span>матчів ти виграв</span></div>
@@ -3343,12 +3404,13 @@ function nmHtml(){
     <div class="nm-wdl-l"><span><b>${fmtN(d.w)}</b> В</span><span><b>${fmtN(d.d)}</b> Н</span><span><b>${fmtN(d.l)}</b> П</span></div>
     <div class="nm-stats"><div><b>${nmDec(d.pts/d.na)}</b><span>очок за сезон</span></div><div><b>${Math.round(d.gf/d.na)}</b><span>голів за сезон</span></div><div><b>${d.best!=null?d.best:'—'}</b><span>найкращий сезон</span></div></div>
     ${d.na<d.n?'<p class="nm-note">Без антисезону: там мета — програти.</p>':''}</div>`;
+  h+=nmMsHtml(d);
   // XI on the game's pitch
   const X=nmXi(d);
   if(X){const G=pitchGeo(d.fm.f);
     h+=`<div class="pp-sec"><h3>Твоя 11-ка</h3><span class="best">${esc(d.fm.f)} · ${nmPct(d.fm.k,d.n)}% сезонів</span></div><div class="pitch" id="nmPitch">${PITCH_MK}${X.F.slots.map((sl,i)=>{const id=X.ids[i],q=id&&pl(id),pt=G.pts[i];
       if(!q)return `<div class="slot empty ${GROUP_OF[sl]}" style="left:${pt.x}%;top:${pt.y}%">${slotInner(sl,null,{})}</div>`;
-      return `<div class="slot filled ${GROUP_OF[sl]}${NM.sel===i?' moving':''}" style="left:${pt.x}%;top:${pt.y}%" data-nm="${i}" role="button" tabindex="0" aria-pressed="${NM.sel===i}" aria-label="${esc(q.n)}: ${nmSea(q.k)} у складі">${slotInner(sl,{name:q.n,id,club:q.c},{pill:`<span class="pill avg">${q.k}</span>`})}</div>`;}).join('')}</div>
+      return `<div class="slot filled ${GROUP_OF[sl]}${NM.sel===i?' moving':''}" style="left:${pt.x}%;top:${pt.y}%" data-nm="${i}" role="button" tabindex="0" aria-pressed="${NM.sel===i}" aria-label="${esc(q.n)}: ${nmSea(q.k)} у складі">${slotInner(sl,{name:q.n,id,club:q.c,y:q.y},{pill:`<span class="pill avg">${q.k}</span>`})}</div>`;}).join('')}</div>
       <p class="nm-pitch-cap">Число біля кружка — у скількох сезонах гравець був у твоєму складі. Торкнись гравця, щоб побачити більше.</p><div id="nmCard">${nmCardHtml(d,X)}</div>`;}
   h+='</div><div>';
   // key players
@@ -3358,6 +3420,7 @@ function nmHtml(){
     row('heart','Найчастіший',d.top.k,q=>`у ${nmPct(q.k,d.n)}% твоїх складів`,q=>fmtN(q.k),q=>plUk(q.k,'сезон','сезони','сезонів'))+
     row('lightning-bolt','Твій андердог',d.top.dog,q=>[`рейтинг ${esc(String(q.r0))}`,`${fmtN(q.g)} ${plUk(q.g,'гол','голи','голів')}`,winW(q)].filter(Boolean).join(' · '),q=>fmtN(q.k),q=>plUk(q.k,'сезон','сезони','сезонів'));
   if(rows)h+=`<div class="pp-sec"><h3>Ключові гравці</h3></div><div class="nm-rows">${rows}</div>`;
+  h+=nmC100Html(d);
   // rejected (needs logged wheel offers; the server sends it only with enough of them)
   const rej=(d.rej||[]).map(r=>({...r,n:nmName(r.id)})).filter(r=>r.n);
   if(rej.length)h+=`<div class="pp-sec"><h3>Відхилені</h3><span class="best">з ${nmSea(d.off_n)}</span></div><div class="nm-rows">${rej.map(r=>`<div class="nm-row">${ic('ferris-wheel')}<div class="t"><b>${esc(r.n)}</b></div><div class="n">${fmtN(r.k)}<small>${plUk(r.k,'раз','рази','разів')}</small></div></div>`).join('')}</div><p class="nm-note">Колесо пропонувало їх найчастіше, а ти не взяв жодного разу.</p>`;
@@ -3382,16 +3445,34 @@ function nmCardHtml(d,X){const id=NM.sel>=0&&X.ids[NM.sel];if(!id)return '';cons
   const w=games?nmPct(q.wa,games):null,wo=rest>0?nmPct(d.w-q.wa,rest):null,df=w!=null&&wo!=null?w-wo:null;
   return `<div class="nm-pc" role="status"><div class="nm-pc-h"><b>${esc(q.n)}</b><span>${[q.slot&&POSNAME[q.slot]||'',q.r0!=null?`рейтинг ${esc(String(q.r0))}`:''].filter(Boolean).join(' · ')}</span></div>
     <div class="nm-pc-g"><div><b>${fmtN(q.k)}</b><span>${plUk(q.k,'сезон','сезони','сезонів')} у складі</span></div><div><b>${fmtN(q.g)}</b><span>${plUk(q.g,'гол','голи','голів')} за тебе</span></div><div><b>${nmPct(q.k,d.n)}%</b><span>твоїх сезонів</span></div></div>
-    ${w!=null?`<p class="nm-pc-d">Перемог з ним <b>${w}%</b>${wo!=null?`, без нього <b>${wo}%</b> <strong class="${df<0?'neg':''}">${df>0?'+':df<0?'−':''}${Math.abs(df)} п.п.</strong>`:''}</p>`:''}</div>`;}
+    ${w!=null?`<p class="nm-pc-d">Перемог з ним <b>${w}%</b>${wo!=null?`, без нього <b>${wo}%</b> <strong class="${df<0?'neg':''}">${df>0?'+':df<0?'−':''}${Math.abs(df)} п.п.</strong>`:''}</p>`:''}
+    ${q.om>=NM_OFF_MIN?`<div class="nm-pc-o"><p>Колесо пропонувало його <b>${fmtN(q.om)}</b> ${plUk(q.om,'раз','рази','разів')}, ти взяв <b>${fmtN(q.ot)}</b></p><i><u style="width:${Math.max(2,nmPct(q.ot,q.om))}%"></u></i></div>`:''}</div>`;}
 function nmRender(){const el=document.getElementById('ppNums');if(!el)return;el.innerHTML=nmHtml();nmWire();}
 function nmWire(){
   document.querySelectorAll('#nmPitch [data-nm]').forEach(s=>{const tap=()=>{NM.sel=NM.sel===+s.dataset.nm?-1:+s.dataset.nm;nmSel();};
     s.onclick=tap;s.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();tap();}else if(e.key==='Escape'&&NM.sel>=0){NM.sel=-1;nmSel();}};});
-  const a=document.getElementById('nmAll');if(a)a.onclick=()=>{NM.all=true;nmRender();};}
+  const a=document.getElementById('nmAll');if(a)a.onclick=()=>{NM.all=true;nmRender();};
+  const c=document.getElementById('nmC100');if(c)c.onclick=()=>{NM.c100=true;nmRender();};
+  const sh=document.getElementById('nmShare');if(sh)sh.onclick=()=>nmShareCard(NM.d);}
 // selection changes only the slot state and the card, the pitch is not redrawn
 function nmSel(){const X=NM.d&&nmXi(NM.d);if(!X)return;
   document.querySelectorAll('#nmPitch [data-nm]').forEach(s=>{const on=+s.dataset.nm===NM.sel;s.classList.toggle('moving',on);s.setAttribute('aria-pressed',String(on));});
   const c=document.getElementById('nmCard');if(c)c.innerHTML=nmCardHtml(NM.d,X);haptic('select');}
+
+// share card: same base as the cabinet card (ppCardBase / ppCardOut), verdict as the headline, four numbers below
+async function nmShareCard(d){try{await document.fonts.ready;}catch(e){}
+  const {W,F}=PP_CARD,{c,g}=ppCardBase('ТВОЇ ЦИФРИ');
+  // verdict: words, <em> words in pink, wrapped to 920px
+  const words=[];nmVerdict(d).split(/(<em>.*?<\/em>)/).forEach(part=>{const em=part.startsWith('<em>');part.replace(/<[^>]+>/g,'').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').split(/\s+/).filter(Boolean).forEach(w=>words.push({w,em}));});
+  g.font=`800 60px ${F}`;let x=80,y=392;const sp=g.measureText(' ').width;
+  for(const o of words){const wd=g.measureText(o.w).width;if(x>80&&x+wd>W-80){x=80;y+=78;}g.fillStyle=o.em?'#ff5aa0':'#ffffff';g.fillText(o.w,x,y);x+=wd+sp;}
+  const top=Math.max(y+70,640);g.fillStyle='rgba(255,255,255,.14)';g.fillRect(80,top,W-160,2);
+  const games=d.w+d.d+d.l,c100=Math.max(+d.c100_n||0,(d.c100||[]).length);
+  const cells=[[fmtN(d.n),plUk(d.n,'сезон','сезони','сезонів')],[games?nmPct(d.w,games)+'%':'—','матчів виграно'],[d.best!=null?String(d.best):'—','очок у найкращому сезоні'],c100?[fmtN(c100),'у Клубі 100']:[fmtN(d.uniq),plUk(d.uniq,'різний гравець','різні гравці','різних гравців')]];
+  const y0=top+190,rowH=250;
+  cells.forEach(([v,l],i)=>{const cx=80+(i%2)*500,cy=y0+Math.floor(i/2)*rowH;g.fillStyle='#ffffff';g.font=`900 132px ${F}`;g.fillText(v,cx,cy);g.fillStyle='#b3aea4';g.font=`600 30px ${F}`;g.fillText(l,cx,cy+54);});
+  ppCardOut(c,'nm',`Мої цифри у 30-0 УПЛ: ${d.n} ${plUk(d.n,'сезон','сезони','сезонів')}`,'30-0-numbers.png','nearest');
+}
 
 // ---------- Leagues with friends: 11x11 and 5x5. Spec: docs/leagues_online.md, mockups docs/mockups/lg_1_list ... lg_6_match5.
 // A league sets shared rules (duration, attempts, counted attempts, points per round, rerolls, ratings, era); each day is a round; each player has own wheel.

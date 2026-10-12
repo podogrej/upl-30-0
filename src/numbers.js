@@ -2,6 +2,10 @@
 // cached in upl30_nums {pid, at, n, d}; refetched when the season count changed or the cache is older than NM_TTL.
 const NM_MIN=5;   // fewer seasons: a neutral line instead of conclusions
 const NM_TTL=10*6e4;
+const NM_C100=3;   // Club 100: rows before "Show all"
+const NM_C100_MAX=15;   // expanded list cap
+const NM_OFF_MIN=5;   // "took N of M" needs at least this many offers of the player
+const NM_SEASON_MS=[10,25,50,100,250,500,1000];
 const NM_CHIPS=8;   // "one season and never again": names shown before "Show all"
 let NM=null;   // {pid, d, at, n, loading, err, sel, all}
 const nmPct=(a,b)=>b?Math.round(100*a/b):0;
@@ -38,12 +42,30 @@ function nmXi(d){const F=FORMATIONS[d.fm&&d.fm.f];if(!F)return null;const out=ne
   return {F,ids:out};}
 const nmBar=(l,v,sub,pct,dim)=>`<div class="nm-bar${dim?' dim':''}"><span>${l}</span><b>${v}${sub?`<small>${sub}</small>`:''}</b><i><u style="width:${Math.max(2,Math.round(pct))}%"></u></i></div>`;
 const nmSea=n=>`${fmtN(n)} ${plUk(n,'сезон','сезони','сезонів')}`;
+
+const nmDate=iso=>{const s=String(iso||'').slice(0,10);return s.length===10?`${s.slice(8)}.${s.slice(5,7)}.${s.slice(0,4)}`:'';};
+// milestones: server gives d.ms [{k:'first'|'champ'|'perfect'|'rel'|'s', s?, n (season ordinal), at}] oldest first; round-number seasons are added here
+function nmMsHtml(d){
+  if(!Array.isArray(d.ms)||!d.ms.length)return '';
+  const T={first:'Перший сезон',champ:'Перший титул',perfect:'Перший 30-0',rel:'Перший виліт'};
+  const li=(t,sub,at,iso,c)=>`<li class="nm-ms-i${c?' '+c:''}"><div><b>${t}</b>${sub?`<small>${sub}</small>`:''}</div>${at?`<time datetime="${esc(String(iso).slice(0,10))}">${at}</time>`:''}</li>`;
+  const rows=d.ms.filter(m=>m&&(m.k==='s'?m.s:T[m.k])).map(m=>m.k==='s'?li(`${fmtN(m.s)}-й сезон`,'',nmDate(m.at),m.at,'nm-ms-c'):li(T[m.k]||'',m.k==='first'?'':`сезон ${fmtN(m.n)}`,nmDate(m.at),m.at)).join('');
+  const nx=NM_SEASON_MS.find(k=>k>d.n),next=nx?`<li class="nm-ms-i nm-ms-next"><div><b>${fmtN(nx)}-й сезон</b><small>ще ${fmtN(nx-d.n)}</small></div></li>`:'';
+  return `<div class="pp-sec"><h3>Віхи</h3></div><div class="nm-card"><ol class="nm-ms">${rows}${next}</ol></div>`;}
+// Club 100: players with 100+ played matches in the own XIs (m from the server), hidden when there are none
+function nmC100Html(d){
+  const L=(d.c100||[]).filter(r=>r.m>=100&&r.n);if(!L.length)return '';const tot=Math.max(+d.c100_n||0,L.length);
+  const shown=NM.c100?L.slice(0,NM_C100_MAX):L.slice(0,NM_C100),rest=tot-shown.length;
+  const row=r=>`<div class="nm-row nm-r100"><div class="t"><b>${esc(r.n)}</b><small>${[r.c?esc(shortTeam(r.c)):'',r.slot&&POSNAME[r.slot]||''].filter(Boolean).join(' · ')}</small></div><div class="n">${fmtN(r.m)}</div></div>`;
+  return `<div class="pp-sec"><h3>Клуб 100</h3><span class="best">${fmtN(tot)} ${plUk(tot,'гравець','гравці','гравців')}</span></div><div class="nm-rows">${shown.map(row).join('')}</div>
+    <p class="nm-note">Матчів у твоєму складі з кожним із них${NM.c100&&rest>0?`; і ще ${fmtN(rest)}`:''}.</p>${!NM.c100&&shown.length<L.length?`<button class="nm-more" type="button" id="nmC100">Показати ще ${fmtN(Math.min(L.length,NM_C100_MAX)-shown.length)}</button>`:''}`;}
 function nmHtml(){
   const d=NM&&NM.d,h2='<h2>Твої цифри</h2>';
   if(!d)return NM&&NM.loading?`<section class="nms" id="nmSec" aria-busy="true">${h2}<p class="nm-verdict"><i class="sk w60"></i></p></section>`:'';
   if(d.n<NM_MIN)return `<section class="nms" id="nmSec">${h2}<p class="nm-low">Зіграй ще кілька сезонів, і ми розкажемо, який ти тренер.</p><p class="nm-basis">${d.n?`Поки є ${nmSea(d.n)}, а для висновків потрібно п'ять.`:'Для висновків потрібно п\'ять сезонів.'}</p></section>`;
   const games=d.w+d.d+d.l,pl=id=>d.pl[id]||{};
-  let h=`<section class="nms" id="nmSec">${h2}<p class="nm-verdict">${nmVerdict(d)}</p><p class="nm-basis">За ${nmSea(d.n)} у твоїх складах ${plUk(d.uniq,'був','було','було')} ${fmtN(d.uniq)} ${plUk(d.uniq,'різний гравець','різні гравці','різних гравців')}.</p><div class="nm-two"><div>`;
+  let h=`<section class="nms" id="nmSec">${h2}<p class="nm-verdict">${nmVerdict(d)}</p><p class="nm-basis">За ${nmSea(d.n)} у твоїх складах ${plUk(d.uniq,'був','було','було')} ${fmtN(d.uniq)} ${plUk(d.uniq,'різний гравець','різні гравці','різних гравців')}.</p>
+    <button class="nm-share" type="button" id="nmShare">${ic('share-variant','sm')}Поділитися цифрами</button><div id="nmOut" hidden class="nm-out"><img id="nmImg" alt="Картка «Твої цифри»"><div class="row"><button class="primary" id="nmSend" hidden></button><span class="muted" id="nmMsg"></span></div></div><div class="nm-two"><div>`;
   // record
   if(games)h+=`<div class="pp-sec"><h3>Твій рекорд</h3><span class="best">${nmSea(d.n)}</span></div><div class="nm-card">
     <div class="nm-rec-top"><b>${nmPct(d.w,games)}%</b><span>матчів ти виграв</span></div>
@@ -51,12 +73,13 @@ function nmHtml(){
     <div class="nm-wdl-l"><span><b>${fmtN(d.w)}</b> В</span><span><b>${fmtN(d.d)}</b> Н</span><span><b>${fmtN(d.l)}</b> П</span></div>
     <div class="nm-stats"><div><b>${nmDec(d.pts/d.na)}</b><span>очок за сезон</span></div><div><b>${Math.round(d.gf/d.na)}</b><span>голів за сезон</span></div><div><b>${d.best!=null?d.best:'—'}</b><span>найкращий сезон</span></div></div>
     ${d.na<d.n?'<p class="nm-note">Без антисезону: там мета — програти.</p>':''}</div>`;
+  h+=nmMsHtml(d);
   // XI on the game's pitch
   const X=nmXi(d);
   if(X){const G=pitchGeo(d.fm.f);
     h+=`<div class="pp-sec"><h3>Твоя 11-ка</h3><span class="best">${esc(d.fm.f)} · ${nmPct(d.fm.k,d.n)}% сезонів</span></div><div class="pitch" id="nmPitch">${PITCH_MK}${X.F.slots.map((sl,i)=>{const id=X.ids[i],q=id&&pl(id),pt=G.pts[i];
       if(!q)return `<div class="slot empty ${GROUP_OF[sl]}" style="left:${pt.x}%;top:${pt.y}%">${slotInner(sl,null,{})}</div>`;
-      return `<div class="slot filled ${GROUP_OF[sl]}${NM.sel===i?' moving':''}" style="left:${pt.x}%;top:${pt.y}%" data-nm="${i}" role="button" tabindex="0" aria-pressed="${NM.sel===i}" aria-label="${esc(q.n)}: ${nmSea(q.k)} у складі">${slotInner(sl,{name:q.n,id,club:q.c},{pill:`<span class="pill avg">${q.k}</span>`})}</div>`;}).join('')}</div>
+      return `<div class="slot filled ${GROUP_OF[sl]}${NM.sel===i?' moving':''}" style="left:${pt.x}%;top:${pt.y}%" data-nm="${i}" role="button" tabindex="0" aria-pressed="${NM.sel===i}" aria-label="${esc(q.n)}: ${nmSea(q.k)} у складі">${slotInner(sl,{name:q.n,id,club:q.c,y:q.y},{pill:`<span class="pill avg">${q.k}</span>`})}</div>`;}).join('')}</div>
       <p class="nm-pitch-cap">Число біля кружка — у скількох сезонах гравець був у твоєму складі. Торкнись гравця, щоб побачити більше.</p><div id="nmCard">${nmCardHtml(d,X)}</div>`;}
   h+='</div><div>';
   // key players
@@ -66,6 +89,7 @@ function nmHtml(){
     row('heart','Найчастіший',d.top.k,q=>`у ${nmPct(q.k,d.n)}% твоїх складів`,q=>fmtN(q.k),q=>plUk(q.k,'сезон','сезони','сезонів'))+
     row('lightning-bolt','Твій андердог',d.top.dog,q=>[`рейтинг ${esc(String(q.r0))}`,`${fmtN(q.g)} ${plUk(q.g,'гол','голи','голів')}`,winW(q)].filter(Boolean).join(' · '),q=>fmtN(q.k),q=>plUk(q.k,'сезон','сезони','сезонів'));
   if(rows)h+=`<div class="pp-sec"><h3>Ключові гравці</h3></div><div class="nm-rows">${rows}</div>`;
+  h+=nmC100Html(d);
   // rejected (needs logged wheel offers; the server sends it only with enough of them)
   const rej=(d.rej||[]).map(r=>({...r,n:nmName(r.id)})).filter(r=>r.n);
   if(rej.length)h+=`<div class="pp-sec"><h3>Відхилені</h3><span class="best">з ${nmSea(d.off_n)}</span></div><div class="nm-rows">${rej.map(r=>`<div class="nm-row">${ic('ferris-wheel')}<div class="t"><b>${esc(r.n)}</b></div><div class="n">${fmtN(r.k)}<small>${plUk(r.k,'раз','рази','разів')}</small></div></div>`).join('')}</div><p class="nm-note">Колесо пропонувало їх найчастіше, а ти не взяв жодного разу.</p>`;
@@ -90,13 +114,31 @@ function nmCardHtml(d,X){const id=NM.sel>=0&&X.ids[NM.sel];if(!id)return '';cons
   const w=games?nmPct(q.wa,games):null,wo=rest>0?nmPct(d.w-q.wa,rest):null,df=w!=null&&wo!=null?w-wo:null;
   return `<div class="nm-pc" role="status"><div class="nm-pc-h"><b>${esc(q.n)}</b><span>${[q.slot&&POSNAME[q.slot]||'',q.r0!=null?`рейтинг ${esc(String(q.r0))}`:''].filter(Boolean).join(' · ')}</span></div>
     <div class="nm-pc-g"><div><b>${fmtN(q.k)}</b><span>${plUk(q.k,'сезон','сезони','сезонів')} у складі</span></div><div><b>${fmtN(q.g)}</b><span>${plUk(q.g,'гол','голи','голів')} за тебе</span></div><div><b>${nmPct(q.k,d.n)}%</b><span>твоїх сезонів</span></div></div>
-    ${w!=null?`<p class="nm-pc-d">Перемог з ним <b>${w}%</b>${wo!=null?`, без нього <b>${wo}%</b> <strong class="${df<0?'neg':''}">${df>0?'+':df<0?'−':''}${Math.abs(df)} п.п.</strong>`:''}</p>`:''}</div>`;}
+    ${w!=null?`<p class="nm-pc-d">Перемог з ним <b>${w}%</b>${wo!=null?`, без нього <b>${wo}%</b> <strong class="${df<0?'neg':''}">${df>0?'+':df<0?'−':''}${Math.abs(df)} п.п.</strong>`:''}</p>`:''}
+    ${q.om>=NM_OFF_MIN?`<div class="nm-pc-o"><p>Колесо пропонувало його <b>${fmtN(q.om)}</b> ${plUk(q.om,'раз','рази','разів')}, ти взяв <b>${fmtN(q.ot)}</b></p><i><u style="width:${Math.max(2,nmPct(q.ot,q.om))}%"></u></i></div>`:''}</div>`;}
 function nmRender(){const el=document.getElementById('ppNums');if(!el)return;el.innerHTML=nmHtml();nmWire();}
 function nmWire(){
   document.querySelectorAll('#nmPitch [data-nm]').forEach(s=>{const tap=()=>{NM.sel=NM.sel===+s.dataset.nm?-1:+s.dataset.nm;nmSel();};
     s.onclick=tap;s.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();tap();}else if(e.key==='Escape'&&NM.sel>=0){NM.sel=-1;nmSel();}};});
-  const a=document.getElementById('nmAll');if(a)a.onclick=()=>{NM.all=true;nmRender();};}
+  const a=document.getElementById('nmAll');if(a)a.onclick=()=>{NM.all=true;nmRender();};
+  const c=document.getElementById('nmC100');if(c)c.onclick=()=>{NM.c100=true;nmRender();};
+  const sh=document.getElementById('nmShare');if(sh)sh.onclick=()=>nmShareCard(NM.d);}
 // selection changes only the slot state and the card, the pitch is not redrawn
 function nmSel(){const X=NM.d&&nmXi(NM.d);if(!X)return;
   document.querySelectorAll('#nmPitch [data-nm]').forEach(s=>{const on=+s.dataset.nm===NM.sel;s.classList.toggle('moving',on);s.setAttribute('aria-pressed',String(on));});
   const c=document.getElementById('nmCard');if(c)c.innerHTML=nmCardHtml(NM.d,X);haptic('select');}
+
+// share card: same base as the cabinet card (ppCardBase / ppCardOut), verdict as the headline, four numbers below
+async function nmShareCard(d){try{await document.fonts.ready;}catch(e){}
+  const {W,F}=PP_CARD,{c,g}=ppCardBase('ТВОЇ ЦИФРИ');
+  // verdict: words, <em> words in pink, wrapped to 920px
+  const words=[];nmVerdict(d).split(/(<em>.*?<\/em>)/).forEach(part=>{const em=part.startsWith('<em>');part.replace(/<[^>]+>/g,'').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').split(/\s+/).filter(Boolean).forEach(w=>words.push({w,em}));});
+  g.font=`800 60px ${F}`;let x=80,y=392;const sp=g.measureText(' ').width;
+  for(const o of words){const wd=g.measureText(o.w).width;if(x>80&&x+wd>W-80){x=80;y+=78;}g.fillStyle=o.em?'#ff5aa0':'#ffffff';g.fillText(o.w,x,y);x+=wd+sp;}
+  const top=Math.max(y+70,640);g.fillStyle='rgba(255,255,255,.14)';g.fillRect(80,top,W-160,2);
+  const games=d.w+d.d+d.l,c100=Math.max(+d.c100_n||0,(d.c100||[]).length);
+  const cells=[[fmtN(d.n),plUk(d.n,'сезон','сезони','сезонів')],[games?nmPct(d.w,games)+'%':'—','матчів виграно'],[d.best!=null?String(d.best):'—','очок у найкращому сезоні'],c100?[fmtN(c100),'у Клубі 100']:[fmtN(d.uniq),plUk(d.uniq,'різний гравець','різні гравці','різних гравців')]];
+  const y0=top+190,rowH=250;
+  cells.forEach(([v,l],i)=>{const cx=80+(i%2)*500,cy=y0+Math.floor(i/2)*rowH;g.fillStyle='#ffffff';g.font=`900 132px ${F}`;g.fillText(v,cx,cy);g.fillStyle='#b3aea4';g.font=`600 30px ${F}`;g.fillText(l,cx,cy+54);});
+  ppCardOut(c,'nm',`Мої цифри у 30-0 УПЛ: ${d.n} ${plUk(d.n,'сезон','сезони','сезонів')}`,'30-0-numbers.png','nearest');
+}
