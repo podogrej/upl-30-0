@@ -52,7 +52,7 @@
       "headers": [
         {
           "key": "Content-Security-Policy-Report-Only",
-          "value": "script-src 'self' 'sha256-31k+qHD55T4O5Cl+whDzaupD4QwInX1+Q5FG2ArML5k=' 'sha256-4+GPVDENkwsQDjTndO5c8ar0tBsp3uM/nHGIhIuERXA=' 'sha256-RpSYOEFeyVJ5Bd3nll6OGJzFKFGx1yO11J4W3Ik5+aI=' 'sha256-YkW9euIk6BLj7wQGfAdL1VUS6k9YWyXeIhwhLXRtBsk=' https://cdn.jsdelivr.net https://telegram.org https://www.clarity.ms https://scripts.clarity.ms; object-src 'none'; base-uri 'none'; report-uri /api/err?csp=1"
+          "value": "script-src 'self' 'sha256-4+GPVDENkwsQDjTndO5c8ar0tBsp3uM/nHGIhIuERXA=' 'sha256-8QY34WHhIVHfSedZebL97gSeBKjWUfkvG6j46+OJqo8=' 'sha256-RpSYOEFeyVJ5Bd3nll6OGJzFKFGx1yO11J4W3Ik5+aI=' 'sha256-YkW9euIk6BLj7wQGfAdL1VUS6k9YWyXeIhwhLXRtBsk=' https://cdn.jsdelivr.net https://telegram.org https://www.clarity.ms https://scripts.clarity.ms; object-src 'none'; base-uri 'none'; report-uri /api/err?csp=1"
         }
       ]
     },
@@ -61,7 +61,7 @@
       "headers": [
         {
           "key": "Content-Security-Policy-Report-Only",
-          "value": "script-src 'self' 'sha256-31k+qHD55T4O5Cl+whDzaupD4QwInX1+Q5FG2ArML5k=' 'sha256-4+GPVDENkwsQDjTndO5c8ar0tBsp3uM/nHGIhIuERXA=' 'sha256-RpSYOEFeyVJ5Bd3nll6OGJzFKFGx1yO11J4W3Ik5+aI=' 'sha256-YkW9euIk6BLj7wQGfAdL1VUS6k9YWyXeIhwhLXRtBsk=' https://cdn.jsdelivr.net https://telegram.org https://www.clarity.ms https://scripts.clarity.ms; object-src 'none'; base-uri 'none'; report-uri /api/err?csp=1"
+          "value": "script-src 'self' 'sha256-4+GPVDENkwsQDjTndO5c8ar0tBsp3uM/nHGIhIuERXA=' 'sha256-8QY34WHhIVHfSedZebL97gSeBKjWUfkvG6j46+OJqo8=' 'sha256-RpSYOEFeyVJ5Bd3nll6OGJzFKFGx1yO11J4W3Ik5+aI=' 'sha256-YkW9euIk6BLj7wQGfAdL1VUS6k9YWyXeIhwhLXRtBsk=' https://cdn.jsdelivr.net https://telegram.org https://www.clarity.ms https://scripts.clarity.ms; object-src 'none'; base-uri 'none'; report-uri /api/err?csp=1"
         }
       ]
     },
