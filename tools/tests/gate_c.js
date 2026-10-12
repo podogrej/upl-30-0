@@ -6,7 +6,7 @@ const { checker, callApi } = require('./_site.js');
 Object.assign(process.env, { SUPABASE_URL: 'https://gate.test', SUPABASE_SERVICE_KEY: 'svc', TG_TOKEN: '123:T', CRON_SECRET: 'cs', VERCEL_ENV: 'production' });
 const ROOT = path.join(__dirname, '..', '..');
 const DEV = '11111111-2222-4333-8444-555555555555', SEC = 'abcdefghijklmnopqrstuvwxyz012345';
-let LOG = [], GATE = 'ok', VIEW = 'ok', TGSENT = [];
+let LOG = [], GATE = 'ok', VIEW = 'ok', TGSENT = [], RATEKEYS = [], DEVOK = 'ok', RATEFULL = null, SEEDFAIL = false;
 const jres = (j, status = 200) => ({ ok: status < 400, status, text: async () => JSON.stringify(j) });
 const missing = () => jres({ code: 'PGRST202', message: 'Could not find the function' }, 404);
 global.fetch = async (u, o = {}) => {
@@ -20,15 +20,16 @@ global.fetch = async (u, o = {}) => {
     if (GATE === 'secret') return jres({ rate: true, player: null, err: 'secret' });
     return jres({ rate: true, player: 'p-1', err: null });
   }
-  if (t === 'rpc/rate_hit') return jres(true);
-  if (t === 'rpc/device_ok') return jres('p-1');
+  if (t === 'rpc/rate_hit') { RATEKEYS.push(a.p_key); return jres(RATEFULL ? !a.p_key.startsWith(RATEFULL) : true); }
+  if (t === 'rpc/device_ok') return DEVOK === 'bad' ? jres({ code: '28000', message: 'device secret' }, 403) : jres('p-1');
   if (t === 'rpc/legacy_writes_open') return jres(false);
   if (t === 'rpc/league_view') {
     if (VIEW === 'missing') return missing();
+    if (VIEW === 'none') return jres(null);
     LOG.push('view:' + JSON.stringify([a.p_chat, a.p_card]));
     return jres({ title: 'Ліга', day: a.p_day, members: 3, today: [{ name: 'Аня', u: 'x', w: 20, d: 5, l: 5, pts: 65, gf: 50, ga: 20, created_at: '2026-10-11T10:00:00Z' }], ...(a.p_card ? {} : { standings: [{ name: 'Аня', u: 'x', wins: 2, days: 3, pts: 150 }] }) });
   }
-  if (m === 'POST' && t === 'season_seeds') return jres([{ id: 's-1' }]);
+  if (m === 'POST' && t === 'season_seeds') return SEEDFAIL ? jres({ message: 'duplicate key value violates unique constraint secret_internal_name' }, 400) : jres([{ id: 's-1' }]);
   if (t === 'leagues') return jres([{ chat_id: -5, title: 'Ліга' }]);
   if (t === 'league_members') return jres([{ tg_user_id: 1 }]);
   return jres([]);
@@ -37,7 +38,7 @@ const mk = () => Array.from({ length: 11 }, (_, i) => ({ id: 'tm:' + i, slot: 'G
 (async () => {
   const T = checker('gate_c'), seed = require(path.join(ROOT, 'api', 'seed.js')), save = require(path.join(ROOT, 'api', 'save.js')), league = require(path.join(ROOT, 'api', 'league.js'));
   const run = async (h, b) => { LOG = []; const r = await callApi(h, b); return { ...r, log: [...LOG] }; };
-  const sb = { device_id: DEV, secret: SEC, xi: mk(), formation: '4-4-2', mode: 'normal', format: 'classic', year: 2020 };
+  const sb = { device_id: DEV, secret: SEC, xi: mk(), formation: '4-4-2', mode: 'normal', format: 'classic', year: 9002 };
 
   let r = await run(seed, sb);
   T.check(r.status === 200 && r.json.seed_id === 's-1' && r.log.filter(x => x.startsWith('rpc/')).join() === 'rpc/api_gate', 'seed: перевірка ліміту й секрету — один виклик api_gate: ' + r.log.join(' | '));
@@ -61,13 +62,33 @@ const mk = () => Array.from({ length: 11 }, (_, i) => ({ id: 'tm:' + i, slot: 'G
   T.check(r.status === 200 && r.log.join().includes('rpc/api_gate') && r.log.filter(x => x === 'rpc/rate_hit').length === 2 && r.log.includes('rpc/device_ok'), 'seed: api_gate ще немає в базі — старий шлях (rate_hit x2 + device_ok): ' + r.log.join(' | '));
   r = await run(save, { kind: 'trophies', device_id: DEV, secret: SEC, ids: ['champ'] });
   T.check(r.status !== 401 && r.status !== 429 && r.log.includes('rpc/device_ok'), `save: старий шлях (${r.status})`);
+  // old path keeps the order of api_gate: IP counter, secret, device counter only after the secret is OK
+  RATEKEYS = []; r = await run(seed, sb);
+  T.check(r.status === 200 && RATEKEYS.length === 2 && /:ip:/.test(RATEKEYS[0]) && /:d:/.test(RATEKEYS[1]) && r.log.indexOf('rpc/device_ok') > r.log.indexOf('rpc/rate_hit') && r.log.lastIndexOf('rpc/rate_hit') > r.log.indexOf('rpc/device_ok'), 'старий шлях: IP -> секрет -> пристрій: ' + RATEKEYS.join(' ') + ' | ' + r.log.join(' '));
+  DEVOK = 'bad'; RATEKEYS = []; r = await run(seed, sb);
+  T.check(r.status === 401 && RATEKEYS.length === 1 && /:ip:/.test(RATEKEYS[0]), 'старий шлях: чужий секрет не рахується проти пристрою (лише IP): ' + RATEKEYS.join(' '));
+  DEVOK = 'ok'; RATEFULL = 'seed:ip:'; r = await run(seed, sb);
+  T.check(r.status === 429 && !r.log.includes('rpc/device_ok'), 'старий шлях: ліміт IP — 429 до перевірки секрету');
+  RATEFULL = 'seed:d:'; r = await run(seed, sb);
+  T.check(r.status === 429 && r.log.includes('rpc/device_ok') && !r.log.includes('POST season_seeds'), 'старий шлях: ліміт пристрою після перевірки секрету — 429, seed не видано');
+  RATEFULL = null;
+  // 500 shows no internals: DB text only in the server log
+  GATE = 'ok'; SEEDFAIL = true; const errs = []; const ce = console.error; console.error = (...a) => errs.push(a.join(' '));
+  r = await run(seed, sb); console.error = ce; SEEDFAIL = false;
+  T.check(r.status === 500 && !/db 4|crash|secret_internal|stage|insert/i.test(JSON.stringify(r.json)) && /[а-яіїє]/i.test(r.json.error) && errs.some(e => /secret_internal_name/.test(e)), 'помилка бази: клієнт бачить загальний текст, подробиці — в журналі сервера: ' + JSON.stringify(r.json));
 
   // league page: one league_view call, same answer shape as the row-by-row path
   const get = async q => { LOG = []; const out = await callApi(league, null, 'GET', q); return { ...out, log: [...LOG] }; };
   r = await get({ chat: '-5' });
-  T.check(r.status === 200 && r.json.title === 'Ліга' && r.json.members === 3 && r.json.today.length === 1 && r.json.standings.length === 1 && r.log.join() === 'rpc/league_view,view:[-5,false]', 'ліга: сторінка — один виклик league_view з підсумками: ' + r.log.join(' | '));
+  T.check(r.status === 200 && r.json.title === 'Ліга' && r.json.members === 3 && r.json.today.length === 1 && r.json.standings.length === 1 && r.log.join() === 'rpc/rate_hit,rpc/league_view,view:[-5,false]', 'ліга: сторінка — ліміт за IP і один виклик league_view з підсумками: ' + r.log.join(' | '));
   r = await get({ chat: '-5', card: '1' });
-  T.check(r.status === 200 && !('standings' in r.json) && r.json.today.length === 1 && r.log.join() === 'rpc/league_view,view:[-5,true]', 'ліга: картка — без підсумків, один виклик');
+  T.check(r.status === 200 && !('standings' in r.json) && r.json.today.length === 1 && r.log.join() === 'rpc/rate_hit,rpc/league_view,view:[-5,true]', 'ліга: картка — без підсумків, один виклик');
+  for (const bad of ['abc', '-5; drop', '1'.repeat(21), '--5', '']) { r = await get({ chat: bad }); T.check(r.status === 400 && r.log.length === 0, `ліга: chat «${bad.slice(0, 12)}» — 400 без запитів до бази`); }
+  VIEW = 'none'; r = await get({ chat: '-5' });
+  T.check(r.status === 404 && r.json.error === 'no league' && r.log.join() === 'rpc/rate_hit,rpc/league_view', 'ліга: league_view відповів «лиги немає» — 404 одразу, без запасного шляху: ' + r.log.join(' | '));
+  VIEW = 'ok'; RATEFULL = 'league:ip:'; r = await get({ chat: '-5' });
+  T.check(r.status === 429 && !r.log.includes('rpc/league_view'), 'ліга: ліміт за IP — 429, база не навантажується');
+  RATEFULL = null; VIEW = 'ok';
   VIEW = 'missing'; r = await get({ chat: '-5' });
   T.check(r.status === 200 && r.json.title === 'Ліга' && r.log.includes('GET league_results'), 'ліга: league_view ще немає — рядки по одному, як раніше');
 

@@ -6,8 +6,8 @@
 //   vd 'mine'   {from?}                    -> own best per day (vd_mine) for the archive
 // Attempt = season_seeds row with vd_day/vd_attempt (sql/v080_vyklyk_dnia.sql). Results are written only here, with the device secret.
 const crypto = require('crypto');
-const { sb, deviceOk, kyivDate, uuidRe } = require('./_device.js');
-const { sbAll } = require('./_lib.js');
+const { sb, deviceOk, kyivDate } = require('./_device.js');
+const { sbAll, xiHash, devicesOf } = require('./_lib.js');
 const V = require('../lib/vd_core.js');
 const LIST = require('../lib/challenges.json');
 let E = null, IDX = null;
@@ -15,7 +15,6 @@ const engine = () => E || (E = require('../lib/engine.js'));
 const CUR = require('../lib/vd_current.json');   // season in progress
 const index = () => IDX || (IDX = V.vdIndex(engine().DATA, CUR));
 const dayRe = /^\d{4}-\d{2}-\d{2}$/;
-const xiHash = xi => crypto.createHash('sha256').update(xi.map(x => `${x.id}|${x.slot}|${x.c}|${x.y}`).join(';')).digest('hex');
 const dup = e => e && (e.status === 409 || /23505/.test(e.body || ''));
 
 // squad check: formation of the day, slots in order, real cards, playable slots, no person twice, event player on his card
@@ -49,14 +48,7 @@ function checkXi(ch, xi, formation, seedId) {
 }
 
 // Attempts are counted per PLAYER: every device bound to the player (player_links kind 'device') shares the VD_ATTEMPTS of a day.
-// Rows keep their own device_id (unique keys per device are unchanged); the player's devices are read from player_links.
-async function devicesOf(dev, pid) {
-  if (!pid) return [dev];
-  try {
-    const rows = await sb(`player_links?kind=eq.device&player_id=eq.${pid}&select=key&limit=50`) || [];
-    return [...new Set([dev, ...rows.map(r => String(r.key).toLowerCase()).filter(k => uuidRe.test(k))])];
-  } catch (e) { return [dev]; }
-}
+// Rows keep their own device_id (unique keys per device are unchanged).
 async function state(devs, day) {
   const list = devs.join(',');
   const [seeds, res] = await Promise.all([
@@ -67,25 +59,20 @@ async function state(devs, day) {
 const summary = st => ({ used: st.res.length, best: st.res.filter(r => r.gate_ok).reduce((a, r) => Math.max(a, r.score), -1) });
 const reply = (r, st) => { const s = summary(st); return { ...r, used: s.used, best: s.best < 0 ? null : s.best }; };
 const finished = (st, s) => st.res.some(r => r.seed_id === s.id || (r.device_id === s.device_id && +r.attempt === +s.vd_attempt));
-const noCol = e => e && /player_id/.test(e.body || '') && /PGRST204|column/.test(e.body || '');   // season_seeds.player_id not added yet (sql/v089_vd_per_player.sql)
 
 // Open attempt of another device of the same player: move it to this device (same seed, same wheel), so the attempt is neither lost nor
 // counted twice. Only while unplayed and unfinished; a number clash on this device (older rows) means: leave it, issue a new one.
 async function takeOver(dev, pid, day, st, s) {
   if (st.seeds.some(x => x.device_id === dev && +x.vd_attempt === +s.vd_attempt) || st.res.some(r => r.device_id === dev && +r.attempt === +s.vd_attempt)) return null;
   const q = `season_seeds?id=eq.${s.id}&device_id=eq.${s.device_id}&used_by=is.null&vd_day=eq.${day}&select=id,vd_attempt`;
-  const mv = body => sb(q, { method: 'PATCH', prefer: 'return=representation', body });
   let got;
-  try { got = await mv({ device_id: dev, ...(pid ? { player_id: pid } : {}) }); }
-  catch (e) {
-    if (noCol(e)) { try { got = await mv({ device_id: dev }); } catch (e2) { if (!dup(e2)) throw e2; return null; } }
-    else if (dup(e)) return null; else throw e;
-  }
+  try { got = await sb(q, { method: 'PATCH', prefer: 'return=representation', body: { device_id: dev, ...(pid ? { player_id: pid } : {}) } }); }
+  catch (e) { if (dup(e)) return null; throw e; }
   return got && got[0] ? got[0] : null;   // empty: another request moved or finished it first
 }
 
 async function start(dev, pid, day, ch) {
-  const devs = await devicesOf(dev, pid);
+  const devs = await devicesOf(pid, dev);
   for (let k = 0; k < 3; k++) {
     const st = await state(devs, day);
     const open = st.seeds.filter(s => !finished(st, s) && s.used_by == null);
@@ -96,10 +83,8 @@ async function start(dev, pid, day, ch) {
     if (st.seeds.length >= V.VD_ATTEMPTS || n > V.VD_ATTEMPTS) return [409, reply({ error: 'Спроби на цей день закінчились.', attempt: null }, st)];
     const row = { device_id: dev, xi_hash: '', seed: crypto.randomInt(1, 2147483647), day: kyivDate(), daily: false, official: false,
       formation: ch.formation || '4-4-2', mode: 'normal', format: 'classic', year: engine().LEAGUE_LEGENDS, vd_day: day, vd_attempt: n, ...(pid ? { player_id: pid } : {}) };
-    const put = r => sb('season_seeds?select=id', { method: 'POST', prefer: 'return=representation', body: r });
     try {
-      let ins;
-      try { [ins] = await put(row) || []; } catch (e) { if (!noCol(e)) throw e; delete row.player_id; [ins] = await put(row) || []; }
+      const [ins] = await sb('season_seeds?select=id', { method: 'POST', prefer: 'return=representation', body: row }) || [];
       return [200, reply({ attempt: n, seed_id: ins && ins.id }, st)];
     } catch (e) { if (!dup(e)) throw e; }   // parallel start took this number: read again
   }
@@ -116,7 +101,7 @@ async function seedFor(seed, row, b) {
   return cur && cur.xi_hash === h && cur.used_by == null ? { seed_id: seed.id, seed: +cur.seed } : {};
 }
 async function finish(dev, pid, day, ch, b, late) {
-  const n = +b.attempt, devs = await devicesOf(dev, pid);
+  const n = +b.attempt, devs = await devicesOf(pid, dev);
   let st = await state(devs, day);
   const seed = st.seeds.find(s => s.device_id === dev && +s.vd_attempt === n);   // the attempt must be issued to (or moved to) this device
   if (!seed) return [400, { error: 'attempt?' }];
@@ -148,7 +133,7 @@ async function handle(b, checked) {
   if (b.vd === 'mine') {
     const from = dayRe.test(String(b.from || '')) ? b.from : null;
     // best per day across all devices of the player (same shape as the vd_mine RPC, which stays for older code)
-    const devs = await devicesOf(dev, d.player);
+    const devs = await devicesOf(d.player, dev);
     const rows = await sbAll(`vd_results?device_id=in.(${devs.join(',')})${from ? `&day=gte.${from}` : ''}&select=day,score,gate_ok&order=id.asc`);
     const by = {};
     for (const r of rows) {

@@ -20,8 +20,8 @@ const fail=[];const check=(ok,msg)=>{if(!ok)fail.push(msg);};
  const before=await pg.evaluate(()=>({vis:!document.getElementById('showRRow').hidden,on:document.getElementById('showR').checked,names:[...document.querySelectorAll('#squad .pl .nm')].map(e=>e.textContent),rt:[...document.querySelectorAll('#squad .pl .rt')].map(e=>e.textContent).join('')}));
  check(before.vis&&!before.on&&before.rt==='','рейтинги: галочка не видна або рейтинги вже показані');
  await pg.click('#showR');await pg.waitForTimeout(200);
- const after=await pg.evaluate(()=>({names:[...document.querySelectorAll('#squad .pl .nm')].map(e=>e.textContent),rt:[...document.querySelectorAll('#squad .pl .rt')].map(e=>e.textContent)}));
- check(after.rt.every(x=>/^\d+$/.test(x)),'рейтинги: після галочки цифр немає');check(JSON.stringify(after.names)===JSON.stringify(before.names),'рейтинги: змінився порядок гравців');
+ const after=await pg.evaluate(()=>({names:[...document.querySelectorAll('#squad .pl .nm')].map(e=>e.textContent),rt:[...document.querySelectorAll('#squad .pl .rt')].map(e=>e.textContent),ok:[...document.querySelectorAll('#squad .pl')].map(e=>!e.disabled)}));
+ check(after.rt.every(x=>/^\d+$/.test(x)),'рейтинги: після галочки цифр немає');{const r=after.rt.filter((x,i)=>after.ok[i]).map(Number);check([...after.names].sort().join()===[...before.names].sort().join()&&r.every((x,i)=>!i||r[i-1]>=x),'рейтинги: після галочки ті самі гравці, відсортовані за рейтингом');}
  await pg.screenshot({path:path.join(OUT,'draft_ratings.png'),fullPage:true});
  {const btn=await pg.$('.pl:not([disabled])');await btn.click();await pg.waitForTimeout(80);const pick=await pg.$('#pitch .slot.target');if(pick)await pick.click();}
  await pg.click('#spinBtn');await pg.waitForSelector('#squad .pl:not([disabled])',{timeout:8000});

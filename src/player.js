@@ -140,14 +140,31 @@ function ppRenderCab(){
 // in Telegram: bot sends the image to DM (api/card), otherwise long-press the image
 const CAB_COL={base:'#8fa0d8',friends:'#33c9e6',secret:'#a970ff'};   // cabinet image uses the same three classes as the page
 let CAB_CANVAS=null;
-async function ppShareCab(got,n,total){try{await document.fonts.ready;}catch(e){}
-  const W=1080,H=1350,c=document.createElement('canvas');c.width=W;c.height=H;CAB_CANVAS=c;const g=c.getContext('2d');
-  const DISP='"KyivType Sans", sans-serif',BODY=DISP,MONO=DISP;   // 0.69.1: KyivType Sans
+// share cards (cabinet, numbers): common 1080x1350 base, and the common "show / send" part
+const PP_CARD={W:1080,H:1350,F:'"KyivType Sans", sans-serif'};
+function ppCardBase(sub){const {W,H,F}=PP_CARD,c=document.createElement('canvas');c.width=W;c.height=H;const g=c.getContext('2d');
   const grd=g.createLinearGradient(0,0,0,H);grd.addColorStop(0,'#0b1430');grd.addColorStop(1,'#24124a');g.fillStyle=grd;g.fillRect(0,0,W,H);
   g.strokeStyle='rgba(255,255,255,.12)';g.lineWidth=4;g.strokeRect(40,40,W-80,H-80);
-  g.fillStyle='#ffffff';g.font=`900 40px ${DISP}`;g.fillText('30-0',80,122);const lw=g.measureText('30-0 ').width;g.fillStyle='#ff5aa0';g.fillText('УПЛ',80+lw,122);
-  g.fillStyle='#b3aea4';g.font=`600 28px ${MONO}`;g.fillText('ШАФА ТРОФЕЇВ',80,178);
-  g.fillStyle='#ffffff';let fs=64;const nm=myName();g.font=`800 ${fs}px ${DISP}`;while(g.measureText(nm).width>W-160&&fs>34){fs-=2;g.font=`800 ${fs}px ${DISP}`;}g.fillText(nm,80,262);
+  g.fillStyle='#ffffff';g.font=`900 40px ${F}`;g.fillText('30-0',80,122);const lw=g.measureText('30-0 ').width;g.fillStyle='#ff5aa0';g.fillText('УПЛ',80+lw,122);
+  g.fillStyle='#b3aea4';g.font=`600 28px ${F}`;g.fillText(sub,80,178);
+  g.fillStyle='#ffffff';let fs=64;const nm=myName();g.font=`800 ${fs}px ${F}`;while(g.measureText(nm).width>W-160&&fs>34){fs-=2;g.font=`800 ${fs}px ${F}`;}g.fillText(nm,80,262);
+  g.fillStyle='#8f9bc4';g.font=`500 24px ${F}`;g.fillText('Збери свою 11-ку · '+SITE_HOST,80,H-62);
+  return {c,g};}
+// shows the card in <pre>Out/Img and wires <pre>Send (Telegram chat, system share sheet, or press-and-hold hint)
+function ppCardOut(c,pre,text,file,block){
+  const $=k=>document.getElementById(pre+k),out=$('Out'),img=$('Img'),send=$('Send'),msg=$('Msg');if(!out)return;
+  img.src=c.toDataURL('image/png');out.hidden=false;msg.textContent='';
+  const inTg=!!(ONLINE&&TG&&TG.initData);let canFile=false;
+  try{canFile=!inTg&&!!navigator.canShare&&navigator.canShare({files:[new File([new Blob(['x'],{type:'image/png'})],'x.png',{type:'image/png'})]});}catch(e){}
+  send.hidden=!(inTg||canFile);send.innerHTML=inTg?`${ic('telegram','sm')}Надіслати мені в Telegram`:`${ic('share-variant','sm')}Поділитися`;
+  if(!inTg&&!canFile)msg.textContent='Натисни й утримуй картинку, щоб зберегти її або поділитися.';
+  send.onclick=()=>{
+    if(inTg){send.disabled=true;msg.textContent='Надсилаємо…';_fetch('/api/card',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({initData:TG.initData,image:c.toDataURL('image/jpeg',0.9),caption:text})})
+      .then(r=>r.json().catch(()=>({}))).then(j=>{msg.textContent=j.ok?`Готово — картинка в чаті з @${TG_BOT}.`:j.need_start?`Спочатку відкрий чат з @${TG_BOT} і натисни «Start».`:'Не вдалося надіслати.';}).catch(()=>{msg.textContent='Не вдалося надіслати: немає зв’язку.';}).finally(()=>{send.disabled=false;});return;}
+    c.toBlob(bl=>{navigator.share({files:[new File([bl],file,{type:'image/png'})],text}).catch(e=>{if(e&&e.name!=='AbortError')msg.textContent='Не вдалося відкрити меню «Поділитися».';});},'image/png');};
+  out.scrollIntoView({behavior:'smooth',block});}
+async function ppShareCab(got,n,total){try{await document.fonts.ready;}catch(e){}
+  const {W,H,F:BODY}=PP_CARD,{c,g}=ppCardBase('ШАФА ТРОФЕЇВ');CAB_CANVAS=c;
   g.fillStyle='#ff5aa0';g.font=`700 34px ${BODY}`;g.fillText(`Відкрито ${n} з ${total}`,80,318);
   g.fillStyle='rgba(255,255,255,.08)';g.fillRect(80,340,W-160,14);g.fillStyle='#ff5aa0';g.fillRect(80,340,(W-160)*(total?n/total:0),14);
   const list=got.slice(0,12),cols=3,cw=(W-160)/cols,ch=222,y0=400;
@@ -158,18 +175,7 @@ async function ppShareCab(got,n,total){try{await document.fonts.ready;}catch(e){
     g.textBaseline='alphabetic';g.fillStyle='#ffffff';let f2=28;g.font=`700 ${f2}px ${BODY}`;let tn=t.n;while(g.measureText(tn).width>cw-20&&f2>20){f2-=1;g.font=`700 ${f2}px ${BODY}`;}
     while(g.measureText(tn).width>cw-20&&tn.length>4)tn=tn.slice(0,-2)+'…';g.fillText(tn,cx,cy+R+46);g.textAlign='left';});
   if(got.length>12){g.fillStyle='#b3aea4';g.font=`600 28px ${BODY}`;g.fillText(`і ще ${got.length-12}`,80,y0+4*ch-10);}
-  g.fillStyle='#8f9bc4';g.font=`500 24px ${BODY}`;g.fillText('Збери свою 11-ку · '+SITE_HOST,80,H-62);
-  const out=document.getElementById('ppCabOut'),img=document.getElementById('ppCabImg'),send=document.getElementById('ppCabSend'),msg=document.getElementById('ppCabMsg');if(!out)return;
-  img.src=c.toDataURL('image/png');out.hidden=false;msg.textContent='';
-  const inTg=!!(ONLINE&&TG&&TG.initData);let canFile=false;
-  try{canFile=!inTg&&!!navigator.canShare&&navigator.canShare({files:[new File([new Blob(['x'],{type:'image/png'})],'x.png',{type:'image/png'})]});}catch(e){}
-  send.hidden=!(inTg||canFile);send.innerHTML=inTg?`${ic('telegram','sm')}Надіслати мені в Telegram`:`${ic('share-variant','sm')}Поділитися`;
-  if(!inTg&&!canFile)msg.textContent='Натисни й утримуй картинку, щоб зберегти її або поділитися.';
-  send.onclick=()=>{const text=`🏆 Моя шафа трофеїв у 30-0 УПЛ: ${n} з ${total}`;
-    if(inTg){send.disabled=true;msg.textContent='Надсилаємо…';_fetch('/api/card',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({initData:TG.initData,image:c.toDataURL('image/jpeg',0.9),caption:text})})
-      .then(r=>r.json().catch(()=>({}))).then(j=>{msg.textContent=j.ok?`Готово — картинка в чаті з @${TG_BOT}.`:j.need_start?`Спочатку відкрий чат з @${TG_BOT} і натисни «Start».`:'Не вдалося надіслати.';}).catch(()=>{msg.textContent='Не вдалося надіслати: немає зв’язку.';}).finally(()=>{send.disabled=false;});return;}
-    c.toBlob(bl=>{navigator.share({files:[new File([bl],'30-0-trophies.png',{type:'image/png'})],text}).catch(e=>{if(e&&e.name!=='AbortError')msg.textContent='Не вдалося відкрити меню «Поділитися».';});},'image/png');};
-  out.scrollIntoView({behavior:'smooth',block:'center'});
+  ppCardOut(c,'ppCab',`🏆 Моя шафа трофеїв у 30-0 УПЛ: ${n} з ${total}`,'30-0-trophies.png','center');
 }
 // history: last 10 seasons, "10 more" on tap
 const PP_MODE_DOT={classic:'var(--amber)',pick:'var(--mf)',daily:'var(--df)',derby:'var(--fw)',oneclub:'var(--mf)',anti:'var(--muted)',legends:'var(--gk)'};

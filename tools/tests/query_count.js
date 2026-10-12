@@ -18,7 +18,10 @@ global.fetch = async (u, o = {}) => {
   }
   return ST.fetch(u, o);
 };
-const count = async fn => { N = 0; LOG = []; const r = await fn(); return { n: N, r, log: [...LOG] }; };
+// n does not include the one daily cleanup call (rpc/cleanup_old_rows): it is per run, not per group
+// channel posts, marks and notify run once per cron call and depend on the real date: not per group
+// the stub has no league_view (returns null): the cron then takes the fallback path, so the failed RPC probe is not counted either
+const count = async fn => { N = 0; LOG = []; const r = await fn(); const c = LOG.filter(l => /cleanup_old_rows/.test(l)).length, v = LOG.filter(l => /rpc\/league_view/.test(l)).length, ch = LOG.filter(l => /channel_posts|app_marks|tg_notify/.test(l)).length; return { n: N - c - v - ch, cleanup: c, r, log: [...LOG] }; };
 const day = (d, k) => new Date(Date.parse(d + 'T00:00:00Z') + k * 864e5).toISOString().slice(0, 10);
 
 (async () => {
@@ -52,6 +55,7 @@ const day = (d, k) => new Date(Date.parse(d + 'T00:00:00Z') + k * 864e5).toISOSt
   out.cronDay = wk.n; out.cronGroups = wk.r.j.summaries;
   T.check(wk.r.c === 200 && wk.r.j.summaries === 3 && texts.length === 3 && texts.every(t => /Переможець дня/.test(t) && /Залік ліги/.test(t)), 'вечірній cron: 3 підсумки надіслано, зміст на місці');
   out.cronPerGroup = +(wk.n / CH.length).toFixed(1);
+  T.check(wk.cleanup === 1, `cron: чистка старих рядків — один запит за запуск (${wk.cleanup})`);
   TG.length = 0;
   const sun = await count(() => run({ day: '2026-10-11' }));
   out.cronSun = sun.n;

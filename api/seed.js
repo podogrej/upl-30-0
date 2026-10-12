@@ -6,9 +6,22 @@
 // Body with `vd`: daily challenge attempts, handled by api/_vd.js.
 const crypto = require('crypto');
 const { sb, legacyOpen, body, kyivDate, uuidRe, gate } = require('./_device.js');
+const { xiHash, fail } = require('./_lib.js');
+const V = require('./verify.js');   // engine lists and the opponent-year rule, same as the season check
+const has = (o, k) => typeof k === 'string' && Object.prototype.hasOwnProperty.call(o, k);
+// mode, format, formation and year are required and must exist in the engine, so one seed cannot be pointed at any mode later.
+// 'daily' mode belongs only to the old daily-draft request (daily: true) and the other way round. Returns an error text or null.
+function fieldsErr(b) {
+  const E = V.engine();
+  if (!has(E.MODES, b.mode)) return 'mode?';
+  if (!!b.daily !== (b.mode === 'daily')) return 'mode?';
+  if (!has(E.FORMATS, b.format)) return 'format?';
+  if (!has(E.FORMATIONS, b.formation)) return 'formation?';
+  if (!Number.isInteger(+b.year) || !V.yearOk({ format: b.format, year: +b.year }, E, true)) return 'year?';
+  return null;
+}
 // retry of an official daily attempt: same squad and year, not played yet
 const sameAttempt = (p, b) => !!p && p.used_by == null && p.xi_hash === xiHash(b.xi) && (p.year == null || p.year === (+b.year || null));
-const xiHash = xi => crypto.createHash('sha256').update(xi.map(x => `${x.id}|${x.slot}|${x.c}|${x.y}`).join(';')).digest('hex');
 
 module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
@@ -24,6 +37,8 @@ module.exports = async (req, res) => {
       return res.status(code).json(j);
     }
     if (!Array.isArray(b.xi) || b.xi.length !== 11) return res.status(400).json({ error: 'xi?' });
+    const fe = fieldsErr(b);
+    if (fe) return res.status(400).json({ error: fe });
     stage = 'gate';
     const g = await gate(req, res, 'seed', b.device_id, b.secret);
     if (g.done) return;
@@ -45,7 +60,7 @@ module.exports = async (req, res) => {
     }
     stage = 'insert';
     const seed = crypto.randomInt(1, 2147483647);
-    const row = { device_id: b.device_id, xi_hash: xiHash(b.xi), seed, day, daily, official, ...(attempt ? { league: true } : {}), formation: String(b.formation || '').slice(0, 8), mode: String(b.mode || '').slice(0, 12), format: String(b.format || '').slice(0, 12), year: +b.year || null };
+    const row = { device_id: b.device_id, xi_hash: xiHash(b.xi), seed, day, daily, official, ...(attempt ? { league: true } : {}), formation: b.formation, mode: b.mode, format: b.format, year: +b.year };
     let ins;
     try { [ins] = await sb('season_seeds?select=id', { method: 'POST', prefer: 'return=representation', body: row }) || []; }
     catch (e) {
@@ -61,6 +76,6 @@ module.exports = async (req, res) => {
     }
     res.status(200).json({ seed_id: ins && ins.id, seed, official });
   } catch (e) {
-    res.status(500).json({ error: `crash at ${stage}: ${String(e && e.message || e).slice(0, 160)}` });
+    fail(res, `seed ${stage}`, e);
   }
 };

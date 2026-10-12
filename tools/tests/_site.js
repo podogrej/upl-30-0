@@ -82,6 +82,7 @@ async function openSite(opts={}){
   if(opts.fastReel!==false)await fastReel(ctx);   // reel spin is instant in tests (fastReel:false keeps the real animation)
   if(opts.fastMotion!==false)await fastMotion(ctx);   // scripted motion takes 1 ms (fastMotion:false keeps it)
   const vdToday=opts.vdToday===undefined?'2026-10-12':opts.vdToday;if(vdToday)await ctx.addInitScript(d=>{window.__vdToday=d;},vdToday);   // daily challenge "today" fixed to a day with content (as in _page.js)
+  await ctx.addInitScript(()=>{try{Object.defineProperty(HTMLScriptElement.prototype,'integrity',{set(){},get(){return '';},configurable:true});}catch(e){}});   // the supabase-js stub has no real file hash: SRI is checked in headers.js
   if(opts.init)await ctx.addInitScript(opts.init);   // e.g. seed localStorage before the game loads
   const pg=await ctx.newPage();const errs=[];pg.on('pageerror',e=>errs.push(e.message));pg.on('dialog',d=>/Склад не збережеться/.test(d.message())?d.accept():d.dismiss());   // auto-accept the leave-unfinished-draft confirm
   await pg.goto(SITE+(opts.query||'')+(opts.hash||''));await ready(pg);await pg.waitForTimeout(opts.wait?Math.max(100,opts.wait-600):400);

@@ -12,14 +12,18 @@ const E=require(path.join(ROOT,'lib','engine.js'));
 function numbers(){
   const slots=E.FORMATIONS['4-4-2'].slots,used=new Set(),ids=[],pl={};
   for(const sl of slots){let got=null;for(const c of E.DATA.clubs){for(const p of c.pl)if(p[6]===sl&&!used.has(p[5])&&p[2]>=80){got={p,c};break;}if(got)break;}
-    used.add(got.p[5]);ids.push(got.p[5]);pl[got.p[5]]={n:got.p[0],k:20+ids.length*3,g:ids.length*7,r0:got.p[2],slot:sl,c:got.c.n,ka:15+ids.length*3,wa:300+ids.length*40};}
+    used.add(got.p[5]);ids.push(got.p[5]);pl[got.p[5]]={n:got.p[0],k:20+ids.length*3,g:ids.length*7,r0:got.p[2],slot:sl,c:got.c.n,y:got.c.y,ka:15+ids.length*3,wa:300+ids.length*40};}
   pl[ids[5]].r0=78;
-  const alt=E.DATA.clubs[5].pl.find(p=>p[6]==='GK'&&!used.has(p[5]));pl[alt[5]]={n:alt[0],k:12,g:0,r0:alt[2],slot:'GK',c:E.DATA.clubs[5].n,ka:10,wa:200};
+  ids.forEach((id,i)=>{pl[id].om=[14,40,22,4,31,18,12,25,3,60,14][i];pl[id].ot=Math.min(pl[id].om,[9,30,20,4,12,18,12,8,2,41,9][i]);});   // offers: M across picks, N taken
+  const alt=E.DATA.clubs[5].pl.find(p=>p[6]==='GK'&&!used.has(p[5]));pl[alt[5]]={n:alt[0],k:12,g:0,r0:alt[2],slot:'GK',c:E.DATA.clubs[5].n,y:E.DATA.clubs[5].y,ka:10,wa:200};
   const xi=ids.map((id,i)=>({i,id,k:20+i*3}));xi.push({i:1,id:ids[0],k:90},{i:0,id:alt[5],k:10});   // ids[0] is most frequent at slot 1: greedy keeps every player once
   const names=[...new Set(E.DATA.clubs.flatMap(c=>c.pl.map(p=>p[0])))];const clubs=[...new Set(E.DATA.clubs.map(c=>c.n))].slice(0,38);
+  const allp=E.DATA.clubs.flatMap(c=>c.pl.filter(p=>p[2]>=75).map(p=>({id:p[5],n:p[0],c:c.n,y:c.y,slot:p[6]})));
+  const c100=allp.filter((p,i)=>i%11===3).slice(0,7).map((p,i)=>({...p,m:3000-i*250}));
+  const ms=[{k:'first',n:1,at:'2026-09-02T10:00:00Z'},{k:'rel',n:3,at:'2026-09-05T10:00:00Z'},{k:'s',s:10,n:10,at:'2026-09-12T10:00:00Z'},{k:'champ',n:12,at:'2026-09-14T10:00:00Z'},{k:'perfect',n:31,at:'2026-09-27T10:00:00Z'},{k:'s',s:100,n:100,at:'2026-10-08T10:00:00Z'}];
   return {n:140,na:128,w:2400,d:700,l:740,pts:7900,gf:7100,best:89,fm:{f:'4-4-2',k:85},xi,pl,top:{g:ids[10],k:ids[2],dog:ids[5]},uniq:640,once:326,once_n:names.slice(0,300),
     xin:1540,avg:82.4,dog:400,rn:1540,cl_n:clubs.length,cl:clubs.map((c,i)=>({c,k:Math.max(4,Math.round(480/(i+1)))})),
-    modes:[{b:'classic',k:98,pts:5940},{b:'daily',k:22,pts:2120},{b:'anti',k:12,pts:610},{b:'derby',k:8,pts:330}],off_n:0,rej:null,_ids:ids,_alt:alt[5]};}
+    modes:[{b:'classic',k:98,pts:5940},{b:'daily',k:22,pts:2120},{b:'anti',k:12,pts:610},{b:'derby',k:8,pts:330}],off_n:0,rej:null,ms,c100,c100_n:9,_ids:ids,_alt:alt[5]};}
 const FULL=numbers();
 let NUMS=FULL,CALLS=0,SEASONS=140;
 const prof=p=>p&&({public_id:p.public_id,name:p.name||p.anon_name,anon:!p.name,since:'2026-09-02T10:00:00Z',seasons:p.id==='p-v'?2:SEASONS,champions:3,perfect:0,best_classic:89,win_pct:62,best:{},worst:{},
@@ -85,6 +89,22 @@ const noHScroll=pg=>pg.evaluate(()=>document.documentElement.scrollWidth<=innerW
   // reduced motion: card without entrance animation
   await pg.emulateMedia({reducedMotion:'reduce'});await slot(1).click();await pg.waitForTimeout(100);
   T.check(await pg.$eval('#nmCard .nm-pc',e=>getComputedStyle(e).animationName==='none'),'зменшений рух: картка без анімації появи');
+  // milestones, Club 100, took N of M, share card
+  {const ms=await pg.$$eval('#nmSec .nm-ms-i',e=>e.map(x=>x.textContent));
+   T.check(/Перший сезон/.test(ms[0])&&/Перший виліт/.test(ms[1])&&/10-й сезон/.test(ms[2])&&/Перший титул/.test(ms[3])&&/Перший 30-0/.test(ms[4])&&/100-й сезон/.test(ms[5])&&/250-й сезон.*ще 110/.test(ms[6])&&ms.length===7,'віхи: хронологія й наступна ціль «250-й сезон, ще 110»: '+ms.join(' | '));
+   T.check(/02\.09\.2026/.test(ms[0])&&await pg.$eval('#nmSec .nm-ms time',t=>t.getAttribute('datetime'))==='2026-09-02','віхи: дата дд.мм.рррр і datetime');
+   const r100=await pg.$$eval('#nmSec .nm-r100',e=>e.map(x=>x.querySelector('.n').textContent));
+   T.check(r100.length===3&&/3\D?000/.test(r100[0])&&/Клуб 100/.test(await pg.textContent('#nmSec'))&&/9 гравців/.test(await pg.textContent('#nmSec')),'Клуб 100: 3 рядки з матчами, 9 гравців у заголовку');
+   await pg.click('#nmC100');await pg.waitForTimeout(100);
+   T.check(await pg.$$eval('#nmSec .nm-r100',e=>e.length)===7&&/і ще 2/.test(await pg.textContent('#nmSec')),'Клуб 100 розгорнуто: 7 рядків і «і ще 2»');
+   await pg.locator('#nmPitch [data-nm="9"] .disc').click();await pg.waitForTimeout(150);
+   T.check(/пропонувало його\D*60\D+взяв\D*41/.test(await pg.textContent('#nmCard')),'картка гравця: «узяв 41 з 60»');
+   await pg.locator('#nmPitch [data-nm="3"] .disc').click();await pg.waitForTimeout(150);
+   T.check(!/пропонувало/.test(await pg.textContent('#nmCard')),'менше 5 пропозицій — рядка «узяв N з M» немає');
+   T.check(await pg.$eval('#nmPitch [data-nm="0"] .club',e=>/\d\d\/\d\d|\d{4}/.test(e.textContent)),'11-ка: клуб із сезоном (рік передано)');
+   await pg.click('#nmShare');await pg.waitForFunction(()=>!document.getElementById('nmOut').hidden,null,{timeout:5000});
+   T.check(await pg.$eval('#nmImg',i=>i.src.startsWith('data:image/png')&&i.src.length>5000)&&(await pg.$eval('#nmMsg',m=>m.textContent)).length>0,'«Поділитися цифрами»: картка показана, є підказка');
+   await shot(pg.locator('#nmOut'),'share');}
   T.check(!A.errs.length,'без помилок на сторінці '+A.errs.join(' | '));await A.ctx.close();}
  // someone else's page: nothing
  {const n0=CALLS,A=await openOwn({b,query:'?u=vitya234'});const pg=A.pg;await pg.waitForTimeout(500);
@@ -101,6 +121,10 @@ const noHScroll=pg=>pg.evaluate(()=>document.documentElement.scrollWidth<=innerW
  {const A=await openOwn({b});const t=await A.pg.textContent('#nmSec');
   T.check(/Відхилені/.test(t)&&/з 14 сезонів/.test(t)&&await A.pg.$$eval('#nmSec .nm-row .ic',e=>e.length)===4,'«Відхилені»: є дані — блок з іменем із пулу (невідомий id пропущено)');
   await shot(A.pg.locator('#nmSec'),'phone_dark_rejected');await A.ctx.close();}
+ // ===== 3b. old DB: no ms / c100 / om fields -> section works, no new blocks
+ NUMS=(({ms,c100,c100_n,...r})=>({...r,pl:Object.fromEntries(Object.entries(r.pl).map(([k,v])=>{const {om,ot,...q}=v;return [k,q];}))}))(FULL);
+ {const A=await openOwn({b});const t=await A.pg.textContent('#nmSec');
+  T.check(/Твій рекорд/.test(t)&&!/Віхи/.test(t)&&!/Клуб 100/.test(t)&&!A.errs.length,'стара база без нових полів: розділ працює, віх і Клубу 100 немає, без помилок');await A.ctx.close();}
  // ===== 4. fewer than 5 seasons: neutral line, favourite rows stay
  NUMS={n:3};SEASONS=3;
  {const A=await openOwn({b});const pg=A.pg;

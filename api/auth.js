@@ -2,7 +2,7 @@
 // Verifies the Telegram signature (Mini App initData or bot login via login_token) and issues a one-time Supabase login token.
 // Vercel env: TG_TOKEN (bot token), SUPABASE_SERVICE_KEY (Supabase -> Settings -> API Keys -> secret key).
 const { rateLimit } = require('./_device.js');   // rate limiting
-const { SB_URL, env, sb: sbRest, miniApp } = require('./_lib.js');
+const { SB_URL, env, sb: sbRest, miniApp, body, fail } = require('./_lib.js');
 const checkMiniApp = (initData, token) => { const m = miniApp(initData, token); return m && m.user; };
 
 async function admin(path, body) {
@@ -19,10 +19,9 @@ module.exports = async (req, res) => {
   let stage = 'config';
   try {
   const token = env('TG_TOKEN');
-  if (!token || !env('SUPABASE_SERVICE_KEY')) return res.status(500).json({ error: 'server not configured: ' + (!token ? 'TG_TOKEN ' : '') + (!env('SUPABASE_SERVICE_KEY') ? 'SUPABASE_SERVICE_KEY' : '') });
+  if (!token || !env('SUPABASE_SERVICE_KEY')) return fail(res, 'auth', new Error('server not configured: ' + (!token ? 'TG_TOKEN ' : '') + (!env('SUPABASE_SERVICE_KEY') ? 'SUPABASE_SERVICE_KEY' : '')));
   stage = 'body';
-  let b = req.body || {};
-  if (typeof b === 'string') b = JSON.parse(b);
+  const b = body(req);
   stage = 'rate';
   if (await rateLimit(req, res, 'auth')) return;   // per IP
   stage = 'signature';
@@ -53,16 +52,16 @@ module.exports = async (req, res) => {
   if (st === 'none') {
     stage = 'create user';
     const cu = await admin('users', { email, email_confirm: true, user_metadata: meta, app_metadata: { tg_id: String(tgId) } });   // a parallel create gets "already exists": checked again below
-    if (cu.status === 401 || cu.status === 403) return res.status(500).json({ error: 'Supabase не прийняв SUPABASE_SERVICE_KEY (потрібен secret key sb_secret_…)', status: cu.status });
+    if (cu.status === 401 || cu.status === 403) return fail(res, 'auth', new Error(`Supabase refused SUPABASE_SERVICE_KEY (needs a secret key sb_secret_...), status ${cu.status}`));
     st = await owner();
   }
   if (st !== 'ok') { console.error('auth: account refused', tgId, st); return res.status(403).json({ error: 'tg_account' }); }
   stage = 'generate link';
   const { status, j } = await admin('generate_link', { type: 'magiclink', email });
   const token_hash = j.hashed_token || (j.properties && j.properties.hashed_token);
-  if (status >= 300 || !token_hash) return res.status(500).json({ error: 'generate_link failed: ' + String(j.msg || j.error_description || j.error || '').slice(0, 120), status });
+  if (status >= 300 || !token_hash) return fail(res, 'auth', new Error(`generate_link failed, status ${status}: ` + String(j.msg || j.error_description || j.error || '').slice(0, 120)));
   res.status(200).json({ token_hash, name });
   } catch (e) {
-    res.status(500).json({ error: `crash at ${stage}: ${String(e && e.message || e).slice(0, 160)}` });
+    fail(res, `auth ${stage}`, e);
   }
 };

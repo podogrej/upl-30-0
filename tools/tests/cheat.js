@@ -114,6 +114,23 @@ function honestXi(formation) {
   const foot = xi.find(x => ['LB', 'RB', 'LW', 'RW'].includes(x.slot));
   await tamper('чесний сезон', r => {}, true);
   await tamper('seed reused', r => {}, false);
+  // two parallel verifications of seasons that share one seed (both read used_by = null): the atomic claim lets exactly one through
+  { const sr = await call(seedH, { device_id: device, xi, formation, mode: 'normal', format: 'classic', year });
+    const q = E.run({ xi: SX(xi), mode: 'normal', format: 'classic', year, seed: sr.j.seed });
+    const mk = () => { const r = JSON.parse(JSON.stringify(legit)); r.id = DB.seasons.length + 1; r.verified = null; Object.assign(r, { seed: sr.j.seed, seed_id: sr.j.seed_id, w: q.W, d: q.D, l: q.L, pts: q.pts, place: q.place, gf: q.gf, ga: q.ga }); DB.seasons.push(r); return r; };
+    const ra = mk(), rb = mk();
+    const [xa, xb] = await Promise.all([call(verH, { season_id: ra.id }), call(verH, { season_id: rb.id })]);
+    const won = [xa, xb].filter(x => x.j.verified === true), lost = [xa, xb].filter(x => x.j.verified === false);
+    const seedRow = DB.season_seeds.find(x => x.id === sr.j.seed_id);
+    const okRace = won.length === 1 && lost.length === 1 && /seed уже використано/.test(lost[0].j.note) && seedRow && [ra.id, rb.id].includes(+seedRow.used_by) && DB.seasons.filter(x => x.verified === true && x.seed_id === sr.j.seed_id).length === 1;
+    if (!okRace) bad++;
+    console.log(`${okRace ? '✓' : '✗'} два сезони на один seed одночасно: один перевірено, другий «seed уже використано» (${xa.j.verified}/${xb.j.verified}, ${xa.j.note} / ${xb.j.note})`);
+    DB.seasons.forEach(x => { if (x.seed_id === sr.j.seed_id) x.verified = null; });
+    const again = await call(verH, { season_id: won.length ? (xa.j.verified === true ? ra.id : rb.id) : ra.id });
+    const okAgain = again.j.verified === true;
+    if (!okAgain) bad++;
+    console.log(`${okAgain ? '✓' : '✗'} повторна перевірка того самого сезону, що взяв seed, лишається чинною (${again.j.verified})`);
+  }
   await tamper('рейтинг піднято до 99', r => { r.xi[0].r = 99; }, false);
   await tamper('рейтинг без штрафу/ноги (r = базовий)', r => { const x = r.xi.find(q => q.r !== q.r0); if (x) x.r = x.r0; else r.xi[0].r += 1; }, false);
   await tamper('очки завищено', r => { r.w += 1; r.d -= 1; r.pts += 2; }, false);
@@ -420,6 +437,51 @@ function honestXi(formation) {
   ok('auth: tg_id іншої людини — 403', (await login(7004)).c === 403 && !LINKS.includes('7004'));
   ok('auth: підробний підпис — 401', (await callReq(authH, { method: 'POST', body: { initData: initData({ id: 7001 }, '').replace(/hash=[0-9a-f]+/, 'hash=00') } })).c === 401);
 
+  // ===== 0.90: seed fields are required (S-3), server-written text and stats (N-1), version format (S-2) =====
+  { const base = { device_id: me, secret: mySecret, xi, formation, mode: 'normal', format: 'classic', year }, n1 = DB.season_seeds.length;
+    const bad400 = [{ mode: '' }, { format: '' }, { formation: '' }, { year: 0 }, { year: null }, { mode: 'bogus' }, { mode: 'constructor' }, { format: '__proto__' }, { formation: '9-9-9' }, { year: 1800 }, { year: 2000 }, { year: E.LEAGUE_CULT, format: 'legends' }, { mode: 'daily' }, { daily: true }, { mode: undefined, format: undefined, formation: undefined, year: undefined }];
+    const codes400 = []; for (const o of bad400) codes400.push((await call(seedH, { ...base, ...o })).c);
+    ok('seed: порожні й чужі mode/format/formation/year, daily без daily — 400, рядок не створено', codes400.every(c => c === 400) && DB.season_seeds.length === n1, codes400.join(','));
+    // old tabs (0.89.x) send valid values: every mode, the Legends year for classic, cult year for other formats, a real UPL year only for an old challenge
+    const goodCombos = [['normal', 'classic', E.LEAGUE_LEGENDS], ['hard', 'classic', E.LEAGUE_LEGENDS], ['hardcore', 'classic', E.LEAGUE_LEGENDS], ['pick', 'classic', E.LEAGUE_LEGENDS], ['practice', 'classic', E.LEAGUE_LEGENDS],
+      ['normal', 'legends', E.LEAGUE_LEGENDS], ['normal', 'derby', E.LEAGUE_CULT], ['normal', 'oneclub', E.LEAGUE_CULT], ['normal', 'anti', E.LEAGUE_CULT], ['normal', 'classic', E.YEARS16[0]]];
+    const good = []; for (const [m, f, y] of goodCombos) good.push((await call(seedH, { ...base, mode: m, format: f, year: y })).c);
+    ok('seed: чинні комбінації старих вкладок (усі режими й формати) проходять', good.every(c => c === 200), good.join(','));
+    { const D0 = E.dailySetupFor('2026-10-12'); ok('seed: старий драфт дня (daily + mode daily, рік і схема дня) проходить', (await call(seedH, { ...base, device_id: crypto.randomUUID(), secret: 'daily-secret-0123456789abc', mode: 'daily', daily: true, year: D0.year, formation: D0.formation })).c === 200); }
+    // verify no longer lets an empty seed field match any mode
+    const sr = await call(seedH, base); const sq = E.run({ xi: SX(xi), mode: 'normal', format: 'classic', year, seed: sr.j.seed });
+    const seedRow = DB.season_seeds.find(x => x.id === sr.j.seed_id);
+    const mkRow = () => ({ ...legit, device_id: me, id: DB.seasons.length + 1, verified: null, seed: sr.j.seed, seed_id: sr.j.seed_id, w: sq.W, d: sq.D, l: sq.L, pts: sq.pts, place: sq.place, gf: sq.gf, ga: sq.ga });
+    for (const k of ['mode', 'format', 'formation', 'year']) { seedRow[k] = k === 'year' ? null : ''; seedRow.used_by = null;
+      const r = mkRow(); DB.seasons.push(r); const v = await call(verH, { season_id: r.id });
+      ok(`verify: seed з порожнім «${k}» — не підходить (verified=false)`, v.j.verified === false && /seed без поля/.test(v.j.note), v.j.note);
+      seedRow[k] = k === 'year' ? year : base[k]; }
+    seedRow.used_by = null; const r0 = mkRow(); DB.seasons.push(r0);
+    ok('verify: той самий seed з усіма полями — перевірено', (await call(verH, { season_id: r0.id })).j.verified === true);
+    // N-1: forged names, stats, table and tier are overwritten from the pool and the simulation when the season is verified
+    const s2 = await call(seedH, base), q2 = E.run({ xi: SX(xi), mode: 'normal', format: 'classic', year, seed: s2.j.seed });
+    const forged = { ...season, seed: s2.j.seed, seed_id: s2.j.seed_id, w: q2.W, d: q2.D, l: q2.L, pts: q2.pts, place: q2.place, gf: q2.gf, ga: q2.ga, perfect: q2.W === 30, tier: 'ІДЕАЛЬНИЙ СЕЗОН · 30-0-0', golden: true,
+      xi: xi.map((x, i) => ({ ...x, n: 'Фальшивий ' + i, g: 99, a: 99, rt: 9.99, f: 5 })), tbl: [{ n: 'Моя команда', w: 30, d: 0, l: 0, gf: 99, ga: 0, pts: 90, me: true }] };
+    const f2 = await call(saveH, { kind: 'season', device_id: me, secret: mySecret, row: forged }), st = DB.seasons[DB.seasons.length - 1];
+    const want = q2.players.reduce((a, p) => a + p.g, 0);
+    ok('verify: підроблені імена гравців замінено іменами з пулу', f2.j.verified === true && st.xi.every((x, i) => x.n === E.DATA.clubs.find(c => c.n === xi[i].c && c.y === xi[i].y).pl.find(p => p[5] === xi[i].id)[0]), f2.j.note);
+    ok('verify: голи, асисти, оцінки, форма — з симуляції', st.xi.every(x => { const q = q2.players.find(p => p.id === x.id); return x.g === q.g && x.a === q.a && x.f === (q.form || 0) && x.rt === (q.rt ? Math.round(q.rt * 100) / 100 : null); }) && st.xi.reduce((a, x) => a + x.g, 0) === want);
+    ok('verify: таблиця — з симуляції, назва своєї команди лишається', st.tbl.length === q2.table.length && st.tbl.filter(t => t.me).length === 1 && st.tbl.every((t, i) => (t.me ? t.n === 'Моя команда' : t.n === q2.table[i].n) && t.pts === q2.table[i].pts));   // own team name is kept, numbers are from the simulation
+    E.setFormat('classic');
+    ok('verify: tier і golden — з симуляції (підроблене «30-0» не лишилось)', st.tier === E.tierOf(q2)[0] && st.golden === !!q2.golden && (q2.W === 30 || !/ІДЕАЛЬНИЙ/.test(st.tier)) && st.perfect === (q2.W === 30), `${st.tier} golden=${st.golden}`);
+    ok('verify: решта рядка (клуб, рік, слот, рейтинг) не змінена', st.xi.every((x, i) => x.id === xi[i].id && x.slot === xi[i].slot && x.c === xi[i].c && x.y === xi[i].y && x.r === xi[i].r && x.r0 === xi[i].r0));
+    // S-2: version is digits and dots only, otherwise stored as null (verified against the current engine like a missing version)
+    const vers = {}; for (const v of ['0.89.1', '0.9', '1.2.3.4', 'abc', '0.89 <b>', '', '0.89.1-x', null]) {
+      const sv2 = await call(seedH, base), qv = E.run({ xi: SX(xi), mode: 'normal', format: 'classic', year, seed: sv2.j.seed });
+      await call(saveH, { kind: 'season', device_id: me, secret: mySecret, row: { ...season, version: v, seed: sv2.j.seed, seed_id: sv2.j.seed_id, w: qv.W, d: qv.D, l: qv.L, pts: qv.pts, place: qv.place, gf: qv.gf, ga: qv.ga, perfect: qv.W === 30 } });
+      vers[v] = DB.seasons[DB.seasons.length - 1].version; }
+    ok('save: version — лише цифри й крапки (0.89.1, 0.9 лишаються), решта → null', vers['0.89.1'] === '0.89.1' && vers['0.9'] === '0.9' && ['1.2.3.4', 'abc', '0.89 <b>', '', '0.89.1-x', null].every(v => vers[v] === null), JSON.stringify(vers));
+    // S-2: result link preview claims a result only for a verified season
+    const R = require(path.join(ROOT, 'api', 'r.js')), ps = { id: 5, w: 30, d: 0, l: 0, pts: 90, place: 1, gf: 99, ga: 0, format: 'classic', players: { name: 'Вітя' } };
+    const pv = R.page('https://upl.test/', 5, { ...ps, verified: true }), pn = R.page('https://upl.test/', 5, { ...ps, verified: null }), pf = R.page('https://upl.test/', 5, { ...ps, verified: false });
+    ok('r: перевірений сезон — «30-0!» у превʼю', /30-0!/.test(pv) && !/не перевірено/.test(pv));
+    ok('r: неперевірений (null і false) — без «30-0!», рахунку й місця, з позначкою «не перевірено»', [pn, pf].every(h => !/30-0!|30-0-0|Чемпіон|90 очок|99:0/.test(h.replace(/<a [^>]*>[^<]*<\/a>/, '').replace(/збери|пройди сезон без поразок/gi, '')) && /не перевірено/.test(h)));
+  }
   // ===== rate limiting -> 429 =====
   RATE_ON = true;
   const rdev = crypto.randomUUID(), rsec = 'rate-secret-0123456789abcd';

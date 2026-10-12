@@ -1,18 +1,18 @@
 // 30-0 UPL: season verification (/api/verify)
 // POST {season_id}: the server takes the season record from the log, checks seed, squad, ratings and format rules
 // and recomputes the season with the same engine as the game (lib/engine.js). Result: seasons.verified = true/false.
-const crypto = require('crypto');
-const { sb, rateLimit } = require('./_device.js');   // DB requests with the service key
+const { sb, rateLimit, body } = require('./_device.js');   // DB requests with the service key
+const { xiHash, fail } = require('./_lib.js');
 const L = require('./_league.js');   // chat leagues: credit verified free-play seasons
-const xiHash = xi => crypto.createHash('sha256').update(xi.map(x => `${x.id}|${x.slot}|${x.c}|${x.y}`).join(';')).digest('hex');
 let E = null;
 const CHAL_OLD_BEFORE = '2026-10-01T14:56:00Z';   // since this merge (0.64) challenges are created only against "League of Legends"
+const SEED_STRICT_FROM = '2026-10-12T00:00:00';   // ISO prefix compare with season_seeds.created_at
 function engine() { if (!E) E = require('../lib/engine.js'); return E; }
 
 // opponent year allowed for a season: for the format, the one the game uses (oppYear: LEAGUE_LEGENDS or LEAGUE_CULT).
 // Exception: classic mode from an old friend challenge (before 0.50 a challenge could use a real 16-team UPL season):
 // such a year is accepted only if challenges has a challenge with that year and formation (chalYearOk computed by the handler below).
-function yearOk(row, E, chalYearOk, prev) {
+function yearOk(row, E, chalYearOk) {
   const y = +row.year;
   // classic (and season pick, daily draft) is against LEAGUE_LEGENDS; LEAGUE_CULT only for seasons from site 0.63 and earlier
   // or a friend challenge created before 0.64 (chalYearOk). Anti-season and hidden derby / one-club modes: cult clubs as before.
@@ -25,15 +25,15 @@ function yearOk(row, E, chalYearOk, prev) {
 
 // The previous site version stays open for players (browser cache, Mini App): if simulation didn't change between versions, add it here
 // so its seasons are verified by the new engine. History for 0.57-0.64 is in CHANGELOG.
-const PREV_VERSIONS = ['0.89', '0.88.2', '0.88.1'];   // only versions with identical simulation; others get null ("not verified"). Keeping it short also blocks forged version (audit P1-2)
+const PREV_VERSIONS = ['0.89.1', '0.89', '0.88.2'];   // only versions with identical simulation; others get null ("not verified"). Keeping it short also blocks forged version (audit P1-2)
 
 // main check: returns [true|false|null, reason]; null = cannot verify (old version etc.)
 function check(row, seedRow, opts = {}) {
   const E = engine();
   if (!row.version || row.version === E.VERSION) return checkCore(row, seedRow, opts);
   if (!PREV_VERSIONS.includes(row.version)) return [null, `версія гри ${row.version} ≠ рушій ${E.VERSION}`];
-  const [v, note] = checkCore(row, seedRow, { ...opts, prev: true });
-  return v === true ? [true, `ok (версія ${row.version})`] : [null, `версія гри ${row.version}: ${note}`];
+  const [v, note, fix] = checkCore(row, seedRow, { ...opts, prev: true });
+  return v === true ? [true, `ok (версія ${row.version})`, fix] : [null, `версія гри ${row.version}: ${note}`];
 }
 function checkCore(row, seedRow, { chalYearOk = false, prev = false } = {}) {
   const E = engine();
@@ -42,7 +42,13 @@ function checkCore(row, seedRow, { chalYearOk = false, prev = false } = {}) {
   if (+seedRow.seed !== +row.seed) return [false, 'seed не збігається'];
   if (seedRow.used_by && +seedRow.used_by !== +row.id) return [false, 'seed уже використано'];
   // formation, mode, format and year must match what the seed was issued for (old seeds may lack these fields)
-  for (const k of ['formation', 'mode', 'format']) if (seedRow[k] != null && seedRow[k] !== '' && String(seedRow[k]) !== String(row[k])) return [false, `${k}: seed видано для «${seedRow[k]}»`];
+  // seeds issued since SEED_STRICT_FROM always carry all four (api/seed.js); an empty field no longer matches any mode
+  const strict = !seedRow.created_at || seedRow.created_at >= SEED_STRICT_FROM;
+  for (const k of ['formation', 'mode', 'format']) {
+    if (strict && !seedRow[k]) return [false, `seed без поля ${k}`];
+    if (seedRow[k] != null && seedRow[k] !== '' && String(seedRow[k]) !== String(row[k])) return [false, `${k}: seed видано для «${seedRow[k]}»`];
+  }
+  if (strict && !seedRow.year) return [false, 'seed без поля year'];
   if (seedRow.year != null && +seedRow.year !== +row.year) return [false, `рік: seed видано для ${seedRow.year}`];
   // a daily draft season needs a daily seed (practice tries use ordinary seeds); a daily seed is never spent on another season
   if (row.day && !row.practice && seedRow.daily !== true) return [false, 'seed не для драфту дня'];
@@ -51,7 +57,7 @@ function checkCore(row, seedRow, { chalYearOk = false, prev = false } = {}) {
   if (seedRow.vd_day && (row.day || row.practice || row.fl_id || (row.era != null && row.era !== 'all'))) return [false, 'seed виклику дня для іншого сезону'];
   if (!E.FORMATS[row.format]) return [false, 'невідомий формат'];
   if (!E.MODES[row.mode]) return [false, 'невідомий режим'];
-  if (!yearOk(row, E, chalYearOk, prev)) return [false, `суперники ${row.year} не для формату ${row.format}`];
+  if (!yearOk(row, E, chalYearOk)) return [false, `суперники ${row.year} не для формату ${row.format}`];
   // era: seasons.era exists only once the DB column is added; then every club-season in the squad must be no earlier than its start
   const era = row.era == null || row.era === 'all' ? null : E.ERAS && E.ERAS[row.era];
   if (row.era != null && row.era !== 'all' && !era) return [false, `невідома епоха ${row.era}`];
@@ -64,6 +70,7 @@ function checkCore(row, seedRow, { chalYearOk = false, prev = false } = {}) {
   const canon = id => (E.DATA.alias && E.DATA.alias[id]) || id;   // one person under two ids (data/aliases) also counts as a duplicate
   if (new Set(xi.map(x => canon(x.id))).size !== 11) return [false, 'гравець двічі'];
   E.setFormat(row.format);
+  const names = [];   // pool names, written over the browser's text fields on success (fix below)
   for (const x of xi) {
     const club = E.DATA.clubs.find(c => c.n === x.c && c.y === +x.y);
     if (!club) return [false, `немає клуб-сезону ${x.c} ${x.y}`];
@@ -71,6 +78,7 @@ function checkCore(row, seedRow, { chalYearOk = false, prev = false } = {}) {
     if (!p) return [false, `${x.n} не грав за ${x.c} ${x.y}`];
     const r = E.effRating(p, x.slot);
     if (r == null) return [false, `${x.n} не може грати на ${x.slot}`];
+    names.push(p[0]);
     if (r !== +x.r) return [false, `рейтинг ${x.n}: ${x.r} ≠ ${r}`];
     if (x.r0 != null && +x.r0 !== p[2]) return [false, `базовий рейтинг ${x.n}: ${x.r0} ≠ ${p[2]}`];   // r0 is shown in tables and on the card
     if (row.format === 'derby' && !E.FORMATS.derby.clubs.includes(club.c)) return [false, 'дербі: чужий клуб'];
@@ -90,7 +98,19 @@ function checkCore(row, seedRow, { chalYearOk = false, prev = false } = {}) {
   const ccOf = x => (E.DATA.clubs.find(c => c.n === x.c && c.y === +x.y) || {}).c;
   const sim = E.run({ xi: xi.map(x => ({ id: x.id, name: x.n, slot: x.slot, pos: E.GROUP_OF[x.slot], r: +x.r, cc: ccOf(x), y: +x.y })), mode: row.mode, format: row.format, year: +row.year, seed: +row.seed });
   const same = sim.W === row.w && sim.D === row.d && sim.L === row.l && sim.gf === row.gf && sim.ga === row.ga && sim.place === row.place && (row.pts == null || sim.pts === row.pts);
-  return same ? [true, 'ok'] : [false, `перерахунок: ${sim.W}-${sim.D}-${sim.L} ${sim.gf}:${sim.ga} #${sim.place}`];
+  return same ? [true, 'ok', stored(E, row, xi, names, sim)] : [false, `перерахунок: ${sim.W}-${sim.D}-${sim.L} ${sim.gf}:${sim.ga} #${sim.place}`];
+}
+
+// Fields stored with a verified season are rewritten from the pool and the simulation, so text and stats cannot be forged:
+// names from the pool, g/a/rt/f from the simulated players, the table, tier, golden and perfect marks (same rules as logSeason in the site).
+// the player's own team name is a label only (not a result): keep the one the site stored for the 'me' row
+const teamName = (row, dflt) => { const m = Array.isArray(row.tbl) && row.tbl.find(t => t && t.me); const n = m && typeof m.n === 'string' ? m.n.trim().slice(0, 60) : ''; return n || dflt; };
+function stored(E, row, xi, names, sim) {
+  E.setFormat(row.format);   // E.run resets the format; tierOf reads it
+  return {
+    xi: xi.map((x, i) => { const q = sim.players.find(v => v.id === x.id) || {}; return { ...x, n: names[i], f: q.form || 0, g: q.g || 0, a: q.a || 0, rt: q.rt ? Math.round(q.rt * 100) / 100 : null }; }),
+    tbl: sim.table.map(t => ({ n: t.id === 'USER' ? teamName(row, t.n) : t.n, w: t.w, d: t.d, l: t.l, gf: t.gf, ga: t.ga, pts: t.pts, me: t.id === 'USER' })),
+    tier: E.tierOf(sim)[0], golden: !!sim.golden, perfect: sim.W === 30 };
 }
 
 // daily challenge result is written by the server from the verified season (browser numbers in daily_results are not trusted).
@@ -141,12 +161,19 @@ async function verifyById(id, row) {
     const ch = await sb(`challenges?year=eq.${+row.year}&formation=eq.${encodeURIComponent(String(row.formation || ''))}&created_at=lt.${CHAL_OLD_BEFORE}&select=id&limit=1`) || [];
     chalYearOk = ch.length > 0;
   }
-  let v, note;
-  try { [v, note] = check(row, seedRow, { chalYearOk }); } catch (e) { v = null; note = 'рушій недоступний: ' + String(e.message || e).slice(0, 80); }
-  // verdict and "seed used" are independent writes: in parallel; the daily result only after both succeeded
-  await Promise.all([
-    sb(`seasons?id=eq.${id}`, { method: 'PATCH', prefer: 'return=minimal', body: { verified: v, verify_note: String(note).slice(0, 200) } }),
-    v === true && seedRow ? sb(`season_seeds?id=eq.${seedRow.id}`, { method: 'PATCH', prefer: 'return=minimal', body: { used_by: id } }) : null]);
+  let v, note, fix;
+  try { [v, note, fix] = check(row, seedRow, { chalYearOk }); } catch (e) { v = null; note = 'рушій недоступний: ' + String(e.message || e).slice(0, 80); }
+  // claim the seed atomically (only while used_by is still null): of two parallel verifications of seasons that share one seed, only one wins
+  if (v === true && seedRow) {
+    const got = await sb(`season_seeds?id=eq.${seedRow.id}&used_by=is.null`, { method: 'PATCH', prefer: 'return=representation', body: { used_by: id } }) || [];
+    if (!got.length) {
+      const [cur] = await sb(`season_seeds?id=eq.${seedRow.id}&select=used_by`) || [];
+      if (!cur || +cur.used_by !== +id) { v = false; note = 'seed уже використано'; }   // same season again (retry after a failed verdict write) stays valid
+    }
+  }
+  // verdict and the server-computed fields in one PATCH (retry-safe: the same values every time)
+  await sb(`seasons?id=eq.${id}`, { method: 'PATCH', prefer: 'return=minimal', body: { verified: v, verify_note: String(note).slice(0, 200), ...(v === true && fix ? fix : {}) } });
+  if (v === true && fix) row = { ...row, ...fix };
   if (v === true && seedRow) await syncDaily({ ...row, verified: true }, { ...seedRow, used_by: id }, true);
   if (v === true && seedRow && seedRow.vd_day) await vdLink(row, seedRow, id).catch(e => console.error('vd', e.message));
   // friends league attempt and chat leagues are independent; a chat league failure never fails the verification
@@ -158,14 +185,16 @@ async function verifyById(id, row) {
 module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
   try {
-    let b = req.body || {}; if (typeof b === 'string') b = JSON.parse(b);
+    const b = body(req);
     const id = +b.season_id; if (!id) return res.status(400).json({ error: 'season_id?' });
     if (await rateLimit(req, res, 'verify')) return;   // per IP
     const r = await verifyById(id);
     if (r.status) return res.status(r.status).json({ error: r.error });
     res.status(200).json(r);
   } catch (e) {
-    res.status(500).json({ error: `crash: ${String(e && e.message || e).slice(0, 160)}` });
+    fail(res, 'verify', e);
   }
 };
 module.exports.verifyById = verifyById;
+module.exports.engine = engine;
+module.exports.yearOk = yearOk;

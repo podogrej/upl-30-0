@@ -1,6 +1,6 @@
 // 30-0 UPL: shared Telegram group league helpers for api/bot.js, api/cron.js, api/league.js ("_" prefix: not a route).
 const L = (() => {
-const { SB_URL, env, sb, sbAll, kyivDate, miniApp } = require('./_lib.js');
+const { SB_URL, env, sb, sbAll, kyivDate, miniApp, devicesOf } = require('./_lib.js');
 const esc = s => String(s == null ? '' : s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
 
 async function tg(method, body) {
@@ -78,10 +78,11 @@ const RES_COLS = 'day,tg_user_id,name,w,d,l,pts,gf,ga,created_at,season_id';
 // all league rows (newest days first) for standings; today's rows are part of it. Paged: one request returns at most 1000 rows
 const leagueRows = chat_id => sbAll(`league_results?chat_id=eq.${chat_id}&select=${RES_COLS}&order=day.desc,tg_user_id.asc`).then(onlyVerified);
 // League card and standings in ONE call (rpc league_view, sql/v0891_audit_c.sql): {title, day, members, today, standings?}.
-// undefined = the function is not in the DB yet, no such league or an odd answer: the caller uses the row-by-row path.
+// null = the function answered "no such league"; undefined = the function is not in the DB yet or gave an odd answer: the caller uses the row-by-row path.
 async function leagueView(chat_id, day, card = false) {
   try {
     const r = await sb('rpc/league_view', { method: 'POST', body: { p_chat: +chat_id, p_day: day, p_card: !!card, p_limit: 100 } });
+    if (r === null) return null;
     return r && typeof r === 'object' && Array.isArray(r.today) ? r : undefined;
   } catch (e) { if (e.status !== 404 && !/PGRST202|Could not find the function/.test(e.body || '')) console.warn('league_view', e.message); return undefined; }
 }
@@ -132,12 +133,6 @@ async function upsertBoard(chat_id, day, { copy = false } = {}) {
 const DAY_N = 3;
 const legends = () => require('../lib/engine.js').LEAGUE_LEGENDS;
 const leagueFree = s => !!s && s.verified === true && s.format === 'classic' && s.mode === 'normal' && !s.practice && !s.day && !s.fl_id && (s.era == null || s.era === 'all') && +s.year === legends();
-// devices of a player (all linked devices); without a player only the given device
-async function devicesOf(pid, device) {
-  const ds = pid ? (await sb(`player_links?kind=eq.device&player_id=eq.${pid}&select=key`) || []).map(l => String(l.key)) : [];
-  if (device && !ds.includes(String(device))) ds.push(String(device));
-  return ds.filter(d => /^[0-9a-f-]{36}$/i.test(d));
-}
 // best counted season of the day for these devices: first DAY_N attempt seeds, then their verified free-play seasons
 async function dayBest(devices, day) {
   if (!devices.length) return null;

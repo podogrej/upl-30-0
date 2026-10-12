@@ -12,6 +12,7 @@
 // 503 {fallback:true}: DB has no device_ok yet (SQL 0.53 not applied). Clients 0.73.1+ do not write directly any more (sql/v054_close_writes.sql).
 const { sb, gate, tgUser, body } = require('./_device.js');
 const { verifyById } = require('./verify.js');
+const { fail } = require('./_lib.js');
 
 const int = (v, lo, hi) => { const n = Number(v); return Number.isInteger(n) && n >= lo && n <= hi ? n : null; };
 const num = (v, lo, hi) => { if (v == null || v === '') return null; const n = Number(v); return Number.isFinite(n) && n >= lo && n <= hi ? n : null; };
@@ -25,6 +26,8 @@ function score(r) {
 const xiItem = x => ({ n: str(x.n, 60), id: str(x.id, 60), slot: str(x.slot, 4), r: num(x.r, 0, 200), r0: num(x.r0, 0, 200), c: str(x.c, 60), y: int(x.y, 1900, 9999),
   f: num(x.f, -99, 99), g: int(x.g, 0, 99), a: int(x.a, 0, 99), rt: num(x.rt, 0, 20) });
 const tblItem = t => ({ n: str(t.n, 60), w: int(t.w, 0, 30), d: int(t.d, 0, 30), l: int(t.l, 0, 30), gf: int(t.gf, 0, 999), ga: int(t.ga, 0, 999), pts: int(t.pts, 0, 90), me: !!t.me });
+// site version as sent by the browser: digits only, else null (the season is then verified against the current engine)
+const verOf = v => (/^\d+\.\d+(\.\d+)?$/.test(String(v == null ? '' : v)) ? String(v).slice(0, 12) : null);
 const dayRe = /^\d{4}-\d{2}-\d{2}$/;
 const trophyIds = a => [...new Set((Array.isArray(a) ? a : []).map(String))].filter(t => /^[A-Za-z0-9_]{1,24}$/.test(t)).slice(0, 100);
 
@@ -47,7 +50,7 @@ function seasonRow(r) {
   const mode = str(r.mode, 12), format = str(r.format, 12), formation = str(r.formation, 8);
   if (!mode || !format || !formation) return null;
   return { ...sc, nickname: str(r.nickname, 24), competition: str(r.competition || 'upl', 12), data_version: str(r.data_version, 16), mode, format, club: str(r.club, 40), formation,
-    year: int(r.year, 1900, 9999), seed: int(r.seed, 0, 2 ** 53), version: str(r.version, 12), xp: num(r.xp, 0, 90), xg: num(r.xg, 0, 999), xga: num(r.xga, 0, 999),
+    year: int(r.year, 1900, 9999), seed: int(r.seed, 0, 2 ** 53), version: verOf(r.version), xp: num(r.xp, 0, 90), xg: num(r.xg, 0, 999), xga: num(r.xga, 0, 999),
     tier: str(r.tier, 80), golden: !!r.golden, perfect: !!r.perfect, seed_id: /^[0-9A-Za-z-]{1,64}$/.test(String(r.seed_id || '')) ? String(r.seed_id) : null, practice: !!r.practice,
     day: dayRe.test(String(r.day || '')) ? r.day : null, xi: r.xi.map(xiItem), tbl: (r.tbl || []).map(tblItem),
     // era: only when not "all years" (otherwise the site doesn't send it). seasons.era may be missing: insert() retries without it
@@ -114,7 +117,7 @@ const handler = async (req, res) => {
     }
     res.status(400).json({ error: 'kind?' });
   } catch (e) {
-    res.status(500).json({ error: `crash at ${stage}: ${String(e && e.message || e).slice(0, 160)}` });
+    fail(res, `save ${stage}`, e);
   }
 };
 module.exports = handler;

@@ -117,7 +117,7 @@ function run({ xi, mode, format, year, seed }){
   rnd = Math.random; S.format = 'classic';
   return r;
 }
-module.exports = { VERSION: '${VERSION}', DATA, FORMATIONS, FORMATS, GROUP_OF, MODES, YEARS16, LEAGUE_CULT, LEAGUE_LEGENDS, LEAGUES, ERAS, ANTI_MIN_APPS, effRating, mulberry32, hashStr, dailySetupFor, wheelSeq, run, setFormat: f => { S.format = f; } };
+module.exports = { VERSION: '${VERSION}', DATA, FORMATIONS, FORMATS, GROUP_OF, MODES, YEARS16, LEAGUE_CULT, LEAGUE_LEGENDS, LEAGUES, ERAS, ANTI_MIN_APPS, effRating, mulberry32, hashStr, dailySetupFor, wheelSeq, run, tierOf, setFormat: f => { S.format = f; } };
 `;
 fs.mkdirSync(ROOT + '/lib', { recursive: true });
 fs.writeFileSync(ROOT + '/lib/engine.js', mod);

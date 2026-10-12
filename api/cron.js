@@ -6,6 +6,8 @@ const C = require('./_channel.js');   // channel post queue
 const N = require('./_notify.js');   // opt-in evening notifications to players
 const { plUk } = require('./_lib.js');
 const { errDigest } = require('./_errdigest.js');   // errors digest
+const MAX_LINES = 30;   // table lines per message (Telegram limit 4096 characters)
+const more = n => n > 0 ? `\n…і ще ${n}` : '';
 const safeEq = (a, b) => { const x = Buffer.from(String(a)), y = Buffer.from(String(b)); return x.length === y.length && require('crypto').timingSafeEqual(x, y); };
 
 module.exports = async (req, res) => {
@@ -45,6 +47,15 @@ module.exports = async (req, res) => {
       for (const l of await L.sb(`leagues?chat_id=in.(${part})&select=chat_id,title`) || []) titles[l.chat_id] = l.title;
     }
     const medal = ['🥇', '🥈', '🥉'];
+    // true only when Telegram accepted the message (ok: true); a refusal or a network error is logged and the chat is skipped
+    const send = async (chat_id, text, what) => {
+      try {
+        const r = await L.tg('sendMessage', { chat_id, text, parse_mode: 'HTML', reply_markup: L.playKb(chat_id), disable_web_page_preview: true });
+        if (r && r.ok) return true;
+        console.error(`cron ${what} ${chat_id}: telegram refused:`, String(r && r.description || 'no answer').slice(0, 200));
+      } catch (e) { console.error(`cron ${what} ${chat_id}:`, String(e && e.message || e).slice(0, 200)); }
+      return false;
+    };
     for (const chat_id of chats) {
       if ((flags[chat_id] || {}).summary_sent) continue;
       // the league history already holds today's rows (checked once, by the same rules): today's list is cut from it
@@ -56,10 +67,10 @@ module.exports = async (req, res) => {
       const win = list[0], ws = st.find(s => s.name === win.name);
       // keep messages short: no trophies and no "new wheel tomorrow" line
       let t = `<b>🌙 Підсумок дня №${L.dayNo(day)} — ліга «${L.esc(titles[chat_id] || '')}»</b>\n\n`;
-      t += list.map((r, i) => `${medal[i] || (i + 1) + '.'} ${L.esc(r.name)} — <b>${r.pts}</b> (${r.w}-${r.d}-${r.l}, ${r.gf}:${r.ga})`).join('\n');
+      t += list.slice(0, MAX_LINES).map((r, i) => `${medal[i] || (i + 1) + '.'} ${L.esc(r.name)} — <b>${r.pts}</b> (${r.w}-${r.d}-${r.l}, ${r.gf}:${r.ga})`).join('\n') + more(list.length - MAX_LINES);
       t += `\n\n👑 Переможець дня: <b>${L.esc(win.name)}</b>${ws && ws.wins > 1 ? ` (уже ${ws.wins}-й раз)` : ''}`;
       if (st.length > 1) t += `\n\n<b>Залік ліги</b> (перемоги в днях): ` + st.slice(0, 8).map(s => `${L.esc(s.name)} ${s.wins}`).join(' · ');
-      await L.tg('sendMessage', { chat_id, text: t, parse_mode: 'HTML', reply_markup: L.playKb(chat_id), disable_web_page_preview: true });
+      if (!(await send(chat_id, t, 'summary'))) continue;   // not delivered: no flag, a rerun tries again
       await L.sb('league_boards?on_conflict=chat_id,day', { method: 'POST', prefer: 'resolution=merge-duplicates,return=minimal', body: { chat_id, day, summary_sent: true } });
       done.push(chat_id);
     }
@@ -73,12 +84,15 @@ module.exports = async (req, res) => {
       // league created mid-week: period starts from its first day, not Monday
       const first = rows.reduce((m, r) => (String(r.day) < m ? String(r.day) : m), day);
       let t = `<b>📅 Підсумок тижня ${L.dayShort(first)}–${L.dayShort(day)} — ліга «${L.esc(titles[chat_id] || '')}»</b>\n(сума очків за всі дні тижня)\n\n`;
-      t += tab.map((s, i) => `${medal[i] || (i + 1) + '.'} ${L.esc(s.name)} — <b>${s.pts}</b> за ${s.days} ${plUk(s.days, 'день', 'дні', 'днів')}${s.wins ? `, перемог: ${s.wins}` : ''}`).join('\n');
+      t += tab.slice(0, MAX_LINES).map((s, i) => `${medal[i] || (i + 1) + '.'} ${L.esc(s.name)} — <b>${s.pts}</b> за ${s.days} ${plUk(s.days, 'день', 'дні', 'днів')}${s.wins ? `, перемог: ${s.wins}` : ''}`).join('\n') + more(tab.length - MAX_LINES);
       t += `\n\n🏅 Гравець тижня: <b>${L.esc(tab[0].name)}</b>`;
-      await L.tg('sendMessage', { chat_id, text: t, parse_mode: 'HTML', reply_markup: L.playKb(chat_id), disable_web_page_preview: true });
+      if (!(await send(chat_id, t, 'weekly'))) continue;
       await L.sb('league_boards?on_conflict=chat_id,day', { method: 'POST', prefer: 'resolution=merge-duplicates,return=minimal', body: { chat_id, day, weekly_sent: true } });
       weekly.push(chat_id);
     }
+    // old unused seeds and login tokens (sql/v090_seed_cleanup.sql); function missing or failing never breaks the summaries
+    let cleaned = null;
+    try { cleaned = await L.sb('rpc/cleanup_old_rows', { method: 'POST', body: {} }); } catch (e) { if (e.status !== 404) console.error('cleanup', e.message); }
     if (weekErr) throw weekErr;
     // opt-in evening notifications (one message per player): after the group summaries; failure doesn't break them
     let notify = null;
@@ -89,7 +103,7 @@ module.exports = async (req, res) => {
     // player errors digest to admin (api/_errdigest.js); failure doesn't break league summaries
     let errs = null;
     try { errs = await errDigest({ sb: L.sb, tg: L.tg, env: L.env, day }); } catch (e) { errs = { error: String(e && e.message || e).slice(0, 120) }; }
-    res.status(200).json({ ok: true, day, summaries: done.length, weekly: weekly.length, errs, channel, notify });
+    res.status(200).json({ ok: true, day, summaries: done.length, weekly: weekly.length, errs, channel, notify, cleaned });
   } catch (e) {
     res.status(500).json({ error: String(e && e.message || e).slice(0, 200) });
   }
