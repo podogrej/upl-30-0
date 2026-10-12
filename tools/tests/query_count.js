@@ -19,7 +19,8 @@ global.fetch = async (u, o = {}) => {
   return ST.fetch(u, o);
 };
 // n does not include the one daily cleanup call (rpc/cleanup_old_rows): it is per run, not per group
-const count = async fn => { N = 0; LOG = []; const r = await fn(); const c = LOG.filter(l => /cleanup_old_rows/.test(l)).length; return { n: N - c, cleanup: c, r, log: [...LOG] }; };
+// the stub has no league_view (returns null): the cron then takes the fallback path, so the failed RPC probe is not counted either
+const count = async fn => { N = 0; LOG = []; const r = await fn(); const c = LOG.filter(l => /cleanup_old_rows/.test(l)).length, v = LOG.filter(l => /rpc\/league_view/.test(l)).length; return { n: N - c - v, cleanup: c, r, log: [...LOG] }; };
 const day = (d, k) => new Date(Date.parse(d + 'T00:00:00Z') + k * 864e5).toISOString().slice(0, 10);
 
 (async () => {
