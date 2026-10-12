@@ -4,6 +4,8 @@
 //   Results are written by the server when it verifies a season (api/_league.js creditSeason); a browser "result" is ignored.
 // GET ?chat=ID[&card=1]: league data (today and standings); card=1: today and counters only (home card of tabs before 0.79).
 const L = require('./_league.js');   // shared group league helpers
+const { rateLimit, body } = require('./_device.js');
+const { fail } = require('./_lib.js');
 // whether the user is a group member (bot must be in the group). Telegram error -> "no" (fail closed)
 const MEMBER = new Set(['member', 'administrator', 'creator']);
 async function isMember(chat_id, user_id) {
@@ -33,12 +35,14 @@ module.exports = async (req, res) => {
   let stage = 'start';
   try {
     if (req.method === 'GET') {
-      const chat = String(req.query.chat || '').replace(/[^0-9-]/g, '');
-      if (!chat) return res.status(400).json({ error: 'chat?' });
+      const chat = String(req.query.chat || '');
+      if (!/^-?\d{1,20}$/.test(chat)) return res.status(400).json({ error: 'chat?' });
+      if (await rateLimit(req, res, 'league')) return;   // per IP
       const day = L.kyivDate();
       // card=1: home card (today + counters, no standings history); otherwise all rows once for both today and standings
       const card = String(req.query.card || '') === '1';
       const view = await L.leagueView(chat, day, card);
+      if (view === null) return res.status(404).json({ error: 'no league' });   // the DB function answered: no such league
       if (view) {
         res.setHeader('Cache-Control', 'public, s-maxage=30, stale-while-revalidate=300');
         const out = { title: view.title, day, today: view.today, members: view.members };
@@ -57,7 +61,7 @@ module.exports = async (req, res) => {
       return res.status(200).json(out);
     }
     if (req.method !== 'POST') return res.status(405).json({ error: 'GET or POST' });
-    let b = req.body || {}; if (typeof b === 'string') b = JSON.parse(b);
+    const b = body(req);
     stage = 'signature';
     const v = L.checkMiniApp(b.initData);
     if (!v) return res.status(401).json({ error: 'bad telegram signature' });
@@ -86,6 +90,6 @@ module.exports = async (req, res) => {
     // clients before 0.79 also sent the daily draft result here: chat leagues no longer take it (posted stays empty)
     res.status(200).json({ ok: true, joined, posted: [] });
   } catch (e) {
-    res.status(500).json({ error: `crash at ${stage}: ${String(e && e.message || e).slice(0, 180)}` });
+    fail(res, `league ${stage}`, e);
   }
 };

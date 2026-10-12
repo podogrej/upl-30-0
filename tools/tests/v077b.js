@@ -26,7 +26,9 @@ function fixture(){
   global.fetch=async(url,o={})=>{const u=decodeURIComponent(String(url));const s=Date.now()-S.t0;let body=[];const m=(o.method||'GET');
     if(u.includes('api.telegram.org')){body=/getChatMember/.test(u)?{ok:true,result:{status:S.member}}:{ok:true,result:{message_id:1}};}
     else{const p=u.split('/rest/v1/')[1];const q=new URLSearchParams(p.split('?')[1]);const t=p.split('?')[0];const f=k=>{const v=q.get(k);return v&&v.replace(/^eq\./,'');};
-      if(m!=='GET'){S.writes.push(t);body=null;}
+      if(t==='rpc/league_view')return {ok:false,status:404,text:async()=>'{"code":"PGRST202"}'};   // function not in the DB: row-by-row path
+      if(t==='rpc/rate_hit')body=true;   // per-IP limit of the page: not a league write
+      else if(m!=='GET'){S.writes.push(t);body=null;}
       else if(t==='leagues')body=f('chat_id')==='-100555'?[{chat_id:'-100555',title:'Футбол по середах'}]:[];
       else if(t==='league_members')body=names.map((_,i)=>({tg_user_id:1000+i})).concat([{tg_user_id:2001},{tg_user_id:2002}]);
       else if(t==='league_results'){body=results.filter(r=>(!f('day')||r.day===f('day'))&&(!f('tg_user_id')||String(r.tg_user_id)===f('tg_user_id')));const lim=+q.get('limit');if(q.get('order')==='day.desc')body=[...body].sort((a,b)=>a.day<b.day?1:a.day>b.day?-1:0);if(lim)body=body.slice(0,lim);}
@@ -35,9 +37,9 @@ function fixture(){
       else if(t==='league_boards')body=[];}
     await wait(20);S.log.push({s,e:Date.now()-S.t0,k:m+' '+u.replace(/^.*\/(rest\/v1|bot[^/]*)\//,'')});
     return {ok:true,status:200,text:async()=>body==null?'':JSON.stringify(body),json:async()=>body};};
-  // the stub has no league_view RPC: these checks measure the fallback path, so the failed RPC probe is left out of the log (league_view itself: gate_c.js)
+  // the stub has no league_view RPC: these checks measure the fallback path, so the failed RPC probe and the per-IP limit call are left out of the log (league_view and the limit: gate_c.js)
   const h=require(path.join(ROOT,'api','league.js'));
-  const run=req=>new Promise(res=>{S.log=[];S.writes=[];S.t0=Date.now();const hd={};h(req,{status(c){this.c=c;return this;},json(j){res({c:this.c||200,j,hd,log:S.log.filter(c=>!/rpc\/league_view/.test(c.k))});},setHeader(k,v){hd[k]=v;},end(){res({c:this.c,hd,log:[...S.log]});}});});
+  const run=req=>new Promise(res=>{S.log=[];S.writes=[];S.t0=Date.now();const hd={};h(req,{status(c){this.c=c;return this;},json(j){res({c:this.c||200,j,hd,log:S.log.filter(c=>!/rpc\/(league_view|rate_hit)/.test(c.k))});},setHeader(k,v){hd[k]=v;},end(){res({c:this.c,hd,log:[...S.log]});}});});
   return {S,run};}
 // sequential rounds: longest chain of calls where each starts after the previous one ended
 const rounds=log=>{const L=[...log].sort((a,b)=>a.s-b.s);for(const c of L)c.dp=1+Math.max(0,...L.filter(p=>p!==c&&p.e<=c.s).map(p=>p.dp||0));return Math.max(0,...L.map(c=>c.dp));};

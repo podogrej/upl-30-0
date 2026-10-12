@@ -806,7 +806,7 @@ GDEV=eeeeeeee-0000-4000-a000-000000000891; GSEC=0123456789abcdef0123456789abcdef
 chk "api_gate і league_view: anon та authenticated не викликають" anon "
   begin perform api_gate('t', '1.1.1.1', '$GDEV', null, 5, 20); assert false, 'api_gate'; exception when insufficient_privilege then null; end;
   begin perform league_view(-9001); assert false, 'league_view'; exception when insufficient_privilege then null; end;"
-chk "api_gate: ліміт пристрою й IP, секрет перевіряється лише в межах ліміту" service_role "
+chk "api_gate (v0891, до v090): ліміт пристрою й IP, секрет перевіряється лише в межах ліміту" service_role "
   j := api_gate('gt', '9.9.9.9', '$GDEV', '$GSEC', 3, 12);
   assert (j->>'rate')::boolean and j->>'err' is null and (j->>'player') is not null, 'перший виклик ' || j::text;
   assert (api_gate('gt', '9.9.9.9', '$GDEV', '$GSEC', 3, 12)->>'player') = (j->>'player'), 'той самий гравець';
@@ -849,6 +849,60 @@ chk "league_view: непідтверджені рядки відкинуто, ц
   assert j->'standings'->0->>'name' = 'Bob' and (j->'standings'->0->>'wins')::int = 1 and (j->'standings'->0->>'days')::int = 2 and (j->'standings'->0->>'pts')::int = 130, 'Bob: 1 перемога, 2 дні, 130 очок, а є ' || (j->'standings'->0)::text;
   assert (league_view(-9001, null, true)::jsonb) ? 'standings' is false and jsonb_array_length((league_view(-9001, null, true))->'today') = 2, 'картка без підсумків';
   assert league_view(-1234) is null, 'невідома ліга';"
+# ===== v090: f5 writes closed, api_gate order, cleanup =====
+chk "v090 до: старі правила f5 дозволяють anon писати й змінювати чужу кімнату (дірка, яку закриває файл)" anon "
+  insert into f5_rooms(id, seed, mode) values ('ROOM1', 1, 'turns');
+  update f5_rooms set status = 'done' where id = 'ROOM1';
+  assert (select status from f5_rooms where id = 'ROOM1') = 'done', 'update не спрацював (дірки вже немає?)';"
+for pass in 1 2; do for f in v090_f5_close_writes v090_gate_order v090_seed_cleanup; do
+  if $P -d t1 -f "$ROOT/sql/$f.sql" >/dev/null 2>"$D/err"; then ok "запуск $pass: $f.sql"; else bad "запуск $pass: $f.sql — $(grep -v NOTICE "$D/err" | head -3)"; fi
+done; done
+chk "v090 f5: anon і authenticated не пишуть у f5_* (insert, update, delete), читання лишилось" anon "
+  begin insert into f5_rooms(id, seed, mode) values ('ROOM2', 1, 'turns'); assert false, 'insert room'; exception when insufficient_privilege then null; end;
+  begin update f5_rooms set status = 'lobby' where id = 'ROOM1'; assert false, 'update room'; exception when insufficient_privilege then null; end;
+  begin delete from f5_rooms where id = 'ROOM1'; assert false, 'delete room'; exception when insufficient_privilege then null; end;
+  begin insert into f5_players(room_id, seat, device_id, name, form) values ('ROOM1', 0, 'aaaaaaaa-0000-4000-a000-0000000000f5', 'x', '1-2-1'); assert false, 'insert player'; exception when insufficient_privilege then null; end;
+  begin insert into f5_picks(room_id, seat, k, n, club_idx, person_id, slot_idx) values ('ROOM1', 0, 0, 0, 0, 'p', 0); assert false, 'insert pick'; exception when insufficient_privilege then null; end;
+  assert (select count(*) from f5_rooms where id = 'ROOM1') = 1, 'читання кімнат';"
+chk "v090 f5: політик запису не лишилось, політики читання є, service_role пише" service_role "
+  assert (select count(*) from pg_policies where tablename in ('f5_rooms', 'f5_players', 'f5_picks') and cmd in ('INSERT', 'UPDATE', 'DELETE', 'ALL')) = 0, 'політики запису';
+  assert (select count(*) from pg_policies where tablename in ('f5_rooms', 'f5_players', 'f5_picks') and cmd = 'SELECT') = 3, 'політики читання';
+  update f5_rooms set status = 'lobby' where id = 'ROOM1';
+  assert (select status from f5_rooms where id = 'ROOM1') = 'lobby', 'service_role update';"
+chk "v090 api_gate: чужий секрет не накручує лічильник пристрою (власник не потрапляє в 429)" service_role "
+  j := api_gate('gx', '8.8.8.8', '$GDEV', '$GSEC', 2, 50);
+  for i in 1..10 loop k := api_gate('gx', '8.8.8.8', '$GDEV', 'attacker-attacker-attacker', 2, 50); assert (k->>'rate')::boolean and k->>'err' = 'secret', 'чужий секрет ' || k::text; end loop;
+  k := api_gate('gx', '8.8.8.8', '$GDEV', '$GSEC', 2, 50);
+  assert (k->>'rate')::boolean and (k->>'player') = (j->>'player'), 'власник після 10 чужих спроб ' || k::text;
+  k := api_gate('gx', '8.8.8.8', '$GDEV', '$GSEC', 2, 50);
+  assert not (k->>'rate')::boolean, 'свій ліміт пристрою діє';
+  for i in 1..6 loop k := api_gate('gy', '8.8.8.7', '$GDEV', 'attacker-attacker-attacker', 100, 5); end loop;
+  assert not (k->>'rate')::boolean, 'підбір секрету обмежений за IP';
+  k := api_gate('gz', '8.8.8.6', '$GDEV', 'short', 5, 50);
+  assert (k->>'rate')::boolean and k->>'err' = 'device', 'короткий секрет — err device ' || k::text;"
+chk "v090 cleanup_old_rows: anon не викликає" anon "
+  begin perform cleanup_old_rows(); assert false, 'cleanup'; exception when insufficient_privilege then null; end;"
+chk "v090 cleanup_old_rows: тільки невикористані й не виклик дня, старші 2 діб; tg_logins старші 2 діб; повтор нічого не псує" postgres "
+  insert into season_seeds(device_id, xi_hash, seed, day, created_at, used_by) values
+    ('aaaaaaaa-0000-4000-a000-0000000c1e01', 'old-free', 1, '2026-09-01', now() - interval '3 days', null),
+    ('aaaaaaaa-0000-4000-a000-0000000c1e01', 'old-used', 2, '2026-09-01', now() - interval '3 days', 77),
+    ('aaaaaaaa-0000-4000-a000-0000000c1e01', 'fresh-free', 3, '2026-09-01', now() - interval '1 day', null);
+  insert into season_seeds(device_id, xi_hash, seed, day, created_at, vd_day, vd_attempt) values
+    ('aaaaaaaa-0000-4000-a000-0000000c1e01', 'old-vd', 4, '2026-09-01', now() - interval '5 days', '2026-09-01', 1);
+  insert into tg_logins(token, tg_id, created_at) values ('t-old', 1, now() - interval '3 days'), ('t-new', 2, now());
+  perform set_config('request.jwt.claims', '{\"role\":\"service_role\"}', true);
+  set local role service_role;
+  j := cleanup_old_rows()::json;
+  assert (j->>'season_seeds')::int >= 1 and (j->>'tg_logins')::int = 1, 'підсумок ' || j::text;
+  reset role;
+  assert not exists (select 1 from season_seeds where xi_hash = 'old-free'), 'старий невикористаний лишився';
+  assert exists (select 1 from season_seeds where xi_hash = 'old-used'), 'використаний видалено';
+  assert exists (select 1 from season_seeds where xi_hash = 'fresh-free'), 'свіжий видалено';
+  assert exists (select 1 from season_seeds where xi_hash = 'old-vd'), 'спробу виклику дня видалено';
+  assert exists (select 1 from tg_logins where token = 't-new') and not exists (select 1 from tg_logins where token = 't-old'), 'tg_logins';
+  set local role service_role;
+  j := cleanup_old_rows()::json;
+  assert (j->>'season_seeds')::int = 0 and (j->>'tg_logins')::int = 0, 'повторний запуск ' || j::text;"
 echo "база: $D (порт $PORT)"
 [ $FAIL = 0 ] && echo "SQL: УСЕ ГАРАЗД ($N перевірок)" || echo "SQL: ПРОБЛЕМИ $FAIL/$N"
 exit $((FAIL>0))

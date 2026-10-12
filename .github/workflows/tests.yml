@@ -6,9 +6,11 @@ on:
   pull_request:
     branches: [main]
   workflow_dispatch:
+permissions:
+  contents: read
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'push' }}   # audit P2-19: never cancel PR checks
+  cancel-in-progress: false   # never cancel PR checks
 jobs:
   scope:
     runs-on: ubuntu-24.04
