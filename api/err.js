@@ -5,9 +5,30 @@ const { sb, rateLimit, body, tgUser, env } = require('./_device.js');
 const L = require('./_league.js');
 const cut = (v, n) => (v == null || v === '' ? null : String(v).slice(0, n));
 const int = v => (Number.isFinite(+v) ? Math.max(0, Math.min(1e7, Math.round(+v))) : null);
+// CSP violation reports (Content-Security-Policy-Report-Only, report-uri /api/err?csp=1): content type application/csp-report, the body is
+// a string or a Buffer. Stored as a short client_errors row ("CSP <directive> <blocked>"), so the daily digest groups them with other errors.
+const EXT = /^(chrome|moz|safari(-web)?)-extension:/;
+const noQuery = u => { const m = /^([a-z]+:\/\/[^?#]*)/i.exec(String(u || '')); return m ? m[1] : null; };
+function cspRow(req) {
+  let b = req.body;
+  if (Buffer.isBuffer(b)) b = b.toString('utf8');
+  if (typeof b === 'string') b = JSON.parse(b.slice(0, 20000));
+  const r = b && b['csp-report'];
+  if (!r || typeof r !== 'object') return null;
+  const blocked = String(r['blocked-uri'] || '');
+  if (EXT.test(blocked) || EXT.test(String(r['source-file'] || ''))) return null;   // browser extensions, not our page
+  return { msg: cut('CSP ' + (r['effective-directive'] || r['violated-directive'] || '?') + ' ' + (blocked || 'inline'), 300), src: cut(noQuery(r['source-file']) || r['source-file'], 200),
+    line: int(r['line-number']), col: int(r['column-number']), screen: 'csp', url: cut(noQuery(r['document-uri']), 200), ua: cut(req.headers['user-agent'], 200), n: 1 };
+}
 module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
   try {
+    if ((req.query && req.query.csp) || /csp-report/.test(String(req.headers['content-type'] || ''))) {
+      if (await rateLimit(req, res, 'csp')) return;
+      const row = cspRow(req);
+      if (row) await sb('client_errors', { method: 'POST', body: [row], prefer: 'return=minimal' });
+      return res.status(204).end();
+    }
     const b = body(req);
     if (b.feedback) return await feedback(req, res, b);   // feedback has its own fb limit, so page errors don't block it
     if (await rateLimit(req, res, 'err')) return;

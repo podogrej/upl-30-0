@@ -903,6 +903,30 @@ chk "v090 cleanup_old_rows: тільки невикористані й не ви
   set local role service_role;
   j := cleanup_old_rows()::json;
   assert (j->>'season_seeds')::int = 0 and (j->>'tg_logins')::int = 0, 'повторний запуск ' || j::text;"
+# ===== v090: public profile counts only verified seasons =====
+PDEV=aaaaaaaa-0000-4000-a000-0000000000c2
+$P -d t1 -q >/dev/null 2>"$D/err" <<SQL || bad "v090 профіль: тестові сезони — $(head -3 "$D/err")"
+select player_hello('$PDEV', '$SEC');
+select set_config('request.jwt.claims', '{"role":"service_role"}', false);   -- the server writes verified
+insert into seasons(device_id, mode, format, formation, w, d, l, pts, place, gf, ga, xi)
+select '$PDEV', 'normal', 'classic', '4-4-2', 20, 5, 5, 65, 2, 60, 30, '[{"id":"pv1","n":"Тест","c":"Динамо (Київ)","r0":80}]' from generate_series(1, 4);
+update seasons s set verified = case q.rn when 1 then true when 2 then false when 3 then null else true end from (select id, row_number() over (order by id) rn from seasons where device_id = '$PDEV') q where s.id = q.id;
+SQL
+chk "v090 профіль до: непідтверджені (null) сезони ще рахуються (стара поведінка)" postgres "
+  assert (select count(*) from seasons where device_id = '$PDEV' and verified is not false) = 3, 'підготовка';
+  j := player_profile(t_link('device', '$PDEV')); assert (j->>'seasons')::int = 3, j::text;"
+for pass in 1 2; do
+  if $P -d t1 -f "$ROOT/sql/v090_profile_verified.sql" >/dev/null 2>"$D/err"; then ok "запуск $pass: v090_profile_verified.sql"; else bad "запуск $pass: v090_profile_verified.sql — $(grep -v NOTICE "$D/err" | head -3)"; fi
+done
+chk "v090 профіль: рахуються лише verified = true; player_profile_pub так само; форма відповіді та права ті самі" anon "
+  j := player_profile_pub((player_hello('$PDEV', '$SEC'))->>'public_id');
+  assert (j->>'seasons')::int = 2, 'сезонів ' || (j->>'seasons');
+  assert j->'best' is not null and json_typeof(j->'trophies') = 'array' and j->>'champions' is not null and j->'fav_player' is not null, j::text;
+  assert j::text !~ '$PDEV', 'device_id у профілі';"
+chk "v090 профіль: execute лише в anon і authenticated, не в public; сигнатура не змінилась" postgres "
+  assert has_function_privilege('anon', 'public.player_profile(uuid)', 'execute') and has_function_privilege('authenticated', 'public.player_profile(uuid)', 'execute'), 'anon';
+  assert not exists (select 1 from pg_proc p, aclexplode(p.proacl) a where p.proname = 'player_profile' and a.grantee = 0), 'public має execute';
+  assert (select count(*) from pg_proc where proname = 'player_profile') = 1, 'перевантаження';"
 echo "база: $D (порт $PORT)"
 [ $FAIL = 0 ] && echo "SQL: УСЕ ГАРАЗД ($N перевірок)" || echo "SQL: ПРОБЛЕМИ $FAIL/$N"
 exit $((FAIL>0))

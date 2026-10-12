@@ -9,7 +9,7 @@ const FMT = { classic: 'Класика', derby: 'Класичне дербі', o
 // seasons_pub: public view without personal columns (sql/v087_data_protection.sql)
 async function season(id) {
   try {
-    const r = await fetch(`${SB_URL}/rest/v1/seasons_pub?select=id,w,d,l,pts,place,gf,ga,format,mode,players&id=eq.${id}&limit=1`, { headers: { apikey: SB_KEY } });
+    const r = await fetch(`${SB_URL}/rest/v1/seasons_pub?select=id,w,d,l,pts,place,gf,ga,format,mode,verified,players&id=eq.${id}&limit=1`, { headers: { apikey: SB_KEY } });
     if (r.ok) { const j = await r.json(); return j[0] || null; }
   } catch (e) { console.error('r', e.message); }
   return null;
@@ -20,9 +20,17 @@ function page(site, id, s) {
   let title = '30-0 УПЛ — збери 11-ку з історії УПЛ', desc = 'Збери найсильнішу 11-ку в історії УПЛ і пройди сезон без поразок.';
   if (s) {
     const who = (s.players && (s.players.name || s.players.anon_name)) || 'Гравець';
+    // only server-verified seasons get result claims in the preview; the rest are marked
+    const ok = s.verified === true;
     const head = s.format === 'anti' ? `${s.place} місце в антисезоні` : s.place === 1 && !s.l && !s.d ? '30-0!' : s.place === 1 ? 'Чемпіон України' : `${s.place} місце`;
-    title = `${who}: ${head} · ${s.w}-${s.d}-${s.l}, ${s.pts} ${plUk(s.pts, 'очко', 'очки', 'очок')}`;
-    desc = `${FMT[s.format] || 'Класика'} · голи ${s.gf}:${s.ga}. Збери свою 11-ку з історії УПЛ і спробуй краще.`;
+    const sc = `${s.w}-${s.d}-${s.l}, ${s.pts} ${plUk(s.pts, 'очко', 'очки', 'очок')}`;
+    if (ok) {
+      title = `${who}: ${head} · ${sc}`;
+      desc = `${FMT[s.format] || 'Класика'} · голи ${s.gf}:${s.ga}. Збери свою 11-ку з історії УПЛ і спробуй краще.`;
+    } else {
+      title = `${who}: сезон у 30-0 УПЛ · не перевірено`;
+      desc = 'Результат не перевірено сервером. Збери свою 11-ку з історії УПЛ і пройди сезон без поразок.';
+    }
   }
   return `<!doctype html><html lang="uk"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${esc(title)}</title>

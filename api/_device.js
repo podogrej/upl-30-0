@@ -36,7 +36,7 @@ function tgUser(initData) {
 // so spoofing device_id doesn't help. Without device_id: IP only. On DB error or missing SQL 0.55, let the request through
 // (availability over counting).
 const RATE_MSG = 'Забагато запитів за хвилину. Зачекай трохи й спробуй ще раз.';
-const LIMITS = { seed: 20, save: 40, verify: 30, card: 10, auth: 60, fl5: 30, err: 10, fb: 5, league: 60 };   // requests per minute per device (per IP: IP_X times more). fb: footer feedback form; err: client error reports; league: group league page reads (CDN caches most); fl5: every 5x5 league member opens the page after the draft closes; auth: bot login polls every 2.5 s
+const LIMITS = { seed: 20, save: 40, verify: 30, card: 10, auth: 60, fl5: 30, err: 10, csp: 10, fb: 5, league: 60 };   // requests per minute per device (per IP: IP_X times more). fb: footer feedback form; err: client error reports; league: group league page reads (CDN caches most); fl5: every 5x5 league member opens the page after the draft closes; auth: bot login polls every 2.5 s
 const IP_X = 4;
 const ipOf = req => String((req.headers && (req.headers['x-forwarded-for'] || req.headers['x-real-ip'])) || '').split(',')[0].trim().slice(0, 64) || 'unknown';
 async function rateHit(key, limit) {

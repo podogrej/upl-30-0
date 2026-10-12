@@ -11,7 +11,7 @@ step(){ local name="$1"; shift; local t=$SECONDS
   if "$@" >"$LOG/$PASS.log" 2>&1; then echo "✓ $name ($((SECONDS-t)) с)"; else echo "✗ $name ($((SECONDS-t)) с)"; grep -m 10 '✗' "$LOG/$PASS.log" | sed 's/^/  ! /'; tail -25 "$LOG/$PASS.log" | sed 's/^/    /'; FAIL+=("$name"); fi
   PASS=$((PASS+1)); }
 # 1. index.html, lib/engine.js, lib/five_core.js, lib/vd_core.js are generated: rebuild and verify the committed copies are up to date
-GEN="index.html lib/engine.js lib/five_core.js lib/vd_core.js pool.*.js"; BEFORE=$(md5sum $GEN)
+GEN="index.html lib/engine.js lib/five_core.js lib/vd_core.js vercel.json pool.*.js"; BEFORE=$(md5sum $GEN)
 step "збірка" bash -c 'python3 src/build.py && node tools/make_engine.js'
 gen_same(){ [ "$(md5sum $GEN)" = "$BEFORE" ] || { echo 'index.html / lib/* застаріли: python3 src/build.py && node tools/make_engine.js — і закомітити'; return 1; }; }
 step "згенеровані файли свіжі (збірка нічого не змінила)" gen_same

@@ -38,7 +38,7 @@ const mk = () => Array.from({ length: 11 }, (_, i) => ({ id: 'tm:' + i, slot: 'G
 (async () => {
   const T = checker('gate_c'), seed = require(path.join(ROOT, 'api', 'seed.js')), save = require(path.join(ROOT, 'api', 'save.js')), league = require(path.join(ROOT, 'api', 'league.js'));
   const run = async (h, b) => { LOG = []; const r = await callApi(h, b); return { ...r, log: [...LOG] }; };
-  const sb = { device_id: DEV, secret: SEC, xi: mk(), formation: '4-4-2', mode: 'normal', format: 'classic', year: 2020 };
+  const sb = { device_id: DEV, secret: SEC, xi: mk(), formation: '4-4-2', mode: 'normal', format: 'classic', year: 9002 };
 
   let r = await run(seed, sb);
   T.check(r.status === 200 && r.json.seed_id === 's-1' && r.log.filter(x => x.startsWith('rpc/')).join() === 'rpc/api_gate', 'seed: перевірка ліміту й секрету — один виклик api_gate: ' + r.log.join(' | '));

@@ -66,4 +66,28 @@ open(f'../pool.{datav}.js','w').write('window.__POOL='+open('pool.json').read()+
 assert '<script id="pool" type="application/json">__POOL__</script>' in tpl
 site=head+tpl.replace('<script id="pool" type="application/json">__POOL__</script>',f'<script src="pool.{datav}.js"></script>').replace('__ONLINE__','true')+'\n</body>\n</html>\n'
 open('../index.html','w').write(site)
+
+# CSP (Report-Only): sha256 of every inline script that runs (no src, JS type) -> rule for "/" and "/index.html" in vercel.json.
+# Other routes keep only the frame-ancestors rule. Hashes depend on the exact script text, so they are rebuilt with every build.
+import base64
+from html.parser import HTMLParser
+class _Inline(HTMLParser):
+    def __init__(s):
+        super().__init__(convert_charrefs=False); s.cur=None; s.out=[]
+    def handle_starttag(s,tag,attrs):
+        a=dict(attrs)
+        if tag=='script' and 'src' not in a and a.get('type','text/javascript') in ('text/javascript','module','application/javascript'):s.cur=[]
+    def handle_data(s,d):
+        if s.cur is not None:s.cur.append(d)
+    def handle_endtag(s,tag):
+        if tag=='script' and s.cur is not None:s.out.append(''.join(s.cur));s.cur=None
+_p=_Inline(); _p.feed(site); _p.close()
+_hashes=sorted({"'sha256-"+base64.b64encode(hashlib.sha256(t.encode('utf-8')).digest()).decode()+"'" for t in _p.out})
+assert _p.out and len(_hashes)<=len(_p.out)
+CSP_RO="script-src 'self' "+' '.join(_hashes)+" https://cdn.jsdelivr.net https://telegram.org https://www.clarity.ms https://scripts.clarity.ms; object-src 'none'; base-uri 'none'; report-uri /api/err?csp=1"
+_vj=json.load(open('../vercel.json',encoding='utf-8'))
+_vj['headers']=[h for h in _vj['headers'] if not any(x['key']=='Content-Security-Policy-Report-Only' for x in h['headers'])]
+_i=next(i for i,h in enumerate(_vj['headers']) if h['source']=='/(.*)')+1
+for _k,_src in enumerate(('/','/index.html')):_vj['headers'].insert(_i+_k,{'source':_src,'headers':[{'key':'Content-Security-Policy-Report-Only','value':CSP_RO}]})
+open('../vercel.json','w',encoding='utf-8').write(json.dumps(_vj,indent=2,ensure_ascii=False)+'\n')
 print(len(art), len(site))
