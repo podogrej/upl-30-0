@@ -12,6 +12,7 @@
 // 503 {fallback:true}: DB has no device_ok yet (SQL 0.53 not applied). Clients 0.73.1+ do not write directly any more (sql/v054_close_writes.sql).
 const { sb, gate, tgUser, body } = require('./_device.js');
 const { verifyById } = require('./verify.js');
+const { fail } = require('./_lib.js');
 
 const int = (v, lo, hi) => { const n = Number(v); return Number.isInteger(n) && n >= lo && n <= hi ? n : null; };
 const num = (v, lo, hi) => { if (v == null || v === '') return null; const n = Number(v); return Number.isFinite(n) && n >= lo && n <= hi ? n : null; };

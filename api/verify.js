@@ -103,11 +103,13 @@ function checkCore(row, seedRow, { chalYearOk = false, prev = false } = {}) {
 
 // Fields stored with a verified season are rewritten from the pool and the simulation, so text and stats cannot be forged:
 // names from the pool, g/a/rt/f from the simulated players, the table, tier, golden and perfect marks (same rules as logSeason in the site).
+// the player's own team name is a label only (not a result): keep the one the site stored for the 'me' row
+const teamName = (row, dflt) => { const m = Array.isArray(row.tbl) && row.tbl.find(t => t && t.me); const n = m && typeof m.n === 'string' ? m.n.trim().slice(0, 60) : ''; return n || dflt; };
 function stored(E, row, xi, names, sim) {
   E.setFormat(row.format);   // E.run resets the format; tierOf reads it
   return {
     xi: xi.map((x, i) => { const q = sim.players.find(v => v.id === x.id) || {}; return { ...x, n: names[i], f: q.form || 0, g: q.g || 0, a: q.a || 0, rt: q.rt ? Math.round(q.rt * 100) / 100 : null }; }),
-    tbl: sim.table.map(t => ({ n: t.n, w: t.w, d: t.d, l: t.l, gf: t.gf, ga: t.ga, pts: t.pts, me: t.id === 'USER' })),
+    tbl: sim.table.map(t => ({ n: t.id === 'USER' ? teamName(row, t.n) : t.n, w: t.w, d: t.d, l: t.l, gf: t.gf, ga: t.ga, pts: t.pts, me: t.id === 'USER' })),
     tier: E.tierOf(sim)[0], golden: !!sim.golden, perfect: sim.W === 30 };
 }
 

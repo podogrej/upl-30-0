@@ -466,7 +466,7 @@ function honestXi(formation) {
     const want = q2.players.reduce((a, p) => a + p.g, 0);
     ok('verify: підроблені імена гравців замінено іменами з пулу', f2.j.verified === true && st.xi.every((x, i) => x.n === E.DATA.clubs.find(c => c.n === xi[i].c && c.y === xi[i].y).pl.find(p => p[5] === xi[i].id)[0]), f2.j.note);
     ok('verify: голи, асисти, оцінки, форма — з симуляції', st.xi.every(x => { const q = q2.players.find(p => p.id === x.id); return x.g === q.g && x.a === q.a && x.f === (q.form || 0) && x.rt === (q.rt ? Math.round(q.rt * 100) / 100 : null); }) && st.xi.reduce((a, x) => a + x.g, 0) === want);
-    ok('verify: таблиця — з симуляції, чужа таблиця прибрана', st.tbl.length === q2.table.length && st.tbl.filter(t => t.me).length === 1 && st.tbl.every((t, i) => t.n === q2.table[i].n && t.pts === q2.table[i].pts) && !st.tbl.some(t => t.n === 'Моя команда'));
+    ok('verify: таблиця — з симуляції, назва своєї команди лишається', st.tbl.length === q2.table.length && st.tbl.filter(t => t.me).length === 1 && st.tbl.every((t, i) => (t.me ? t.n === 'Моя команда' : t.n === q2.table[i].n) && t.pts === q2.table[i].pts));   // own team name is kept, numbers are from the simulation
     E.setFormat('classic');
     ok('verify: tier і golden — з симуляції (підроблене «30-0» не лишилось)', st.tier === E.tierOf(q2)[0] && st.golden === !!q2.golden && (q2.W === 30 || !/ІДЕАЛЬНИЙ/.test(st.tier)) && st.perfect === (q2.W === 30), `${st.tier} golden=${st.golden}`);
     ok('verify: решта рядка (клуб, рік, слот, рейтинг) не змінена', st.xi.every((x, i) => x.id === xi[i].id && x.slot === xi[i].slot && x.c === xi[i].c && x.y === xi[i].y && x.r === xi[i].r && x.r0 === xi[i].r0));
