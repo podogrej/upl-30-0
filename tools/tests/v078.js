@@ -82,7 +82,8 @@ async function serverChecks(){
    const rows=S.tbl(base,'league_results');let n=0;
    for(let d=0;d<60;d++){const day=new Date(Date.UTC(2026,7,1)+d*864e5).toISOString().slice(0,10);   // days before VERIFIED_FROM: counted as stored
      for(let p=0;p<21;p++)rows.push({chat_id:'-100900',day,tg_user_id:7000+p,name:'u'+p,w:10,d:5,l:15,pts:35+((p*7+d*3)%40),gf:30,ga:30,created_at:`${day}T10:${String(p).padStart(2,'0')}:00Z`,season_id:null}),n++;}
-   const log=[];global.fetch=async(url,o={})=>{log.push(keyOf(o.method||'GET',url));return S.fetch(url,o);};
+   // league_view is missing in this stub (as in a DB before 0.89.1): 404 PGRST202 sends the API down the fallback path measured here
+   const log=[];global.fetch=async(url,o={})=>{log.push(keyOf(o.method||'GET',url));if(String(url).includes('/rpc/league_view')){const b={code:'PGRST202',message:'not found'};return {ok:false,status:404,json:async()=>b,text:async()=>JSON.stringify(b)};}return S.fetch(url,o);};
    delete require.cache[require.resolve(path.join(ROOT,'api','_league.js'))];const L=require(path.join(ROOT,'api','_league.js'));
    const st=await L.standings('-100900');const days=st.reduce((a,s)=>a+s.days,0),wins=st.reduce((a,s)=>a+s.wins,0);
    T.check(n>1000&&days===n&&wins===60,`залік ліги чату: усі ${n} результатів за 60 днів (днів у заліку ${days}, перемог ${wins})`);
@@ -93,7 +94,8 @@ async function serverChecks(){
    S.tbl(base,'leagues').push({chat_id:'-100900',title:'Чат'});log.length=0;
    const h=require(path.join(ROOT,'api','league.js'));const day=L.kyivDate();rows.push({chat_id:'-100900',day,tg_user_id:7001,name:'u1',w:20,d:5,l:5,pts:65,gf:50,ga:30,created_at:new Date().toISOString(),season_id:null});
    const res=await new Promise(r=>h({method:'GET',query:{chat:'-100900',card:'1'},headers:{}},{status(c){this.c=c;return this;},json(j){r({c:this.c||200,j});},setHeader(){},send(){},end(){}}));
-   T.check(res.c===200&&log.length<=5&&count(log,/GET league_results/)===1,`картка ліги: ${log.length} запитів до бази, без заліку (${log.join(', ')})`);
+   const q=log.filter(k=>!/rate_hit|league_view/.test(k));   // IP limit and the missing-RPC probe are outside the fallback being measured
+   T.check(res.c===200&&q.length<=5&&count(log,/GET league_results/)===1,`картка ліги: ${q.length} запитів до бази, без заліку (${log.join(', ')})`);
   }
 }
 
