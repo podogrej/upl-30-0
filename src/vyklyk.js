@@ -66,7 +66,7 @@ function vdOpen(day,from){const ch=vdCh(day);if(!ch)return;const st=vdState(day)
   document.getElementById('modeLabel').textContent=`Виклик дня · ${S.formation}`;
   v.wait=vdStart(v).then(()=>{v.wait=null;if(S.vd!==v)return;if(v.over){S.vd=null;openVdArchive('Спроби на цей день закінчились.');return;}renderDraft();if(S.slots.every(x=>x.player))setTimeout(vdComplete,0);});
   renderDraft();go(2,false,from);}
-async function vdStart(v){let seed=null;   // online: the wheel comes from the attempt (server checks the XI against it)
+async function vdStart(v){trafficSend('season_start');let seed=null;   // online: the wheel comes from the attempt (server checks the XI against it)
   if(ONLINE){try{const j=await vdApi({vd:'start',day:v.day});
       if(j.attempt){v.attempt=j.attempt;v.seedId=j.seed_id;seed=hashStr(String(j.seed_id)+'|wheel');vdMerge(v.day,j);}   // same attempt -> same wheel
       else if(j.status===409){vdMerge(v.day,{...j,used:VD_ATTEMPTS});v.over=true;}}catch(e){}}
