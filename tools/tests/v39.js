@@ -20,7 +20,7 @@ function mkDB(v39){
   const rpc=v39?{player_hello:a=>{const c=check(a);return c.err||js(c.p);},
     device_ok:a=>{const c=check(a);return c.err||c.p.id;},   // /api/save and /api/seed check the device secret
     set_player_name:a=>{const c=check(a);if(c.err)return c.err;const nm=String(a.p_name||'').trim()||null;if(nm&&(nm.length<2||nm.length>24))return {status:400,body:'{"code":"22023"}'};c.p.name=nm&&nm.toLowerCase().replace(/\s+/g,'_');return js(c.p);}}:{};
-  const db=makeDB({seasons:{auto:'id',cols:v39?null:OLD_COLS,onInsert:r=>{if(v39){r.player_id=forDevice(r.device_id).pid;r.competition=r.competition||'upl';r.gd=r.gf-r.ga;}r.verified=null;}},season_seeds:{auto:'id'},daily_results:{auto:'id'}},rpc);
+  const db=makeDB({seasons:{auto:'id',cols:v39?null:OLD_COLS,onInsert:r=>{if(v39){r.player_id=forDevice(r.device_id).pid;r.competition=r.competition||'upl';r.gd=r.gf-r.ga;}r.verified=null;}},season_seeds:{onInsert:r=>{r.id=require('crypto').randomUUID();}},daily_results:{auto:'id'}},rpc);   // draft seeds use uuid ids (api/_draft.js lock)
   if(v39)db.DB.players=P.players;
   global.fetch=db.fetch;   // for api/seed and api/verify
   return {db,P};}
