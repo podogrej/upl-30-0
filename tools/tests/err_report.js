@@ -1,8 +1,8 @@
 // A page JS error → report to /api/err (version, screen, message, line); identical errors are merged into one record with a counter.
-// Server: api/err.js writes only the needed fields to client_errors and truncates long ones. Run from repo root: node tools/tests/err_report.js
+// Traffic-source pings (0.90.3) also go to /api/err and are ignored here. Server: api/err.js writes only the needed fields to client_errors and truncates long ones. Run from repo root: node tools/tests/err_report.js
 const {openSite,makeDB,checker,callApi}=require('./_site.js');
 (async()=>{const T=checker('err_report');const got=[];
-  let FAIL=false;const {b,pg,errs}=await openSite({db:makeDB({}),api:{'/api/err':async req=>{got.push(req.body);if(req.body&&req.body.feedback)return FAIL?{status:503,json:{error:'Не вдалося надіслати. Спробуй ще раз або напиши боту @upl30_bot.'}}:{status:200,json:{ok:true}};return {status:204};}},wait:1200});
+  let FAIL=false;const {b,pg,errs}=await openSite({db:makeDB({}),api:{'/api/err':async req=>{if(req.body&&req.body.traffic)return {status:204};got.push(req.body);if(req.body&&req.body.feedback)return FAIL?{status:503,json:{error:'Не вдалося надіслати. Спробуй ще раз або напиши боту @upl30_bot.'}}:{status:200,json:{ok:true}};return {status:204};}},wait:1200});
   await pg.evaluate(()=>{for(let i=0;i<3;i++)setTimeout(()=>{throw new Error('тест-помилка 0.68');},0);setTimeout(()=>Promise.reject(new Error('тест-проміс')),0);});
   await pg.waitForTimeout(4200);
   const r=got[0]||{};const e=(r.errors||[]).find(x=>/тест-помилка/.test(x.msg));
