@@ -4,6 +4,7 @@
 // The browser also sends the device secret: another device can't burn the official daily attempt (audit K5).
 // Without a secret (legacy clients): only until step 2 (sql/v054_close_writes.sql -> legacy_writes_open() = false).
 // Body with `vd`: daily challenge attempts, handled by api/_vd.js.
+// Body with `draft`: server wheel and season (api/_draft.js). Without it (tabs older than 0.90.1): a 'legacy' seed, the season stays unverified.
 const crypto = require('crypto');
 const { sb, legacyOpen, body, kyivDate, uuidRe, gate } = require('./_device.js');
 const { xiHash, fail } = require('./_lib.js');
@@ -36,6 +37,13 @@ module.exports = async (req, res) => {
       const [code, j] = await require('./_vd.js').handle(b, g.dev);
       return res.status(code).json(j);
     }
+    if (b.draft) {   // server wheel and season (api/_draft.js): start, lock
+      stage = 'draft';
+      const g = await gate(req, res, 'seed', b.device_id, b.secret);
+      if (g.done) return;
+      const [code, j] = await require('./_draft.js').handle(b, g.dev);
+      return res.status(code).json(j);
+    }
     if (!Array.isArray(b.xi) || b.xi.length !== 11) return res.status(400).json({ error: 'xi?' });
     const fe = fieldsErr(b);
     if (fe) return res.status(400).json({ error: fe });
@@ -51,21 +59,12 @@ module.exports = async (req, res) => {
     // only the first attempt of the day from this device is official: try to insert it as official straight away,
     // the unique index season_seeds_official_uq (audit V2) rejects a second one with 409
     let official = daily;
-    // chat-league attempt (free play: classic, normal, all years; marked by the browser): season_seeds.league, counted by api/_league.js dayBest
-    const attempt = !daily && b.league === true && b.format === 'classic' && b.mode === 'normal';
-    if (attempt) {   // retry after a timeout: same squad and year, not played yet -> the same seed, so one season never burns two attempts
-      stage = 'league';
-      const [p] = await sb(`season_seeds?device_id=eq.${b.device_id}&day=eq.${day}&league=is.true&used_by=is.null&xi_hash=eq.${xiHash(b.xi)}&select=id,seed,xi_hash,year,used_by&order=created_at.desc&limit=1`).catch(() => []) || [];
-      if (sameAttempt(p, b)) return res.status(200).json({ seed_id: p.id, seed: p.seed, official: false });
-    }
     stage = 'insert';
     const seed = crypto.randomInt(1, 2147483647);
-    const row = { device_id: b.device_id, xi_hash: xiHash(b.xi), seed, day, daily, official, ...(attempt ? { league: true } : {}), formation: b.formation, mode: b.mode, format: b.format, year: +b.year };
+    const row = { device_id: b.device_id, xi_hash: xiHash(b.xi), seed, day, daily, official, kind: daily ? null : 'legacy', formation: b.formation, mode: b.mode, format: b.format, year: +b.year };
     let ins;
     try { [ins] = await sb('season_seeds?select=id', { method: 'POST', prefer: 'return=representation', body: row }) || []; }
     catch (e) {
-      // sql/v079_league_seeds.sql not applied yet: issue the seed without the attempt mark (it does not count for chat leagues)
-      if (row.league && /'league' column/.test(e.body || '')) { delete row.league; [ins] = await sb('season_seeds?select=id', { method: 'POST', prefer: 'return=representation', body: row }) || []; return res.status(200).json({ seed_id: ins && ins.id, seed, official }); }
       if (!(daily && official && (e.status === 409 || /23505/.test(e.body || '')))) throw e;
       // official attempt already issued (client retry after a timeout, parallel request): same squad, not played yet -> the same seed again
       stage = 'daily';

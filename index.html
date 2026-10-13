@@ -1653,7 +1653,7 @@ addEventListener('popstate',e=>{const sd=e.state&&e.state.sheet||0;
   NAV_FREE=false;NAV_I=st.i||0;go(st.sec,true);});
 try{history.replaceState({sec:1,i:0},'',location.href);}catch(e){}
 screenTag('home');   // start screen (others via go())
-document.getElementById('startBtn').onclick=()=>{if(S.format==='oneclub'&&!S.club){openOc();return;}S.league=null;S.vd=null;S.result=null;S.challenge=null;S.chal=S.format==='classic'&&S.era==='all'&&!S.pickMode?chalNewGame():null;S.mode=S.pickMode?'pick':S.freeMode||'normal';if(S.format==='anti')S.mode='hardcore';S.slots=newSlots(S.formation);S.taken=new Set();S.wheel=null;S.rerolls=MODES[S.mode].rerolls;S.showR=false;S.moveMode=false;document.getElementById('modeLabel').textContent=fmtLabel()+S.formation+" · "+modeName();renderDraft();go(2,false,'#startBtn');};
+document.getElementById('startBtn').onclick=()=>{if(S.format==='oneclub'&&!S.club){openOc();return;}S.league=null;S.vd=null;S.result=null;S.challenge=null;S.mode=S.pickMode?'pick':S.freeMode||'normal';if(S.format==='anti')S.mode='hardcore';S.chal=draftOk()?draftNew():null;S.slots=newSlots(S.formation);S.taken=new Set();S.wheel=null;S.rerolls=MODES[S.mode].rerolls;S.showR=false;S.moveMode=false;document.getElementById('modeLabel').textContent=fmtLabel()+S.formation+" · "+modeName();renderDraft();go(2,false,'#startBtn');};
 document.getElementById('restartBtn').onclick=()=>{if(S.league){openLeague(S.league.id);return;}go(S.vd||S.challenge?1:4);};
 document.getElementById('homeBtn').onclick=()=>askLeave(()=>go(1));document.getElementById('backBtn').onclick=navBack;
 document.getElementById('freeOpen').onclick=()=>{setFmt(S.format==='oneclub'||S.pickMode?'classic':S.format);go(4);};   // resync the setup screen with S (challenge sets S.format directly); season pick and one club have their own entries
@@ -1907,6 +1907,7 @@ function renderPickOpts(){const box=document.getElementById('seaPick'),o=S.pickO
 function spin(mode){if(S.mode!=='pick')document.querySelector('.reels').classList.remove('one');   // leftover from an abandoned season pick
   if(S.mode==='pick'&&!mode){spinPick();return;}
   if(S.vd&&S.vd.wait){const v=S.vd,b=document.getElementById('spinBtn');b.disabled=true;v.wait.then(()=>{b.disabled=false;if(S.vd===v&&!v.over)spin(mode);});return;}   // attempt not issued yet
+  if(S.chal&&S.chal.wait){const v=S.chal,b=document.getElementById('spinBtn');b.disabled=true;v.wait.then(()=>{b.disabled=false;if(S.chal===v)spin(mode);});return;}   // server wheel not issued yet
   let cs;
   if(S.vd&&!mode){while(S.vd.ptr<S.vd.seq.length){const c=DATA.clubs[S.vd.seq[S.vd.ptr++]];if(eligible(c).length>0){cs=c;break;}}}
   else if(S.chal&&!mode){while(S.chal.ptr<S.chal.seq.length){const c=DATA.clubs[S.chal.seq[S.chal.ptr++]];if(eligible(c).length>0){cs=c;break;}}}
@@ -2031,7 +2032,7 @@ async function lockDraft(){
   const pb=document.getElementById('preBox');pb.hidden=false;pb.innerHTML='<div class="kicker">Рахуємо прогноз…</div><div class="bar"><i id="xpBar"></i></div>';
   pb.scrollIntoView({behavior:'smooth',block:'center'});
   // audit P1-4: league attempt and daily challenge seeds are fetched only on Play season, otherwise a swap after the forecast consumed the attempt
-  const seedP=S.vd||lgAttempt()?Promise.resolve(null):fetchSeed(year);
+  const seedP=S.vd||S.chal||lgAttempt()?Promise.resolve(null):fetchSeed(year);   // a server wheel locks on Play season (draftLock)
   const pre=await xpRun(xi,mode,year,async f=>{const b=document.getElementById('xpBar');if(b)b.style.transform=`translateX(${Math.round(f*100)-100}%)`;await new Promise(r=>setTimeout(r,0));return tok===S.lockTok;});
   if(!pre)return;   // squad changed while computing
   S.srv=seedP;S.year=year;S.pre=pre;S.locked=true;S.locking=false;   // forecast immediately; the server seed request is awaited only on Play season
@@ -2561,8 +2562,9 @@ async function playSeason(year){
   const xi=S.slots.map(s=>s.player);const mode=MODES[S.mode];
   let srv=null,vf=null;
   if(S.vd){vf=await vdFinish(S.vd,vdEvalNow());if(!vf.gate){sb.disabled=false;sb.textContent=sbt;SIM_BUSY=false;vdFailShow(vf);return;}srv=vf.seed;year=S.year||oppYear();}   // daily challenge: the server fixes the squad and issues the attempt's seed
-  else if(S.locked&&S.year&&!year){year=S.year;srv=await S.srv;S.srv=null;if(!srv&&lgAttempt())srv=await fetchSeed(year);}   // year and seed issued when the squad was locked
-  else{if(S.chal){year=S.chal.year;}if(!year)year=oppYear();srv=await fetchSeed(year);}
+  else if(S.chal){year=S.chal.year;srv=await draftLock(S.chal);if(!srv)RATE_NOTE=S.chal.note;}   // server wheel: squad locked, season seed from the server
+  else if(S.locked&&S.year&&!year){year=S.year;srv=await S.srv;S.srv=null;}   // year and seed issued when the squad was locked
+  else{if(!year)year=oppYear();srv=await fetchSeed(year);}
   sb.disabled=false;sb.textContent=sbt;SIM_BUSY=false;
   const seed=srv?srv.seed:Math.floor(Math.random()*2147483647);rnd=mulberry32(seed);const r=simulate(xi,mode,year);rnd=Math.random;r.seed=seed;r.seedId=srv?srv.seed_id:null;r.slow=srv?'':RATE_NOTE;RATE_NOTE='';S.result=r;
   // xP: from the pre-season forecast, or computed here (no forecast / different year)
@@ -3640,7 +3642,7 @@ function flWire(){const $=id=>document.getElementById(id),el=$('fl');
 function flPlay(){const d=FL&&FL.data;if(!d)return;
   S.league={id:d.id,name:d.name,rerolls:d.rerolls,memory:d.ratings==='memory',era:ERAS[d.era]?d.era:'all'};
   S.vd=null;S.challenge=null;S.chal=null;S.result=null;setFmt('classic');S.mode='normal';
-  S.formation=FORMATIONS[FL.formation]?FL.formation:'4-4-2';S.slots=newSlots(S.formation);S.taken=new Set();S.wheel=null;S.rerolls=d.rerolls;S.showR=false;S.moveMode=false;
+  S.formation=FORMATIONS[FL.formation]?FL.formation:'4-4-2';S.chal=draftNew({fl_id:d.id});S.slots=newSlots(S.formation);S.taken=new Set();S.wheel=null;S.rerolls=d.rerolls;S.showR=false;S.moveMode=false;
   document.getElementById('modeLabel').textContent=`Ліга «${d.name}» · ${S.formation}`;renderDraft();go(2);}
 // after a league season: line under the result (credited or not)
 function flAfterSave(r,j){if(!S.league||S.result!==r)return;const el=document.getElementById('leagueMsg');if(!el)return;
@@ -3917,8 +3919,8 @@ function nameCheck(v){const s=nameKey(v);if(!s)return {name:null};const n=[...s]
   if(nameBad(s))return {err:'bad'};
   return {name:s};}
 const NAME_MSG={len:`Ім'я — від ${NAME_MIN} до ${NAME_MAX} символів.`,chars:'Лише латинські літери a–z, цифри, «_» і «.».',edge:'Починається й закінчується літерою або цифрою.',bad:"Таке ім'я не підходить. Обери інше.",
-  taken:"Це ім'я вже зайняте. Спробуй інше.",wait:d=>`Змінити ім'я знову можна з ${fmtLong(d)}.`,fail:"Не вдалося зберегти. Спробуй ще раз."};
-function nameErrOf(e){const m=/name_(len|chars|edge|bad|taken|wait)(?::(\d{4}-\d{2}-\d{2}))?/.exec(String(e&&e.message||e));return m?(m[1]==='wait'?NAME_MSG.wait(m[2]):NAME_MSG[m[1]]):NAME_MSG.fail;}
+  taken:"Це ім'я вже зайняте. Спробуй інше.",season:"Власне ім'я можна обрати після першого зіграного сезону.",wait:d=>`Змінити ім'я знову можна з ${fmtLong(d)}.`,fail:"Не вдалося зберегти. Спробуй ще раз."};
+function nameErrOf(e){const m=/name_(len|chars|edge|bad|taken|wait|season)(?::(\d{4}-\d{2}-\d{2}))?/.exec(String(e&&e.message||e));return m?(m[1]==='wait'?NAME_MSG.wait(m[2]):NAME_MSG[m[1]]):NAME_MSG.fail;}
 // first name from Telegram/Google or the name field: DB transliterates to Latin, taken -> numbered (andrii7), too short -> stay anonymous
 async function playerAutoName(p,raw){
   try{return await playerRpc('set_player_auto_name',{p_raw:String(raw||'').slice(0,60)});}catch(e){return p;}}
@@ -4064,8 +4066,34 @@ function lgRender(){const el=document.getElementById('tbChats');if(!el||el.hidde
 const CHAL_ALPH='abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 function chalId(){let s='';const a=new Uint32Array(8);try{crypto.getRandomValues(a);}catch(e){for(let i=0;i<8;i++)a[i]=Math.floor(Math.random()*4e9);}for(const x of a)s+=CHAL_ALPH[x%CHAL_ALPH.length];return s;}
 const wheelSeq=seed=>wheelFor(seed,'classic','all');
-// new free game: wheel seed and opponents' season are fixed up front so the game can be replayed as a challenge
-function chalNewGame(seed,year){seed=seed||Math.floor(Math.random()*2147483647);return {seed,year:year||LEAGUE_LEGENDS,seq:wheelSeq(seed),ptr:0};}
+// new game: the server issues the wheel seed (api/_draft.js start) and later locks the squad and simulates the season (lock);
+// the wheel is the same for a challenge replay. No answer within 6 s, the day limit or a hidden format: local wheel, season not verified (d.note)
+const DRAFT_NOTE='Сезон зіграно без зв\'язку з сервером, тому він не піде в рекорди й таблиці.';
+const DRAFT_BAD='Сервер не прийняв цей склад, тому сезон не піде в рекорди й таблиці.';
+const draftOk=()=>(S.format==='classic'||S.format==='oneclub')&&['normal','hard','practice'].includes(S.mode)&&!S.pickMode;
+function draftNew(extra){
+  const d={seed:0,year:oppYear(),seq:[],ptr:0,sid:null,note:''};
+  const local=note=>{d.seed=Math.floor(Math.random()*2147483647);d.note=note;};
+  const era=eraOf(),club=S.format==='oneclub'?S.club:null;
+  d.wait=(async()=>{
+    if(ONLINE&&(extra||draftOk())){
+      const ctl=typeof AbortController!=='undefined'?new AbortController():null;const tm=setTimeout(()=>ctl&&ctl.abort(),6000);
+      try{const r=await _fetch('/api/seed',{method:'POST',headers:{'Content-Type':'application/json'},signal:ctl&&ctl.signal,
+          body:JSON.stringify({draft:'start',device_id:deviceId(),secret:devSecret(),format:S.format,mode:S.mode,era,club,formation:S.formation,league:lgAttempt(),...(extra||{})})});
+        const j=await r.json().catch(()=>({}));
+        if(r.ok&&j.seed_id){d.seed=+j.ws;d.sid=j.seed_id;d.year=+j.year||d.year;}else local(r.status===429&&j.error?j.error:DRAFT_NOTE);}
+      catch(e){local(DRAFT_NOTE);}finally{clearTimeout(tm);}
+    }else local(ONLINE?'':DRAFT_NOTE);
+    d.seq=wheelFor(d.seed,S.format,era,club);d.wait=null;})();
+  return d;}
+// squad locked on "Play season": the server checks it against the wheel and fixes the season seed. null: play locally, not verified
+async function draftLock(d){
+  if(!d||!d.sid||!ONLINE)return null;
+  const ctl=typeof AbortController!=='undefined'?new AbortController():null;const tm=setTimeout(()=>ctl&&ctl.abort(),8000);
+  try{const r=await _fetch('/api/seed',{method:'POST',headers:{'Content-Type':'application/json'},signal:ctl&&ctl.signal,
+      body:JSON.stringify({draft:'lock',device_id:deviceId(),secret:devSecret(),seed_id:d.sid,xi:S.slots.map(s=>({id:s.player.id,slot:s.slot,c:s.player.club,y:s.player.y}))})});
+    const j=await r.json().catch(()=>({}));if(r.ok&&j.seed)return j;d.note=r.status===429&&j.error?j.error:r.status>=500?DRAFT_NOTE:DRAFT_BAD;return null;}
+  catch(e){d.note=DRAFT_NOTE;return null;}finally{clearTimeout(tm);}}
 let CHAL=null;   // challenge currently opened via link
 // challenger name comes from the player profile (audit V5); legacy rows without player fall back to name
 const chalWho=x=>x&&x.players&&(x.players.name||x.players.anon_name)?pname(x):String((x&&x.name)||'друг').toLowerCase();
@@ -4074,8 +4102,8 @@ const chalName=()=>{const el=document.getElementById('chalName');const v=el&&el.
 function chalLinkWeb(id){return `${SITE}?c=${id}`;}
 function chalLinkTg(id){return `https://t.me/${TG_BOT}?startapp=c${id}`;}
 async function chalCreate(r){
-  const id=chalId();const row={id,device_id:deviceId(),name:chalName().slice(0,40),seed:S.chal.seed,formation:S.formation,year:r.year,mode:S.mode,w:r.W,d:r.D,l:r.L,pts:r.pts,place:r.place,gf:r.gf,ga:r.ga};
-  await saveApi('challenge',{row});return id;   // server writes only
+  if(!r.rowId||r.verified!==true)throw new Error('not verified');
+  const id=chalId();await saveApi('challenge',{season_id:r.rowId,row:{id,name:chalName().slice(0,40)}});return id;   // the server takes wheel, rules and result from the verified season
 }
 async function chalShare(){
   const r=S.result;const msg=document.getElementById('chalMsg');if(!r||!S.chal)return;
@@ -4111,22 +4139,21 @@ function renderChal(){
 }
 function chalStart(){
   const c=CHAL;if(!c)return;S.league=null;S.vd=null;S.result=null;S.format='classic';S.pickMode=false;S.mode=MODES[c.mode]&&c.mode!=='daily'?c.mode:'normal';S.formation=FORMATIONS[c.formation]?c.formation:'4-4-2';
-  S.chal=chalNewGame(+c.seed,+c.year);S.challenge=c;
+  S.challenge=c;S.chal=draftNew({chal_id:c.id});S.chal.year=+c.year;
   S.slots=newSlots(S.formation);S.taken=new Set();S.wheel=null;S.rerolls=MODES[S.mode].rerolls;
   document.getElementById('modeLabel').textContent=`Виклик · ${S.formation} · ${MODES[S.mode].name}`;renderDraft();go(2);
 }
 // after the season: compare with the challenge and save the result
 function chalAfterSeason(r){
   const line=document.getElementById('chalLine'),box=document.getElementById('chalBox');
-  const can=ONLINE&&S.chal&&!S.vd&&S.format==='classic';   // the Challenge tile opens this block
+  const can=ONLINE&&S.chal&&!!S.chal.sid&&!S.vd&&!S.league&&S.format==='classic'&&eraOf()==='all'&&S.mode!=='practice';   // the Challenge tile opens this block
   if(box)box.hidden=true;const tile=document.getElementById('chalOpen');if(tile)tile.hidden=!can;
   const ni=document.getElementById('chalName');if(ni){ni.hidden=!!TGU;if(!ni.value)ni.value=myName();}
   document.getElementById('chalMsg').textContent='';
   if(!line)return;line.hidden=true;const c=S.challenge;if(!c)return;
   const diff=r.pts-c.pts;line.hidden=false;
   line.innerHTML=`${ic('sword-cross','sm')}Ти <b>${r.pts}</b> : <b>${c.pts}</b> ${esc(chalWho(c))} — ${diff>0?`<b>виклик прийнято й виграно</b> (+${diff})`:diff===0?'нічия за очками':`не вистачило ${-diff} ${ptsWord(-diff)}`}`;
-  if(!ONLINE)return;const row={challenge_id:c.id,device_id:deviceId(),name:chalName().slice(0,40),w:r.W,d:r.D,l:r.L,pts:r.pts,place:r.place,gf:r.gf,ga:r.ga};
-  saveApi('chal_result',{row}).then(()=>chalLoad(true)).catch(e=>console.warn('chal',e));
+  if(ONLINE)setTimeout(()=>chalLoad(true),1500);   // the server wrote the result when the squad was locked
 }
 
 // ---------- Daily challenge (vd_*) rules. Shared by the site (build.py inlines it) and the server (lib/vd_core.js, api/_vd.js).

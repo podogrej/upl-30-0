@@ -1620,7 +1620,7 @@ addEventListener('popstate',e=>{const sd=e.state&&e.state.sheet||0;
   NAV_FREE=false;NAV_I=st.i||0;go(st.sec,true);});
 try{history.replaceState({sec:1,i:0},'',location.href);}catch(e){}
 screenTag('home');   // start screen (others via go())
-document.getElementById('startBtn').onclick=()=>{if(S.format==='oneclub'&&!S.club){openOc();return;}S.league=null;S.vd=null;S.result=null;S.challenge=null;S.chal=S.format==='classic'&&S.era==='all'&&!S.pickMode?chalNewGame():null;S.mode=S.pickMode?'pick':S.freeMode||'normal';if(S.format==='anti')S.mode='hardcore';S.slots=newSlots(S.formation);S.taken=new Set();S.wheel=null;S.rerolls=MODES[S.mode].rerolls;S.showR=false;S.moveMode=false;document.getElementById('modeLabel').textContent=fmtLabel()+S.formation+" · "+modeName();renderDraft();go(2,false,'#startBtn');};
+document.getElementById('startBtn').onclick=()=>{if(S.format==='oneclub'&&!S.club){openOc();return;}S.league=null;S.vd=null;S.result=null;S.challenge=null;S.mode=S.pickMode?'pick':S.freeMode||'normal';if(S.format==='anti')S.mode='hardcore';S.chal=draftOk()?draftNew():null;S.slots=newSlots(S.formation);S.taken=new Set();S.wheel=null;S.rerolls=MODES[S.mode].rerolls;S.showR=false;S.moveMode=false;document.getElementById('modeLabel').textContent=fmtLabel()+S.formation+" · "+modeName();renderDraft();go(2,false,'#startBtn');};
 document.getElementById('restartBtn').onclick=()=>{if(S.league){openLeague(S.league.id);return;}go(S.vd||S.challenge?1:4);};
 document.getElementById('homeBtn').onclick=()=>askLeave(()=>go(1));document.getElementById('backBtn').onclick=navBack;
 document.getElementById('freeOpen').onclick=()=>{setFmt(S.format==='oneclub'||S.pickMode?'classic':S.format);go(4);};   // resync the setup screen with S (challenge sets S.format directly); season pick and one club have their own entries
@@ -1801,6 +1801,7 @@ function renderPickOpts(){const box=document.getElementById('seaPick'),o=S.pickO
 function spin(mode){if(S.mode!=='pick')document.querySelector('.reels').classList.remove('one');   // leftover from an abandoned season pick
   if(S.mode==='pick'&&!mode){spinPick();return;}
   if(S.vd&&S.vd.wait){const v=S.vd,b=document.getElementById('spinBtn');b.disabled=true;v.wait.then(()=>{b.disabled=false;if(S.vd===v&&!v.over)spin(mode);});return;}   // attempt not issued yet
+  if(S.chal&&S.chal.wait){const v=S.chal,b=document.getElementById('spinBtn');b.disabled=true;v.wait.then(()=>{b.disabled=false;if(S.chal===v)spin(mode);});return;}   // server wheel not issued yet
   let cs;
   if(S.vd&&!mode){while(S.vd.ptr<S.vd.seq.length){const c=DATA.clubs[S.vd.seq[S.vd.ptr++]];if(eligible(c).length>0){cs=c;break;}}}
   else if(S.chal&&!mode){while(S.chal.ptr<S.chal.seq.length){const c=DATA.clubs[S.chal.seq[S.chal.ptr++]];if(eligible(c).length>0){cs=c;break;}}}
@@ -1925,7 +1926,7 @@ async function lockDraft(){
   const pb=document.getElementById('preBox');pb.hidden=false;pb.innerHTML='<div class="kicker">Рахуємо прогноз…</div><div class="bar"><i id="xpBar"></i></div>';
   pb.scrollIntoView({behavior:'smooth',block:'center'});
   // audit P1-4: league attempt and daily challenge seeds are fetched only on Play season, otherwise a swap after the forecast consumed the attempt
-  const seedP=S.vd||lgAttempt()?Promise.resolve(null):fetchSeed(year);
+  const seedP=S.vd||S.chal||lgAttempt()?Promise.resolve(null):fetchSeed(year);   // a server wheel locks on Play season (draftLock)
   const pre=await xpRun(xi,mode,year,async f=>{const b=document.getElementById('xpBar');if(b)b.style.transform=`translateX(${Math.round(f*100)-100}%)`;await new Promise(r=>setTimeout(r,0));return tok===S.lockTok;});
   if(!pre)return;   // squad changed while computing
   S.srv=seedP;S.year=year;S.pre=pre;S.locked=true;S.locking=false;   // forecast immediately; the server seed request is awaited only on Play season
@@ -2125,8 +2126,9 @@ async function playSeason(year){
   const xi=S.slots.map(s=>s.player);const mode=MODES[S.mode];
   let srv=null,vf=null;
   if(S.vd){vf=await vdFinish(S.vd,vdEvalNow());if(!vf.gate){sb.disabled=false;sb.textContent=sbt;SIM_BUSY=false;vdFailShow(vf);return;}srv=vf.seed;year=S.year||oppYear();}   // daily challenge: the server fixes the squad and issues the attempt's seed
-  else if(S.locked&&S.year&&!year){year=S.year;srv=await S.srv;S.srv=null;if(!srv&&lgAttempt())srv=await fetchSeed(year);}   // year and seed issued when the squad was locked
-  else{if(S.chal){year=S.chal.year;}if(!year)year=oppYear();srv=await fetchSeed(year);}
+  else if(S.chal){year=S.chal.year;srv=await draftLock(S.chal);if(!srv)RATE_NOTE=S.chal.note;}   // server wheel: squad locked, season seed from the server
+  else if(S.locked&&S.year&&!year){year=S.year;srv=await S.srv;S.srv=null;}   // year and seed issued when the squad was locked
+  else{if(!year)year=oppYear();srv=await fetchSeed(year);}
   sb.disabled=false;sb.textContent=sbt;SIM_BUSY=false;
   const seed=srv?srv.seed:Math.floor(Math.random()*2147483647);rnd=mulberry32(seed);const r=simulate(xi,mode,year);rnd=Math.random;r.seed=seed;r.seedId=srv?srv.seed_id:null;r.slow=srv?'':RATE_NOTE;RATE_NOTE='';S.result=r;
   // xP: from the pre-season forecast, or computed here (no forecast / different year)

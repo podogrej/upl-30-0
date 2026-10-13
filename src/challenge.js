@@ -3,8 +3,34 @@
 const CHAL_ALPH='abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 function chalId(){let s='';const a=new Uint32Array(8);try{crypto.getRandomValues(a);}catch(e){for(let i=0;i<8;i++)a[i]=Math.floor(Math.random()*4e9);}for(const x of a)s+=CHAL_ALPH[x%CHAL_ALPH.length];return s;}
 const wheelSeq=seed=>wheelFor(seed,'classic','all');
-// new free game: wheel seed and opponents' season are fixed up front so the game can be replayed as a challenge
-function chalNewGame(seed,year){seed=seed||Math.floor(Math.random()*2147483647);return {seed,year:year||LEAGUE_LEGENDS,seq:wheelSeq(seed),ptr:0};}
+// new game: the server issues the wheel seed (api/_draft.js start) and later locks the squad and simulates the season (lock);
+// the wheel is the same for a challenge replay. No answer within 6 s, the day limit or a hidden format: local wheel, season not verified (d.note)
+const DRAFT_NOTE='Сезон зіграно без зв\'язку з сервером, тому він не піде в рекорди й таблиці.';
+const DRAFT_BAD='Сервер не прийняв цей склад, тому сезон не піде в рекорди й таблиці.';
+const draftOk=()=>(S.format==='classic'||S.format==='oneclub')&&['normal','hard','practice'].includes(S.mode)&&!S.pickMode;
+function draftNew(extra){
+  const d={seed:0,year:oppYear(),seq:[],ptr:0,sid:null,note:''};
+  const local=note=>{d.seed=Math.floor(Math.random()*2147483647);d.note=note;};
+  const era=eraOf(),club=S.format==='oneclub'?S.club:null;
+  d.wait=(async()=>{
+    if(ONLINE&&(extra||draftOk())){
+      const ctl=typeof AbortController!=='undefined'?new AbortController():null;const tm=setTimeout(()=>ctl&&ctl.abort(),6000);
+      try{const r=await _fetch('/api/seed',{method:'POST',headers:{'Content-Type':'application/json'},signal:ctl&&ctl.signal,
+          body:JSON.stringify({draft:'start',device_id:deviceId(),secret:devSecret(),format:S.format,mode:S.mode,era,club,formation:S.formation,league:lgAttempt(),...(extra||{})})});
+        const j=await r.json().catch(()=>({}));
+        if(r.ok&&j.seed_id){d.seed=+j.ws;d.sid=j.seed_id;d.year=+j.year||d.year;}else local(r.status===429&&j.error?j.error:DRAFT_NOTE);}
+      catch(e){local(DRAFT_NOTE);}finally{clearTimeout(tm);}
+    }else local(ONLINE?'':DRAFT_NOTE);
+    d.seq=wheelFor(d.seed,S.format,era,club);d.wait=null;})();
+  return d;}
+// squad locked on "Play season": the server checks it against the wheel and fixes the season seed. null: play locally, not verified
+async function draftLock(d){
+  if(!d||!d.sid||!ONLINE)return null;
+  const ctl=typeof AbortController!=='undefined'?new AbortController():null;const tm=setTimeout(()=>ctl&&ctl.abort(),8000);
+  try{const r=await _fetch('/api/seed',{method:'POST',headers:{'Content-Type':'application/json'},signal:ctl&&ctl.signal,
+      body:JSON.stringify({draft:'lock',device_id:deviceId(),secret:devSecret(),seed_id:d.sid,xi:S.slots.map(s=>({id:s.player.id,slot:s.slot,c:s.player.club,y:s.player.y}))})});
+    const j=await r.json().catch(()=>({}));if(r.ok&&j.seed)return j;d.note=r.status===429&&j.error?j.error:r.status>=500?DRAFT_NOTE:DRAFT_BAD;return null;}
+  catch(e){d.note=DRAFT_NOTE;return null;}finally{clearTimeout(tm);}}
 let CHAL=null;   // challenge currently opened via link
 // challenger name comes from the player profile (audit V5); legacy rows without player fall back to name
 const chalWho=x=>x&&x.players&&(x.players.name||x.players.anon_name)?pname(x):String((x&&x.name)||'друг').toLowerCase();
@@ -13,8 +39,8 @@ const chalName=()=>{const el=document.getElementById('chalName');const v=el&&el.
 function chalLinkWeb(id){return `${SITE}?c=${id}`;}
 function chalLinkTg(id){return `https://t.me/${TG_BOT}?startapp=c${id}`;}
 async function chalCreate(r){
-  const id=chalId();const row={id,device_id:deviceId(),name:chalName().slice(0,40),seed:S.chal.seed,formation:S.formation,year:r.year,mode:S.mode,w:r.W,d:r.D,l:r.L,pts:r.pts,place:r.place,gf:r.gf,ga:r.ga};
-  await saveApi('challenge',{row});return id;   // server writes only
+  if(!r.rowId||r.verified!==true)throw new Error('not verified');
+  const id=chalId();await saveApi('challenge',{season_id:r.rowId,row:{id,name:chalName().slice(0,40)}});return id;   // the server takes wheel, rules and result from the verified season
 }
 async function chalShare(){
   const r=S.result;const msg=document.getElementById('chalMsg');if(!r||!S.chal)return;
@@ -50,20 +76,19 @@ function renderChal(){
 }
 function chalStart(){
   const c=CHAL;if(!c)return;S.league=null;S.vd=null;S.result=null;S.format='classic';S.pickMode=false;S.mode=MODES[c.mode]&&c.mode!=='daily'?c.mode:'normal';S.formation=FORMATIONS[c.formation]?c.formation:'4-4-2';
-  S.chal=chalNewGame(+c.seed,+c.year);S.challenge=c;
+  S.challenge=c;S.chal=draftNew({chal_id:c.id});S.chal.year=+c.year;
   S.slots=newSlots(S.formation);S.taken=new Set();S.wheel=null;S.rerolls=MODES[S.mode].rerolls;
   document.getElementById('modeLabel').textContent=`Виклик · ${S.formation} · ${MODES[S.mode].name}`;renderDraft();go(2);
 }
 // after the season: compare with the challenge and save the result
 function chalAfterSeason(r){
   const line=document.getElementById('chalLine'),box=document.getElementById('chalBox');
-  const can=ONLINE&&S.chal&&!S.vd&&S.format==='classic';   // the Challenge tile opens this block
+  const can=ONLINE&&S.chal&&!!S.chal.sid&&!S.vd&&!S.league&&S.format==='classic'&&eraOf()==='all'&&S.mode!=='practice';   // the Challenge tile opens this block
   if(box)box.hidden=true;const tile=document.getElementById('chalOpen');if(tile)tile.hidden=!can;
   const ni=document.getElementById('chalName');if(ni){ni.hidden=!!TGU;if(!ni.value)ni.value=myName();}
   document.getElementById('chalMsg').textContent='';
   if(!line)return;line.hidden=true;const c=S.challenge;if(!c)return;
   const diff=r.pts-c.pts;line.hidden=false;
   line.innerHTML=`${ic('sword-cross','sm')}Ти <b>${r.pts}</b> : <b>${c.pts}</b> ${esc(chalWho(c))} — ${diff>0?`<b>виклик прийнято й виграно</b> (+${diff})`:diff===0?'нічия за очками':`не вистачило ${-diff} ${ptsWord(-diff)}`}`;
-  if(!ONLINE)return;const row={challenge_id:c.id,device_id:deviceId(),name:chalName().slice(0,40),w:r.W,d:r.D,l:r.L,pts:r.pts,place:r.place,gf:r.gf,ga:r.ga};
-  saveApi('chal_result',{row}).then(()=>chalLoad(true)).catch(e=>console.warn('chal',e));
+  if(ONLINE)setTimeout(()=>chalLoad(true),1500);   // the server wrote the result when the squad was locked
 }

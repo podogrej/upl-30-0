@@ -16,7 +16,7 @@ function draft(ws, format, era, club, rerolls, formation, rand) {
     while (ptr < seq.length) { const x = E.DATA.clubs[seq[ptr++]]; if (cands(x).length) { c = x; at = ptr - 1; break; } }
     if (!c) return null;
     if (rr > 0 && rand() < 0.3) {   // reroll: a random club-season off the wheel, wheel position not advanced
-      rr--; ptr--;
+      rr--;   // the site spends the wheel position before the reroll
       const alt = pool.filter(x => cands(x).length); if (!alt.length) continue;
       c = alt[Math.floor(rand() * alt.length)]; at = -1;
     }
