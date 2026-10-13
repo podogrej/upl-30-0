@@ -43,12 +43,12 @@ const findPl=(pg,multi)=>pg.evaluate(multi=>{const D=window.__dbg,S=D.S;const bs
  check(await pg.evaluate(()=>{const el=document.getElementById('eras'),r=el.getBoundingClientRect();return r.right<=document.documentElement.clientWidth&&el.scrollWidth<=el.clientWidth+1&&[...document.querySelectorAll('#eras button')].every(b=>b.scrollWidth<=b.clientWidth+1);}),'епохи: на 320 px кнопки влазять');
  await (await pg.$('#eraBox')).screenshot({path:path.join(OUT,'era_320.png')});await pg.setViewportSize({width:390,height:844});
  await pg.click('#modes .opt:nth-child(1)');await pg.click('#startBtn');
- check(await pg.evaluate(()=>/2000-ні/.test(document.getElementById('modeLabel').textContent)&&window.__dbg.S.chal===null),'епохи: підпис драфту з епохою, «Виклику другу» немає');
+ check(await pg.evaluate(()=>/2000-ні/.test(document.getElementById('modeLabel').textContent)&&window.__dbg.S.era==='d2000'),'епохи: підпис драфту з епохою');   // every free game has a wheel (S.chal); the Challenge tile is checked after the season
  const ys=[];for(let i=0;i<11;i++){await spin(pg);ys.push(await pg.evaluate(()=>window.__dbg.S.wheel.y));await (await pg.$('#squad .pl:not([disabled])')).click();await pg.waitForTimeout(60);const pb=await pg.$('#squad .plpos button');if(pb){await pb.click();await pg.waitForTimeout(60);}}
  check(ys.every(y=>y>=2000&&y<=2009),'епохи: колесо «2000-ні» дає лише сезони 2000/01–2009/10 ('+ys.join(',')+')');
  check(await pg.evaluate(()=>window.__dbg.S.slots.every(s=>s.player&&s.player.y>=2000&&s.player.y<=2009)),'епохи: увесь склад з 2000/01–2009/10');
  await pg.waitForSelector('#simBtn:not([hidden])');await pg.click('#simBtn');await pg.click('#skipBtn');await pg.waitForTimeout(400);
- check(await pg.evaluate(()=>/2000-ні/.test(document.getElementById('shareText').value)&&document.getElementById('chalBox').hidden),'епохи: епоха в тексті результату, виклику другу немає');
+ check(await pg.evaluate(()=>/2000-ні/.test(document.getElementById('shareText').value)&&document.getElementById('chalBox').hidden&&document.getElementById('chalOpen').hidden),'епохи: епоха в тексті результату, плитки «Виклик» немає');
  await pg.reload();await pg.waitForTimeout(600);
  check(await pg.evaluate(()=>window.__dbg.S.era==='d2000'),'епохи: вибір пам\'ятається після перезавантаження');
  await pg.evaluate(()=>localStorage.setItem('upl30_era','"y2015"'));await pg.reload();await pg.waitForTimeout(600);

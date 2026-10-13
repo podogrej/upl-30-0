@@ -59,14 +59,15 @@ async function server(){
    rowOf(-1).season_id=s2.id;Object.assign(rowOf(-1),{w:15,d:5,l:10,pts:50});
    const mid={...best,id:999,w:18,d:5,l:7,pts:59};await Promise.all([L.putBest(mid,day,m),L.putBest(best,day,m)]);
    T.check(r1===s3.id&&rowOf(-1).season_id===s3.id,`гонка двох перевірок — у рядку кращий сезон (без рядка: ${r1}, з рядком: ${rowOf(-1).season_id}, кращий ${s3.id})`);}
-  // /api/seed marks league attempts only for classic + normal outside the daily draft
+  // /api/seed marks league attempts only on a server wheel (draft start) for classic + normal + all years; the old seed request never does
   {const call=body=>new Promise(res=>seedH({method:'POST',body,query:{},headers:{}},{status(c){this.c=c;return this;},json(j){res({c:this.c||200,j});},setHeader(){}}));
-   const xi=[...Array(11)].map((_,i)=>({id:'x'+i,slot:'CB',c:'a',y:2000}));const base={device_id:OTHER,secret:'s'.repeat(32),xi,formation:'4-4-2',year:LL};
+   const xi=[...Array(11)].map((_,i)=>({id:'x'+i,slot:'CB',c:'a',y:2000}));const base={device_id:OTHER,secret:'s'.repeat(32),formation:'4-4-2'};
    const got=async b=>{const r=await call({...base,...b});return D.season_seeds.find(s=>s.id===r.j.seed_id)||{};};
-   const k1=await got({mode:'normal',format:'classic',league:true}),k2=await got({mode:'hard',format:'classic',league:true}),k3=await got({mode:'normal',format:'classic'}),k4=await got({mode:'normal',format:'oneclub',league:true});
-   const k1b=await got({mode:'normal',format:'classic',league:true});k1b.used_by=7;const k1c=await got({mode:'normal',format:'classic',league:true});
-   T.check(k1b.id===k1.id&&k1c.id!==k1.id&&D.season_seeds.filter(x=>x.device_id===OTHER&&x.league).length===2,'/api/seed: повтор запиту спроби (той самий склад, сезон ще не зіграно) — той самий seed, друга спроба не згоряє; після гри — новий');
-   T.check(k1.league===true&&!k1.official&&!k2.league&&!k3.league&&!k4.league,'/api/seed: спроба ліги — лише «Грати» (класика, «Звичайний») з позначкою браузера');}
+   const dr=b=>got({draft:'start',format:'classic',mode:'normal',...b});
+   const k1=await dr({league:true}),k2=await dr({mode:'hard',league:true}),k3=await dr({}),k4=await dr({format:'oneclub',club:require(path.join(ROOT,'lib','engine.js')).DATA.clubs[0].c,league:true}),k5=await dr({era:'d2000',league:true});
+   T.check(k1.kind==='draft'&&k1.league===true&&!k1.official&&!k2.league&&!k3.league&&!k4.league&&!k5.league&&!!k4.id&&!!k5.id,'/api/seed draft start: спроба ліги — лише «Грати» (класика, «Звичайний», усі роки) з позначкою браузера');
+   const old=await got({xi,year:LL,mode:'normal',format:'classic',league:true});
+   T.check(old.kind==='legacy'&&!old.league,'/api/seed без draft (вкладки до 0.90.1): спробою ліги не позначається');}
   // Mini App: join a third chat -> today's best of the first 3 attempts is copied in; a browser result is ignored
   const hm=(k,d)=>crypto.createHmac('sha256',k).update(d).digest();
   const initData=(user,sp)=>{const p=new URLSearchParams({auth_date:String(Math.floor(Date.now()/1000)),user:JSON.stringify(user),start_param:sp});
