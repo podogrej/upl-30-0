@@ -1,7 +1,7 @@
 // Client JavaScript errors
 // (src/template.html, first <script>) -> client_errors table (sql/v068_client_errors.sql). Always responds 204.
-// Also handles footer form feedback ({feedback:{text,contact}}): no separate route due to the Vercel Hobby 12-function limit.
-const { sb, rateLimit, body, tgUser, env } = require('./_device.js');
+// Also handles footer form feedback ({feedback:{text,contact}}) and traffic sources ({traffic}): no separate route due to the Vercel Hobby 12-function limit.
+const { sb, rateLimit, body, tgUser, env, uuidRe } = require('./_device.js');
 const L = require('./_league.js');
 const cut = (v, n) => (v == null || v === '' ? null : String(v).slice(0, n));
 const int = v => (Number.isFinite(+v) ? Math.max(0, Math.min(1e7, Math.round(+v))) : null);
@@ -40,7 +40,8 @@ module.exports = async (req, res) => {
       return res.status(204).end();
     }
     const b = body(req);
-    if (b.feedback) return await feedback(req, res, b);   // feedback has its own fb limit, so page errors don't block it
+    if (b.feedback) return await feedback(req, res, b);
+    if (b.traffic) return await traffic(req, res, b.traffic);   // feedback has its own fb limit, so page errors don't block it
     if (await rateLimit(req, res, 'err')) return;
     const rows = (Array.isArray(b.errors) ? b.errors.slice(0, 5) : []).filter(e => e && e.msg).map(e => ({
       version: cut(b.version, 12), msg: cut(e.msg, 300), src: cut(e.src, 200), line: int(e.line), col: int(e.col), stack: cut(e.stack, 1500),
@@ -50,6 +51,19 @@ module.exports = async (req, res) => {
   } catch (e) { console.warn('err', String(e && e.message).slice(0, 160)); }
   res.status(204).end();
 };
+
+// traffic source of a device (first touch) for one event: visit / season_start / season_finish (sql/v0903_traffic.sql); one row per device and event
+const TRF_EVENTS = ['visit', 'season_start', 'season_finish'];
+const tag = v => { const s = String(v == null ? '' : v).toLowerCase().trim().slice(0, 64).replace(/[^a-z0-9_.:-]/g, ''); return s || null; };
+async function traffic(req, res, t) {
+  const id = String(t && t.anon_id || '');
+  if (!uuidRe.test(id) || !TRF_EVENTS.includes(t.event)) return res.status(204).end();
+  if (await rateLimit(req, res, 'trf', id)) return;
+  const row = { anon_id: id.toLowerCase(), event: t.event, utm_source: tag(t.utm_source), utm_medium: tag(t.utm_medium), utm_campaign: tag(t.utm_campaign), referrer: tag(t.referrer) };
+  try { await sb('traffic_events?on_conflict=anon_id,event', { method: 'POST', prefer: 'resolution=ignore-duplicates,return=minimal', body: row }); }
+  catch (e) { console.warn('traffic', String(e && e.message).slice(0, 160)); }
+  res.status(204).end();
+}
 
 // site feedback: forward to admin in Telegram (TG_FEEDBACK_CHAT or TG_CARDS_CHAT) and store in feedback (sql/v06969_feedback_site.sql)
 async function feedback(req, res, b) {

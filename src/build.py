@@ -53,6 +53,9 @@ var cred=function(){return /(^|[#&])(access_token|refresh_token|provider_token|t
 var go=function(){if(cred())return;
 (function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);})(window,document,"clarity","script","yq84mk48cm");};
 if(!cred())return go();var n=0,t=setInterval(function(){if(!cred()||++n>=20){clearInterval(t);go();}},500);})();</script>
+<script>/* Vercel Web Analytics (cookieless page views, referrers, UTM): production host only; the script is served once Analytics is enabled in the project */
+(function(){if(!/^(upl30\.com\.ua|upl-30-0\.vercel\.app)$/.test(location.hostname))return;window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments);};
+var t=document.createElement('script');t.defer=true;t.src='/_vercel/insights/script.js';document.head.appendChild(t);})();</script>
 <style>html{-webkit-text-size-adjust:100%}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}[hidden]{display:none!important}img{max-width:100%}</style>
 </head>
 <body>

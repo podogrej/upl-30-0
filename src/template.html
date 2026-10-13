@@ -1365,7 +1365,7 @@ h3,.sec0,#s1 .sec0,.pgh,.trleg .h{font-size:var(--fs-footnote);font-weight:var(-
 <div class="ft-done" id="fbDone" hidden><b>✓</b><span>Дякуємо! Прочитаємо найближчим часом</span></div>
 <div class="ft-pills"><button class="ft-pill" id="fbBtn" type="button"><!--i:mail-->Відгук і баги</button><a class="ft-pill" id="ftBot" href="https://t.me/upl30_bot" target="_blank" rel="noopener"><!--i:telegram-->Telegram-бот</a></div>
 <div class="ft-soc-icons"><a id="ftTg" href="https://t.me/upl_nostalgia" target="_blank" rel="noopener" aria-label="Telegram-канал" title="Telegram-канал"><!--i:telegram-plane--></a><a href="https://www.threads.com/@upl30_game" target="_blank" rel="noopener" aria-label="Threads" title="Threads"><!--i:threads--></a><a href="https://ua.tribuna.com/uk/blogs/dim-nostalhiyi-istoriya-upl/" target="_blank" rel="noopener" aria-label="Блог на Трибуні" title="Блог на Трибуні"><!--i:newspaper--></a></div>
-<div class="foot ft-small"><a href="#" id="newsBtn">Що нового у версії 0.90.2<b id="newsDot" hidden></b></a><a href="privacy.html">Конфіденційність</a><a href="terms.html">Умови використання</a></div>
+<div class="foot ft-small"><a href="#" id="newsBtn">Що нового у версії 0.90.3<b id="newsDot" hidden></b></a><a href="privacy.html">Конфіденційність</a><a href="terms.html">Умови використання</a></div>
 <div class="foot ft-copy">© 2026 30-0 УПЛ · неофіційний фан-проєкт <a href="#" id="themeBtn" class="thm" role="switch" aria-checked="false" aria-label="Світла тема"></a></div>
 <p class="ft-legal">30-0 УПЛ — незалежний фан-проєкт: футбольний драфт і симулятор сезону. Він не пов'язаний з Українською Прем'єр-лігою, Українською асоціацією футболу, клубами, футболістами, їхніми об'єднаннями чи іншими організаціями й не схвалений ними. Назви клубів, імена футболістів, рейтинги, статистику й дані сезонів використано лише з інформаційною та довідковою метою. Офіційні логотипи, емблеми та фото футболістів не використовуються. Усі торговельні марки належать їхнім власникам.</p>
 <div class="ft-cred">Шрифт KyivType Sans © Дмитро Растворцев (айдентика Києва)<br>Іконки: Material Design Icons (Apache 2.0), логотипи Telegram і Threads — Font Awesome Free (CC BY 4.0)</div>
@@ -2253,6 +2253,17 @@ const TG_BOT='upl30_bot';   // bot username without @
 let TG=null,TGU=null;
 // feedback: footer form -> /api/err ({feedback}) -> Telegram notification and feedback table.
 // Screenshots still go to the bot via DM (api/bot.js treats any message as feedback)
+// traffic source (first touch, upl30_src): UTM from the URL, else the referrer host, else the Telegram Mini App, else 'direct';
+// sent once per device and event (visit, season_start, season_finish) to /api/err -> traffic_events
+function trafficSrc(){let s=lsGet('upl30_src');if(s&&s.at)return s;
+  const q=new URLSearchParams(location.search),g=k=>(q.get(k)||'').trim().toLowerCase().slice(0,64)||null;let ref=null;
+  try{const h=document.referrer?new URL(document.referrer).hostname:'';if(h&&h!==location.hostname)ref=h;}catch(e){}
+  const tg=!!(window.Telegram&&window.Telegram.WebApp&&window.Telegram.WebApp.initData);
+  s={utm_source:g('utm_source')||(!ref&&tg?'telegram_miniapp':null),utm_medium:g('utm_medium'),utm_campaign:g('utm_campaign'),referrer:ref||'direct',at:Date.now(),sent:{}};
+  lsSet('upl30_src',s);return s;}
+function trafficSend(ev){if(!ONLINE)return;const s=trafficSrc();if(s.sent&&s.sent[ev])return;
+  _fetch('/api/err',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({traffic:{anon_id:deviceId(),event:ev,utm_source:s.utm_source,utm_medium:s.utm_medium,utm_campaign:s.utm_campaign,referrer:s.referrer}})})
+    .then(r=>{if(r.ok){const t=lsGet('upl30_src')||s;t.sent={...(t.sent||{}),[ev]:1};lsSet('upl30_src',t);}}).catch(()=>{});}
 function tgOpen(u){try{if(TG&&TG.openTelegramLink){TG.openTelegramLink(u);return;}}catch(e){}window.open(u,'_blank','noopener');}
 {const $=id=>document.getElementById(id),form=$('fbForm'),btn=$('fbBtn'),done=$('fbDone'),err=$('fbErr'),send=$('fbSend');
   const show=on=>{form.hidden=!on;btn.hidden=on;if(on){done.hidden=true;err.hidden=true;}};
@@ -2313,7 +2324,7 @@ document.getElementById('tgShareBtn').onclick=async()=>{const b=document.getElem
   showCard();};
 async function sbGet(q){const r=await fetch(`${SB_URL}/rest/v1/${q}${q.includes('?')?'&':'?'}apikey=${SB_KEY}`);if(!r.ok)throw new Error('GET '+r.status);return r.json();}
 // ---------- log: every played season is written to the seasons table (squad, stats, table, seed)
-function logSeason(r){
+function logSeason(r){trafficSend('season_finish');
   if(!ONLINE)return;
   const [tier]=tierOf(r);
   const row={device_id:deviceId(),nickname:myName()||null,competition:'upl',data_version:DATA_VERSION,mode:S.mode,format:S.format,club:S.format==='oneclub'?S.club:null,formation:S.formation,year:r.year,seed:r.seed,version:VERSION,
@@ -2724,7 +2735,7 @@ function drawCard(r){   // card in site style: UPL navy background, UPL.TV gradi
 }
 document.getElementById('chalOpen').onclick=()=>{const b=document.getElementById('chalBox'),t=document.getElementById('chalOpen');b.hidden=!b.hidden;t.classList.toggle('on',!b.hidden);if(!b.hidden){b.scrollIntoView({behavior:'smooth',block:'center'});const n=document.getElementById('chalName');if(n&&!n.hidden&&!n.value)n.focus();}};
 // ---------- What's new: short player-friendly notes on the latest version (technical log: CHANGELOG.md)
-const WHATSNEW={v:'0.90.2',news:'0.90.2',date:'13.10.2026',items:[
+const WHATSNEW={v:'0.90.3',news:'0.90.2',date:'13.10.2026',items:[
   ['telegram-plane','Ми в Telegram, Threads і на Трибуні','Посилання внизу головної: канал у Telegram, сторінка в Threads і блог на Трибуні.'],
   ['shield-star','Чесні таблиці','Колесо тепер крутить сервер. У рекорди й таблиці потрапляють лише сезони зі складом із колеса й зі зв\'язком із сервером.'],   // news: edition of the items; a release without new items keeps it, so the news dot does not light up again
   ['format-list-numbered','«Твої цифри»: віхи й «Клуб 100»','Дати твоїх перших: сезон, титул, 30-0, виліт, і круглі числа сезонів. «Клуб 100» — гравці, з якими ти зіграв 100+ матчів. А в картці гравця з твоєї 11-ки — скільки разів колесо його пропонувало і скільки ти взяв.'],
@@ -2746,6 +2757,7 @@ document.getElementById('themeBtn').onclick=e=>{e.preventDefault();const de=docu
   try{const t=document.startViewTransition(()=>themeSet(th));t.ready.catch(()=>{});t.finished.then(end,end);}catch(x){end();themeSet(th);}};
 themeLabel();
 document.getElementById('newsDot').hidden=lsGet('upl30_news_seen')===(WHATSNEW.news||WHATSNEW.v);
+trafficSrc();setTimeout(()=>trafficSend('visit'),1500);   // source is read on the first load, sent after the page settles
 /*__FIVE__*/
 document.getElementById('f5Open').onclick=f5Start;
 // audit P2-5: only what tests use; drawCard for card checks, simulate/rerun for fast determinism

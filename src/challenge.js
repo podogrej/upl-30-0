@@ -8,7 +8,7 @@ const wheelSeq=seed=>wheelFor(seed,'classic','all');
 const DRAFT_NOTE='Без зв\'язку з сервером. Сезон не потрапить у рекорди й таблиці.';
 const DRAFT_BAD='Сервер не прийняв цей склад. Сезон не потрапить у рекорди й таблиці.';
 const draftOk=()=>(S.format==='classic'||S.format==='oneclub')&&['normal','hard','practice'].includes(S.mode)&&!S.pickMode;
-function draftNew(extra){
+function draftNew(extra){trafficSend('season_start');
   const d={seed:0,year:oppYear(),seq:[],ptr:0,sid:null,note:''};
   const local=note=>{d.seed=extra&&extra.ws?extra.ws:Math.floor(Math.random()*2147483647);d.note=note;};   // a challenge keeps its wheel even without the server
   const era=eraOf(),club=S.format==='oneclub'?S.club:null;
