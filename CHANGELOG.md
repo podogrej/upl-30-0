@@ -19,7 +19,7 @@
 
 **Игра**
 - `src/template.html`: блок `ft-soc-icons` (кнопки 44×44, `target="_blank" rel="noopener"`); ссылка на канал в Telegram Mini App открывается через `tgOpen`, как ссылка на бота. Строка `ft-cred` упоминает Threads. `WHATSNEW` — новый пункт, `news:'0.90.2'`.
-- `src/icons/make_icons.py` → `src/icons.js`: добавлены `telegram-plane`, `threads` (Font Awesome Free, CC BY 4.0) и `newspaper` (MDI, Apache 2.0).
+- `src/icons/make_icons.py` → `src/icons.js`: добавлены `threads` (Font Awesome Free, CC BY 4.0), `newspaper` и `telegram-plane` (MDI `send-outline`, Apache 2.0: значок канала без круга, чтобы не путать с кнопкой бота).
 - `tools/tests/visual_expect.json`: `home`, `faq`, `news` (там виден полный подвал).
 
 **Залить**: `index.html`, `lib/engine.js`, `src/`, `tools/tests/visual_expect.json`, `CHANGELOG.md`. SQL и сервер не менялись.

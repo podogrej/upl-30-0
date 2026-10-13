@@ -12,13 +12,13 @@ UI={'home-outline':'home-outline','chevron-right':'chevron-right','google':'goog
 'format-quote-open':'format-quote-open-outline','pencil':'pencil-outline','logout':'logout','alert-outline':'alert-outline','calendar-check':'calendar-check-outline',
 'account-multiple-check':'account-multiple-check-outline','bookshelf':'bookshelf','timer-sand':'timer-sand','restart':'restart','arrow-left-right':'arrow-left-right','swap-horizontal':'swap-horizontal',
 'soccer':'soccer','shield-star':'shield-star-outline','heart':'heart-outline','lightning-bolt':'lightning-bolt-outline','arrow-down-bold':'arrow-down','trophy':'trophy-outline','crown':'crown-outline',
-'mail':'email-outline','newspaper':'newspaper-variant-outline','tv':'monitor-eye','close':'close'}
+'mail':'email-outline','newspaper':'newspaper-variant-outline','telegram-plane':'send-outline','tv':'monitor-eye','close':'close'}
 def load(path):
     t=open(path).read();vb=re.search(r'viewBox="([^"]+)"',t).group(1);ds=re.findall(r'<path[^>]*\sd="([^"]+)"',t)
     assert len(ds)==1,(path,len(ds));return [vb,ds[0]]+([1] if 'evenodd' in t else [])   # 3rd element: fill-rule evenodd
 ICO={}
 for n in sorted(UI):ICO[n]=load(f'{ROOT}/material/{UI[n]}.svg')
-for n in ('telegram','telegram-plane','threads'):ICO[n]=load(f'{ROOT}/fontawesome/brands/{n}.svg')
+for n in ('telegram','threads'):ICO[n]=load(f'{ROOT}/fontawesome/brands/{n}.svg')
 # every trophy id must have an emoji (field i in trophies.js)
 _t=open(os.path.join(SRC,'trophies.js')).read()
 miss=[i for i,b in re.findall(r'\{id:"([a-z0-9]+)"([^}]*)',_t) if 'i:"' not in b];assert not miss,miss
