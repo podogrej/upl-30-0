@@ -5,8 +5,8 @@ function chalId(){let s='';const a=new Uint32Array(8);try{crypto.getRandomValues
 const wheelSeq=seed=>wheelFor(seed,'classic','all');
 // new game: the server issues the wheel seed (api/_draft.js start) and later locks the squad and simulates the season (lock);
 // the wheel is the same for a challenge replay. No answer within 6 s, the day limit or a hidden format: local wheel, season not verified (d.note)
-const DRAFT_NOTE='Сезон зіграно без зв\'язку з сервером, тому він не піде в рекорди й таблиці.';
-const DRAFT_BAD='Сервер не прийняв цей склад, тому сезон не піде в рекорди й таблиці.';
+const DRAFT_NOTE='Без зв\'язку з сервером. Сезон не потрапить у рекорди й таблиці.';
+const DRAFT_BAD='Сервер не прийняв цей склад. Сезон не потрапить у рекорди й таблиці.';
 const draftOk=()=>(S.format==='classic'||S.format==='oneclub')&&['normal','hard','practice'].includes(S.mode)&&!S.pickMode;
 function draftNew(extra){
   const d={seed:0,year:oppYear(),seq:[],ptr:0,sid:null,note:''};

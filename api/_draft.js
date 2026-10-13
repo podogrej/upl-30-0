@@ -49,7 +49,7 @@ async function start(b, dev, pid) {
   const day = kyivDate();
   const mine = pid ? `player_id=eq.${pid}` : `device_id=eq.${dev}`;
   const used = await sb(`season_seeds?${mine}&day=eq.${day}&kind=eq.draft&select=id&limit=${DAY_LIMIT}`) || [];
-  if (used.length >= DAY_LIMIT) return err(429, 'На сьогодні вже зіграно забагато сезонів. Цей сезон не піде в рекорди й таблиці.');
+  if (used.length >= DAY_LIMIT) return err(429, `Ліміт на сьогодні — ${DAY_LIMIT} сезонів. Цей сезон не потрапить у рекорди й таблиці.`);
   const league = b.league === true && !fl && !chal && format === 'classic' && mode === 'normal' && era === 'all';   // chat-league attempt (api/_league.js)
   const row = { device_id: dev, player_id: pid || null, xi_hash: '', seed: crypto.randomInt(1, 2147483647), day, daily: false, official: false,
     formation, mode, format, year, kind: 'draft', wheel_seed: ws, era, club, rerolls, fl_id: fl, chal_id: chal, league };
