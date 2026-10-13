@@ -2722,8 +2722,7 @@ function drawCard(r){   // card in site style: UPL navy background, UPL.TV gradi
 document.getElementById('chalOpen').onclick=()=>{const b=document.getElementById('chalBox'),t=document.getElementById('chalOpen');b.hidden=!b.hidden;t.classList.toggle('on',!b.hidden);if(!b.hidden){b.scrollIntoView({behavior:'smooth',block:'center'});const n=document.getElementById('chalName');if(n&&!n.hidden&&!n.value)n.focus();}};
 // ---------- What's new: short player-friendly notes on the latest version (technical log: CHANGELOG.md)
 const WHATSNEW={v:'0.90.1',news:'0.90.1',date:'13.10.2026',items:[
-  ['shield-star','Чесні таблиці','Колесо тепер крутить сервер. У рекорди й таблиці потрапляють лише сезони зі складом із колеса й зі зв\'язком із сервером.'],
-  ['account-circle','Власне ім\'я — після першого сезону','Своє ім\'я можна обрати, зігравши перший сезон.'],   // news: edition of the items; a release without new items keeps it, so the news dot does not light up again
+  ['shield-star','Чесні таблиці','Колесо тепер крутить сервер. У рекорди й таблиці потрапляють лише сезони зі складом із колеса й зі зв\'язком із сервером.'],   // news: edition of the items; a release without new items keeps it, so the news dot does not light up again
   ['format-list-numbered','«Твої цифри»: віхи й «Клуб 100»','Дати твоїх перших: сезон, титул, 30-0, виліт, і круглі числа сезонів. «Клуб 100» — гравці, з якими ти зіграв 100+ матчів. А в картці гравця з твоєї 11-ки — скільки разів колесо його пропонувало і скільки ти взяв.'],
   ['share-variant','Поділитися цифрами','Твої головні цифри — однією картинкою для Telegram.'],
   ['star','Сортування за рейтингом','Увімкнув «Рейтинги» під час збору складу — гравці йдуть від найсильнішого. В антисезоні, як і раніше, за абеткою.'],
