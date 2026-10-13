@@ -2,6 +2,7 @@
 // HSTS with subdomains, and only frame-ancestors in the CSP (Telegram Web embeds the Mini App in a frame, so no X-Frame-Options).
 // Plus (0.90) Content-Security-Policy-Report-Only only on "/" and "/index.html": script-src with the sha256 of every inline script of index.html
 // (build.py writes it), SRI for supabase-js, and /api/err accepting CSP reports.
+// Plus (0.90.4) Google sign-in uses the PKCE flow (login CSRF).
 // Run from repo root: node tools/tests/headers.js
 const path = require('path');
 const { checker } = require('./_site.js');
@@ -41,6 +42,8 @@ T.check(/ src=["']pool\.[a-z0-9]+\.js["']/.test(html) && !/<script[^>]* src=["']
 const acc = fs.readFileSync(path.join(ROOT, 'src', 'account.js'), 'utf8');
 const sriOk = f => /supabase-js@2\.45\.4\/dist\/umd\/supabase\.js'/.test(f) && /\.integrity='sha384-[A-Za-z0-9+/]{64}'/.test(f) && /\.crossOrigin='anonymous'/.test(f) && !/src='[^']*supabase\.min\.js/.test(f);
 T.check(sriOk(acc) && sriOk(html), 'supabase-js: integrity sha384 + crossOrigin anonymous (src/account.js і index.html)');
+// Google sign-in via PKCE: a planted link with someone else's #access_token or ?code is rejected (login CSRF, 0.90.4)
+T.check([acc, html].every(f => /flowType:'pkce'/.test(f) && !/flowType:'implicit'/.test(f)), 'вхід через Google — PKCE (чуже посилання з токеном не входить в чужий акаунт)');
 
 // ---- /api/err accepts CSP reports (string and Buffer), one compact row, rate-limited, no new function
 (async () => {
