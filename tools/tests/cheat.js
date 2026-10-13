@@ -1,7 +1,7 @@
 // Anti-cheat without a browser: real api/seed.js and api/verify.js, in-memory DB.
 // Also: /api/backup (Cron secret, gzip in storage, retention), joining a group league only as a group member (getChatMember stubbed),
 // rate limiting (rate_hit as an in-memory counter) -> 429.
-// An honest season (squad with effRating, server seed, recomputed by the same engine) must pass,
+// An honest season (draft start -> squad from the server wheel -> lock -> save, recomputed by the same engine) must pass,
 // every forgery must fail. Run: node tools/tests/cheat.js
 const path = require('path'), crypto = require('crypto');
 const ROOT = path.join(__dirname, '..', '..');
@@ -139,7 +139,16 @@ const res6 = q => ({ w: q.W, d: q.D, l: q.L, pts: q.pts, place: q.place, gf: q.g
   // season trophies are written by the server after verification (src 'srv'), the same conditions as the site
   { const st = DB.seasons.find(x => x.id === honest.id), c = E.trCtxRow(st); c.r = { ...L0.q, xp: L0.q.pts };
     const want = E.trEval(c).sort().join(), got = DB.trophies.filter(x => x.device_id === device && x.src === 'srv').map(x => x.trophy).sort().join();
-    ok('verify: сервер сам записав сезонні трофеї (src srv), ті самі, що рахує сайт', got === want && DB.trophies.filter(x => x.device_id === device).every(x => x.src === 'srv'), `${got.split(',').filter(Boolean).length} шт.: ${got}`); }
+    ok('verify: сервер сам записав сезонні трофеї (src srv), ті самі, що рахує сайт', got === want && DB.trophies.filter(x => x.device_id === device).every(x => x.src === 'srv'), `${got.split(',').filter(Boolean).length} шт.: ${got}`);
+    // a season with at least one trophy (the honest one may earn none), on a fresh device
+    const td = crypto.randomUUID(), tds = 'troph-secret-0123456789abcd'; let n = 0, want2 = '', got2 = '';
+    for (let i = 0; i < 20 && !want2; i++) {
+      const t = await draftSeason(td, tds, { formation }); const r = { ...t.row, id: DB.seasons.length + 1, verified: null }; DB.seasons.push(r);
+      const v = await call(verH, { season_id: r.id }); n++;
+      const c2 = E.trCtxRow(DB.seasons.find(x => x.id === r.id)); c2.r = { ...t.q, xp: t.q.pts };
+      if (v.j.verified === true) want2 = E.trEval(c2).sort().join(); }
+    got2 = DB.trophies.filter(x => x.device_id === td && x.src === 'srv').map(x => x.trophy).sort().join();
+    ok('verify: сезон із трофеями — усі його сезонні трофеї записано сервером', !!want2 && got2 === want2, `сезонів ${n}, ${want2}`); }
   await tamper('seed reused', r => {}, false);
   // two parallel verifications of seasons that share one seed (both read used_by = null): the atomic claim lets exactly one through
   { const sr = await draftSeason(device, devSec, { formation });
