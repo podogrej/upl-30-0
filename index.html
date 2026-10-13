@@ -4076,13 +4076,13 @@ const DRAFT_BAD='Сервер не прийняв цей склад. Сезон 
 const draftOk=()=>(S.format==='classic'||S.format==='oneclub')&&['normal','hard','practice'].includes(S.mode)&&!S.pickMode;
 function draftNew(extra){
   const d={seed:0,year:oppYear(),seq:[],ptr:0,sid:null,note:''};
-  const local=note=>{d.seed=Math.floor(Math.random()*2147483647);d.note=note;};
+  const local=note=>{d.seed=extra&&extra.ws?extra.ws:Math.floor(Math.random()*2147483647);d.note=note;};   // a challenge keeps its wheel even without the server
   const era=eraOf(),club=S.format==='oneclub'?S.club:null;
   d.wait=(async()=>{
     if(ONLINE&&(extra||draftOk())){
       const ctl=typeof AbortController!=='undefined'?new AbortController():null;const tm=setTimeout(()=>ctl&&ctl.abort(),6000);
       try{const r=await _fetch('/api/seed',{method:'POST',headers:{'Content-Type':'application/json'},signal:ctl&&ctl.signal,
-          body:JSON.stringify({draft:'start',device_id:deviceId(),secret:devSecret(),format:S.format,mode:S.mode,era,club,formation:S.formation,league:lgAttempt(),...(extra||{})})});
+          body:JSON.stringify({draft:'start',device_id:deviceId(),secret:devSecret(),format:S.format,mode:S.mode,era,club,formation:S.formation,league:lgAttempt(),...(extra?{fl_id:extra.fl_id,chal_id:extra.chal_id}:{})})});
         const j=await r.json().catch(()=>({}));
         if(r.ok&&j.seed_id){d.seed=+j.ws;d.sid=j.seed_id;d.year=+j.year||d.year;}else local(r.status===429&&j.error?j.error:DRAFT_NOTE);}
       catch(e){local(DRAFT_NOTE);}finally{clearTimeout(tm);}
@@ -4090,13 +4090,15 @@ function draftNew(extra){
     d.seq=wheelFor(d.seed,S.format,era,club);d.wait=null;})();
   return d;}
 // squad locked on "Play season": the server checks it against the wheel and fixes the season seed. null: play locally, not verified
-async function draftLock(d){
+async function draftLock(d,retry=2){
   if(!d||!d.sid||!ONLINE)return null;
   const ctl=typeof AbortController!=='undefined'?new AbortController():null;const tm=setTimeout(()=>ctl&&ctl.abort(),8000);
   try{const r=await _fetch('/api/seed',{method:'POST',headers:{'Content-Type':'application/json'},signal:ctl&&ctl.signal,
       body:JSON.stringify({draft:'lock',device_id:deviceId(),secret:devSecret(),seed_id:d.sid,xi:S.slots.map(s=>({id:s.player.id,slot:s.slot,c:s.player.club,y:s.player.y}))})});
-    const j=await r.json().catch(()=>({}));if(r.ok&&j.seed)return j;d.note=r.status===429&&j.error?j.error:r.status>=500?DRAFT_NOTE:DRAFT_BAD;return null;}
-  catch(e){d.note=DRAFT_NOTE;return null;}finally{clearTimeout(tm);}}
+    const j=await r.json().catch(()=>({}));if(r.ok&&j.seed)return j;
+    if(r.status>=500&&retry>0){clearTimeout(tm);return draftLock(d,retry-1);}   // the server may have locked already: same squad, same answer
+    d.note=r.status===429&&j.error?j.error:r.status>=500?DRAFT_NOTE:DRAFT_BAD;return null;}
+  catch(e){clearTimeout(tm);if(retry>0)return draftLock(d,retry-1);d.note=DRAFT_NOTE;return null;}finally{clearTimeout(tm);}}
 let CHAL=null;   // challenge currently opened via link
 // challenger name comes from the player profile (audit V5); legacy rows without player fall back to name
 const chalWho=x=>x&&x.players&&(x.players.name||x.players.anon_name)?pname(x):String((x&&x.name)||'друг').toLowerCase();
@@ -4141,8 +4143,8 @@ function renderChal(){
   document.getElementById('chalGo').onclick=chalStart;
 }
 function chalStart(){
-  const c=CHAL;if(!c)return;S.league=null;S.vd=null;S.result=null;S.format='classic';S.pickMode=false;S.mode=MODES[c.mode]&&c.mode!=='daily'?c.mode:'normal';S.formation=FORMATIONS[c.formation]?c.formation:'4-4-2';
-  S.challenge=c;S.chal=draftNew({chal_id:c.id});S.chal.year=+c.year;
+  const c=CHAL;if(!c)return;S.league=null;S.vd=null;S.result=null;S.format='classic';S.pickMode=false;S.mode=c.mode==='hard'?'hard':'normal';S.formation=FORMATIONS[c.formation]?c.formation:'4-4-2';   // level: same rule as api/_draft.js start
+  S.challenge=c;S.chal=draftNew({chal_id:c.id,ws:+c.seed});S.chal.year=+c.year;
   S.slots=newSlots(S.formation);S.taken=new Set();S.wheel=null;S.rerolls=MODES[S.mode].rerolls;
   document.getElementById('modeLabel').textContent=`Виклик · ${S.formation} · ${MODES[S.mode].name}`;renderDraft();go(2);
 }
@@ -4495,10 +4497,8 @@ function drawCard(r){   // card in site style: UPL navy background, UPL.TV gradi
 document.getElementById('chalOpen').onclick=()=>{const b=document.getElementById('chalBox'),t=document.getElementById('chalOpen');b.hidden=!b.hidden;t.classList.toggle('on',!b.hidden);if(!b.hidden){b.scrollIntoView({behavior:'smooth',block:'center'});const n=document.getElementById('chalName');if(n&&!n.hidden&&!n.value)n.focus();}};
 // ---------- What's new: short player-friendly notes on the latest version (technical log: CHANGELOG.md)
 const WHATSNEW={v:'0.90.2',news:'0.90.2',date:'13.10.2026',items:[
-  ['telegram-plane','Ми в Telegram, Threads і на Трибуні','Внизу головної — посилання на наш канал у Telegram, сторінку в Threads і блог на Трибуні.'],
   ['telegram-plane','Ми в Telegram, Threads і на Трибуні','Посилання внизу головної: канал у Telegram, сторінка в Threads і блог на Трибуні.'],
-  ['shield-star','Чесні таблиці','Колесо тепер крутить сервер. У рекорди й таблиці потрапляють лише сезони зі складом із колеса й зі зв\'язком із сервером.'],
-  ['account-circle','Власне ім\'я — після першого сезону','Своє ім\'я можна обрати, зігравши перший сезон.'],   // news: edition of the items; a release without new items keeps it, so the news dot does not light up again
+  ['shield-star','Чесні таблиці','Колесо тепер крутить сервер. У рекорди й таблиці потрапляють лише сезони зі складом із колеса й зі зв\'язком із сервером.'],   // news: edition of the items; a release without new items keeps it, so the news dot does not light up again
   ['format-list-numbered','«Твої цифри»: віхи й «Клуб 100»','Дати твоїх перших: сезон, титул, 30-0, виліт, і круглі числа сезонів. «Клуб 100» — гравці, з якими ти зіграв 100+ матчів. А в картці гравця з твоєї 11-ки — скільки разів колесо його пропонувало і скільки ти взяв.'],
   ['share-variant','Поділитися цифрами','Твої головні цифри — однією картинкою для Telegram.'],
   ['star','Сортування за рейтингом','Увімкнув «Рейтинги» під час збору складу — гравці йдуть від найсильнішого. В антисезоні, як і раніше, за абеткою.'],
@@ -4760,7 +4760,7 @@ function f5Render(){
 
 document.getElementById('f5Open').onclick=f5Start;
 // audit P2-5: only what tests use; drawCard for card checks, simulate/rerun for fast determinism
-window.__dbg={go,place,em,haptic,seasonHaptic,renderNewTro,TROPHIES,CLUB_REC,trEval,ppXiRow,OC_GEN,ocMine,ocAfter,renderOc,renderOcRes,openOc,acctMerge,get BEST(){return BEST;},get VT_N(){return VT_N;},ic,seasonLabel,boardFetch,boardStale,BOARD_FROM,setFmt,lgRender,lgStale,openTables,boardHtml,oppYear,champModal,drawCard,chalNewGame:(seed,year)=>({seed,year:year||LEAGUE_LEGENDS,seq:wheelSeq(seed),ptr:0}),draftNew,LEAGUE_CULT,LEAGUE_LEGENDS,openTrophies,renderNewTro,renderWheel,posOpts,eraOf,ptsWord,viewHtml,renderPitch,pitchHtml,f5Pitch,F5_FORMS,cardName,clubShort,simulate,shareTextOf,trCtxNow,trAward,trStore,FORMATIONS,GROUP_OF,DATA,TROPHIES,trEval,PERSON,effRating,get S(){return S;},vdOpen,vdEval,vdIndex,vdIdx,VD_LIST,renderVdCard,openVdArchive,vdSt,rerun(seed,year,xi){rnd=mulberry32(seed);const r=simulate(xi||S.slots.map(s=>s.player),MODES[S.mode],year);rnd=Math.random;return {W:r.W,D:r.D,L:r.L,gf:r.gf,ga:r.ga,place:r.place};}};
+window.__dbg={go,place,xpRun,MODES,em,haptic,seasonHaptic,renderNewTro,TROPHIES,CLUB_REC,trEval,ppXiRow,OC_GEN,ocMine,ocAfter,renderOc,renderOcRes,openOc,acctMerge,get BEST(){return BEST;},get VT_N(){return VT_N;},ic,seasonLabel,boardFetch,boardStale,BOARD_FROM,setFmt,lgRender,lgStale,openTables,boardHtml,oppYear,champModal,drawCard,chalNewGame:(seed,year)=>({seed,year:year||LEAGUE_LEGENDS,seq:wheelSeq(seed),ptr:0}),draftNew,LEAGUE_CULT,LEAGUE_LEGENDS,openTrophies,renderNewTro,renderWheel,posOpts,eraOf,ptsWord,viewHtml,renderPitch,pitchHtml,f5Pitch,F5_FORMS,cardName,clubShort,simulate,shareTextOf,trCtxNow,trAward,trStore,FORMATIONS,GROUP_OF,DATA,TROPHIES,trEval,PERSON,effRating,get S(){return S;},vdOpen,vdEval,vdIndex,vdIdx,VD_LIST,renderVdCard,openVdArchive,vdSt,rerun(seed,year,xi){rnd=mulberry32(seed);const r=simulate(xi||S.slots.map(s=>s.player),MODES[S.mode],year);rnd=Math.random;return {W:r.W,D:r.D,L:r.L,gf:r.gf,ga:r.ga,place:r.place};}};
 // Telegram script was requested by the first inline script: init now if it already loaded, otherwise on its load
 if(ONLINE){window.__tgCb=tgInit;if(window.__tgOk)tgInit();}
 })();

@@ -10,13 +10,13 @@ const DRAFT_BAD='Сервер не прийняв цей склад. Сезон 
 const draftOk=()=>(S.format==='classic'||S.format==='oneclub')&&['normal','hard','practice'].includes(S.mode)&&!S.pickMode;
 function draftNew(extra){
   const d={seed:0,year:oppYear(),seq:[],ptr:0,sid:null,note:''};
-  const local=note=>{d.seed=Math.floor(Math.random()*2147483647);d.note=note;};
+  const local=note=>{d.seed=extra&&extra.ws?extra.ws:Math.floor(Math.random()*2147483647);d.note=note;};   // a challenge keeps its wheel even without the server
   const era=eraOf(),club=S.format==='oneclub'?S.club:null;
   d.wait=(async()=>{
     if(ONLINE&&(extra||draftOk())){
       const ctl=typeof AbortController!=='undefined'?new AbortController():null;const tm=setTimeout(()=>ctl&&ctl.abort(),6000);
       try{const r=await _fetch('/api/seed',{method:'POST',headers:{'Content-Type':'application/json'},signal:ctl&&ctl.signal,
-          body:JSON.stringify({draft:'start',device_id:deviceId(),secret:devSecret(),format:S.format,mode:S.mode,era,club,formation:S.formation,league:lgAttempt(),...(extra||{})})});
+          body:JSON.stringify({draft:'start',device_id:deviceId(),secret:devSecret(),format:S.format,mode:S.mode,era,club,formation:S.formation,league:lgAttempt(),...(extra?{fl_id:extra.fl_id,chal_id:extra.chal_id}:{})})});
         const j=await r.json().catch(()=>({}));
         if(r.ok&&j.seed_id){d.seed=+j.ws;d.sid=j.seed_id;d.year=+j.year||d.year;}else local(r.status===429&&j.error?j.error:DRAFT_NOTE);}
       catch(e){local(DRAFT_NOTE);}finally{clearTimeout(tm);}
@@ -24,13 +24,15 @@ function draftNew(extra){
     d.seq=wheelFor(d.seed,S.format,era,club);d.wait=null;})();
   return d;}
 // squad locked on "Play season": the server checks it against the wheel and fixes the season seed. null: play locally, not verified
-async function draftLock(d){
+async function draftLock(d,retry=2){
   if(!d||!d.sid||!ONLINE)return null;
   const ctl=typeof AbortController!=='undefined'?new AbortController():null;const tm=setTimeout(()=>ctl&&ctl.abort(),8000);
   try{const r=await _fetch('/api/seed',{method:'POST',headers:{'Content-Type':'application/json'},signal:ctl&&ctl.signal,
       body:JSON.stringify({draft:'lock',device_id:deviceId(),secret:devSecret(),seed_id:d.sid,xi:S.slots.map(s=>({id:s.player.id,slot:s.slot,c:s.player.club,y:s.player.y}))})});
-    const j=await r.json().catch(()=>({}));if(r.ok&&j.seed)return j;d.note=r.status===429&&j.error?j.error:r.status>=500?DRAFT_NOTE:DRAFT_BAD;return null;}
-  catch(e){d.note=DRAFT_NOTE;return null;}finally{clearTimeout(tm);}}
+    const j=await r.json().catch(()=>({}));if(r.ok&&j.seed)return j;
+    if(r.status>=500&&retry>0){clearTimeout(tm);return draftLock(d,retry-1);}   // the server may have locked already: same squad, same answer
+    d.note=r.status===429&&j.error?j.error:r.status>=500?DRAFT_NOTE:DRAFT_BAD;return null;}
+  catch(e){clearTimeout(tm);if(retry>0)return draftLock(d,retry-1);d.note=DRAFT_NOTE;return null;}finally{clearTimeout(tm);}}
 let CHAL=null;   // challenge currently opened via link
 // challenger name comes from the player profile (audit V5); legacy rows without player fall back to name
 const chalWho=x=>x&&x.players&&(x.players.name||x.players.anon_name)?pname(x):String((x&&x.name)||'друг').toLowerCase();
@@ -75,8 +77,8 @@ function renderChal(){
   document.getElementById('chalGo').onclick=chalStart;
 }
 function chalStart(){
-  const c=CHAL;if(!c)return;S.league=null;S.vd=null;S.result=null;S.format='classic';S.pickMode=false;S.mode=MODES[c.mode]&&c.mode!=='daily'?c.mode:'normal';S.formation=FORMATIONS[c.formation]?c.formation:'4-4-2';
-  S.challenge=c;S.chal=draftNew({chal_id:c.id});S.chal.year=+c.year;
+  const c=CHAL;if(!c)return;S.league=null;S.vd=null;S.result=null;S.format='classic';S.pickMode=false;S.mode=c.mode==='hard'?'hard':'normal';S.formation=FORMATIONS[c.formation]?c.formation:'4-4-2';   // level: same rule as api/_draft.js start
+  S.challenge=c;S.chal=draftNew({chal_id:c.id,ws:+c.seed});S.chal.year=+c.year;
   S.slots=newSlots(S.formation);S.taken=new Set();S.wheel=null;S.rerolls=MODES[S.mode].rerolls;
   document.getElementById('modeLabel').textContent=`Виклик · ${S.formation} · ${MODES[S.mode].name}`;renderDraft();go(2);
 }

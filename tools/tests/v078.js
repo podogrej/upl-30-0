@@ -59,7 +59,7 @@ async function serverChecks(){
    T.check(sv.status===200&&sv.json.verified===true&&sv.json.tr===true,`сезон: перевірено, трофеї записано (${sv.json.verified} ${sv.json.note||''} tr=${sv.json.tr})`);
    T.check(!log.urls.some(u=>/^GET .*\/seasons\?id=eq\./.test(u)),'сезон: без повторного читання рядка (GET seasons?id = 0)');
    // 0.90.1: season trophy ids from the browser are dropped (champ), ms1 kept with one verified season; season trophies are written by the server
-   const srvRow=db.DB.seasons.find(x=>x.id===sv.json.id),ctx=E.trCtxRow(srvRow);ctx.r={...q,xp:q.pts};const wantSrv=[...E.trEval(ctx),...(srvRow.player_id?['ms1']:[])].sort().join();
+   const srvRow=db.DB.seasons.find(x=>x.id===sv.json.id),ctx=E.trCtxRow(srvRow);ctx.r={...q,xp:E.xpOf({xi:srvRow.xi.map(x=>({id:x.id,name:x.n,slot:x.slot,pos:E.GROUP_OF[x.slot],r:+x.r,cc:(E.DATA.clubs.find(k=>k.n===x.c&&k.y===+x.y)||{}).c,y:+x.y})),mode:srvRow.mode,format:srvRow.format,formation:srvRow.formation,year:+srvRow.year})};const wantSrv=[...E.trEval(ctx),...(srvRow.player_id?['ms1']:[])].sort().join();
    T.check(!db.DB.trophies.some(x=>x.device_id===dev&&x.src!=='srv'),'сезон: трофеї сезону й віхи з запиту відкинуто (champ, ms1): їх пише сервер');
    T.check(db.DB.trophies.filter(x=>x.device_id===dev&&x.src==='srv').map(x=>x.trophy).sort().join()===wantSrv,`сезон: сезонні трофеї записав сервер (src srv: ${wantSrv||'немає'})`);
    const ins=log.indexOf('POST seasons'),pv=log.indexOf('PATCH seasons'),ps=log.indexOf('PATCH season_seeds'),pd=log.indexOf('POST daily_results upsert');
