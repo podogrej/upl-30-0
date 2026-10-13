@@ -168,7 +168,7 @@ const res6 = q => ({ w: q.W, d: q.D, l: q.L, pts: q.pts, place: q.place, gf: q.g
   await tamper('рейтинг без штрафу/ноги (r = базовий)', r => { const x = r.xi.find(q => q.r !== q.r0); if (x) x.r = x.r0; else r.xi[0].r += 1; }, false);
   await tamper('очки завищено', r => { r.w += 1; r.d -= 1; r.pts += 2; }, false);
   await tamper('seed не від сервера', r => { r.seed_id = null; }, false);
-  await tamper('гравець не з того клубу', r => { r.xi[1].c = 'Динамо (Київ)'; r.xi[1].y = 1992; }, false);
+  await tamper('гравець не з того клубу', r => { const [c, y] = r.xi[1].c === 'Динамо (Київ)' && +r.xi[1].y === 1992 ? ['Шахтар (Донецьк)', 2010] : ['Динамо (Київ)', 1992]; r.xi[1].c = c; r.xi[1].y = y; }, false);   // always a different club-season than the random wheel gave
   await tamper('слоти переставлено', r => { const t = r.xi[0].slot; r.xi[0].slot = r.xi[10].slot; r.xi[10].slot = t; }, false);
   // PREV_VERSIONS is short: a season from an older site is 'unverifiable', not 'forged'
   await tamper('сезон з сайту 0.56 (до рейтингів v2) — не перевірити (null), не підробка', r => { r.version = '0.56'; }, null);
