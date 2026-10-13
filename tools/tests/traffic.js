@@ -26,6 +26,14 @@ const errH=require(path.join(ROOT,'api','err.js'));
   // no UTM, no referrer: direct
   const B=await openSite({b,db,api});await B.pg.waitForTimeout(2200);
   T.check(db.DB.traffic_events.some(r=>r.event==='visit'&&r.utm_source==null&&r.referrer==='direct'&&r.anon_id!==dev),'без UTM і реферера — direct');
+  // Telegram Mini App without UTM (SDK not loaded yet): recognised by the URL fragment
+  const C=await openSite({b,db,api,hash:'#tgWebAppData=user%3D1&tgWebAppVersion=7.0'});await C.pg.waitForTimeout(2200);
+  const cs=await C.pg.evaluate(()=>JSON.parse(localStorage.getItem('upl30_src')));
+  T.check(cs&&cs.utm_source==='telegram_miniapp','Mini App без UTM — telegram_miniapp ('+(cs&&cs.utm_source)+')');
+  // a format without a server wheel (anti-season) still counts its start
+  const Dp=await openSite({b,db,api});await Dp.pg.waitForTimeout(2200);const dd=await Dp.pg.evaluate(()=>JSON.parse(localStorage.getItem('upl30_device')));
+  await Dp.pg.click('#freeOpen');await Dp.pg.evaluate(()=>window.__dbg.setFmt('anti'));await Dp.pg.click('#startBtn');await Dp.pg.waitForTimeout(800);
+  T.check(db.DB.traffic_events.some(r=>r.anon_id===dd&&r.event==='season_start'),'антисезон: старт сезону теж записано');
   // server rejects junk: bad id, bad event; strips odd characters
   const before=db.DB.traffic_events.length;
   await api['/api/err']({body:{traffic:{anon_id:'nope',event:'visit'}}});await api['/api/err']({body:{traffic:{anon_id:dev,event:'hack'}}});

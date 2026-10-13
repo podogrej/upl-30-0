@@ -40,8 +40,8 @@ module.exports = async (req, res) => {
       return res.status(204).end();
     }
     const b = body(req);
-    if (b.feedback) return await feedback(req, res, b);
-    if (b.traffic) return await traffic(req, res, b.traffic);   // feedback has its own fb limit, so page errors don't block it
+    if (b.feedback) return await feedback(req, res, b);   // feedback has its own fb limit, so page errors don't block it
+    if (b.traffic) return await traffic(req, res, b.traffic);   // own trf limit as well
     if (await rateLimit(req, res, 'err')) return;
     const rows = (Array.isArray(b.errors) ? b.errors.slice(0, 5) : []).filter(e => e && e.msg).map(e => ({
       version: cut(b.version, 12), msg: cut(e.msg, 300), src: cut(e.src, 200), line: int(e.line), col: int(e.col), stack: cut(e.stack, 1500),

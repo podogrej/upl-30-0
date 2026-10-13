@@ -18,9 +18,9 @@
 Отслеживание источников трафика (просьба владельца 13.10): Threads, Telegram, Трибуна. Игроку ничего не видно, поэтому в `WHATSNEW` пункта нет.
 
 **Игра**
-- Первый источник устройства (`upl30_src` в localStorage, первый заход важнее последнего): `utm_source/utm_medium/utm_campaign` из адреса (в нижнем регистре), иначе hostname реферера, иначе `telegram_miniapp` в Mini App, иначе `direct`.
+- Первый источник устройства (`upl30_src` в localStorage, первый заход важнее последнего): `utm_source/utm_medium/utm_campaign` из адреса (в нижнем регистре), иначе hostname реферера, иначе `telegram_miniapp` в Mini App (по адресу, не дожидаясь SDK), иначе `direct`. `season_start` — на любом старте, включая форматы без серверного колеса.
 - События по одному на устройство: `visit` (первый заход), `season_start` (первый старт драфта или «Виклику дня»), `season_finish` (первый сохранённый сезон). Отправка — `/api/err {traffic}`.
-- Vercel Web Analytics: скрипт `/_vercel/insights/script.js` только на основном адресе; начнёт работать, когда Analytics включат в проекте Vercel (сейчас 404).
+- Vercel Web Analytics: скрипт `/_vercel/insights/script.js` только на основном адресе, не в Mini App, адрес без фрагмента (`beforeSend`: токены входа и initData не уходят); начнёт работать, когда Analytics включат в проекте Vercel (сейчас 404).
 
 **Сервер**: `/api/err` пишет `traffic_events` с ключом сервера (метки чистятся до `[a-z0-9_.:-]`, ≤ 64 символа), лимит `trf` 10 в минуту на устройство.
 
