@@ -201,7 +201,7 @@ async function verifyById(id, row) {
   // verdict and the server-computed fields in one PATCH (retry-safe: the same values every time)
   await sb(`seasons?id=eq.${id}`, { method: 'PATCH', prefer: 'return=minimal', body: { verified: v, verify_note: String(note).slice(0, 200), ...(v === true && fix ? fix : {}) } });
   if (v === true && fix) row = { ...row, ...fix };
-  if (v === true && sim) await putTrophies(row, sim).catch(e => console.error('trophies', e.message));
+  if (v === true && sim && !row.practice) await putTrophies(row, sim).catch(e => console.error('trophies', e.message));
   if (v === true && seedRow) await syncDaily({ ...row, verified: true }, { ...seedRow, used_by: id }, true);
   if (v === true && seedRow && seedRow.vd_day) await vdLink(row, seedRow, id).catch(e => console.error('vd', e.message));
   // friends league attempt and chat leagues are independent; a chat league failure never fails the verification

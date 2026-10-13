@@ -81,55 +81,76 @@ const E = require(path.join(ROOT, 'lib', 'engine.js'));
 // squad for E.run built the same way as api/verify.js, incl. club code and season (chemistry)
 const SX = xi => xi.map(x => ({ id: x.id, name: x.n, slot: x.slot, pos: E.GROUP_OF[x.slot], r: x.r, cc: (E.DATA.clubs.find(c => c.n === x.c && c.y === +x.y) || {}).c, y: +x.y }));
 const seedH = require(path.join(ROOT, 'api', 'seed.js')), verH = require(path.join(ROOT, 'api', 'verify.js'));
+const { xiHash } = require(path.join(ROOT, 'api', '_lib.js')), { WIN } = require(path.join(ROOT, 'api', '_draft.js'));
 const call = (h, body) => new Promise(res => { h({ method: 'POST', body }, { status(c) { this.c = c; return this; }, json(j) { res({ c: this.c, j }); } }); });
+const canon = id => (E.DATA.alias && E.DATA.alias[id]) || id;
+const card = (c, p, slot) => ({ n: p[0], id: p[5], slot, r: E.effRating(p, slot), r0: p[2], c: c.n, y: c.y });
 
-// honest squad: 4-3-3, each slot gets the first pool player eligible there (with foot if present, to cover it too)
-function honestXi(formation) {
-  E.setFormat('classic');
-  const used = new Set(), xi = [];
-  for (const slot of E.FORMATIONS[formation].slots) {
-    let pick = null;
-    for (const c of E.DATA.clubs) { for (const p of c.pl) { if (used.has(p[5])) continue; const r = E.effRating(p, slot);
-      if (r != null && (!['LB', 'RB', 'LW', 'RW'].includes(slot) || (E.DATA.foot || {})[p[5]])) { pick = { c, p, r }; break; } } if (pick) break; }
-    used.add(pick.p[5]);
-    xi.push({ n: pick.p[0], id: pick.p[5], slot, r: pick.r, r0: pick.p[2], c: pick.c.n, y: pick.c.y });
+// honest squad from a server wheel (idea of tools/wheel_window.js): one pick per wheel stop, first free player that fits an open slot
+function wheelXi(ws, formation, format = 'classic', era = 'all', club = null) {
+  E.setFormat(format);
+  const seq = E.wheelFor(ws, format, era, club), slots = E.FORMATIONS[formation].slots.map(slot => ({ slot, x: null })), taken = new Set();
+  for (let k = 0; k < seq.length && slots.some(s => !s.x); k++) {
+    const c = E.DATA.clubs[seq[k]];
+    for (const p of c.pl) {
+      if (taken.has(canon(p[5]))) continue;
+      const s = slots.find(q => !q.x && E.effRating(p, q.slot) != null);
+      if (s) { s.x = card(c, p, s.slot); taken.add(canon(p[5])); break; }
+    }
   }
-  return xi;
+  return slots.every(s => s.x) ? slots.map(s => s.x) : null;
 }
+const lockXi = xi => xi.map(x => ({ id: x.id, slot: x.slot, c: x.c, y: x.y }));
+// full honest flow as the site does it: draft start -> squad from the wheel -> lock -> season row with the locked seed
+async function draftSeason(dev, secret, o = {}) {
+  const a = { format: 'classic', mode: 'normal', era: 'all', formation: '4-3-3', ...o };
+  delete a.xi;
+  const st = await call(seedH, { draft: 'start', device_id: dev, secret, ...a });
+  if (st.c !== 200) return { st };
+  const era = a.chal_id ? 'all' : a.era, xi = o.xi || wheelXi(st.j.ws, st.j.formation, a.format, era, a.club || null);
+  const lk = await call(seedH, { draft: 'lock', device_id: dev, secret, seed_id: st.j.seed_id, xi: lockXi(xi) });
+  if (lk.c !== 200) return { st, lk, xi };
+  const q = E.run({ xi: SX(xi), mode: st.j.mode, format: a.format, year: st.j.year, seed: lk.j.seed });
+  const row = { device_id: dev, version: E.VERSION, mode: st.j.mode, format: a.format, formation: st.j.formation, year: st.j.year, seed: lk.j.seed, seed_id: st.j.seed_id, xi,
+    w: q.W, d: q.D, l: q.L, pts: q.pts, place: q.place, gf: q.gf, ga: q.ga,
+    ...(era !== 'all' ? { era } : {}), ...(st.j.mode === 'practice' ? { practice: true } : {}), ...(a.format === 'oneclub' ? { club: a.club } : {}) };
+  return { st, lk, xi, q, row };
+}
+const res6 = q => ({ w: q.W, d: q.D, l: q.L, pts: q.pts, place: q.place, gf: q.gf, ga: q.ga });
 (async () => {
-  const device = crypto.randomUUID(), formation = '4-3-3', year = E.LEAGUE_LEGENDS;   // classic opponents are the Legends League
-  const xi = honestXi(formation);
-  const s = await call(seedH, { device_id: device, xi, formation, mode: 'normal', format: 'classic', year });
-  const sim = E.run({ xi: SX(xi), mode: 'normal', format: 'classic', year, seed: s.j.seed });
-  const legit = { device_id: device, version: E.VERSION, mode: 'normal', format: 'classic', formation, year, seed: s.j.seed, seed_id: s.j.seed_id, xi,
-    w: sim.W, d: sim.D, l: sim.L, pts: sim.pts, place: sim.place, gf: sim.gf, ga: sim.ga };
+  const device = crypto.randomUUID(), devSec = 'legit-secret-0123456789abcd', formation = '4-3-3', year = E.LEAGUE_LEGENDS;   // classic opponents are the Legends League
+  const L0 = await draftSeason(device, devSec, { formation });
+  const xi = L0.xi, legit = L0.row;
   let bad = 0;
-  const tamper = async (name, fn, expect) => {
-    const r = JSON.parse(JSON.stringify(legit)); r.id = DB.seasons.length + 1; r.verified = null; fn(r); DB.seasons.push(r);
+  const ok = (name, cond, extra = '') => { if (!cond) bad++; console.log(`${cond ? '✓' : '✗'} ${name}${extra ? ' (' + extra + ')' : ''}`); };
+  ok('draft: старт і фіксація чесного складу з колеса, результат сервера = симуляція', !!xi && L0.lk.c === 200 && JSON.stringify(L0.lk.j.res) === JSON.stringify(res6(L0.q)), `${L0.st.c}/${L0.lk && L0.lk.c} ${JSON.stringify(L0.lk && L0.lk.j)}`);
+  const tamper = async (name, fn, expect, base = legit) => {
+    const r = JSON.parse(JSON.stringify(base)); r.id = DB.seasons.length + 1; r.verified = null; fn(r); DB.seasons.push(r);
     if (name !== 'seed reused') DB.season_seeds.forEach(x => { x.used_by = null; });
     const x = await call(verH, { season_id: r.id }); const v = x.j.verified;
     const pass = v === expect; if (!pass) bad++;
     console.log(`${pass ? '✓' : '✗'} ${name}: verified=${v} (${x.j.note})`);
+    return r;
   };
   const foot = xi.find(x => ['LB', 'RB', 'LW', 'RW'].includes(x.slot));
-  await tamper('чесний сезон', r => {}, true);
+  const honest = await tamper('чесний сезон', r => {}, true);
+  // season trophies are written by the server after verification (src 'srv'), the same conditions as the site
+  { const st = DB.seasons.find(x => x.id === honest.id), c = E.trCtxRow(st); c.r = { ...L0.q, xp: L0.q.pts };
+    const want = E.trEval(c).sort().join(), got = DB.trophies.filter(x => x.device_id === device && x.src === 'srv').map(x => x.trophy).sort().join();
+    ok('verify: сервер сам записав сезонні трофеї (src srv), ті самі, що рахує сайт', got === want && DB.trophies.filter(x => x.device_id === device).every(x => x.src === 'srv'), `${got.split(',').filter(Boolean).length} шт.: ${got}`); }
   await tamper('seed reused', r => {}, false);
   // two parallel verifications of seasons that share one seed (both read used_by = null): the atomic claim lets exactly one through
-  { const sr = await call(seedH, { device_id: device, xi, formation, mode: 'normal', format: 'classic', year });
-    const q = E.run({ xi: SX(xi), mode: 'normal', format: 'classic', year, seed: sr.j.seed });
-    const mk = () => { const r = JSON.parse(JSON.stringify(legit)); r.id = DB.seasons.length + 1; r.verified = null; Object.assign(r, { seed: sr.j.seed, seed_id: sr.j.seed_id, w: q.W, d: q.D, l: q.L, pts: q.pts, place: q.place, gf: q.gf, ga: q.ga }); DB.seasons.push(r); return r; };
+  { const sr = await draftSeason(device, devSec, { formation });
+    const mk = () => { const r = JSON.parse(JSON.stringify(sr.row)); r.id = DB.seasons.length + 1; r.verified = null; DB.seasons.push(r); return r; };
     const ra = mk(), rb = mk();
     const [xa, xb] = await Promise.all([call(verH, { season_id: ra.id }), call(verH, { season_id: rb.id })]);
     const won = [xa, xb].filter(x => x.j.verified === true), lost = [xa, xb].filter(x => x.j.verified === false);
-    const seedRow = DB.season_seeds.find(x => x.id === sr.j.seed_id);
-    const okRace = won.length === 1 && lost.length === 1 && /seed уже використано/.test(lost[0].j.note) && seedRow && [ra.id, rb.id].includes(+seedRow.used_by) && DB.seasons.filter(x => x.verified === true && x.seed_id === sr.j.seed_id).length === 1;
-    if (!okRace) bad++;
-    console.log(`${okRace ? '✓' : '✗'} два сезони на один seed одночасно: один перевірено, другий «seed уже використано» (${xa.j.verified}/${xb.j.verified}, ${xa.j.note} / ${xb.j.note})`);
-    DB.seasons.forEach(x => { if (x.seed_id === sr.j.seed_id) x.verified = null; });
+    const seedRow = DB.season_seeds.find(x => x.id === sr.st.j.seed_id);
+    const okRace = won.length === 1 && lost.length === 1 && /seed уже використано/.test(lost[0].j.note) && seedRow && [ra.id, rb.id].includes(+seedRow.used_by) && DB.seasons.filter(x => x.verified === true && x.seed_id === sr.st.j.seed_id).length === 1;
+    ok(`два сезони на один seed одночасно: один перевірено, другий «seed уже використано» (${xa.j.verified}/${xb.j.verified}, ${xa.j.note} / ${xb.j.note})`, okRace);
+    DB.seasons.forEach(x => { if (x.seed_id === sr.st.j.seed_id) x.verified = null; });
     const again = await call(verH, { season_id: won.length ? (xa.j.verified === true ? ra.id : rb.id) : ra.id });
-    const okAgain = again.j.verified === true;
-    if (!okAgain) bad++;
-    console.log(`${okAgain ? '✓' : '✗'} повторна перевірка того самого сезону, що взяв seed, лишається чинною (${again.j.verified})`);
+    ok(`повторна перевірка того самого сезону, що взяв seed, лишається чинною (${again.j.verified})`, again.j.verified === true);
   }
   await tamper('рейтинг піднято до 99', r => { r.xi[0].r = 99; }, false);
   await tamper('рейтинг без штрафу/ноги (r = базовий)', r => { const x = r.xi.find(q => q.r !== q.r0); if (x) x.r = x.r0; else r.xi[0].r += 1; }, false);
@@ -137,7 +158,7 @@ function honestXi(formation) {
   await tamper('seed не від сервера', r => { r.seed_id = null; }, false);
   await tamper('гравець не з того клубу', r => { r.xi[1].c = 'Динамо (Київ)'; r.xi[1].y = 1992; }, false);
   await tamper('слоти переставлено', r => { const t = r.xi[0].slot; r.xi[0].slot = r.xi[10].slot; r.xi[10].slot = t; }, false);
-  // PREV_VERSIONS is empty: a season from an older site is 'unverifiable', not 'forged'
+  // PREV_VERSIONS is short: a season from an older site is 'unverifiable', not 'forged'
   await tamper('сезон з сайту 0.56 (до рейтингів v2) — не перевірити (null), не підробка', r => { r.version = '0.56'; }, null);
   await tamper('підробка з сайту 0.56 — не перевірено (null)', r => { r.version = '0.56'; r.xi[0].r = 99; }, null);
   await tamper('старша версія 0.49 — не перевірити (null)', r => { r.version = '0.49'; }, null);
@@ -146,22 +167,28 @@ function honestXi(formation) {
   await tamper('сезон з сайту 0.65 — не перевірити (null)', r => { r.version = '0.65'; }, null);
   await tamper('підробка з сайту 0.62 — не перевірено (null)', r => { r.version = '0.62'; r.xi[0].r = 99; }, null);
   await tamper('сезон з сайту 0.61 — не перевірити (null)', r => { r.version = '0.61'; }, null);
-  // classic seeded under LEAGUE_CULT (former cult-clubs opponents)
-  { const sc = await call(seedH, { device_id: device, xi, formation, mode: 'normal', format: 'classic', year: E.LEAGUE_CULT });
-    const q = E.run({ xi: SX(xi), mode: 'normal', format: 'classic', year: E.LEAGUE_CULT, seed: sc.j.seed });
-    const cult = r => Object.assign(r, { year: E.LEAGUE_CULT, seed: sc.j.seed, seed_id: sc.j.seed_id, w: q.W, d: q.D, l: q.L, pts: q.pts, place: q.place, gf: q.gf, ga: q.ga });
+  // classic against cult clubs (former opponents) on a Legends wheel: result recomputed honestly, only the year is wrong
+  { const q = E.run({ xi: SX(xi), mode: 'normal', format: 'classic', year: E.LEAGUE_CULT, seed: legit.seed });
+    const cult = r => Object.assign(r, { year: E.LEAGUE_CULT }, res6(q));
     await tamper('класика з підробленою старою версією проти культових клубів — не перевірено (аудит P1-2)', r => { cult(r); r.version = '0.64'; }, null);
-    await tamper('класика 0.64 проти культових клубів без виклику другу — ні', r => { cult(r); }, false);
-    await tamper('антисезон проти «Ліги легенд» — ні', r => { cult(r); r.format = 'anti'; r.year = E.LEAGUE_LEGENDS; }, false); }
-  // era (seasons.era, once the column exists): squad only from that era's club-seasons
-  { const early = Math.min(...legit.xi.map(x => x.y));
-    await tamper(`епоха «Сучасність», а в складі сезон ${early}`, r => { r.era = 'y2015'; }, early >= 2015);
-    await tamper('епоха «Усі роки» — як без епохи', r => { r.era = 'all'; }, true);
-    const late = Math.max(...legit.xi.map(x => x.y));
-    await tamper(`десятиліття «90-ті», а в складі сезон ${late}`, r => { r.era = 'd1990'; }, late <= 1999);
-    await tamper(`десятиліття «2020-ті», а в складі сезон ${early}`, r => { r.era = 'd2020'; }, early >= 2020);
-    await tamper(`десятиліття «2000-ні» (${early}–${late})`, r => { r.era = 'd2000'; }, early >= 2000 && late <= 2009);
-    await tamper('невідома епоха', r => { r.era = 'y1900'; }, false); }
+    await tamper('класика проти культових клубів на колесі «Ліги легенд» — ні', r => { cult(r); }, false);
+    await tamper('антисезон на колесі класики — ні', r => { cult(r); r.format = 'anti'; }, false); }
+  // era: the season's era must be the wheel's era; the wheel of an era only offers that era's club-seasons, lock refuses others
+  await tamper('епоха сезону «Сучасність», колесо — «Усі роки»', r => { r.era = 'y2015'; }, false);
+  await tamper('епоха «Усі роки» — як без епохи', r => { r.era = 'all'; }, true);
+  await tamper('невідома епоха', r => { r.era = 'y1900'; }, false);
+  { const e2 = await draftSeason(device, devSec, { formation, era: 'd2000' });
+    ok('draft епохи «2000-ні»: усі клуб-сезони складу з 2000–2009', !!e2.row && e2.xi.every(x => x.y >= 2000 && x.y <= 2009), e2.xi && e2.xi.map(x => x.y).join(','));
+    if (e2.row) {
+      await tamper('десятиліття «2000-ні»: чесний сезон з колеса епохи', r => {}, true, e2.row);
+      await tamper('колесо «2000-ні», сезон записано як «Усі роки»', r => { delete r.era; }, false, e2.row);
+      await tamper('колесо «2000-ні», сезон записано як «90-ті»', r => { r.era = 'd1990'; }, false, e2.row); }
+    const st = await call(seedH, { draft: 'start', device_id: device, secret: devSec, format: 'classic', mode: 'normal', era: 'd2000', formation });
+    const ex = wheelXi(st.j.ws, formation, 'classic', 'd2000'), used = new Set(ex.map(x => canon(x.id)));
+    let old = null; for (const c of E.DATA.clubs) { if (c.y >= 2000) continue; const p = c.pl.find(p => !used.has(canon(p[5])) && E.effRating(p, ex[0].slot) != null); if (p) { old = card(c, p, ex[0].slot); break; } }
+    ex[0] = old;
+    const lk = await call(seedH, { draft: 'lock', device_id: device, secret: devSec, seed_id: st.j.seed_id, xi: lockXi(ex) });
+    ok(`lock: колесо «2000-ні», у складі ${old.c} ${old.y} — 400`, lk.c === 400 && /епоха/.test(lk.j.error), `${lk.c} ${lk.j.error}`); }
   await tamper('r0 підроблено (показ у таблицях і на картці)', r => { r.xi[0].r0 = 99; }, false);
   await tamper('r0 немає (старий клієнт) — пропускаємо', r => { r.xi.forEach(x => { delete x.r0; }); }, true);
   // seed issued for one set of conditions, season saved with another
@@ -170,29 +197,50 @@ function honestXi(formation) {
   await tamper('seed для іншого режиму', r => { r.mode = 'hard'; }, false);
   await tamper('seed для іншого року суперників', r => { r.year = E.LEAGUE_CULT; }, false);
   await tamper('позначка 30-0 без 30 перемог', r => { r.perfect = true; }, false);
-  // one person under two ids (DATA.alias) counts as a duplicate player even if the seed is valid and the recompute matches
+  await tamper('сезон записано як тренування, колесо — звичайне', r => { r.practice = true; }, false);
+  // one person under two ids (DATA.alias) counts as a duplicate player: lock refuses it, and verify too if such a squad were ever locked
   { const place = (id, used) => { for (const c of E.DATA.clubs) for (const p of c.pl) if (p[5] === id) for (let i = 0; i < xi.length; i++) {
-      if (used.has(i)) continue; const r = E.effRating(p, xi[i].slot); if (r != null) return { i, x: { n: p[0], id, slot: xi[i].slot, r, r0: p[2], c: c.n, y: c.y } }; } };
+      if (used.has(i)) continue; const r = E.effRating(p, xi[i].slot); if (r != null) return { i, x: card(c, p, xi[i].slot) }; } };
     let pair = null;
     for (const [d, k] of Object.entries(E.DATA.alias || {})) { const a = place(d, new Set()); const b = a && place(k, new Set([a.i])); if (a && b) { pair = [a, b]; break; } }
-    if (!pair) { bad++; console.log('✗ немає пари псевдонімів для перевірки'); }
+    if (!pair) ok('немає пари псевдонімів для перевірки', false);
     else {
       const x2 = xi.map(x => ({ ...x })); for (const q of pair) x2[q.i] = q.x;
-      const s2 = await call(seedH, { device_id: device, xi: x2, formation, mode: 'normal', format: 'classic', year });
-      const q = E.run({ xi: SX(x2), mode: 'normal', format: 'classic', year, seed: s2.j.seed });
-      await tamper(`одна людина двічі: ${pair[0].x.id} = ${pair[1].x.id}`, r => { Object.assign(r, { xi: x2, seed: s2.j.seed, seed_id: s2.j.seed_id, w: q.W, d: q.D, l: q.L, pts: q.pts, place: q.place, gf: q.gf, ga: q.ga }); }, false);
+      const sa = await call(seedH, { draft: 'start', device_id: device, secret: devSec, format: 'classic', mode: 'normal', formation });
+      const la = await call(seedH, { draft: 'lock', device_id: device, secret: devSec, seed_id: sa.j.seed_id, xi: lockXi(x2) });
+      ok(`lock: одна людина двічі (${pair[0].x.id} = ${pair[1].x.id}) — 400`, la.c === 400 && /двічі/.test(la.j.error), `${la.c} ${la.j.error}`);
+      const srow = DB.season_seeds.find(x => x.id === sa.j.seed_id);
+      Object.assign(srow, { xi_hash: xiHash(x2), locked_at: new Date().toISOString(), res: {} });   // as if a lock had let it through
+      const q = E.run({ xi: SX(x2), mode: 'normal', format: 'classic', year, seed: +srow.seed });
+      await tamper(`verify: одна людина двічі: ${pair[0].x.id} = ${pair[1].x.id}`, r => { Object.assign(r, { xi: x2, seed: +srow.seed, seed_id: srow.id }, res6(q)); }, false);
     } }
-  // opponent year outside the format: seed issued for a weak real season with no matching challenge
+  // opponent year outside the format: a real weak season is allowed only for a replay of an old challenge (its wheel seed carries the year)
   const weak = E.YEARS16[0];
-  const sw = await call(seedH, { device_id: device, xi, formation, mode: 'normal', format: 'classic', year: weak });
-  await tamper('класика проти справжнього сезону без виклику', r => { r.year = weak; r.seed = sw.j.seed; r.seed_id = sw.j.seed_id; const q = E.run({ xi: SX(xi), mode: 'normal', format: 'classic', year: weak, seed: sw.j.seed });
-    Object.assign(r, { w: q.W, d: q.D, l: q.L, pts: q.pts, place: q.place, gf: q.gf, ga: q.ga }); }, false);
-  DB.challenges.push({ id: 'newchal1', year: weak, formation, created_at: '2026-10-02T10:00:00Z' });   // audit P1-1: a new challenge does not unlock a weak season
-  await tamper('той самий сезон, є лише НОВИЙ виклик з цим роком — ні', r => { r.year = weak; r.seed = sw.j.seed; r.seed_id = sw.j.seed_id; const q = E.run({ xi: SX(xi), mode: 'normal', format: 'classic', year: weak, seed: sw.j.seed });
-    Object.assign(r, { w: q.W, d: q.D, l: q.L, pts: q.pts, place: q.place, gf: q.gf, ga: q.ga }); }, false);
-  DB.challenges.push({ id: 'abcdefgh', year: weak, formation, created_at: '2026-09-25T10:00:00Z' });
-  await tamper('той самий сезон, але є старий «Виклик другу» з цим роком', r => { r.year = weak; r.seed = sw.j.seed; r.seed_id = sw.j.seed_id; const q = E.run({ xi: SX(xi), mode: 'normal', format: 'classic', year: weak, seed: sw.j.seed });
-    Object.assign(r, { w: q.W, d: q.D, l: q.L, pts: q.pts, place: q.place, gf: q.gf, ga: q.ga }); }, true);
+  { const q = E.run({ xi: SX(xi), mode: 'normal', format: 'classic', year: weak, seed: legit.seed });
+    const wk = r => Object.assign(r, { year: weak }, res6(q));
+    await tamper('класика проти справжнього сезону без виклику', wk, false);
+    DB.challenges.push({ id: 'newchal1', seed: 777, year: weak, formation, mode: 'normal', created_at: '2026-10-02T10:00:00Z' });   // audit P1-1: a new challenge does not unlock a weak season
+    await tamper('той самий сезон, є лише НОВИЙ виклик з цим роком — ні', wk, false);
+    DB.challenges.push({ id: 'abcdefgh', seed: 424242, year: weak, formation, mode: 'normal', created_at: '2026-09-25T10:00:00Z' });
+    await tamper('той самий сезон, є старий «Виклик другу» з цим роком, але колесо не з виклику — ні', wk, false); }
+  { const oc = await draftSeason(device, devSec, { chal_id: 'abcdefgh' });
+    ok('draft за старим викликом: колесо, схема й рік суперників — з виклику', oc.st.c === 200 && oc.st.j.ws === 424242 && oc.st.j.year === weak && oc.st.j.formation === formation && !!oc.row, `${oc.st.j.ws} ${oc.st.j.year}`);
+    if (oc.row) await tamper('відповідь на старий «Виклик другу» з реальним сезоном — перевірено', r => {}, true, oc.row); }
+  // seeds of tabs older than 0.90.1 ('legacy', no server wheel): the season is not verified (null), not a forgery
+  { const lg = await call(seedH, { device_id: device, secret: devSec, xi, formation, mode: 'normal', format: 'classic', year });
+    const q = E.run({ xi: SX(xi), mode: 'normal', format: 'classic', year, seed: lg.j.seed });
+    ok('старий запит seed (без draft) — рядок kind legacy', (DB.season_seeds.find(x => x.id === lg.j.seed_id) || {}).kind === 'legacy');
+    await tamper('сезон на seed без серверного колеса (legacy) — null', r => { Object.assign(r, { seed: lg.j.seed, seed_id: lg.j.seed_id }, res6(q)); }, null); }
+  // one club and practice: honest drafts pass, the club / practice flag must match the wheel
+  { const club = E.DATA.clubs.find(c => c.c && E.DATA.clubs.filter(x => x.c === c.c).length > 5).c;
+    const oc = await draftSeason(device, devSec, { format: 'oneclub', club, formation });
+    ok(`draft «Один клуб» (${club}): склад лише з цього клубу`, !!oc.row && oc.xi.every(x => (E.DATA.clubs.find(c => c.n === x.c && c.y === x.y) || {}).c === club), oc.lk ? `${oc.lk.c} ${oc.lk.j.error || ''}` : `${oc.st.c} ${oc.st.j.error}`);
+    if (oc.row) { await tamper('«Один клуб»: чесний сезон', r => {}, true, oc.row);
+      await tamper('«Один клуб»: сезон записано на інший клуб', r => { r.club = 'zzz'; }, false, oc.row); }
+    const pr = await draftSeason(device, devSec, { mode: 'practice', formation });
+    if (pr.row) { await tamper('тренування: чесний сезон', r => {}, true, pr.row);
+      await tamper('тренування на колесі, сезон записано як звичайний', r => { r.practice = false; }, false, pr.row); }
+    else ok('draft тренування', false, JSON.stringify(pr.st.j)); }
 
   // daily challenge: browser inserted inflated points into daily_results -> server overwrites with the verified season; a forgery without a season gets no verified flag
   const day = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Kyiv', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
