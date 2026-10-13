@@ -36,7 +36,7 @@ async function start(b, dev, pid) {
     const [c] = await sb(`challenges?id=eq.${id}&select=id,seed,formation,year,mode`) || [];
     if (!c) return err(404, 'Виклику не знайдено.');
     chal = c.id; format = 'classic'; era = 'all'; club = null; ws = +c.seed; formation = c.formation; year = +c.year;
-    mode = DRAFT_MODES.includes(c.mode) && c.mode !== 'practice' ? c.mode : 'normal';
+    mode = c.mode === 'hard' ? 'hard' : 'normal';   // same rule as chalStart in src/challenge.js
   }
   if (!['classic', 'oneclub'].includes(format)) return err(400, 'format?');
   if (!DRAFT_MODES.includes(mode)) return err(400, 'mode?');

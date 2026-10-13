@@ -126,11 +126,13 @@ function stored(E, row, xi, names, sim) {
 }
 
 // Season trophies are written by the server from the verified season (src 'srv'): the same TROPHIES conditions as the site,
-// on the simulated season and the stored squad. xP is not recomputed (too slow): the browser's xp is used, so only the rest of an xP condition is checked.
+// on the simulated season, the stored squad and the server's own xP.
 async function putTrophies(row, sim) {
   const E = engine();
   const c = E.trCtxRow(row);
-  c.r = { ...sim, xp: Number.isFinite(+row.xp) && row.xp != null ? Math.max(0, Math.min(90, +row.xp)) : sim.pts };
+  // pre-season xP recomputed here (same runs as the site, ~0.2 s), not taken from the browser
+  c.r = { ...sim, xp: E.xpOf({ xi: (row.xi || []).map(x => ({ id: x.id, name: x.n, slot: x.slot, pos: E.GROUP_OF[x.slot], r: +x.r, cc: (E.DATA.clubs.find(k => k.n === x.c && k.y === +x.y) || {}).c, y: +x.y })),
+    mode: row.mode, format: row.format, formation: row.formation, year: +row.year }) };
   const ids = E.trEval(c);
   // season-count milestones from the DB (this season is already verified): also restores ones a device never reported
   if (row.player_id) {

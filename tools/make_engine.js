@@ -89,7 +89,7 @@ if (extraN.length !== 5) throw new Error('extra statements not found: ' + extraN
 extraN.forEach(n => { for (const x of freeNames(n)) visit(x); });
 const extra = extraN.map(n => code.slice(n.start, n.end));
 // names used by the hand-written tail below (dailySetupFor, run, module.exports) must be in the engine
-['LEAGUE_CULT', 'LEAGUE_LEGENDS', 'LEAGUES', 'YEARS16', 'ERAS', 'hashStr', 'mulberry32', 'pickWeighted'].forEach(visit);
+['LEAGUE_CULT', 'LEAGUE_LEGENDS', 'LEAGUES', 'YEARS16', 'ERAS', 'hashStr', 'mulberry32', 'pickWeighted', 'XP_N'].forEach(visit);
 const idxs = [...new Set([...need].map(k => decl[k].idx))].sort((a, b) => a - b);
 let out = idxs.map(i => code.slice(body[i].start, body[i].end)).join('\n');
 const pool = fs.readFileSync(ROOT + '/src/pool.json', 'utf8');
@@ -118,7 +118,15 @@ function run({ xi, mode, format, year, seed }){
   rnd = Math.random; S.format = 'classic';
   return r;
 }
-module.exports = { VERSION: '${VERSION}', DATA, FORMATIONS, FORMATS, GROUP_OF, MODES, YEARS16, LEAGUE_CULT, LEAGUE_LEGENDS, LEAGUES, ERAS, ANTI_MIN_APPS, effRating, mulberry32, hashStr, dailySetupFor, wheelSeq, wheelFor, run, tierOf, TROPHIES, MILESTONES, trEval, trCtxRow, setFormat: f => { S.format = f; } };
+// pre-season xP, same runs as xpRun in template.html (xs by id, one stream per run): xi = [{id, slot, r, ...}] in slot order
+function xpOf({ xi, mode, format, formation, year }){
+  S.format = format; const xs = xi.slice().sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
+  const base = 'xp|' + year + '|' + mode + '|' + format + '|' + formation + '|' + xs.map(x => x.id).join(','); let sp = 0;
+  try { for (let k = 0; k < XP_N; k++) { rnd = mulberry32(hashStr(base + '|' + k)); sp += simulate(xs, MODES[mode], year, true).pts; } }
+  finally { rnd = Math.random; S.format = 'classic'; }
+  return sp / XP_N;
+}
+module.exports = { VERSION: '${VERSION}', DATA, FORMATIONS, FORMATS, GROUP_OF, MODES, YEARS16, LEAGUE_CULT, LEAGUE_LEGENDS, LEAGUES, ERAS, ANTI_MIN_APPS, effRating, mulberry32, hashStr, dailySetupFor, wheelSeq, wheelFor, run, tierOf, TROPHIES, MILESTONES, trEval, trCtxRow, xpOf, setFormat: f => { S.format = f; } };
 `;
 fs.mkdirSync(ROOT + '/lib', { recursive: true });
 fs.writeFileSync(ROOT + '/lib/engine.js', mod);

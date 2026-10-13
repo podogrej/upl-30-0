@@ -82,6 +82,7 @@ global.fetch = async (url, o = {}) => {
 const E = require(path.join(ROOT, 'lib', 'engine.js'));
 // squad for E.run built the same way as api/verify.js, incl. club code and season (chemistry)
 const SX = xi => xi.map(x => ({ id: x.id, name: x.n, slot: x.slot, pos: E.GROUP_OF[x.slot], r: x.r, cc: (E.DATA.clubs.find(c => c.n === x.c && c.y === +x.y) || {}).c, y: +x.y }));
+const xpRow = s => E.xpOf({ xi: (s.xi || []).map(x => ({ id: x.id, name: x.n, slot: x.slot, pos: E.GROUP_OF[x.slot], r: +x.r, cc: (E.DATA.clubs.find(k => k.n === x.c && k.y === +x.y) || {}).c, y: +x.y })), mode: s.mode, format: s.format, formation: s.formation, year: +s.year });   // server xP (api/verify.js)
 const seedH = require(path.join(ROOT, 'api', 'seed.js')), verH = require(path.join(ROOT, 'api', 'verify.js'));
 const { xiHash } = require(path.join(ROOT, 'api', '_lib.js')), { WIN } = require(path.join(ROOT, 'api', '_draft.js'));
 const call = (h, body) => new Promise(res => { h({ method: 'POST', body }, { status(c) { this.c = c; return this; }, json(j) { res({ c: this.c, j }); } }); });
@@ -137,7 +138,7 @@ const res6 = q => ({ w: q.W, d: q.D, l: q.L, pts: q.pts, place: q.place, gf: q.g
   const foot = xi.find(x => ['LB', 'RB', 'LW', 'RW'].includes(x.slot));
   const honest = await tamper('чесний сезон', r => {}, true);
   // season trophies are written by the server after verification (src 'srv'), the same conditions as the site
-  { const st = DB.seasons.find(x => x.id === honest.id), c = E.trCtxRow(st); c.r = { ...L0.q, xp: L0.q.pts };
+  { const st = DB.seasons.find(x => x.id === honest.id), c = E.trCtxRow(st); c.r = { ...L0.q, xp: xpRow(st) };
     const want = E.trEval(c).sort().join(), got = DB.trophies.filter(x => x.device_id === device && x.src === 'srv').map(x => x.trophy).sort().join();
     ok('verify: сервер сам записав сезонні трофеї (src srv), ті самі, що рахує сайт', got === want && DB.trophies.filter(x => x.device_id === device).every(x => x.src === 'srv'), `${got.split(',').filter(Boolean).length} шт.: ${got}`);
     // a season with at least one trophy (the honest one may earn none), on a fresh device
@@ -145,7 +146,7 @@ const res6 = q => ({ w: q.W, d: q.D, l: q.L, pts: q.pts, place: q.place, gf: q.g
     for (let i = 0; i < 20 && !want2; i++) {
       const t = await draftSeason(td, tds, { formation }); const r = { ...t.row, id: DB.seasons.length + 1, verified: null }; DB.seasons.push(r);
       const v = await call(verH, { season_id: r.id }); n++;
-      const c2 = E.trCtxRow(DB.seasons.find(x => x.id === r.id)); c2.r = { ...t.q, xp: t.q.pts };
+      const c2 = E.trCtxRow(DB.seasons.find(x => x.id === r.id)); c2.r = { ...t.q, xp: xpRow(DB.seasons.find(x => x.id === r.id)) };
       if (v.j.verified === true) want2 = E.trEval(c2).sort().join(); }
     got2 = DB.trophies.filter(x => x.device_id === td && x.src === 'srv').map(x => x.trophy).sort().join();
     ok('verify: сезон із трофеями — усі його сезонні трофеї записано сервером', !!want2 && got2 === want2, `сезонів ${n}, ${want2}`); }

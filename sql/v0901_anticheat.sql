@@ -99,7 +99,8 @@ begin
     if nm is not null and cur.name is distinct from nm then update players set name = nm where id = pid; end if;
     return public.player_json(pid);
   end if;
-  if nm is not null and not exists (select 1 from seasons where player_id = pid and verified is true and not practice) then
+  if nm is not null and not exists (select 1 from name_reserved r where r.name = nm and r.player_id = pid)
+     and not exists (select 1 from seasons where player_id = pid and verified is true and not practice) then
     raise exception 'name_season' using errcode = '22023';
   end if;
   if cur.name_changed_at > now() - interval '30 days' then
