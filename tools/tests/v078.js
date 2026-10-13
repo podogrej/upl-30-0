@@ -17,11 +17,11 @@ const count=(log,re)=>log.filter(k=>re.test(k)).length;
 // in-memory DB for server handlers; official daily seeds are unique per device and day (season_seeds_official_uq)
 const SECRETS={};
 function serverDB(){
-  const db=makeDB({seasons:{auto:'id'},season_seeds:{auto:'id'},daily_results:{auto:'id'},trophies:{pk:['device_id','trophy']},challenges:{}},
+  const db=makeDB({seasons:{auto:'id',onInsert:r=>{r.player_id='p-1';}},season_seeds:{auto:'id'},daily_results:{auto:'id'},trophies:{pk:['device_id','trophy']},challenges:{}},   // player_id as the DB trigger sets it
     {device_ok:a=>{if(SECRETS[a.p_device]==null)SECRETS[a.p_device]=a.p_secret;return SECRETS[a.p_device]===a.p_secret?'p-1':{status:403,body:JSON.stringify({code:'28000',message:'device secret'})};},rate_hit:()=>true,
     api_gate:a=>{if(a.p_secret==null)return {rate:true,player:null,err:null};if(SECRETS[a.p_device]==null)SECRETS[a.p_device]=a.p_secret;return SECRETS[a.p_device]===a.p_secret?{rate:true,player:'p-1',err:null}:{rate:true,player:null,err:'secret'};}});
-  const log=[];
-  global.fetch=async(url,o={})=>{const m=o.method||'GET';log.push(keyOf(m,url)+(m==='POST'&&/on_conflict/.test(url)?' upsert':''));
+  const log=[];log.urls=[];
+  global.fetch=async(url,o={})=>{const m=o.method||'GET';log.push(keyOf(m,url)+(m==='POST'&&/on_conflict/.test(url)?' upsert':''));log.urls.push(m+' '+decodeURIComponent(url));
     if(m==='POST'&&/\/season_seeds/.test(url)){const b=JSON.parse(o.body);if(b.official&&db.DB.season_seeds.some(x=>x.official&&x.daily&&x.device_id===b.device_id&&x.day===b.day))
       return {ok:false,status:409,text:async()=>JSON.stringify({code:'23505'}),json:async()=>({code:'23505'})};}
     return db.fetch(url,o);};
@@ -54,17 +54,20 @@ async function serverChecks(){
    const q=E.run({xi:SX(xi),mode:'daily',format:'classic',year:D.year,seed:s1.json.seed});
    const row={mode:'daily',format:'classic',formation:D.formation,year:D.year,seed:s1.json.seed,seed_id:s1.json.seed_id,version:E.VERSION,xi,day:DAY,practice:false,
      w:q.W,d:q.D,l:q.L,pts:q.pts,place:q.place,gf:q.gf,ga:q.ga,perfect:q.W===30,nickname:'tester'};
-   log.length=0;const sv=await callApi(saveH,{kind:'season',device_id:dev,secret:sec,row,trophies:['ms1','champ','bad id!']});
+   log.length=0;log.urls.length=0;const sv=await callApi(saveH,{kind:'season',device_id:dev,secret:sec,row,trophies:['ms1','champ','bad id!']});
    const order=log.join(' | ');
    T.check(sv.status===200&&sv.json.verified===true&&sv.json.tr===true,`сезон: перевірено, трофеї записано (${sv.json.verified} ${sv.json.note||''} tr=${sv.json.tr})`);
-   T.check(count(log,/GET seasons/)===0,'сезон: без повторного читання рядка (GET seasons = 0)');
-   T.check(db.DB.trophies.filter(x=>x.device_id===dev).map(x=>x.trophy).sort().join()==='champ,ms1','сезон: трофеї з запиту — лише коректні id');
+   T.check(!log.urls.some(u=>/^GET .*\/seasons\?id=eq\./.test(u)),'сезон: без повторного читання рядка (GET seasons?id = 0)');
+   // 0.90.1: season trophy ids from the browser are dropped (champ), ms1 kept with one verified season; season trophies are written by the server
+   const srvRow=db.DB.seasons.find(x=>x.id===sv.json.id),ctx=E.trCtxRow(srvRow);ctx.r={...q,xp:E.xpOf({xi:srvRow.xi.map(x=>({id:x.id,name:x.n,slot:x.slot,pos:E.GROUP_OF[x.slot],r:+x.r,cc:(E.DATA.clubs.find(k=>k.n===x.c&&k.y===+x.y)||{}).c,y:+x.y})),mode:srvRow.mode,format:srvRow.format,formation:srvRow.formation,year:+srvRow.year})};const wantSrv=[...E.trEval(ctx),...(srvRow.player_id?['ms1']:[])].sort().join();
+   T.check(!db.DB.trophies.some(x=>x.device_id===dev&&x.src!=='srv'),'сезон: трофеї сезону й віхи з запиту відкинуто (champ, ms1): їх пише сервер');
+   T.check(db.DB.trophies.filter(x=>x.device_id===dev&&x.src==='srv').map(x=>x.trophy).sort().join()===wantSrv,`сезон: сезонні трофеї записав сервер (src srv: ${wantSrv||'немає'})`);
    const ins=log.indexOf('POST seasons'),pv=log.indexOf('PATCH seasons'),ps=log.indexOf('PATCH season_seeds'),pd=log.indexOf('POST daily_results upsert');
    T.check(ins>=0&&ins<pv&&ins<ps&&pd>pv&&pd>ps,'сезон: порядок вставка → вердикт і seed used_by → результат дня ('+order+')');
    T.check(count(log,/daily_results/)===1&&count(log,/PATCH daily_results/)===0,'сезон дня: результат дня одним upsert, без PATCH');
    const seedRow=db.DB.season_seeds.find(x=>x.id===s1.json.seed_id),dr=db.DB.daily_results.filter(x=>x.device_id===dev);
    T.check(+seedRow.used_by===+sv.json.id&&dr.length===1&&dr[0].verified===true&&dr[0].pts===q.pts&&dr[0].nickname==='tester',`seed used_by = сезон, у таблиці дня один перевірений рядок (${dr.length}, ${dr[0]&&dr[0].pts} оч.)`);
-   T.check(log.length===7,`сезон дня зі збереженням трофеїв: ${log.length} запитів до бази (до 0.78 — 10, і ще 4 на окремий запит трофеїв; api_gate: ліміт і секрет одним викликом)`);
+   const want=7+(srvRow.player_id?1:0);T.check(log.length===want,`сезон дня зі збереженням трофеїв: ${log.length} запитів до бази, очікувано ${want} (0.90: 7; з 0.90.1 трофеї пише сервер замість браузера, +1 підрахунок перевірених сезонів для віх, коли є гравець; до 0.78 — 10, і ще 4 на окремий запит трофеїв)`);
    // repeated verify keeps the name in the row (anonymised after deletion) and rewrites numbers
    dr[0].nickname='calm_owl';dr[0].pts=90;log.length=0;await callApi(verH,{season_id:sv.json.id});
    T.check(dr[0].nickname==='calm_owl'&&dr[0].pts===q.pts&&count(log,/PATCH daily_results/)===1,'повторний verify: числа переписано, ім\'я в рядку не чіпаємо');
@@ -72,8 +75,8 @@ async function serverChecks(){
    const sv2=await callApi(saveH,{kind:'season',device_id:dev,secret:sec,row});
    T.check(sv2.json.verified===false,'той самий seed удруге — не перевірено ('+sv2.json.note+')');
    // old tabs: separate trophies request still works
-   const old=await callApi(saveH,{kind:'trophies',device_id:dev,secret:sec,ids:['perfect']});
-   T.check(old.status===200&&db.DB.trophies.some(x=>x.device_id===dev&&x.trophy==='perfect'),'старий шлях kind: trophies працює');
+   const old=await callApi(saveH,{kind:'trophies',device_id:dev,secret:sec,ids:['perfect','f5play']});
+   T.check(old.status===200&&old.json.n===1&&db.DB.trophies.some(x=>x.device_id===dev&&x.trophy==='f5play')&&!db.DB.trophies.some(x=>x.device_id===dev&&x.trophy==='perfect'&&x.src!=='srv'),'старий шлях kind: trophies працює (f5play записано, сезонний perfect відкинуто)');
    const wrong=await callApi(saveH,{kind:'season',device_id:dev,secret:'other-secret-0123456789',row,trophies:['hack']});
    T.check(wrong.status===401&&!db.DB.trophies.some(x=>x.trophy==='hack'),'чужий секрет: ні сезону, ні трофеїв (401)');
   }
@@ -106,7 +109,7 @@ async function siteChecks(){
   const rpc={player_hello:()=>js(players[0]),link_account:()=>({...js(players[0]),merge_offer:null}),device_ok:()=>'p-me',rate_hit:()=>true,legacy_writes_open:()=>false,
     trophy_stats:()=>({players:50,t:{}}),player_profile:()=>({public_id:'andr2345',name:'andrii',since:'2026-09-02T10:00:00Z',seasons:3,champions:1,perfect:0,best_classic:70,win_pct:60,best:{},worst:{},trophies:[{id:'champ',at:'2026-10-01'}],streak_best:0,streak_now:0}),
     fl_mine:()=>[],tg_leagues_mine:()=>[]};
-  const db=makeDB({seasons:{auto:'id',onInsert:r=>{r.verified=null;r.player_id='p-me';}},season_seeds:{auto:'id'},daily_results:{auto:'id'},user_state:{pk:['user_id']},trophies:{pk:['device_id','trophy']}},rpc);
+  const db=makeDB({seasons:{auto:'id',onInsert:r=>{r.verified=null;r.player_id='p-me';}},season_seeds:{onInsert:r=>{r.id=crypto.randomUUID();}},daily_results:{auto:'id'},user_state:{pk:['user_id']},trophies:{pk:['device_id','trophy']}},rpc);
   db.DB.players=players;
   let C=[];const cdb={DB:db.DB,handle:(m,url,b,h)=>{C.push(keyOf(m,url)+' '+decodeURIComponent(new URL(url).search));return db.handle(m,url,b,h);}};
   const api={'/api/seed':async r=>{C.push('API seed');return callApi(seedH,r.body);},'/api/save':async r=>{C.push('API save:'+r.body.kind+(r.body.trophies?' +trophies':''));return callApi(saveH,r.body);},

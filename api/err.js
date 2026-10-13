@@ -9,8 +9,18 @@ const int = v => (Number.isFinite(+v) ? Math.max(0, Math.min(1e7, Math.round(+v)
 // a string or a Buffer. Stored as a short client_errors row ("CSP <directive> <blocked>"), so the daily digest groups them with other errors.
 const EXT = /^(chrome|moz|safari(-web)?)-extension:/;
 const noQuery = u => { const m = /^([a-z]+:\/\/[^?#]*)/i.exec(String(u || '')); return m ? m[1] : null; };
-function cspRow(req) {
-  let b = req.body;
+// the Vercel Node runtime leaves req.body undefined for application/csp-report: read the raw stream first (1.5 s cap), req.body as a fallback
+function rawText(req) {
+  if (!req || typeof req.on !== 'function' || req.readableEnded) return Promise.resolve('');
+  return new Promise(res => {
+    const parts = []; let n = 0; const done = () => { clearTimeout(t); res(Buffer.concat(parts).toString('utf8')); };
+    const t = setTimeout(done, 1500);
+    req.on('data', c => { n += c.length; if (n <= 20000) parts.push(Buffer.from(c)); });
+    req.on('end', done); req.on('error', done);
+  });
+}
+function cspRow(req, raw) {
+  let b = raw || req.body;
   if (Buffer.isBuffer(b)) b = b.toString('utf8');
   if (typeof b === 'string') b = JSON.parse(b.slice(0, 20000));
   const r = b && b['csp-report'];
@@ -25,7 +35,7 @@ module.exports = async (req, res) => {
   try {
     if ((req.query && req.query.csp) || /csp-report/.test(String(req.headers['content-type'] || ''))) {
       if (await rateLimit(req, res, 'csp')) return;
-      const row = cspRow(req);
+      const row = cspRow(req, await rawText(req));
       if (row) await sb('client_errors', { method: 'POST', body: [row], prefer: 'return=minimal' });
       return res.status(204).end();
     }

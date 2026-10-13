@@ -137,7 +137,7 @@ const leagueFree = s => !!s && s.verified === true && s.format === 'classic' && 
 async function dayBest(devices, day) {
   if (!devices.length) return null;
   const seeds = await sb(`season_seeds?device_id=in.(${devices.join(',')})&day=eq.${day}&daily=is.false&league=is.true&format=eq.classic&mode=eq.normal&year=eq.${legends()}`
-    + `&select=id&order=created_at.asc,id.asc&limit=${DAY_N}`) || [];
+    + `&select=id&order=locked_at.asc.nullsfirst,created_at.asc,id.asc&limit=${DAY_N}`) || [];   // order of locks (0.90.1); older seeds have no lock time
   if (!seeds.length) return null;
   const rows = await sb(`seasons?seed_id=in.(${seeds.map(s => s.id).join(',')})&verified=is.true&format=eq.classic&mode=eq.normal&practice=is.false&day=is.null&fl_id=is.null&era=is.null`
     + `&select=id,w,d,l,place,gf,ga,xp,formation,year,seed_id,created_at`) || [];

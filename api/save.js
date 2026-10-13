@@ -6,12 +6,12 @@
 //                                         off?: wheel offers, 11 arrays of player ids aligned with row.xi (each contains its picked player);
 //                                         stored in season_offers (no anon access), invalid ones are dropped without failing the season
 //   kind 'trophies'    {ids:[...]}     -> first trophy unlocks -> {ok}
-//   kind 'challenge'   {row}           -> friend challenge -> {id}
-//   kind 'chal_result' {row}           -> accepted challenge result -> {ok}
+//   kind 'challenge'   {season_id, row:{id, name}} -> friend challenge from an own verified season with a server wheel -> {id}
+//   kind 'chal_result' -> ignored (the result is written when the squad is locked, api/_draft.js)
 // Daily challenge result is not written here: the server writes it from the verified season (api/verify.js, syncDaily).
 // 503 {fallback:true}: DB has no device_ok yet (SQL 0.53 not applied). Clients 0.73.1+ do not write directly any more (sql/v054_close_writes.sql).
 const { sb, gate, tgUser, body } = require('./_device.js');
-const { verifyById } = require('./verify.js');
+const { verifyById, seasonTrophy } = require('./verify.js');
 const { fail } = require('./_lib.js');
 
 const int = (v, lo, hi) => { const n = Number(v); return Number.isInteger(n) && n >= lo && n <= hi ? n : null; };
@@ -68,6 +68,8 @@ async function insert(table, row, qs = '', prefer = 'return=representation') {
   }
 }
 
+// browser trophy claims: season trophies and milestones are dropped (the server writes them from the verified season); the rest (series, 5x5, friend leagues) as before
+const claimable = ids => ids.filter(id => !seasonTrophy(id));
 const putTrophies = (ids, device_id, tg) => insert('trophies', ids.map(trophy => ({ device_id, trophy, ...tg })), '?on_conflict=device_id,trophy', 'resolution=ignore-duplicates,return=minimal');
 
 const handler = async (req, res) => {
@@ -89,32 +91,32 @@ const handler = async (req, res) => {
       const [ins] = await insert('seasons', { ...row, device_id, ...tg }, '?select=*') || [];
       if (!ins || !ins.id) return res.status(500).json({ error: 'no id' });
       stage = 'verify';
-      const ids = trophyIds(b.trophies);
       const off = b.off != null ? offersOf(b.off, row.xi) : null;
       const putOff = off ? insert('season_offers', { season_id: ins.id, player_id: ins.player_id || null, off }, '', 'return=minimal').then(() => true, () => false) : undefined;
-      const [v, tr, of] = await Promise.all([verifyById(ins.id, ins), ids.length ? putTrophies(ids, device_id, tg).then(() => true, () => false) : undefined, putOff]);
+      const [v, of] = await Promise.all([verifyById(ins.id, ins), putOff]);   // verification first: milestone claims count this season
+      const ids = claimable(trophyIds(b.trophies));
+      const tr = ids.length ? await putTrophies(ids, device_id, tg).then(() => true, () => false) : true;   // true: nothing left for the browser to resend
       return res.status(200).json({ id: ins.id, verified: v.verified, note: v.note, fl: v.fl, tr, off: of });
     }
     if (b.kind === 'trophies') {   // 5x5, retro awards, older tabs
-      const ids = trophyIds(b.ids);
-      if (!ids.length) return res.status(400).json({ error: 'ids?' });
-      await putTrophies(ids, device_id, tg);
+      const ids = claimable(trophyIds(b.ids));
+      if (ids.length) await putTrophies(ids, device_id, tg);
       return res.status(200).json({ ok: true, n: ids.length });
     }
-    if (b.kind === 'challenge') {
-      const sc = score(r), id = String(r.id || '');
-      if (!sc || !/^[A-Za-z0-9]{6,12}$/.test(id) || !int(r.seed, 1, 2 ** 53) || !str(r.formation, 8) || !str(r.mode, 12) || int(r.year, 1900, 9999) == null) return res.status(400).json({ error: 'challenge?' });
-      try { await insert('challenges', { id, device_id, name: str(r.name, 40), seed: +r.seed, formation: str(r.formation, 8), year: +r.year, mode: str(r.mode, 12), ...sc }, '', 'return=minimal'); }
+    if (b.kind === 'challenge') {   // from a verified free-play season with a server wheel: wheel seed, rules and result come from the DB
+      const id = String(r.id || ''), sid = +b.season_id;
+      if (!/^[A-Za-z0-9]{6,12}$/.test(id) || !Number.isInteger(sid) || sid < 1) return res.status(400).json({ error: 'challenge?' });
+      const [se] = await sb(`seasons?id=eq.${sid}&select=id,device_id,player_id,verified,practice,format,era,fl_id,day,mode,formation,year,seed_id,w,d,l,pts,place,gf,ga`) || [];
+      const mine = se && (String(se.device_id) === device_id.toLowerCase() || (dev.player && se.player_id === dev.player));
+      if (!mine || se.verified !== true || se.practice || se.format !== 'classic' || se.era || se.fl_id || se.day || !se.seed_id) return res.status(400).json({ error: 'challenge?' });
+      const [sd] = await sb(`season_seeds?id=eq.${encodeURIComponent(se.seed_id)}&kind=eq.draft&select=wheel_seed`) || [];
+      if (!sd) return res.status(400).json({ error: 'challenge?' });
+      try { await insert('challenges', { id, device_id, name: str(r.name, 40), seed: +sd.wheel_seed, formation: se.formation, year: se.year, mode: se.mode,
+        w: se.w, d: se.d, l: se.l, pts: se.pts, place: se.place, gf: se.gf, ga: se.ga }, '', 'return=minimal'); }
       catch (e) { if (e.status === 409 || /23505/.test(e.body || '')) return res.status(409).json({ error: 'id taken' }); throw e; }
       return res.status(200).json({ id });
     }
-    if (b.kind === 'chal_result') {
-      const sc = score(r), cid = String(r.challenge_id || '');
-      if (!sc || !/^[A-Za-z0-9]{6,12}$/.test(cid)) return res.status(400).json({ error: 'result?' });
-      try { await insert('challenge_results', { challenge_id: cid, device_id, name: str(r.name, 40), ...sc }, '?on_conflict=challenge_id,device_id', 'resolution=ignore-duplicates,return=minimal'); }
-      catch (e) { if (/23503/.test(e.body || '')) return res.status(400).json({ error: 'no challenge' }); throw e; }
-      return res.status(200).json({ ok: true });
-    }
+    if (b.kind === 'chal_result') return res.status(200).json({ ok: true, ignored: true });   // older tabs: the result is written on lock (api/_draft.js)
     res.status(400).json({ error: 'kind?' });
   } catch (e) {
     fail(res, `save ${stage}`, e);

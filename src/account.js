@@ -154,8 +154,8 @@ function nameCheck(v){const s=nameKey(v);if(!s)return {name:null};const n=[...s]
   if(nameBad(s))return {err:'bad'};
   return {name:s};}
 const NAME_MSG={len:`Ім'я — від ${NAME_MIN} до ${NAME_MAX} символів.`,chars:'Лише латинські літери a–z, цифри, «_» і «.».',edge:'Починається й закінчується літерою або цифрою.',bad:"Таке ім'я не підходить. Обери інше.",
-  taken:"Це ім'я вже зайняте. Спробуй інше.",wait:d=>`Змінити ім'я знову можна з ${fmtLong(d)}.`,fail:"Не вдалося зберегти. Спробуй ще раз."};
-function nameErrOf(e){const m=/name_(len|chars|edge|bad|taken|wait)(?::(\d{4}-\d{2}-\d{2}))?/.exec(String(e&&e.message||e));return m?(m[1]==='wait'?NAME_MSG.wait(m[2]):NAME_MSG[m[1]]):NAME_MSG.fail;}
+  taken:"Це ім'я вже зайняте. Спробуй інше.",season:"Власне ім'я можна обрати після першого зіграного сезону.",wait:d=>`Змінити ім'я знову можна з ${fmtLong(d)}.`,fail:"Не вдалося зберегти. Спробуй ще раз."};
+function nameErrOf(e){const m=/name_(len|chars|edge|bad|taken|wait|season)(?::(\d{4}-\d{2}-\d{2}))?/.exec(String(e&&e.message||e));return m?(m[1]==='wait'?NAME_MSG.wait(m[2]):NAME_MSG[m[1]]):NAME_MSG.fail;}
 // first name from Telegram/Google or the name field: DB transliterates to Latin, taken -> numbered (andrii7), too short -> stay anonymous
 async function playerAutoName(p,raw){
   try{return await playerRpc('set_player_auto_name',{p_raw:String(raw||'').slice(0,60)});}catch(e){return p;}}
