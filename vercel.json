@@ -1,5 +1,5 @@
 {
-  "ignoreCommand": "p=${VERCEL_GIT_PREVIOUS_SHA:-HEAD^};git cat-file -e $p^{commit}||exit 1;git diff --quiet $p HEAD -- . ':!*.md' ':!docs' ':!tools' ':!sql' ':!data' ':!.github' ':!.claude'",
+  "ignoreCommand": "p=${VERCEL_GIT_PREVIOUS_SHA:-HEAD^};[ \"$p\" = \"$VERCEL_GIT_COMMIT_SHA\" ]&&exit 1;git cat-file -e $p^{commit}||exit 1;git diff --quiet $p HEAD -- . ':!*.md' ':!docs' ':!tools' ':!sql' ':!data' ':!.github' ':!.claude'",
   "crons": [
     {
       "path": "/api/cron",
