@@ -13,6 +13,17 @@
 - Номер версии в подвале и `VERSION` в `lib/engine.js` должны совпадать: сервер проверяет сезон только той версией движка, которой он сыгран. Поэтому `index.html` и `lib/engine.js` всегда заливаются вместе.
 - При каждом выпуске обновляется `WHATSNEW` — это текст для игроков о последней версии.
 
+## 0.90.2 «Ми в соцмережах» — 13.10.2026
+
+Три круглі кнопки-посилання під рядком «Відгук і баги / Telegram-бот» у подвалі (тільки на головній, як і блок розділів): канал Telegram (`t.me/upl_nostalgia`), Threads (`@upl30_game`), блог на Трибуні. Логотипу Трибуни немає, тому третя кнопка — нейтральна іконка газети (MDI `newspaper-variant-outline`).
+
+**Игра**
+- `src/template.html`: блок `ft-soc-icons` (кнопки 44×44, `target="_blank" rel="noopener"`); ссылка на канал в Telegram Mini App открывается через `tgOpen`, как ссылка на бота. Строка `ft-cred` упоминает Threads. `WHATSNEW` — новый пункт, `news:'0.90.2'`.
+- `src/icons/make_icons.py` → `src/icons.js`: добавлены `threads` (Font Awesome Free, CC BY 4.0), `newspaper` и `telegram-plane` (MDI `send-outline`, Apache 2.0: значок канала без круга, чтобы не путать с кнопкой бота).
+- `tools/tests/visual_expect.json`: `home`, `faq`, `news` (там виден полный подвал).
+
+**Залить**: `index.html`, `lib/engine.js`, `src/`, `tools/tests/visual_expect.json`, `CHANGELOG.md`. SQL и сервер не менялись.
+
 ## 0.90.1 «Античит одним выпуском» — 13.10.2026
 
 Весь остаток серии `docs/anticheat_090.md` (0.90.1–0.90.3) одним выпуском по решению владельца 13.10. Защита сайта (CSP) остаётся в режиме отчётов: сбор отчётов на проде не работал, см. ниже.
