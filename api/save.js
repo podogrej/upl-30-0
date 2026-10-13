@@ -68,15 +68,8 @@ async function insert(table, row, qs = '', prefer = 'return=representation') {
   }
 }
 
-// browser trophy claims: season trophies are dropped (the server writes them from the verified season); a season-count milestone (msN)
-// only with N verified seasons of this player; the rest (series, 5x5, friend leagues) as before
-async function claimable(ids, pid, device_id) {
-  ids = ids.filter(id => !seasonTrophy(id));
-  const need = Math.max(0, ...ids.map(id => /^ms\d+$/.test(id) ? +id.slice(2) : 0));
-  if (!need) return ids;
-  const n = (await sb(`seasons?${pid ? 'player_id=eq.' + pid : 'device_id=eq.' + device_id}&verified=is.true&practice=is.false&select=id&limit=${Math.min(need, 1000)}`) || []).length;
-  return ids.filter(id => !/^ms\d+$/.test(id) || +id.slice(2) <= n);
-}
+// browser trophy claims: season trophies and milestones are dropped (the server writes them from the verified season); the rest (series, 5x5, friend leagues) as before
+const claimable = ids => ids.filter(id => !seasonTrophy(id));
 const putTrophies = (ids, device_id, tg) => insert('trophies', ids.map(trophy => ({ device_id, trophy, ...tg })), '?on_conflict=device_id,trophy', 'resolution=ignore-duplicates,return=minimal');
 
 const handler = async (req, res) => {
@@ -101,12 +94,12 @@ const handler = async (req, res) => {
       const off = b.off != null ? offersOf(b.off, row.xi) : null;
       const putOff = off ? insert('season_offers', { season_id: ins.id, player_id: ins.player_id || null, off }, '', 'return=minimal').then(() => true, () => false) : undefined;
       const [v, of] = await Promise.all([verifyById(ins.id, ins), putOff]);   // verification first: milestone claims count this season
-      const ids = await claimable(trophyIds(b.trophies), ins.player_id || dev.player, device_id);
-      const tr = ids.length ? await putTrophies(ids, device_id, tg).then(() => true, () => false) : undefined;
+      const ids = claimable(trophyIds(b.trophies));
+      const tr = ids.length ? await putTrophies(ids, device_id, tg).then(() => true, () => false) : true;   // true: nothing left for the browser to resend
       return res.status(200).json({ id: ins.id, verified: v.verified, note: v.note, fl: v.fl, tr, off: of });
     }
     if (b.kind === 'trophies') {   // 5x5, retro awards, older tabs
-      const ids = await claimable(trophyIds(b.ids), dev.player, device_id);
+      const ids = claimable(trophyIds(b.ids));
       if (ids.length) await putTrophies(ids, device_id, tg);
       return res.status(200).json({ ok: true, n: ids.length });
     }

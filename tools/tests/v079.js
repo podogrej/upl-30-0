@@ -65,7 +65,7 @@ async function server(){
    const got=async b=>{const r=await call({...base,...b});return D.season_seeds.find(s=>s.id===r.j.seed_id)||{};};
    const dr=b=>got({draft:'start',format:'classic',mode:'normal',...b});
    const k1=await dr({league:true}),k2=await dr({mode:'hard',league:true}),k3=await dr({}),k4=await dr({format:'oneclub',club:require(path.join(ROOT,'lib','engine.js')).DATA.clubs[0].c,league:true}),k5=await dr({era:'d2000',league:true});
-   T.check(k1.kind==='draft'&&k1.league===true&&!k1.official&&!k2.league&&!k3.league&&!k4.league&&!k5.league&&!!k4.id&&!!k5.id,'/api/seed draft start: спроба ліги — лише «Грати» (класика, «Звичайний», усі роки) з позначкою браузера');
+   T.check(k1.kind==='draft'&&!k1.official&&[k1,k2,k3,k4,k5].every(k=>!!k.id&&k.league===false),'/api/seed draft start: старт спробу ліги не витрачає (позначає лок, tools/tests/cheat.js)');
    const old=await got({xi,year:LL,mode:'normal',format:'classic',league:true});
    T.check(old.kind==='legacy'&&!old.league,'/api/seed без draft (вкладки до 0.90.1): спробою ліги не позначається');}
   // Mini App: join a third chat -> today's best of the first 3 attempts is copied in; a browser result is ignored

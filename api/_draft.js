@@ -50,9 +50,8 @@ async function start(b, dev, pid) {
   const mine = pid ? `player_id=eq.${pid}` : `device_id=eq.${dev}`;
   const used = await sb(`season_seeds?${mine}&day=eq.${day}&kind=eq.draft&select=id&limit=${DAY_LIMIT}`) || [];
   if (used.length >= DAY_LIMIT) return err(429, `Ліміт на сьогодні — ${DAY_LIMIT} сезонів. Цей сезон не потрапить у рекорди й таблиці.`);
-  const league = b.league === true && !fl && !chal && format === 'classic' && mode === 'normal' && era === 'all';   // chat-league attempt (api/_league.js)
   const row = { device_id: dev, player_id: pid || null, xi_hash: '', seed: crypto.randomInt(1, 2147483647), day, daily: false, official: false,
-    formation, mode, format, year, kind: 'draft', wheel_seed: ws, era, club, rerolls, fl_id: fl, chal_id: chal, league };
+    formation, mode, format, year, kind: 'draft', wheel_seed: ws, era, club, rerolls, fl_id: fl, chal_id: chal, league: false };
   const [ins] = await sb('season_seeds?select=id', { method: 'POST', prefer: 'return=representation', body: row }) || [];
   return [200, { seed_id: ins && ins.id, ws, rerolls, year, formation, mode }];
 }
@@ -100,7 +99,9 @@ async function lock(b, dev, pid) {
   if (bad) return err(400, bad);
   const sim = D.run({ xi: cards.map(c => ({ id: c.id, name: c.name, slot: c.slot, pos: c.pos, r: c.r, cc: c.cc, y: c.y })), mode: s.mode, format: s.format, year: +s.year, seed: +s.seed });
   const res = { w: sim.W, d: sim.D, l: sim.L, pts: sim.pts, gf: sim.gf, ga: sim.ga, place: sim.place };
-  let [got] = await sb(`season_seeds?id=eq.${id}&locked_at=is.null&select=*`, { method: 'PATCH', prefer: 'return=representation', body: { xi_hash: h, locked_at: new Date().toISOString(), res } }) || [];
+  // a chat-league attempt (api/_league.js dayBest) is spent on lock, not on start: free classic, normal level, all years
+  const league = s.format === 'classic' && s.mode === 'normal' && (s.era || 'all') === 'all' && !s.fl_id && !s.chal_id;
+  let [got] = await sb(`season_seeds?id=eq.${id}&locked_at=is.null&select=*`, { method: 'PATCH', prefer: 'return=representation', body: { xi_hash: h, locked_at: new Date().toISOString(), res, league } }) || [];
   if (!got) { [got] = await sb(`season_seeds?id=eq.${id}&select=*`) || []; return got ? done(got) : err(404, 'seed?'); }   // a parallel lock won
   let fl;
   if (s.fl_id) { try { const n = await sb('rpc/fl_record_seed', { method: 'POST', body: { p_seed: id } }); fl = n == null ? null : +n; } catch (e) { console.error('fl lock', e.message); fl = null; } }

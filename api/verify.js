@@ -132,13 +132,18 @@ async function putTrophies(row, sim) {
   const c = E.trCtxRow(row);
   c.r = { ...sim, xp: Number.isFinite(+row.xp) && row.xp != null ? Math.max(0, Math.min(90, +row.xp)) : sim.pts };
   const ids = E.trEval(c);
+  // season-count milestones from the DB (this season is already verified): also restores ones a device never reported
+  if (row.player_id) {
+    const n = (await sb(`seasons?player_id=eq.${row.player_id}&verified=is.true&practice=is.false&select=id&limit=${Math.max(...E.MILESTONES.map(m => m[0]))}`) || []).length;
+    for (const [k] of E.MILESTONES) if (n >= k) ids.push('ms' + k);
+  }
   if (!ids.length) return;
   await sb('trophies?on_conflict=device_id,trophy', { method: 'POST', prefer: 'resolution=ignore-duplicates,return=minimal',
     body: ids.map(trophy => ({ device_id: row.device_id, trophy, src: 'srv', ...(row.tg_user_id ? { tg_user_id: row.tg_user_id, tg_name: row.tg_name || null } : {}) })) });
 }
-// season trophies: only the server writes them (putTrophies); a browser claim of one of these ids is dropped
+// season trophies and season-count milestones: only the server writes them (putTrophies); a browser claim of one of these ids is dropped
 let SEASON_IDS = null;
-const seasonTrophy = id => (SEASON_IDS || (SEASON_IDS = new Set(engine().TROPHIES.filter(t => t.t).map(t => t.id)))).has(id);
+const seasonTrophy = id => /^ms\d+$/.test(id) || (SEASON_IDS || (SEASON_IDS = new Set(engine().TROPHIES.filter(t => t.t).map(t => t.id)))).has(id);
 
 // daily challenge result is written by the server from the verified season (browser numbers in daily_results are not trusted).
 // Only the first official attempt of the day (seed official) and only the season that seed was assigned to (used_by).

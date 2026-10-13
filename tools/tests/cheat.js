@@ -415,8 +415,11 @@ const res6 = q => ({ w: q.W, d: q.D, l: q.L, pts: q.pts, place: q.place, gf: q.g
     const t2 = await call(saveH, { kind: 'season', device_id: me, secret: mySecret, row: sx.row, trophies: [STR, 'f5hat'] });
     ok('save сезону з трофеями: сезонний трофей з браузера відкинуто, решту записано', t2.j.verified === true && t2.j.tr === true && !DB.trophies.some(x => x.device_id === me && x.trophy === STR && x.src !== 'srv') && mine() === 'f5hat,f5play', mine());
     const nv = DB.seasons.filter(x => x.device_id === me && x.verified === true && !x.practice).length;
-    const t3 = await call(saveH, { kind: 'trophies', device_id: me, secret: mySecret, ids: ['ms1', 'ms' + (nv + 1), 'ms1000'] });
-    ok(`save: віхи — ms1 записано, ms${nv + 1} і ms1000 ні (перевірених сезонів ${nv})`, t3.c === 200 && t3.j.n === 1 && mine() === 'f5hat,f5play,ms1', mine()); }
+    const t3 = await call(saveH, { kind: 'trophies', device_id: me, secret: mySecret, ids: ['ms1', 'ms1000'] });
+    const srvMs = DB.trophies.filter(x => x.device_id === me && x.src === 'srv' && /^ms\d+$/.test(x.trophy)).map(x => x.trophy).sort().join();
+    ok(`save: віхи від браузера відкинуто, сервер записав їх сам за перевіреними сезонами (${nv}: ${srvMs})`, t3.c === 200 && t3.j.n === 0 && mine() === 'f5hat,f5play' && srvMs === 'ms1' + (nv >= 5 ? ',ms5' : ''), mine() + ' / ' + srvMs);
+    const sd = DB.season_seeds.find(s => s.id === sx.row.seed_id);
+    ok('лок класики («Звичайний», усі роки) позначає спробу ліги чату, старт — ні', !!sd && sd.league === true, JSON.stringify(sd && sd.league)); }
   // friend challenge: only from an own verified free classic season; wheel, rules and result come from the DB
   { const fakeChal = { id: 'abcDEF23', name: 'Я', seed: 5, formation: '4-4-2', year: E.YEARS16[0], mode: 'hard', w: 30, d: 0, l: 0, pts: 90, place: 1, gf: 99, ga: 0 };
     const ch = await call(saveH, { kind: 'challenge', device_id: me, secret: mySecret, season_id: sv.j.id, row: fakeChal });
