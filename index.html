@@ -1553,6 +1553,9 @@ let S={pending:null,move:null,format:"classic",pickMode:false,freeMode:"normal",
 const STAR_BIAS=0.04;   // strong seasons more often; top 4 of their season x1.5; Dynamo and Shakhtar x0.8 so the star quarter also includes Dnipro, Metalist, Zorya, Chornomorets
 for(const c of DATA.clubs){const r=c.pl.map(p=>p[2]).sort((a,b)=>b-a).slice(0,11);c.q=r.reduce((a,b)=>a+b,0)/r.length;c.w=Math.exp(STAR_BIAS*(c.q-85))*(c.pos<=4&&!isLive(c.y)?1.5:1)*(c.c==='dynamo-kyiv'||c.c==='shakhtar-donetsk'?0.8:1);}
 function pickWeighted(cands,r){if(S.format==='anti'||!STAR_BIAS)return cands[Math.floor(r()*cands.length)];let tot=0;for(const c of cands)tot+=c.w;let x=r()*tot;for(const c of cands){x-=c.w;if(x<=0)return c;}return cands[cands.length-1];}
+// draft wheel from a server wheel seed: 600 weighted picks from the format/era/club pool (indices into DATA.clubs); classic/all equals wheelSeq
+function wheelPoolOf(format,era,club){let cs=DATA.clubs;if(format==='derby')cs=cs.filter(c=>FORMATS.derby.clubs.includes(c.c));else if(format==='oneclub')cs=cs.filter(c=>c.c===club);return !era||era==='all'?cs:cs.filter(c=>inEra(era,c.y));}
+function wheelFor(ws,format,era,club){const prev=S.format;S.format=format==='anti'?'anti':'classic';const pool=wheelPoolOf(format,era,club),r=mulberry32(ws),seq=[];if(pool.length)for(let i=0;i<600;i++)seq.push(DATA.clubs.indexOf(pickWeighted(pool,r)));S.format=prev;return seq;}
 // ---------- day (Kyiv) and local cleanup
 const DAY=kyivDate();
 // cleanup: per-day keys (daily challenge upl30_vd_<day>; daily draft upl30_daily_/upl30_sent_ from older versions) older than 14 days
@@ -1576,10 +1579,7 @@ function eligible(cs){const anti=S.format==="anti";return cs.pl.filter(p=>!S.tak
 function eraOf(){return S.league?S.league.era:S.vd||S.challenge||S.format==='oneclub'?'all':S.era;}
 // ratings are revealed (mode) and not played from memory in friend leagues
 function ratingsOpen(){const m=MODES[S.mode];return !!(m.reveal||m.showRatings)&&!(S.league&&S.league.memory);}   // era of the current game
-function wheelPool(){const e=eraOf();let cs=DATA.clubs;
-  if(S.format==="derby")cs=cs.filter(c=>FORMATS.derby.clubs.includes(c.c));
-  else if(S.format==="oneclub")cs=cs.filter(c=>c.c===S.club);
-  return e==='all'?cs:cs.filter(c=>inEra(e,c.y));}
+function wheelPool(){return wheelPoolOf(S.format,eraOf(),S.club);}
 function isOk(cs,p){return !S.taken.has(canon(p[5]))&&(S.format!=="anti"||p[3]>=ANTI_MIN_APPS)&&!!bestSlot(p);}
 
 // ---------- pool counters (Home, About, format descriptions): computed from DATA, not hardcoded
@@ -4063,7 +4063,7 @@ function lgRender(){const el=document.getElementById('tbChats');if(!el||el.hidde
 // Every free classic game has a wheel seed; after the season a challenge (table challenges) can be created and shared by link.
 const CHAL_ALPH='abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 function chalId(){let s='';const a=new Uint32Array(8);try{crypto.getRandomValues(a);}catch(e){for(let i=0;i<8;i++)a[i]=Math.floor(Math.random()*4e9);}for(const x of a)s+=CHAL_ALPH[x%CHAL_ALPH.length];return s;}
-function wheelSeq(seed){const r=mulberry32(seed);const seq=[];for(let i=0;i<600;i++){const c=pickWeighted(DATA.clubs,r);seq.push(DATA.clubs.indexOf(c));}return seq;}
+const wheelSeq=seed=>wheelFor(seed,'classic','all');
 // new free game: wheel seed and opponents' season are fixed up front so the game can be replayed as a challenge
 function chalNewGame(seed,year){seed=seed||Math.floor(Math.random()*2147483647);return {seed,year:year||LEAGUE_LEGENDS,seq:wheelSeq(seed),ptr:0};}
 let CHAL=null;   // challenge currently opened via link

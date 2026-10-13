@@ -6,7 +6,7 @@ const req = m => { try { return require(m); } catch (e) { return require('/opt/n
 const acorn = req('acorn');
 const walk = req('acorn-walk');
 const ROOT = __dirname + '/..';
-const html = fs.readFileSync(ROOT + '/src/template.html', 'utf8').replace('/*__TROPHIES__*/', '');
+const html = fs.readFileSync(ROOT + '/index.html', 'utf8');   // built page (python3 src/build.py first): trophies and club records are inlined
 // main game script: the IIFE after <script id="pool">
 const start = html.indexOf('<script>\n(function(){');
 const end = html.indexOf('</script>', start);
@@ -18,7 +18,7 @@ body.forEach((n, idx) => {
   if (n.type === 'FunctionDeclaration') decl[n.id.name] = { n, idx };
   if (n.type === 'VariableDeclaration') for (const d of n.declarations) if (d.id.type === 'Identifier') decl[d.id.name] = { n, idx };
 });
-const ROOTS = ['simulate', 'effRating', 'slotPenalty', 'FORMATIONS', 'FORMATS', 'GROUP_OF', 'MODES', 'mulberry32', 'hashStr', 'pickWeighted', 'YEARS16', 'ANTI_MIN_APPS', 'tierOf'];
+const ROOTS = ['simulate', 'effRating', 'slotPenalty', 'FORMATIONS', 'FORMATS', 'GROUP_OF', 'MODES', 'mulberry32', 'hashStr', 'pickWeighted', 'YEARS16', 'ANTI_MIN_APPS', 'tierOf', 'wheelFor', 'TROPHIES', 'trEval', 'trCtxRow', 'MILESTONES'];
 const SKIP = new Set(['DATA', 'S', 'rnd', 'document', 'window', 'BEST']);   // provided by the generated wrapper
 // JS/browser globals the engine may reference; any other unknown name fails the build (instead of a silent ReferenceError on the server)
 const KNOWN = new Set(['Math', 'Object', 'Array', 'Number', 'String', 'Boolean', 'JSON', 'Set', 'Map', 'WeakMap', 'Symbol', 'Date', 'Intl', 'Error', 'RegExp', 'Promise',
@@ -83,8 +83,9 @@ const visit = name => {
 ROOTS.forEach(visit);
 // side-effect statements the engine needs: club-season wheel weights and the daily-challenge mode
 const extraN = body.filter(n => n.type !== 'FunctionDeclaration' && n.type !== 'VariableDeclaration')
-  .filter(n => { const t = code.slice(n.start, n.end); return /^for\(const c of DATA\.clubs\)\{const r=c\.pl/.test(t) || /^MODES\.daily=/.test(t) || /^for\(const f in FORMATIONS\)FORMATIONS\[f\]\.slots=/.test(t); });
-if (extraN.length !== 3) throw new Error('extra statements not found: ' + extraN.length);
+  .filter(n => { const t = code.slice(n.start, n.end); return /^for\(const c of DATA\.clubs\)\{const r=c\.pl/.test(t) || /^MODES\.daily=/.test(t) || /^for\(const f in FORMATIONS\)FORMATIONS\[f\]\.slots=/.test(t)
+    || /^\{const CL=\{\};for\(const c of DATA\.clubs\)/.test(t) || /^if\(typeof CLUB_REC!=='undefined'\)for\(const k of ocClubs\(\)\)/.test(t); });   // + person index and one-club record trophies
+if (extraN.length !== 5) throw new Error('extra statements not found: ' + extraN.length);
 extraN.forEach(n => { for (const x of freeNames(n)) visit(x); });
 const extra = extraN.map(n => code.slice(n.start, n.end));
 // names used by the hand-written tail below (dailySetupFor, run, module.exports) must be in the engine
@@ -108,8 +109,8 @@ function dailySetupFor(day){
   const wr=mulberry32(hashStr("upl30|"+day+"|wheel"));const seq=[];for(let i=0;i<600;i++){const c=pickWeighted(DATA.clubs,wr);seq.push(DATA.clubs.indexOf(c));}
   S.format=prev;return {formation,year,seq};
 }
-// daily challenge attempt wheel: same as wheelSeq in src/challenge.js (classic weights)
-function wheelSeq(seed){const prev=S.format;S.format='classic';const r=mulberry32(seed),seq=[];for(let i=0;i<600;i++)seq.push(DATA.clubs.indexOf(pickWeighted(DATA.clubs,r)));S.format=prev;return seq;}
+// daily challenge attempt wheel: same as wheelSeq in src/challenge.js
+const wheelSeq = seed => wheelFor(seed, 'classic', 'all');
 // replay a season from its seed: xi = [{id, slot, r}] in formation slot order
 function run({ xi, mode, format, year, seed }){
   S.format = format; rnd = mulberry32(seed);
@@ -117,7 +118,7 @@ function run({ xi, mode, format, year, seed }){
   rnd = Math.random; S.format = 'classic';
   return r;
 }
-module.exports = { VERSION: '${VERSION}', DATA, FORMATIONS, FORMATS, GROUP_OF, MODES, YEARS16, LEAGUE_CULT, LEAGUE_LEGENDS, LEAGUES, ERAS, ANTI_MIN_APPS, effRating, mulberry32, hashStr, dailySetupFor, wheelSeq, run, tierOf, setFormat: f => { S.format = f; } };
+module.exports = { VERSION: '${VERSION}', DATA, FORMATIONS, FORMATS, GROUP_OF, MODES, YEARS16, LEAGUE_CULT, LEAGUE_LEGENDS, LEAGUES, ERAS, ANTI_MIN_APPS, effRating, mulberry32, hashStr, dailySetupFor, wheelSeq, wheelFor, run, tierOf, TROPHIES, MILESTONES, trEval, trCtxRow, setFormat: f => { S.format = f; } };
 `;
 fs.mkdirSync(ROOT + '/lib', { recursive: true });
 fs.writeFileSync(ROOT + '/lib/engine.js', mod);

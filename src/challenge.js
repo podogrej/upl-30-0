@@ -2,7 +2,7 @@
 // Every free classic game has a wheel seed; after the season a challenge (table challenges) can be created and shared by link.
 const CHAL_ALPH='abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 function chalId(){let s='';const a=new Uint32Array(8);try{crypto.getRandomValues(a);}catch(e){for(let i=0;i<8;i++)a[i]=Math.floor(Math.random()*4e9);}for(const x of a)s+=CHAL_ALPH[x%CHAL_ALPH.length];return s;}
-function wheelSeq(seed){const r=mulberry32(seed);const seq=[];for(let i=0;i<600;i++){const c=pickWeighted(DATA.clubs,r);seq.push(DATA.clubs.indexOf(c));}return seq;}
+const wheelSeq=seed=>wheelFor(seed,'classic','all');
 // new free game: wheel seed and opponents' season are fixed up front so the game can be replayed as a challenge
 function chalNewGame(seed,year){seed=seed||Math.floor(Math.random()*2147483647);return {seed,year:year||LEAGUE_LEGENDS,seq:wheelSeq(seed),ptr:0};}
 let CHAL=null;   // challenge currently opened via link
