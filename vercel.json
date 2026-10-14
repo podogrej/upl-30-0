@@ -52,7 +52,7 @@
       "headers": [
         {
           "key": "Content-Security-Policy-Report-Only",
-          "value": "script-src 'self' 'sha256-4+GPVDENkwsQDjTndO5c8ar0tBsp3uM/nHGIhIuERXA=' 'sha256-EVB23NB+udGHSHnSKCwGZqg04OvL78bfXclc9b67zeM=' 'sha256-RpSYOEFeyVJ5Bd3nll6OGJzFKFGx1yO11J4W3Ik5+aI=' 'sha256-YkW9euIk6BLj7wQGfAdL1VUS6k9YWyXeIhwhLXRtBsk=' 'sha256-kYkqbQ3jdUqAEz6orjKOeoCSxJqrAxTA8p7Q1cdehEY=' https://cdn.jsdelivr.net https://telegram.org https://www.clarity.ms https://scripts.clarity.ms; object-src 'none'; base-uri 'none'; report-uri /api/err?csp=1"
+          "value": "script-src 'self' 'sha256-4+GPVDENkwsQDjTndO5c8ar0tBsp3uM/nHGIhIuERXA=' 'sha256-BG7X4h9NJjcxpBNMhjT25E4h/0TKw+B7hGiqxrK6DCk=' 'sha256-EVB23NB+udGHSHnSKCwGZqg04OvL78bfXclc9b67zeM=' 'sha256-RpSYOEFeyVJ5Bd3nll6OGJzFKFGx1yO11J4W3Ik5+aI=' 'sha256-YkW9euIk6BLj7wQGfAdL1VUS6k9YWyXeIhwhLXRtBsk=' https://cdn.jsdelivr.net https://telegram.org https://www.clarity.ms https://scripts.clarity.ms; object-src 'none'; base-uri 'none'; report-uri /api/err?csp=1"
         }
       ]
     },
@@ -61,7 +61,7 @@
       "headers": [
         {
           "key": "Content-Security-Policy-Report-Only",
-          "value": "script-src 'self' 'sha256-4+GPVDENkwsQDjTndO5c8ar0tBsp3uM/nHGIhIuERXA=' 'sha256-EVB23NB+udGHSHnSKCwGZqg04OvL78bfXclc9b67zeM=' 'sha256-RpSYOEFeyVJ5Bd3nll6OGJzFKFGx1yO11J4W3Ik5+aI=' 'sha256-YkW9euIk6BLj7wQGfAdL1VUS6k9YWyXeIhwhLXRtBsk=' 'sha256-kYkqbQ3jdUqAEz6orjKOeoCSxJqrAxTA8p7Q1cdehEY=' https://cdn.jsdelivr.net https://telegram.org https://www.clarity.ms https://scripts.clarity.ms; object-src 'none'; base-uri 'none'; report-uri /api/err?csp=1"
+          "value": "script-src 'self' 'sha256-4+GPVDENkwsQDjTndO5c8ar0tBsp3uM/nHGIhIuERXA=' 'sha256-BG7X4h9NJjcxpBNMhjT25E4h/0TKw+B7hGiqxrK6DCk=' 'sha256-EVB23NB+udGHSHnSKCwGZqg04OvL78bfXclc9b67zeM=' 'sha256-RpSYOEFeyVJ5Bd3nll6OGJzFKFGx1yO11J4W3Ik5+aI=' 'sha256-YkW9euIk6BLj7wQGfAdL1VUS6k9YWyXeIhwhLXRtBsk=' https://cdn.jsdelivr.net https://telegram.org https://www.clarity.ms https://scripts.clarity.ms; object-src 'none'; base-uri 'none'; report-uri /api/err?csp=1"
         }
       ]
     },
