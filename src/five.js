@@ -12,7 +12,6 @@ const f5Fits=(t,p)=>f5Open(t).some(s=>s.slot===f5G(p));
 const f5Label=t=>t.team||t.name;
 function f5Rng(tag){return mulberry32((F5.seed^hashStr(tag))>>>0);}
 // formation from DB (f5_players.form) is whitelisted against F5_FORMS, else 1-2-1 (f5_* tables are publicly writable)
-const f5Form=x=>Object.prototype.hasOwnProperty.call(F5_FORMS,x)?x:'1-2-1';
 function f5Team(name,team,form){return {name,team,form,slots:F5_FORMS[form].rows.flat().map(slot=>({slot,player:null})),rerolls:F5_REROLLS,taken:new Set()};}
 function f5Seat(){const n=F5.teams.length;return F5.mode==='turns'?F5.pick%n:F5.solo;}   // turns mode: strict A-B-A-B
 function f5Taken(team){return F5.mode==='turns'?F5.takenAll:team.taken;}

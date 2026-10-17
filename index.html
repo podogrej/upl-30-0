@@ -273,9 +273,9 @@ td.avgc{font-family:var(--font-display);font-weight:var(--wt-bold);font-size:var
 .tre{display:inline-grid;place-items:center;width:42px;height:42px;border-radius:50%;background:var(--bg2);font-size:var(--fs-title2);line-height:1;letter-spacing:var(--ls-tight)}.tre.off{filter:grayscale(1);opacity:.45}.chip .tre,.trchip .tre{width:22px;height:22px;font-size:var(--fs-body);background:none}.tro0 .tre{width:26px;height:26px;font-size:var(--fs-headline)}   /* trophy icons are emoji */
 .ic.sm{width:20px;height:20px;margin-right:var(--sp-2)}.ic.sm .ico{width:16px;height:16px}
 .ic.lg{width:34px;height:34px}.ic.lg .ico{width:26px;height:26px}
-button:has(.ic),a.btnlink:has(.ic){display:inline-flex;align-items:center;justify-content:center;gap:var(--sp-2)}
+button:has(.ic){display:inline-flex;align-items:center;justify-content:center;gap:var(--sp-2)}
 button:has(.ic) .ic{margin-left:calc(var(--sp-1) * -1)}
-.primary .ic,a.btnlink .ic{color:var(--bg);width:22px;height:22px}.primary .ic .ico,a.btnlink .ic .ico{width:22px;height:22px}
+.primary .ic{color:var(--bg);width:22px;height:22px}.primary .ic .ico{width:22px;height:22px}
 .ghost .ic{width:18px;height:18px;margin-right:0}.ghost .ic .ico{width:18px;height:18px}
 .chip:has(.ic),.chip.ms{display:inline-flex;align-items:center;gap:var(--sp-2)}.chip .ic{width:18px;height:18px;margin-left:calc(var(--sp-1) * -1)}.chip .ic .ico{width:14px;height:14px}
 .kicker .ic{margin-right:var(--sp-2)}
@@ -354,7 +354,6 @@ details.tip[open]>summary::before{transform:rotate(90deg)}details.tip>p,details.
 .f5goal{padding:var(--sp-3) var(--sp-3);border-radius:var(--r-md);background:color-mix(in srgb,var(--amber) 14%,var(--surface));border:1px solid var(--amber);animation:pop var(--dur-3) var(--spring-pop) both}.f5goal.s1{text-align:right}
 .f5pen{font-size:.45em}
 .f5wholist{display:grid;gap:var(--sp-2)}.f5who{display:flex;flex-wrap:wrap;gap:var(--sp-2) var(--sp-2);align-items:center;padding:var(--sp-2) var(--sp-3);border:1px solid var(--line);border-radius:var(--r-sm);background:var(--bg)}
-a.btnlink{display:block;text-align:center;text-decoration:none;background:var(--ink);color:var(--bg);border:1px solid var(--ink);border-radius:var(--r-md);padding:var(--sp-3) var(--sp-4);font-weight:var(--wt-bold)}
 .foot{margin-top:var(--sp-6);font-family:var(--font-mono);font-size:var(--fs-caption2);color:var(--muted);text-align:center}
 /* difficulty levels in tables, player name, test DB badge */
 .lv{display:inline-block;font-family:var(--font-mono);font-size:var(--fs-caption2);font-weight:var(--wt-bold);letter-spacing:var(--ls-0);padding:var(--sp-0h) var(--sp-2);border-radius:var(--r-pill);border:1px solid currentColor;vertical-align:1px;white-space:nowrap}
@@ -1394,12 +1393,12 @@ h3,.sec0,#s1 .sec0,.pgh,.trleg .h{font-size:var(--fs-footnote);font-weight:var(-
 <div class="ft-done" id="fbDone" hidden><b>✓</b><span>Дякуємо! Прочитаємо найближчим часом</span></div>
 <div class="ft-pills"><button class="ft-pill" id="fbBtn" type="button"><!--i:mail-->Відгук і баги</button><a class="ft-pill" id="ftBot" href="https://t.me/upl30_bot" target="_blank" rel="noopener"><!--i:telegram-->Telegram-бот</a></div>
 <div class="ft-soc-icons"><a id="ftTg" href="https://t.me/upl_nostalgia" target="_blank" rel="noopener" aria-label="Telegram-канал" title="Telegram-канал"><!--i:telegram-plane--></a><a href="https://www.threads.com/@upl30_game" target="_blank" rel="noopener" aria-label="Threads" title="Threads"><!--i:threads--></a><a href="https://ua.tribuna.com/uk/blogs/dim-nostalhiyi-istoriya-upl/" target="_blank" rel="noopener" aria-label="Блог на Трибуні" title="Блог на Трибуні"><!--i:newspaper--></a></div>
-<div class="foot ft-small"><a href="#" id="newsBtn">Що нового у версії 0.90.4<b id="newsDot" hidden></b></a><a href="privacy.html">Конфіденційність</a><a href="terms.html">Умови використання</a></div>
+<div class="foot ft-small"><a href="#" id="newsBtn">Що нового у версії 0.91<b id="newsDot" hidden></b></a><a href="privacy.html">Конфіденційність</a><a href="terms.html">Умови використання</a></div>
 <div class="foot ft-copy">© 2026 30-0 УПЛ · неофіційний фан-проєкт <a href="#" id="themeBtn" class="thm" role="switch" aria-checked="false" aria-label="Світла тема"></a></div>
 <p class="ft-legal">30-0 УПЛ — незалежний фан-проєкт: футбольний драфт і симулятор сезону. Він не пов'язаний з Українською Прем'єр-лігою, Українською асоціацією футболу, клубами, футболістами, їхніми об'єднаннями чи іншими організаціями й не схвалений ними. Назви клубів, імена футболістів, рейтинги, статистику й дані сезонів використано лише з інформаційною та довідковою метою. Офіційні логотипи, емблеми та фото футболістів не використовуються. Усі торговельні марки належать їхнім власникам.</p>
 <div class="ft-cred">Шрифт KyivType Sans © Дмитро Растворцев (айдентика Києва)<br>Іконки: Material Design Icons (Apache 2.0), логотипи Telegram і Threads — Font Awesome Free (CC BY 4.0)</div>
 </footer>
-<script src="pool.d05eecba7.js"></script>
+<script src="pool.dc144ea65.js"></script>
 <script>
 (function(){
 // motion: one reduced-motion check; MOTION reads the CSS motion tokens for WAAPI (window.__fastMotion: 1 ms durations in tests)
@@ -1495,8 +1494,8 @@ const MODES = {
   pick:{name:"Вибір сезону",desc:"Колесо дає клуб, сезон обираєш сам — з трьох. Без перекручувань.",damp:1,star:0,rerolls:0,showRatings:false,reveal:true,pick:3},
   practice:{name:"Тренування",desc:"Рейтинги видно одразу. Для знайомства з грою: результат не йде в рекорди й таблиці.",damp:1,star:0,rerolls:2,showRatings:true,reveal:true}};
 const FORMATS = {
-  classic:{name:"Класика",desc:"Усі 524 клуб-сезони."},
-  derby:{name:"Класичне дербі",desc:"Лише «Динамо» і «Шахтар» за 34 сезони.",clubs:["dynamo-kyiv","shakhtar-donetsk"]},
+  classic:{name:"Класика",desc:""},   // desc: counts from the data, set below (DSTAT)
+  derby:{name:"Класичне дербі",desc:"",clubs:["dynamo-kyiv","shakhtar-donetsk"]},
   oneclub:{name:"Один клуб",desc:"Найкращий XI одного клубу за всю історію УПЛ."},
   anti:{name:"Антисезон 0-30",desc:"Навпаки: збери найгірший склад і програй усі 30 матчів. Рейтинги не показуються — обирай з пам'яті."},
   legends:{name:"Ліга легенд",desc:"Ті самі 15 культових клубів, але кожен у сезоні з найсильнішим складом."}};
@@ -1569,7 +1568,7 @@ const DAY=kyivDate();
 // cleanup: per-day keys (daily challenge upl30_vd_<day>; daily draft upl30_daily_/upl30_sent_ from older versions) older than 14 days
 try{const old=dayAdd(DAY,-14);for(let i=localStorage.length-1;i>=0;i--){const k=localStorage.key(i),m=/^upl30_(?:vd|daily|sent)_(\d{4}-\d{2}-\d{2})$/.exec(k||'');if(m&&m[1]<old)localStorage.removeItem(k);}}catch(e){}
 setTimeout(()=>{try{renderTrBtn();trRetro();}catch(e){}try{chalLoad();}catch(e){}},0);
-// daily draft mode (removed from the game in 0.80): kept for the server engine, which still verifies seasons from older tabs
+// daily draft mode (removed from the game in 0.80): kept for labels of old seasons; the server rejects new ones
 MODES.daily={name:"Драфт дня",desc:"",damp:1,star:0,rerolls:1,showRatings:false,reveal:true};
 function dayAdd(day,n){return new Date(Date.UTC(+day.slice(0,4),+day.slice(5,7)-1,+day.slice(8,10))+n*864e5).toISOString().slice(0,10);}
 function weekKey(day){const wd=(new Date(Date.UTC(+day.slice(0,4),+day.slice(5,7)-1,+day.slice(8,10))).getUTCDay()+6)%7;return dayAdd(day,-wd);}
@@ -2685,7 +2684,7 @@ const SB_ENVS={prod:{url:"https://qruhcbwycrnfgzzdbljr.supabase.co",key:"sb_publ
                test:{url:"https://joahjmpupilukdbmbdfl.supabase.co",key:"sb_publishable_OqaI_M6vP6S6D9fxzfwFcQ_TcQx8Rkz"}};
 const SB_ENV=(ONLINE&&SB_ENVS.test.url&&(/-git-test-/.test(location.hostname)||/[?&]db=test\b/.test(location.search)))?'test':'prod';
 const SB_URL=SB_ENVS[SB_ENV].url, SB_KEY=SB_ENVS[SB_ENV].key;
-const DATA_VERSION="d05eecba7";   // player pool fingerprint (ratings): stored with every season
+const DATA_VERSION="dc144ea65";   // player pool fingerprint (ratings): stored with every season
 if(SB_ENV==='test'){for(const id of ['homeBtn','hLogo']){const b=document.getElementById(id);if(b)b.insertAdjacentHTML('beforeend','<span class="testbadge">ТЕСТ</span>');}}
 function deviceId(){let id=lsGet("upl30_device");if(!id){lsSet("upl30_tr_retro",1);try{id=crypto.randomUUID();}catch(e){const h=[...crypto.getRandomValues(new Uint8Array(16))].map(b=>b.toString(16).padStart(2,'0')).join('');id=`${h.slice(0,8)}-${h.slice(8,12)}-4${h.slice(13,16)}-a${h.slice(17,20)}-${h.slice(20,32)}`;}lsSet("upl30_device",id);}return id;}
 const VERSION=(document.getElementById('newsBtn').textContent.match(/версі[яї] ([\d.]+)/)||[])[1]||'?';
@@ -2789,10 +2788,6 @@ const lgAttempt=()=>!S.vd&&!S.league&&!S.challenge&&!S.pickMode&&S.format==='cla
 // play button of the chat tables: always the format chat leagues count
 function openLeaguePlay(){setFmt('classic');const m=document.querySelector('#modes .opt[data-m="normal"]'),e=document.querySelector('#eras [data-era="all"]');if(m)m.click();if(e)e.click();go(4);}
 const lgFree=w=>w.format==='classic'&&w.mode==='normal'&&!w.practice&&!w.day&&!w.era&&!w.fl_id;
-// server recomputes the season and marks it verified
-async function verifySeason(r){
-  try{const res=await _fetch('/api/verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({season_id:r.rowId})});const j=await res.json();if(res.status===429)r.slow=j.error;verifiedUi(r,j);}catch(e){}
-}
 function verifiedUi(r,j){r.verified=j.verified;
     const el=document.getElementById('verLine');if(el&&S.result===r){el.hidden=j.verified!==true&&!r.slow;if(j.verified===true){el.innerHTML=ic('check-decagram','sm')+'Результат перевірено сервером';boardStale();}else if(r.slow)el.textContent=r.slow;}
 }
@@ -3805,7 +3800,12 @@ if(ONLINE){
 // Safari sometimes dropped the apikey header; duplicate the key in the query string
 const sbFetch=(u,o)=>{const url=typeof u==='string'?u:u.url;return _fetch(url+(url.includes('?')?'&':'?')+'apikey='+SB_KEY,o);};
 function acctName(){const u=SESSION&&SESSION.user;if(!u)return '';const m=u.user_metadata||{};return m.full_name||m.name||m.tg_name||(u.email&&!u.email.endsWith('@users.upl-30-0.vercel.app')?u.email.split('@')[0]:'')||'Гравець';}
+// auth tokens and auth errors in someone else's link: supabase-js would drop the current session on them (logout CSRF); ?code= stays for PKCE
+function acctUrlClean(){try{const u=new URL(location.href),h=new URLSearchParams(u.hash.slice(1));let ch=false;
+  for(const k of ['access_token','refresh_token','provider_token','provider_refresh_token','expires_in','expires_at','token_type','type','error','error_code','error_description']){if(h.has(k)){h.delete(k);ch=true;}if(k.startsWith('error')&&u.searchParams.has(k)){u.searchParams.delete(k);ch=true;}}
+  if(ch){const hs=h.toString();u.hash=hs?'#'+hs:'';history.replaceState(history.state,'',u.toString());}}catch(e){}}
 async function acctInit(){
+  acctUrlClean();
   try{SB=window.supabase.createClient(SB_URL,SB_KEY,{global:{fetch:sbFetch},auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,flowType:'pkce'}});}catch(e){return;}
   SB.auth.onAuthStateChange((ev,s)=>{const was=!!SESSION;SESSION=s||null;renderAcct();if(SESSION&&!was&&ev!=='INITIAL_SESSION')acctOnLogin();});
   const {data}=await SB.auth.getSession();SESSION=data&&data.session||null;renderAcct();playerSync();
@@ -4513,13 +4513,8 @@ function drawCard(r){   // card in site style: UPL navy background, UPL.TV gradi
 }
 document.getElementById('chalOpen').onclick=()=>{const b=document.getElementById('chalBox'),t=document.getElementById('chalOpen');b.hidden=!b.hidden;t.classList.toggle('on',!b.hidden);if(!b.hidden){b.scrollIntoView({behavior:'smooth',block:'center'});const n=document.getElementById('chalName');if(n&&!n.hidden&&!n.value)n.focus();}};
 // ---------- What's new: short player-friendly notes on the latest version (technical log: CHANGELOG.md)
-const WHATSNEW={v:'0.90.4',news:'0.90.2',date:'13.10.2026',items:[
-  ['telegram-plane','Ми в Telegram, Threads і на Трибуні','Посилання внизу головної: канал у Telegram, сторінка в Threads і блог на Трибуні.'],
-  ['shield-star','Чесні таблиці','Колесо тепер крутить сервер. У рекорди й таблиці потрапляють лише сезони зі складом із колеса й зі зв\'язком із сервером.'],   // news: edition of the items; a release without new items keeps it, so the news dot does not light up again
-  ['format-list-numbered','«Твої цифри»: віхи й «Клуб 100»','Дати твоїх перших: сезон, титул, 30-0, виліт, і круглі числа сезонів. «Клуб 100» — гравці, з якими ти зіграв 100+ матчів. А в картці гравця з твоєї 11-ки — скільки разів колесо його пропонувало і скільки ти взяв.'],
-  ['share-variant','Поділитися цифрами','Твої головні цифри — однією картинкою для Telegram.'],
-  ['star','Сортування за рейтингом','Увімкнув «Рейтинги» під час збору складу — гравці йдуть від найсильнішого. В антисезоні, як і раніше, за абеткою.'],
-  ['account-circle','Зручніші кнопки','Дрібні кнопки стало легше натискати, довгі назви трофеїв на вузьких екранах переносяться рівніше.']]};
+const WHATSNEW={v:'0.91',news:'0.91',date:'17.10.2026',items:[
+  ['star','Рейтинги за кар\'єрою','Сезон, у якому гравець зіграв лише кілька матчів, більше не занижує його рейтинг: він ближчий до рівня гравця в сусідніх сезонах. На початку кар\'єри гравець слабший, після піку — поступово спадає.']]};
 function openNews(){screenTag('news');const box=document.getElementById('viewBox');document.getElementById('viewTitle').textContent=`Що нового · версія ${WHATSNEW.v}`;
   document.getElementById('viewBody').innerHTML=`<div class="news">${WHATSNEW.items.map(([e,h,d])=>`<div class="ni">${ic(e,'lg')}<div><b>${esc(h)}</b><p>${esc(d)}</p></div></div>`).join('')}</div>`;
   box.hidden=false;lsSet('upl30_news_seen',WHATSNEW.news||WHATSNEW.v);document.getElementById('newsDot').hidden=true;}
@@ -4638,7 +4633,6 @@ const f5Fits=(t,p)=>f5Open(t).some(s=>s.slot===f5G(p));
 const f5Label=t=>t.team||t.name;
 function f5Rng(tag){return mulberry32((F5.seed^hashStr(tag))>>>0);}
 // formation from DB (f5_players.form) is whitelisted against F5_FORMS, else 1-2-1 (f5_* tables are publicly writable)
-const f5Form=x=>Object.prototype.hasOwnProperty.call(F5_FORMS,x)?x:'1-2-1';
 function f5Team(name,team,form){return {name,team,form,slots:F5_FORMS[form].rows.flat().map(slot=>({slot,player:null})),rerolls:F5_REROLLS,taken:new Set()};}
 function f5Seat(){const n=F5.teams.length;return F5.mode==='turns'?F5.pick%n:F5.solo;}   // turns mode: strict A-B-A-B
 function f5Taken(team){return F5.mode==='turns'?F5.takenAll:team.taken;}
