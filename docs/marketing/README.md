@@ -52,16 +52,16 @@
 
 Игра считает, откуда пришёл человек и дошёл ли он до сезона (первый заход важнее последующих). Без метки заход записывается как «direct» или «threads.com», и неясно, какой пост сработал.
 
-| Где | Ссылка |
-|---|---|
-| Threads: первый комментарий | `https://upl30.com.ua/?utm_source=threads&utm_medium=social&utm_campaign=post` |
-| Threads: профиль (bio) | `https://upl30.com.ua/?utm_source=threads&utm_medium=social&utm_campaign=bio` |
-| Threads: комментарии под чужими постами | `https://upl30.com.ua/?utm_source=threads&utm_medium=outreach` |
-| Telegram-канал: пост | `https://upl30.com.ua/?utm_source=telegram&utm_medium=social&utm_campaign=post` |
-| Tribuna: статья | `https://upl30.com.ua/?utm_source=tribuna&utm_medium=blog&utm_campaign=<короткое-имя-статьи>` |
-| Другие площадки | `utm_source=<площадка>` (латиницей, строчными), `utm_medium=social` / `blog` / `outreach` |
+| Где | Короткая ссылка (в тексте поста) | Полная ссылка |
+|---|---|---|
+| Threads: первый комментарий | `upl30.com.ua/t` | `https://upl30.com.ua/?utm_source=threads&utm_medium=social&utm_campaign=post` |
+| Threads: профиль (bio) | `upl30.com.ua/tb` | `https://upl30.com.ua/?utm_source=threads&utm_medium=social&utm_campaign=bio` |
+| Threads: комментарии под чужими постами | `upl30.com.ua/to` | `https://upl30.com.ua/?utm_source=threads&utm_medium=outreach` |
+| Telegram-канал: пост | `upl30.com.ua/tg` | `https://upl30.com.ua/?utm_source=telegram&utm_medium=social&utm_campaign=post` |
+| Tribuna: статья | `upl30.com.ua/tr/<имя-статьи>` | `https://upl30.com.ua/?utm_source=tribuna&utm_medium=blog&utm_campaign=<короткое-имя-статьи>` |
+| Другие площадки | — | `utm_source=<площадка>` (латиницей, строчными), `utm_medium=social` / `blog` / `outreach` |
 
-Метки — только латиница, цифры, `_ . : -`. Цифры по площадкам (заходы → начали сезон → доиграли) раз в неделю даёт разработчик из отчёта `traffic_funnel`; попроси их через владельца.
+Короткая ссылка сама переводит на полную (302), метки при этом сохраняются. Имя статьи Tribuna в `/tr/<имя>` — латиница строчными, цифры и дефис, до 48 знаков. Метки — только латиница, цифры, `_ . : -`. Цифры по площадкам (заходы → начали сезон → доиграли) раз в неделю даёт разработчик из отчёта `traffic_funnel`; попроси их через владельца.
 
 ## 7. Как не терять работу
 

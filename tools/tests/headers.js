@@ -3,6 +3,7 @@
 // Plus (0.90) Content-Security-Policy-Report-Only only on "/" and "/index.html": script-src with the sha256 of every inline script of index.html
 // (build.py writes it), SRI for supabase-js, and /api/err accepting CSP reports.
 // Plus (0.90.4) Google sign-in uses the PKCE flow (login CSRF).
+// Plus short marketing links: 302 redirects to the home page with UTM tags (docs/marketing/README.md, section 6).
 // Run from repo root: node tools/tests/headers.js
 const path = require('path');
 const { checker } = require('./_site.js');
@@ -17,6 +18,14 @@ T.check(/camera=\(\)/.test(H['permissions-policy']) && /microphone=\(\)/.test(H[
 T.check(/max-age=\d{7,}/.test(H['strict-transport-security']) && /includeSubDomains/.test(H['strict-transport-security']), 'HSTS з includeSubDomains');
 T.check(H['content-security-policy'] === "frame-ancestors 'self' https://web.telegram.org https://*.telegram.org", 'CSP: лише frame-ancestors (сайт і Telegram)');
 T.check(!H['x-frame-options'] && !H['content-security-policy-report-only'], 'без X-Frame-Options (ламає Telegram Web) і без Report-Only на всіх адресах');
+
+// ---- short marketing links: temporary redirects keep the UTM tags the game reads on the first visit
+const RD = Object.fromEntries((cfg.redirects || []).map(r => [r.source, r]));
+const SHORT = { '/t': 'utm_source=threads&utm_medium=social&utm_campaign=post', '/tb': 'utm_source=threads&utm_medium=social&utm_campaign=bio',
+  '/to': 'utm_source=threads&utm_medium=outreach', '/tg': 'utm_source=telegram&utm_medium=social&utm_campaign=post',
+  '/tr/:name([a-z0-9-]{1,48})': 'utm_source=tribuna&utm_medium=blog&utm_campaign=:name' };
+T.check(Object.entries(SHORT).every(([k, q]) => RD[k] && RD[k].destination === '/?' + q && RD[k].statusCode === 302) && (cfg.redirects || []).length === 5, 'короткі посилання /t /tb /to /tg /tr/<назва> → 302 на головну з UTM');
+T.check(!(cfg.rewrites || []).some(r => /^\/(t|tb|to|tg|tr)(\/|$)/.test(r.source)) && !['t', 'tb', 'to', 'tg', 'tr'].some(f => ['', '.html'].some(x => require('fs').existsSync(path.join(__dirname, '..', '..', f + x)))), 'короткі посилання не перетинаються з адресами сайту');
 
 // ---- CSP Report-Only: only on the page itself
 const fs = require('fs'), crypto = require('crypto'), ROOT = path.join(__dirname, '..', '..');
