@@ -68,7 +68,6 @@
 
 ## Порядок и техдолг
 
-- 🧹 `api/league.js:40` `GET ?card=1` и `api/_league.js:46` чтение `s.day` — срок «неделя после 0.79» прошёл.
 - 🧹 Таблицы `f5_*`: убрать из `api/backup.js:28`, снять права anon, затем удалить (п. 13, два шага).
 - 🧹 `sql/v039_part_B.sql:195,240` при повторе берёт tg id из почты → `raw_app_meta_data->>'tg_id'`.
 - 🧹 Тестовая база: колонки `season_seeds.daily_try` (+индекс) и `daily_results.best_try` — удалить при уборке (через коннектор `drop` зависает).
@@ -80,7 +79,7 @@
 - 🧹 После 11-го игрока в вызове и сразу «Додому» ответ сервера открывает «Не зараховано» — решить, показывать ли.
 - 🧹 «Виклик другу» пишет `challenge_results` без привязки к проверенному сезону (`api/save.js:108-113`).
 - 🧹 Повторы «без колонки» в `api/save.js:60-64` и `api/err.js:41`; три одинаковых помощника RPC (`playerRpc`, `flRpc`, `ppRpc`).
-- 🧹 Мёртвый CSS `a.btnlink`; `api/bot.js:87` `TEST_*` через `process.env`; магические числа (`3*864e5` account.js:211, `6e4` player.js:53, 16/30); крон 18:00 UTC зимой; чистка `season_seeds` и `tg_logins`.
+- 🧹 `api/bot.js:87` `TEST_*` через `process.env`; магические числа (`3*864e5` account.js:211, `6e4` player.js:53, 16/30); крон 18:00 UTC зимой; чистка `season_seeds` и `tg_logins`.
 - 🧹 Движок всё ещё в `src/template.html` (вынос в `src/engine.js`).
 - 🧹 `upl30_clubrec` до 0.72 знает только лучший результат — по желанию досчитать худший из `seasons`.
 - 🧹 Явная проверка индекса `season_seeds_official_uq` в `sql/check_schema.sql` (сейчас только общий список) — решить, нужна ли.

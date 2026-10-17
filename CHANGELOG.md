@@ -27,6 +27,10 @@
 
 **Сервер**
 - `PREV_VERSIONS` пуст: рейтинги изменились, сезоны старых версий получают «не перевірено».
+- Убрана серверная ветка старого «Драфту дня» (заменён «Викликом дня» в 0.80): `api/seed.js` — запрос `daily` → 400 `mode?`, без «официальной попытки»; `api/verify.js` — без `syncDaily`, сезон с `day` → null; `dailySetupFor` убран из движка (`tools/make_engine.js`). `daily_results` в базе остаётся (п. 13), `_notify.js` читает её для серии.
+- Мёртвый код: `GET /api/league?card=1` и чтение `s.day` в `_league.js` (BACKLOG «Порядок»), CSS `a.btnlink`, `verifySeason` (template), `f5Form` (five.js).
+
+**Тесты**: `cheat`, `v078`, `v080`, `gate_c`, `v077b` переписаны под удалённое (seed драфта дня → 400, сезон с `day` → null, `daily_results` не трогается); `sim30` и `trophy_freq` без конфигурации драфта дня.
 
 ## 0.90.4 «Вхід лише свій» — 13.10.2026
 
