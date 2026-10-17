@@ -20,6 +20,11 @@ Steps per card (S = rating after cameo smoothing and TOP_PTS compression):
 3. Deliberate bonus (DECISIONS): +3 to all Chornomorets cards for y 2011-2013;
    a person with a manual peak is capped at that peak.
 4. Clamp to 45-99.
+5. Career curve (0.91): a season with fewer than CURVE_FULL apps is blended toward the person's level in nearby seasons,
+   weight of the own rating (apps/CURVE_FULL)^2. Level = Gaussian-weighted mean (CURVE_BW seasons) of the person's seasons with
+   >= CURVE_MAIN apps, weights min(apps, 30)^1.5, the season itself excluded. Before the first such season the level is that
+   season minus CURVE_UP per year, after the last one minus CURVE_DOWN per year. Seasons with >= CURVE_FULL apps and live
+   seasons are unchanged; person = canonical id.
 """
 import csv, json, math, os, re, sys
 
@@ -37,6 +42,7 @@ AGE_FULL, AGE_STEP, GK_EXTRA = 30, 0.2, 3
 K = 10.5                     # class bonus K*C^2 (proposal.py -> calibrate(): ~15 people 90+ before manual peaks)
 KNEE, SLOPE, FLOOR = 82, 0.4, 70
 SAILORS = ('chornomorets-odesa', (2011, 2012, 2013), 3)
+CURVE_FULL, CURVE_MAIN, CURVE_BW, CURVE_UP, CURVE_DOWN = 15, 10, 1.2, 4, 3
 W = {'intl': .25, 'euro': .25, 'money': .20, 'awards': .30}
 
 
@@ -126,6 +132,34 @@ def formula_c(S, c, k=K, f=1.0):
     return min(99, round(s + k * c * c * f))
 
 
+def career_curve(cards, out, canon):
+    """step 5 in place: cards = [(key, club, card)] without live seasons"""
+    by = {}
+    for key, c, p in cards: by.setdefault(canon(p[5]), []).append((c['y'], p[3], key))
+    new = {}
+    for seasons in by.values():
+        main = [x for x in seasons if x[1] >= CURVE_MAIN]
+        if not main: continue
+        y0, y1 = min(x[0] for x in main), max(x[0] for x in main)
+        def level(y, own):
+            s = w = 0.0
+            for yy, a, key in main:
+                if key == own: continue
+                ww = min(a, 30) ** 1.5 * math.exp(-((y - yy) ** 2) / (2 * CURVE_BW ** 2))
+                s += ww * out[key]; w += ww
+            return s / w if w > 1e-9 else None
+        def edge(y):
+            b = [(out[key], a) for yy, a, key in main if yy == y]
+            return sum(r * a for r, a in b) / sum(a for r, a in b)
+        for y, a, key in seasons:
+            if a >= CURVE_FULL: continue
+            t = edge(y0) - CURVE_UP * (y0 - y) if y < y0 else edge(y1) - CURVE_DOWN * (y - y1) if y > y1 else level(y, key)
+            if t is None: continue
+            al = min(1.0, (a / CURVE_FULL) ** 2)
+            new[key] = max(45, min(99, round(al * out[key] + (1 - al) * t)))
+    out.update(new)
+
+
 def apply_v2(pool, sm, k=K, anchors=True):
     """{card key: smoothed rating} -> {key: v2 rating}; anchors=False applies formula C only (calibration and report)"""
     alias = pool.get('alias') or {}
@@ -152,6 +186,7 @@ def apply_v2(pool, sm, k=K, anchors=True):
                 out[key] += bonus
                 if pid in A: out[key] = min(out[key], A[pid])   # bonus card of a person with a manual peak: capped at the peak
             out[key] = max(45, min(99, out[key]))
+        career_curve(cards, out, canon)
     out.update((SC.key(c, i), p[2]) for c in pool['clubs'] if c['y'] in live for i, p in enumerate(c['pl']))   # live cards: final already
     return out
 

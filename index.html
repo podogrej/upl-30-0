@@ -1394,12 +1394,12 @@ h3,.sec0,#s1 .sec0,.pgh,.trleg .h{font-size:var(--fs-footnote);font-weight:var(-
 <div class="ft-done" id="fbDone" hidden><b>✓</b><span>Дякуємо! Прочитаємо найближчим часом</span></div>
 <div class="ft-pills"><button class="ft-pill" id="fbBtn" type="button"><!--i:mail-->Відгук і баги</button><a class="ft-pill" id="ftBot" href="https://t.me/upl30_bot" target="_blank" rel="noopener"><!--i:telegram-->Telegram-бот</a></div>
 <div class="ft-soc-icons"><a id="ftTg" href="https://t.me/upl_nostalgia" target="_blank" rel="noopener" aria-label="Telegram-канал" title="Telegram-канал"><!--i:telegram-plane--></a><a href="https://www.threads.com/@upl30_game" target="_blank" rel="noopener" aria-label="Threads" title="Threads"><!--i:threads--></a><a href="https://ua.tribuna.com/uk/blogs/dim-nostalhiyi-istoriya-upl/" target="_blank" rel="noopener" aria-label="Блог на Трибуні" title="Блог на Трибуні"><!--i:newspaper--></a></div>
-<div class="foot ft-small"><a href="#" id="newsBtn">Що нового у версії 0.90.4<b id="newsDot" hidden></b></a><a href="privacy.html">Конфіденційність</a><a href="terms.html">Умови використання</a></div>
+<div class="foot ft-small"><a href="#" id="newsBtn">Що нового у версії 0.91<b id="newsDot" hidden></b></a><a href="privacy.html">Конфіденційність</a><a href="terms.html">Умови використання</a></div>
 <div class="foot ft-copy">© 2026 30-0 УПЛ · неофіційний фан-проєкт <a href="#" id="themeBtn" class="thm" role="switch" aria-checked="false" aria-label="Світла тема"></a></div>
 <p class="ft-legal">30-0 УПЛ — незалежний фан-проєкт: футбольний драфт і симулятор сезону. Він не пов'язаний з Українською Прем'єр-лігою, Українською асоціацією футболу, клубами, футболістами, їхніми об'єднаннями чи іншими організаціями й не схвалений ними. Назви клубів, імена футболістів, рейтинги, статистику й дані сезонів використано лише з інформаційною та довідковою метою. Офіційні логотипи, емблеми та фото футболістів не використовуються. Усі торговельні марки належать їхнім власникам.</p>
 <div class="ft-cred">Шрифт KyivType Sans © Дмитро Растворцев (айдентика Києва)<br>Іконки: Material Design Icons (Apache 2.0), логотипи Telegram і Threads — Font Awesome Free (CC BY 4.0)</div>
 </footer>
-<script src="pool.d05eecba7.js"></script>
+<script src="pool.d01a6395b.js"></script>
 <script>
 (function(){
 // motion: one reduced-motion check; MOTION reads the CSS motion tokens for WAAPI (window.__fastMotion: 1 ms durations in tests)
@@ -1495,8 +1495,8 @@ const MODES = {
   pick:{name:"Вибір сезону",desc:"Колесо дає клуб, сезон обираєш сам — з трьох. Без перекручувань.",damp:1,star:0,rerolls:0,showRatings:false,reveal:true,pick:3},
   practice:{name:"Тренування",desc:"Рейтинги видно одразу. Для знайомства з грою: результат не йде в рекорди й таблиці.",damp:1,star:0,rerolls:2,showRatings:true,reveal:true}};
 const FORMATS = {
-  classic:{name:"Класика",desc:"Усі 524 клуб-сезони."},
-  derby:{name:"Класичне дербі",desc:"Лише «Динамо» і «Шахтар» за 34 сезони.",clubs:["dynamo-kyiv","shakhtar-donetsk"]},
+  classic:{name:"Класика",desc:""},   // desc: counts from the data, set below (DSTAT)
+  derby:{name:"Класичне дербі",desc:"",clubs:["dynamo-kyiv","shakhtar-donetsk"]},
   oneclub:{name:"Один клуб",desc:"Найкращий XI одного клубу за всю історію УПЛ."},
   anti:{name:"Антисезон 0-30",desc:"Навпаки: збери найгірший склад і програй усі 30 матчів. Рейтинги не показуються — обирай з пам'яті."},
   legends:{name:"Ліга легенд",desc:"Ті самі 15 культових клубів, але кожен у сезоні з найсильнішим складом."}};
@@ -2685,7 +2685,7 @@ const SB_ENVS={prod:{url:"https://qruhcbwycrnfgzzdbljr.supabase.co",key:"sb_publ
                test:{url:"https://joahjmpupilukdbmbdfl.supabase.co",key:"sb_publishable_OqaI_M6vP6S6D9fxzfwFcQ_TcQx8Rkz"}};
 const SB_ENV=(ONLINE&&SB_ENVS.test.url&&(/-git-test-/.test(location.hostname)||/[?&]db=test\b/.test(location.search)))?'test':'prod';
 const SB_URL=SB_ENVS[SB_ENV].url, SB_KEY=SB_ENVS[SB_ENV].key;
-const DATA_VERSION="d05eecba7";   // player pool fingerprint (ratings): stored with every season
+const DATA_VERSION="d01a6395b";   // player pool fingerprint (ratings): stored with every season
 if(SB_ENV==='test'){for(const id of ['homeBtn','hLogo']){const b=document.getElementById(id);if(b)b.insertAdjacentHTML('beforeend','<span class="testbadge">ТЕСТ</span>');}}
 function deviceId(){let id=lsGet("upl30_device");if(!id){lsSet("upl30_tr_retro",1);try{id=crypto.randomUUID();}catch(e){const h=[...crypto.getRandomValues(new Uint8Array(16))].map(b=>b.toString(16).padStart(2,'0')).join('');id=`${h.slice(0,8)}-${h.slice(8,12)}-4${h.slice(13,16)}-a${h.slice(17,20)}-${h.slice(20,32)}`;}lsSet("upl30_device",id);}return id;}
 const VERSION=(document.getElementById('newsBtn').textContent.match(/версі[яї] ([\d.]+)/)||[])[1]||'?';
@@ -3805,7 +3805,12 @@ if(ONLINE){
 // Safari sometimes dropped the apikey header; duplicate the key in the query string
 const sbFetch=(u,o)=>{const url=typeof u==='string'?u:u.url;return _fetch(url+(url.includes('?')?'&':'?')+'apikey='+SB_KEY,o);};
 function acctName(){const u=SESSION&&SESSION.user;if(!u)return '';const m=u.user_metadata||{};return m.full_name||m.name||m.tg_name||(u.email&&!u.email.endsWith('@users.upl-30-0.vercel.app')?u.email.split('@')[0]:'')||'Гравець';}
+// auth tokens and auth errors in someone else's link: supabase-js would drop the current session on them (logout CSRF); ?code= stays for PKCE
+function acctUrlClean(){try{const u=new URL(location.href),h=new URLSearchParams(u.hash.slice(1));let ch=false;
+  for(const k of ['access_token','refresh_token','provider_token','provider_refresh_token','expires_in','expires_at','token_type','type','error','error_code','error_description']){if(h.has(k)){h.delete(k);ch=true;}if(k.startsWith('error')&&u.searchParams.has(k)){u.searchParams.delete(k);ch=true;}}
+  if(ch){const hs=h.toString();u.hash=hs?'#'+hs:'';history.replaceState(history.state,'',u.toString());}}catch(e){}}
 async function acctInit(){
+  acctUrlClean();
   try{SB=window.supabase.createClient(SB_URL,SB_KEY,{global:{fetch:sbFetch},auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,flowType:'pkce'}});}catch(e){return;}
   SB.auth.onAuthStateChange((ev,s)=>{const was=!!SESSION;SESSION=s||null;renderAcct();if(SESSION&&!was&&ev!=='INITIAL_SESSION')acctOnLogin();});
   const {data}=await SB.auth.getSession();SESSION=data&&data.session||null;renderAcct();playerSync();
@@ -4513,13 +4518,8 @@ function drawCard(r){   // card in site style: UPL navy background, UPL.TV gradi
 }
 document.getElementById('chalOpen').onclick=()=>{const b=document.getElementById('chalBox'),t=document.getElementById('chalOpen');b.hidden=!b.hidden;t.classList.toggle('on',!b.hidden);if(!b.hidden){b.scrollIntoView({behavior:'smooth',block:'center'});const n=document.getElementById('chalName');if(n&&!n.hidden&&!n.value)n.focus();}};
 // ---------- What's new: short player-friendly notes on the latest version (technical log: CHANGELOG.md)
-const WHATSNEW={v:'0.90.4',news:'0.90.2',date:'13.10.2026',items:[
-  ['telegram-plane','Ми в Telegram, Threads і на Трибуні','Посилання внизу головної: канал у Telegram, сторінка в Threads і блог на Трибуні.'],
-  ['shield-star','Чесні таблиці','Колесо тепер крутить сервер. У рекорди й таблиці потрапляють лише сезони зі складом із колеса й зі зв\'язком із сервером.'],   // news: edition of the items; a release without new items keeps it, so the news dot does not light up again
-  ['format-list-numbered','«Твої цифри»: віхи й «Клуб 100»','Дати твоїх перших: сезон, титул, 30-0, виліт, і круглі числа сезонів. «Клуб 100» — гравці, з якими ти зіграв 100+ матчів. А в картці гравця з твоєї 11-ки — скільки разів колесо його пропонувало і скільки ти взяв.'],
-  ['share-variant','Поділитися цифрами','Твої головні цифри — однією картинкою для Telegram.'],
-  ['star','Сортування за рейтингом','Увімкнув «Рейтинги» під час збору складу — гравці йдуть від найсильнішого. В антисезоні, як і раніше, за абеткою.'],
-  ['account-circle','Зручніші кнопки','Дрібні кнопки стало легше натискати, довгі назви трофеїв на вузьких екранах переносяться рівніше.']]};
+const WHATSNEW={v:'0.91',news:'0.91',date:'17.10.2026',items:[
+  ['star','Рейтинги за кар\'єрою','Сезон, у якому гравець зіграв лише кілька матчів, більше не занижує його рейтинг: він ближчий до рівня гравця в сусідніх сезонах. На початку кар\'єри гравець слабший, після піку — поступово спадає.']]};
 function openNews(){screenTag('news');const box=document.getElementById('viewBox');document.getElementById('viewTitle').textContent=`Що нового · версія ${WHATSNEW.v}`;
   document.getElementById('viewBody').innerHTML=`<div class="news">${WHATSNEW.items.map(([e,h,d])=>`<div class="ni">${ic(e,'lg')}<div><b>${esc(h)}</b><p>${esc(d)}</p></div></div>`).join('')}</div>`;
   box.hidden=false;lsSet('upl30_news_seen',WHATSNEW.news||WHATSNEW.v);document.getElementById('newsDot').hidden=true;}

@@ -20,7 +20,12 @@ if(ONLINE){
 // Safari sometimes dropped the apikey header; duplicate the key in the query string
 const sbFetch=(u,o)=>{const url=typeof u==='string'?u:u.url;return _fetch(url+(url.includes('?')?'&':'?')+'apikey='+SB_KEY,o);};
 function acctName(){const u=SESSION&&SESSION.user;if(!u)return '';const m=u.user_metadata||{};return m.full_name||m.name||m.tg_name||(u.email&&!u.email.endsWith('@users.upl-30-0.vercel.app')?u.email.split('@')[0]:'')||'Гравець';}
+// auth tokens and auth errors in someone else's link: supabase-js would drop the current session on them (logout CSRF); ?code= stays for PKCE
+function acctUrlClean(){try{const u=new URL(location.href),h=new URLSearchParams(u.hash.slice(1));let ch=false;
+  for(const k of ['access_token','refresh_token','provider_token','provider_refresh_token','expires_in','expires_at','token_type','type','error','error_code','error_description']){if(h.has(k)){h.delete(k);ch=true;}if(k.startsWith('error')&&u.searchParams.has(k)){u.searchParams.delete(k);ch=true;}}
+  if(ch){const hs=h.toString();u.hash=hs?'#'+hs:'';history.replaceState(history.state,'',u.toString());}}catch(e){}}
 async function acctInit(){
+  acctUrlClean();
   try{SB=window.supabase.createClient(SB_URL,SB_KEY,{global:{fetch:sbFetch},auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,flowType:'pkce'}});}catch(e){return;}
   SB.auth.onAuthStateChange((ev,s)=>{const was=!!SESSION;SESSION=s||null;renderAcct();if(SESSION&&!was&&ev!=='INITIAL_SESSION')acctOnLogin();});
   const {data}=await SB.auth.getSession();SESSION=data&&data.session||null;renderAcct();playerSync();
