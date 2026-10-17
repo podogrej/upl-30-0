@@ -1529,7 +1529,7 @@ const DAY=kyivDate();
 // cleanup: per-day keys (daily challenge upl30_vd_<day>; daily draft upl30_daily_/upl30_sent_ from older versions) older than 14 days
 try{const old=dayAdd(DAY,-14);for(let i=localStorage.length-1;i>=0;i--){const k=localStorage.key(i),m=/^upl30_(?:vd|daily|sent)_(\d{4}-\d{2}-\d{2})$/.exec(k||'');if(m&&m[1]<old)localStorage.removeItem(k);}}catch(e){}
 setTimeout(()=>{try{renderTrBtn();trRetro();}catch(e){}try{chalLoad();}catch(e){}},0);
-// daily draft mode (removed from the game in 0.80): kept for the server engine, which still verifies seasons from older tabs
+// daily draft mode (removed from the game in 0.80): kept for labels of old seasons; the server rejects new ones
 MODES.daily={name:"Драфт дня",desc:"",damp:1,star:0,rerolls:1,showRatings:false,reveal:true};
 function dayAdd(day,n){return new Date(Date.UTC(+day.slice(0,4),+day.slice(5,7)-1,+day.slice(8,10))+n*864e5).toISOString().slice(0,10);}
 function weekKey(day){const wd=(new Date(Date.UTC(+day.slice(0,4),+day.slice(5,7)-1,+day.slice(8,10))).getUTCDay()+6)%7;return dayAdd(day,-wd);}

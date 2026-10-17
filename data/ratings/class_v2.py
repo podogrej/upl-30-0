@@ -24,7 +24,7 @@ Steps per card (S = rating after cameo smoothing and TOP_PTS compression):
    weight of the own rating (apps/CURVE_FULL)^2. Level = Gaussian-weighted mean (CURVE_BW seasons) of the person's seasons with
    >= CURVE_MAIN apps, weights min(apps, 30)^1.5, the season itself excluded. Before the first such season the level is that
    season minus CURVE_UP per year, after the last one minus CURVE_DOWN per year. Seasons with >= CURVE_FULL apps and live
-   seasons are unchanged; person = canonical id.
+   seasons are unchanged; person = canonical id. Runs after step 2 and before step 3, so the bonus stays whole.
 """
 import csv, json, math, os, re, sys
 
@@ -177,16 +177,16 @@ def apply_v2(pool, sm, k=K, anchors=True):
         for key, c, p in cards:
             if canon(p[5]) in A: best[canon(p[5])] = max(best.get(canon(p[5]), 0), out[key])
         assert set(best) == set(A), f'піків без карток: {set(A) - set(best)}'
-        club, years, bonus = SAILORS
         for key, c, p in cards:
             pid = canon(p[5])
-            if pid in A:
-                out[key] += A[pid] - best[pid]
-            if c['c'] == club and c['y'] in years:
-                out[key] += bonus
-                if pid in A: out[key] = min(out[key], A[pid])   # bonus card of a person with a manual peak: capped at the peak
-            out[key] = max(45, min(99, out[key]))
+            if pid in A: out[key] = max(45, min(99, out[key] + A[pid] - best[pid]))
         career_curve(cards, out, canon)
+        club, years, bonus = SAILORS   # after the curve: the bonus stays whole and does not leak into other seasons
+        for key, c, p in cards:
+            if c['c'] == club and c['y'] in years:
+                pid = canon(p[5])
+                out[key] = min(99, out[key] + bonus)
+                if pid in A: out[key] = min(out[key], A[pid])   # bonus card of a person with a manual peak: capped at the peak
     out.update((SC.key(c, i), p[2]) for c in pool['clubs'] if c['y'] in live for i, p in enumerate(c['pl']))   # live cards: final already
     return out
 
