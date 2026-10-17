@@ -19,7 +19,7 @@ Steps per card (S = rating after cameo smoothing and TOP_PTS compression):
 2. Manual peaks (data/ratings/anchors_v2.csv): the person's best card = the peak, all their other cards shift by the same delta.
 3. Deliberate bonus (DECISIONS): +3 to all Chornomorets cards for y 2011-2013;
    a person with a manual peak is capped at that peak.
-4. Clamp to 45-99.
+4. Clamp to 45-99 (the bonus of step 3 only to 99).
 5. Career curve (0.91): a season with fewer than CURVE_FULL apps is blended toward the person's level in nearby seasons,
    weight of the own rating (apps/CURVE_FULL)^2. Level = Gaussian-weighted mean (CURVE_BW seasons) of the person's seasons with
    >= CURVE_MAIN apps, weights min(apps, 30)^1.5, the season itself excluded. Before the first such season the level is that
