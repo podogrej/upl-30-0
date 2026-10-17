@@ -41,9 +41,9 @@ async function nameMap(rows) {
 }
 const applyNames = (rows, pl) => rows.map(r => { const p = pl[String(r.tg_user_id)]; const n = p && (p.name || p.anon_name);
   return n ? { ...r, name: String(n), u: p.public_id || undefined } : r; });
-// Kyiv day of a season: the daily draft carries it; free play counts on its seed's day, saved that day or (past midnight) the next
+// Kyiv day of a season: free play counts on its seed's day, saved that day or (past midnight) the next
 const nextDay = day => new Date(Date.parse(day + 'T00:00:00Z') + 864e5).toISOString().slice(0, 10);
-const dayOk = (s, day) => { day = String(day).slice(0, 10); if (s.day) return String(s.day).slice(0, 10) === day; const c = kyivDate(s.created_at ? new Date(s.created_at) : new Date()); return c === day || c === nextDay(day); };
+const dayOk = (s, day) => { day = String(day).slice(0, 10); const c = kyivDate(s.created_at ? new Date(s.created_at) : new Date()); return c === day || c === nextDay(day); };
 // league boards and summaries count only server-verified seasons (numbers taken from the season, not the browser).
 // Days before VERIFIED_FROM are shown as they were, to keep league history intact.
 const VERIFIED_FROM = '2026-10-01';

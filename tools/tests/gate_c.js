@@ -81,8 +81,6 @@ const mk = () => Array.from({ length: 11 }, (_, i) => ({ id: 'tm:' + i, slot: 'G
   const get = async q => { LOG = []; const out = await callApi(league, null, 'GET', q); return { ...out, log: [...LOG] }; };
   r = await get({ chat: '-5' });
   T.check(r.status === 200 && r.json.title === 'Ліга' && r.json.members === 3 && r.json.today.length === 1 && r.json.standings.length === 1 && r.log.join() === 'rpc/rate_hit,rpc/league_view,view:[-5,false]', 'ліга: сторінка — ліміт за IP і один виклик league_view з підсумками: ' + r.log.join(' | '));
-  r = await get({ chat: '-5', card: '1' });
-  T.check(r.status === 200 && !('standings' in r.json) && r.json.today.length === 1 && r.log.join() === 'rpc/rate_hit,rpc/league_view,view:[-5,true]', 'ліга: картка — без підсумків, один виклик');
   for (const bad of ['abc', '-5; drop', '1'.repeat(21), '--5', '']) { r = await get({ chat: bad }); T.check(r.status === 400 && r.log.length === 0, `ліга: chat «${bad.slice(0, 12)}» — 400 без запитів до бази`); }
   VIEW = 'none'; r = await get({ chat: '-5' });
   T.check(r.status === 404 && r.json.error === 'no league' && r.log.join() === 'rpc/rate_hit,rpc/league_view', 'ліга: league_view відповів «лиги немає» — 404 одразу, без запасного шляху: ' + r.log.join(' | '));

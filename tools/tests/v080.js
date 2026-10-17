@@ -2,7 +2,7 @@
 // event player never counts for the required condition but always scores, parts need separate players.
 // B. server (api/_vd.js via /api/seed, real handlers + in-memory DB): attempt issue and resume, burn on a missed condition, 3 attempts per day,
 // score computed by the server (a forged one is ignored), archive day is late, future day refused, counted attempt -> season verified and linked,
-// not credited to chat leagues; an older 0.79.2 tab's daily draft season is still verified.
+// not credited to chat leagues; an older tab's daily draft seed is refused and its season stays unverified.
 // C. site (file://, offline): home card states, no hints in the wheel list, event player on the pitch, not-counted screen, result block, archive;
 // screenshots tools/tests/out/v080_*.png (phone dark and light, iPad). Run from repo root: node tools/tests/v080.js
 const path=require('path'),fs=require('fs'),crypto=require('crypto');const {ROOT,launch,makeDB,callApi,checker}=require('./_site.js');const {fastReel}=require('./_page.js');
@@ -156,14 +156,16 @@ async function serverChecks(){
    const d1=await cl(d2,{vd:'start',day:TODAY}),df=await cl(d2,{vd:'finish',day:TODAY,attempt:d1.json.attempt,formation:'4-4-2',xi:sq(buildXi(2,d1.json.seed_id))});
    T.check(d1.json.attempt===2&&d1.json.used===1&&df.json.gate===true&&df.json.used===2&&df.json.best===df.json.score&&df.json.seed,`зарахована спроба на другому пристрої: номер 2, спроб 2, краща ${df.json.best}`);
   }
-  // older 0.79.2 tab: different ratings since 0.82, so the season is 'not verified' (null), not 'forged'
-  const D=E.dailySetupFor(TODAY),dv=crypto.randomUUID();E.setFormat('classic');const dxi=[],u=new Set();
-  for(const slot of E.FORMATIONS[D.formation].slots){let pick=null;for(const i of D.seq){const c=E.DATA.clubs[i];for(const p of c.pl){if(u.has(canon(p[5])))continue;const r=E.effRating(p,slot);if(r!=null){pick={c,p,r};break;}}if(pick)break;}
+  // older tab (retired daily draft): its seed request is refused, a season carrying a day stays 'not verified' (null), not 'forged'
+  const F0='4-4-2',dv=crypto.randomUUID();E.setFormat('classic');const dxi=[],u=new Set();
+  for(const slot of E.FORMATIONS[F0].slots){let pick=null;for(const i of E.wheelFor(777,'classic','all')){const c=E.DATA.clubs[i];for(const p of c.pl){if(u.has(canon(p[5])))continue;const r=E.effRating(p,slot);if(r!=null){pick={c,p,r};break;}}if(pick)break;}
     u.add(canon(pick.p[5]));dxi.push({n:pick.p[0],id:pick.p[5],slot,r:pick.r,r0:pick.p[2],c:pick.c.n,y:pick.c.y});}
-  const ds=await callApi(seedH,{device_id:dv,secret,xi:dxi,formation:D.formation,mode:'daily',format:'classic',year:D.year,daily:true});
-  const dq=E.run({xi:SX(dxi),mode:'daily',format:'classic',year:D.year,seed:ds.json.seed});
-  const dsv=await callApi(saveH,{kind:'season',device_id:dv,secret,row:{mode:'daily',format:'classic',formation:D.formation,year:D.year,seed:ds.json.seed,seed_id:ds.json.seed_id,version:'0.79.2',xi:dxi,day:TODAY,practice:false,w:dq.W,d:dq.D,l:dq.L,pts:dq.pts,place:dq.place,gf:dq.gf,ga:dq.ga,perfect:dq.W===30}});
-  T.check(dsv.json.verified===null,'стара вкладка 0.79.2: сезон не перевірено, а не підробка ('+dsv.json.note+')');
+  const ds=await callApi(seedH,{device_id:dv,secret,xi:dxi,formation:F0,mode:'daily',format:'classic',year:E.LEAGUE_LEGENDS,daily:true});
+  T.check(ds.status===400,'стара вкладка: seed драфту дня відхилено (400)');
+  const ds2=await callApi(seedH,{device_id:dv,secret,xi:dxi,formation:F0,mode:'normal',format:'classic',year:E.LEAGUE_LEGENDS});
+  const dq=E.run({xi:SX(dxi),mode:'normal',format:'classic',year:E.LEAGUE_LEGENDS,seed:ds2.json.seed});
+  const dsv=await callApi(saveH,{kind:'season',device_id:dv,secret,row:{mode:'normal',format:'classic',formation:F0,year:E.LEAGUE_LEGENDS,seed:ds2.json.seed,seed_id:ds2.json.seed_id,version:E.VERSION,xi:dxi,day:TODAY,practice:false,w:dq.W,d:dq.D,l:dq.L,pts:dq.pts,place:dq.place,gf:dq.gf,ga:dq.ga,perfect:dq.W===30}});
+  T.check(dsv.json.verified===null,'сезон із day: не перевірено, а не підробка ('+dsv.json.note+')');
 }
 
 // ---- C. site

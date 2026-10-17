@@ -1,6 +1,6 @@
 // 0.78 "fewer DB requests": request counts per flow with the in-memory DB and the real api/ handlers.
-// A. server: daily seed is one insert (409 path keeps retry / race / other squad), season save does not re-read the row,
-//    new trophies come with the season, daily result is one upsert, chat league standings page past 1000 rows, league card.
+// A. server: the retired daily-draft seed is refused, season save does not re-read the row,
+//    new trophies come with the season, chat league standings page past 1000 rows.
 // B. site: no table prefetch, tables load on open (head start on touch), trophy counter cache (6 h), trophy_stats cache (1 h),
 //    player page asks for leagues once, daily challenge asks for its attempt once, no user_state write when nothing changed.
 // Run from repo root: node tools/tests/v078.js
@@ -14,45 +14,39 @@ const kd=d=>new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Kyiv',year:'numeri
 const DAY=kd(new Date());
 const keyOf=(m,url)=>{const u=new URL(url);return m+' '+(u.pathname.includes('/rpc/')?'rpc/':'')+u.pathname.split('/').pop();};
 const count=(log,re)=>log.filter(k=>re.test(k)).length;
-// in-memory DB for server handlers; official daily seeds are unique per device and day (season_seeds_official_uq)
+// in-memory DB for server handlers
 const SECRETS={};
 function serverDB(){
-  const db=makeDB({seasons:{auto:'id',onInsert:r=>{r.player_id='p-1';}},season_seeds:{auto:'id'},daily_results:{auto:'id'},trophies:{pk:['device_id','trophy']},challenges:{}},   // player_id as the DB trigger sets it
+  const db=makeDB({seasons:{auto:'id',onInsert:r=>{r.player_id='p-1';}},season_seeds:{onInsert:r=>{r.id=crypto.randomUUID();}},daily_results:{auto:'id'},trophies:{pk:['device_id','trophy']},challenges:{}},   // player_id as the DB trigger sets it
     {device_ok:a=>{if(SECRETS[a.p_device]==null)SECRETS[a.p_device]=a.p_secret;return SECRETS[a.p_device]===a.p_secret?'p-1':{status:403,body:JSON.stringify({code:'28000',message:'device secret'})};},rate_hit:()=>true,
     api_gate:a=>{if(a.p_secret==null)return {rate:true,player:null,err:null};if(SECRETS[a.p_device]==null)SECRETS[a.p_device]=a.p_secret;return SECRETS[a.p_device]===a.p_secret?{rate:true,player:'p-1',err:null}:{rate:true,player:null,err:'secret'};}});
   const log=[];log.urls=[];
   global.fetch=async(url,o={})=>{const m=o.method||'GET';log.push(keyOf(m,url)+(m==='POST'&&/on_conflict/.test(url)?' upsert':''));log.urls.push(m+' '+decodeURIComponent(url));
-    if(m==='POST'&&/\/season_seeds/.test(url)){const b=JSON.parse(o.body);if(b.official&&db.DB.season_seeds.some(x=>x.official&&x.daily&&x.device_id===b.device_id&&x.day===b.day))
-      return {ok:false,status:409,text:async()=>JSON.stringify({code:'23505'}),json:async()=>({code:'23505'})};}
     return db.fetch(url,o);};
   return {db,log};}
-// daily squad: first eligible players from the wheel of the day
-function dailyXi(skip=0){const D=E.dailySetupFor(DAY);E.setFormat('classic');const xi=[],used=new Set();
-  for(const slot of E.FORMATIONS[D.formation].slots){let pick=null,k=skip;
-    for(const i of D.seq){const c=E.DATA.clubs[i];for(const p of c.pl){if(used.has(p[5]))continue;const r=E.effRating(p,slot);if(r!=null){if(k>0&&slot==='GK'){k--;continue;}pick={c,p,r};break;}}if(pick)break;}
-    used.add(pick.p[5]);xi.push({n:pick.p[0],id:pick.p[5],slot,r:pick.r,r0:pick.p[2],c:pick.c.n,y:pick.c.y});}
-  return {D,xi};}
+// honest squad from a server wheel: one pick per wheel stop, first free player that fits an open slot
+function wheelXi(ws,formation){E.setFormat('classic');const seq=E.wheelFor(ws,'classic','all'),slots=E.FORMATIONS[formation].slots.map(slot=>({slot,x:null})),taken=new Set();
+  for(let k=0;k<seq.length&&slots.some(q=>!q.x);k++){const c=E.DATA.clubs[seq[k]];
+    for(const p of c.pl){if(taken.has(p[5]))continue;const q=slots.find(t=>!t.x&&E.effRating(p,t.slot)!=null);if(q){q.x={n:p[0],id:p[5],slot:q.slot,r:E.effRating(p,q.slot),r0:p[2],c:c.n,y:c.y};taken.add(p[5]);break;}}}
+  return slots.map(q=>q.x);}
 const SX=xi=>xi.map(x=>({id:x.id,name:x.n,slot:x.slot,pos:E.GROUP_OF[x.slot],r:x.r,cc:(E.DATA.clubs.find(c=>c.n===x.c&&c.y===+x.y)||{}).c,y:+x.y}));
 
 async function serverChecks(){
-  // ---- daily seed: insert first
-  {const {db,log}=serverDB();const dev=crypto.randomUUID(),sec='secret-0123456789abcdef';const {D,xi}=dailyXi();
+  // ---- retired daily-draft seed: refused
+  {const {db,log}=serverDB();const dev=crypto.randomUUID(),sec='secret-0123456789abcdef';
+   const st=await callApi(seedH,{draft:'start',device_id:dev,secret:sec,format:'classic',mode:'normal',era:'all',formation:'4-3-3'});
+   const xi=wheelXi(st.json.ws,st.json.formation);
+   const D={formation:st.json.formation,year:st.json.year};
    const args={device_id:dev,secret:sec,xi,formation:D.formation,mode:'daily',format:'classic',year:D.year,daily:true};
-   const s1=await callApi(seedH,args);
-   T.check(s1.json.official===true&&count(log,/season_seeds/)===1&&count(log,/GET season_seeds/)===0,`seed дня: одна вставка, без читання (${log.filter(k=>/season_seeds/.test(k)).join(', ')})`);
-   log.length=0;const s2=await callApi(seedH,args);
-   T.check(s2.json.official===true&&s2.json.seed===s1.json.seed&&count(log,/season_seeds/)===2,'seed дня: повтор того самого складу — той самий офіційний seed (409 → читання)');
-   const other=dailyXi(1).xi;log.length=0;const s3=await callApi(seedH,{...args,xi:other});
-   T.check(s3.json.official===false&&s3.json.seed!==s1.json.seed,'seed дня: інший склад після офіційного — звичайна спроба');
-   const r1=await callApi(seedH,{...args,device_id:crypto.randomUUID()});
-   T.check(r1.json.official===true,'seed дня: новий пристрій — офіційна');
-   const dv=crypto.randomUUID();const race=await Promise.all([callApi(seedH,{...args,device_id:dv}),callApi(seedH,{...args,device_id:dv})]);
-   T.check(race.every(x=>x.json.official===true&&x.json.seed===race[0].json.seed)&&db.DB.season_seeds.filter(x=>x.device_id===dv&&x.official).length===1,'seed дня: гонка двох запитів — одна офіційна спроба');
+   log.length=0;const sd=await callApi(seedH,args);
+   T.check(sd.status===400&&count(log,/season_seeds/)===0,'seed старого драфту дня: відмова, рядок не створено');
    const plain=await callApi(seedH,{...args,daily:false,mode:'normal'});
-   T.check(plain.json.official===false,'seed не дня — звичайний');
-  // ---- season save: inserted row goes to verification, trophies in the same request, daily result as one upsert
-   const q=E.run({xi:SX(xi),mode:'daily',format:'classic',year:D.year,seed:s1.json.seed});
-   const row={mode:'daily',format:'classic',formation:D.formation,year:D.year,seed:s1.json.seed,seed_id:s1.json.seed_id,version:E.VERSION,xi,day:DAY,practice:false,
+   T.check(plain.status===200&&plain.json.official===false,'seed не дня — звичайний');
+  // ---- season save: inserted row goes to verification, trophies in the same request
+   const lk=await callApi(seedH,{draft:'lock',device_id:dev,secret:sec,seed_id:st.json.seed_id,xi:xi.map(x=>({id:x.id,slot:x.slot,c:x.c,y:x.y}))});
+   const q=E.run({xi:SX(xi),mode:'normal',format:'classic',year:D.year,seed:lk.json.seed});
+   const s1={json:{seed:lk.json.seed,seed_id:st.json.seed_id}};
+   const row={mode:'normal',format:'classic',formation:D.formation,year:D.year,seed:s1.json.seed,seed_id:s1.json.seed_id,version:E.VERSION,xi,practice:false,
      w:q.W,d:q.D,l:q.L,pts:q.pts,place:q.place,gf:q.gf,ga:q.ga,perfect:q.W===30,nickname:'tester'};
    log.length=0;log.urls.length=0;const sv=await callApi(saveH,{kind:'season',device_id:dev,secret:sec,row,trophies:['ms1','champ','bad id!']});
    const order=log.join(' | ');
@@ -62,15 +56,15 @@ async function serverChecks(){
    const srvRow=db.DB.seasons.find(x=>x.id===sv.json.id),ctx=E.trCtxRow(srvRow);ctx.r={...q,xp:E.xpOf({xi:srvRow.xi.map(x=>({id:x.id,name:x.n,slot:x.slot,pos:E.GROUP_OF[x.slot],r:+x.r,cc:(E.DATA.clubs.find(k=>k.n===x.c&&k.y===+x.y)||{}).c,y:+x.y})),mode:srvRow.mode,format:srvRow.format,formation:srvRow.formation,year:+srvRow.year})};const wantSrv=[...E.trEval(ctx),...(srvRow.player_id?['ms1']:[])].sort().join();
    T.check(!db.DB.trophies.some(x=>x.device_id===dev&&x.src!=='srv'),'сезон: трофеї сезону й віхи з запиту відкинуто (champ, ms1): їх пише сервер');
    T.check(db.DB.trophies.filter(x=>x.device_id===dev&&x.src==='srv').map(x=>x.trophy).sort().join()===wantSrv,`сезон: сезонні трофеї записав сервер (src srv: ${wantSrv||'немає'})`);
-   const ins=log.indexOf('POST seasons'),pv=log.indexOf('PATCH seasons'),ps=log.indexOf('PATCH season_seeds'),pd=log.indexOf('POST daily_results upsert');
-   T.check(ins>=0&&ins<pv&&ins<ps&&pd>pv&&pd>ps,'сезон: порядок вставка → вердикт і seed used_by → результат дня ('+order+')');
-   T.check(count(log,/daily_results/)===1&&count(log,/PATCH daily_results/)===0,'сезон дня: результат дня одним upsert, без PATCH');
-   const seedRow=db.DB.season_seeds.find(x=>x.id===s1.json.seed_id),dr=db.DB.daily_results.filter(x=>x.device_id===dev);
-   T.check(+seedRow.used_by===+sv.json.id&&dr.length===1&&dr[0].verified===true&&dr[0].pts===q.pts&&dr[0].nickname==='tester',`seed used_by = сезон, у таблиці дня один перевірений рядок (${dr.length}, ${dr[0]&&dr[0].pts} оч.)`);
-   const want=7+(srvRow.player_id?1:0);T.check(log.length===want,`сезон дня зі збереженням трофеїв: ${log.length} запитів до бази, очікувано ${want} (0.90: 7; з 0.90.1 трофеї пише сервер замість браузера, +1 підрахунок перевірених сезонів для віх, коли є гравець; до 0.78 — 10, і ще 4 на окремий запит трофеїв)`);
-   // repeated verify keeps the name in the row (anonymised after deletion) and rewrites numbers
-   dr[0].nickname='calm_owl';dr[0].pts=90;log.length=0;await callApi(verH,{season_id:sv.json.id});
-   T.check(dr[0].nickname==='calm_owl'&&dr[0].pts===q.pts&&count(log,/PATCH daily_results/)===1,'повторний verify: числа переписано, ім\'я в рядку не чіпаємо');
+   const ins=log.indexOf('POST seasons'),pv=log.indexOf('PATCH seasons'),ps=log.indexOf('PATCH season_seeds');
+   T.check(ins>=0&&ins<pv&&ins<ps,'сезон: порядок вставка → вердикт і seed used_by ('+order+')');
+   T.check(count(log,/daily_results/)===0,'сезон: таблиця дня не чіпається');
+   const seedRow=db.DB.season_seeds.find(x=>x.id===s1.json.seed_id);
+   T.check(+seedRow.used_by===+sv.json.id,'seed used_by = сезон');
+   const want=7+(srvRow.player_id?1:0);T.check(log.length===want,`сезон зі збереженням трофеїв: ${log.length} запитів до бази, очікувано ${want} (0.90: 7; з 0.90.1 трофеї пише сервер замість браузера, +1 підрахунок перевірених сезонів для віх, коли є гравець; до 0.78 — 10, і ще 4 на окремий запит трофеїв)`);
+   // repeated verify of a verified season changes nothing in the daily table
+   log.length=0;await callApi(verH,{season_id:sv.json.id});
+   T.check(count(log,/daily_results/)===0,'повторний verify: таблиця дня не чіпається');
    // second save of a season with the same seed is not verified
    const sv2=await callApi(saveH,{kind:'season',device_id:dev,secret:sec,row});
    T.check(sv2.json.verified===false,'той самий seed удруге — не перевірено ('+sv2.json.note+')');
@@ -93,12 +87,6 @@ async function serverChecks(){
    T.check(count(log,/GET league_results/)===2,'залік: дві сторінки по 1000 ('+count(log,/GET league_results/)+' запити)');
    const lim=await (await S.fetch(`${base}/rest/v1/league_results?chat_id=eq.-100900&limit=3000`)).json();
    T.check(lim.length===1000,'перевірка мока: один запит віддає не більше 1000 рядків, як Supabase');
-   // league card (GET /api/league?card=1): standings are not read
-   S.tbl(base,'leagues').push({chat_id:'-100900',title:'Чат'});log.length=0;
-   const h=require(path.join(ROOT,'api','league.js'));const day=L.kyivDate();rows.push({chat_id:'-100900',day,tg_user_id:7001,name:'u1',w:20,d:5,l:5,pts:65,gf:50,ga:30,created_at:new Date().toISOString(),season_id:null});
-   const res=await new Promise(r=>h({method:'GET',query:{chat:'-100900',card:'1'},headers:{}},{status(c){this.c=c;return this;},json(j){r({c:this.c||200,j});},setHeader(){},send(){},end(){}}));
-   const q=log.filter(k=>!/rate_hit|league_view/.test(k));   // IP limit and the missing-RPC probe are outside the fallback being measured
-   T.check(res.c===200&&q.length<=5&&count(log,/GET league_results/)===1,`картка ліги: ${q.length} запитів до бази, без заліку (${log.join(', ')})`);
   }
 }
 

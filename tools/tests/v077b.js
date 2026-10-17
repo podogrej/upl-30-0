@@ -1,5 +1,5 @@
 // Chat league tables (since 0.79 on the Tables screen, chats tab) and /api/league.
-// A. server: same output as before for a fixture, fewer sequential DB rounds, card=1 without standings (older tabs), cache header,
+// A. server: same output as before for a fixture, fewer sequential DB rounds, cache header,
 //    join still checks membership, a browser result is ignored.
 // B. site: no table request before the screen opens, skeleton while loading, join skipped for 24 h, retry after an error,
 //    column header / own row, standings from the same request, cache bypass after own season, 403 and migration, 404.
@@ -20,7 +20,7 @@ function fixture(){
   const results=[];let sid=0;const seasons={};
   days.forEach((day,di)=>names.forEach((nm,i)=>{if((i+di)%4===3)return;const id=++sid;const pts=40+((i*7+di*5)%31);const w=Math.floor(pts/3)-((i+di)%3),d=pts-3*w,l=30-w-d;
     results.push({chat_id:'-100555',day,tg_user_id:1000+i,name:nm,w,d,l,pts,gf:30+((i*3+di)%20),ga:20+((i+di*2)%15),created_at:`2026-09-01T10:${String(i).padStart(2,'0')}:00Z`,season_id:id});
-    if((i+di)%5!==2)seasons[id]={id,day,tg_user_id:(i===4&&di===1)?9999:1000+i,w:w+(i%2),d,l:l-(i%2),gf:31+i,ga:22,place:1+(i%16)};}));
+    if((i+di)%5!==2)seasons[id]={id,created_at:day+'T12:00:00Z',tg_user_id:(i===4&&di===1)?9999:1000+i,w:w+(i%2),d,l:l-(i%2),gf:31+i,ga:22,place:1+(i%16)};}));
   const links=[];for(let i=0;i<names.length;i+=2)links.push({key:String(1000+i),players:{name:'p_'+i,anon_name:'a'+i,public_id:i%4===0?'abcdefg'+(2+i%7):null}});
   const S={log:[],t0:0,member:'member',writes:[]};
   global.fetch=async(url,o={})=>{const u=decodeURIComponent(String(url));const s=Date.now()-S.t0;let body=[];const m=(o.method||'GET');
@@ -56,9 +56,6 @@ async function server(){
   T.check(rf<=2&&rq===1,`сервер: повна таблиця — ${rf} послідовні раунди запитів (було 4), результати ліги читаються один раз (${rq})`);
   T.check(full.log.filter(c=>/^GET seasons/.test(c.k)).length===2&&rounds(full.log.filter(c=>/seasons|player_links/.test(c.k)))===1,'сервер: пачки перевірки сезонів та імена — паралельно (Promise.all)');
   T.check(full.hd['Cache-Control']==='public, s-maxage=30, stale-while-revalidate=300','сервер: Cache-Control s-maxage=30, stale-while-revalidate=300');
-  const card=await F.run({method:'GET',query:{chat:'-100555',card:'1'}});
-  T.check(!('standings' in card.j)&&JSON.stringify(card.j.today)===JSON.stringify(full.j.today)&&card.j.members===full.j.members&&card.j.title===full.j.title,'сервер: card=1 — той самий «сьогодні» і лічильники, без заліку');
-  T.check(!card.log.some(c=>/order=day\.desc/.test(c.k))&&rounds(card.log)<=2&&card.log.length<full.log.length,`сервер: card=1 не читає історію ліги (${card.log.length} запитів проти ${full.log.length})`);
   T.check((await F.run({method:'GET',query:{chat:'-1'}})).c===404,'сервер: чужий чат без ліги — 404');
   // join: membership is still checked (403 for non-members), signature still checked (401); league lookup and getChatMember start together
   const id=initData({id:1001,first_name:'Марко'},'g-100555');

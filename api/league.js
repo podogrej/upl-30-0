@@ -2,7 +2,7 @@
 // POST {initData}: verifies the Telegram signature and adds the player to the group league (if the game was opened from the group button),
 //   copying today's best free-play season in. Joining only if the bot sees the player as a group member (getChatMember).
 //   Results are written by the server when it verifies a season (api/_league.js creditSeason); a browser "result" is ignored.
-// GET ?chat=ID[&card=1]: league data (today and standings); card=1: today and counters only (home card of tabs before 0.79).
+// GET ?chat=ID: league data (today and standings).
 const L = require('./_league.js');   // shared group league helpers
 const { rateLimit, body } = require('./_device.js');
 const { fail } = require('./_lib.js');
@@ -39,25 +39,23 @@ module.exports = async (req, res) => {
       if (!/^-?\d{1,20}$/.test(chat)) return res.status(400).json({ error: 'chat?' });
       if (await rateLimit(req, res, 'league')) return;   // per IP
       const day = L.kyivDate();
-      // card=1: home card (today + counters, no standings history); otherwise all rows once for both today and standings
-      const card = String(req.query.card || '') === '1';
-      const view = await L.leagueView(chat, day, card);
+      const view = await L.leagueView(chat, day);
       if (view === null) return res.status(404).json({ error: 'no league' });   // the DB function answered: no such league
       if (view) {
         res.setHeader('Cache-Control', 'public, s-maxage=30, stale-while-revalidate=300');
         const out = { title: view.title, day, today: view.today, members: view.members };
-        if (!card) out.standings = view.standings;
+        out.standings = view.standings;
         return res.status(200).json(out);
       }
       const [[lg], rows, memberRows] = await Promise.all([
         L.sb(`leagues?chat_id=eq.${chat}&select=title`).then(x => x || []),
-        card ? L.sb(`league_results?chat_id=eq.${chat}&day=eq.${day}&select=${L.RES_COLS}`).then(x => L.onlyVerified(x || [])) : L.leagueRows(chat),
+        L.leagueRows(chat),
         L.sb(`league_members?chat_id=eq.${chat}&left_at=is.null&select=tg_user_id`).then(x => x || [])]);
       if (!lg) return res.status(404).json({ error: 'no league' });
       const today = rows.filter(r => String(r.day).slice(0, 10) === day).sort(L.sortRes).map(({ name, u, w, d, l, pts, gf, ga, created_at }) => ({ name, u, w, d, l, pts, gf, ga, created_at }));
       res.setHeader('Cache-Control', 'public, s-maxage=30, stale-while-revalidate=300');
       const out = { title: lg.title, day, today, members: memberRows.length };
-      if (!card) out.standings = L.standingsOf(rows).slice(0, 100);   // full standings for the "full table" sheet
+      out.standings = L.standingsOf(rows).slice(0, 100);   // full standings for the "full table" sheet
       return res.status(200).json(out);
     }
     if (req.method !== 'POST') return res.status(405).json({ error: 'GET or POST' });
