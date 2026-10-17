@@ -10,7 +10,7 @@ const DB = { season_seeds: [], seasons: [], daily_results: [], challenges: [], c
 // Supabase storage (backups), Telegram (getChatMember), rate_hit counter
 const STORE = {}, MEMBERS = {}, RATE = {}, MIGRATED = {}; let RATE_ON = false, TAMPER = null; const TGMSG = [];
 const jres = j => ({ ok: true, status: 200, json: async () => j, text: async () => JSON.stringify(j) });
-// DB: device secrets (device_ok), step-2 switch, unique official daily attempt
+// DB: device secrets (device_ok), step-2 switch
 const SECRETS = {}; let LEGACY_OPEN = true, SQL053 = true, ERA_COL = true;
 const err = (status, j) => ({ ok: false, status, text: async () => JSON.stringify(j) });
 // Supabase Auth (api/auth.js): accounts by service email; tg_auth_user as in sql/v087 (made = created by our server, no password)
@@ -53,7 +53,6 @@ global.fetch = async (url, o = {}) => {
     if (t === 'fl_record_seed') return jres(null);   // friend-league try on lock: no fl_leagues rows here
     return err(404, { code: 'PGRST202' });
   }
-  if (m === 'POST' && t === 'season_seeds') { const b = JSON.parse(o.body); if (b.daily && b.official && DB.season_seeds.some(x => x.official && x.daily && x.device_id === b.device_id && x.day === b.day)) return err(409, { code: '23505', message: 'duplicate key value violates unique constraint "season_seeds_official_uq"' }); }
   if (m === 'POST' && t !== 'season_seeds' && t !== 'daily_results' && !u.searchParams.get('on_conflict')) {   // rows written by /api/save
     const list = [].concat(JSON.parse(o.body));
     if (t === 'season_offers' && !OFF_TABLE) return err(404, { code: 'PGRST205', message: "Could not find the table 'public.season_offers' in the schema cache" });   // 0.85 SQL not applied yet
@@ -254,70 +253,52 @@ const res6 = q => ({ w: q.W, d: q.D, l: q.L, pts: q.pts, place: q.place, gf: q.g
       await tamper('тренування на колесі, сезон записано як звичайний', r => { r.practice = false; }, false, pr.row); }
     else ok('draft тренування', false, JSON.stringify(pr.st.j)); }
 
-  // daily challenge: browser inserted inflated points into daily_results -> server overwrites with the verified season; a forgery without a season gets no verified flag
+  // retired daily draft: the seed endpoint refuses it, a season that carries a day is never verified, daily_results stays untouched
   const day = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Kyiv', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
-  const D = E.dailySetupFor(day);
-  E.setFormat('classic');
-  const dxi = [], used = new Set();
-  for (const slot of E.FORMATIONS[D.formation].slots) { let pick = null;
-    for (const i of D.seq) { const c = E.DATA.clubs[i]; for (const p of c.pl) { if (used.has(p[5])) continue; const r = E.effRating(p, slot); if (r != null) { pick = { c, p, r }; break; } } if (pick) break; }
-    used.add(pick.p[5]); dxi.push({ n: pick.p[0], id: pick.p[5], slot, r: pick.r, r0: pick.p[2], c: pick.c.n, y: pick.c.y }); }
+  const D = { formation, year: E.LEAGUE_LEGENDS };
+  const dxi = wheelXi(777, D.formation);
   const dev2 = crypto.randomUUID();
-  const ds = await call(seedH, { device_id: dev2, xi: dxi, formation: D.formation, mode: 'daily', format: 'classic', year: D.year, daily: true });
-  const dq = E.run({ xi: SX(dxi), mode: 'daily', format: 'classic', year: D.year, seed: ds.j.seed });
+  const nD = DB.season_seeds.length;
+  const dr = [await call(seedH, { device_id: dev2, xi: dxi, formation: D.formation, mode: 'daily', format: 'classic', year: D.year, daily: true }),
+    await call(seedH, { device_id: dev2, xi: dxi, formation: D.formation, mode: 'normal', format: 'classic', year: D.year, daily: true }),
+    await call(seedH, { device_id: dev2, xi: dxi, formation: D.formation, mode: 'daily', format: 'classic', year: D.year })];
+  ok('seed: старий драфт дня (daily, mode daily або їх суміш) — 400, рядка seed немає', dr.every(x => x.c === 400) && DB.season_seeds.length === nD, dr.map(x => x.c).join(','));
+  const ds = await call(seedH, { device_id: dev2, xi: dxi, formation: D.formation, mode: 'normal', format: 'classic', year: D.year });
+  const dq = E.run({ xi: SX(dxi), mode: 'normal', format: 'classic', year: D.year, seed: ds.j.seed });
   const fakeDaily = { day, device_id: dev2, nickname: 'Шахрай', w: 30, d: 0, l: 0, pts: 90, gf: 99, ga: 0, place: 1, verified: null };
   DB.daily_results.push(fakeDaily);
-  const cheater = { device_id: crypto.randomUUID(), day, nickname: 'Без сезону', w: 30, d: 0, l: 0, pts: 90, gf: 99, ga: 0, place: 1, verified: null };
-  DB.daily_results.push(cheater);
-  const drow = { id: DB.seasons.length + 1, device_id: dev2, version: E.VERSION, mode: 'daily', format: 'classic', formation: D.formation, year: D.year, day, practice: false, perfect: dq.W === 30,
-    seed: ds.j.seed, seed_id: ds.j.seed_id, xi: dxi, w: dq.W, d: dq.D, l: dq.L, pts: dq.pts, place: dq.place, gf: dq.gf, ga: dq.ga, nickname: 'Чесний', verified: null };
+  const drow = { id: DB.seasons.length + 1, device_id: dev2, version: E.VERSION, mode: 'normal', format: 'classic', formation: D.formation, year: D.year, day, practice: false, perfect: dq.W === 30,
+    seed: ds.j.seed, seed_id: ds.j.seed_id, xi: dxi, ...res6(dq), nickname: 'Чесний', verified: null };
   DB.seasons.push(drow);
   const dv = await call(verH, { season_id: drow.id });
-  const t1 = dv.j.verified === true && fakeDaily.verified === true && fakeDaily.pts === dq.pts && fakeDaily.w === dq.W && fakeDaily.gf === dq.gf;
-  if (!t1) bad++; console.log(`${t1 ? '✓' : '✗'} виклик дня: підроблені очки в daily_results переписано перевіреним сезоном (${fakeDaily.w}-${fakeDaily.d}-${fakeDaily.l}, ${fakeDaily.pts} оч., verified=${fakeDaily.verified})`);
-  fakeDaily.pts = 90; fakeDaily.w = 30;   // browser tampered again -> repeated (cached) verify rewrites season numbers again
-  await call(verH, { season_id: drow.id });
-  const t2 = fakeDaily.pts === dq.pts && fakeDaily.w === dq.W;
-  if (!t2) bad++; console.log(`${t2 ? '✓' : '✗'} виклик дня: повторний verify не лишає підроблених очок (${fakeDaily.pts})`);
-  const t3 = cheater.verified !== true;
-  if (!t3) bad++; console.log(`${t3 ? '✓' : '✗'} виклик дня: рядок з очками без перевіреного сезону не стає verified`);
-  // server inserts the daily result itself if the browser has not sent one
-  const dev3 = crypto.randomUUID();
-  const ds3 = await call(seedH, { device_id: dev3, xi: dxi, formation: D.formation, mode: 'daily', format: 'classic', year: D.year, daily: true });
-  const dq3 = E.run({ xi: SX(dxi), mode: 'daily', format: 'classic', year: D.year, seed: ds3.j.seed });
-  const drow3 = { ...drow, id: DB.seasons.length + 1, device_id: dev3, seed: ds3.j.seed, seed_id: ds3.j.seed_id, perfect: dq3.W === 30, w: dq3.W, d: dq3.D, l: dq3.L, pts: dq3.pts, place: dq3.place, gf: dq3.gf, ga: dq3.ga, nickname: null, verified: null };
-  DB.seasons.push(drow3);
-  await call(verH, { season_id: drow3.id });
-  const ins = DB.daily_results.find(x => x.device_id === dev3);
-  const t4 = !!ins && ins.verified === true && ins.pts === dq3.pts && ins.nickname.length >= 2;
-  if (!t4) bad++; console.log(`${t4 ? '✓' : '✗'} виклик дня: сервер сам записав результат (${ins ? ins.pts + ' оч., нік «' + ins.nickname + '»' : 'немає'})`);
-  // second (unofficial) daily attempt does not go to the daily table
-  const ds4 = await call(seedH, { device_id: dev3, xi: dxi, formation: D.formation, mode: 'daily', format: 'classic', year: D.year, daily: true });
-  const dq4 = E.run({ xi: SX(dxi), mode: 'daily', format: 'classic', year: D.year, seed: ds4.j.seed });
-  const drow4 = { ...drow3, id: DB.seasons.length + 1, seed: ds4.j.seed, seed_id: ds4.j.seed_id, perfect: dq4.W === 30, w: dq4.W, d: dq4.D, l: dq4.L, pts: dq4.pts, place: dq4.place, gf: dq4.gf, ga: dq4.ga, verified: null };
-  DB.seasons.push(drow4);
-  const before = ins.pts; const v4 = await call(verH, { season_id: drow4.id });
-  const t5 = !ds4.j.official && ins.pts === before && DB.daily_results.filter(x => x.device_id === dev3).length === 1;
-  if (!t5) bad++; console.log(`${t5 ? '✓' : '✗'} виклик дня: друга спроба (verified=${v4.j.verified}) не змінює таблицю дня`);
-  // a chat-league attempt (draft seed with league) cannot carry a daily draft season: unlimited daily tries otherwise
+  ok(`сезон із day (старий драфт дня) — не перевірено, daily_results не чіпано (${dv.j.verified}, ${dv.j.note})`, dv.j.verified === null && DB.seasons.find(x => x.id === drow.id).verified === null
+    && fakeDaily.verified === null && fakeDaily.pts === 90 && DB.daily_results.length === 1);
+  const dv2 = await call(verH, { season_id: drow.id });
+  ok('сезон із day: повторний verify нічого не змінює', dv2.j.verified === null && fakeDaily.pts === 90 && DB.daily_results.length === 1);
+  // a season with a day on another device's seed is still rejected as before
+  const rowX = { ...drow, id: DB.seasons.length + 1, device_id: crypto.randomUUID(), verified: null };
+  DB.seasons.push(rowX);
+  ok('сезон із day на seed іншого пристрою — відхилено', (await call(verH, { season_id: rowX.id })).j.verified === false);
+  // a chat-league attempt (draft seed with league) cannot carry a season with a day
   const dev5 = crypto.randomUUID(), sec5 = 'dev5-secret-0123456789abcd';
   const L5 = await draftSeason(dev5, sec5, { formation: D.formation, league: true });
   const lrow = { ...L5.row, id: DB.seasons.length + 1, day, practice: false, nickname: 'Обхід', verified: null };
   DB.seasons.push(lrow);
   const lv = await call(verH, { season_id: lrow.id });
   const lseed = DB.season_seeds.find(x => x.id === L5.st.j.seed_id) || {};
-  ok(`виклик дня: сезон дня на колесі спроби ліги — відхилено, таблиця дня не змінена (${lv.j.note})`, lseed.league === true && !lseed.official && lv.j.verified === false && !DB.daily_results.some(x => x.device_id === dev5));
+  ok(`сезон із day на колесі спроби ліги — не перевірено, у лігу не йде (${lv.j.note})`, lseed.league === true && !lseed.official && lv.j.verified !== true && !DB.daily_results.some(x => x.device_id === dev5));
   { const ls = await call(seedH, { device_id: crypto.randomUUID(), xi: dxi, formation: D.formation, mode: 'normal', format: 'classic', year: D.year, league: true });
     const s = DB.season_seeds.find(x => x.id === ls.j.seed_id) || {};
     ok('старий запит seed з league — спробою ліги не позначається', ls.c === 200 && s.kind === 'legacy' && !s.league); }
-  // and a daily seed is not spent on another (non-daily) season: such a seed has no server wheel -> not verified
+  // an old daily seed row already in the DB is not spent on an ordinary season
   const dev6 = crypto.randomUUID();
-  const ds6 = await call(seedH, { device_id: dev6, xi: dxi, formation: D.formation, mode: 'normal', format: 'classic', year: D.year, daily: true });
-  const dq6 = E.run({ xi: SX(dxi), mode: 'normal', format: 'classic', year: D.year, seed: ds6.j.seed });
-  const row6 = { ...drow, id: DB.seasons.length + 1, device_id: dev6, mode: 'normal', day: null, seed: ds6.j.seed, seed_id: ds6.j.seed_id, perfect: dq6.W === 30, ...res6(dq6), verified: null };
+  const ds6 = { id: crypto.randomUUID(), device_id: dev6, xi_hash: require(path.join(ROOT, 'api', '_lib.js')).xiHash(dxi), seed: 4242, day, daily: true, official: true, formation: D.formation, mode: 'normal', format: 'classic', year: D.year, kind: null, created_at: new Date().toISOString() };
+  DB.season_seeds.push(ds6);
+  const dq6 = E.run({ xi: SX(dxi), mode: 'normal', format: 'classic', year: D.year, seed: ds6.seed });
+  const row6 = { ...drow, id: DB.seasons.length + 1, device_id: dev6, mode: 'normal', day: null, seed: ds6.seed, seed_id: ds6.id, perfect: dq6.W === 30, ...res6(dq6), verified: null };
   DB.seasons.push(row6);
   const v6 = await call(verH, { season_id: row6.id });
-  ok(`seed драфту дня для звичайного сезону — не перевірено (${v6.j.verified}, ${v6.j.note})`, v6.j.verified !== true && (DB.season_seeds.find(x => x.id === ds6.j.seed_id) || {}).used_by == null);
+  ok(`старий seed драфту дня для звичайного сезону — не перевірено (${v6.j.verified}, ${v6.j.note})`, v6.j.verified !== true && ds6.used_by == null);
 
   // ===== 0.90.1: server wheel (draft start / lock) =====
   { const dv = crypto.randomUUID(), dsec = 'wheel-secret-0123456789abc';
@@ -447,27 +428,11 @@ const res6 = q => ({ w: q.W, d: q.D, l: q.L, pts: q.pts, place: q.place, gf: q.g
     ok('draft start: неіснуючий виклик — 404', (await call(seedH, { draft: 'start', device_id: victim, secret: victimSecret, chal_id: 'nochal99', formation })).c === 404); }
   ok('save: невідомий kind — 400', (await call(saveH, { kind: 'daily', device_id: me, secret: mySecret, row: {} })).c === 400);
   // /api/seed: foreign device
-  const dayArgs = { xi: dxi, formation: D.formation, mode: 'daily', format: 'classic', year: D.year, daily: true };
-  ok('seed: чужий пристрій з чужим секретом — 401 (офіційна спроба жертви ціла)', (await call(seedH, { device_id: victim, secret: 'attacker-secret-0123456789', ...dayArgs })).c === 401 && !DB.season_seeds.some(x => x.device_id === victim && x.daily));
+  const dayArgs = { xi: dxi, formation: D.formation, mode: 'normal', format: 'classic', year: D.year };
+  ok('seed: чужий пристрій з чужим секретом — 401', (await call(seedH, { device_id: victim, secret: 'attacker-secret-0123456789', ...dayArgs })).c === 401 && !DB.season_seeds.some(x => x.device_id === victim && x.kind === 'legacy'));
   ok('seed: без секрету в перехідний період (сайт 0.52) — видається', (await call(seedH, { device_id: crypto.randomUUID(), ...dayArgs })).c === 200);
   LEGACY_OPEN = false;
-  ok('seed: без секрету після кроку 2 — 401', (await call(seedH, { device_id: victim, ...dayArgs })).c === 401 && !DB.season_seeds.some(x => x.device_id === victim && x.daily));
-  // client timed out and retried: same squad, attempt not played -> the same official seed; another squad -> a regular attempt
-  {const rd = crypto.randomUUID(), rsec = 'retry-secret-0123456789ab';
-   const r1 = await call(seedH, { device_id: rd, secret: rsec, ...dayArgs }), r2 = await call(seedH, { device_id: rd, secret: rsec, ...dayArgs });
-   const n1 = DB.season_seeds.filter(x => x.device_id === rd).length;
-   const other = { ...dayArgs, xi: [...dayArgs.xi.slice(1), dayArgs.xi[0]] };
-   const r3 = await call(seedH, { device_id: rd, secret: rsec, ...other });
-   ok('seed: повтор після таймауту — той самий офіційний seed', r1.j.official && r2.j.official && r2.j.seed === r1.j.seed && r2.j.seed_id === r1.j.seed_id && n1 === 1, `${r1.j.seed}/${r2.j.seed}`);
-   ok('seed: інший склад після офіційного — звичайна спроба', r3.c === 200 && !r3.j.official && r3.j.seed_id !== r1.j.seed_id);}
-  // two concurrent requests - only one official attempt
-  const racer = crypto.randomUUID(), rs = 'racer-secret-0123456789ab';
-  const both = await Promise.all([call(seedH, { device_id: racer, secret: rs, ...dayArgs }), call(seedH, { device_id: racer, secret: rs, ...dayArgs })]);
-  ok('seed: гонка двох запитів — одна офіційна спроба (той самий seed обом)', both.every(x => x.c === 200) && both[0].j.seed_id === both[1].j.seed_id && DB.season_seeds.filter(x => x.device_id === racer && x.official).length === 1, both.map(x => x.j.official + ':' + x.j.seed).join('/'));
-  // race with a different squad: the second one is a regular attempt
-  const racer2 = crypto.randomUUID(), rs2 = 'racer2-secret-0123456789ab', alt = { ...dayArgs, xi: [...dayArgs.xi.slice(1), dayArgs.xi[0]] };
-  const both2 = await Promise.all([call(seedH, { device_id: racer2, secret: rs2, ...dayArgs }), call(seedH, { device_id: racer2, secret: rs2, ...alt })]);
-  ok('seed: гонка з різними складами — офіційна лише одна', both2.every(x => x.c === 200) && both2.filter(x => x.j.official).length === 1);
+  ok('seed: без секрету після кроку 2 — 401', (await call(seedH, { device_id: victim, ...dayArgs })).c === 401 && !DB.season_seeds.some(x => x.device_id === victim && x.kind === 'legacy'));
   // device-secret SQL not applied yet: server says 'write the old way', seed still works
   SQL053 = false;
   const fb = await call(saveH, { kind: 'season', device_id: me, secret: mySecret, row: season });
@@ -578,7 +543,6 @@ const res6 = q => ({ w: q.W, d: q.D, l: q.L, pts: q.pts, place: q.place, gf: q.g
       ['normal', 'legends', E.LEAGUE_LEGENDS], ['normal', 'derby', E.LEAGUE_CULT], ['normal', 'oneclub', E.LEAGUE_CULT], ['normal', 'anti', E.LEAGUE_CULT], ['normal', 'classic', E.YEARS16[0]]];
     const good = []; for (const [m, f, y] of goodCombos) good.push((await call(seedH, { ...base, mode: m, format: f, year: y })).c);
     ok('seed: чинні комбінації старих вкладок (усі режими й формати) проходять', good.every(c => c === 200), good.join(','));
-    { const D0 = E.dailySetupFor('2026-10-12'); ok('seed: старий драфт дня (daily + mode daily, рік і схема дня) проходить', (await call(seedH, { ...base, device_id: crypto.randomUUID(), secret: 'daily-secret-0123456789abc', mode: 'daily', daily: true, year: D0.year, formation: D0.formation })).c === 200); }
     // verify no longer lets an empty seed field match any mode
     const sr = await draftSeason(me, mySecret, { formation });
     const seedRow = DB.season_seeds.find(x => x.id === sr.st.j.seed_id);

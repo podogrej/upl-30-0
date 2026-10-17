@@ -15,18 +15,18 @@ function pickW(cands, r, uniform) {
 }
 
 // one draft + season
-// cfg: {format, club, mode, sigma, formation, daily:{seq,year,formation}|null, seed, y0}; y0: era, wheel uses only club-seasons from y0
+// cfg: {format, club, mode, sigma, formation, seed, y0}; y0: era, wheel uses only club-seasons from y0
 function play(cfg) {
   const r = mulberry32(cfg.seed);
   E.setFormat(cfg.format);
   const anti = cfg.format === 'anti';
-  const formation = cfg.daily ? cfg.daily.formation : cfg.formation;
+  const formation = cfg.formation;
   const slots = FORMATIONS[formation].slots.map(slot => ({ slot, p: null }));
   const taken = new Set();   // people by canonical id (DATA.alias), same as S.taken in the game
   const noise = {};   // perception noise is fixed per player for the whole draft
   const perceived = (p, slot) => { const er = effRating(p, slot); if (er == null) return null; if (!(p[5] in noise)) noise[p[5]] = normal(r) * cfg.sigma; return (SEE === 'base' ? p[2] : er) + noise[p[5]]; };
-  const pool0 = anti || cfg.format === 'classic' || cfg.format === 'legends' || cfg.daily ? DATA.clubs : cfg.format === 'derby' ? DATA.clubs.filter(c => FORMATS.derby.clubs.includes(c.c)) : DATA.clubs.filter(c => c.c === cfg.club);
-  const pool = cfg.y0 && !cfg.daily ? pool0.filter(c => c.y >= cfg.y0) : pool0;
+  const pool0 = anti || cfg.format === 'classic' || cfg.format === 'legends' ? DATA.clubs : cfg.format === 'derby' ? DATA.clubs.filter(c => FORMATS.derby.clubs.includes(c.c)) : DATA.clubs.filter(c => c.c === cfg.club);
+  const pool = cfg.y0 ? pool0.filter(c => c.y >= cfg.y0) : pool0;
   const okP = p => !taken.has(canon(p[5])) && (!anti || p[3] >= ANTI_MIN_APPS);
   const best = cs => {   // best move (worst for anti) in this club-season
     let b = null;
@@ -35,13 +35,10 @@ function play(cfg) {
         const score = anti ? -v : v; if (!b || score > b.score) b = { p, s, score, v }; } }
     return b;
   };
-  let rerolls = cfg.daily ? 1 : MODES[cfg.mode].rerolls, ptr = 0;
+  let rerolls = MODES[cfg.mode].rerolls;
   // rejection sampling: same result as the game's "has a pickable player" filter + weighted pick, but faster
   const spinFresh = () => { for (let t = 0; t < 5000; t++) { const c = pickW(pool, r, anti); if (best(c)) return c; } return pool.find(c => best(c)); };
-  const spin = () => {
-    if (cfg.daily) { while (ptr < cfg.daily.seq.length) { const c = DATA.clubs[cfg.daily.seq[ptr++]]; if (best(c)) return c; } }
-    return spinFresh();
-  };
+  const spin = spinFresh;
   const REROLL_BELOW = cfg.rerollBelow ?? 83;
   // season-pick mode: wheel gives a club, bot takes the best move among three random seasons of that club (with pickable players)
   const pickN = MODES[cfg.mode] && MODES[cfg.mode].pick;
@@ -49,14 +46,14 @@ function play(cfg) {
     while (opts.length < pickN && all.length) opts.push(all.splice(Math.floor(r() * all.length), 1)[0]);
     let bb = null; for (const c of opts) { const b = best(c); if (b) { b.cc = c.c; b.y = c.y; } if (!bb || b.score > bb.score) bb = b; } return bb; };
   for (let k = 0; k < 11; k++) {
-    if (pickN && !cfg.daily) { const b = spinPick(); b.s.p = b.p; b.s.cc = b.cc; b.s.y = b.y; taken.add(canon(b.p[5])); continue; }
+    if (pickN) { const b = spinPick(); b.s.p = b.p; b.s.cc = b.cc; b.s.y = b.y; taken.add(canon(b.p[5])); continue; }
     let cs = spin(), b = best(cs);
     while (rerolls > 0 && !anti && b.v < REROLL_BELOW) { rerolls--; cs = spinFresh(); b = best(cs); }
     b.s.p = b.p; b.s.cc = cs.c; b.s.y = cs.y; taken.add(canon(b.p[5]));
   }
   const xi = slots.map(s => ({ id: s.p[5], name: s.p[0], slot: s.slot, pos: GROUP_OF[s.slot], r: effRating(s.p, s.slot), cc: s.cc, y: s.y }));
-  const year = cfg.daily ? cfg.daily.year : cfg.year || (E.LEAGUE_CULT ? (cfg.format === 'legends' || (cfg.format === 'classic' && E.VERSION >= '0.64') ? E.LEAGUE_LEGENDS : E.LEAGUE_CULT) : YEARS16[Math.floor(r() * YEARS16.length)]);   // cult-clubs league; classic uses the legends league since 0.64 (as oppYear); old engines use a random season
-  const mode = cfg.daily ? 'daily' : cfg.mode;
+  const year = cfg.year || (E.LEAGUE_CULT ? (cfg.format === 'legends' || (cfg.format === 'classic' && E.VERSION >= '0.64') ? E.LEAGUE_LEGENDS : E.LEAGUE_CULT) : YEARS16[Math.floor(r() * YEARS16.length)]);   // cult-clubs league; classic uses the legends league since 0.64 (as oppYear); old engines use a random season
+  const mode = cfg.mode;
   const res = E.run({ xi, mode, format: cfg.format, year, seed: Math.floor(r() * 2147483647) });
   const avg = xi.reduce((a, x) => a + x.r, 0) / 11;
   return { W: res.W, D: res.D, L: res.L, pts: res.pts, place: res.place, gf: res.gf, ga: res.ga, avg };
@@ -83,8 +80,6 @@ if (require.main === module) {
   for (const [who, sigma] of Object.entries(SIGMAS)) {
     for (const mode of ['normal', 'hard', 'pick'])
       runSet(`classic|${mode}|${who}`, i => ({ format: 'classic', mode, sigma, formation: FORMS[i % FORMS.length], seed: seedBase++ }));
-    // daily challenge: different days
-    runSet(`daily|daily|${who}`, i => { const day = new Date(Date.UTC(2026, 8, 28) + (i % 365) * 864e5).toISOString().slice(0, 10); return { format: 'classic', mode: 'daily', sigma, daily: E.dailySetupFor(day), seed: seedBase++ }; });
     for (const mode of ['normal', 'hard'])
       runSet(`derby|${mode}|${who}`, i => ({ format: 'derby', mode, sigma, formation: FORMS[i % FORMS.length], seed: seedBase++ }));
     for (const club of ['dynamo-kyiv', 'shakhtar-donetsk', 'dnipro', 'vorskla-poltava'])

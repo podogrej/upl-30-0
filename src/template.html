@@ -244,9 +244,9 @@ td.avgc{font-family:var(--font-display);font-weight:var(--wt-bold);font-size:var
 .tre{display:inline-grid;place-items:center;width:42px;height:42px;border-radius:50%;background:var(--bg2);font-size:var(--fs-title2);line-height:1;letter-spacing:var(--ls-tight)}.tre.off{filter:grayscale(1);opacity:.45}.chip .tre,.trchip .tre{width:22px;height:22px;font-size:var(--fs-body);background:none}.tro0 .tre{width:26px;height:26px;font-size:var(--fs-headline)}   /* trophy icons are emoji */
 .ic.sm{width:20px;height:20px;margin-right:var(--sp-2)}.ic.sm .ico{width:16px;height:16px}
 .ic.lg{width:34px;height:34px}.ic.lg .ico{width:26px;height:26px}
-button:has(.ic),a.btnlink:has(.ic){display:inline-flex;align-items:center;justify-content:center;gap:var(--sp-2)}
+button:has(.ic){display:inline-flex;align-items:center;justify-content:center;gap:var(--sp-2)}
 button:has(.ic) .ic{margin-left:calc(var(--sp-1) * -1)}
-.primary .ic,a.btnlink .ic{color:var(--bg);width:22px;height:22px}.primary .ic .ico,a.btnlink .ic .ico{width:22px;height:22px}
+.primary .ic{color:var(--bg);width:22px;height:22px}.primary .ic .ico{width:22px;height:22px}
 .ghost .ic{width:18px;height:18px;margin-right:0}.ghost .ic .ico{width:18px;height:18px}
 .chip:has(.ic),.chip.ms{display:inline-flex;align-items:center;gap:var(--sp-2)}.chip .ic{width:18px;height:18px;margin-left:calc(var(--sp-1) * -1)}.chip .ic .ico{width:14px;height:14px}
 .kicker .ic{margin-right:var(--sp-2)}
@@ -325,7 +325,6 @@ details.tip[open]>summary::before{transform:rotate(90deg)}details.tip>p,details.
 .f5goal{padding:var(--sp-3) var(--sp-3);border-radius:var(--r-md);background:color-mix(in srgb,var(--amber) 14%,var(--surface));border:1px solid var(--amber);animation:pop var(--dur-3) var(--spring-pop) both}.f5goal.s1{text-align:right}
 .f5pen{font-size:.45em}
 .f5wholist{display:grid;gap:var(--sp-2)}.f5who{display:flex;flex-wrap:wrap;gap:var(--sp-2) var(--sp-2);align-items:center;padding:var(--sp-2) var(--sp-3);border:1px solid var(--line);border-radius:var(--r-sm);background:var(--bg)}
-a.btnlink{display:block;text-align:center;text-decoration:none;background:var(--ink);color:var(--bg);border:1px solid var(--ink);border-radius:var(--r-md);padding:var(--sp-3) var(--sp-4);font-weight:var(--wt-bold)}
 .foot{margin-top:var(--sp-6);font-family:var(--font-mono);font-size:var(--fs-caption2);color:var(--muted);text-align:center}
 /* difficulty levels in tables, player name, test DB badge */
 .lv{display:inline-block;font-family:var(--font-mono);font-size:var(--fs-caption2);font-weight:var(--wt-bold);letter-spacing:var(--ls-0);padding:var(--sp-0h) var(--sp-2);border-radius:var(--r-pill);border:1px solid currentColor;vertical-align:1px;white-space:nowrap}
@@ -2347,10 +2346,6 @@ const lgAttempt=()=>!S.vd&&!S.league&&!S.challenge&&!S.pickMode&&S.format==='cla
 // play button of the chat tables: always the format chat leagues count
 function openLeaguePlay(){setFmt('classic');const m=document.querySelector('#modes .opt[data-m="normal"]'),e=document.querySelector('#eras [data-era="all"]');if(m)m.click();if(e)e.click();go(4);}
 const lgFree=w=>w.format==='classic'&&w.mode==='normal'&&!w.practice&&!w.day&&!w.era&&!w.fl_id;
-// server recomputes the season and marks it verified
-async function verifySeason(r){
-  try{const res=await _fetch('/api/verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({season_id:r.rowId})});const j=await res.json();if(res.status===429)r.slow=j.error;verifiedUi(r,j);}catch(e){}
-}
 function verifiedUi(r,j){r.verified=j.verified;
     const el=document.getElementById('verLine');if(el&&S.result===r){el.hidden=j.verified!==true&&!r.slow;if(j.verified===true){el.innerHTML=ic('check-decagram','sm')+'Результат перевірено сервером';boardStale();}else if(r.slow)el.textContent=r.slow;}
 }

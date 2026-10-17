@@ -8,7 +8,6 @@
 //   kind 'trophies'    {ids:[...]}     -> first trophy unlocks -> {ok}
 //   kind 'challenge'   {season_id, row:{id, name}} -> friend challenge from an own verified season with a server wheel -> {id}
 //   kind 'chal_result' -> ignored (the result is written when the squad is locked, api/_draft.js)
-// Daily challenge result is not written here: the server writes it from the verified season (api/verify.js, syncDaily).
 // 503 {fallback:true}: DB has no device_ok yet (SQL 0.53 not applied). Clients 0.73.1+ do not write directly any more (sql/v054_close_writes.sql).
 const { sb, gate, tgUser, body } = require('./_device.js');
 const { verifyById, seasonTrophy } = require('./verify.js');
