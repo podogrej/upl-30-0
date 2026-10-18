@@ -5,6 +5,7 @@ const L = require('./_league.js');
 const C = require('./_channel.js');   // channel post queue
 const N = require('./_notify.js');   // opt-in evening notifications to players
 const { plUk } = require('./_lib.js');
+const D = require('./_device.js');   // per-IP rate limit for the database token
 const { errDigest } = require('./_errdigest.js');   // errors digest
 const MAX_LINES = 30;   // table lines per message (Telegram limit 4096 characters)
 const more = n => n > 0 ? `\n…і ще ${n}` : '';
@@ -16,9 +17,12 @@ module.exports = async (req, res) => {
   const cronSecret = L.env('CRON_SECRET');
   const auth = String((req.headers && req.headers.authorization) || '');
   const okBy = sec => !!sec && safeEq(auth, `Bearer ${sec}`);
-  // ?task=channel: channel queue only (every ~10 min from GitHub Actions, .github/workflows/channel.yml); key: CHANNEL_SECRET or CRON_SECRET
+  // ?task=channel: channel queue only (every 10 min from pg_cron, sql/v0912_channel_cron.sql); key: CHANNEL_SECRET, CRON_SECRET
+  // or the database token (cron_token_ok, 64 hex chars), checked with the service key and rate limited per IP
   if (req.query && req.query.task === 'channel') {
-    if (!okBy(cronSecret) && !okBy(L.env('CHANNEL_SECRET'))) return res.status(401).json({ error: 'unauthorized' });
+    const tok = /^Bearer ([0-9a-f]{64})$/.exec(auth);
+    const dbOk = async () => !!tok && !(await D.rateLimit(req, res, 'cron')) && (await L.sb('rpc/cron_token_ok', { method: 'POST', body: { p_token: tok[1] } })) === true;
+    if (!okBy(cronSecret) && !okBy(L.env('CHANNEL_SECRET')) && !(await dbOk())) return res.headersSent ? undefined : res.status(401).json({ error: 'unauthorized' });
     try { return res.status(200).json({ ok: true, channel: await C.runChannel() }); } catch (e) { return res.status(500).json({ error: String(e && e.message || e).slice(0, 200) }); }
   }
   if (!okBy(cronSecret)) return res.status(401).json({ error: 'unauthorized' });
