@@ -133,6 +133,8 @@ const kb=x=>(x.b.reply_markup&&x.b.reply_markup.inline_keyboard||[]).flat().map(
   ok((await cron({task:'channel'},'b'.repeat(64))).c===401,'чужий 64-символьний ключ — 401');
   RPC=[];ok((await cron({},DBT)).c===401&&!RPC.length,'ключ бази не відкриває щоденний підсумок ліг');
   RPC=[];await cron({task:'channel'},'wrong');ok(!RPC.length,'ключ не того формату — без запиту до бази');
+  const F1=global.fetch;global.fetch=async(url,o={})=>/rpc\/cron_token_ok$/.test(String(url))?{ok:false,status:500,json:async()=>({}),text:async()=>'db down'}:F1(url,o);
+  const re=await cron({task:'channel'},DBT);ok(re.c===401,'ключ бази: база не відповіла — 401, без тексту помилки');global.fetch=F1;
   LIMITED=true;RPC=[];const rl=await cron({task:'channel'},DBT);ok(rl.c===429&&!RPC.includes('cron_token_ok'),'ключ бази: ліміт частоти — 429 без перевірки ключа');LIMITED=false;
   global.fetch=F0;
   // bot made admin of a channel: ID goes to the admin privately, nothing into the channel

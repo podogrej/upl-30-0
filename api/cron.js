@@ -21,7 +21,7 @@ module.exports = async (req, res) => {
   // or the database token (cron_token_ok, 64 hex chars), checked with the service key and rate limited per IP
   if (req.query && req.query.task === 'channel') {
     const tok = /^Bearer ([0-9a-f]{64})$/.exec(auth);
-    const dbOk = async () => !!tok && !(await D.rateLimit(req, res, 'cron')) && (await L.sb('rpc/cron_token_ok', { method: 'POST', body: { p_token: tok[1] } })) === true;
+    const dbOk = async () => !!tok && !(await D.rateLimit(req, res, 'cron')) && (await L.sb('rpc/cron_token_ok', { method: 'POST', body: { p_token: tok[1] } }).catch(e => { console.error('cron token:', String(e && e.message || e).slice(0, 200)); return false; })) === true;
     if (!okBy(cronSecret) && !okBy(L.env('CHANNEL_SECRET')) && !(await dbOk())) return res.headersSent ? undefined : res.status(401).json({ error: 'unauthorized' });
     try { return res.status(200).json({ ok: true, channel: await C.runChannel() }); } catch (e) { return res.status(500).json({ error: String(e && e.message || e).slice(0, 200) }); }
   }
