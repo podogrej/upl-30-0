@@ -19,8 +19,11 @@ async function pickOne(pg){await pg.click('#spinBtn');await pg.waitForSelector('
  // draft: player flies to the pitch
  await pg.click('#freeOpen');await pg.click('#startBtn');
  await pg.click('#spinBtn');await pg.waitForSelector('#squad .pl:not([disabled])',{timeout:8000});await (await pg.$('#squad .pl:not([disabled])')).click();await pg.waitForTimeout(40);
- const pb=await pg.$('#squad .plpos button');const land=pg.waitForSelector('#pitch .disc.land0',{timeout:1500}).then(()=>true).catch(()=>false);if(pb)await pb.click();
- T.check(await land,'0.66: гравець не «летить», лише відгук кружка на полі (.land0)');await pg.waitForTimeout(500);
+ const pb=await pg.$('#squad .plpos button');
+ // the land0 class lives only for the animation: an observer set before the click records it even on a slow, loaded machine
+ await pg.evaluate(()=>{window.__land=false;const o=new MutationObserver(()=>{if(document.querySelector('#pitch .disc.land0')){window.__land=true;o.disconnect();}});o.observe(document.getElementById('pitch'),{subtree:true,childList:true,attributes:true,attributeFilter:['class']});});
+ if(pb)await pb.click();const land=await pg.waitForFunction(()=>window.__land,null,{timeout:5000}).then(()=>true).catch(()=>false);
+ T.check(land,'0.66: гравець не «летить», лише відгук кружка на полі (.land0)');await pg.waitForTimeout(500);
  for(let i=1;i<11;i++)await pickOne(pg);
  await pg.waitForSelector('#simBtn:not([hidden])');await pg.click('#simBtn');await pg.waitForSelector('#live:not([hidden])');
  const goal=await pg.waitForFunction(()=>document.querySelector('#lvMatch .goal0'),null,{timeout:12000}).then(()=>true).catch(()=>false);

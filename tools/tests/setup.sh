@@ -927,6 +927,19 @@ chk "v090 профіль: execute лише в anon і authenticated, не в pub
   assert has_function_privilege('anon', 'public.player_profile(uuid)', 'execute') and has_function_privilege('authenticated', 'public.player_profile(uuid)', 'execute'), 'anon';
   assert not exists (select 1 from pg_proc p, aclexplode(p.proacl) a where p.proname = 'player_profile' and a.grantee = 0), 'public має execute';
   assert (select count(*) from pg_proc where proname = 'player_profile') = 1, 'перевантаження';"
+# channel tick from pg_cron (sql/v0912_channel_cron.sql, part 1): token kept on a rerun, only the service role checks it
+for pass in 1 2; do
+  if $P -d t1 -tA -f "$ROOT/sql/v0912_channel_cron.sql" >"$D/out$pass" 2>"$D/err"; then ok "запуск $pass: v0912_channel_cron.sql"; else bad "запуск $pass: v0912_channel_cron.sql — $(grep -v NOTICE "$D/err" | head -3)"; fi
+done
+if [ "$(cat "$D/out1")" = "1|t|f" ] && [ "$(cat "$D/out2")" = "1|t|f" ]; then ok "v0912: один ключ, перевірка проходить, anon не читає app_secrets"; else bad "v0912: перевірка — $(cat "$D/out1") / $(cat "$D/out2")"; fi
+chk "v0912: ключ — 64 hex, чужі ключі не проходять" postgres "
+  assert (select value ~ '^[0-9a-f]{64}\$' from app_secrets where name = 'channel_cron'), 'формат';
+  assert not cron_token_ok('a') and not cron_token_ok(null) and not cron_token_ok(repeat('0', 64)), 'чужий ключ';"
+chk "v0912: anon і authenticated не викликають cron_token_ok і channel_cron_on" postgres "
+  assert not has_function_privilege('anon', 'public.cron_token_ok(text)', 'execute') and not has_function_privilege('authenticated', 'public.cron_token_ok(text)', 'execute'), 'cron_token_ok';
+  assert not has_function_privilege('anon', 'public.channel_cron_on(text)', 'execute') and not has_function_privilege('authenticated', 'public.channel_cron_on(text)', 'execute'), 'channel_cron_on';
+  assert has_function_privilege('service_role', 'public.cron_token_ok(text)', 'execute'), 'service_role';
+  assert not has_table_privilege('authenticated', 'public.app_secrets', 'select'), 'authenticated читає';"
 echo "база: $D (порт $PORT)"
 [ $FAIL = 0 ] && echo "SQL: УСЕ ГАРАЗД ($N перевірок)" || echo "SQL: ПРОБЛЕМИ $FAIL/$N"
 exit $((FAIL>0))

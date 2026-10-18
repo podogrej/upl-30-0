@@ -125,6 +125,18 @@ const kb=x=>(x.b.reply_markup&&x.b.reply_markup.inline_keyboard||[]).flat().map(
   ok((await cron({task:'channel'})).c===401&&(await cron({task:'channel'},'wrong')).c===401,'?task=channel без ключа / з чужим — 401');
   const rc=await cron({task:'channel'},'chan');ok(rc.c===200&&rc.j.channel&&rc.j.channel.env==='p','?task=channel з CHANNEL_SECRET — працює');
   ok((await cron({},'chan')).c===401,'CHANNEL_SECRET не відкриває щоденний підсумок ліг (лише CRON_SECRET)');
+  // database token (pg_cron, sql/v0912_channel_cron.sql): checked by rpc cron_token_ok, rate limited per IP
+  const DBT='a'.repeat(64),F0=global.fetch;let RPC=[],LIMITED=false;
+  global.fetch=async(url,o={})=>{const m=/\/rest\/v1\/rpc\/(cron_token_ok|rate_hit)$/.exec(String(url));if(!m)return F0(url,o);
+    const b=JSON.parse(o.body||'{}'),v=m[1]==='rate_hit'?!LIMITED:b.p_token===DBT;RPC.push(m[1]);return {ok:true,status:200,json:async()=>v,text:async()=>JSON.stringify(v)};};
+  const rd=await cron({task:'channel'},DBT);ok(rd.c===200&&rd.j.channel&&RPC.includes('cron_token_ok'),'?task=channel з ключем бази — працює (перевірка через cron_token_ok)');
+  ok((await cron({task:'channel'},'b'.repeat(64))).c===401,'чужий 64-символьний ключ — 401');
+  RPC=[];ok((await cron({},DBT)).c===401&&!RPC.length,'ключ бази не відкриває щоденний підсумок ліг');
+  RPC=[];await cron({task:'channel'},'wrong');ok(!RPC.length,'ключ не того формату — без запиту до бази');
+  const F1=global.fetch;global.fetch=async(url,o={})=>/rpc\/cron_token_ok$/.test(String(url))?{ok:false,status:500,json:async()=>({}),text:async()=>'db down'}:F1(url,o);
+  const re=await cron({task:'channel'},DBT);ok(re.c===401,'ключ бази: база не відповіла — 401, без тексту помилки');global.fetch=F1;
+  LIMITED=true;RPC=[];const rl=await cron({task:'channel'},DBT);ok(rl.c===429&&!RPC.includes('cron_token_ok'),'ключ бази: ліміт частоти — 429 без перевірки ключа');LIMITED=false;
+  global.fetch=F0;
   // bot made admin of a channel: ID goes to the admin privately, nothing into the channel
   TG.length=0;await bot({update_id:UID++,my_chat_member:{chat:{id:-1003748699064,type:'channel',title:'УПЛ ностальгія',username:'upl_nostalgia'},from:{id:777},old_chat_member:{status:'left'},new_chat_member:{status:'administrator'}}});
   ok(sent(777,/-1003748699064/).length===1&&!TG.some(x=>String(x.b.chat_id)==='-1003748699064'),'бота зробили адміном каналу — ID власнику в особисті, у канал нічого');
