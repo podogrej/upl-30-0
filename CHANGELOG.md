@@ -15,6 +15,8 @@
 
 ## 0.91 «Рейтинги за кар'єрою» — 17.10.2026
 
+**SQL (без смены версии, 18.10):** шаг 2 защиты данных 0.87 — `sql/v088_revoke_pii_step2.sql` выполнен в тестовой, затем в основной базе. Перед этим: последний сезон версии 0.86 — 11.10 (7 дней), в логах Supabase за сутки нет прямых чтений этих таблиц из браузера, клиент 0.91 читает только `*_pub`, `user_state` и RPC. Проверено запросом и от имени anon: `seasons`, `players`, `trophies`, `league_results`, `challenges` → 42501; `seasons_pub`, `challenges_pub`, `challenge_results_pub`, `trophy_stats`, `game_stats`, `/r/<id>` работают; права anon/authenticated в обеих базах совпадают. Откат: `grant select on <таблица> to anon, authenticated`.
+
 **Сервер (без смены версии, 17.10, просьба маркетинга):** короткие ссылки для постов — `vercel.json` `redirects`: `/t`, `/tb`, `/to`, `/tg`, `/tr/<имя>` → 302 на главную с UTM-метками (docs/marketing/README.md §6). Проверка — `tools/tests/headers.js`.
 
 Пакет утверждён владельцем 17.10: рейтинги по кривой карьеры + мелочи.
