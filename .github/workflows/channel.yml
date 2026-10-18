@@ -1,12 +1,10 @@
-# Telegram channel queue: every 10 minutes calls /api/cron?task=channel (api/_channel.js): due drafts (publish_at <= now) sent to the admin for approval, auto posts.
-# Vercel Hobby allows Cron only once a day, so the frequent run lives here. GitHub runs schedules only from main and may lag 5–15 min.
+# Telegram channel queue: calls /api/cron?task=channel (api/_channel.js): due drafts (publish_at <= now) sent to the admin for approval, auto posts.
+# Manual run only (Run workflow): the 10-minute tick comes from pg_cron in the main database (sql/v0912_channel_cron.sql).
 # Repository secrets (Settings → Secrets and variables → Actions):
 #   CHANNEL_SECRET: same value as the CHANNEL_SECRET env var in Vercel (Production and Preview);
 #   VERCEL_BYPASS: optional "Protection Bypass for Automation" key to reach the test deployment (behind Vercel auth).
 name: Канал
 on:
-  schedule:
-    - cron: '*/10 * * * *'
   workflow_dispatch:
 concurrency:
   group: channel
