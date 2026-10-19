@@ -946,6 +946,7 @@ for pass in 1 2; do
 done
 chk "v0911: anon не пише в players і seasons, не читає player_links і season_seeds; user_state — як було" postgres "
   assert not has_table_privilege('anon', 'public.players', 'insert') and not has_table_privilege('authenticated', 'public.seasons', 'delete'), 'запис';
+  assert not has_table_privilege('anon', 'public.seasons', 'truncate') and not has_table_privilege('authenticated', 'public.user_state', 'truncate'), 'truncate';
   assert not has_table_privilege('anon', 'public.player_links', 'select') and not has_table_privilege('authenticated', 'public.season_seeds', 'select'), 'читання';
   assert has_table_privilege('authenticated', 'public.user_state', 'insert') and has_table_privilege('authenticated', 'public.user_state', 'select'), 'user_state';"
 chk "v0911: 5x5 — нова ліга до турніру, обидва склади" authenticated "

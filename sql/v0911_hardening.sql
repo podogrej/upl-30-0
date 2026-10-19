@@ -28,6 +28,9 @@ do $$ declare t text; begin
   end loop;
 end $$;
 
+-- TRUNCATE bypasses RLS: no table of the public schema keeps truncate, references or trigger for anon/authenticated
+revoke truncate, references, trigger on all tables in schema public from anon, authenticated;
+
 -- 3. fl_get: before a 5x5 league is played, other members' formation is hidden too (DECISIONS item 22), not only their xi
 create or replace function public.fl_get(p_id text)
  returns json language sql stable security definer set search_path to 'public'
@@ -50,5 +53,6 @@ grant execute on function public.fl_get(text) to anon, authenticated;
 -- check: expected no rows
 select table_name, grantee, privilege_type from information_schema.role_table_grants
  where table_schema = 'public' and grantee in ('anon', 'authenticated')
-   and (privilege_type in ('INSERT', 'UPDATE', 'DELETE') and table_name <> 'user_state'
+   and (privilege_type in ('TRUNCATE', 'REFERENCES', 'TRIGGER')
+        or privilege_type in ('INSERT', 'UPDATE', 'DELETE') and table_name <> 'user_state'
         or privilege_type = 'SELECT' and table_name in ('app_marks', 'league_boards', 'player_links', 'season_seeds', 'tg_logins', 'f5_rooms', 'f5_players', 'f5_picks'));
