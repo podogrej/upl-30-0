@@ -381,8 +381,10 @@ td .sub{font-size:var(--fs-caption2);color:var(--muted);margin-top:var(--sp-0h);
 /* shr-*: screen opened by a result link (the rest reuses site components) */
 .shr-stack{display:grid;gap:var(--sp-4);padding-top:var(--sp-4)}
 .shr-stack{max-width:760px;margin-inline:auto}@media (min-width:1000px){.shr-stack{max-width:640px}}   /* same column as the result screen */
-.shr-stack .share{margin-top:0}.shr-stack .share .trsec{margin-top:0}.shr-stack>div>h3:first-child{margin-top:var(--sp-2)}   /* button + caption, then the heading at the result-screen rhythm */
-.shr-stack .trsec{margin-top:var(--sp-3);text-wrap:balance}
+.shr-stack .share{margin-top:0}.shr-stack>div>h3:first-child{margin-top:var(--sp-2)}   /* button + caption, then the heading at the result-screen rhythm */
+.shr-stack .share>p,.shr-stack h3+p{margin:0;text-align:center;font-size:var(--fs-footnote);text-wrap:balance}.shr-stack h3+p{text-align:start}.shr-stack h3+p+.shr-dots{margin-top:var(--sp-3)}
+.shr-stack .pitch{margin-inline:0}   /* field from the column's left edge, like the result tabs */
+.shr-dots{display:flex;gap:var(--sp-0h);justify-content:flex-start}@media (min-width:360px){.shr-dots{gap:var(--sp-2)}}.shr-dots i{flex:1 1 0;max-width:calc(var(--sp-6) + var(--sp-1));aspect-ratio:1;border-radius:50%;border:1.5px dashed var(--muted);box-sizing:border-box}.shr-dots i.on{border:0;background:color-mix(in srgb,var(--win) 70%,transparent)}
 @media (max-width:359px){.shr-stack .big{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-3) var(--sp-4)}}   /* 2x2 instead of 3+1 */
 .trp .sk{width:7em}
 .tile b .sk{display:block;height:calc(var(--fs-title1) * var(--lh-tight))}
@@ -2595,12 +2597,11 @@ async function openView(q){screenTag('view');const box=document.getElementById('
   try{const rows=await sbGet(`seasons_pub?select=*&${q}&limit=1`);body.innerHTML=rows.length?viewHtml(rows[0]):'<p class="muted">Склад для цього результату не збережено.</p>';}catch(e){body.innerHTML='<p class="muted">Не вдалося завантажити.</p>';}}
 // ---------- screen opened by a result link (?s=<id>, from /r/<id>): someone's season (or daily challenge) and one button to play
 const shrPlay=()=>{setFmt('classic');const m=document.querySelector('#modes .opt[data-m="normal"]'),e=document.querySelector('#eras [data-era="all"]');if(m)m.click();if(e)e.click();document.getElementById('startBtn').click();};   // classic, Normal level, all years
-// hidden squad: the site pitch with 11 equal empty positions (the squad is not sent)
-function shrPitch(s){const G=pitchGeo(s.formation),F=FORMATIONS[s.formation]||FORMATIONS['4-4-2'];
-  return `<div class="pitch" role="img" aria-label="Склад відкриється завтра">${PITCH_MK}${F.slots.map((sl,i)=>`<div class="slot empty ${GROUP_OF[sl]}" style="left:${G.pts[i].x}%;top:${G.pts[i].y}%">${slotInner(sl,null,{})}</div>`).join('')}</div>`;}
+// hidden squad: one row of 11 circles, `hit` filled, no positions (the squad is not sent)
+const shrDots=hit=>`<div class="shr-dots" role="img" aria-label="${hit} з 11">${Array.from({length:11},(_,i)=>`<i class="${i<hit?'on':''}"></i>`).join('')}</div>`;
 const SHR_WHAT='<details class="tip"><summary>Що це за гра?</summary><p class="muted cap">Крутиш колесо: випадає клуб і сезон УПЛ, обираєш гравця. Зібрав 11 — граєш сезон. Мета — 30-0.</p></details>';
 function shrShell(head,cta,sub,rest){
-  return `<div class="shr-stack">${head}<div class="share"><button class="sharebtn primary" id="shrGo" type="button">${esc(cta)}</button><p class="trsec">${esc(sub)}</p></div>${rest||''}${SHR_WHAT}</div>`;}
+  return `<div class="shr-stack">${head}<div class="share"><button class="sharebtn primary" id="shrGo" type="button">${esc(cta)}</button><p class="muted">${esc(sub)}</p></div>${rest||''}${SHR_WHAT}</div>`;}
 const shrWire=go1=>{document.getElementById('shrGo').onclick=go1;};
 function shrRender(raw){
   const s=cleanSeason(raw),vd=raw.vd_day!=null&&raw.vd_score!=null,box=document.getElementById('shr');
@@ -2608,10 +2609,10 @@ function shrRender(raw){
     box.innerHTML=shrShell(viewHero(s,true,true),'Зібрати свій склад','Без реєстрації',s.xi.length?`<div><h3>Склад</h3>${pitchHtml(s.formation,s.xi)}</div>`:'');
     shrWire(shrPlay);return;}
   const day=String(raw.vd_day).slice(0,10),score=Math.min(numOr0(raw.vd_score),11),m=vdMedal(score),ch=vdCh(day),hidden=!s.xi.length,today=day>=VD_DAY,cur=vdCh(VD_DAY);
-  const hero=`<div class="hero"><div class="tier">${m?m.e+' ':''}${score} з 11</div><div class="muted">${plink(s)} · Виклик дня №${vdNumber(day)}</div>${ch?`<p class="note" style="margin:0"><b>${esc(ch.title)}${/[.!?…]$/.test(ch.title)?'':'.'}</b> ${esc(ch.task)}</p>`:''}${viewBig(s,true)}</div>`;
-  const att=`${VD_ATTEMPTS} ${plUk(VD_ATTEMPTS,'спроба','спроби','спроб')} · без реєстрації`;
-  box.innerHTML=shrShell(hero,today?'Пройти виклик':'Пройти сьогоднішній виклик',today?att:(cur?`Сьогодні: ${cur.title.replace(/[.!?…]$/,'')} · `:'Сьогодні новий виклик · ')+att,
-    `<div><h3>Склад</h3>${hidden?shrPitch(s)+`<p class="trsec">Склад відкриється завтра</p>`:pitchHtml(s.formation,s.xi)}</div>`);
+  const hero=`<div class="hero"><div class="tier">${m?m.e+' ':''}${score} з 11</div><div class="muted">${plink(s)} · Виклик дня №${vdNumber(day)}</div>${ch&&today?`<p class="note" style="margin:0"><b>${esc(ch.title)}${/[.!?…]$/.test(ch.title)?'':'.'}</b> ${esc(ch.task)}</p>`:''}${viewBig(s,true)}</div>`;
+  const att=`${VD_ATTEMPTS} ${plUk(VD_ATTEMPTS,'спроба','спроби','спроб')}\u00a0· без реєстрації`;
+  box.innerHTML=shrShell(hero,today?'Пройти виклик':'Сьогоднішній виклик',today?att:(cur?`Сьогодні — №${vdNumber(VD_DAY)}: ${cur.title.replace(/^[^\p{L}\p{N}]+/u,'').replace(/[.!?…]$/,'')}`:'Сьогодні новий виклик')+`\u00a0· ${att}`,
+    `<div><h3>Склад</h3>${hidden?`<p class="muted">Склад відкриється завтра</p>${shrDots(score)}`:pitchHtml(s.formation,s.xi)}</div>`);
   shrWire(()=>vdCh(VD_DAY)?vdOpen(VD_DAY,'#shrGo'):go(1));}
 async function openShared(sid){
   history.replaceState({sec:12,i:0},'',location.href);
