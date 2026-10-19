@@ -79,7 +79,7 @@ function mkDB(n,fmt5){
  const sk=await pg.$eval('#skipBtn',e=>Math.round(e.getBoundingClientRect().height));T.check(sk>=44,'«Одразу до фіналу сезону»: висота '+sk+'px');
  await shot(pg,'live_phone_dark');
  await pg.click('#skipBtn');await pg.waitForTimeout(700);
- gr=await gradients(pg);T.check(gr.length===0&&await pg.evaluate(()=>{const b=document.getElementById('tgShareBtn');return !!b&&b.getBoundingClientRect().height>=44;}),'підсумок: одна головна кнопка «Поділитися», без градієнтних ('+gr.join()+')');
+ gr=await gradients(pg);T.check(gr.length===1,'підсумок: один градієнтний елемент-кнопка ('+gr.join()+')');
  await shot(pg,'result_phone_dark',true);await theme(pg,'light');await shot(pg,'result_phone_light',true);await theme(pg,'dark');
  const sm=await pg.evaluate(()=>{document.querySelectorAll('#final details').forEach(d=>d.open=false);const t=document.querySelector('#tabs .tab[data-tab="t2"]');if(t)t.click();return [...document.querySelectorAll('#final summary')].filter(s=>s.getBoundingClientRect().width>0).map(s=>({t:s.textContent.trim().slice(0,24),h:Math.round(s.getBoundingClientRect().height)}));});
  T.check(sm.length>=3&&!small(sm).length,`підсумок: summary-рядки ≥44px (${sm.map(x=>x.t+' '+x.h).join('; ')})`);

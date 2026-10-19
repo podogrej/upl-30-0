@@ -39,9 +39,9 @@ head='''<!doctype html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="description" content="Збери XI з усієї історії Прем'єр-ліги України 1992–2026 і пройди сезон 30-0. Щоденний виклик, дербі, антисезон.">
+<meta name="description" content="Збери склад із легенд УПЛ 1992–2026 і спробуй пройти сезон 30 перемог із 30. Безкоштовно, у браузері й у Telegram.">
 <meta property="og:title" content="30-0 УПЛ — драфт з історії чемпіонату України">
-<meta property="og:description" content="Колесо видає клуб і сезон, ти збираєш XI і граєш 30 турів. Чи вийде 30-0-0?">
+<meta property="og:description" content="Збери склад із легенд УПЛ 1992–2026 і спробуй пройти сезон 30 перемог із 30. Безкоштовно, у браузері й у Telegram.">
 <meta name="theme-color" content="#0b1430">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' x2='1'%3E%3Cstop offset='0' stop-color='%239a2bb5'/%3E%3Cstop offset='.5' stop-color='%23e0287a'/%3E%3Cstop offset='1' stop-color='%23ff831e'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='14' fill='%230b1430'/%3E%3Ctext x='32' y='38' font-size='23' font-family='Arial Black,Arial,sans-serif' font-weight='900' fill='white' text-anchor='middle' letter-spacing='-1'%3E30-0%3C/text%3E%3Crect x='12' y='46' width='40' height='6' rx='3' fill='url(%23g)'/%3E%3C/svg%3E">\n<link rel="apple-touch-icon" href="icon-180.png">   <!-- app icon: navy background with the UPL gradient -->
 <script>/* Microsoft Clarity (anonymous click analytics): production host only, not on the test deployment or in automated tests.

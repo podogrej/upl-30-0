@@ -36,6 +36,9 @@ T.check(ro.map(h => h.source).sort().join() === '/,/index.html', 'повна CSP
 const CSP = ro.length ? ro[0].headers.find(x => x.key.toLowerCase() === 'content-security-policy').value : '';
 T.check(ro.every(h => h.headers.length === 1 && h.headers[0].value === CSP), 'однакове правило для обох адрес');
 const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
+// link preview text (Telegram, Threads): marketing never says "wheel"
+{ const d = (html.match(/<meta property="og:description" content="([^"]*)">/) || [])[1] || '', m = (html.match(/<meta name="description" content="([^"]*)">/) || [])[1] || '';
+  T.check(d.length > 40 && m.length > 40 && !/колес/i.test(d + m), 'опис для превʼю (og:description, description) є і без слова «колесо»'); }
 // inline scripts the way the browser reads them: from <script> to the first </script>, no src, JavaScript type
 const inline = [...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)].filter(m => !/\bsrc=/i.test(m[1]) && !/type=["']?(?!text\/javascript|module|application\/javascript)/i.test(m[1])).map(m => m[2]);
 const want = [...new Set(inline.map(t => "'sha256-" + crypto.createHash('sha256').update(t, 'utf8').digest('base64') + "'"))].sort();

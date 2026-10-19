@@ -61,7 +61,7 @@ async function pickOne(pg){await pg.click('#spinBtn');await pg.waitForSelector('
      inT2:['xRow','idxRow','linesRow','xCap'].every(i=>t2.contains(document.getElementById(i))),xTxt:document.getElementById('xRow').textContent,idx:document.getElementById('idxRow').textContent,lines:document.getElementById('linesRow').textContent+document.getElementById('sayRow').textContent,
      hiddenXD:inD('xRow'),oldX:!!document.querySelector('#final>.hero #xRow'),
      scorersEl:!!document.getElementById('scorers'),h3:[...document.querySelectorAll('#t1 h3')].map(h=>h.textContent),top:document.getElementById('topScorer').textContent,topHidden:document.getElementById('topScorer').hidden,mvp:document.getElementById('mvpLine2').textContent,
-     sc:r.scorers[0]?r.scorers[0].name+' '+r.scorers[0].g:'',share:getComputedStyle(document.getElementById('tgShareBtn')).backgroundColor,alt:getComputedStyle(document.getElementById('againBtn')).backgroundColor,
+     sc:r.scorers[0]?r.scorers[0].name+' '+r.scorers[0].g:'',share:getComputedStyle(document.getElementById('tgShareBtn')).backgroundImage,alt:getComputedStyle(document.getElementById('againBtn')).backgroundImage,
      rows:(()=>{const a=document.getElementById('againBtn').getBoundingClientRect(),s=document.getElementById('tgShareBtn').getBoundingClientRect();return {againBelow:a.top>=s.bottom,w:a.width};})()};});
  T.check(sm.place===String(sm.rp)&&sm.tiles===2&&!sm.placeTiles.includes('місце'),`підсумок: одне велике місце (${sm.place}), плиток у рядку ${sm.tiles}`);
  T.check(!/Прогноз/.test(await pg.$eval('#final>.hero',e=>e.textContent)),'підсумок: плашки «Прогноз» у верхній картці немає');
@@ -71,7 +71,7 @@ async function pickOne(pg){await pg.click('#spinBtn');await pg.waitForSelector('
  T.check(sm.inT2&&/xG/.test(sm.xTxt)&&/Атака/.test(sm.idx)&&/Оборона/.test(sm.idx)&&/Прогноз перед сезоном/.test(sm.lines)&&!sm.oldX,'підсумок: xG, індекси, лінії — у вкладці «Статистика сезону»');
  T.check(!sm.scorersEl&&!sm.h3.includes('Бомбардири')&&!sm.topHidden&&/⚽/.test(sm.top)&&/Найкращий бомбардир/.test(sm.top)&&sm.top.includes(sm.sc.split(' ').slice(0,-1).join(' ')),`бомбардири: «${sm.top}»`);
  T.check(/Гравець сезону/.test(sm.mvp),'«Гравець сезону» лишився: '+sm.mvp);
- T.check(sm.share!=='rgba(0, 0, 0, 0)'&&sm.alt==='rgba(0, 0, 0, 0)','«Поділитися» — суцільна головна кнопка, «Новий драфт» — тиха (без заливки)');
+ T.check(/gradient/.test(sm.share)&&!/gradient/.test(sm.alt),'«Поділитися» — градієнтна головна кнопка, «Новий драфт» — другорядна');
  await shot(pg,'result_phone_dark',true);
  await pg.click('#tabs .tab[data-tab="t2"]');await pg.waitForTimeout(200);
  T.check(await pg.$eval('#xRow',e=>e.getBoundingClientRect().height>0&&!e.closest('[hidden]')),'«Статистика сезону»: xG видно одразу');
