@@ -364,6 +364,12 @@ const res6 = q => ({ w: q.W, d: q.D, l: q.L, pts: q.pts, place: q.place, gf: q.g
   ok('save: епоха записується в seasons.era (колесо «Усі роки» — не перевірено)', DB.seasons[DB.seasons.length - 1].era === 'y2015' && sEra.j.verified === false, sEra.j.note);
   await call(saveH, { kind: 'season', device_id: me, secret: mySecret, row: { ...season, era: '<b>' } });
   ok('save: некоректна епоха не пишеться', !('era' in DB.seasons[DB.seasons.length - 1]));
+  {const kd = t => new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Kyiv', year: 'numeric', month: '2-digit', day: '2-digit' }).format(t), today = kd(Date.now());
+   await call(saveH, { kind: 'season', device_id: me, secret: mySecret, row: { ...season, vd_day: today } });
+   const okToday = DB.seasons[DB.seasons.length - 1].vd_day === today;
+   await call(saveH, { kind: 'season', device_id: me, secret: mySecret, row: { ...season, vd_day: '2099-12-31' } });
+   const far = DB.seasons[DB.seasons.length - 1];
+   ok('save: день виклику (vd_day) приймається лише сьогодні/вчора за Києвом, далека дата відкидається (склад не сховати назавжди)', okToday && !('vd_day' in far));}
   ERA_COL = false; const nE = DB.seasons.length;
   const noCol = await call(saveH, { kind: 'season', device_id: me, secret: mySecret, row: { ...season, era: 'y2010' } });
   ok('save: без колонки era сезон однаково записано', noCol.c === 200 && DB.seasons.length === nE + 1 && !('era' in DB.seasons[nE]), `${noCol.c} ${noCol.j.error || ''}`);
