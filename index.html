@@ -4493,10 +4493,10 @@ function drawCard(r){   // card in site style: UPL navy background, UPL.TV gradi
     g.fillStyle=INK2;g.font=`600 28px ${BODY}`;const words=`${ch.title||''}. ${ch.task||''}`.split(' ');let ln='',ly=y+148;
     for(const w of words){const tr=ln?ln+' '+w:w;if(g.measureText(tr).width>W-224&&ln){g.fillText(ln,112,ly);ln=w;ly+=38;}else ln=tr;}if(ln)g.fillText(ln,112,ly);
     y+=th+44;
-    const rows=(FORMATIONS[S.formation]||FORMATIONS['4-4-2']).rows,ph=H-240-y;rr(80,y,W-160,ph,32);g.fillStyle='rgba(255,255,255,.05)';g.fill();
-    let k=0;rows.forEach((row,ri)=>{const cy=y+ph*(ri+.5)/rows.length;row.forEach((_,ci)=>{const cx=80+(W-160)*(ci+.5)/row.length;g.beginPath();g.arc(cx,cy,30,0,7);
-      if(k++<sc){g.fillStyle='#2fd07a';g.fill();g.strokeStyle='#fff';g.lineWidth=5;g.setLineDash([]);}else{g.setLineDash([10,8]);g.strokeStyle='rgba(255,255,255,.45)';g.lineWidth=4;}g.stroke();g.setLineDash([]);});});
-    g.fillStyle=MUTED;g.font=`600 24px ${MONO}`;g.fillText('СКЛАД ВІДКРИЄТЬСЯ ЗАВТРА',80,H-190);
+    const ph=120,step=(W-160)/11;rr(80,y,W-160,ph,32);g.fillStyle='rgba(255,255,255,.05)';g.fill();   // one row of 11 circles: hits first
+    for(let k=0;k<11;k++){const cx=80+step*(k+.5),cy=y+ph/2;g.beginPath();g.arc(cx,cy,28,0,7);
+      if(k<sc){g.fillStyle='#2fd07a';g.fill();g.strokeStyle='#fff';g.lineWidth=5;g.setLineDash([]);}else{g.setLineDash([10,8]);g.strokeStyle='rgba(255,255,255,.45)';g.lineWidth=4;}g.stroke();g.setLineDash([]);}
+    g.fillStyle=MUTED;g.font=`600 24px ${MONO}`;g.fillText('СКЛАД ВІДКРИЄТЬСЯ ЗАВТРА',80,y+ph+50);
   }else{
   // instead of match bars: two tiles, top scorer and player of the season
     {const top=r.scorers&&r.scorers[0],mvp=(r.players||[]).slice().sort((a,b)=>b.rt-a.rt)[0];const tw=(W-160-24)/2,th=150;
