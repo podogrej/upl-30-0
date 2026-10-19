@@ -1526,7 +1526,7 @@ function seasonForm(xi){const avgR=xi.reduce((a,x)=>a+x.r,0)/xi.length;
 let rnd=Math.random;
 function hashStr(str){let h=1779033703^str.length;for(let i=0;i<str.length;i++){h=Math.imul(h^str.charCodeAt(i),3432918353);h=h<<13|h>>>19;}return (h>>>0);}
 function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
-function kyivDate(){try{return new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Kyiv',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());}catch(e){return new Date().toISOString().slice(0,10);}}
+function kyivDate(t){try{return new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Kyiv',year:'numeric',month:'2-digit',day:'2-digit'}).format(t?new Date(t):new Date());}catch(e){return (t?new Date(t):new Date()).toISOString().slice(0,10);}}
 function lsGet(k){try{return JSON.parse(localStorage.getItem(k)||"null");}catch(e){return null;}}
 function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
 function pick(a){return a[Math.floor(rnd()*a.length)];}
@@ -3017,6 +3017,9 @@ function cleanSeason(s){const N=numOr0,T=x=>x==null?'':String(x);
   const xi=(Array.isArray(s.xi)?s.xi:[]).filter(p=>p&&typeof p==='object').map(p=>({n:T(p.n),id:T(p.id),slot:T(p.slot),r:N(p.r),r0:p.r0!=null?N(p.r0):undefined,c:T(p.c),y:N(p.y),f:N(p.f),g:N(p.g),a:N(p.a),rt:p.rt!=null&&isFinite(+p.rt)?+p.rt:null}));
   const tbl=(Array.isArray(s.tbl)?s.tbl:[]).filter(t=>t&&typeof t==='object').map(t=>({n:T(t.n),w:N(t.w),d:N(t.d),l:N(t.l),gf:N(t.gf),ga:N(t.ga),pts:N(t.pts),me:t.me===true}));
   return {...s,xi,tbl,w:N(s.w),d:N(s.d),l:N(s.l),pts:N(s.pts),place:N(s.place),gf:N(s.gf),ga:N(s.ga),year:N(s.year),day:s.day?T(s.day).slice(0,10):null,formation:T(s.formation),mode:T(s.mode),tier:T(s.tier)};}
+// squad hidden by the server until the daily-challenge day is over (seasons_pub.xi = null)
+const xiHidden=s=>!s.xi.length&&(s.vd_day!=null||(!!s.created_at&&kyivDate(s.created_at)>=VD_DAY));
+const XI_LATER='<p class="muted">Склад відкриється завтра</p>';
 // summary card of a saved season (the squad sheet and the shared-result screen)
 const viewBig=(s,link)=>`<div class="big"><div><div class="n">${s.w}-${s.d}-${s.l}</div><div class="l">${link?'в · н · п':'П – Н – Пр'}</div></div><div><div class="n">${s.pts}</div><div class="l">очок</div></div><div><div class="n">${s.place}</div><div class="l">місце</div></div><div><div class="n">${s.gf}:${s.ga}</div><div class="l">голи</div></div></div>`;
 // link: result-link screen (record label as on the result screen, empty xP/xG/xGA chips are not shown)
@@ -3029,9 +3032,9 @@ function viewHtml(s){
   s=cleanSeason(s);const xi=s.xi,tb=s.tbl;const rc=v=>v>=7.5?'var(--win)':v>=6.9?'var(--mf)':v>=6.5?'var(--draw)':'var(--loss)';
   const mvp=[...xi].filter(p=>p.rt!=null).sort((a,b)=>b.rt-a.rt)[0];
   return viewHero(s)+`
-    <h3>Склад</h3>${pitchHtml(s.formation,xi)}
+    <h3>Склад</h3>${!xi.length&&xiHidden(s)?XI_LATER:pitchHtml(s.formation,xi)}
     ${mvp?`<p style="margin:var(--sp-2) 0 0">${em('star','sm')}Гравець сезону: <b>${esc(mvp.n)}</b> · ${Number(mvp.rt).toFixed(2)}</p>`:''}
-    <div class="tbl"><table><tr><th>Гравець</th><th class="num">Оцінка</th><th class="num" title="Голи">Г</th><th class="num" title="Асисти">А</th><th class="num">Рейт.</th><th class="num">Форма</th></tr>${[...xi].sort((a,b)=>(b.rt||0)-(a.rt||0)).map(p=>`<tr><td class="pn"><div class="pnr">${lineDot(p.slot)}<span>${esc(p.n)}</span></div></td><td class="num"><b style="color:${rc(p.rt||0)}">${p.rt!=null?Number(p.rt).toFixed(2):'—'}</b></td><td class="num">${p.g||0}</td><td class="num">${p.a||0}</td><td class="num">${numOr0(baseR(p))}</td><td class="num" style="color:${p.f>=3?'var(--win)':p.f<=-3?'var(--loss)':'inherit'}">${p.f>0?'+':''}${p.f||0}</td></tr>`).join('')}</table></div>${LINE_KEY}
+    ${xi.length?`<div class="tbl"><table><tr><th>Гравець</th><th class="num">Оцінка</th><th class="num" title="Голи">Г</th><th class="num" title="Асисти">А</th><th class="num">Рейт.</th><th class="num">Форма</th></tr>${[...xi].sort((a,b)=>(b.rt||0)-(a.rt||0)).map(p=>`<tr><td class="pn"><div class="pnr">${lineDot(p.slot)}<span>${esc(p.n)}</span></div></td><td class="num"><b style="color:${rc(p.rt||0)}">${p.rt!=null?Number(p.rt).toFixed(2):'—'}</b></td><td class="num">${p.g||0}</td><td class="num">${p.a||0}</td><td class="num">${numOr0(baseR(p))}</td><td class="num" style="color:${p.f>=3?'var(--win)':p.f<=-3?'var(--loss)':'inherit'}">${p.f>0?'+':''}${p.f||0}</td></tr>`).join('')}</table></div>${LINE_KEY}`:''}
     ${tb.length?`<h3>Турнірна таблиця</h3><div class="tbl"><table><tr><th>#</th><th>Команда</th><th class="num">В</th><th class="num">Н</th><th class="num">П</th><th class="num">Г</th><th class="num">О</th></tr>${tb.map((t,i)=>`<tr${t.me?' class="me"':''}><td class="num">${i+1}</td><td>${esc(t.me?t.n:shortTeam(t.n))}</td><td class="num">${t.w}</td><td class="num">${t.d}</td><td class="num">${t.l}</td><td class="num">${t.gf}:${t.ga}</td><td class="num"><b>${t.pts}</b></td></tr>`).join('')}</table></div>`:''}`;
 }
 async function openView(q){screenTag('view');const box=document.getElementById('viewBox'),body=document.getElementById('viewBody');box.hidden=false;document.getElementById('viewTitle').textContent='Склад';body.innerHTML=skView();
@@ -3047,7 +3050,7 @@ const shrWire=go1=>{document.getElementById('shrGo').onclick=go1;};
 function shrRender(raw){
   const s=cleanSeason(raw),vd=raw.vd_day!=null&&raw.vd_score!=null,box=document.getElementById('shr');
   if(!vd){
-    box.innerHTML=shrShell(viewHero(s,true,true),'Зібрати свій склад','Без реєстрації',s.xi.length?`<div><h3>Склад</h3>${pitchHtml(s.formation,s.xi)}</div>`:'');
+    box.innerHTML=shrShell(viewHero(s,true,true),'Зібрати свій склад','Без реєстрації',s.xi.length?`<div><h3>Склад</h3>${pitchHtml(s.formation,s.xi)}</div>`:xiHidden(s)?`<div><h3>Склад</h3>${XI_LATER}</div>`:'');
     shrWire(shrPlay);return;}
   const day=String(raw.vd_day).slice(0,10),score=Math.min(numOr0(raw.vd_score),11),m=vdMedal(score),ch=vdCh(day),hidden=!s.xi.length,today=day>=VD_DAY,cur=vdCh(VD_DAY);
   const hero=`<div class="hero"><div class="tier">${m?m.e+' ':''}${score} з 11</div><div class="muted">${plink(s)} · Виклик дня №${vdNumber(day)}</div>${ch&&today?`<p class="note" style="margin:0"><b>${esc(ch.title)}${/[.!?…]$/.test(ch.title)?'':'.'}</b> ${esc(ch.task)}</p>`:''}${viewBig(s,true)}</div>`;
@@ -4535,7 +4538,7 @@ function drawCard(r){   // card in site style: UPL navy background, UPL.TV gradi
 const WHATSNEW={v:'0.92',news:'0.92',date:'19.10.2026',items:[
   ['share-variant','Одна кнопка «Поділитися»','Під результатом сезону — одна головна кнопка. У Telegram вона надсилає картку з підписом, у браузері відкриває меню «Поділитися» або копіює текст. У Telegram друзі бачать «Побий мій результат» з посиланням на твій результат.'],
   ['soccer-field','Результат за посиланням','Посилання на чужий результат відкривається окремим екраном: звання, рахунок, склад і кнопка «Зібрати свій склад» без реєстрації. Склад виклику дня відкривається наступного дня.'],
-  ['sword-cross','Без кнопки «Кинути виклик другу»','Діліться результатом — друг одним дотиком пройде те саме. Виклики, які вже розіслано, працюють як раніше.']]};
+  ['sword-cross','Без кнопки «Кинути виклик другу»','Тепер є одна кнопка «Поділитися»: друг побачить твій результат і зможе зібрати свій склад. Виклики, які вже розіслано, працюють як раніше.']]};
 function openNews(){screenTag('news');const box=document.getElementById('viewBox');document.getElementById('viewTitle').textContent=`Що нового · версія ${WHATSNEW.v}`;
   document.getElementById('viewBody').innerHTML=`<div class="news">${WHATSNEW.items.map(([e,h,d])=>`<div class="ni">${ic(e,'lg')}<div><b>${esc(h)}</b><p>${esc(d)}</p></div></div>`).join('')}</div>`;
   box.hidden=false;lsSet('upl30_news_seen',WHATSNEW.news||WHATSNEW.v);document.getElementById('newsDot').hidden=true;}

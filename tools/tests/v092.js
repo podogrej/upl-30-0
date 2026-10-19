@@ -123,12 +123,14 @@ const tgRoute=(r,u)=>{if(u.host==='telegram.org'){r.fulfill({contentType:'applic
   // card: a normal one draws the squad names, a daily-challenge one draws none (the squad opens the next day) but keeps the condition and circles
   const cd=await pg.evaluate(()=>{const S=window.__dbg.S,r=S.result,out={},cp=CanvasRenderingContext2D.prototype,orig=cp.fillText;
     const run=()=>{const t=[];cp.fillText=function(s){t.push(String(s));return orig.apply(this,arguments);};try{window.__dbg.drawCard(r);}finally{cp.fillText=orig;}return t;};
-    const names=S.slots.map(s=>s.player.name.split(' ').pop().slice(0,4));
-    const hit=t=>names.filter(n=>t.some(x=>x.includes(n)));
+    const names=S.slots.map(s=>s.player.name.split(' ').pop());   // whole surname: a prefix can match the condition text
+    const hit=t=>names.filter(n=>t.some(x=>new RegExp('(^|[^\\p{L}])'+n+'($|[^\\p{L}])','u').test(x)));
     const a=run();out.normal=hit(a).length;
     S.vd={day:'2026-10-12',ch:{title:'Мандрівники',task:'Два гравці, які грали в УПЛ за 7+ клубів.'}};r.vd={score:9};
     const b=run();out.vd=hit(b);out.vdText=b.join('|');S.vd=null;delete r.vd;return out;});
   T.check(cd.normal>=8,'звичайна картка малює прізвища складу ('+cd.normal+' з 11)');
+  {const vh=await pg.evaluate(()=>{const h=window.__dbg.viewHtml({id:9,w:20,d:5,l:5,pts:65,place:2,gf:60,ga:30,formation:'4-4-2',xi:null,tbl:[],vd_day:'2026-10-12',created_at:'2026-10-12T08:00:00Z'});return {later:/Склад відкриється завтра/.test(h),table:/<th>Гравець<\/th>/.test(h)};});
+   T.check(vh.later&&!vh.table,'лист «Склад» для схованого складу виклику: «Склад відкриється завтра», без порожньої таблиці гравців');}
   T.check(cd.vd.length===0&&/ВИКЛИК ДНЯ №4/.test(cd.vdText)&&/9 з 11/.test(cd.vdText)&&/Мандрівники/.test(cd.vdText)&&!/БОМБАРДИР|ГРАВЕЦЬ СЕЗОНУ/.test(cd.vdText),'картка виклику дня: прізвищ складу й плиток «Бомбардир»/«Гравець сезону» немає, є №, «9 з 11», умова: '+cd.vd.join());
   T.check(!A.errs.length,'помилок на сторінці немає '+A.errs.join(' | '));await A.ctx.close();}
  // ---- 5. system share sheet with the card file

@@ -971,6 +971,12 @@ chk "v092: сезон виклику дня — сьогодні склад сх
   update vd_results set day = day - 1 where season_id = (select max(id) from seasons);
   assert (select xi is not null and vd_day is not null from seasons_pub where id = (select max(id) from seasons)), 'завтра';
   assert (select xi is not null and vd_day is null from seasons_pub where id = (select min(id) from seasons where xi is not null)), 'звичайний сезон';"
+chk "v092: сезон виклику дня без перевірки сервером (немає рядка vd_results) — склад сьогодні теж схований" postgres "
+  insert into season_seeds(device_id, xi_hash, seed, day, vd_day) values ('$DEV', 'h092', 7, (now() at time zone 'Europe/Kyiv')::date, (now() at time zone 'Europe/Kyiv')::date);
+  insert into seasons(device_id, mode, format, formation, w, d, l, pts, place, gf, ga, xi, seed_id) values ('$DEV', 'normal', 'classic', '4-4-2', 10, 10, 10, 40, 8, 30, 30, '[{\"n\":\"X\"}]', (select id from season_seeds where seed = 7 and vd_day is not null order by created_at desc limit 1));
+  assert (select xi is null and vd_day is null from seasons_pub where id = (select max(id) from seasons)), 'сьогодні без vd_results';
+  update season_seeds set vd_day = vd_day - 1 where id = (select seed_id from seasons where id = (select max(id) from seasons));
+  assert (select xi is not null from seasons_pub where id = (select max(id) from seasons)), 'завтра';"
 echo "база: $D (порт $PORT)"
 [ $FAIL = 0 ] && echo "SQL: УСЕ ГАРАЗД ($N перевірок)" || echo "SQL: ПРОБЛЕМИ $FAIL/$N"
 exit $((FAIL>0))
