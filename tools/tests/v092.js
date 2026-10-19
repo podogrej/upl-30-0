@@ -33,7 +33,8 @@ const tgRoute=(r,u)=>{if(u.host==='telegram.org'){r.fulfill({contentType:'applic
   T.check(await pg.$eval('header.top',e=>getComputedStyle(e).display!=='none'&&!e.querySelector('#backBtn').hidden&&!e.querySelector('#homeBtn').hidden)&&!await pg.$('.shr-top')&&!await pg.$('.shr-logo'),'обычная шапка сайта: «Назад» і домик, власної шапки немає');
   T.check(await txt(pg,'#shr .hero .tier')==='ЧЕМПІОНИ УКРАЇНИ'&&/^ihor · /.test(await txt(pg,'#shr .hero .muted')),'картка підсумку сайту: звання й автор: '+await txt(pg,'#shr .hero .muted'));
   T.check(!/Хардкор|hardcore|Драфт дня|Лише пам/i.test(await txt(pg,'#s12')),'назви прихованого режиму немає');
-  T.check(/^23-6-1П – Н – Пр75очок1місце79:10голи/.test(await txt(pg,'#shr .hero .big')),'В-Н-П / очки / місце / голи: '+await txt(pg,'#shr .hero .big'));
+  T.check(/^23-6-1в · н · п75очок1місце79:10голи/.test(await txt(pg,'#shr .hero .big')),'В-Н-П «в · н · п» / очки / місце / голи: '+await txt(pg,'#shr .hero .big'));
+  T.check(await pg.$$eval('#shr .hero .xrow .chip',a=>a.map(e=>e.textContent.replace(/\s+/g,' ').trim()).join())==='xP 60.0','пусті xG/xGA не показано, лише xP: '+await pg.$$eval('#shr .hero .xrow .chip',a=>a.length));
   const xi=await pg.evaluate(()=>({pitch:document.querySelectorAll('#shr .pitch').length,pl:document.querySelectorAll('#shr .pitch .slot.filled').length,pills:document.querySelectorAll('#shr .pitch .pill').length,names:[...document.querySelectorAll('#shr .pitch .nm')].every(e=>e.textContent.trim().length>1),old:document.querySelectorAll('#shr .shr-xi,#shr .shr-pl').length}));
   T.check(xi.pitch===1&&xi.pl===11&&xi.pills===11&&xi.names&&xi.old===0,'склад: те саме поле сайту, 11 фішок з оцінкою й прізвищем');
   T.check(await pg.$eval('#shr details.tip',e=>!e.open),'«Що це за гра?» згорнуто');
@@ -64,9 +65,10 @@ const tgRoute=(r,u)=>{if(u.host==='telegram.org'){r.fulfill({contentType:'applic
   T.check(/^🥇 9 з 11$/.test(await txt(pg,'#shr .hero .tier'))&&/Виклик дня №4/.test(await txt(pg,'#shr .hero .muted')),'медаль, «9 з 11», «Виклик дня №4»: '+await txt(pg,'#shr .hero'));
   const task=await txt(pg,'#shr .hero .note');
   T.check(/^⚽|^🎂|^🧳|^🎖|^📅/.test(task)&&task.length>30,'умова виклику (з challenges.json): '+task.slice(0,70));
-  const m=await pg.evaluate(()=>({sl:document.querySelectorAll('#shr .pitch .slot.empty').length,hit:document.querySelectorAll('#shr .pitch .slot.shr-hit').length,filled:document.querySelectorAll('#shr .pitch .slot.filled').length,names:document.querySelectorAll('#shr .pitch .nm').length,lock:(document.querySelector('#shr .pitch+.trsec')||{}).textContent}));
-  T.check(m.sl===11&&m.hit===9&&m.filled===0&&m.names===0&&m.lock==='Склад відкриється завтра','те саме поле сайту: 11 порожніх позицій, 9 підсвічено, прізвищ немає, «Склад відкриється завтра»');
+  const m=await pg.evaluate(()=>({sl:document.querySelectorAll('#shr .pitch .slot.empty').length,hit:document.querySelectorAll('#shr .pitch .slot.target').length,filled:document.querySelectorAll('#shr .pitch .slot.filled').length,names:document.querySelectorAll('#shr .pitch .nm').length,lock:(document.querySelector('#shr .pitch+.trsec')||{}).textContent}));
+  T.check(m.sl===11&&m.hit===0&&m.filled===0&&m.names===0&&m.lock==='Склад відкриється завтра','те саме поле сайту: 11 однакових порожніх позицій, без підсвітки, прізвищ немає, «Склад відкриється завтра»');
   T.check(await txt(pg,'#shrGo')==='Пройти виклик'&&await txt(pg,'#shr .share .trsec')==='3 спроби · без реєстрації','кнопка «Пройти виклик» і «3 спроби · без реєстрації»');
+  T.check(/^23-6-1в · н · п75очок8місце79:10голи$/.test(await txt(pg,'#shr .hero .big')),'на екрані виклику є числа сезону: '+await txt(pg,'#shr .hero .big'));
   await pg.screenshot({path:path.join(OUT,'v092_vd_390d.png'),fullPage:true});
   await pg.click('#shrGo');await pg.waitForTimeout(600);
   const v=await pg.evaluate(()=>({s2:!document.getElementById('s2').hidden,vd:window.__dbg.S.vd&&window.__dbg.S.vd.day}));
@@ -76,6 +78,9 @@ const tgRoute=(r,u)=>{if(u.host==='telegram.org'){r.fulfill({contentType:'applic
   const m=await pg.evaluate(()=>({pl:document.querySelectorAll('#shr .pitch .slot.filled').length,lock:!!document.querySelector('#shr .pitch+.trsec'),nm:document.querySelector('#shr .pitch .nm').textContent}));
   T.check(m.pl===11&&!m.lock&&m.nm.trim().length>1,'наступного дня склад відкрито, замка немає ('+m.nm+')');
   T.check(await txt(pg,'#shrGo')==='Пройти сьогоднішній виклик','кнопка «Пройти сьогоднішній виклик»');
+  {const cur=V.vdFind(JSON.parse(fs.readFileSync(path.join(ROOT,'lib','challenges.json'),'utf8')),'2026-10-13'),cap=await txt(pg,'#shr .share .trsec');
+   T.check(cap===(cur?`Сьогодні: ${cur.title.replace(/[.!?…]$/,'')} · 3 спроби · без реєстрації`:'Сьогодні новий виклик · 3 спроби · без реєстрації'),'підпис під кнопкою називає сьогоднішній виклик: '+cap);
+   T.check(/^23-6-1в · н · п75очок8місце/.test(await txt(pg,'#shr .hero .big')),'числа сезону на екрані виклику (наступний день)');}
   await pg.screenshot({path:path.join(OUT,'v092_vd_next_390d.png'),fullPage:true});
   await pg.click('#shrGo');await pg.waitForTimeout(600);T.check(await pg.evaluate(()=>window.__dbg.S.vd&&window.__dbg.S.vd.day)==='2026-10-13'||await pg.evaluate(()=>!document.getElementById('s2').hidden||!document.getElementById('s1').hidden),'сьогоднішній виклик: відкрито або головна, якщо виклику на день немає');
   await A.ctx.close();}

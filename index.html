@@ -409,7 +409,10 @@ td .sub{font-size:var(--fs-caption2);color:var(--muted);margin-top:var(--sp-0h);
 .sk-h1{width:55%;height:var(--fs-title1);border-radius:var(--r-sm)}.sk-bar{height:8px;border-radius:var(--r-pill)}.sk-btn{height:48px;border-radius:var(--r-md)}
 /* shr-*: screen opened by a result link (the rest reuses site components) */
 .shr-stack{display:grid;gap:var(--sp-4);padding-top:var(--sp-4)}
-.shr-hit .disc,.shr-hit .disc::after{animation:none}   /* lit circle of a hidden squad stays still */
+.shr-stack{max-width:760px;margin-inline:auto}@media (min-width:1000px){.shr-stack{max-width:640px}}   /* same column as the result screen */
+.shr-stack .share{margin-top:0}.shr-stack .share .trsec{margin-top:0}.shr-stack>div>h3:first-child{margin-top:var(--sp-2)}   /* button + caption, then the heading at the result-screen rhythm */
+.shr-stack .trsec{margin-top:var(--sp-3);text-wrap:balance}
+@media (max-width:359px){.shr-stack .big{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-3) var(--sp-4)}}   /* 2x2 instead of 3+1 */
 .trp .sk{width:7em}
 .tile b .sk{display:block;height:calc(var(--fs-title1) * var(--lh-tight))}
 td .sub .sk{height:18px;border-radius:var(--r-pill)}
@@ -3014,9 +3017,13 @@ function cleanSeason(s){const N=numOr0,T=x=>x==null?'':String(x);
   const tbl=(Array.isArray(s.tbl)?s.tbl:[]).filter(t=>t&&typeof t==='object').map(t=>({n:T(t.n),w:N(t.w),d:N(t.d),l:N(t.l),gf:N(t.gf),ga:N(t.ga),pts:N(t.pts),me:t.me===true}));
   return {...s,xi,tbl,w:N(s.w),d:N(s.d),l:N(s.l),pts:N(s.pts),place:N(s.place),gf:N(s.gf),ga:N(s.ga),year:N(s.year),day:s.day?T(s.day).slice(0,10):null,formation:T(s.formation),mode:T(s.mode),tier:T(s.tier)};}
 // summary card of a saved season (the squad sheet and the shared-result screen)
-const viewHero=(s,noMode)=>`<div class="hero"><div class="tier">${esc(s.tier||'')}</div><div class="muted">${plink(s)} · ${esc(oppLabel(s.year))} · ${esc(s.formation)}${noMode?'':' · '+(s.day?'Драфт дня '+esc(s.day):(MODES[s.mode]?MODES[s.mode].name:esc(s.mode)))}</div>
-    <div class="big"><div><div class="n">${s.w}-${s.d}-${s.l}</div><div class="l">П – Н – Пр</div></div><div><div class="n">${s.pts}</div><div class="l">очок</div></div><div><div class="n">${s.place}</div><div class="l">місце</div></div><div><div class="n">${s.gf}:${s.ga}</div><div class="l">голи</div></div></div>
-    <div class="xrow"><span class="chip">xP <b>${s.xp!=null?Number(s.xp).toFixed(1):'—'}</b></span><span class="chip">xG <b>${s.xg!=null?Number(s.xg).toFixed(1):'—'}</b></span><span class="chip">xGA <b>${s.xga!=null?Number(s.xga).toFixed(1):'—'}</b></span></div></div>`;
+const viewBig=(s,link)=>`<div class="big"><div><div class="n">${s.w}-${s.d}-${s.l}</div><div class="l">${link?'в · н · п':'П – Н – Пр'}</div></div><div><div class="n">${s.pts}</div><div class="l">очок</div></div><div><div class="n">${s.place}</div><div class="l">місце</div></div><div><div class="n">${s.gf}:${s.ga}</div><div class="l">голи</div></div></div>`;
+// link: result-link screen (record label as on the result screen, empty xP/xG/xGA chips are not shown)
+const viewHero=(s,noMode,link)=>{const x=(k,v)=>v!=null?`<span class="chip">${k} <b>${Number(v).toFixed(1)}</b></span>`:link?'':`<span class="chip">${k} <b>—</b></span>`,
+    xr=x('xP',s.xp)+x('xG',s.xg)+x('xGA',s.xga);
+  return `<div class="hero"><div class="tier">${esc(s.tier||'')}</div><div class="muted">${plink(s)} · ${esc(oppLabel(s.year))} · ${esc(s.formation)}${noMode?'':' · '+(s.day?'Драфт дня '+esc(s.day):(MODES[s.mode]?MODES[s.mode].name:esc(s.mode)))}</div>
+    ${viewBig(s,link)}
+    ${xr?`<div class="xrow">${xr}</div>`:''}</div>`;};
 function viewHtml(s){
   s=cleanSeason(s);const xi=s.xi,tb=s.tbl;const rc=v=>v>=7.5?'var(--win)':v>=6.9?'var(--mf)':v>=6.5?'var(--draw)':'var(--loss)';
   const mvp=[...xi].filter(p=>p.rt!=null).sort((a,b)=>b.rt-a.rt)[0];
@@ -3030,9 +3037,9 @@ async function openView(q){screenTag('view');const box=document.getElementById('
   try{const rows=await sbGet(`seasons_pub?select=*&${q}&limit=1`);body.innerHTML=rows.length?viewHtml(rows[0]):'<p class="muted">Склад для цього результату не збережено.</p>';}catch(e){body.innerHTML='<p class="muted">Не вдалося завантажити.</p>';}}
 // ---------- screen opened by a result link (?s=<id>, from /r/<id>): someone's season (or daily challenge) and one button to play
 const shrPlay=()=>{setFmt('classic');const m=document.querySelector('#modes .opt[data-m="normal"]'),e=document.querySelector('#eras [data-era="all"]');if(m)m.click();if(e)e.click();document.getElementById('startBtn').click();};   // classic, Normal level, all years
-// hidden squad: empty positions on the site pitch, the first `hit` ones lit in a fixed shuffled order (the squad is not sent)
-function shrPitch(s,hit){const G=pitchGeo(s.formation),F=FORMATIONS[s.formation]||FORMATIONS['4-4-2'],ord=F.slots.map((_,i)=>i).sort((a,b)=>hashStr(`${s.id}|${a}`)-hashStr(`${s.id}|${b}`)),on=new Set(ord.slice(0,hit));
-  return `<div class="pitch" role="img" aria-label="${hit} з 11 позицій відгадано">${PITCH_MK}${F.slots.map((sl,i)=>`<div class="slot empty ${GROUP_OF[sl]}${on.has(i)?' target shr-hit':''}" style="left:${G.pts[i].x}%;top:${G.pts[i].y}%">${slotInner(sl,null,{})}</div>`).join('')}</div>`;}
+// hidden squad: the site pitch with 11 equal empty positions (the squad is not sent)
+function shrPitch(s){const G=pitchGeo(s.formation),F=FORMATIONS[s.formation]||FORMATIONS['4-4-2'];
+  return `<div class="pitch" role="img" aria-label="Склад відкриється завтра">${PITCH_MK}${F.slots.map((sl,i)=>`<div class="slot empty ${GROUP_OF[sl]}" style="left:${G.pts[i].x}%;top:${G.pts[i].y}%">${slotInner(sl,null,{})}</div>`).join('')}</div>`;}
 const SHR_WHAT='<details class="tip"><summary>Що це за гра?</summary><p class="muted cap">Крутиш колесо: випадає клуб і сезон УПЛ, обираєш гравця. Зібрав 11 — граєш сезон. Мета — 30-0.</p></details>';
 function shrShell(head,cta,sub,rest){
   return `<div class="shr-stack">${head}<div class="share"><button class="sharebtn primary" id="shrGo" type="button">${esc(cta)}</button><p class="trsec">${esc(sub)}</p></div>${rest||''}${SHR_WHAT}</div>`;}
@@ -3040,12 +3047,13 @@ const shrWire=go1=>{document.getElementById('shrGo').onclick=go1;};
 function shrRender(raw){
   const s=cleanSeason(raw),vd=raw.vd_day!=null&&raw.vd_score!=null,box=document.getElementById('shr');
   if(!vd){
-    box.innerHTML=shrShell(viewHero(s,true),'Зібрати свій склад','Без реєстрації',s.xi.length?`<div><h3>Склад</h3>${pitchHtml(s.formation,s.xi)}</div>`:'');
+    box.innerHTML=shrShell(viewHero(s,true,true),'Зібрати свій склад','Без реєстрації',s.xi.length?`<div><h3>Склад</h3>${pitchHtml(s.formation,s.xi)}</div>`:'');
     shrWire(shrPlay);return;}
-  const day=String(raw.vd_day).slice(0,10),score=Math.min(numOr0(raw.vd_score),11),m=vdMedal(score),ch=vdCh(day),hidden=!s.xi.length,today=day>=VD_DAY;
-  const hero=`<div class="hero"><div class="tier">${m?m.e+' ':''}${score} з 11</div><div class="muted">${plink(s)} · Виклик дня №${vdNumber(day)}</div>${ch?`<p class="note" style="margin:0"><b>${esc(ch.title)}${/[.!?…]$/.test(ch.title)?'':'.'}</b> ${esc(ch.task)}</p>`:''}</div>`;
-  box.innerHTML=shrShell(hero,today?'Пройти виклик':'Пройти сьогоднішній виклик',`${VD_ATTEMPTS} ${plUk(VD_ATTEMPTS,'спроба','спроби','спроб')} · без реєстрації`,
-    `<div><h3>Склад</h3>${hidden?shrPitch(s,score)+`<p class="trsec">Склад відкриється завтра</p>`:pitchHtml(s.formation,s.xi)}</div>`);
+  const day=String(raw.vd_day).slice(0,10),score=Math.min(numOr0(raw.vd_score),11),m=vdMedal(score),ch=vdCh(day),hidden=!s.xi.length,today=day>=VD_DAY,cur=vdCh(VD_DAY);
+  const hero=`<div class="hero"><div class="tier">${m?m.e+' ':''}${score} з 11</div><div class="muted">${plink(s)} · Виклик дня №${vdNumber(day)}</div>${ch?`<p class="note" style="margin:0"><b>${esc(ch.title)}${/[.!?…]$/.test(ch.title)?'':'.'}</b> ${esc(ch.task)}</p>`:''}${viewBig(s,true)}</div>`;
+  const att=`${VD_ATTEMPTS} ${plUk(VD_ATTEMPTS,'спроба','спроби','спроб')} · без реєстрації`;
+  box.innerHTML=shrShell(hero,today?'Пройти виклик':'Пройти сьогоднішній виклик',today?att:(cur?`Сьогодні: ${cur.title.replace(/[.!?…]$/,'')} · `:'Сьогодні новий виклик · ')+att,
+    `<div><h3>Склад</h3>${hidden?shrPitch(s)+`<p class="trsec">Склад відкриється завтра</p>`:pitchHtml(s.formation,s.xi)}</div>`);
   shrWire(()=>vdCh(VD_DAY)?vdOpen(VD_DAY,'#shrGo'):go(1));}
 async function openShared(sid){
   history.replaceState({sec:12,i:0},'',location.href);
@@ -4473,7 +4481,17 @@ function drawCard(r){   // card in site style: UPL navy background, UPL.TV gradi
   g.fillStyle=grad(0,W);g.fillRect(0,0,W,12);g.fillRect(0,H-12,W,12);
   g.font=`900 44px ${DISP}`;g.fillStyle=INK;g.fillText('30-0',80,128);const lw=g.measureText('30-0 ').width,uw=g.measureText('УПЛ').width;g.fillStyle=grad(80+lw,80+lw+uw);g.fillText('УПЛ',80+lw,128);
   const vdc=r.vd&&S.vd;if(vdc){const d=S.vd.day,head=`ВИКЛИК ДНЯ №${vdNumber(d)} · ${d.slice(8,10)}.${d.slice(5,7)}.${d.slice(0,4)}`;g.fillStyle=INK2;g.font=`600 26px ${MONO}`;g.fillText(head,80,182);}   // no formation or mode
-  const [tier,gold]=tierOf(r);let y=vdc?230:180;   // tier label (e.g. Champions, 30-0-0): only for special seasons
+  const [tier,gold]=tierOf(r);let y=vdc?230:180,GAP=44;   // tier label (e.g. Champions, 30-0-0): only for special seasons
+  let vdLines=null,vdTh=0;
+  if(vdc){   // daily challenge: medal, score and condition right under the header, then the season numbers, then one circle per position
+    const sc=Math.min(r.vd.score,11),m=vdMedal(sc),ch=S.vd.ch||{};
+    g.font=`600 28px ${BODY}`;vdLines=[];let ln='';for(const w of `${ch.title||''}. ${ch.task||''}`.split(' ')){const tr=ln?ln+' '+w:w;if(g.measureText(tr).width>W-224&&ln){vdLines.push(ln);ln=w;}else ln=tr;}if(ln)vdLines.push(ln);
+    vdTh=Math.max(210,148+(vdLines.length-1)*38+40);
+    GAP=Math.max(40,Math.min(84,Math.floor((1180-y-(gold?104:0)-(vdTh+300+150+58))/2)));   // spread the free height evenly
+    rr(80,y,W-160,vdTh,24);g.fillStyle='rgba(255,255,255,.05)';g.fill();
+    g.fillStyle=INK;g.font=`800 76px ${DISP}`;g.fillText(`${m?m.e+' ':''}${sc} з 11`,112,y+92);
+    g.fillStyle=INK2;g.font=`600 28px ${BODY}`;vdLines.forEach((l,i)=>g.fillText(l,112,y+148+i*38));
+    y+=vdTh+GAP;}
   if(gold){const fs=fit(tier,f=>`800 ${f}px ${DISP}`,W-160,64,34);const tw=g.measureText(tier).width;g.fillStyle=grad(80,80+tw);g.fillText(tier,80,y+fs);y+=fs+40;}
   // main tile: W-D-L / points / place (as on the site), goals and xG below
   const hh=300;rr(80,y,W-160,hh,32);g.fillStyle='rgba(255,255,255,.06)';g.fill();g.strokeStyle='rgba(224,40,122,.35)';g.lineWidth=2;g.stroke();
@@ -4485,18 +4503,14 @@ function drawCard(r){   // card in site style: UPL navy background, UPL.TV gradi
   g.font=`600 28px ${BODY}`;g.fillStyle=MUTED;[['в · н · п',0],[ptsWord(r.pts),1],['місце',2]].forEach(([t,k])=>{const tw=g.measureText(t).width;g.fillText(t,80+cw*k+cw/2-tw/2,y+200);});
   g.fillStyle='rgba(255,255,255,.08)';g.fillRect(120,y+228,W-240,2);
   {const t=`Голи ${r.gf}:${r.ga}`+(r.xgf!=null?` · xG ${r.xgf.toFixed(1)} : ${r.xga.toFixed(1)}`:'');g.font=`600 30px ${BODY}`;g.fillStyle=INK2;const tw=g.measureText(t).width;g.fillText(t,W/2-tw/2,y+276);}
-  y+=hh+44;
-  if(vdc){   // daily challenge: no names, the squad opens the next day; the condition and one circle per position (hit / miss)
-    const sc=Math.min(r.vd.score,11),m=vdMedal(sc),ch=S.vd.ch||{},th=210;
-    rr(80,y,W-160,th,24);g.fillStyle='rgba(255,255,255,.05)';g.fill();
-    g.fillStyle=INK;g.font=`800 76px ${DISP}`;g.fillText(`${m?m.e+' ':''}${sc} з 11`,112,y+92);
-    g.fillStyle=INK2;g.font=`600 28px ${BODY}`;const words=`${ch.title||''}. ${ch.task||''}`.split(' ');let ln='',ly=y+148;
-    for(const w of words){const tr=ln?ln+' '+w:w;if(g.measureText(tr).width>W-224&&ln){g.fillText(ln,112,ly);ln=w;ly+=38;}else ln=tr;}if(ln)g.fillText(ln,112,ly);
-    y+=th+44;
-    const ph=120,step=(W-160)/11;rr(80,y,W-160,ph,32);g.fillStyle='rgba(255,255,255,.05)';g.fill();   // one row of 11 circles: hits first
-    for(let k=0;k<11;k++){const cx=80+step*(k+.5),cy=y+ph/2;g.beginPath();g.arc(cx,cy,28,0,7);
-      if(k<sc){g.fillStyle='#2fd07a';g.fill();g.strokeStyle='#fff';g.lineWidth=5;g.setLineDash([]);}else{g.setLineDash([10,8]);g.strokeStyle='rgba(255,255,255,.45)';g.lineWidth=4;}g.stroke();g.setLineDash([]);}
-    g.fillStyle=MUTED;g.font=`600 24px ${MONO}`;g.fillText('СКЛАД ВІДКРИЄТЬСЯ ЗАВТРА',80,y+ph+50);
+  y+=hh+GAP;
+  if(vdc){   // no names, the squad opens the next day
+    const sc=Math.min(r.vd.score,11);
+    const ph=150,step=(W-160)/11;rr(80,y,W-160,ph,32);g.fillStyle='rgba(255,255,255,.05)';g.fill();   // one row of 11 circles: hits first
+    for(let k=0;k<11;k++){const cx=80+step*(k+.5),cy=y+ph/2;g.beginPath();g.arc(cx,cy,22,0,7);
+      if(k<sc){g.fillStyle='rgba(47,208,122,.6)';g.fill();g.setLineDash([]);}else{g.setLineDash([8,7]);g.strokeStyle='rgba(255,255,255,.45)';g.lineWidth=3;g.stroke();}}
+    g.setLineDash([]);
+    g.fillStyle=MUTED;g.font=`600 24px ${MONO}`;g.fillText('СКЛАД ВІДКРИЄТЬСЯ ЗАВТРА',80,y+ph+58);
   }else{
   // instead of match bars: two tiles, top scorer and player of the season
     {const top=r.scorers&&r.scorers[0],mvp=(r.players||[]).slice().sort((a,b)=>b.rt-a.rt)[0];const tw=(W-160-24)/2,th=150;
