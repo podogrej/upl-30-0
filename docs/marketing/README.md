@@ -59,6 +59,8 @@
 | Threads: комментарии под чужими постами | `upl30.com.ua/to` | `https://upl30.com.ua/?utm_source=threads&utm_medium=outreach` |
 | Telegram-канал: пост | `upl30.com.ua/tg` | `https://upl30.com.ua/?utm_source=telegram&utm_medium=social&utm_campaign=post` |
 | Tribuna: статья | `upl30.com.ua/tr/<имя-статьи>` | `https://upl30.com.ua/?utm_source=tribuna&utm_medium=blog&utm_campaign=<короткое-имя-статьи>` |
+| Instagram: профиль (bio) | `upl30.com.ua/ig` | `https://upl30.com.ua/?utm_source=instagram&utm_medium=social&utm_campaign=bio` |
+| TikTok: профиль (bio) | `upl30.com.ua/tt` | `https://upl30.com.ua/?utm_source=tiktok&utm_medium=social&utm_campaign=bio` |
 | Другие площадки | — | `utm_source=<площадка>` (латиницей, строчными), `utm_medium=social` / `blog` / `outreach` |
 
 Короткая ссылка сама переводит на полную (302), метки при этом сохраняются. Имя статьи Tribuna в `/tr/<имя>` — латиница строчными, цифры и дефис, до 48 знаков. Метки — только латиница, цифры, `_ . : -`. Цифры по площадкам (заходы → начали сезон → доиграли) раз в неделю даёт разработчик из отчёта `traffic_funnel`; попроси их через владельца.
