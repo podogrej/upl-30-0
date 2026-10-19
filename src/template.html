@@ -340,6 +340,8 @@ td .sub{font-size:var(--fs-caption2);color:var(--muted);margin-top:var(--sp-0h);
 .tabs>.ind.ok,.seg.era>.ind.ok{opacity:1}.tabs:has(>.ind.ok) .tab.on{border-bottom-color:transparent}.seg.era:has(>.ind.ok) button.on{background:transparent}@media (hover:hover) and (pointer:fine){.seg.era:has(>.ind.ok) button.on:hover{background:transparent}}
 @media (prefers-reduced-motion:reduce){.tabs>.ind,.seg.era>.ind{transition:none}}
 /* share */
+.share{display:grid;gap:var(--sp-2);margin-top:var(--sp-4)}
+.share textarea{width:100%;min-height:118px;font-family:var(--font-mono);font-size:var(--fs-footnote);line-height:var(--lh-body);border:1px solid var(--line);border-radius:var(--r-sm);padding:var(--sp-3);background:var(--surface);color:var(--ink);resize:vertical}
 /* sheets: bottom sheet on phone (spring in, blurred dim, swipe down to close), centered card from 600px, full screen for the table */
 .overlay,.sheet0{--sx:var(--sp-card);position:fixed;inset:0;display:flex;align-items:flex-end;justify-content:center;overflow:hidden;overflow:clip;overscroll-behavior:contain}   /* clip: never scrolls (the spring gap filler overflows below) */
 .overlay{z-index:50}.sheet0{z-index:60}
@@ -376,60 +378,9 @@ td .sub{font-size:var(--fs-caption2);color:var(--muted);margin-top:var(--sp-0h);
 
 .sk-row .sk.dot{width:20px;height:20px}.sk-row b,.sk-row small{display:block}
 .sk-h1{width:55%;height:var(--fs-title1);border-radius:var(--r-sm)}.sk-bar{height:8px;border-radius:var(--r-pill)}.sk-btn{height:48px;border-radius:var(--r-md)}
-/* shr-*: screen opened by a result link and the pinned Share bar; tokens only */
-.shr-app{max-width:560px;margin:0 auto;min-height:100dvh;display:flex;flex-direction:column}
-.shr-top{display:flex;justify-content:space-between;align-items:center;min-height:56px}
-.shr-logo{font-weight:var(--wt-black);font-size:var(--fs-headline);letter-spacing:var(--ls-tight);font-family:var(--font-display)}
-.shr-home{min-height:44px;padding-inline:var(--sp-3);margin-right:calc(var(--sp-3) * -1);border:0;background:none;color:var(--ink2);font:inherit;font-weight:var(--wt-medium);font-size:var(--fs-body)}
-.shr-main{display:grid;gap:var(--sp-4);align-content:start;flex:1;padding-block:var(--sp-2) var(--sp-4)}
-.shr-head{display:grid;gap:var(--sp-2)}
-.shr-h{margin:0;font-family:var(--font-display);font-weight:var(--wt-black);font-size:clamp(var(--fs-title2),8.4vw,var(--fs-large));line-height:var(--lh-tight);letter-spacing:var(--ls-tight);text-wrap:balance;overflow-wrap:anywhere}
-.shr-h .em{font-family:var(--font-emoji);font-weight:var(--wt-regular)}
-.shr-who{margin:0;color:var(--ink2);font-size:var(--fs-body)}
-.shr-who b{color:var(--ink)}
-.shr-tag{display:inline-block;padding:2px var(--sp-2);border-radius:var(--r-pill);border:1px solid var(--line);font-size:var(--fs-caption);font-weight:var(--wt-bold);color:var(--ink2);vertical-align:1px}
-.shr-score{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--sp-2);text-align:center;margin:0}
-.shr-score div{padding:var(--sp-3) var(--sp-1);border-radius:var(--r-md);background:var(--surface);border:1px solid var(--line)}
-.shr-score b{display:block;font-family:var(--font-display);font-weight:var(--wt-black);font-size:var(--fs-title2);line-height:var(--lh-tight);letter-spacing:var(--ls-tight);font-variant-numeric:tabular-nums;white-space:nowrap}
-.shr-score i{font-style:normal}.shr-score .W{color:var(--win)}.shr-score .D{color:var(--draw)}.shr-score .L{color:var(--loss)}
-.shr-score .hot{color:var(--amber)}
-.shr-score span{font-size:var(--fs-caption);color:var(--muted)}
-.shr-xi{position:relative;display:grid;gap:var(--sp-4);padding:var(--sp-4) var(--sp-1);border-radius:var(--r-lg);background:linear-gradient(180deg,var(--pitch),var(--pitch2));border:1px solid var(--line);overflow:hidden}
-.shr-xi::before{content:"";position:absolute;inset:0;background:linear-gradient(var(--chalkline),var(--chalkline)) 0 50%/100% 1px no-repeat;pointer-events:none}
-.shr-row{position:relative;display:flex;justify-content:space-around;align-items:flex-start;gap:var(--sp-1)}
-.shr-pl{display:grid;grid-template-columns:minmax(0,1fr);justify-items:center;gap:var(--sp-0h);min-width:0;flex:1 1 0;text-align:center;color:#fff}
-.shr-disc{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:var(--ln);color:#0b1430;font-weight:var(--wt-black);font-size:var(--fs-footnote);font-variant-numeric:tabular-nums;border:2px solid rgba(255,255,255,.85)}
-.shr-pl.GK{--ln:var(--gk)}.shr-pl.DF{--ln:var(--df)}.shr-pl.MF{--ln:var(--mf)}.shr-pl.FW{--ln:var(--fw)}
-.shr-nm{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:var(--wt-black);font-size:var(--fs-footnote);text-shadow:0 1px 2px rgba(0,0,0,.55)}
-.shr-yr{font-size:var(--fs-caption);color:rgba(255,255,255,.78);font-variant-numeric:tabular-nums}
-.shr-pl.shr-miss .shr-disc{background:transparent;border:2px dashed rgba(255,255,255,.45);color:transparent}
-.shr-pl.shr-hit .shr-disc{background:var(--win);border-color:#fff}
-.shr-lock{position:relative;display:flex;align-items:center;justify-content:center;gap:var(--sp-2);margin:0;padding:var(--sp-2) var(--sp-3);border-radius:var(--r-pill);justify-self:center;background:rgba(11,20,48,.72);color:#fff;font-weight:var(--wt-bold);font-size:var(--fs-footnote)}
-.shr-lock svg{width:16px;height:16px;fill:currentColor;flex:none}
-.shr-task{margin:0;padding:var(--sp-3) var(--sp-4);border-radius:var(--r-md);background:var(--surface);border:1px solid var(--line);font-size:var(--fs-body);color:var(--ink2)}
-.shr-task b{color:var(--ink)}
-.shr-what{border-top:1px solid var(--line)}
-.shr-what summary{min-height:48px;display:flex;align-items:center;justify-content:space-between;gap:var(--sp-3);cursor:pointer;list-style:none;color:var(--ink2);font-weight:var(--wt-medium);font-size:var(--fs-body)}
-.shr-what summary::-webkit-details-marker{display:none}
-.shr-what summary svg{width:20px;height:20px;fill:currentColor;transition:transform var(--dur-2) var(--ease-out)}
-.shr-what[open] summary svg{transform:rotate(180deg)}
-.shr-what p{margin:0 0 var(--sp-3);color:var(--ink2);font-size:var(--fs-body)}
-.shr-bar{position:sticky;bottom:0;display:grid;gap:var(--sp-1);margin-inline:calc(var(--sp-4) * -1);padding:var(--sp-5) var(--sp-4) calc(var(--sp-3) + env(safe-area-inset-bottom));background:linear-gradient(to top,var(--bg) 70%,transparent)}
-.shr-cta{width:100%;max-width:420px;justify-self:center;min-height:56px;display:flex;align-items:center;justify-content:center;gap:var(--sp-2);border:0;border-radius:var(--r-md);background:var(--ink);color:var(--bg);font-family:var(--font-display);font-weight:var(--wt-bold);font-size:var(--fs-headline);box-shadow:var(--sh-2)}
-.shr-cta:active{filter:brightness(1.08)}.shr-cta:focus-visible,.shr-home:focus-visible,.shr-what summary:focus-visible,.shr-link:focus-visible{outline:2px solid var(--amber2);outline-offset:2px}
-.shr-cta svg{width:22px;height:22px;fill:currentColor}
-.shr-sub{margin:0;text-align:center;font-size:var(--fs-footnote);color:var(--ink2)}
-.shr-link{justify-self:center;min-height:44px;padding-inline:var(--sp-4);border:0;background:none;color:var(--ink2);font:inherit;font-weight:var(--wt-medium);font-size:var(--fs-body)}
-.shr-ok{background:var(--win);color:#06210f}
-@media (max-width:360px){.shr-nm{font-size:var(--fs-caption)}.shr-xi{padding-inline:0}}
-@media (min-width:820px){.shr-app{max-width:640px}.shr-bar{margin-inline:0;padding-inline:0}}
-.shr-bar .shr-ta{width:100%;max-width:420px;justify-self:center;min-height:96px;font:inherit;font-size:var(--fs-footnote);line-height:var(--lh-body);border:1px solid var(--line);border-radius:var(--r-sm);padding:var(--sp-3);background:var(--surface);color:var(--ink);resize:vertical}
-.shr-bar .shr-msg:empty{display:none}
-.shr-bar .shr-msg .ghost{padding:var(--sp-1) var(--sp-3);margin-left:var(--sp-2)}
-.shr-cta:disabled{opacity:.6}
-header.top.shr-off{display:none}
-.shr-sk{display:grid;gap:var(--sp-4)}
-.shr-fail{margin:0;padding:var(--sp-4) 0;color:var(--ink2)}
+/* shr-*: screen opened by a result link (the rest reuses site components) */
+.shr-stack{display:grid;gap:var(--sp-4);padding-top:var(--sp-4)}
+.shr-hit .disc,.shr-hit .disc::after{animation:none}   /* lit circle of a hidden squad stays still */
 .trp .sk{width:7em}
 .tile b .sk{display:block;height:calc(var(--fs-title1) * var(--lh-tight))}
 td .sub .sk{height:18px;border-radius:var(--r-pill)}
@@ -926,6 +877,8 @@ body:has(#s1[hidden]) .foot0,body:has(#s1[hidden]) .ft-soc-icons,body:has(#s1[hi
 .plrow .plpos{flex:none;padding:0 var(--sp-2) 0 0;animation:plin var(--dur-2) var(--ease-out) both}.plrow .plpos button{min-width:48px;min-height:38px;padding:var(--sp-2) var(--sp-3)}
 .plrow.in{animation:plin var(--dur-3) var(--ease-out) both}
 /* summary */
+.sharebtn{width:100%;max-width:420px;justify-self:center;padding:var(--sp-4) var(--sp-card);font:var(--wt-bold) var(--fs-headline) var(--font-display);border:0;background:var(--ink);color:var(--bg)}   /* Share: solid light button with emoji, no gradient */
+.sharebtn{display:flex;align-items:center;justify-content:center;gap:var(--sp-2);min-height:calc(var(--sp-7) + var(--sp-2))}.sharebtn .ic{background:none;margin:0 var(--sp-0h) 0 calc(var(--sp-1) * -1)}.sharebtn.alt{background:var(--card);color:var(--ink)}
 #skipBtn{justify-self:center}
 @media (min-width:700px){
   .score0 b{font-size:var(--fs-numeral);letter-spacing:var(--ls-tight)}.score0 span{font-size:var(--fs-body)}.hero .tier{font-size:var(--fs-large);letter-spacing:var(--ls-tight)}
@@ -998,6 +951,7 @@ button.primary.solid,.big0.primary.solid{background:var(--ink);background-image:
 .verd0 .vc.good{--c:var(--win)}.verd0 .vc.mid{--c:var(--draw)}.verd0 .vc.bad{--c:var(--loss)}
 .awd0{display:grid;gap:var(--sp-2);margin-top:var(--sp-3)}.awd0+#mDet{margin-top:var(--sp-5)}.awd0 p{margin:0;display:flex;align-items:flex-start;gap:var(--sp-2)}.awd0 p>.ic{margin:0;height:calc(var(--lh-sub) * 1em)}   /* icon box = one text line: centered on the first line, wrapped text keeps its own column */
 /* Share is the gradient primary (button.primary); challenge and new draft side by side */
+.shr2{display:flex;gap:var(--sp-2);width:100%;max-width:420px;justify-self:center}.shr2 .sharebtn{flex:1 1 0;min-width:0;max-width:none;padding-inline:var(--sp-2);font-size:var(--fs-body);text-align:center;line-height:var(--lh-snug)}.shr2 .sharebtn .ic{display:none}   /* two text buttons per row, no icon */
 #final>.hero{width:100%;max-width:760px;margin-inline:auto}   /* same column as the tabs below; two-column layout (wide screens) keeps it narrower */
 @media (min-width:1000px){#final>.hero{max-width:640px}}
 details.tip.pop0{position:relative}details.tip.pop0>p{position:absolute;z-index:6;left:0;right:0;top:100%;margin:var(--sp-2) 0 0!important;padding:var(--sp-3) var(--sp-4);border-radius:var(--r-md);background:var(--card);box-shadow:var(--sh-3)}
@@ -1353,6 +1307,12 @@ h3,.sec0,#s1 .sec0,.pgh,.trleg .h{font-size:var(--fs-footnote);font-weight:var(-
       <p class="note" id="leagueMsg" hidden style="margin:0"></p>
       <p class="note" id="chalLine" hidden style="margin:0"></p>
     </div>
+    <div class="share" id="shareBox">
+      <textarea id="shareText" hidden readonly aria-label="Текст для поширення"></textarea>
+      <button class="sharebtn primary" id="tgShareBtn" aria-live="polite"><!--i:share-variant-->Поділитися</button>
+      <div class="shr2"><button class="sharebtn alt" id="againBtn">Новий драфт</button></div>
+      <span class="best" id="copyMsg" role="status"></span>
+    </div>
     <div class="tabs" role="tablist" id="tabs"><button class="tab on" data-tab="t1" role="tab">Огляд</button><button class="tab" data-tab="t2" role="tab">Статистика сезону</button></div>
     <div id="t1" class="tabpane">
       <h3 id="myXiTitle">Твоя 11-ка</h3>
@@ -1381,16 +1341,10 @@ h3,.sec0,#s1 .sec0,.pgh,.trleg .h{font-size:var(--fs-footnote);font-weight:var(-
         <details class="tip"><summary>Як рахувався сезон</summary><p class="note" id="modelNote"></p></details>
       </div>
     </div>
-    <div class="shr-bar" id="shareBox">
-      <textarea class="shr-ta" id="shareText" hidden readonly aria-label="Текст для поширення"></textarea>
-      <button class="shr-cta" id="tgShareBtn" type="button" aria-live="polite"><!--i:share-variant-->Поділитися</button>
-      <p class="shr-sub shr-msg" id="copyMsg" role="status"></p>
-      <button class="shr-link" id="againBtn" type="button">Новий драфт</button>
-    </div>
     </div>
   </section>
   <!-- SHARED RESULT (?s=<id>) -->
-  <section id="s12" hidden><div class="shr-app" id="shr"></div></section>
+  <section id="s12" hidden><div id="shr"></div></section>
 </div>
 
 <div class="overlay" id="viewBox" hidden><div class="sheet-bd"></div><div class="box" role="dialog" aria-modal="true" aria-labelledby="viewTitle" tabindex="-1"><div class="sheet-head" id="viewHead"><div class="grab" aria-hidden="true"></div><div class="vhead"><h3 id="viewTitle">Склад</h3><button class="ghost" id="viewClose">Закрити</button></div></div><div id="viewBody"></div></div></div>
@@ -1646,7 +1600,7 @@ function go(n,pop,link,after){if(VT_PEND)VT_PEND();if(n===2)PITCH_VIS=true;if(!p
 let NAV_I=0,NAV_FREE=false;   // NAV_I: history entry index of this tab (0 = first screen); NAV_FREE: leaving the draft already confirmed
 let SHEET=0;   // sheet open: one history entry
 function navPush(n){const rep=(n===3||n===11)&&CUR_SEC===2;if(!rep)NAV_I++;try{history[rep?'replaceState':'pushState']({sec:n,i:NAV_I},'',location.href);}catch(e){}}
-function navUi(){const inner=CUR_SEC!==1;document.querySelector('header.top').classList.toggle('in',inner);document.querySelector('header.top').classList.toggle('shr-off',CUR_SEC===12);   // the shared-result screen has its own top row
+function navUi(){const inner=CUR_SEC!==1;document.querySelector('header.top').classList.toggle('in',inner);
   document.getElementById('backBtn').hidden=!inner;document.getElementById('homeBtn').hidden=!inner;document.getElementById('hLogo').hidden=inner;
   try{if(TG&&TG.BackButton){if(inner||SHEET)TG.BackButton.show();else TG.BackButton.hide();}}catch(e){}}
 // draft in progress (players picked, no season yet): confirm before leaving
@@ -2375,14 +2329,14 @@ const CHECK_SVG='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 7 9 19
 // copy the text; the button shows the copied state for 2 s; no clipboard: show the text selected
 function copyShare(text,b){const ta=document.getElementById('shareText');ta.value=text;
   const fb=()=>{ta.hidden=false;ta.focus();ta.setSelectionRange(0,ta.value.length);document.getElementById('copyMsg').textContent='Текст виділено — скопіюй вручну';};
-  const ok=()=>{if(b._orig==null)b._orig=b.innerHTML;b.classList.add('shr-ok');b.innerHTML=CHECK_SVG+'Скопійовано';clearTimeout(b._t);b._t=setTimeout(()=>{b.classList.remove('shr-ok');b.innerHTML=b._orig;b._orig=null;},2000);};
+  const ok=()=>{if(b._orig==null)b._orig=b.innerHTML;b.dataset.copied='1';b.innerHTML=CHECK_SVG+'Скопійовано';clearTimeout(b._t);b._t=setTimeout(()=>{delete b.dataset.copied;b.innerHTML=b._orig;b._orig=null;},2000);};
   try{navigator.clipboard.writeText(text).then(ok,fb);}catch(e){fb();}}
 async function shareTg(r,pre,b,msg){
   if(!tgShareOk()){shareTextLink();return;}
   b.disabled=true;msg.textContent=pre?'':'Готуємо картку…';
   try{let j=pre?await pre.p:null;if(!j||!j.prepared||j.link!==shareLink(r,'telegram'))j=await cardPost(r);b.disabled=false;   // preparation failed or the link changed since: regular path
     if(j.ok&&j.prepared){msg.textContent='';TG.shareMessage(j.prepared,ok=>{msg.textContent=ok?'Надіслано':'';});return;}
-    if(j.need_start){msg.innerHTML='Спочатку відкрий чат з ботом і натисни «Start», потім спробуй ще раз. <button class="ghost" id="openBotBtn" type="button">Відкрити @'+TG_BOT+'</button>';document.getElementById('openBotBtn').onclick=()=>TG.openTelegramLink('https://t.me/'+TG_BOT+'?start=card');return;}
+    if(j.need_start){msg.innerHTML='Спочатку відкрий чат з ботом і натисни «Start», потім спробуй ще раз. <button class="ghost" id="openBotBtn" type="button" style="padding:var(--sp-1) var(--sp-3);margin-left:var(--sp-2)">Відкрити @'+TG_BOT+'</button>';document.getElementById('openBotBtn').onclick=()=>TG.openTelegramLink('https://t.me/'+TG_BOT+'?start=card');return;}
   }catch(e){b.disabled=false;}
   msg.textContent='Картку не вийшло — надсилаю текстом.';shareTextLink();}
 document.getElementById('tgShareBtn').onclick=async()=>{const r=S.result;if(!r)return;const b=document.getElementById('tgShareBtn'),msg=document.getElementById('copyMsg');
@@ -2617,12 +2571,14 @@ function cleanSeason(s){const N=numOr0,T=x=>x==null?'':String(x);
   const xi=(Array.isArray(s.xi)?s.xi:[]).filter(p=>p&&typeof p==='object').map(p=>({n:T(p.n),id:T(p.id),slot:T(p.slot),r:N(p.r),r0:p.r0!=null?N(p.r0):undefined,c:T(p.c),y:N(p.y),f:N(p.f),g:N(p.g),a:N(p.a),rt:p.rt!=null&&isFinite(+p.rt)?+p.rt:null}));
   const tbl=(Array.isArray(s.tbl)?s.tbl:[]).filter(t=>t&&typeof t==='object').map(t=>({n:T(t.n),w:N(t.w),d:N(t.d),l:N(t.l),gf:N(t.gf),ga:N(t.ga),pts:N(t.pts),me:t.me===true}));
   return {...s,xi,tbl,w:N(s.w),d:N(s.d),l:N(s.l),pts:N(s.pts),place:N(s.place),gf:N(s.gf),ga:N(s.ga),year:N(s.year),day:s.day?T(s.day).slice(0,10):null,formation:T(s.formation),mode:T(s.mode),tier:T(s.tier)};}
+// summary card of a saved season (the squad sheet and the shared-result screen)
+const viewHero=(s,noMode)=>`<div class="hero"><div class="tier">${esc(s.tier||'')}</div><div class="muted">${plink(s)} · ${esc(oppLabel(s.year))} · ${esc(s.formation)}${noMode?'':' · '+(s.day?'Драфт дня '+esc(s.day):(MODES[s.mode]?MODES[s.mode].name:esc(s.mode)))}</div>
+    <div class="big"><div><div class="n">${s.w}-${s.d}-${s.l}</div><div class="l">П – Н – Пр</div></div><div><div class="n">${s.pts}</div><div class="l">очок</div></div><div><div class="n">${s.place}</div><div class="l">місце</div></div><div><div class="n">${s.gf}:${s.ga}</div><div class="l">голи</div></div></div>
+    <div class="xrow"><span class="chip">xP <b>${s.xp!=null?Number(s.xp).toFixed(1):'—'}</b></span><span class="chip">xG <b>${s.xg!=null?Number(s.xg).toFixed(1):'—'}</b></span><span class="chip">xGA <b>${s.xga!=null?Number(s.xga).toFixed(1):'—'}</b></span></div></div>`;
 function viewHtml(s){
   s=cleanSeason(s);const xi=s.xi,tb=s.tbl;const rc=v=>v>=7.5?'var(--win)':v>=6.9?'var(--mf)':v>=6.5?'var(--draw)':'var(--loss)';
   const mvp=[...xi].filter(p=>p.rt!=null).sort((a,b)=>b.rt-a.rt)[0];
-  return `<div class="hero"><div class="tier">${esc(s.tier||'')}</div><div class="muted">${plink(s)} · ${esc(oppLabel(s.year))} · ${esc(s.formation)} · ${s.day?'Драфт дня '+esc(s.day):(MODES[s.mode]?MODES[s.mode].name:esc(s.mode))}</div>
-    <div class="big"><div><div class="n">${s.w}-${s.d}-${s.l}</div><div class="l">П – Н – Пр</div></div><div><div class="n">${s.pts}</div><div class="l">очок</div></div><div><div class="n">${s.place}</div><div class="l">місце</div></div><div><div class="n">${s.gf}:${s.ga}</div><div class="l">голи</div></div></div>
-    <div class="xrow"><span class="chip">xP <b>${s.xp!=null?Number(s.xp).toFixed(1):'—'}</b></span><span class="chip">xG <b>${s.xg!=null?Number(s.xg).toFixed(1):'—'}</b></span><span class="chip">xGA <b>${s.xga!=null?Number(s.xga).toFixed(1):'—'}</b></span></div></div>
+  return viewHero(s)+`
     <h3>Склад</h3>${pitchHtml(s.formation,xi)}
     ${mvp?`<p style="margin:var(--sp-2) 0 0">${em('star','sm')}Гравець сезону: <b>${esc(mvp.n)}</b> · ${Number(mvp.rt).toFixed(2)}</p>`:''}
     <div class="tbl"><table><tr><th>Гравець</th><th class="num">Оцінка</th><th class="num" title="Голи">Г</th><th class="num" title="Асисти">А</th><th class="num">Рейт.</th><th class="num">Форма</th></tr>${[...xi].sort((a,b)=>(b.rt||0)-(a.rt||0)).map(p=>`<tr><td class="pn"><div class="pnr">${lineDot(p.slot)}<span>${esc(p.n)}</span></div></td><td class="num"><b style="color:${rc(p.rt||0)}">${p.rt!=null?Number(p.rt).toFixed(2):'—'}</b></td><td class="num">${p.g||0}</td><td class="num">${p.a||0}</td><td class="num">${numOr0(baseR(p))}</td><td class="num" style="color:${p.f>=3?'var(--win)':p.f<=-3?'var(--loss)':'inherit'}">${p.f>0?'+':''}${p.f||0}</td></tr>`).join('')}</table></div>${LINE_KEY}
@@ -2631,43 +2587,32 @@ function viewHtml(s){
 async function openView(q){screenTag('view');const box=document.getElementById('viewBox'),body=document.getElementById('viewBody');box.hidden=false;document.getElementById('viewTitle').textContent='Склад';body.innerHTML=skView();
   try{const rows=await sbGet(`seasons_pub?select=*&${q}&limit=1`);body.innerHTML=rows.length?viewHtml(rows[0]):'<p class="muted">Склад для цього результату не збережено.</p>';}catch(e){body.innerHTML='<p class="muted">Не вдалося завантажити.</p>';}}
 // ---------- screen opened by a result link (?s=<id>, from /r/<id>): someone's season (or daily challenge) and one button to play
-const SHR_LOCK='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17a2 2 0 0 0 2-2 2 2 0 0 0-2-2 2 2 0 0 0-2 2 2 2 0 0 0 2 2m6-9a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V10a2 2 0 0 1 2-2h1V6a5 5 0 0 1 5-5 5 5 0 0 1 5 5v2h1m-6-5a3 3 0 0 0-3 3v2h6V6a3 3 0 0 0-3-3"/></svg>';
-const SHR_DOWN='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.41 8.58 12 13.17l4.59-4.59L18 10l-6 6-6-6z"/></svg>';
 const shrPlay=()=>{setFmt('classic');const m=document.querySelector('#modes .opt[data-m="normal"]'),e=document.querySelector('#eras [data-era="all"]');if(m)m.click();if(e)e.click();document.getElementById('startBtn').click();};   // classic, Normal level, all years
-// an all-caps tier title reads as a heading in sentence case
-const shrCase=t=>t.split(' · ').map(x=>/[А-ЯІЇЄҐ]/.test(x)&&x===x.toUpperCase()?x.charAt(0)+x.slice(1).toLowerCase():x).join(' · ').replace(/україн/g,'Україн');
-const shrPl=(g,p)=>`<div class="shr-pl ${g}"><span class="shr-disc">${numOr0(baseR(p))}</span><span class="shr-nm">${esc(cardName(p.n))}</span><span class="shr-yr">${p.y?shortSea(p.y):'&nbsp;'}</span></div>`;
-// four rows, forwards on top; hidden squad: only the circles (the first `hit` ones lit in a fixed shuffled order, the squad is not sent)
-function shrXi(s,hit){const G={FW:[],MF:[],DF:[],GK:[]};
-  if(hit==null)s.xi.forEach(p=>G[GROUP_OF[p.slot]||'MF'].push(shrPl(GROUP_OF[p.slot]||'MF',p)));
-  else{const F=FORMATIONS[s.formation]||FORMATIONS['4-4-2'],ord=F.slots.map((_,i)=>i).sort((a,b)=>hashStr(`${s.id}|${a}`)-hashStr(`${s.id}|${b}`)),on=new Set(ord.slice(0,hit));
-    F.slots.forEach((sl,i)=>{const g=GROUP_OF[sl];G[g].push(`<div class="shr-pl ${g} ${on.has(i)?'shr-hit':'shr-miss'}" aria-hidden="true"><span class="shr-disc"></span><span class="shr-nm">&nbsp;</span><span class="shr-yr">&nbsp;</span></div>`);});}
-  return `<section class="shr-xi" aria-label="Склад">${['FW','MF','DF','GK'].filter(g=>G[g].length).map(g=>`<div class="shr-row">${G[g].join('')}</div>`).join('')}${hit!=null?`<p class="shr-lock">${SHR_LOCK}Склад відкриється завтра</p>`:''}</section>`;}
-function shrShell(main,cta,sub){
-  return `<header class="shr-top"><span class="shr-logo">30-0 УПЛ</span><button class="shr-home" id="shrHome" type="button">На головну</button></header>
-    <main class="shr-main">${main}<details class="shr-what"><summary>Що це за гра?${SHR_DOWN}</summary><p>Крутиш колесо: випадає клуб і сезон УПЛ, обираєш гравця. Зібрав 11 — граєш сезон. Мета — 30-0.</p></details></main>
-    <div class="shr-bar"><button class="shr-cta" id="shrGo" type="button">${esc(cta)}</button><p class="shr-sub">${esc(sub)}</p></div>`;}
-function shrWire(go1){document.getElementById('shrHome').onclick=()=>go(1);document.getElementById('shrGo').onclick=go1;}
+// hidden squad: empty positions on the site pitch, the first `hit` ones lit in a fixed shuffled order (the squad is not sent)
+function shrPitch(s,hit){const G=pitchGeo(s.formation),F=FORMATIONS[s.formation]||FORMATIONS['4-4-2'],ord=F.slots.map((_,i)=>i).sort((a,b)=>hashStr(`${s.id}|${a}`)-hashStr(`${s.id}|${b}`)),on=new Set(ord.slice(0,hit));
+  return `<div class="pitch" role="img" aria-label="${hit} з 11 позицій відгадано">${PITCH_MK}${F.slots.map((sl,i)=>`<div class="slot empty ${GROUP_OF[sl]}${on.has(i)?' target shr-hit':''}" style="left:${G.pts[i].x}%;top:${G.pts[i].y}%">${slotInner(sl,null,{})}</div>`).join('')}</div>`;}
+const SHR_WHAT='<details class="tip"><summary>Що це за гра?</summary><p class="muted cap">Крутиш колесо: випадає клуб і сезон УПЛ, обираєш гравця. Зібрав 11 — граєш сезон. Мета — 30-0.</p></details>';
+function shrShell(head,cta,sub,rest){
+  return `<div class="shr-stack">${head}<div class="share"><button class="sharebtn primary" id="shrGo" type="button">${esc(cta)}</button><p class="trsec">${esc(sub)}</p></div>${rest||''}${SHR_WHAT}</div>`;}
+const shrWire=go1=>{document.getElementById('shrGo').onclick=go1;};
 function shrRender(raw){
   const s=cleanSeason(raw),vd=raw.vd_day!=null&&raw.vd_score!=null,box=document.getElementById('shr');
   if(!vd){
-    box.innerHTML=shrShell(`<div class="shr-head"><h1 class="shr-h">${esc(shrCase(s.tier||s.place+' місце'))}</h1><p class="shr-who"><b>${esc(pname(s))}</b> <span class="shr-tag">Грати</span></p></div>
-      <div class="shr-score"><div><b><i class="W">${s.w}</i>-<i class="D">${s.d}</i>-<i class="L">${s.l}</i></b><span>в · н · п</span></div><div><b class="hot">${s.pts}</b><span>${ptsWord(s.pts)}</span></div><div><b>${s.gf}:${s.ga}</b><span>голи</span></div></div>
-      ${s.xi.length?shrXi(s):''}`,'Зібрати свій склад','Без реєстрації');
+    box.innerHTML=shrShell(viewHero(s,true),'Зібрати свій склад','Без реєстрації',s.xi.length?`<div><h3>Склад</h3>${pitchHtml(s.formation,s.xi)}</div>`:'');
     shrWire(shrPlay);return;}
-  const day=String(raw.vd_day).slice(0,10),score=numOr0(raw.vd_score),m=vdMedal(score),ch=vdCh(day),hidden=!s.xi.length,today=day>=VD_DAY;
-  const task=ch?`<p class="shr-task"><b>${esc(ch.title)}${/[.!?…]$/.test(ch.title)?'':'.'}</b> ${esc(ch.task)}</p>`:'';
-  box.innerHTML=shrShell(`<div class="shr-head"><h1 class="shr-h">${m?`<span class="em">${m.e}</span> `:''}${score} з 11</h1><p class="shr-who"><b>${esc(pname(s))}</b> <span class="shr-tag">Виклик дня №${vdNumber(day)}</span></p></div>
-    ${task}${hidden?shrXi(s,Math.min(score,11)):shrXi(s)}`,today?'Пройти виклик':'Пройти сьогоднішній виклик',`${VD_ATTEMPTS} ${plUk(VD_ATTEMPTS,'спроба','спроби','спроб')} · без реєстрації`);
+  const day=String(raw.vd_day).slice(0,10),score=Math.min(numOr0(raw.vd_score),11),m=vdMedal(score),ch=vdCh(day),hidden=!s.xi.length,today=day>=VD_DAY;
+  const hero=`<div class="hero"><div class="tier">${m?m.e+' ':''}${score} з 11</div><div class="muted">${plink(s)} · Виклик дня №${vdNumber(day)}</div>${ch?`<p class="note" style="margin:0"><b>${esc(ch.title)}${/[.!?…]$/.test(ch.title)?'':'.'}</b> ${esc(ch.task)}</p>`:''}</div>`;
+  box.innerHTML=shrShell(hero,today?'Пройти виклик':'Пройти сьогоднішній виклик',`${VD_ATTEMPTS} ${plUk(VD_ATTEMPTS,'спроба','спроби','спроб')} · без реєстрації`,
+    `<div><h3>Склад</h3>${hidden?shrPitch(s,score)+`<p class="trsec">Склад відкриється завтра</p>`:pitchHtml(s.formation,s.xi)}</div>`);
   shrWire(()=>vdCh(VD_DAY)?vdOpen(VD_DAY,'#shrGo'):go(1));}
 async function openShared(sid){
   history.replaceState({sec:12,i:0},'',location.href);
-  const box=document.getElementById('shr');box.innerHTML=shrShell(skBox('<div class="sk blk sk-h1"></div><div class="sk blk sk-hero"></div><div class="sk blk sk-pitch"></div>'),'Зібрати свій склад','Без реєстрації');shrWire(shrPlay);
+  const box=document.getElementById('shr');box.innerHTML=shrShell(skView(),'Зібрати свій склад','Без реєстрації');shrWire(shrPlay);
   go(12,true);
+  const fail=m=>{box.innerHTML=shrShell(`<p class="muted">${m}</p>`,'Зібрати свій склад','Без реєстрації');shrWire(shrPlay);};
   try{const rows=await sbGet(`seasons_pub?select=*&id=eq.${sid}&limit=1`);
-    if(rows.length)shrRender(rows[0]);
-    else{box.innerHTML=shrShell('<p class="shr-fail">Цей результат не знайдено.</p>','Зібрати свій склад','Без реєстрації');shrWire(shrPlay);}}
-  catch(e){box.innerHTML=shrShell('<p class="shr-fail">Не вдалося завантажити.</p>','Зібрати свій склад','Без реєстрації');shrWire(shrPlay);}}
+    if(rows.length)shrRender(rows[0]);else fail('Цей результат не знайдено.');}
+  catch(e){fail('Не вдалося завантажити.');}}
 if(ONLINE){const sid=(new URLSearchParams(location.search).get('s')||'').replace(/\D/g,'');if(sid)setTimeout(()=>openShared(sid),0);}
 // Trophies: trophy cabinet on own player page (filters, rarity); without the site (file://) the old dialog
 document.getElementById('trBtn').onclick=()=>{if(!ONLINE){openTrophies();return;}openPlayer();ppScrollCab();};
@@ -2756,7 +2701,7 @@ function fmtLabel(){const e=eraOf(),era=e==='all'?'':ERAS[e].name+' · ';   // e
 function renderShare(r){
   {const v=document.getElementById('verLine');if(v){v.hidden=!r.slow;if(r.slow)v.textContent=r.slow;}}
   const ta=document.getElementById('shareText'),b=document.getElementById('tgShareBtn');ta.value=shareTextOf(r);ta.hidden=true;
-  document.getElementById('copyMsg').textContent='';clearTimeout(b._t);if(b._orig!=null){b.innerHTML=b._orig;b._orig=null;}b.classList.remove('shr-ok');
+  document.getElementById('copyMsg').textContent='';clearTimeout(b._t);if(b._orig!=null){b.innerHTML=b._orig;b._orig=null;}delete b.dataset.copied;
 }
 let CARD_CANVAS=null;
 // load card fonts explicitly: fonts.ready only waits for fonts already used on the page
@@ -2771,7 +2716,7 @@ function drawCard(r){   // card in site style: UPL navy background, UPL.TV gradi
   const bg=g.createRadialGradient(W*.15,0,0,W*.15,0,H*1.1);bg.addColorStop(0,'#1d2d63');bg.addColorStop(.55,'#0b1430');bg.addColorStop(1,'#0a1129');g.fillStyle=bg;g.fillRect(0,0,W,H);
   g.fillStyle=grad(0,W);g.fillRect(0,0,W,12);g.fillRect(0,H-12,W,12);
   g.font=`900 44px ${DISP}`;g.fillStyle=INK;g.fillText('30-0',80,128);const lw=g.measureText('30-0 ').width,uw=g.measureText('УПЛ').width;g.fillStyle=grad(80+lw,80+lw+uw);g.fillText('УПЛ',80+lw,128);
-  const vdc=r.vd&&S.vd;if(vdc){const d=S.vd.day,head=`ВИКЛИК ДНЯ · ${r.vd.score}/11 · ${d.slice(8,10)}.${d.slice(5,7)}.${d.slice(0,4)}`;g.fillStyle=INK2;g.font=`600 26px ${MONO}`;g.fillText(head,80,182);}   // no formation or mode
+  const vdc=r.vd&&S.vd;if(vdc){const d=S.vd.day,head=`ВИКЛИК ДНЯ №${vdNumber(d)} · ${d.slice(8,10)}.${d.slice(5,7)}.${d.slice(0,4)}`;g.fillStyle=INK2;g.font=`600 26px ${MONO}`;g.fillText(head,80,182);}   // no formation or mode
   const [tier,gold]=tierOf(r);let y=vdc?230:180;   // tier label (e.g. Champions, 30-0-0): only for special seasons
   if(gold){const fs=fit(tier,f=>`800 ${f}px ${DISP}`,W-160,64,34);const tw=g.measureText(tier).width;g.fillStyle=grad(80,80+tw);g.fillText(tier,80,y+fs);y+=fs+40;}
   // main tile: W-D-L / points / place (as on the site), goals and xG below
@@ -2785,27 +2730,40 @@ function drawCard(r){   // card in site style: UPL navy background, UPL.TV gradi
   g.fillStyle='rgba(255,255,255,.08)';g.fillRect(120,y+228,W-240,2);
   {const t=`Голи ${r.gf}:${r.ga}`+(r.xgf!=null?` · xG ${r.xgf.toFixed(1)} : ${r.xga.toFixed(1)}`:'');g.font=`600 30px ${BODY}`;g.fillStyle=INK2;const tw=g.measureText(t).width;g.fillText(t,W/2-tw/2,y+276);}
   y+=hh+44;
+  if(vdc){   // daily challenge: no names, the squad opens the next day; the condition and one circle per position (hit / miss)
+    const sc=Math.min(r.vd.score,11),m=vdMedal(sc),ch=S.vd.ch||{},th=210;
+    rr(80,y,W-160,th,24);g.fillStyle='rgba(255,255,255,.05)';g.fill();
+    g.fillStyle=INK;g.font=`800 76px ${DISP}`;g.fillText(`${m?m.e+' ':''}${sc} з 11`,112,y+92);
+    g.fillStyle=INK2;g.font=`600 28px ${BODY}`;const words=`${ch.title||''}. ${ch.task||''}`.split(' ');let ln='',ly=y+148;
+    for(const w of words){const tr=ln?ln+' '+w:w;if(g.measureText(tr).width>W-224&&ln){g.fillText(ln,112,ly);ln=w;ly+=38;}else ln=tr;}if(ln)g.fillText(ln,112,ly);
+    y+=th+44;
+    const rows=(FORMATIONS[S.formation]||FORMATIONS['4-4-2']).rows,ph=H-240-y;rr(80,y,W-160,ph,32);g.fillStyle='rgba(255,255,255,.05)';g.fill();
+    let k=0;rows.forEach((row,ri)=>{const cy=y+ph*(ri+.5)/rows.length;row.forEach((_,ci)=>{const cx=80+(W-160)*(ci+.5)/row.length;g.beginPath();g.arc(cx,cy,30,0,7);
+      if(k++<sc){g.fillStyle='#2fd07a';g.fill();g.strokeStyle='#fff';g.lineWidth=5;g.setLineDash([]);}else{g.setLineDash([10,8]);g.strokeStyle='rgba(255,255,255,.45)';g.lineWidth=4;}g.stroke();g.setLineDash([]);});});
+    g.fillStyle=MUTED;g.font=`600 24px ${MONO}`;g.fillText('СКЛАД ВІДКРИЄТЬСЯ ЗАВТРА',80,H-190);
+  }else{
   // instead of match bars: two tiles, top scorer and player of the season
-  {const top=r.scorers&&r.scorers[0],mvp=(r.players||[]).slice().sort((a,b)=>b.rt-a.rt)[0];const tw=(W-160-24)/2,th=150;
-    [[`⚽  БОМБАРДИР`,top?top.name:'—',top?`${top.g} ${plUk(top.g,'гол','голи','голів')}`:''],[`⭐  ГРАВЕЦЬ СЕЗОНУ`,mvp?mvp.name:'—',mvp?`оцінка ${mvp.rt.toFixed(2)}`:'']].forEach(([k,n,v],i)=>{const x=80+i*(tw+24);
-      rr(x,y,tw,th,24);g.fillStyle='rgba(255,255,255,.05)';g.fill();
-      g.fillStyle=MUTED;g.font=`600 22px ${MONO}`;g.fillText(k,x+28,y+44);
-      g.fillStyle=INK;let fs=fit(n,f=>`700 ${f}px ${BODY}`,tw-56,34,24);g.fillText(n,x+28,y+92);
-      g.fillStyle='#ff5aa0';g.font=`700 26px ${BODY}`;g.fillText(v,x+28,y+128);});
-    y+=th+56;}
-  g.fillStyle=MUTED;g.font=`600 24px ${MONO}`;g.fillText((S.teamName||'Твоя 11-ка').toUpperCase(),80,y);
-  const LN={FW:0,MF:1,DF:2,GK:3},PC={GK:'#f5b83d',DF:'#4d8dff',MF:'#2fd07a',FW:'#ff4d5e'};
-  const xi=S.slots.map(s=>s.player).map((p,i)=>[p,i]).sort((a,b)=>(LN[a[0].pos]-LN[b[0].pos])||(a[1]-b[1])).map(x=>x[0]);const colsX=[80,560];
-  xi.forEach((p,i)=>{const cx=colsX[i<6?0:1],cy=y+48+(i<6?i:i-6)*46;g.fillStyle=PC[p.pos];g.beginPath();g.arc(cx+8,cy-10,8,0,7);g.fill();
-    g.fillStyle=INK;g.font=`700 28px ${BODY}`;let nm=p.name;while(g.measureText(nm).width>330&&nm.length>4)nm=nm.slice(0,-2)+'…';g.fillText(nm,cx+28,cy);
-    if(ratingsOpen()){g.fillStyle='#ff5aa0';g.font=`700 28px ${DISP}`;g.fillText(String(baseR(p)),cx+380,cy);}});
+    {const top=r.scorers&&r.scorers[0],mvp=(r.players||[]).slice().sort((a,b)=>b.rt-a.rt)[0];const tw=(W-160-24)/2,th=150;
+      [[`⚽  БОМБАРДИР`,top?top.name:'—',top?`${top.g} ${plUk(top.g,'гол','голи','голів')}`:''],[`⭐  ГРАВЕЦЬ СЕЗОНУ`,mvp?mvp.name:'—',mvp?`оцінка ${mvp.rt.toFixed(2)}`:'']].forEach(([k,n,v],i)=>{const x=80+i*(tw+24);
+        rr(x,y,tw,th,24);g.fillStyle='rgba(255,255,255,.05)';g.fill();
+        g.fillStyle=MUTED;g.font=`600 22px ${MONO}`;g.fillText(k,x+28,y+44);
+        g.fillStyle=INK;let fs=fit(n,f=>`700 ${f}px ${BODY}`,tw-56,34,24);g.fillText(n,x+28,y+92);
+        g.fillStyle='#ff5aa0';g.font=`700 26px ${BODY}`;g.fillText(v,x+28,y+128);});
+      y+=th+56;}
+    g.fillStyle=MUTED;g.font=`600 24px ${MONO}`;g.fillText((S.teamName||'Твоя 11-ка').toUpperCase(),80,y);
+    const LN={FW:0,MF:1,DF:2,GK:3},PC={GK:'#f5b83d',DF:'#4d8dff',MF:'#2fd07a',FW:'#ff4d5e'};
+    const xi=S.slots.map(s=>s.player).map((p,i)=>[p,i]).sort((a,b)=>(LN[a[0].pos]-LN[b[0].pos])||(a[1]-b[1])).map(x=>x[0]);const colsX=[80,560];
+    xi.forEach((p,i)=>{const cx=colsX[i<6?0:1],cy=y+48+(i<6?i:i-6)*46;g.fillStyle=PC[p.pos];g.beginPath();g.arc(cx+8,cy-10,8,0,7);g.fill();
+      g.fillStyle=INK;g.font=`700 28px ${BODY}`;let nm=p.name;while(g.measureText(nm).width>330&&nm.length>4)nm=nm.slice(0,-2)+'…';g.fillText(nm,cx+28,cy);
+      if(ratingsOpen()){g.fillStyle='#ff5aa0';g.font=`700 28px ${DISP}`;g.fillText(String(baseR(p)),cx+380,cy);}});
+  }
   g.fillStyle=INK;g.font=`700 34px ${DISP}`;g.fillText('Зможеш краще?',80,H-104);   // like 'Think you can beat this?' in 38-0
   g.fillStyle=MUTED;g.font=`500 26px ${BODY}`;g.fillText(SITE_HOST,80,H-56);
   return c.toDataURL('image/png');
 }
 // ---------- What's new: short player-friendly notes on the latest version (technical log: CHANGELOG.md)
 const WHATSNEW={v:'0.92',news:'0.92',date:'19.10.2026',items:[
-  ['share-variant','Одна кнопка «Поділитися»','Під результатом сезону — одна кнопка внизу екрана. У Telegram вона надсилає картку з підписом, у браузері відкриває меню «Поділитися» або копіює текст. Друзі бачать слова «Побий мій результат» замість довгого посилання.'],
+  ['share-variant','Одна кнопка «Поділитися»','Під результатом сезону — одна головна кнопка. У Telegram вона надсилає картку з підписом, у браузері відкриває меню «Поділитися» або копіює текст. У Telegram друзі бачать «Побий мій результат» з посиланням на твій результат.'],
   ['soccer-field','Результат за посиланням','Посилання на чужий результат відкривається окремим екраном: звання, рахунок, склад і кнопка «Зібрати свій склад» без реєстрації. Склад виклику дня відкривається наступного дня.'],
   ['sword-cross','Без кнопки «Кинути виклик другу»','Діліться результатом — друг одним дотиком пройде те саме. Виклики, які вже розіслано, працюють як раніше.']]};
 function openNews(){screenTag('news');const box=document.getElementById('viewBox');document.getElementById('viewTitle').textContent=`Що нового · версія ${WHATSNEW.v}`;
