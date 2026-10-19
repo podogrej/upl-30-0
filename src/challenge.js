@@ -1,7 +1,5 @@
 // ---------- Friend challenge ("beat my result"): same wheel seed, formation, mode and opponents
-// Every free classic game has a wheel seed; after the season a challenge (table challenges) can be created and shared by link.
-const CHAL_ALPH='abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-function chalId(){let s='';const a=new Uint32Array(8);try{crypto.getRandomValues(a);}catch(e){for(let i=0;i<8;i++)a[i]=Math.floor(Math.random()*4e9);}for(const x of a)s+=CHAL_ALPH[x%CHAL_ALPH.length];return s;}
+// Every free classic game has a wheel seed. New challenges are no longer created in the UI; links already sent (?c=, startapp=c) keep working.
 const wheelSeq=seed=>wheelFor(seed,'classic','all');
 // new game: the server issues the wheel seed (api/_draft.js start) and later locks the squad and simulates the season (lock);
 // the wheel is the same for a challenge replay. No answer within 6 s, the day limit or a hidden format: local wheel, season not verified (d.note)
@@ -37,29 +35,6 @@ let CHAL=null;   // challenge currently opened via link
 // challenger name comes from the player profile (audit V5); legacy rows without player fall back to name
 const chalWho=x=>x&&x.players&&(x.players.name||x.players.anon_name)?pname(x):String((x&&x.name)||'друг').toLowerCase();
 const chalLink=x=>x&&x.players&&x.players.public_id?plink(x):esc(chalWho(x));
-const chalName=()=>{const el=document.getElementById('chalName');const v=el&&el.value.trim();if(v&&v.length>=2){if(!TGU)nickSet(v);return v;}return (TGU?[TGU.first_name,TGU.last_name].filter(Boolean).join(' '):'')||myName()||'Друг';};
-function chalLinkWeb(id){return `${SITE}?c=${id}`;}
-function chalLinkTg(id){return `https://t.me/${TG_BOT}?startapp=c${id}`;}
-async function chalCreate(r){
-  if(!r.rowId||r.verified!==true)throw new Error('not verified');
-  const id=chalId();await saveApi('challenge',{season_id:r.rowId,row:{id,name:chalName().slice(0,40)}});return id;   // the server takes wheel, rules and result from the verified season
-}
-async function chalShare(){
-  const r=S.result;const msg=document.getElementById('chalMsg');if(!r||!S.chal)return;
-  msg.textContent='Створюю виклик…';
-  try{const id=r.chalId||(r.chalId=await chalCreate(r));
-    const text=`⚔️ Кидаю виклик у 30-0 УПЛ: ${r.pts} ${ptsWord(r.pts)} (${r.W}-${r.D}-${r.L}), ${r.place} місце. Те саме колесо, схема ${S.formation}. Побий!`;
-    const url=`https://t.me/share/url?url=${encodeURIComponent(TG_BOT?chalLinkTg(id):chalLinkWeb(id))}&text=${encodeURIComponent(text)}`;
-    if(TG&&TG.openTelegramLink)TG.openTelegramLink(url);else window.open(url,'_blank');
-    msg.innerHTML=`Посилання на виклик: <span class="mono" style="user-select:all">${esc(chalLinkWeb(id))}</span>`;
-  }catch(e){msg.textContent='Не вдалося створити виклик. Спробуй ще раз.';}
-}
-async function chalCopy(){
-  const r=S.result;const msg=document.getElementById('chalMsg');if(!r||!S.chal)return;
-  try{const id=r.chalId||(r.chalId=await chalCreate(r));const link=chalLinkWeb(id);
-    try{await navigator.clipboard.writeText(link);msg.textContent='Посилання скопійовано: '+link;}catch(e){msg.innerHTML=`Скопіюй посилання: <span class="mono" style="user-select:all">${esc(link)}</span>`;}
-  }catch(e){msg.textContent='Не вдалося створити виклик. Спробуй ще раз.';}
-}
 // challenge link opened
 function chalParam(){const m=/[?&]c=([A-Za-z0-9]{6,12})/.exec(location.search);if(m)return m[1];const sp=TG&&TG.initDataUnsafe&&TG.initDataUnsafe.start_param||'';const t=/^c([A-Za-z0-9]{6,12})$/.exec(sp);return t?t[1]:null;}
 async function chalLoad(force){
@@ -84,11 +59,7 @@ function chalStart(){
 }
 // after the season: compare with the challenge and save the result
 function chalAfterSeason(r){
-  const line=document.getElementById('chalLine'),box=document.getElementById('chalBox');
-  const can=ONLINE&&S.chal&&!!S.chal.sid&&!S.vd&&!S.league&&S.format==='classic'&&eraOf()==='all'&&S.mode!=='practice';   // the Challenge tile opens this block
-  if(box)box.hidden=true;const tile=document.getElementById('chalOpen');if(tile)tile.hidden=!can;
-  const ni=document.getElementById('chalName');if(ni){ni.hidden=!!TGU;if(!ni.value)ni.value=myName();}
-  document.getElementById('chalMsg').textContent='';
+  const line=document.getElementById('chalLine');
   if(!line)return;line.hidden=true;const c=S.challenge;if(!c)return;
   const diff=r.pts-c.pts;line.hidden=false;
   line.innerHTML=`${ic('sword-cross','sm')}Ти <b>${r.pts}</b> : <b>${c.pts}</b> ${esc(chalWho(c))} — ${diff>0?`<b>виклик прийнято й виграно</b> (+${diff})`:diff===0?'нічия за очками':`не вистачило ${-diff} ${ptsWord(-diff)}`}`;

@@ -43,12 +43,12 @@ const fail=[];let n=0;const check=(ok,msg)=>{n++;console.log((ok?'✓ ':'✗ ')+
    const btn=await pg.$('.pl:not([disabled])');await btn.click();await pg.waitForTimeout(60);const t=await pg.$('#pitch .slot.target');if(t){await t.click();await pg.waitForTimeout(60);}}
  await pg.waitForSelector('#simBtn:not([hidden])');await pg.click('#simBtn');await pg.click('#skipBtn');await pg.waitForTimeout(1200);
  const res=await pg.evaluate(()=>({mode:window.__dbg.S.mode,share:document.getElementById('shareText').value,
-   tiles:[...document.querySelectorAll('#shareBox > button, #shareBox > .shr2 > button')].map(b=>b.id+(b.hidden?':h':'')).join(','),big:!document.getElementById('tgShareBtn').hidden,chal:document.getElementById('chalBox').hidden}));
- check(res.mode==='pick'&&/Вибір сезону/.test(res.share),'сезон: режим pick, у тексті «Вибір сезону»');
+   tiles:[...document.querySelectorAll('#shareBox > button')].map(b=>b.id+(b.hidden?':h':'')).join(','),big:!document.getElementById('tgShareBtn').hidden,chal:!document.getElementById('chalBox')&&!document.getElementById('chalOpen')}));
+ check(res.mode==='pick'&&!/Вибір сезону/.test(res.share),'сезон: режим pick, у тексті шерингу назви режиму немає');
  for(let k=0;k<40&&!saves.find(x=>x.kind==='season');k++)await pg.waitForTimeout(200);   // save happens after the summary animations; slower on CI (GitHub Actions) than 1.2 s
  const sv=saves.find(x=>x.kind==='season');
  check(sv&&sv.row.mode==='pick'&&sv.row.format==='classic'&&sv.row.show_r===true,'запис сезону: mode pick, format classic, show_r (рейтинги відкривали) — '+(sv?JSON.stringify({m:sv.row.mode,f:sv.row.format,r:sv.row.show_r}):'немає'));
- check(res.big&&res.tiles==='tgShareBtn,chalOpen:h,againBtn'&&res.chal,'«Поділитися» (0.63 — одна кнопка; виклику у «Виборі сезону» немає; 0.66 — «Новий драфт» теж під карткою): '+res.tiles);
+ check(res.big&&res.tiles==='tgShareBtn,againBtn'&&res.chal,'«Поділитися» — одна закріплена кнопка, під нею «Новий драфт», кнопки виклику немає: '+res.tiles);
  await pg.locator('#shareBox').screenshot({path:path.join(OUT,'v060_share.png')});
  // ---- rare new trophy shows the effect (secret)
  const sec=await pg.evaluate(()=>{const t=window.__dbg.TROPHIES.find(x=>x.sec&&!x.gone);window.__dbg.renderNewTro({tro:{got:[t.id,'champ'],fresh:[t.id,'champ']}});
