@@ -17,6 +17,11 @@ select s.id, s.created_at, s.nickname, s.mode, s.format, s.club, s.formation, s.
 revoke all on public.seasons_pub from public, anon, authenticated;
 grant select on public.seasons_pub to anon, authenticated;
 
--- check: expected one row "t | t"
+-- traffic_events: 'share' event (utm_medium = channel). The check only widens, so the old site keeps working.
+alter table public.traffic_events drop constraint if exists traffic_events_event_check;
+alter table public.traffic_events add constraint traffic_events_event_check check (event in ('visit', 'season_start', 'season_finish', 'share'));
+
+-- check: expected one row "t | t | t"
 select exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'seasons_pub' and column_name = 'vd_score') as has_vd,
-       not has_table_privilege('anon', 'public.vd_results', 'select') as vd_results_closed;
+       not has_table_privilege('anon', 'public.vd_results', 'select') as vd_results_closed,
+       (select pg_get_constraintdef(oid) like '%share%' from pg_constraint where conname = 'traffic_events_event_check') as share_ok;

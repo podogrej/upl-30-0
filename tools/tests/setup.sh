@@ -962,7 +962,7 @@ chk "v0911: anon до турніру не бачить схем" anon "
   j := fl_get('$F911'); assert (j->>'fives_n')::int = 2 and (select count(*) from jsonb_array_elements(j::jsonb->'fives') f where f ? 'form' or f ? 'xi') = 0, j::text;"
 # 0.92 share (sql/v092_share.sql): daily-challenge fields in seasons_pub, squad hidden until the challenge day is over
 for pass in 1 2; do
-  if $P -d t1 -tA -f "$ROOT/sql/v092_share.sql" >"$D/out" 2>"$D/err" && [ "$(cat "$D/out")" = "t|t" ]; then ok "запуск $pass: v092_share.sql"; else bad "запуск $pass: v092_share.sql — $(grep -v NOTICE "$D/err" | head -3) $(head -3 "$D/out")"; fi
+  if $P -d t1 -tA -f "$ROOT/sql/v092_share.sql" >"$D/out" 2>"$D/err" && [ "$(cat "$D/out")" = "t|t|t" ]; then ok "запуск $pass: v092_share.sql"; else bad "запуск $pass: v092_share.sql — $(grep -v NOTICE "$D/err" | head -3) $(head -3 "$D/out")"; fi
 done
 chk "v092: сезон виклику дня — сьогодні склад схований, рахунок видно; наступного дня склад відкритий" postgres "
   insert into seasons(device_id, mode, format, formation, w, d, l, pts, place, gf, ga, xi) values ('$DEV', 'normal', 'classic', '4-4-2', 10, 10, 10, 40, 8, 30, 30, '[{\"n\":\"X\"}]');

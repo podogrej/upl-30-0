@@ -33,9 +33,9 @@ async function warm(url) {   // read the whole file (up to 4 s) so Telegram gets
   const ac = new AbortController(), t = setTimeout(() => ac.abort(), 4000);
   try { const r = await fetch(url, { signal: ac.signal }); await r.arrayBuffer(); } catch (e) {} finally { clearTimeout(t); }
 }
-async function prepare(token, u, photo, caption) {
+async function prepare(token, u, photo, caption, html) {
   const bot = env('TG_BOT') || 'upl30_bot';
-  const result = { type: 'photo', id: crypto.randomBytes(8).toString('hex'), ...photo, caption: String(caption || '').slice(0, 1000),
+  const result = { type: 'photo', id: crypto.randomBytes(8).toString('hex'), ...photo, caption: String(caption || '').slice(0, 1000), ...(html ? { parse_mode: 'HTML' } : {}),
     reply_markup: { inline_keyboard: [[{ text: 'Зібрати свою 11-ку', url: `https://t.me/${bot}?startapp` }]] } };
   const pr = await fetch(`https://api.telegram.org/bot${token}/savePreparedInlineMessage`, { method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ user_id: u.id, result, allow_user_chats: true, allow_group_chats: true, allow_channel_chats: true }) });
@@ -100,11 +100,12 @@ module.exports = async (req, res) => {
     const m = /^data:image\/(jpeg|png);base64,(.+)$/.exec(String(b.image || ''));
     if (!m) return res.status(400).json({ error: 'image?' });
     const buf = Buffer.from(m[2], 'base64');
+    const html = b.parse_mode === 'HTML';
     if (buf.length > 3.5e6) return res.status(413).json({ error: 'image too large' });
     if (b.share) {
       stage = 'channel';
       const fid = await cachePhoto(token, buf, m[1]).catch(() => null);
-      if (fid) { stage = 'prepare'; return res.status(200).json(await prepare(token, u, { photo_file_id: fid }, b.caption)); }
+      if (fid) { stage = 'prepare'; return res.status(200).json(await prepare(token, u, { photo_file_id: fid }, b.caption, html)); }
       stage = 'store';
       const url = await storeCard(buf, m[1] === 'png' ? 'png' : 'jpg').catch(() => null);
       if (url) {
@@ -116,7 +117,7 @@ module.exports = async (req, res) => {
         stage = 'warm';
         await warm(url);
         stage = 'prepare';
-        return res.status(200).json(await prepare(token, u, { photo_url: url, thumbnail_url: thumb || url, photo_width: 1080, photo_height: 1350 }, b.caption));
+        return res.status(200).json(await prepare(token, u, { photo_url: url, thumbnail_url: thumb || url, photo_width: 1080, photo_height: 1350 }, b.caption, html));
       }
       if (b.prefetch) return res.status(200).json({ ok: false, error: 'store' });   // prefetch: no private-chat fallback
     }
@@ -124,6 +125,7 @@ module.exports = async (req, res) => {
     const fd = new FormData();
     fd.append('chat_id', String(u.id));
     fd.append('caption', String(b.caption || '').slice(0, 1000));
+    if (html) fd.append('parse_mode', 'HTML');
     fd.append('photo', new Blob([buf], { type: `image/${m[1]}` }), `30-0-upl.${m[1] === 'png' ? 'png' : 'jpg'}`);
     const r = await fetch(`https://api.telegram.org/bot${token}/sendPhoto`, { method: 'POST', body: fd });
     const j = await r.json().catch(() => ({}));
@@ -139,7 +141,7 @@ module.exports = async (req, res) => {
     const fileId = photos.length ? photos[photos.length - 1].file_id : null;
     if (!fileId) return res.status(200).json({ ok: false, error: 'no file_id' });
     fetch(`https://api.telegram.org/bot${token}/deleteMessage`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: u.id, message_id: j.result.message_id }) }).catch(() => {});
-    res.status(200).json(await prepare(token, u, { photo_file_id: fileId }, b.caption));
+    res.status(200).json(await prepare(token, u, { photo_file_id: fileId }, b.caption, html));
   } catch (e) {
     fail(res, `card ${stage}`, e);
   }
