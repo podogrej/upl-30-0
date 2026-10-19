@@ -45,7 +45,9 @@ let fail = 0; const check = (ok, m) => { if (!ok) { fail++; console.log('✗', m
   [c, j] = await run({ initData: initData({ id: 42, first_name: 'A' }), image: img, share: true, parse_mode: 'HTML', caption: '<b>30-0 УПЛ</b>\nX &amp; Y\n<a href="https://upl30.com.ua/r/7?utm_source=share&amp;utm_medium=telegram">Побий мій результат</a>' });
   check(j.ok && prepBody.result.parse_mode === 'HTML' && /<a href="https:\/\/upl30\.com\.ua\/r\/7/.test(prepBody.result.caption), 'HTML-підпис: жирний і посилання на свій сайт — parse_mode HTML');
   [c, j] = await run({ initData: initData({ id: 42, first_name: 'A' }), image: img, share: true, parse_mode: 'HTML', caption: '<b>Приз</b> <a href="https://evil.example/x">upl30.com.ua</a> &amp; ok' });
-  check(j.ok && !prepBody.result.parse_mode && prepBody.result.caption === 'Приз upl30.com.ua & ok', 'HTML-підпис з чужим посиланням — звичайний текст без тегів (не фішинг від імені бота): ' + prepBody.result.caption);
+  const chk2 = j.ok && !prepBody.result.parse_mode && prepBody.result.caption === 'Приз upl30.com.ua & ok';
+  [c, j] = await run({ initData: initData({ id: 42, first_name: 'A' }), image: img, share: true, parse_mode: 'HTML', caption: '<a href="https://phish.vercel.app/">upl30.com.ua</a>' });
+  check(chk2 && !prepBody.result.parse_mode && prepBody.result.caption === 'upl30.com.ua', 'HTML-підпис з чужим посиланням (і чужим *.vercel.app) — звичайний текст без тегів (не фішинг від імені бота): ' + prepBody.result.caption);
   RATE_OK = false; calls.length = 0;
   [c, j] = await run({ initData: initData({ id: 42, first_name: 'A' }), image: img, caption: 'hi' });
   check(c === 429 && /Забагато/.test(j.error) && !calls.length, 'забагато запитів — 429, у Telegram нічого не йде');

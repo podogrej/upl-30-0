@@ -83,7 +83,7 @@ async function ogCard(req, res, b, token) {
 }
 const checkMiniApp = (initData, token) => { const m = miniApp(initData, token); return m && m.user; };
 // HTML caption: only <b> and links to the site itself; anything else is sent as plain text with the tags removed
-const OWN_LINK = /^https:\/\/(upl30\.com\.ua|[a-z0-9-]+\.vercel\.app)\//;
+const OWN_LINK = /^https:\/\/(upl30\.com\.ua|upl-30-0[a-z0-9-]*\.vercel\.app)\//;   // the site and this project's preview deployments
 const htmlOk = c => !/[<>]/.test(String(c).replace(/<\/?b>|<\/a>/g, '').replace(/<a href="([^"<>]*)">/g, (m, h) => OWN_LINK.test(h) ? '' : '<'));
 const plainOf = c => String(c).replace(/<[^>]*>/g, '').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&amp;/g, '&');
 
