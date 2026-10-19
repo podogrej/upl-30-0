@@ -28,7 +28,7 @@ const saveH=require(path.join(ROOT,'api','save.js')),seedH=require(path.join(ROO
  T.check(await A.pg.evaluate(()=>window.__dbg.S.chal.seed)===+seedA.wheel_seed,'A: колесо на сторінці — з сервера (ws = wheel_seed)');
  T.check(!await A.pg.$('#chalOpen')&&!await A.pg.$('#chalBox')&&!await A.pg.$('#chalCopyBtn'),'A: на екрані результату кнопки «Кинути виклик другу» більше немає');
  // a challenge sent earlier (link ?c=): created through the same server path the old button used
- await A.pg.evaluate(()=>saveApi('challenge',{season_id:window.__dbg.S.result.rowId,row:{id:'abcdEFGH',name:'Андрій'}}));await A.pg.waitForTimeout(300);
+ await A.pg.evaluate(()=>fetch('/api/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({kind:'challenge',device_id:JSON.parse(localStorage.getItem('upl30_device')),secret:JSON.parse(localStorage.getItem('upl30_dsecret')),season_id:window.__dbg.S.result.rowId,row:{id:'abcdEFGH',name:'Андрій'}})}));await A.pg.waitForTimeout(300);
  const row=DB.challenges[0];
  const rA=await A.pg.evaluate(()=>{const S=window.__dbg.S;return {pts:S.result.pts,formation:S.formation,mode:S.mode,year:S.result.year};});
  T.check(calls.includes('save:challenge')&&!A.log.some(x=>/rest\/v1\/challenges$/.test(x)&&x.startsWith('POST')),'A: виклик записав сервер, не браузер');

@@ -1,5 +1,5 @@
 // 0.92 share: the screen opened by a result link (?s=<id>) for a normal season and a daily challenge (squad hidden today, open the next day),
-// "Зібрати свій склад" starts a classic draft, the result screen has one pinned "Поділитися" (browser: copy / system share; Telegram: prepared message),
+// the play button starts a classic draft, the result screen has one pinned Share button (browser: copy / system share; Telegram: prepared message),
 // share texts (utm, challenge number, no mode names), preview image and the "share" event. In-memory DB, no real network.
 // Screenshots: tools/tests/out/v092_*.png. Run from repo root: node tools/tests/v092.js
 const path=require('path'),fs=require('fs');const {ROOT,launch,makeDB,openSite,draftSeason,checker}=require('./_site.js');
@@ -82,7 +82,7 @@ const tgRoute=(r,u)=>{if(u.host==='telegram.org'){r.fulfill({contentType:'applic
   await A.ctx.close();}
  {const A=await openSite({b,db,api,query:'?s=503'});await A.pg.waitForSelector('#shr .shr-h',{timeout:5000});
   T.check(/^2 з 11$/.test(await txt(A.pg,'#shr .shr-h')),'без медалі (2 з 11): лише рахунок');await A.ctx.close();}
- // ---- 4. result screen in a browser: one pinned Share, copy with "Скопійовано"
+ // ---- 4. result screen in a browser: one pinned Share, copy with the copied state
  const CLIP=`window.__clip=null;Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:async t=>{if(window.__clipFail)throw new Error('no');window.__clip=t;}}});Object.defineProperty(navigator,'canShare',{configurable:true,value:undefined});Object.defineProperty(navigator,'share',{configurable:true,value:undefined});`;
  {seen.length=0;const A=await openSite({b,db,api,init:CLIP});const pg=A.pg;
   await pg.click('#freeOpen');await pg.evaluate(()=>window.__dbg.setFmt('classic'));await pg.click('#startBtn');await draftSeason(pg);await pg.waitForTimeout(800);
