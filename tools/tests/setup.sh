@@ -965,11 +965,11 @@ for pass in 1 2; do
   if $P -d t1 -tA -f "$ROOT/sql/v092_share.sql" >"$D/out" 2>"$D/err" && [ "$(cat "$D/out")" = "t|t|t|t" ]; then ok "запуск $pass: v092_share.sql"; else bad "запуск $pass: v092_share.sql — $(grep -v NOTICE "$D/err" | head -3) $(head -3 "$D/out")"; fi
 done
 chk "v092: сезон виклику дня — сьогодні склад схований, рахунок видно; наступного дня склад відкритий" postgres "
-  insert into seasons(device_id, mode, format, formation, w, d, l, pts, place, gf, ga, xi) values ('$DEV', 'normal', 'classic', '4-4-2', 10, 10, 10, 40, 8, 30, 30, '[{\"n\":\"X\"}]');
+  insert into seasons(device_id, mode, format, formation, w, d, l, pts, place, gf, ga, xi, xp, xg, xga) values ('$DEV', 'normal', 'classic', '4-4-2', 10, 10, 10, 40, 8, 30, 30, '[{\"n\":\"X\"}]', 50, 40, 30);
   insert into vd_results(day, device_id, attempt, gate_ok, score, season_id) values ((now() at time zone 'Europe/Kyiv')::date, '$DEV', 1, true, 9, (select max(id) from seasons));
-  assert (select xi is null and vd_score = 9 and vd_gate from seasons_pub where id = (select max(id) from seasons)), 'сьогодні';
+  assert (select xi is null and xp is null and xg is null and vd_score = 9 and vd_gate from seasons_pub where id = (select max(id) from seasons)), 'сьогодні';
   update vd_results set day = day - 1 where season_id = (select max(id) from seasons);
-  assert (select xi is not null and vd_day is not null from seasons_pub where id = (select max(id) from seasons)), 'завтра';
+  assert (select xi is not null and xp = 50 and vd_day is not null from seasons_pub where id = (select max(id) from seasons)), 'завтра';
   assert (select xi is not null and vd_day is null from seasons_pub where id = (select min(id) from seasons where xi is not null)), 'звичайний сезон';"
 chk "v092: сезон виклику дня без перевірки сервером (немає рядка vd_results) — склад сьогодні теж схований" postgres "
   insert into season_seeds(device_id, xi_hash, seed, day, vd_day) values ('$DEV', 'h092', 7, (now() at time zone 'Europe/Kyiv')::date, (now() at time zone 'Europe/Kyiv')::date);

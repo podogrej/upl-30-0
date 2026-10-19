@@ -82,6 +82,10 @@ async function ogCard(req, res, b, token) {
   res.status(200).json({ ok: true, og: ogUrl(id) });
 }
 const checkMiniApp = (initData, token) => { const m = miniApp(initData, token); return m && m.user; };
+// HTML caption: only <b> and links to the site itself; anything else is sent as plain text with the tags removed
+const OWN_LINK = /^https:\/\/(upl30\.com\.ua|[a-z0-9-]+\.vercel\.app)\//;
+const htmlOk = c => !/[<>]/.test(String(c).replace(/<\/?b>|<\/a>/g, '').replace(/<a href="([^"<>]*)">/g, (m, h) => OWN_LINK.test(h) ? '' : '<'));
+const plainOf = c => String(c).replace(/<[^>]*>/g, '').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&amp;/g, '&');
 
 module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
@@ -100,7 +104,8 @@ module.exports = async (req, res) => {
     const m = /^data:image\/(jpeg|png);base64,(.+)$/.exec(String(b.image || ''));
     if (!m) return res.status(400).json({ error: 'image?' });
     const buf = Buffer.from(m[2], 'base64');
-    const html = b.parse_mode === 'HTML';
+    const html = b.parse_mode === 'HTML' && htmlOk(b.caption || '');
+    if (b.parse_mode === 'HTML' && !html) b.caption = plainOf(b.caption || '');
     if (buf.length > 3.5e6) return res.status(413).json({ error: 'image too large' });
     if (b.share) {
       stage = 'channel';

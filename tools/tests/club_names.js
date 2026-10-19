@@ -55,7 +55,7 @@ function numbers(){
 const grab=pg=>pg.evaluate(()=>{for(const d of document.querySelectorAll('details'))d.open=true;
   const vals=[...document.querySelectorAll('textarea,input')].filter(e=>e.offsetParent).map(e=>e.value);
   const pitch=[...document.querySelectorAll('.pitch .club')].filter(e=>e.closest('section:not([hidden])')).map(e=>e.textContent);
-  const D=window.__dbg,fin=document.getElementById('final'),share=fin&&!fin.hidden&&fin.offsetParent&&D.S.result?D.shareTextOf(D.S.result)+'\n'+D.shareTextOf(D.S.result,true,true):'';
+  const D=window.__dbg,fin=document.getElementById('final'),share=fin&&!fin.hidden&&fin.offsetParent&&D.S.result?D.shareTextOf(D.S.result)+'\n'+D.shareTextOf(D.S.result,'copy'):'';
   return [document.body.innerText,...vals,...pitch,share].join('\n');});
 const seen={};   // screen -> number of full names checked against
 async function screen(pg,name,fn,errs){

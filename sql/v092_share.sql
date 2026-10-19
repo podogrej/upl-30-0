@@ -8,8 +8,10 @@ create index if not exists vd_results_season_idx on public.vd_results (season_id
 alter table public.seasons add column if not exists vd_day date;
 create or replace view public.seasons_pub with (security_invoker = false) as
 select s.id, s.created_at, s.nickname, s.mode, s.format, s.club, s.formation, s.year, s.version,
-       s.w, s.d, s.l, s.pts, s.place, s.gf, s.ga, s.gd, s.xp, s.xg, s.xga, s.tier, s.perfect, s.golden, s.practice, s.day,
-       case when coalesce(v.day, ss.vd_day, s.vd_day) >= (now() at time zone 'Europe/Kyiv')::date then null else s.xi end as xi,
+       s.w, s.d, s.l, s.pts, s.place, s.gf, s.ga, s.gd,
+       case when h.hid then null else s.xp end as xp, case when h.hid then null else s.xg end as xg, case when h.hid then null else s.xga end as xga,
+       s.tier, s.perfect, s.golden, s.practice, s.day,
+       case when h.hid then null else s.xi end as xi,
        s.tbl, s.verified, s.competition, s.data_version, s.era, s.show_r, s.player_id,
        s.fl_id is not null as in_fl,
        case when p.id is null then null else json_build_object('name', p.name, 'anon_name', p.anon_name, 'public_id', p.public_id) end as players,
@@ -17,7 +19,8 @@ select s.id, s.created_at, s.nickname, s.mode, s.format, s.club, s.formation, s.
   from public.seasons s
   left join public.players p on p.id = s.player_id
   left join public.season_seeds ss on ss.id = s.seed_id   -- challenge day also for a season the server did not verify
-  left join lateral (select r.day, r.score, r.gate_ok from public.vd_results r where r.season_id = s.id order by r.id limit 1) v on true;
+  left join lateral (select r.day, r.score, r.gate_ok from public.vd_results r where r.season_id = s.id order by r.id limit 1) v on true
+  cross join lateral (select coalesce(v.day, ss.vd_day, s.vd_day) >= (now() at time zone 'Europe/Kyiv')::date as hid) h;   -- squad and xP/xG/xGA (squad strength) hidden on the challenge day
 revoke all on public.seasons_pub from public, anon, authenticated;
 grant select on public.seasons_pub to anon, authenticated;
 
