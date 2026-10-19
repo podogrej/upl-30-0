@@ -28,6 +28,9 @@ const tblItem = t => ({ n: str(t.n, 60), w: int(t.w, 0, 30), d: int(t.d, 0, 30),
 // site version as sent by the browser: digits only, else null (the season is then verified against the current engine)
 const verOf = v => (/^\d+\.\d+(\.\d+)?$/.test(String(v == null ? '' : v)) ? String(v).slice(0, 12) : null);
 const dayRe = /^\d{4}-\d{2}-\d{2}$/;
+// challenge day of a season: only today or yesterday in Kyiv (a season finished after midnight), anything else is dropped
+const kyivDay = t => new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Kyiv', year: 'numeric', month: '2-digit', day: '2-digit' }).format(t);
+const vdDayOk = d => dayRe.test(String(d || '')) && [kyivDay(Date.now()), kyivDay(Date.now() - 864e5)].includes(d);
 const trophyIds = a => [...new Set((Array.isArray(a) ? a : []).map(String))].filter(t => /^[A-Za-z0-9_]{1,24}$/.test(t)).slice(0, 100);
 
 // wheel offers: exactly one list per xi slot, ids in pool format, each list contains the player picked for that slot
@@ -51,7 +54,10 @@ function seasonRow(r) {
   return { ...sc, nickname: str(r.nickname, 24), competition: str(r.competition || 'upl', 12), data_version: str(r.data_version, 16), mode, format, club: str(r.club, 40), formation,
     year: int(r.year, 1900, 9999), seed: int(r.seed, 0, 2 ** 53), version: verOf(r.version), xp: num(r.xp, 0, 90), xg: num(r.xg, 0, 999), xga: num(r.xga, 0, 999),
     tier: str(r.tier, 80), golden: !!r.golden, perfect: !!r.perfect, seed_id: /^[0-9A-Za-z-]{1,64}$/.test(String(r.seed_id || '')) ? String(r.seed_id) : null, practice: !!r.practice,
-    day: dayRe.test(String(r.day || '')) ? r.day : null, xi: r.xi.map(xiItem), tbl: (r.tbl || []).map(tblItem),
+    day: dayRe.test(String(r.day || '')) ? r.day : null,
+    // daily-challenge day: seasons_pub hides the squad until it is over (seasons.vd_day may be missing: insert() retries without it)
+    ...(vdDayOk(r.vd_day) ? { vd_day: r.vd_day } : {}),
+    xi: r.xi.map(xiItem), tbl: (r.tbl || []).map(tblItem),
     // era: only when not "all years" (otherwise the site doesn't send it). seasons.era may be missing: insert() retries without it
     ...(/^[yd]\d{4}$/.test(String(r.era || '')) ? { era: String(r.era) } : {}),
     // "show ratings" was enabled in the draft (seasons.show_r; if the column is missing insert() retries without it)

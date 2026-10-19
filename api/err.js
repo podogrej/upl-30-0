@@ -53,7 +53,7 @@ module.exports = async (req, res) => {
 };
 
 // traffic source of a device (first touch) for one event: visit / season_start / season_finish (sql/v0903_traffic.sql); one row per device and event
-const TRF_EVENTS = ['visit', 'season_start', 'season_finish'];
+const TRF_EVENTS = ['visit', 'season_start', 'season_finish', 'share'];   // share: utm_medium carries the channel (telegram | web | copy)
 const tag = v => { const s = String(v == null ? '' : v).toLowerCase().trim().slice(0, 64).replace(/[^a-z0-9_.:-]/g, ''); return s || null; };
 async function traffic(req, res, t) {
   const id = String(t && t.anon_id || '');

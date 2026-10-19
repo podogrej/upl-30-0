@@ -61,7 +61,7 @@ const sk=(pg,sel)=>pg.evaluate(s=>{const n=[...document.querySelectorAll(s+' .sk
   T.check(inside,'Tab не виходить за межі шторки');
   await shot(pg,'sheet_phone_dark');await theme(pg,'light');await wait(300);await shot(pg,'sheet_phone_light');await theme(pg,'dark');
   // closing: button, backdrop, Escape, history.back; focus returns to the trigger
-  const reopen=async()=>{await pg.click('#newsBtn');await wait(650);};
+  const reopen=async()=>{await pg.waitForSelector('#viewBox',{state:'hidden',timeout:3000}).catch(()=>{});await pg.click('#newsBtn');await wait(650);};   // closing animation may still cover the page on a slow machine
   for(const [name,fn] of [['«Закрити»',()=>pg.click('#viewClose')],['тап по затемненню',()=>pg.mouse.click(195,60)],['Escape',()=>pg.keyboard.press('Escape')],['системне «назад»',()=>pg.evaluate(()=>history.back())]]){
     await fn();await wait(160);const s1=await st(pg);await wait(500);const s2=await st(pg);
     T.check(s1.hidden&&s2.sheet===0&&s2.ghosts===0&&s2.focus==='newsBtn',`закриття: ${name} — шторка закрита, запис історії знято, фокус на «Що нового» (${s2.focus})`);

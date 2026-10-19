@@ -22,7 +22,7 @@ const clubsOf=pg=>pg.evaluate(()=>[...new Set(window.__dbg.S.slots.map(s=>s.play
  // derby
  await free(pg,2);await draft(pg);const dc=await clubsOf(pg);
  T.check(dc.length&&dc.every(c=>['dynamo-kyiv','shakhtar-donetsk'].includes(c)),'дербі: лише Динамо і Шахтар ('+dc.join(', ')+')');
- await pg.click('#simBtn');await pg.click('#skipBtn');T.check(/дербі/i.test(await pg.inputValue('#shareText')),'дербі: у тексті є «дербі»');
+ await pg.click('#simBtn');await pg.click('#skipBtn');{const s=await pg.inputValue('#shareText');T.check(/^30-0 УПЛ · (\d+ місце · \d+-\d+-\d+ · \d+ \S+|30-0!)/.test(s)&&!/дербі/i.test(s),'дербі: текст шерингу без назви режиму');}
  // one club
  let club='';
  await free(pg,3,async()=>{T.check((await pg.$$('#ocGrid .oct')).length===51,'один клуб: сторінка з 51 клубом');
@@ -40,7 +40,7 @@ const clubsOf=pg=>pg.evaluate(()=>[...new Set(window.__dbg.S.slots.map(s=>s.play
  await free(pg,4);await draft(pg);
  const apps=await pg.evaluate(()=>window.__dbg.S.slots.map(s=>s.player.apps));T.check(apps.every(a=>a>=10),'антисезон: у всіх 10+ матчів ('+apps.join(',')+')');
  T.check(await pg.evaluate(()=>window.__dbg.S.mode)==='hardcore','антисезон: внутрішній режим «hardcore» (без рейтингів)');
- await pg.click('#simBtn');await pg.click('#skipBtn');T.check(/антисезон|0-30/i.test(await pg.inputValue('#shareText')),'антисезон: текст про антисезон');
+ await pg.click('#simBtn');await pg.click('#skipBtn');{const s=await pg.inputValue('#shareText');T.check(/^30-0 УПЛ · (\d+ місце · \d+-\d+-\d+ · \d+ \S+|30-0!)/.test(s)&&!/антисезон/i.test(s),'антисезон: текст шерингу без назви режиму');}
  // daily challenge: the condition met -> the season plays (classic, normal), the attempt and its score are kept
  await playSeason(pg,'vd',0,0);
  const vd=await pg.evaluate(()=>{const S=window.__dbg.S;return {m:S.mode,f:S.format,sc:S.result.vd&&S.result.vd.score,st:JSON.parse(localStorage.getItem('upl30_vd_2026-10-12')||'{}')};});

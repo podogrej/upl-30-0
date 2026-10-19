@@ -63,9 +63,8 @@ const fail=[];const check=(ok,msg)=>{if(!ok)fail.push(msg);};
  for(const [fmt,mode,form] of [['classic',1,1],['vd',0,0],['anti',3,1],['derby',2,2]]){
   await playSeason(pg,fmt,mode,form);
   await pg.screenshot({path:path.join(OUT,`result_${fmt}.png`),fullPage:true});
-  await pg.click('#tgShareBtn');await pg.waitForTimeout(900);   // outside Telegram and without a native share sheet: shows the card
-  check(await pg.evaluate(()=>!document.getElementById('shareImg').hidden),`${fmt}: «Поділитися карткою» не показала картку`);
-  const d=await pg.evaluate(()=>{const S=window.__dbg.S;return {text:document.getElementById('shareText').value,cap:window.__dbg.shareTextOf(S.result,false,true),img:document.getElementById('shareImg').src,r:{W:S.result.W,D:S.result.D,L:S.result.L,gf:S.result.gf,ga:S.result.ga,log:S.result.log.map(m=>[m.ug,m.og,m.res])},verified:document.getElementById('verLine').textContent};});
+  check(await pg.evaluate(()=>!!document.getElementById('tgShareBtn')&&!document.getElementById('chalOpen')&&!document.getElementById('cardTgBtn')&&!document.getElementById('copyBtn')),`${fmt}: на результаті має бути лише «Поділитися»`);
+  const d=await pg.evaluate(()=>{const S=window.__dbg.S;return {text:document.getElementById('shareText').value,cap:window.__dbg.shareTextOf(S.result,'copy'),img:window.__dbg.drawCard(S.result),r:{W:S.result.W,D:S.result.D,L:S.result.L,gf:S.result.gf,ga:S.result.ga,log:S.result.log.map(m=>[m.ug,m.og,m.res])},verified:document.getElementById('verLine').textContent};});
   fs.writeFileSync(path.join(OUT,`card_${fmt}.png`),Buffer.from(d.img.split(',')[1],'base64'));
   // player sees only the base card rating: on the result pitch, in the player table and in the season view
   if(fmt!=='anti'){const rb=await pg.evaluate(()=>{const D=window.__dbg,S=D.S;const bad=[];
@@ -82,8 +81,8 @@ const fail=[];const check=(ok,msg)=>{if(!ok)fail.push(msg);};
   const L=d.r.log;check(L.length===30,`${fmt}: не 30 матчів`);
   check(L.reduce((a,m)=>a+m[0],0)===d.r.gf&&L.reduce((a,m)=>a+m[1],0)===d.r.ga,`${fmt}: голи не сходяться з матчами`);
   check(L.every(m=>m[2]===(m[0]>m[1]?'W':m[0]<m[1]?'L':'D')),`${fmt}: результат матчу не збігається з рахунком`);
-  check(/[🟩🟨🟥]/u.test(d.text),`${fmt}: у тексті немає квадратиків`);check(!/[🟩🟨🟥]/u.test(d.cap),`${fmt}: у підписі до картки є квадратики`);
-  check(!/№/.test(d.text),`${fmt}: у тексті номер виклику`);
+  check(!/[🟩🟨🟥]/u.test(d.text)&&!/[🟩🟨🟥]/u.test(d.cap),`${fmt}: у тексті шерингу квадратиків немає (вони на картці)`);
+  check(fmt==='vd'?/^Виклик дня №\d+ · .*\d+ з 11 · \d+ місце/.test(d.text)&&!/Мандрівники|[А-Яа-я]+ — [А-Я]/.test(d.text.split('\n').slice(1).join(' ').replace(/Пройди виклик.*/,'')):/^30-0 УПЛ · (\d+ місце · \d+-\d+-\d+ · \d+ \S+|30-0!)/.test(d.text)&&!/№|Виклик дня|дербі|антисезон|Хардкор/i.test(d.text),`${fmt}: текст шерингу за шаблоном, без номера (крім виклику дня) і назв режимів: ${d.text.split('\n')[0]}`);
   console.log(`\n== ${fmt}: ${d.r.W}-${d.r.D}-${d.r.L} ${d.r.gf}:${d.r.ga}\n${d.cap}`);
  }
  check(!errs.length,'помилки на сторінці: '+errs.join(' | '));

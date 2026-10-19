@@ -26,7 +26,7 @@ const DEV='aaaaaaaa-0000-4000-a000-000000000001';
   const r=await pg.evaluate(()=>{const R=window.__dbg.S.result;return {got:R.tro.got,fresh:R.tro.fresh,seasons:window.__dbg.trStore().seasons,box:document.getElementById('newTro').hidden?'':document.getElementById('newTro').textContent,share:document.getElementById('shareText').value};});
   T.check(r.seasons===2+k,`сезон ${k+1}: лічильник сезонів ${r.seasons}`);
   T.check(r.got.length?!!r.box:!r.box,`сезон ${k+1}: блок трофеїв ${r.box?'показано ('+r.got.join(', ')+')':'схований — трофеїв немає'}`);
-  T.check(r.fresh.length?/🏆 Нов/.test(r.share):!/🏆 Нов/.test(r.share),`сезон ${k+1}: нові трофеї в тексті ${r.fresh.length?'є':'не згадано'}`);
+  T.check(!/🏆 Нов/.test(r.share),`сезон ${k+1}: у тексті шерингу трофеїв немає`);
   const sn=db.DB.seasons[db.DB.seasons.length-1]||{},mine=db.DB.trophies.filter(x=>x.device_id===DEV);
   T.check(sn.verified===true&&r.got.filter(t=>SEASON.has(t)).every(t=>mine.some(x=>x.trophy===t&&x.src==='srv'))&&mine.filter(x=>SEASON.has(x.trophy)).every(x=>x.src==='srv')&&new Set(mine.map(x=>x.trophy)).size===mine.length,
    `сезон ${k+1}: сезон перевірено, сезонні трофеї записав сервер, з браузера — лише несезонні (${mine.map(x=>x.trophy+(x.src?':'+x.src:'')).join(', ')})`);

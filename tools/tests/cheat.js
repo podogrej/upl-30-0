@@ -170,6 +170,7 @@ const res6 = q => ({ w: q.W, d: q.D, l: q.L, pts: q.pts, place: q.place, gf: q.g
   await tamper('гравець не з того клубу', r => { const [c, y] = r.xi[1].c === 'Динамо (Київ)' && +r.xi[1].y === 1992 ? ['Шахтар (Донецьк)', 2010] : ['Динамо (Київ)', 1992]; r.xi[1].c = c; r.xi[1].y = y; }, false);   // always a different club-season than the random wheel gave
   await tamper('слоти переставлено', r => { const t = r.xi[0].slot; r.xi[0].slot = r.xi[10].slot; r.xi[10].slot = t; }, false);
   // PREV_VERSIONS is short: a season from an older site is 'unverifiable', not 'forged'
+  await tamper('сезон з сайту 0.91 (та сама симуляція) — перевірено', r => { r.version = '0.91'; }, true);
   await tamper('сезон з сайту 0.56 (до рейтингів v2) — не перевірити (null), не підробка', r => { r.version = '0.56'; }, null);
   await tamper('підробка з сайту 0.56 — не перевірено (null)', r => { r.version = '0.56'; r.xi[0].r = 99; }, null);
   await tamper('старша версія 0.49 — не перевірити (null)', r => { r.version = '0.49'; }, null);
@@ -363,6 +364,12 @@ const res6 = q => ({ w: q.W, d: q.D, l: q.L, pts: q.pts, place: q.place, gf: q.g
   ok('save: епоха записується в seasons.era (колесо «Усі роки» — не перевірено)', DB.seasons[DB.seasons.length - 1].era === 'y2015' && sEra.j.verified === false, sEra.j.note);
   await call(saveH, { kind: 'season', device_id: me, secret: mySecret, row: { ...season, era: '<b>' } });
   ok('save: некоректна епоха не пишеться', !('era' in DB.seasons[DB.seasons.length - 1]));
+  {const kd = t => new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Kyiv', year: 'numeric', month: '2-digit', day: '2-digit' }).format(t), today = kd(Date.now());
+   await call(saveH, { kind: 'season', device_id: me, secret: mySecret, row: { ...season, vd_day: today } });
+   const okToday = DB.seasons[DB.seasons.length - 1].vd_day === today;
+   await call(saveH, { kind: 'season', device_id: me, secret: mySecret, row: { ...season, vd_day: '2099-12-31' } });
+   const far = DB.seasons[DB.seasons.length - 1];
+   ok('save: день виклику (vd_day) приймається лише сьогодні/вчора за Києвом, далека дата відкидається (склад не сховати назавжди)', okToday && !('vd_day' in far));}
   ERA_COL = false; const nE = DB.seasons.length;
   const noCol = await call(saveH, { kind: 'season', device_id: me, secret: mySecret, row: { ...season, era: 'y2010' } });
   ok('save: без колонки era сезон однаково записано', noCol.c === 200 && DB.seasons.length === nE + 1 && !('era' in DB.seasons[nE]), `${noCol.c} ${noCol.j.error || ''}`);

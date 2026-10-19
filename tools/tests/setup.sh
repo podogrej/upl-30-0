@@ -960,6 +960,37 @@ chk "v0911: 5x5 до турніру — у чужого немає ні скла
   assert (select count(*) from jsonb_array_elements(j::jsonb->'fives') f where not f ? 'xi' and f ? 'form') = 0, 'чужа схема видна ' || j::text;" ',"sub":"'$UG'"'
 chk "v0911: anon до турніру не бачить схем" anon "
   j := fl_get('$F911'); assert (j->>'fives_n')::int = 2 and (select count(*) from jsonb_array_elements(j::jsonb->'fives') f where f ? 'form' or f ? 'xi') = 0, j::text;"
+# 0.92 share (sql/v092_share.sql): daily-challenge fields in seasons_pub, squad hidden until the challenge day is over
+for pass in 1 2; do
+  if $P -d t1 -tA -f "$ROOT/sql/v092_share.sql" >"$D/out" 2>"$D/err" && [ "$(cat "$D/out")" = "t|t|t|t" ]; then ok "запуск $pass: v092_share.sql"; else bad "запуск $pass: v092_share.sql — $(grep -v NOTICE "$D/err" | head -3) $(head -3 "$D/out")"; fi
+done
+chk "v092: сезон виклику дня — сьогодні склад схований, рахунок видно; наступного дня склад відкритий" postgres "
+  insert into seasons(device_id, mode, format, formation, w, d, l, pts, place, gf, ga, xi, xp, xg, xga) values ('$DEV', 'normal', 'classic', '4-4-2', 10, 10, 10, 40, 8, 30, 30, '[{\"n\":\"X\"}]', 50, 40, 30);
+  insert into vd_results(day, device_id, attempt, gate_ok, score, season_id) values ((now() at time zone 'Europe/Kyiv')::date, '$DEV', 1, true, 9, (select max(id) from seasons));
+  assert (select xi is null and xp is null and xg is null and xga is null and vd_score = 9 and vd_gate from seasons_pub where id = (select max(id) from seasons)), 'сьогодні';
+  update vd_results set day = day - 1 where season_id = (select max(id) from seasons);
+  assert (select xi is not null and xp = 50 and vd_day is not null from seasons_pub where id = (select max(id) from seasons)), 'завтра';
+  assert (select xi is not null and vd_day is null from seasons_pub where id = (select min(id) from seasons where xi is not null)), 'звичайний сезон';"
+chk "v092: сезон виклику дня без перевірки сервером (немає рядка vd_results) — склад сьогодні теж схований" postgres "
+  insert into season_seeds(device_id, xi_hash, seed, day, vd_day) values ('$DEV', 'h092', 7, (now() at time zone 'Europe/Kyiv')::date, (now() at time zone 'Europe/Kyiv')::date);
+  insert into seasons(device_id, mode, format, formation, w, d, l, pts, place, gf, ga, xi, seed_id) values ('$DEV', 'normal', 'classic', '4-4-2', 10, 10, 10, 40, 8, 30, 30, '[{\"n\":\"X\"}]', (select id from season_seeds where seed = 7 and vd_day is not null order by created_at desc limit 1));
+  assert (select xi is null and vd_day is null from seasons_pub where id = (select max(id) from seasons)), 'сьогодні без vd_results';
+  update season_seeds set vd_day = vd_day - 1 where id = (select seed_id from seasons where id = (select max(id) from seasons));
+  assert (select xi is not null from seasons_pub where id = (select max(id) from seasons)), 'завтра';"
+chk "v092: сезон виклику дня без seed від сервера (vd_day у самому сезоні) — склад сьогодні схований" postgres "
+  insert into seasons(device_id, mode, format, formation, w, d, l, pts, place, gf, ga, xi, vd_day) values ('$DEV', 'normal', 'classic', '4-4-2', 10, 10, 10, 40, 8, 30, 30, '[{\"n\":\"X\"}]', (now() at time zone 'Europe/Kyiv')::date);
+  assert (select xi is null from seasons_pub where id = (select max(id) from seasons)), 'сьогодні без seed';
+  update seasons set vd_day = vd_day - 1 where id = (select max(id) from seasons);
+  assert (select xi is not null from seasons_pub where id = (select max(id) from seasons)), 'завтра';"
+chk "v092 профіль: сьогоднішні сезони виклику дня не рахуються в улюбленого гравця й клуб (підказка схованого складу)" postgres "
+  j := player_profile(t_link('device', '$PDEV')); assert j->'fav_player'->>'id' = 'pv1', 'до ' || j::text;
+  update seasons set vd_day = (now() at time zone 'Europe/Kyiv')::date where device_id = '$PDEV';
+  j := player_profile(t_link('device', '$PDEV')); assert j->'fav_player' is null or json_typeof(j->'fav_player') = 'null', 'сьогодні ' || j::text;
+  assert j->'best'->'classic'->'avg' is null or json_typeof(j->'best'->'classic'->'avg') = 'null', 'середній рейтинг схованого складу ' || j::text;
+  assert (j->>'seasons')::int >= 1, 'сезони рахуються ' || j::text;
+  update seasons set vd_day = vd_day - 1 where device_id = '$PDEV';
+  j := player_profile(t_link('device', '$PDEV')); assert j->'fav_player'->>'id' = 'pv1', 'завтра ' || j::text;
+  update seasons set vd_day = null where device_id = '$PDEV';"
 echo "база: $D (порт $PORT)"
 [ $FAIL = 0 ] && echo "SQL: УСЕ ГАРАЗД ($N перевірок)" || echo "SQL: ПРОБЛЕМИ $FAIL/$N"
 exit $((FAIL>0))

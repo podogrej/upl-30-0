@@ -175,6 +175,7 @@ async function page(b,o={}){const ctx=await b.newContext({viewport:o.vp||{width:
   await ctx.route(u=>!u.href.startsWith('file:'),r=>r.abort());
   await ctx.addInitScript(([d,th,ls])=>{window.__vdToday=d;if(!sessionStorage.getItem('init')){sessionStorage.setItem('init',1);localStorage.setItem('upl30_theme',th);for(const [k,v] of Object.entries(ls||{}))localStorage.setItem(k,JSON.stringify(v));}},[o.day||DAYS.vd,o.th||'dark',o.ls||{}]);
   const pg=await ctx.newPage();const errs=[];pg.on('pageerror',e=>errs.push(e.message));pg.on('dialog',d=>d.accept());
+  if(o.init)await ctx.addInitScript(o.init);
   await pg.goto('file://'+path.join(ROOT,'index.html'));await pg.waitForTimeout(700);return {ctx,pg,errs};}
 const secOf=pg=>pg.evaluate(()=>[...document.querySelectorAll('.wrap>section')].filter(s=>!s.hidden).map(s=>s.id).join());
 // draft to 11 picking the first player; avoid: never take Shakhtar (condition fails); prefer: take Shakhtar seasons first
@@ -230,9 +231,14 @@ async function siteChecks(b){
   await o.pg.click('#vdAgain');await o.pg.waitForTimeout(500);
   T.check(await o.pg.evaluate(()=>window.__dbg.S.vd.attempt)===2,'кнопка «Спроба 2 з 3» відкриває нову спробу');
   await draft(o.pg,'prefer');await o.pg.waitForSelector('#simBtn:not([hidden])');await o.pg.click('#simBtn');await o.pg.waitForSelector('#skipBtn:visible',{timeout:15000});await o.pg.click('#skipBtn');await o.pg.waitForTimeout(1200);
-  const r=await o.pg.evaluate(()=>({t:document.getElementById('vdRes').textContent,h:document.getElementById('vdRes').hidden,sc:window.__dbg.S.result.vd.score,share:window.__dbg.shareTextOf(window.__dbg.S.result,true,true),st:JSON.parse(localStorage.getItem('upl30_vd_2026-10-12'))}));
+  const r=await o.pg.evaluate(()=>({t:document.getElementById('vdRes').textContent,h:document.getElementById('vdRes').hidden,sc:window.__dbg.S.result.vd.score,share:window.__dbg.shareTextOf(window.__dbg.S.result,'copy'),st:JSON.parse(localStorage.getItem('upl30_vd_2026-10-12'))}));
   T.check(!r.h&&new RegExp(`${r.sc} з 11 гравців`).test(r.t)&&/Виклик зараховано/.test(r.t)&&r.st.best===r.sc&&r.st.used===2,`виклик зараховано: блок над сезоном, ${r.sc}/11, краща спроба збережена`);
-  T.check(/Виклик дня/.test(r.share)&&new RegExp(`${r.sc}/11`).test(r.share),'текст для поширення — з виклику дня');
+  T.check(/Виклик дня/.test(r.share)&&new RegExp(`${r.sc} з 11`).test(r.share),'текст для поширення — з виклику дня');
+  // no server (vd start failed, no seed): the season row still carries the challenge day, so seasons_pub hides the squad today
+  {const q=await page(b,{init:`window.__saved=[];const f=window.fetch;window.fetch=(u,o)=>{if(String(u).includes('/api/save')){try{window.__saved.push(JSON.parse(o.body));}catch(e){}return Promise.resolve(new Response('{"id":1}',{status:200,headers:{'Content-Type':'application/json'}}));}return f(u,o);};`});
+   await q.pg.click('#vdCard');await q.pg.waitForTimeout(500);await draft(q.pg,'prefer');await q.pg.waitForSelector('#simBtn:not([hidden])');await q.pg.click('#simBtn');await q.pg.waitForSelector('#skipBtn:visible',{timeout:15000});await q.pg.click('#skipBtn');await q.pg.waitForTimeout(1200);
+   const sv=await q.pg.evaluate(()=>window.__saved.filter(x=>x.kind==='season').map(x=>[x.row.vd_day,x.row.seed_id]));
+   T.check(sv.length===1&&sv[0][0]===DAYS.vd&&!sv[0][1],'виклик без сервера (немає seed): сезон зберігається з днем виклику vd_day — склад схований до кінця дня ('+JSON.stringify(sv)+')');await q.ctx.close();}
   await o.pg.screenshot({path:path.join(OUT,'v080_result_phone_dark.png'),fullPage:true});
   await o.pg.evaluate(()=>window.__dbg.go(1));await o.pg.waitForTimeout(300);
   T.check(/\bprogress\b/.test(await o.pg.$eval('#vdCard',e=>e.className))&&/краща спроба/.test(await o.pg.textContent('#vdCard')),'головна: у процесі — краща спроба й медаль');

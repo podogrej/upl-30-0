@@ -48,7 +48,7 @@ const findPl=(pg,multi)=>pg.evaluate(multi=>{const D=window.__dbg,S=D.S;const bs
  check(ys.every(y=>y>=2000&&y<=2009),'епохи: колесо «2000-ні» дає лише сезони 2000/01–2009/10 ('+ys.join(',')+')');
  check(await pg.evaluate(()=>window.__dbg.S.slots.every(s=>s.player&&s.player.y>=2000&&s.player.y<=2009)),'епохи: увесь склад з 2000/01–2009/10');
  await pg.waitForSelector('#simBtn:not([hidden])');await pg.click('#simBtn');await pg.click('#skipBtn');await pg.waitForTimeout(400);
- check(await pg.evaluate(()=>/2000-ні/.test(document.getElementById('shareText').value)&&document.getElementById('chalBox').hidden&&document.getElementById('chalOpen').hidden),'епохи: епоха в тексті результату, плитки «Виклик» немає');
+ check(await pg.evaluate(()=>/^30-0 УПЛ · /.test(document.getElementById('shareText').value)&&!/2000-ні/.test(document.getElementById('shareText').value)&&!document.getElementById('chalBox')&&!document.getElementById('chalOpen')),'епохи: у тексті результату немає назви епохи, кнопки «Кинути виклик» немає');
  await pg.reload();await pg.waitForTimeout(600);
  check(await pg.evaluate(()=>window.__dbg.S.era==='d2000'),'епохи: вибір пам\'ятається після перезавантаження');
  await pg.evaluate(()=>localStorage.setItem('upl30_era','"y2015"'));await pg.reload();await pg.waitForTimeout(600);
