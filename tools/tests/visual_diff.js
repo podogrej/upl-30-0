@@ -33,7 +33,7 @@ function pageInit(seed,now){
     Object.defineProperty(crypto,'randomUUID',{value:()=>{const h=[...gv(new Uint8Array(16))].map(x=>x.toString(16).padStart(2,'0')).join('');return `${h.slice(0,8)}-${h.slice(8,12)}-4${h.slice(13,16)}-a${h.slice(17,20)}-${h.slice(20,32)}`;},configurable:true});}catch(e){}
 }
 // CSS for the screenshot only: no caret, no transient toast (timer driven), header in flow so a full-page shot does not depend on scroll
-const SHOT_CSS='*,*::before,*::after{caret-color:transparent!important}#toast{visibility:hidden!important}header.top{position:static!important}';
+const SHOT_CSS='*,*::before,*::after{caret-color:transparent!important}#toast{visibility:hidden!important}header.top{position:static!important}#vdBar,#miniBar{display:none!important}';   // compact bars appear on scroll with a transition: timing dependent
 // version text differs by design between builds: mask the footer version number as "0.0"
 const maskVersion=pg=>pg.evaluate(()=>{const w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);let n;
   while((n=w.nextNode()))if(/версі[яї] \d+(\.\d+)+/.test(n.nodeValue))n.nodeValue=n.nodeValue.replace(/(версі[яї]) \d+(\.\d+)+/g,'$1 0.0');});
@@ -86,12 +86,12 @@ async function shoot(dir){
       await pg.waitForFunction(()=>![...document.querySelectorAll('.sk')].some(e=>e.offsetParent),null,{timeout:4000}).catch(()=>{});
       await pg.waitForTimeout(250);};
     // screenshot until two in a row are identical (waits out late renders; never loosens the diff)
-    const snap=async(pg,name)=>{await settle(pg);await pg.evaluate(()=>window.scrollTo(0,0));await maskVersion(pg);const file=path.join(dir,`${name}_${tag}.png`);let prev=null,buf=null;
-      for(let i=0;i<8;i++){buf=await pg.screenshot({fullPage:true,animations:'disabled',caret:'hide',style:SHOT_CSS});if(prev&&prev.equals(buf))break;prev=buf;await pg.waitForTimeout(300);await maskVersion(pg);}
+    const snap=async(pg,name,el)=>{await settle(pg);await pg.evaluate(()=>window.scrollTo(0,0));await maskVersion(pg);const file=path.join(dir,`${name}_${tag}.png`);let prev=null,buf=null;
+      for(let i=0;i<8;i++){buf=await (el?pg.locator(el):pg).screenshot({...(el?{}:{fullPage:true}),animations:'disabled',caret:'hide',style:SHOT_CSS});if(prev&&prev.equals(buf))break;prev=buf;await pg.waitForTimeout(300);await maskVersion(pg);}
       if(!prev||!prev.equals(buf))report.unstable.push(`${name}_${tag}`);
       fs.writeFileSync(file,buf);report.saved.push(`${name}_${tag}`);};
     // one screen: a missing hook or element in this build means skipped, not failed
-    const step=async(pg,name,fn)=>{try{if(await fn()===false){report.skipped.push(`${name}_${tag}`);return;}await snap(pg,name);}
+    const step=async(pg,name,fn,el)=>{try{if(await fn()===false){report.skipped.push(`${name}_${tag}`);return;}await snap(pg,name,el);}
       catch(e){report.failed.push(`${name}_${tag}: ${String(e.message).split('\n')[0].slice(0,120)}`);}};   // an error is a failure: a silent skip would hide the screen from compare
     const has=(pg,k)=>pg.evaluate(k=>!!(window.__dbg&&window.__dbg[k]),k);
     const back=pg=>pg.evaluate(()=>{const c=document.getElementById('viewClose');if(c&&c.offsetParent)c.click();document.getElementById('homeBtn').click();}).then(()=>pg.waitForTimeout(250));
@@ -127,6 +127,21 @@ async function shoot(dir){
     {const {pg,errs,ctx}=await open({query:'?u=vitya234'});
      await step(pg,'player_other',async()=>{await pg.waitForSelector('#s6:not([hidden]) #ppName',{timeout:5000});});
      if(errs.length)report.errors.push(`${tag} ?u=: `+errs.join(' | '));await ctx.close();}
+    // daily challenge (fixed day, own stub DB): no spins, so the squads do not depend on the wheel; players come from pool order
+    {const {pg,errs,ctx}=await open({db:stubDb(makeDB)});
+     const fill=want=>pg.evaluate(w=>{const D=window.__dbg,S=D.S,ix=D.vdIdx(),A=D.DATA.alias||{},sh=id=>!!(ix[A[id]||id]||{clubs:{}}).clubs['shakhtar-donetsk'];let k=0;
+       for(const c of D.DATA.clubs){if(S.slots.every(s=>s.player))break;for(const p of c.pl){if(S.slots.every(s=>s.player))break;if(S.taken.has(A[p[5]]||p[5]))continue;
+         const isSh=sh(p[5]);if(w&&k<3?!isSh:isSh)continue;const o=D.posOpts(p);if(!o.length)continue;S.wheel=c;D.place(p,o[0]);if(isSh)k++;}}},want);
+     const hooks=['S','vdIdx','posOpts','place','openVdArchive'];
+     const ok=async()=>{for(const k of hooks)if(!await has(pg,k))return false;return !!await pg.$('#vdCard');};
+     await step(pg,'vd_card',async()=>{if(!await ok())return false;await pg.waitForSelector('#vdBox',{timeout:5000});},'#vdBox');
+     await step(pg,'vd_draft',async()=>{if(!await ok())return false;await click(pg,'#vdCard');await pg.waitForSelector('#vdBrief',{timeout:5000});await pg.waitForTimeout(600);});
+     await step(pg,'vd_fail',async()=>{if(!await ok())return false;await fill(false);await pg.waitForSelector('#s11:not([hidden])',{timeout:5000});});
+     await step(pg,'vd_result',async()=>{if(!await ok())return false;await click(pg,'#vdAgain');await pg.waitForTimeout(500);await fill(true);
+       await pg.waitForSelector('#simBtn:not([hidden])',{timeout:5000});await click(pg,'#simBtn');await pg.waitForSelector('#skipBtn:visible',{timeout:15000});await click(pg,'#skipBtn');
+       await pg.waitForSelector('#vdRes:not([hidden])',{timeout:8000});await pg.waitForTimeout(1500);});
+     await step(pg,'vd_archive',async()=>{if(!await ok())return false;await pg.evaluate(()=>{window.__dbg.go(1);window.__dbg.openVdArchive();});await pg.waitForSelector('#vdArch .tc',{timeout:5000});});
+     if(errs.length)report.errors.push(`${tag} vd: `+errs.join(' | '));await ctx.close();}
     {const {pg,errs,ctx}=await open({tg,hash:'#tgWebAppData=x'});
      await step(pg,'tables_chats',async()=>{if(!await has(pg,'openTables'))return false;await pg.evaluate(()=>window.__dbg.openTables('chats'));await pg.waitForTimeout(500);});
      if(errs.length)report.errors.push(`${tag} Telegram: `+errs.join(' | '));await ctx.close();}}
