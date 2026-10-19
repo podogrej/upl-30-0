@@ -37,6 +37,16 @@
       "statusCode": 302
     },
     {
+      "source": "/ig",
+      "destination": "/?utm_source=instagram&utm_medium=social&utm_campaign=bio",
+      "statusCode": 302
+    },
+    {
+      "source": "/tt",
+      "destination": "/?utm_source=tiktok&utm_medium=social&utm_campaign=bio",
+      "statusCode": 302
+    },
+    {
       "source": "/tr/:name([a-z0-9-]{1,48})",
       "destination": "/?utm_source=tribuna&utm_medium=blog&utm_campaign=:name",
       "statusCode": 302

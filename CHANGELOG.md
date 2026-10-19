@@ -15,6 +15,8 @@
 
 ## 0.91 «Рейтинги за кар'єрою» — 17.10.2026
 
+**Сервер (без смены версии, 19.10, просьба маркетинга):** короткие ссылки `/ig` (Instagram, bio) и `/tt` (TikTok, bio) → 302 на главную с UTM, как `/t` и `/tg`. `headers.js`, `docs/marketing/README.md` §6.
+
 **Безопасность и порядок (без смены версии, 19.10, проверка 19.10, решение владельца):**
 - Лиги Telegram-чатов: сезон засчитывается в лиги только через Telegram-привязки самого игрока (`creditSeason` → `membersOf(row.player_id, null)`); раньше новое устройство с чужой подписью Mini App получало новые 3 попытки в день. Цена: сезон игрока Mini App без Telegram-привязки (не прошёл вход) в лигу не идёт — за 14 дней таких 1 из 144 сезонов с Telegram. Тест `v079` (+1, падает на старом коде).
 - SQL `sql/v0911_hardening.sql` (тестовая → основная база): сняты права anon/authenticated на схему `net` (pg_net), на insert/update/delete во всех таблицах, кроме `user_state` (единственная, куда сайт пишет сам), на truncate/references/trigger во всех таблицах, и на чтение `app_marks`, `league_boards`, `player_links`, `season_seeds`, `tg_logins`, `f5_*`; `fl_get` до турнира 5×5 прячет у чужих и схему (`form`), как в DECISIONS п. 22. `setup.sh` (+7).
