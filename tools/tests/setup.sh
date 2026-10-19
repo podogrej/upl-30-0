@@ -986,6 +986,7 @@ chk "v092 профіль: сьогоднішні сезони виклику д�
   j := player_profile(t_link('device', '$PDEV')); assert j->'fav_player'->>'id' = 'pv1', 'до ' || j::text;
   update seasons set vd_day = (now() at time zone 'Europe/Kyiv')::date where device_id = '$PDEV';
   j := player_profile(t_link('device', '$PDEV')); assert j->'fav_player' is null or json_typeof(j->'fav_player') = 'null', 'сьогодні ' || j::text;
+  assert j->'best'->'classic'->'avg' is null or json_typeof(j->'best'->'classic'->'avg') = 'null', 'середній рейтинг схованого складу ' || j::text;
   assert (j->>'seasons')::int >= 1, 'сезони рахуються ' || j::text;
   update seasons set vd_day = vd_day - 1 where device_id = '$PDEV';
   j := player_profile(t_link('device', '$PDEV')); assert j->'fav_player'->>'id' = 'pv1', 'завтра ' || j::text;

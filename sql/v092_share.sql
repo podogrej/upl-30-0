@@ -29,7 +29,8 @@ do $$ begin
   end if;
 end $$;
 
--- player_profile (base: sql/v090_profile_verified.sql): favourite player and club skip today's daily-challenge seasons,
+-- player_profile (base: sql/v090_profile_verified.sql): favourite player and club skip today's daily-challenge seasons and their
+-- average rating is not shown,
 -- otherwise they would hint at the hidden squad. Same signature, same JSON, same grants.
 create or replace function public.player_profile(p_player uuid) returns json language plpgsql stable security definer set search_path = public as $$
 declare pid uuid := p_player; p players%rowtype; hops int := 0; res json;
@@ -58,8 +59,8 @@ begin
       from s
   ), rk as (
     select s.id, s.b, s.pts, s.w, s.d, s.l, s.place, s.formation, s.mode, s.club, s.day, s.created_at,
-           (select round(avg(case when coalesce(x->>'r0', x->>'r') ~ '^\d{1,3}(\.\d+)?$' then coalesce(x->>'r0', x->>'r')::numeric end), 1)
-              from jsonb_array_elements(case when jsonb_typeof(s.xi) = 'array' then s.xi else '[]'::jsonb end) x) avg_r,
+           case when coalesce(s.vd_today, false) then null else (select round(avg(case when coalesce(x->>'r0', x->>'r') ~ '^\d{1,3}(\.\d+)?$' then coalesce(x->>'r0', x->>'r')::numeric end), 1)
+              from jsonb_array_elements(case when jsonb_typeof(s.xi) = 'array' then s.xi else '[]'::jsonb end) x) end avg_r,
            row_number() over (partition by s.b order by case when s.b = 'anti' then -s.pts else s.pts end desc,
                                                         case when s.b = 'anti' then -s.place else s.place end, s.gf - s.ga desc, s.created_at) best_n,
            row_number() over (partition by s.b order by case when s.b = 'anti' then -s.pts else s.pts end,
