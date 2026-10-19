@@ -50,6 +50,10 @@ async function server(){
   const sd5=seed();const s5=season(sd5,{w:28,d:2,l:0,created_at:new Date(t+=60e3).toISOString()});
   // 5th season saved with the seed of attempt 3? no: a season always sits on its own seed; replay with an early seed id is blocked by verify (used_by)
   await L.creditSeason(s5,sd5);T.check(rowOf(-2).season_id===s3.id,'5-та спроба — теж ні');
+  // fresh device signed with the member's Telegram initData: its own player has no Telegram link, so no league and no new attempts
+  {const NEW=crypto.randomUUID();D.player_links.push({kind:'device',key:NEW,player_id:'p9'});const sdN=seed({device_id:NEW});
+   await L.creditSeason(season(sdN,{player_id:'p9',tg_user_id:11,w:30,d:0,l:0}),sdN);
+   T.check(rowOf(-1).season_id!==D.seasons[D.seasons.length-1].id&&rowOf(-2).season_id===s3.id,'новий пристрій з чужим initData (без привʼязки Telegram) — у лігу не йде, нових спроб немає');}
   T.check(L.cmpRes({pts:50,gf:40,ga:20},{pts:50,gf:30,ga:20})<0&&L.cmpRes({pts:50,gf:40,ga:30},{pts:50,gf:30,ga:10})>0&&L.cmpRes({pts:51,gf:0,ga:9},{pts:50,gf:90,ga:0})<0,'порівняння: очки → різниця м’ячів → забиті');
   T.check(L.RULE==='У лігу йде найкращий сезон із перших трьох спроб дня у «Грати».'&&/перших трьох спроб дня/.test(await L.boardText(-1,day))&&!/драфт|Драфт/.test(await L.boardText(-1,day)),'табло в чаті пояснює правило, без «Драфт дня»');
   T.check(L.playKb(-1).inline_keyboard[0][0].text==='▶️ Грати','кнопка під табло — «Грати»');

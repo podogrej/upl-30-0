@@ -47,7 +47,7 @@ head='''<!doctype html>
 <script>/* Microsoft Clarity (anonymous click analytics): production host only, not on the test deployment or in automated tests.
    Never inside the Telegram Mini App; sign-in fragments (#access_token, #tgWebAppData) are never shown to it:
    wait until the app has consumed them (up to 10 s); if they are still there, skip Clarity this time and leave the URL alone */
-(function(){if(!/^(upl30\.com\.ua|upl-30-0\.vercel\.app)$/.test(location.hostname))return;
+(function(){if(!/^(upl30\\.com\\.ua|upl-30-0\\.vercel\\.app)$/.test(location.hostname))return;
 var tg=/tgWebApp/.test(location.hash);try{tg=tg||!!sessionStorage.getItem('__telegram__initParams');}catch(e){}if(tg||window.TelegramWebviewProxy)return;
 var cred=function(){return /(^|[#&])(access_token|refresh_token|provider_token|tgWebAppData)=/.test(location.hash);};
 var go=function(){if(cred())return;
@@ -55,7 +55,7 @@ var go=function(){if(cred())return;
 if(!cred())return go();var n=0,t=setInterval(function(){if(!cred()||++n>=20){clearInterval(t);go();}},500);})();</script>
 <script>/* Vercel Web Analytics (cookieless page views, referrers, UTM): production host only; the script is served once Analytics is enabled in the project.
    Not inside the Telegram Mini App; the URL is sent without its fragment (sign-in tokens, Telegram initData live there) */
-(function(){if(!/^(upl30\.com\.ua|upl-30-0\.vercel\.app)$/.test(location.hostname))return;
+(function(){if(!/^(upl30\\.com\\.ua|upl-30-0\\.vercel\\.app)$/.test(location.hostname))return;
 var tg=/tgWebApp/.test(location.hash);try{tg=tg||!!sessionStorage.getItem('__telegram__initParams');}catch(e){}if(tg||window.TelegramWebviewProxy)return;
 window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments);};window.va('beforeSend',function(e){return Object.assign({},e,{url:String(e.url||'').split('#')[0]});});
 var t=document.createElement('script');t.defer=true;t.src='/_vercel/insights/script.js';document.head.appendChild(t);})();</script>
@@ -73,8 +73,9 @@ assert '<script id="pool" type="application/json">__POOL__</script>' in tpl
 site=head+tpl.replace('<script id="pool" type="application/json">__POOL__</script>',f'<script src="pool.{datav}.js"></script>').replace('__ONLINE__','true')+'\n</body>\n</html>\n'
 open('../index.html','w').write(site)
 
-# CSP (Report-Only): sha256 of every inline script that runs (no src, JS type) -> rule for "/" and "/index.html" in vercel.json.
-# Other routes keep only the frame-ancestors rule. Hashes depend on the exact script text, so they are rebuilt with every build.
+# CSP (enforced since 0.91.1): sha256 of every inline script that runs (no src, JS type) -> rule for "/" and "/index.html" in vercel.json,
+# with the frame-ancestors part of the all-routes rule repeated, so one header carries both. Other routes keep only frame-ancestors.
+# Hashes depend on the exact script text, so they are rebuilt with every build. Violations still go to /api/err?csp=1.
 import base64
 from html.parser import HTMLParser
 class _Inline(HTMLParser):
@@ -90,10 +91,12 @@ class _Inline(HTMLParser):
 _p=_Inline(); _p.feed(site); _p.close()
 _hashes=sorted({"'sha256-"+base64.b64encode(hashlib.sha256(t.encode('utf-8')).digest()).decode()+"'" for t in _p.out})
 assert _p.out and len(_hashes)<=len(_p.out)
-CSP_RO="script-src 'self' "+' '.join(_hashes)+" https://cdn.jsdelivr.net https://telegram.org https://www.clarity.ms https://scripts.clarity.ms; object-src 'none'; base-uri 'none'; report-uri /api/err?csp=1"
 _vj=json.load(open('../vercel.json',encoding='utf-8'))
-_vj['headers']=[h for h in _vj['headers'] if not any(x['key']=='Content-Security-Policy-Report-Only' for x in h['headers'])]
-_i=next(i for i,h in enumerate(_vj['headers']) if h['source']=='/(.*)')+1
-for _k,_src in enumerate(('/','/index.html')):_vj['headers'].insert(_i+_k,{'source':_src,'headers':[{'key':'Content-Security-Policy-Report-Only','value':CSP_RO}]})
+_all=next(h for h in _vj['headers'] if h['source']=='/(.*)')
+_fa=next(x['value'] for x in _all['headers'] if x['key']=='Content-Security-Policy')
+CSP="script-src 'self' "+' '.join(_hashes)+" https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/ https://telegram.org https://www.clarity.ms https://scripts.clarity.ms; object-src 'none'; base-uri 'none'; "+_fa+"; report-uri /api/err?csp=1"
+_vj['headers']=[h for h in _vj['headers'] if h['source'] not in ('/','/index.html')]
+_i=_vj['headers'].index(_all)+1
+for _k,_src in enumerate(('/','/index.html')):_vj['headers'].insert(_i+_k,{'source':_src,'headers':[{'key':'Content-Security-Policy','value':CSP}]})
 open('../vercel.json','w',encoding='utf-8').write(json.dumps(_vj,indent=2,ensure_ascii=False)+'\n')
 print(len(art), len(site))

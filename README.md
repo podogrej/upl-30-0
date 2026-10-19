@@ -146,6 +146,7 @@ RLS включён, политик нет, права anon/authenticated ото�
    - правит `src/`;
    - поднимает номер в подвале («Що нового у версії X.YY» в `src/template.html`) и обновляет `WHATSNEW`;
    - собирает: `python3 src/build.py` и `node tools/make_engine.js`. Номер в подвале и `VERSION` в `lib/engine.js` должны совпасть;
+   - картинка превью ссылок `og.png` (1200×630) пересобирается редко и вручную: `node tools/make_og.js`;
    - прогоняет проверки (ниже);
    - обновляет CHANGELOG и BACKLOG;
    - отправляет в ветку `test`.

@@ -940,6 +940,26 @@ chk "v0912: anon і authenticated не викликають cron_token_ok і cha
   assert not has_function_privilege('anon', 'public.channel_cron_on(text)', 'execute') and not has_function_privilege('authenticated', 'public.channel_cron_on(text)', 'execute'), 'channel_cron_on';
   assert has_function_privilege('service_role', 'public.cron_token_ok(text)', 'execute'), 'service_role';
   assert not has_table_privilege('authenticated', 'public.app_secrets', 'select'), 'authenticated читає';"
+# 0.91.1 hardening (sql/v0911_hardening.sql): no direct writes, unused tables unreadable, other 5x5 formations hidden
+for pass in 1 2; do
+  if $P -d t1 -tA -f "$ROOT/sql/v0911_hardening.sql" >"$D/out" 2>"$D/err" && [ ! -s "$D/out" ]; then ok "запуск $pass: v0911_hardening.sql"; else bad "запуск $pass: v0911_hardening.sql — $(grep -v NOTICE "$D/err" | head -3) $(head -3 "$D/out")"; fi
+done
+chk "v0911: anon не пише в players і seasons, не читає player_links і season_seeds; user_state — як було" postgres "
+  assert not has_table_privilege('anon', 'public.players', 'insert') and not has_table_privilege('authenticated', 'public.seasons', 'delete'), 'запис';
+  assert not has_table_privilege('anon', 'public.seasons', 'truncate') and not has_table_privilege('authenticated', 'public.user_state', 'truncate'), 'truncate';
+  assert not has_table_privilege('anon', 'public.player_links', 'select') and not has_table_privilege('authenticated', 'public.season_seeds', 'select'), 'читання';
+  assert has_table_privilege('authenticated', 'public.user_state', 'insert') and has_table_privilege('authenticated', 'public.user_state', 'select'), 'user_state';"
+chk "v0911: 5x5 — нова ліга до турніру, обидва склади" authenticated "
+  j := fl_create5('$MX', '$SEC', 'Кубок 0911', 3, 1, 'show', 'all');" ',"sub":"'$UG'"'
+F911=$($P -d t1 -tAc "select id from fl_leagues where name = 'Кубок 0911' order by created_at desc limit 1")
+chk "v0911: друг надсилає склад" authenticated "
+  j := fl_join('$L3', '$SEC', '$F911'); j := fl5_submit('$L3', '$SEC', '$F911', '1-2-1', '$XI');" ',"sub":"'$U3'"'
+chk "v0911: 5x5 до турніру — у чужого немає ні складу, ні схеми; свій видно повністю" authenticated "
+  j := fl5_submit('$MX', '$SEC', '$F911', '2-2', '$XI');
+  assert json_array_length(j->'fives') = 2 and (select count(*) from jsonb_array_elements(j::jsonb->'fives') f where f ? 'xi' and f->>'form' = '2-2') = 1, 'свій ' || j::text;
+  assert (select count(*) from jsonb_array_elements(j::jsonb->'fives') f where not f ? 'xi' and f ? 'form') = 0, 'чужа схема видна ' || j::text;" ',"sub":"'$UG'"'
+chk "v0911: anon до турніру не бачить схем" anon "
+  j := fl_get('$F911'); assert (j->>'fives_n')::int = 2 and (select count(*) from jsonb_array_elements(j::jsonb->'fives') f where f ? 'form' or f ? 'xi') = 0, j::text;"
 echo "база: $D (порт $PORT)"
 [ $FAIL = 0 ] && echo "SQL: УСЕ ГАРАЗД ($N перевірок)" || echo "SQL: ПРОБЛЕМИ $FAIL/$N"
 exit $((FAIL>0))
