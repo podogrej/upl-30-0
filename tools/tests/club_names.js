@@ -111,7 +111,7 @@ async function season(pg,label,fmt){
   {const {pg,errs,ctx}=await openSite({b,db,init:INIT,viewport:VP,query:'?u=vitya234',wait:1500});
    await screen(pg,'чужа сторінка гравця (улюблений клуб, найкращий XI)',()=>pg.waitForSelector('#s6:not([hidden]) #ppName',{timeout:5000}),errs);await ctx.close();}
   {const {pg,errs,ctx}=await openSite({b,db,init:INIT,viewport:VP,query:'?s=105',wait:1500});
-   await screen(pg,'перегляд сезону ?s= (склад і таблиця)',()=>pg.waitForSelector('#viewBody .hero',{timeout:5000}),errs);await ctx.close();}
+   await screen(pg,'сезон за посиланням ?s= (результат і склад)',()=>pg.waitForSelector('#s12:not([hidden]) .shr-cta',{timeout:5000}),errs);await ctx.close();}
   {const {pg,errs,ctx}=await openSite({b,db,init:INIT,viewport:VP,signed:true,wait:1500});
    await screen(pg,'ліга 5×5 з друзями: колесо',async()=>{await pg.click('#flOpen');await pg.waitForTimeout(400);await pg.click('#flNew');await pg.waitForTimeout(200);
      await pg.click('[data-k="fmt"][data-v="f5"]');await pg.click('#flCreate');await pg.waitForSelector('#fl .reel .club',{timeout:5000});},errs);

@@ -18,10 +18,14 @@ revoke all on public.seasons_pub from public, anon, authenticated;
 grant select on public.seasons_pub to anon, authenticated;
 
 -- traffic_events: 'share' event (utm_medium = channel). The check only widens, so the old site keeps working.
-alter table public.traffic_events drop constraint if exists traffic_events_event_check;
-alter table public.traffic_events add constraint traffic_events_event_check check (event in ('visit', 'season_start', 'season_finish', 'share'));
+do $$ begin
+  if to_regclass('public.traffic_events') is not null then
+    alter table public.traffic_events drop constraint if exists traffic_events_event_check;
+    alter table public.traffic_events add constraint traffic_events_event_check check (event in ('visit', 'season_start', 'season_finish', 'share'));
+  end if;
+end $$;
 
 -- check: expected one row "t | t | t"
 select exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'seasons_pub' and column_name = 'vd_score') as has_vd,
        not has_table_privilege('anon', 'public.vd_results', 'select') as vd_results_closed,
-       (select pg_get_constraintdef(oid) like '%share%' from pg_constraint where conname = 'traffic_events_event_check') as share_ok;
+       coalesce((select pg_get_constraintdef(oid) like '%share%' from pg_constraint where conname = 'traffic_events_event_check'), to_regclass('public.traffic_events') is null) as share_ok;

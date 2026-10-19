@@ -230,9 +230,9 @@ async function siteChecks(b){
   await o.pg.click('#vdAgain');await o.pg.waitForTimeout(500);
   T.check(await o.pg.evaluate(()=>window.__dbg.S.vd.attempt)===2,'кнопка «Спроба 2 з 3» відкриває нову спробу');
   await draft(o.pg,'prefer');await o.pg.waitForSelector('#simBtn:not([hidden])');await o.pg.click('#simBtn');await o.pg.waitForSelector('#skipBtn:visible',{timeout:15000});await o.pg.click('#skipBtn');await o.pg.waitForTimeout(1200);
-  const r=await o.pg.evaluate(()=>({t:document.getElementById('vdRes').textContent,h:document.getElementById('vdRes').hidden,sc:window.__dbg.S.result.vd.score,share:window.__dbg.shareTextOf(window.__dbg.S.result,true,true),st:JSON.parse(localStorage.getItem('upl30_vd_2026-10-12'))}));
+  const r=await o.pg.evaluate(()=>({t:document.getElementById('vdRes').textContent,h:document.getElementById('vdRes').hidden,sc:window.__dbg.S.result.vd.score,share:window.__dbg.shareTextOf(window.__dbg.S.result,'copy'),st:JSON.parse(localStorage.getItem('upl30_vd_2026-10-12'))}));
   T.check(!r.h&&new RegExp(`${r.sc} з 11 гравців`).test(r.t)&&/Виклик зараховано/.test(r.t)&&r.st.best===r.sc&&r.st.used===2,`виклик зараховано: блок над сезоном, ${r.sc}/11, краща спроба збережена`);
-  T.check(/Виклик дня/.test(r.share)&&new RegExp(`${r.sc}/11`).test(r.share),'текст для поширення — з виклику дня');
+  T.check(/Виклик дня/.test(r.share)&&new RegExp(`${r.sc} з 11`).test(r.share),'текст для поширення — з виклику дня');
   await o.pg.screenshot({path:path.join(OUT,'v080_result_phone_dark.png'),fullPage:true});
   await o.pg.evaluate(()=>window.__dbg.go(1));await o.pg.waitForTimeout(300);
   T.check(/\bprogress\b/.test(await o.pg.$eval('#vdCard',e=>e.className))&&/краща спроба/.test(await o.pg.textContent('#vdCard')),'головна: у процесі — краща спроба й медаль');
