@@ -174,7 +174,8 @@ async function membersOf(pid, tgId) {
 // a season was just verified (seedRow: its seed): update every chat league of its player, then their pinned boards
 async function creditSeason(row, seedRow) {
   if (!leagueFree(row) || !seedRow || !seedRow.day || String(seedRow.id) !== String(row.seed_id)) return [];
-  const members = await membersOf(row.player_id, row.tg_user_id);
+  // leagues only through the player's own Telegram links: attempts are counted per player, so a fresh device signed with someone's initData gets nothing
+  const members = await membersOf(row.player_id, null);
   if (!members.length) return [];
   const day = String(seedRow.day).slice(0, 10);
   const best = await dayBest(await devicesOf(row.player_id, row.device_id), day);

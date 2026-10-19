@@ -1,7 +1,7 @@
 // Security headers in vercel.json for every route (C-8, simple set): nosniff, referrer policy, no camera/microphone/geolocation,
 // HSTS with subdomains, and only frame-ancestors in the CSP (Telegram Web embeds the Mini App in a frame, so no X-Frame-Options).
-// Plus (0.90) Content-Security-Policy-Report-Only only on "/" and "/index.html": script-src with the sha256 of every inline script of index.html
-// (build.py writes it), SRI for supabase-js, and /api/err accepting CSP reports.
+// Plus (0.90, enforced since 0.91.1) Content-Security-Policy on "/" and "/index.html": script-src with the sha256 of every inline script of index.html
+// (build.py writes it), supabase-js only from its own jsdelivr path, frame-ancestors repeated, SRI for supabase-js, /api/err accepting CSP reports.
 // Plus (0.90.4) Google sign-in uses the PKCE flow (login CSRF).
 // Plus short marketing links: 302 redirects to the home page with UTM tags (docs/marketing/README.md, section 6).
 // Run from repo root: node tools/tests/headers.js
@@ -18,6 +18,7 @@ T.check(/camera=\(\)/.test(H['permissions-policy']) && /microphone=\(\)/.test(H[
 T.check(/max-age=\d{7,}/.test(H['strict-transport-security']) && /includeSubDomains/.test(H['strict-transport-security']), 'HSTS з includeSubDomains');
 T.check(H['content-security-policy'] === "frame-ancestors 'self' https://web.telegram.org https://*.telegram.org", 'CSP: лише frame-ancestors (сайт і Telegram)');
 T.check(!H['x-frame-options'] && !H['content-security-policy-report-only'], 'без X-Frame-Options (ламає Telegram Web) і без Report-Only на всіх адресах');
+T.check(!(cfg.headers || []).some(h => h.headers.some(x => x.key.toLowerCase() === 'content-security-policy-report-only')), 'Report-Only більше ніде немає: політика діє');
 
 // ---- short marketing links: temporary redirects keep the UTM tags the game reads on the first visit
 const RD = Object.fromEntries((cfg.redirects || []).map(r => [r.source, r]));
@@ -27,11 +28,11 @@ const SHORT = { '/t': 'utm_source=threads&utm_medium=social&utm_campaign=post', 
 T.check(Object.entries(SHORT).every(([k, q]) => RD[k] && RD[k].destination === '/?' + q && RD[k].statusCode === 302) && (cfg.redirects || []).length === 5, 'короткі посилання /t /tb /to /tg /tr/<назва> → 302 на головну з UTM');
 T.check(!(cfg.rewrites || []).some(r => /^\/(t|tb|to|tg|tr)(\/|$)/.test(r.source)) && !['t', 'tb', 'to', 'tg', 'tr'].some(f => ['', '.html'].some(x => require('fs').existsSync(path.join(__dirname, '..', '..', f + x)))), 'короткі посилання не перетинаються з адресами сайту');
 
-// ---- CSP Report-Only: only on the page itself
+// ---- enforced CSP of the page itself
 const fs = require('fs'), crypto = require('crypto'), ROOT = path.join(__dirname, '..', '..');
-const ro = (cfg.headers || []).filter(h => h.headers.some(x => x.key.toLowerCase() === 'content-security-policy-report-only'));
-T.check(ro.map(h => h.source).sort().join() === '/,/index.html', 'Report-Only лише на «/» і «/index.html»', ro.map(h => h.source).join());
-const CSP = ro.length ? ro[0].headers.find(x => x.key.toLowerCase() === 'content-security-policy-report-only').value : '';
+const ro = (cfg.headers || []).filter(h => h.source !== '/(.*)' && h.headers.some(x => x.key.toLowerCase() === 'content-security-policy'));
+T.check(ro.map(h => h.source).sort().join() === '/,/index.html', 'повна CSP лише на «/» і «/index.html»', ro.map(h => h.source).join());
+const CSP = ro.length ? ro[0].headers.find(x => x.key.toLowerCase() === 'content-security-policy').value : '';
 T.check(ro.every(h => h.headers.length === 1 && h.headers[0].value === CSP), 'однакове правило для обох адрес');
 const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
 // inline scripts the way the browser reads them: from <script> to the first </script>, no src, JavaScript type
@@ -40,11 +41,14 @@ const want = [...new Set(inline.map(t => "'sha256-" + crypto.createHash('sha256'
 const have = (CSP.match(/'sha256-[A-Za-z0-9+/]+=*'/g) || []).sort();
 T.check(inline.length >= 3 && want.length > 0 && JSON.stringify(want) === JSON.stringify(have), `хеші sha256 у CSP збігаються з убудованими скриптами index.html (${inline.length} скриптів)`, `${want.length} очікується, ${have.length} в правилі`);
 const dirs = Object.fromEntries(CSP.split(';').map(x => x.trim()).filter(Boolean).map(x => [x.split(/\s+/)[0], x.split(/\s+/).slice(1)]));
-T.check(['https://cdn.jsdelivr.net', 'https://telegram.org', 'https://www.clarity.ms', 'https://scripts.clarity.ms', "'self'"].every(x => (dirs['script-src'] || []).includes(x)) && !(dirs['script-src'] || []).some(x => /unsafe-inline|unsafe-eval|\*/.test(x)), 'script-src: self, хеші й потрібні вузли, без unsafe-inline/unsafe-eval');
+T.check(['https://telegram.org', 'https://www.clarity.ms', 'https://scripts.clarity.ms', "'self'"].every(x => (dirs['script-src'] || []).includes(x)) && !(dirs['script-src'] || []).some(x => /unsafe-inline|unsafe-eval|\*/.test(x)), 'script-src: self, хеші й потрібні вузли, без unsafe-inline/unsafe-eval');
+const sbSrc = (fs.readFileSync(path.join(ROOT, 'src', 'account.js'), 'utf8').match(/https:\/\/cdn\.jsdelivr\.net\/npm\/@supabase\/supabase-js@[\d.]+\//) || [''])[0];
+T.check(!!sbSrc && (dirs['script-src'] || []).includes(sbSrc) && !(dirs['script-src'] || []).includes('https://cdn.jsdelivr.net'), 'jsdelivr лише шлях supabase-js тієї версії, що вантажить account.js', sbSrc);
+T.check((dirs['frame-ancestors'] || []).join(' ') === H['content-security-policy'].replace(/^frame-ancestors /, ''), 'frame-ancestors повторено в CSP сторінки');
 T.check((dirs['object-src'] || []).join() === "'none'" && (dirs['base-uri'] || []).join() === "'none'" && (dirs['report-uri'] || []).join() === '/api/err?csp=1', "object-src 'none', base-uri 'none', report-uri /api/err?csp=1");
 // every external script the page adds must be allowed by script-src
 const hosts = new Set([...html.matchAll(/\.src\s*=\s*["'`](https:\/\/[^/"'`]+)/g)].map(m => m[1]));
-T.check(hosts.size >= 2 && [...hosts].every(h => (dirs['script-src'] || []).includes(h) || (dirs['script-src'] || []).includes(h.replace(/^https:\/\/[^.]+\./, 'https://'))), 'зовнішні скрипти сторінки дозволені в script-src', [...hosts].join(' '));
+T.check(hosts.size >= 2 && [...hosts].every(h => (dirs['script-src'] || []).some(x => x === h || x.startsWith(h + '/') || x === h.replace(/^https:\/\/[^.]+\./, 'https://'))), 'зовнішні скрипти сторінки дозволені в script-src', [...hosts].join(' '));
 T.check(/ src=["']pool\.[a-z0-9]+\.js["']/.test(html) && !/<script[^>]* src=["']https?:/i.test(html), 'пул — свій файл («self»), без зовнішніх <script src> у розмітці');
 
 // ---- SRI for supabase-js (the exact file from the npm package, not the jsdelivr .min.js)

@@ -58,7 +58,7 @@ const tag = v => { const s = String(v == null ? '' : v).toLowerCase().trim().sli
 async function traffic(req, res, t) {
   const id = String(t && t.anon_id || '');
   if (!uuidRe.test(id) || !TRF_EVENTS.includes(t.event)) return res.status(204).end();
-  if (await rateLimit(req, res, 'trf', id)) return;
+  if (await rateLimit(req, res, 'trf')) return;   // per IP only: the device id is chosen by the caller, so a per-device limit stops nothing
   const row = { anon_id: id.toLowerCase(), event: t.event, utm_source: tag(t.utm_source), utm_medium: tag(t.utm_medium), utm_campaign: tag(t.utm_campaign), referrer: tag(t.referrer) };
   try { await sb('traffic_events?on_conflict=anon_id,event', { method: 'POST', prefer: 'resolution=ignore-duplicates,return=minimal', body: row }); }
   catch (e) { console.warn('traffic', String(e && e.message).slice(0, 160)); }

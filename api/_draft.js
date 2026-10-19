@@ -7,10 +7,9 @@
 // A friend-league try is spent on lock (fl_record_seed), a challenge result is written on lock; abandoning the season does not undo either.
 const crypto = require('crypto');
 const { sb, kyivDate } = require('./_device.js');
-const { xiHash } = require('./_lib.js');
+const { xiHash, uuidRe } = require('./_lib.js');
 let E = null;
 const engine = () => E || (E = require('../lib/engine.js'));
-const uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const has = (o, k) => typeof k === 'string' && Object.prototype.hasOwnProperty.call(o, k);
 const DRAFT_MODES = ['normal', 'hard', 'practice'];   // visible levels; hidden formats and levels get no server wheel (season stays unverified)
 const DAY_LIMIT = 60;   // draft starts per player and Kyiv day
