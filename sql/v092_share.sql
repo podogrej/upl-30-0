@@ -3,10 +3,12 @@
 -- until the challenge day is over (Kyiv), so a shared link is not the answer. Same column list and order as v087 otherwise.
 -- Safe to run again; changes nothing in the tables. Old site versions read only the columns they name.
 create index if not exists vd_results_season_idx on public.vd_results (season_id);
+-- challenge day stored with the season itself (sent by the site): the squad stays hidden even if the server gave no seed
+alter table public.seasons add column if not exists vd_day date;
 create or replace view public.seasons_pub with (security_invoker = false) as
 select s.id, s.created_at, s.nickname, s.mode, s.format, s.club, s.formation, s.year, s.version,
        s.w, s.d, s.l, s.pts, s.place, s.gf, s.ga, s.gd, s.xp, s.xg, s.xga, s.tier, s.perfect, s.golden, s.practice, s.day,
-       case when coalesce(v.day, ss.vd_day) >= (now() at time zone 'Europe/Kyiv')::date then null else s.xi end as xi,
+       case when coalesce(v.day, ss.vd_day, s.vd_day) >= (now() at time zone 'Europe/Kyiv')::date then null else s.xi end as xi,
        s.tbl, s.verified, s.competition, s.data_version, s.era, s.show_r, s.player_id,
        s.fl_id is not null as in_fl,
        case when p.id is null then null else json_build_object('name', p.name, 'anon_name', p.anon_name, 'public_id', p.public_id) end as players,

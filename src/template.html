@@ -2365,6 +2365,7 @@ function logSeason(r){trafficSend('season_finish');
     tbl:r.table.map(t=>({n:t.n,w:t.w,d:t.d,l:t.l,gf:t.gf,ga:t.ga,pts:t.pts,me:t.id==='USER'}))};
   if(eraOf()!=='all')row.era=eraOf();   // era only when not All years (seasons.era)
   if(S.showREver)row.show_r=true;   // ratings were enabled during the draft: tables show a badge (seasons.show_r)
+  if(S.vd&&S.vd.day)row.vd_day=S.vd.day;   // squad hidden until the challenge day is over, even without a server seed
   if(S.league)row.fl_id=S.league.id;   // friend league attempt is credited by the server after verification
   // season is saved and verified by the server (/api/save, device secret); this season's new trophies travel in the same request
   const tro=r.tro&&r.tro.fresh.length?r.tro.fresh:null;

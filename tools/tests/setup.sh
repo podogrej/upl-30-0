@@ -977,6 +977,11 @@ chk "v092: сезон виклику дня без перевірки серве
   assert (select xi is null and vd_day is null from seasons_pub where id = (select max(id) from seasons)), 'сьогодні без vd_results';
   update season_seeds set vd_day = vd_day - 1 where id = (select seed_id from seasons where id = (select max(id) from seasons));
   assert (select xi is not null from seasons_pub where id = (select max(id) from seasons)), 'завтра';"
+chk "v092: сезон виклику дня без seed від сервера (vd_day у самому сезоні) — склад сьогодні схований" postgres "
+  insert into seasons(device_id, mode, format, formation, w, d, l, pts, place, gf, ga, xi, vd_day) values ('$DEV', 'normal', 'classic', '4-4-2', 10, 10, 10, 40, 8, 30, 30, '[{\"n\":\"X\"}]', (now() at time zone 'Europe/Kyiv')::date);
+  assert (select xi is null from seasons_pub where id = (select max(id) from seasons)), 'сьогодні без seed';
+  update seasons set vd_day = vd_day - 1 where id = (select max(id) from seasons);
+  assert (select xi is not null from seasons_pub where id = (select max(id) from seasons)), 'завтра';"
 echo "база: $D (порт $PORT)"
 [ $FAIL = 0 ] && echo "SQL: УСЕ ГАРАЗД ($N перевірок)" || echo "SQL: ПРОБЛЕМИ $FAIL/$N"
 exit $((FAIL>0))

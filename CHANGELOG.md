@@ -29,7 +29,7 @@
 - `api/err.js`: событие `share` в `traffic_events` (`utm_medium` = канал).
 - `api/verify.js`: `PREV_VERSIONS = ['0.91']` — симуляция не менялась, сезоны с открытой 0.91 проверяются.
 
-**SQL:** `sql/v092_share.sql` — индекс `vd_results(season_id)`; `seasons_pub` + `vd_day`, `vd_score`, `vd_gate`, `xi` вызова дня скрыт до конца дня (Киев) — по `vd_results` и по `season_seeds.vd_day`, то есть и у сезона, который сервер не подтвердил; лист «Склад» и экран по ссылке пишут «Склад відкриється завтра»; `traffic_events` принимает `share`. Тестовая → основная база до мержа.
+**SQL:** `sql/v092_share.sql` — индекс `vd_results(season_id)`; `seasons_pub` + `vd_day`, `vd_score`, `vd_gate`, `xi` вызова дня скрыт до конца дня (Киев) — по `vd_results`, по `season_seeds.vd_day` и по новой колонке `seasons.vd_day` (сайт пишет день вызова в сам сезон, `api/save.js` её принимает) — то есть и у сезона, который сервер не подтвердил или для которого не выдал seed; лист «Склад» и экран по ссылке пишут «Склад відкриється завтра»; `traffic_events` принимает `share`. Тестовая → основная база до мержа.
 
 **Тесты:** новые `v092` (51), `share092` (24); обновлены `chal`, `draft58`, `modes`, `scenarios`, `tro`, `v060`, `v073`, `cheat` (+1), `setup.sh`. `visual_expect`: `news`, `result`.
 
