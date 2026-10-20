@@ -1,29 +1,29 @@
 // Generates the link preview image og.jpg (1200x630) for the home page and /r. Run from repo root: node tools/make_og.js [out.jpg]
-// Unbounded and Manrope fonts are fetched from Google Fonts via curl and embedded; without network, system fonts are used.
+// Site font KyivType Sans is embedded from fonts/ so the preview matches the site and renders offline.
 // Key content stays inside the centered 630x630 square: some apps crop the preview to a square.
-const path=require('path'),{execFileSync}=require('child_process');
-const UA='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36';
-function fonts(){try{let css=execFileSync('curl',['-sS','-A',UA,'https://fonts.googleapis.com/css2?family=Unbounded:wght@800&family=Manrope:wght@600;700;800&subset=cyrillic&display=block']).toString();
-  for(const u of new Set(css.match(/https:[^)]+\.woff2/g)||[]))css=css.split(u).join('data:font/woff2;base64,'+execFileSync('curl',['-sS',u]).toString('base64'));return css;}catch(e){return '';}}const {launch,ROOT}=require('./tests/_page.js');
+const path=require('path'),fs=require('fs');
+const {launch,ROOT}=require('./tests/_page.js');
+function fonts(){const F=w=>'data:font/otf;base64,'+fs.readFileSync(path.join(ROOT,'fonts','KyivTypeSans-'+w+'.otf')).toString('base64');
+  return '@font-face{font-family:K;src:url('+F('Black')+');font-weight:900}@font-face{font-family:K;src:url('+F('Bold')+');font-weight:700}';}
 // 4-3-3 on a horizontal pitch, x/y in % of the pitch box; colors match the game's position tokens
 const G='#FFD60A',D='#0A84FF',M='#30D158',F='#FF453A';const XI=[[5,50,G],[17,14,D],[15,38,D],[15,62,D],[17,86,D],[30,18,M],[28,50,M],[30,82,M],[71,20,F],[73,50,F],[71,80,F]];
 const dots=XI.map(([x,y,c])=>`<i style="left:${x}%;top:${y}%;--c:${c}"></i>`).join('');
 const HTML=`<!doctype html><html><head><meta charset="utf-8">
 <style>${fonts()}
-body{margin:0;width:1200px;height:630px;overflow:hidden;background:radial-gradient(80% 110% at 50% 0%,#1b2a5c 0,#0b1430 65%);color:#fff;font-family:Manrope,system-ui,sans-serif;position:relative}
-.p{position:absolute;left:60px;right:60px;top:40px;bottom:50px;border:2px solid rgba(255,255,255,.13);border-radius:18px}
-.p::before{content:"";position:absolute;left:50%;top:0;bottom:0;border-left:2px solid rgba(255,255,255,.13)}
-.p::after{content:"";position:absolute;left:50%;top:50%;width:150px;height:150px;margin:-75px 0 0 -75px;border:2px solid rgba(255,255,255,.13);border-radius:50%}
-.p b{position:absolute;top:28%;bottom:28%;width:110px;border:2px solid rgba(255,255,255,.13)}
+body{margin:0;width:1200px;height:630px;overflow:hidden;background:radial-gradient(80% 110% at 50% 0%,#1b2a5c 0,#0b1430 65%);color:#fff;font-family:K,system-ui,sans-serif;position:relative}
+.p{position:absolute;left:60px;right:60px;top:40px;bottom:50px;border:2px solid rgba(200,215,255,.24);border-radius:18px}
+.p::before{content:"";position:absolute;left:50%;top:0;bottom:0;border-left:2px solid rgba(200,215,255,.24)}
+.p::after{content:"";position:absolute;left:50%;top:50%;width:150px;height:150px;margin:-75px 0 0 -75px;border:2px solid rgba(200,215,255,.24);border-radius:50%}
+.p b{position:absolute;top:28%;bottom:28%;width:110px;border:2px solid rgba(200,215,255,.24)}
 .p b:first-of-type{left:-2px;border-left:0}.p b:last-of-type{right:-2px;border-right:0}
-.p i{position:absolute;width:48px;height:48px;margin:-24px 0 0 -24px;border-radius:50%;border:4px solid var(--c);background:color-mix(in srgb,var(--c) 22%,#0b1430);box-shadow:0 0 12px color-mix(in srgb,var(--c) 40%,transparent)}
+.p i{position:absolute;width:54px;height:54px;margin:-27px 0 0 -27px;border-radius:50%;border:4px solid var(--c);background:color-mix(in srgb,var(--c) 22%,#0b1430);box-shadow:0 0 12px color-mix(in srgb,var(--c) 40%,transparent)}
 .v{position:absolute;inset:0;background:radial-gradient(24% 48% at 50% 50%,rgba(11,20,48,.85) 0,rgba(11,20,48,0) 100%)}
 .t{position:absolute;left:285px;width:630px;text-align:center}
-.l{top:84px;font:800 54px/1 Unbounded,system-ui;letter-spacing:-.01em}
+.l{top:88px;font:900 60px/1 K,system-ui;letter-spacing:-.03em}
 .l span{background:linear-gradient(90deg,#7e24b0,#d41e6f,#ff831e);-webkit-background-clip:text;background-clip:text;color:transparent}
-.h{top:176px;font:800 62px/1.1 Manrope,system-ui;letter-spacing:-.01em}
-.s{top:352px;font:700 30px/1.3 Manrope;color:#d3d9f0}
-.u{top:500px;font:800 30px Manrope;color:#fff;letter-spacing:.01em}
+.h{top:180px;font:900 58px/1.1 K,system-ui;letter-spacing:-.02em}
+.s{top:350px;font:700 32px/1.28 K,system-ui;color:#d3d9f0}
+.u{top:500px;font:700 32px K,system-ui;color:#fff;letter-spacing:.01em}
 .bar{position:absolute;left:0;right:0;bottom:0;height:10px;background:linear-gradient(90deg,#7e24b0,#d41e6f,#ff831e)}</style></head>
 <body><div class="p"><b></b><b></b>${dots}</div><div class="v"></div>
 <div class="t l">30-0 <span>УПЛ</span></div>
