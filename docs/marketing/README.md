@@ -54,7 +54,8 @@
 
 | Где | Короткая ссылка (в тексте поста) | Полная ссылка |
 |---|---|---|
-| Threads: первый комментарий | `upl30.com.ua/t` | `https://upl30.com.ua/?utm_source=threads&utm_medium=social&utm_campaign=post` |
+| Threads: текст поста | `upl30.com.ua/tp` | `https://upl30.com.ua/?utm_source=threads&utm_medium=social&utm_campaign=post` |
+| Threads: комментарии (в том числе первый под своим постом) | `upl30.com.ua/t` | `https://upl30.com.ua/?utm_source=threads&utm_medium=social&utm_campaign=comment` |
 | Threads: профиль (bio) | `upl30.com.ua/tb` | `https://upl30.com.ua/?utm_source=threads&utm_medium=social&utm_campaign=bio` |
 | Threads: комментарии под чужими постами | `upl30.com.ua/to` | `https://upl30.com.ua/?utm_source=threads&utm_medium=outreach` |
 | Telegram-канал: пост | `upl30.com.ua/tg` | `https://upl30.com.ua/?utm_source=telegram&utm_medium=social&utm_campaign=post` |
