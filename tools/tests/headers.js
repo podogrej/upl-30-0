@@ -27,7 +27,7 @@ const SHORT = { '/t': 'utm_source=threads&utm_medium=social&utm_campaign=comment
   '/ig': 'utm_source=instagram&utm_medium=social&utm_campaign=bio', '/tt': 'utm_source=tiktok&utm_medium=social&utm_campaign=bio',
   '/tr/:name([a-z0-9-]{1,48})': 'utm_source=tribuna&utm_medium=blog&utm_campaign=:name' };
 T.check(Object.entries(SHORT).every(([k, q]) => RD[k] && RD[k].destination === '/?' + q && RD[k].statusCode === 302) && (cfg.redirects || []).length === 8, 'короткі посилання /t /tp /tb /to /tg /ig /tt /tr/<назва> → 302 на головну з UTM');
-T.check(!(cfg.rewrites || []).some(r => /^\/(t|tb|to|tg|ig|tt|tr)(\/|$)/.test(r.source)) && !['t', 'tb', 'to', 'tg', 'ig', 'tt', 'tr'].some(f => ['', '.html'].some(x => require('fs').existsSync(path.join(__dirname, '..', '..', f + x)))), 'короткі посилання не перетинаються з адресами сайту');
+T.check(!(cfg.rewrites || []).some(r => /^\/(t|tp|tb|to|tg|ig|tt|tr)(\/|$)/.test(r.source)) && !['t', 'tp', 'tb', 'to', 'tg', 'ig', 'tt', 'tr'].some(f => ['', '.html'].some(x => require('fs').existsSync(path.join(__dirname, '..', '..', f + x)))), 'короткі посилання не перетинаються з адресами сайту');
 
 // ---- enforced CSP of the page itself
 const fs = require('fs'), crypto = require('crypto'), ROOT = path.join(__dirname, '..', '..');
