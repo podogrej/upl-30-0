@@ -11,17 +11,17 @@ const dots=XI.map(([x,y,c])=>`<i style="left:${x}%;top:${y}%;--c:${c}"></i>`).jo
 const HTML=`<!doctype html><html><head><meta charset="utf-8">
 <style>${fonts()}
 body{margin:0;width:1200px;height:630px;overflow:hidden;background:radial-gradient(80% 110% at 50% 0%,#1b2a5c 0,#0b1430 65%);color:#fff;font-family:K,system-ui,sans-serif;position:relative}
-.p{position:absolute;left:60px;right:60px;top:40px;bottom:50px;border:2px solid rgba(200,215,255,.24);border-radius:18px}
-.p::before{content:"";position:absolute;left:50%;top:0;bottom:0;border-left:2px solid rgba(200,215,255,.24)}
-.p::after{content:"";position:absolute;left:50%;top:50%;width:150px;height:150px;margin:-75px 0 0 -75px;border:2px solid rgba(200,215,255,.24);border-radius:50%}
-.p b{position:absolute;top:28%;bottom:28%;width:110px;border:2px solid rgba(200,215,255,.24)}
+.p{position:absolute;left:60px;right:60px;top:40px;bottom:50px;border:2px solid rgba(200,215,255,.32);border-radius:18px}
+.p::before{content:"";position:absolute;left:50%;top:0;bottom:0;border-left:2px solid rgba(200,215,255,.32)}
+.p::after{content:"";position:absolute;left:50%;top:50%;width:150px;height:150px;margin:-75px 0 0 -75px;border:2px solid rgba(200,215,255,.32);border-radius:50%}
+.p b{position:absolute;top:28%;bottom:28%;width:110px;border:2px solid rgba(200,215,255,.32)}
 .p b:first-of-type{left:-2px;border-left:0}.p b:last-of-type{right:-2px;border-right:0}
 .p i{position:absolute;width:54px;height:54px;margin:-27px 0 0 -27px;border-radius:50%;border:4px solid var(--c);background:color-mix(in srgb,var(--c) 22%,#0b1430);box-shadow:0 0 12px color-mix(in srgb,var(--c) 40%,transparent)}
 .v{position:absolute;inset:0;background:radial-gradient(24% 48% at 50% 50%,rgba(11,20,48,.85) 0,rgba(11,20,48,0) 100%)}
 .t{position:absolute;left:285px;width:630px;text-align:center}
-.l{top:88px;font:900 60px/1 K,system-ui;letter-spacing:-.03em}
+.l{top:92px;font:900 48px/1 K,system-ui;letter-spacing:-.03em}
 .l span{background:linear-gradient(90deg,#7e24b0,#d41e6f,#ff831e);-webkit-background-clip:text;background-clip:text;color:transparent}
-.h{top:180px;font:900 58px/1.1 K,system-ui;letter-spacing:-.02em}
+.h{top:172px;font:900 62px/1.08 K,system-ui;letter-spacing:-.02em}
 .s{top:350px;font:700 32px/1.28 K,system-ui;color:#d3d9f0}
 .u{top:500px;font:700 32px K,system-ui;color:#fff;letter-spacing:.01em}
 .bar{position:absolute;left:0;right:0;bottom:0;height:10px;background:linear-gradient(90deg,#7e24b0,#d41e6f,#ff831e)}</style></head>
