@@ -50,7 +50,7 @@ var t=document.createElement('script');t.defer=true;t.src='/_vercel/insights/scr
 /* Telegram Mini App: start loading telegram-web-app.js now, in parallel with the page; the main script runs tgInit when both are ready */
 (function(){if(!true||!/tgWebApp/.test(location.hash+location.search))return;var s=document.createElement('script');s.src='https://telegram.org/js/telegram-web-app.js';s.async=true;
   s.onload=function(){window.__tgOk=1;if(window.__tgCb)window.__tgCb();};document.head.appendChild(s);})();</script>
-<script>try{var o=JSON.parse(localStorage.getItem('upl30_vdh')||'{}');if(o.w===(innerWidth<360?1:0)&&o.h>100&&o.h<400)document.documentElement.style.setProperty('--vdh',o.h+'px');}catch(e){}</script>
+<script>try{var o=JSON.parse(localStorage.getItem('upl30_vdh')||'{}');if(o.w===(innerWidth<324?0:innerWidth<462?1:2)&&o.h>100&&o.h<400)document.documentElement.style.setProperty('--vdh',o.h+'px');}catch(e){}</script>
 <style>
 :root{
   --bg:#f4f5fa; --bg2:#eceef6; --surface:#ffffff; --line:#dfe3ef; --ink:#132346; --ink2:#4a5578; --muted:#5e6888; --pitch:#2a4fa8; --pitch2:#1d3a80; --chalk:#ffffff; --amber:#6d2abb; --amber2:#d8177b; --win:#0b7a3a; --draw:#c98a00; --loss:#e0263b; --grad:linear-gradient(90deg,#7e24b0,#d41e6f,#ff831e); --gk:#FFCC00; --df:#0062d1; --mf:#34C759; --fw:#FF3B30;
@@ -261,7 +261,12 @@ select.need{border-color:var(--loss);box-shadow:0 0 0 2px color-mix(in srgb,var(
 .tile.hot b{color:var(--amber)}
 .cap{font-size:var(--fs-caption);margin:0;max-width:none}
 .pre{border:0;box-shadow:var(--sh-2);border-radius:var(--r-lg);background:var(--surface);padding:var(--sp-4);display:grid;gap:var(--sp-2)}
-.pre-busy{align-content:start;min-height:560px}   /* forecast card keeps its size while computing: the footer and the Play button do not jump */
+.pre-sk{pointer-events:none}   /* skeleton of the forecast: same markup as the result, text hidden, so the page below does not move */
+.pre-sk .kicker{position:relative}.pre-sk .xpb{position:absolute;left:0;right:0;top:100%;margin-top:1px}
+.pre-sk .tile b,.pre-sk .tile span,.pre-sk .prow>span,.pre-sk .prow b,.pre-sk .pgh,.pre-sk .chem0>*,.pre-sk details.tip>summary{color:transparent}
+.pre-sk .pgrid .bar i{transform:translateX(-100%)!important}   /* empty tracks */
+.pre-sk .tile{background:var(--bg2);border-color:transparent}
+.pre-sk .prow>span,.pre-sk .pgh,.pre-sk details.tip>summary{background:var(--bg2);border-radius:var(--r-sm);justify-self:start}
 .pre .kicker{font-family:var(--font-mono);font-size:var(--fs-caption);letter-spacing:var(--ls-caps);text-transform:uppercase;color:var(--amber)}
 .tiles.t3{grid-template-columns:repeat(3,minmax(0,1fr))}.pre p{margin:0}
 .pre .bar{height:6px;border-radius:var(--r-sm);background:var(--line2);overflow:hidden}.pre .bar i{display:block;height:100%;width:100%;background:var(--amber);border-radius:var(--r-sm);transform:translateX(-100%)}#xpBar{transition:transform var(--dur-3) var(--ease-out)}   /* fill slides inside the clipped track */
@@ -897,8 +902,9 @@ body:has(#s1[hidden]) .foot0,body:has(#s1[hidden]) .ft-soc-icons,body:has(#s1[hi
 .cdot{display:inline-block;width:14px;height:14px;border-radius:50%;margin-right:10px;vertical-align:-1px;background:var(--c1,var(--line));box-shadow:inset 0 0 0 3px var(--c2,transparent),0 0 0 1px rgba(255,255,255,.18)}
 .reel .strip>div.club{display:flex;align-items:center}@media (max-width:600px){.reel .cdot{display:none}}   /* phone: club circle was only visible for short names; removed */
 .rr{display:grid;gap:var(--sp-1)}   /* gap to the buttons; the wheel grid gap above is --sp-3 */
-.rr .lbl{display:flex;align-items:center;justify-content:space-between;gap:var(--sp-2);font-size:var(--fs-footnote);font-weight:var(--wt-medium);color:var(--ink2)}   /* quiet caption of the buttons below */
-.rr .rrn{display:inline-flex;align-items:center;gap:var(--sp-2);font-size:var(--fs-footnote);font-weight:var(--wt-medium);color:var(--ink2)}
+.rr .lbl{display:flex;align-items:center;justify-content:flex-start;gap:var(--sp-1);font-size:var(--fs-footnote);font-weight:var(--wt-medium);color:var(--ink2)}   /* quiet caption of the buttons below */
+.rr .lbl>span:first-child::after{content:' ·'}
+.rr .rrn{display:inline-flex;align-items:center;gap:var(--sp-1);font-size:var(--fs-footnote);font-weight:var(--wt-medium);color:var(--ink2)}
 .rr .rrn b{font-weight:var(--wt-bold);color:var(--ink);font-size:var(--fs-footnote)}
 .rr .seg{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--sp-1);border:0;background:none;padding:0;overflow:visible}
 .rr .seg button,.rr .seg button+button{border:0;border-radius:var(--r-md);background:var(--bg);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--amber) 45%,var(--line));color:var(--ink);font-size:var(--fs-body);font-weight:var(--wt-bold);padding:var(--sp-3) var(--sp-2);white-space:nowrap}
@@ -1081,7 +1087,7 @@ h3,.sec0,#s1 .sec0,.pgh,.trleg .h{font-size:var(--fs-footnote);font-weight:var(-
 .stk0 .ic{color:var(--amber2)}.stk0 .ico{width:18px;height:18px}:root:not([data-theme="dark"]) .stk0 .ic{color:var(--amber)}
 .hdr-r{display:flex;align-items:center;gap:var(--sp-2)}
 /* home card: the whole card is the button */
-#vdBox{min-height:var(--vdh,178px)}@media (max-width:359px){#vdBox{min-height:var(--vdh,216px)}}   /* card is drawn by JS after the pool loads: reserve its height (last measured one, see head script) */
+#vdBox{min-height:var(--vdh,178px)}@media (max-width:323px){#vdBox{min-height:var(--vdh,216px)}}@media (min-width:462px){#vdBox{min-height:var(--vdh,160px)}}   /* card is drawn by JS after the pool loads: reserve its height (last measured one, see head script) */
 .evc.evc{display:grid;gap:var(--sp-2);width:100%;text-align:left;padding:var(--sp-4);border-radius:var(--r-lg);background:var(--card);border:1px solid var(--line);color:var(--ink);box-shadow:var(--sh-1);font:inherit;font-weight:var(--wt-regular)}
 .evc.new{border-color:color-mix(in srgb,var(--gtag) 55%,var(--line));background:color-mix(in srgb,var(--gtag) 8%,var(--card))}
 .evc.done,.evc.soon{box-shadow:none}
@@ -1881,7 +1887,7 @@ function renderDraft(){
   const done=filled===11;
   document.getElementById('spinBtn').hidden=done||!!S.wheel||!!S.pickOpts;
   document.getElementById('preBox').hidden=!S.locked&&!S.locking;
-  document.getElementById('simBtn').hidden=!done||!S.locked;
+  simBtnSync(done);
   document.getElementById('wheel').hidden=!(S.wheel||S.pickOpts)||done;if(S.move==null&&!S.pending)document.getElementById('moveHint').hidden=true;
   if(S.wheel)renderWheel();else if(S.pickOpts)renderPickOpts();
 }
@@ -2022,6 +2028,9 @@ function renderMini(){const ord={GK:0,DF:1,MF:2,FW:3},sl=[...S.slots].sort((a,b)
   [...md.children].forEach((d,i)=>d.classList.toggle('f',!!sl[i].player));miniSync();}
 // squad counter "n/11": one more player rolls the digit and bumps; restart, removal or a fresh draft set it at once
 function draftNum(el,n){const p=parseInt(el.dataset.odo!==undefined?el.dataset.odo:el.textContent,10),up=n===p+1;odoSet(el,n+'/11',!up);if(up)bump(el);}
+// Play button: shown disabled while the forecast is computed, so it does not appear later and push the page
+function simBtnSync(done){const b=document.getElementById('simBtn'),calc=!S.locked&&!!S.locking;b.hidden=!done||!(S.locked||calc);
+  if(calc){b.disabled=true;b.textContent='Рахуємо прогноз…';}else if(b.textContent==='Рахуємо прогноз…'){b.disabled=false;b.textContent='Зіграти сезон';}}
 function revealList(){if(TWOCOL())return;requestAnimationFrame(()=>{const w=document.getElementById('wheel');if(w.hidden)return;
   const top=w.getBoundingClientRect().top+scrollY-(document.querySelector('header.top').offsetHeight+44+8);if(Math.abs(top-scrollY)<8)return;
   window.scrollTo({top:Math.max(0,top),behavior:LESS_MOTION()?'instant':'smooth'});});}
@@ -2060,7 +2069,7 @@ async function lockDraft(){
   const xi=S.slots.map(s=>s.player);const mode=MODES[S.mode];
   const year=S.chal?S.chal.year:oppYear();
   // server seed and xP runs (xpRun) in parallel; runs in chunks so the UI does not freeze and the progress bar advances
-  const pb=document.getElementById('preBox');pb.hidden=false;pb.classList.toggle('pre-busy',ratingsOpen());pb.innerHTML='<div class="kicker">Рахуємо прогноз…</div><div class="bar"><i id="xpBar"></i></div>';
+  const pb=document.getElementById('preBox');pb.hidden=false;if(ratingsOpen())renderPreSk(year);else pb.innerHTML='<div class="kicker">Рахуємо прогноз…</div><div class="bar"><i id="xpBar"></i></div>';simBtnSync(true);
   pb.scrollIntoView({behavior:'smooth',block:'center'});
   // audit P1-4: league attempt and daily challenge seeds are fetched only on Play season, otherwise a swap after the forecast consumed the attempt
   const seedP=S.vd||S.chal||lgAttempt()?Promise.resolve(null):fetchSeed(year);   // a server wheel locks on Play season (draftLock)
@@ -2076,8 +2085,9 @@ const PRE_ODDS=[['Чемпіон',p=>p===1,1],['Ліга чемпіонів',p=>
 const PRE_LINES=[['FW','Атака'],['MF','Півзахист'],['DF','Захист'],['GK','Воротар']];
 // grow: the bars grow once when the forecast is ready (staggered); otherwise they are set at once
 const preBar=v=>`<div class="bar"><i style="transform:translateX(${v-100}%)"></i></div>`;
-function renderPre(grow){
-  const el=document.getElementById('preBox');el.classList.remove('pre-busy');const xi=S.slots.map(s=>s.player);const open=ratingsOpen();
+function renderPreSk(year){const keep=[S.pre,S.year];S.pre={xp:0,pl:[]};S.year=year;try{renderPre(false,true);}finally{[S.pre,S.year]=keep;}}   // skeleton drawn by the same code as the forecast
+function renderPre(grow,sk){
+  const el=document.getElementById('preBox');el.classList.toggle('pre-sk',!!sk);el.removeAttribute('aria-busy');const xi=S.slots.map(s=>s.player);const open=ratingsOpen();
   const avg=xi.reduce((s,x)=>s+baseR(x),0)/11;
   const sea=seasonOf(S.year);const last=sea&&sea.teams[sea.teams.length-1];const lg=LEAGUE_NAME[S.year];
   const opp=lg?`<p>${lg}: ${sea.teams.slice(0,-1).map(t=>esc(shortTeam(t[1]))).join(', ')}. ${S.year===LEAGUE_CULT?'Кожен клуб — із середньою силою за свою історію в УПЛ.':'Кожен клуб — у сезоні з найсильнішим складом (середній рейтинг 11 найкращих гравців).'}</p>`
@@ -2097,6 +2107,7 @@ function renderPre(grow){
     `<div class="pgh">Сила ліній</div><div class="pgrid">${lines}</div>`+
     (ch.pts>0?`<div class="chem0"><b>Хімія +${ch.pts.toFixed(1)}</b><span>${chT}</span></div>`:'')+
     `<details class="tip"><summary>Що таке xP і прогноз?</summary><p class="muted cap">xP — скільки очок у середньому набирає цей склад проти цих суперників за 300 симуляцій; відсотки — як часто він фінішує так високо (чи низько). Справжній сезон може піти краще чи гірше: форма гравців і везіння. Хімія — бонус за 3+ гравців одного клубу (ще трохи — з одного сезону).</p></details>`+oppD;
+  if(sk){const k=el.querySelector('.kicker');k.textContent='Рахуємо прогноз…';k.insertAdjacentHTML('beforeend','<div class="bar xpb"><i id="xpBar"></i></div>');[...el.children].forEach((c,n)=>{if(n)c.inert=true;});el.setAttribute('aria-busy','true');return;}   // placeholders only, not announced or focusable
   if(grow&&!LESS_MOTION()&&el.animate)el.querySelectorAll('.pgrid .bar i').forEach((b,k)=>b.animate([{transform:'translateX(-100%)'},{transform:b.style.transform}],{duration:MOTION.ms('--dur-4'),delay:MOTION.t(40)*k,easing:MOTION.ease(),fill:'backwards'}));
 }
 
@@ -4351,7 +4362,7 @@ function renderVdCard(){const box=document.getElementById('vdBox');if(!box)retur
     +(done?`<span class="evt">${ic('timer-sand')}<span id="vdLeft">Новий виклик через ${vdLeft()}</span></span>`:'')+`</button>`;
   document.getElementById('vdCard').onclick=()=>done?openVdArchive():vdOpen(VD_DAY,'#vdCard');
   vdKeepH(box);}
-function vdKeepH(box){const h=Math.round(box.getBoundingClientRect().height);box.style.minHeight='0';if(h>100&&h<400)lsSet('upl30_vdh',{w:innerWidth<360?1:0,h});}   // reserved height for the next load
+function vdKeepH(box){box.style.minHeight='0';const h=Math.round(box.getBoundingClientRect().height);if(h>100&&h<400)lsSet('upl30_vdh',{w:innerWidth<324?0:innerWidth<462?1:2,h});}   // reserved height for the next load
 setInterval(()=>{const el=document.getElementById('vdLeft');if(el&&CUR_SEC===1)el.textContent='Новий виклик через '+vdLeft();},30e3);
 
 // ---- attempt: draft with the event player already on the pitch; the server issues (or resumes) the attempt

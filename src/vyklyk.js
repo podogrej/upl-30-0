@@ -54,7 +54,7 @@ function renderVdCard(){const box=document.getElementById('vdBox');if(!box)retur
     +(done?`<span class="evt">${ic('timer-sand')}<span id="vdLeft">Новий виклик через ${vdLeft()}</span></span>`:'')+`</button>`;
   document.getElementById('vdCard').onclick=()=>done?openVdArchive():vdOpen(VD_DAY,'#vdCard');
   vdKeepH(box);}
-function vdKeepH(box){const h=Math.round(box.getBoundingClientRect().height);box.style.minHeight='0';if(h>100&&h<400)lsSet('upl30_vdh',{w:innerWidth<360?1:0,h});}   // reserved height for the next load
+function vdKeepH(box){box.style.minHeight='0';const h=Math.round(box.getBoundingClientRect().height);if(h>100&&h<400)lsSet('upl30_vdh',{w:innerWidth<324?0:innerWidth<462?1:2,h});}   // reserved height for the next load
 setInterval(()=>{const el=document.getElementById('vdLeft');if(el&&CUR_SEC===1)el.textContent='Новий виклик через '+vdLeft();},30e3);
 
 // ---- attempt: draft with the event player already on the pitch; the server issues (or resumes) the attempt

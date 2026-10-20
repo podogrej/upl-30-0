@@ -61,7 +61,7 @@ async function openDraft(pg,fmt){await pg.evaluate(()=>document.getElementById('
     T.check(s2.vacated&&s2.mv==null,'режим перестановки: цільова позиція переставляє гравця як раніше',JSON.stringify([s0,s2]));}
    else T.check(true,'(гравець без альтернативних позицій — цілей немає)');}
   await ctx.close();}
- // ---- 3. season pick: tap spins the club, then the hint is "Обери сезон"
+ // ---- 3. season pick: tap spins the club, then the season hint
  {const {pg,ctx}=await openPage({b,viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true});
   await stubClarity(pg);await pg.evaluate(()=>document.getElementById('homeBtn').click());await pg.click('#freeOpen');await pickFmt(pg,'pick');await pg.click('#startBtn');await pg.waitForTimeout(400);
   await pg.evaluate(()=>document.querySelector('#pitch .slot.slot-tap .disc').click());
@@ -126,5 +126,33 @@ async function openDraft(pg,fmt){await pg.evaluate(()=>document.getElementById('
   const after=await pg.evaluate(()=>({h:Math.round(document.getElementById('vdBox').getBoundingClientRect().height),ls:localStorage.getItem('upl30_vdh')}));
   T.check(after.h>=100&&after.ls&&JSON.parse(after.ls).h===after.h,'після відмальовування висота картки запам\'ятана для наступного відкриття: '+JSON.stringify(after));
   await pg.screenshot({path:path.join(OUT,'v093_4_home.png')});await ctx.close();await b2.close();srv.close();}
+ // ---- 7. forecast skeleton: same geometry as the result, the Play button is already there (disabled), the footer does not move
+ for(const w of [390,320,768]){const {pg,ctx}=await openPage({b,viewport:{width:w,height:844},deviceScaleFactor:2,isMobile:w<700,hasTouch:true});
+  await pg.click('#freeOpen');await pg.click('#startBtn');await pg.waitForTimeout(300);
+  for(let i=0;i<11;i++){await pg.click('#spinBtn');await pg.waitForSelector('#squad .pl:not([disabled])',{timeout:8000});
+   if(i===10){const cdp=await ctx.newCDPSession(pg);await cdp.send('Emulation.setCPUThrottlingRate',{rate:12});}
+   await pg.evaluate(()=>{const D=window.__dbg,w=D.S.wheel,id=document.querySelector('#squad .pl:not([disabled])').dataset.id,p=w.pl.find(x=>x[5]===id);D.place(p,D.posOpts(p)[0]);});}
+  await pg.waitForTimeout(100);
+  const geo=()=>pg.evaluate(()=>{const r=id=>{const e=document.getElementById(id);return e&&!e.hidden?e.getBoundingClientRect():null;};const pb=r('preBox'),sb=document.getElementById('simBtn'),ft=document.getElementById('ft').getBoundingClientRect();
+   return {sk:document.getElementById('preBox').classList.contains('pre-sk'),pbH:pb&&Math.round(pb.height),ft:Math.round(ft.top+scrollY),sim:!sb.hidden,simOff:sb.disabled,simTxt:sb.textContent,inert:[...document.getElementById('preBox').children].slice(1).every(c=>c.inert),busy:document.getElementById('preBox').getAttribute('aria-busy')};});
+  const a=await geo();
+  await pg.screenshot({path:path.join(OUT,`v093_5_forecast_busy_${w}.png`)});
+  await pg.waitForSelector('#preBox:not(.pre-sk)',{timeout:90000});await pg.waitForTimeout(400);
+  const z=await geo();await pg.screenshot({path:path.join(OUT,`v093_5_forecast_done_${w}.png`)});
+  T.check(a.sk&&a.pbH>300&&a.inert&&a.busy==='true','['+w+'] «Рахуємо прогноз…»: скелет прогнозу тієї ж розмітки, заглушки не в фокусі і не озвучуються',JSON.stringify(a));
+  T.check(a.sim&&a.simOff&&a.simTxt==='Рахуємо прогноз…','['+w+'] кнопка «Зіграти сезон» уже на місці, вимкнена, з текстом «Рахуємо прогноз…»',JSON.stringify([a.sim,a.simOff,a.simTxt]));
+  T.check(!z.simOff&&z.simTxt==='Зіграти сезон'&&z.busy===null,'['+w+'] після розрахунку кнопка активна, текст «Зіграти сезон»',JSON.stringify(z));
+  T.check(Math.abs(z.ft-a.ft)<=5&&Math.abs(z.pbH-a.pbH)<=5,'['+w+'] підвал і картка не зсуваються ≤ 5px: підвал '+a.ft+' → '+z.ft+', картка '+a.pbH+' → '+z.pbH);
+  await ctx.close();}
+ // ---- 8. reserved height of the challenge card: measured without the reserve, buckets by width
+ for(const [w,k] of [[320,0],[390,1],[768,2],[1024,2]]){const {pg,ctx}=await openPage({b,viewport:{width:w,height:800}});
+  const r=await pg.evaluate(()=>{const x=document.getElementById('vdBox');x.style.minHeight='0';const nat=Math.round(x.getBoundingClientRect().height);return {nat,ls:JSON.parse(localStorage.getItem('upl30_vdh')||'{}')};});
+  T.check(r.ls.w===k&&Math.abs(r.ls.h-r.nat)<=1,'['+w+'] записана реальна висота картки без резерву: '+JSON.stringify(r));
+  const def=await pg.evaluate(()=>{document.documentElement.style.removeProperty('--vdh');const x=document.getElementById('vdBox');x.style.minHeight='';return Math.round(x.getBoundingClientRect().height);});
+  T.check(Math.abs(def-r.nat)<=2,'['+w+'] резерв за замовчуванням ('+def+') = реальна висота ('+r.nat+')');await ctx.close();}
+ // ---- 9. reroll row: one line from the left edge
+ {const {pg,ctx}=await openPage({b,viewport:{width:390,height:844},isMobile:true,hasTouch:true});await pg.click('#freeOpen');await pg.click('#startBtn');await pg.click('#spinBtn');await pg.waitForSelector('#squad .pl:not([disabled])',{timeout:8000});
+  const q=await pg.evaluate(()=>{const l=document.querySelector('#rerollRow .lbl'),a=l.firstElementChild.getBoundingClientRect(),n=l.lastElementChild.getBoundingClientRect(),L=l.getBoundingClientRect();return {jc:getComputedStyle(l).justifyContent,left:Math.round(a.left-L.left),gap:Math.round(n.left-a.right),after:getComputedStyle(l.firstElementChild,'::after').content,right:Math.round(L.right-n.right)};});
+  T.check(q.jc==='flex-start'&&q.left<=1&&q.gap<=12&&/·/.test(q.after),'рядок перекруток: «Перекрутити колесо · залишилось N» одним рядком зліва',JSON.stringify(q));await ctx.close();}
  await b.close();T.done();
 })().catch(e=>{console.error(e);process.exit(1);});
