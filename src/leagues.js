@@ -165,7 +165,7 @@ function flPlay(){const d=FL&&FL.data;if(!d)return;
   S.league={id:d.id,name:d.name,rerolls:d.rerolls,memory:d.ratings==='memory',era:ERAS[d.era]?d.era:'all'};
   S.vd=null;S.challenge=null;S.chal=null;S.result=null;setFmt('classic');S.mode='normal';
   S.formation=FORMATIONS[FL.formation]?FL.formation:'4-4-2';S.chal=draftNew({fl_id:d.id});S.slots=newSlots(S.formation);S.taken=new Set();S.wheel=null;S.rerolls=d.rerolls;S.showR=false;S.moveMode=false;
-  document.getElementById('modeLabel').textContent=`Ліга «${d.name}» · ${S.formation}`;renderDraft();go(2);}
+  document.getElementById('modeLabel').textContent=`Ліга «${d.name}» · ${S.formation}`;renderDraft();draftEv();go(2);}
 // after a league season: line under the result (credited or not)
 function flAfterSave(r,j){if(!S.league||S.result!==r)return;const el=document.getElementById('leagueMsg');if(!el)return;
   if(j&&j.verified===true){el.hidden=false;el.textContent=j.fl?`Спробу ${j.fl} зараховано в лігу «${S.league.name}».`:j.fl===null?`Цю спробу не зараховано в лігу «${S.league.name}»: спроби на сьогодні вичерпано або тур закінчився.`:'';}}

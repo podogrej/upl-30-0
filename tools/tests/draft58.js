@@ -27,7 +27,7 @@ const findPl=(pg,multi)=>pg.evaluate(multi=>{const D=window.__dbg,S=D.S;const bs
  await pg.evaluate(()=>{window.__cl=[];window.clarity=(...a)=>window.__cl.push(a.join(':'));});
  await pg.click('#freeOpen');await pg.click('#startBtn');await pg.click('#newsBtn');await pg.click('#viewClose');await home(pg);
  await pg.click('#trBtn');await pg.waitForTimeout(200);await home(pg);await pg.click('#tablesOpen');await home(pg);await pg.evaluate(()=>document.getElementById('f5Open').click());await home(pg);   // Trophies is a separate page; 5x5 is hidden on the home screen (button kept)
- const cl=await pg.evaluate(()=>window.__cl.map(x=>x.replace('set:screen:','')).join(' '));
+ const cl=await pg.evaluate(()=>window.__cl.filter(x=>x.startsWith('set:screen:')).map(x=>x.replace('set:screen:','')).join(' '));
  check(cl==='setup draft news draft home player home table home five home','Clarity: '+cl);
  await pg.evaluate(()=>{delete window.clarity;});
  // ---- eras: chosen on the free-play screen, remembered; One Club has no era
