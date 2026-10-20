@@ -65,10 +65,10 @@ const prev = async (query) => new Promise(res => { const r = { setHeader(k, v) {
   // preview
   OG_EXISTS = false;
   let [h, hd] = await prev({});
-  check(/og\.png/.test(h) && /1200/.test(h), 'без файлу: старий og.png 1200x630');
+  check(/og\.jpg/.test(h) && /1200/.test(h), 'без файлу: загальна картинка og.jpg 1200x630');
   OG_EXISTS = true;
   [h] = await prev({});
-  check(/og\/7\.jpg/.test(h) && /og:image:width" content="1080"/.test(h) && /height" content="1350"/.test(h) && !/og\.png/.test(h), 'з файлом: og/7.jpg 1080x1350');
+  check(/og\/7\.jpg/.test(h) && /og:image:width" content="1080"/.test(h) && /height" content="1350"/.test(h) && !/og\.jpg/.test(h), 'з файлом: og/7.jpg 1080x1350');
   PUB = { ...PUB, vd_day: '2026-10-19', vd_score: 9, vd_gate: true };
   [h] = await prev({});
   check(/Vitia: Виклик дня №11 · 🥇 9 з 11/.test(h), 'виклик дня: заголовок, номер 11 для 19.10, медаль');

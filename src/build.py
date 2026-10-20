@@ -42,6 +42,17 @@ head='''<!doctype html>
 <meta name="description" content="Збери склад із легенд УПЛ 1992–2026 і спробуй пройти сезон 30 перемог із 30. Безкоштовно, у браузері й у Telegram.">
 <meta property="og:title" content="30-0 УПЛ — драфт з історії чемпіонату України">
 <meta property="og:description" content="Збери склад із легенд УПЛ 1992–2026 і спробуй пройти сезон 30 перемог із 30. Безкоштовно, у браузері й у Telegram.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://upl30.com.ua/">
+<meta property="og:locale" content="uk_UA">
+<meta property="og:site_name" content="30-0 УПЛ">
+<meta property="og:image" content="https://upl30.com.ua/og.jpg">
+<meta property="og:image:type" content="image/jpeg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="30-0 УПЛ — збери збірну УПЛ усіх часів. Футбольне поле з 11 позиціями.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://upl30.com.ua/og.jpg">
 <meta name="theme-color" content="#0b1430">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' x2='1'%3E%3Cstop offset='0' stop-color='%239a2bb5'/%3E%3Cstop offset='.5' stop-color='%23e0287a'/%3E%3Cstop offset='1' stop-color='%23ff831e'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='14' fill='%230b1430'/%3E%3Ctext x='32' y='38' font-size='23' font-family='Arial Black,Arial,sans-serif' font-weight='900' fill='white' text-anchor='middle' letter-spacing='-1'%3E30-0%3C/text%3E%3Crect x='12' y='46' width='40' height='6' rx='3' fill='url(%23g)'/%3E%3C/svg%3E">\n<link rel="apple-touch-icon" href="icon-180.png">   <!-- app icon: navy background with the UPL gradient -->
 <script>/* Microsoft Clarity (anonymous click analytics): production host only, not on the test deployment or in automated tests.

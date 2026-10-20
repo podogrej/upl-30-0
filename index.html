@@ -6,6 +6,17 @@
 <meta name="description" content="Збери склад із легенд УПЛ 1992–2026 і спробуй пройти сезон 30 перемог із 30. Безкоштовно, у браузері й у Telegram.">
 <meta property="og:title" content="30-0 УПЛ — драфт з історії чемпіонату України">
 <meta property="og:description" content="Збери склад із легенд УПЛ 1992–2026 і спробуй пройти сезон 30 перемог із 30. Безкоштовно, у браузері й у Telegram.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://upl30.com.ua/">
+<meta property="og:locale" content="uk_UA">
+<meta property="og:site_name" content="30-0 УПЛ">
+<meta property="og:image" content="https://upl30.com.ua/og.jpg">
+<meta property="og:image:type" content="image/jpeg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="30-0 УПЛ — збери збірну УПЛ усіх часів. Футбольне поле з 11 позиціями.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://upl30.com.ua/og.jpg">
 <meta name="theme-color" content="#0b1430">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' x2='1'%3E%3Cstop offset='0' stop-color='%239a2bb5'/%3E%3Cstop offset='.5' stop-color='%23e0287a'/%3E%3Cstop offset='1' stop-color='%23ff831e'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='14' fill='%230b1430'/%3E%3Ctext x='32' y='38' font-size='23' font-family='Arial Black,Arial,sans-serif' font-weight='900' fill='white' text-anchor='middle' letter-spacing='-1'%3E30-0%3C/text%3E%3Crect x='12' y='46' width='40' height='6' rx='3' fill='url(%23g)'/%3E%3C/svg%3E">
 <link rel="apple-touch-icon" href="icon-180.png">   <!-- app icon: navy background with the UPL gradient -->
@@ -1408,7 +1419,7 @@ h3,.sec0,#s1 .sec0,.pgh,.trleg .h{font-size:var(--fs-footnote);font-weight:var(-
 <div class="ft-done" id="fbDone" hidden><b>✓</b><span>Дякуємо! Прочитаємо найближчим часом</span></div>
 <div class="ft-pills"><button class="ft-pill" id="fbBtn" type="button"><!--i:mail-->Відгук і баги</button><a class="ft-pill" id="ftBot" href="https://t.me/upl30_bot" target="_blank" rel="noopener"><!--i:telegram-->Telegram-бот</a></div>
 <div class="ft-soc-icons"><a id="ftTg" href="https://t.me/upl_nostalgia" target="_blank" rel="noopener" aria-label="Telegram-канал" title="Telegram-канал"><!--i:telegram-plane--></a><a href="https://www.threads.com/@upl30_game" target="_blank" rel="noopener" aria-label="Threads" title="Threads"><!--i:threads--></a><a href="https://ua.tribuna.com/uk/blogs/dim-nostalhiyi-istoriya-upl/" target="_blank" rel="noopener" aria-label="Блог на Трибуні" title="Блог на Трибуні"><!--i:newspaper--></a></div>
-<div class="foot ft-small"><a href="#" id="newsBtn">Що нового у версії 0.93<b id="newsDot" hidden></b></a><a href="privacy.html">Конфіденційність</a><a href="terms.html">Умови використання</a></div>
+<div class="foot ft-small"><a href="#" id="newsBtn">Що нового у версії 0.93.1<b id="newsDot" hidden></b></a><a href="privacy.html">Конфіденційність</a><a href="terms.html">Умови використання</a></div>
 <div class="foot ft-copy">© 2026 30-0 УПЛ · неофіційний фан-проєкт <a href="#" id="themeBtn" class="thm" role="switch" aria-checked="false" aria-label="Світла тема"></a></div>
 <p class="ft-legal">30-0 УПЛ — незалежний фан-проєкт: футбольний драфт і симулятор сезону. Він не пов'язаний з Українською Прем'єр-лігою, Українською асоціацією футболу, клубами, футболістами, їхніми об'єднаннями чи іншими організаціями й не схвалений ними. Назви клубів, імена футболістів, рейтинги, статистику й дані сезонів використано лише з інформаційною та довідковою метою. Офіційні логотипи, емблеми та фото футболістів не використовуються. Усі торговельні марки належать їхнім власникам.</p>
 <div class="ft-cred">Шрифт KyivType Sans © Дмитро Растворцев (айдентика Києва)<br>Іконки: Material Design Icons (Apache 2.0), логотипи Telegram і Threads — Font Awesome Free (CC BY 4.0)</div>
@@ -4575,10 +4586,11 @@ function drawCard(r){   // card in site style: UPL navy background, UPL.TV gradi
   return c.toDataURL('image/png');
 }
 // ---------- What's new: short player-friendly notes on the latest version (technical log: CHANGELOG.md)
-const WHATSNEW={v:'0.93',news:'0.93',date:'20.10.2026',items:[
+const WHATSNEW={v:'0.93.1',news:'0.93.1',date:'20.10.2026',items:[
   ['soccer-field','Тап по порожній позиції','Натисни на порожній кружечок на полі — колесо закрутиться. Якщо колесо вже крутилося, гра підкаже, що робити далі.'],
   ['lightning-bolt','Сторінка не стрибає','Поки гра завантажується, головний екран і «Рахуємо прогноз» більше не зсуваються: кнопки на місці, не промахнешся.'],
-  ['restart','Тихіший рядок перекруток','«Перекрутити колесо · залишилось N» — тепер тонкий підпис над кнопками, а не окремий яскравий блок.']]};
+  ['restart','Тихіший рядок перекруток','«Перекрутити колесо · залишилось N» — тепер тонкий підпис над кнопками, а не окремий яскравий блок.'],
+  ['share-variant','Картинка в посиланні','Коли ділишся посиланням на гру в Telegram, Threads чи Instagram, тепер видно картинку з полем і назвою гри.']]};
 function openNews(){screenTag('news');const box=document.getElementById('viewBox');document.getElementById('viewTitle').textContent=`Що нового · версія ${WHATSNEW.v}`;
   document.getElementById('viewBody').innerHTML=`<div class="news">${WHATSNEW.items.map(([e,h,d])=>`<div class="ni">${ic(e,'lg')}<div><b>${esc(h)}</b><p>${esc(d)}</p></div></div>`).join('')}</div>`;
   box.hidden=false;lsSet('upl30_news_seen',WHATSNEW.news||WHATSNEW.v);document.getElementById('newsDot').hidden=true;}
