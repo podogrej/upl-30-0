@@ -18,6 +18,11 @@
   "redirects": [
     {
       "source": "/t",
+      "destination": "/?utm_source=threads&utm_medium=social&utm_campaign=comment",
+      "statusCode": 302
+    },
+    {
+      "source": "/tp",
       "destination": "/?utm_source=threads&utm_medium=social&utm_campaign=post",
       "statusCode": 302
     },
