@@ -2602,7 +2602,7 @@ async function openView(q){screenTag('view');const box=document.getElementById('
 const shrPlay=()=>{setFmt('classic');const m=document.querySelector('#modes .opt[data-m="normal"]'),e=document.querySelector('#eras [data-era="all"]');if(m)m.click();if(e)e.click();document.getElementById('startBtn').click();};   // classic, Normal level, all years
 // hidden squad: one row of 11 circles, `hit` filled, no positions (the squad is not sent)
 const shrDots=hit=>`<div class="shr-dots" role="img" aria-label="${hit} з 11">${Array.from({length:11},(_,i)=>`<i class="${i<hit?'on':''}"></i>`).join('')}</div>`;
-const SHR_WHAT='<details class="tip"><summary>Що це за гра?</summary><p class="muted cap">Крутиш колесо: випадає клуб і сезон УПЛ, обираєш гравця. Зібрав 11 — граєш сезон. Мета — 30-0.</p></details>';
+const SHR_WHAT='<details class="tip"><summary>Що це за гра?</summary><p class="muted cap">Тобі випадає клуб і сезон УПЛ — береш з нього одного гравця. Зібрав 11 — граєш сезон. Мета — 30-0.</p></details>';
 function shrShell(head,cta,sub,rest){
   return `<div class="shr-stack">${head}<div class="share"><button class="sharebtn primary" id="shrGo" type="button">${esc(cta)}</button><p class="muted">${esc(sub)}</p></div>${rest||''}${SHR_WHAT}</div>`;}
 const shrWire=go1=>{document.getElementById('shrGo').onclick=go1;};

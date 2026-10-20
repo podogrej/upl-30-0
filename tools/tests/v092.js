@@ -47,7 +47,7 @@ const tgRoute=(r,u)=>{if(u.host==='telegram.org'){r.fulfill({contentType:'applic
   for(const [w,h,n] of [[320,640,'320'],[1024,768,'1024']]){await pg.setViewportSize({width:w,height:h});await pg.waitForTimeout(250);
     T.check(await pg.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),`${w}px: без горизонтального прокручування`);await pg.screenshot({path:path.join(OUT,`v092_link_${n}d.png`),fullPage:true});}
   await pg.setViewportSize({width:390,height:844});
-  await pg.click('#shr details.tip summary');T.check(await pg.$eval('#shr details.tip',e=>e.open),'«Що це за гра?» відкривається');
+  await pg.click('#shr details.tip summary');T.check(await pg.$eval('#shr details.tip',e=>e.open&&!/колес/i.test(e.textContent)),'«Що це за гра?» відкривається, без слова «колесо»');
   // home and back
   await pg.click('#homeBtn');await pg.waitForTimeout(300);T.check(await vis(pg,'#s1'),'домик у шапці веде на головну');
   await pg.evaluate(()=>history.back());await pg.waitForTimeout(500);
