@@ -4,6 +4,7 @@
 // (build.py writes it), supabase-js only from its own jsdelivr path, frame-ancestors repeated, SRI for supabase-js, /api/err accepting CSP reports.
 // Plus (0.90.4) Google sign-in uses the PKCE flow (login CSRF).
 // Plus short marketing links: 302 redirects to the home page with UTM tags (docs/marketing/README.md, section 6).
+// Plus the home page link preview meta (og:image and twitter card).
 // Run from repo root: node tools/tests/headers.js
 const path = require('path');
 const { checker } = require('./_site.js');
@@ -77,5 +78,11 @@ T.check([acc, html].every(f => /flowType:'pkce'/.test(f) && !/flowType:'implicit
   limited = true; const c4 = await send(JSON.stringify(rep));
   T.check(c4 === 429 && rows.length === n, 'err: ліміт частоти для CSP-звітів');
   T.check(fs.readdirSync(path.join(ROOT, 'api')).filter(f => f.endsWith('.js') && !f.startsWith('_')).length <= 12, 'функцій Vercel не більше 12');
+  // link preview of the home page (0.93.1): absolute og:image that exists, its size, twitter card
+  const home = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8'), meta = k => (home.match(new RegExp(`(?:property|name)="${k}" content="([^"]*)"`)) || [])[1];
+  const ogi = meta('og:image') || '', ogf = path.join(ROOT, ogi.replace('https://upl30.com.ua/', ''));
+  T.check(ogi.startsWith('https://upl30.com.ua/') && fs.existsSync(ogf) && fs.statSync(ogf).size <= 300 * 1024 && meta('twitter:image') === ogi, 'головна: og:image абсолютний, файл є, ≤ 300 КБ, twitter:image той самий');
+  T.check(meta('og:image:width') === '1200' && meta('og:image:height') === '630' && !!meta('og:image:alt') && meta('twitter:card') === 'summary_large_image', 'головна: 1200×630, alt, summary_large_image');
+  T.check(meta('og:url') === 'https://upl30.com.ua/' && meta('og:type') === 'website' && meta('og:locale') === 'uk_UA', 'головна: og:url, og:type, og:locale');
   process.exit(T.done());
 })();
