@@ -57,8 +57,10 @@ async function openDraft(pg,fmt){await pg.evaluate(()=>document.getElementById('
    await pg.evaluate(()=>{const e=document.querySelector('#pitch .slot.empty.slot-tap .disc');if(e)e.click();});await pg.waitForTimeout(300);
    const s1=await dbg(pg,()=>({wheel:!document.getElementById('wheel').hidden,toast:!!document.querySelector('#toast .toast:not(.out)'),mv:window.__dbg.S.move}));
    T.check(s0.mv!=null&&!s1.wheel&&!s1.toast&&s1.mv===s0.mv,'режим перестановки: порожня позиція без підсвітки нічого не робить',JSON.stringify([s0,s1]));
-   if(s0.t>0){await pg.click('#pitch .slot.target');await pg.waitForTimeout(400);const s2=await dbg(pg,m=>({vacated:!window.__dbg.S.slots[m].player,mv:window.__dbg.S.move}),s0.mv);
-    T.check(s2.vacated&&s2.mv==null,'режим перестановки: цільова позиція переставляє гравця як раніше',JSON.stringify([s0,s2]));}
+   // a filled target swaps two players, an empty one vacates the source position
+   if(s0.t>0){const emptyT=await pg.$('#pitch .slot.empty.target');await pg.click(emptyT?'#pitch .slot.empty.target':'#pitch .slot.target');await pg.waitForTimeout(400);
+    const s2=await dbg(pg,m=>({vacated:!window.__dbg.S.slots[m].player,mv:window.__dbg.S.move}),s0.mv);
+    T.check((emptyT?s2.vacated:!s2.vacated)&&s2.mv==null,'режим перестановки: цільова позиція переставляє гравця як раніше',JSON.stringify([s0,s2]));}
    else T.check(true,'(гравець без альтернативних позицій — цілей немає)');}
   await ctx.close();}
  // ---- 3. season pick: tap spins the club, then the season hint

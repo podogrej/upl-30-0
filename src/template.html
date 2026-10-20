@@ -107,7 +107,7 @@ button.ghost{border-color:var(--line);background:transparent;color:var(--ink2);p
 .slot-tap .disc::before{content:'';position:absolute;inset:calc(var(--cs) / 2 - 24px);border-radius:50%}   /* 44px touch area, invisible */
 .slot-tap .disc{transition:background-color var(--dur-1) var(--ease-out),box-shadow var(--dur-1) var(--ease-out)}
 .slot-tap:active .disc{background:rgba(255,255,255,.25);box-shadow:0 0 0 2px rgba(255,255,255,.7)}
-:root[data-theme="light"] .pitch .slot-tap:active .disc{background:rgba(19,35,70,.16);box-shadow:0 0 0 2px rgba(19,35,70,.5)}
+:root[data-theme="light"] .pitch .slot.slot-tap:active .disc{background:rgba(19,35,70,.16);box-shadow:0 0 0 2px rgba(19,35,70,.5)}
 .slot.target .disc{border:2px solid #7df0a8;box-shadow:0 0 0 1.5px rgba(125,240,168,.9);animation:tgtin var(--dur-2) var(--spring-pop)}.slot.target .pos{color:#7df0a8}
 .slot.target .disc::after{content:'';position:absolute;inset:-5px;border-radius:50%;border:2px solid #7df0a8;opacity:0;pointer-events:none;animation:ring 1200ms var(--ease-out) calc(var(--rd,0ms) + 120ms) 2}   /* pulse twice, then the static ring; --rd staggers targets */
 .slot.filled.target .disc{background:color-mix(in srgb,var(--c1,#2b3a33) 35%,#0e2c20)}
@@ -1591,8 +1591,8 @@ showBest();
 let CUR_SEC=1;
 // Clarity (production host only, build.py): current screen tag so recordings and heatmaps can be filtered by screen (Filters -> Custom tags -> screen)
 const SEC_NAME={1:'home',2:'draft',3:'result',4:'setup',5:'five',6:'player',7:'friends',8:'oneclub',9:'table',10:'vd_archive',11:'vd_fail',12:'share'};
-let SPUN=false;   // first spin of the current draft already reported
-const draftEv=()=>{SPUN=false;cEv('draft_start');};
+let SPUN=false,PICKN=0;   // first spin / highest squad size already reported in the current draft
+const draftEv=()=>{SPUN=false;PICKN=0;cEv('draft_start');};
 const cEv=n=>{try{if(window.clarity)window.clarity('event',n);}catch(e){}};   // Clarity custom event, no player data
 function screenTag(name){try{if(window.clarity)window.clarity('set','screen',name);}catch(e){}}
 // View transitions: without them (old WebView, reduced motion) swap() runs synchronously; with them it runs in the transition callback,
@@ -1898,7 +1898,7 @@ function offTake(id){const a=[id,...[...(S.offNow||[])].filter(x=>x!==id)].slice
 function place(p,s){
   const r=effRating(p,s.slot),fly0=flySrc(p);
   s.player={name:p[0],pos:GROUP_OF[s.slot],slot:s.slot,main:p[6],alts:p[7],r,r0:p[2],apps:p[3],goals:p[4],ast:p[8],cs:p[9],nat:p[10],by:p[11],cc:S.wheel.c,id:p[5],club:S.wheel.n,y:S.wheel.y,off:offTake(p[5])};S.taken.add(canon(p[5]));S.wheel=null;S.move=null;S.pending=null;keepScroll(renderDraft);haptic('light');
-  {const n=S.slots.filter(x=>x.player).length;cEv('pick_'+n);if(n===S.slots.length)cEv('squad_full');}
+  {const n=S.slots.filter(x=>x.player).length;if(n>PICKN){PICKN=n;cEv('pick_'+n);if(n===S.slots.length)cEv('squad_full');}}
   {const ix=S.slots.indexOf(s),sl=document.querySelectorAll('#pitch .slot')[ix],disc=sl&&sl.querySelector('.disc');if(disc&&!LESS_MOTION()&&!flyTo(fly0,ix))restartAnim(disc,'land0');}   // name chip flies to the slot, else short landing only
   {const n=S.slots.filter(x=>x.player).length,seen=lsGet('upl30_hint_move')||0;if(n===2&&seen<2){const h=document.getElementById('moveHint');h.hidden=false;h.textContent='Порада: кнопка «Переставити гравців» під полем дозволяє поміняти позиції.';lsSet('upl30_hint_move',seen+1);}}
   if(S.slots.every(x=>x.player))setTimeout(S.vd?vdComplete:lockDraft,0);   // squad complete (daily challenge: required condition first): ratings, forecast and Play season immediately; progress bar in preBox while computing
@@ -2818,7 +2818,7 @@ function drawCard(r){   // card in site style: UPL navy background, UPL.TV gradi
 }
 // ---------- What's new: short player-friendly notes on the latest version (technical log: CHANGELOG.md)
 const WHATSNEW={v:'0.93',news:'0.93',date:'20.10.2026',items:[
-  ['soccer-field','Тап по порожній позиції','Натисни на порожній гурток на полі — колесо закрутиться. Якщо колесо вже крутилося, гра підкаже, що робити далі.'],
+  ['soccer-field','Тап по порожній позиції','Натисни на порожній кружечок на полі — колесо закрутиться. Якщо колесо вже крутилося, гра підкаже, що робити далі.'],
   ['lightning-bolt','Сторінка не стрибає','Поки гра завантажується, головний екран і «Рахуємо прогноз» більше не зсуваються: кнопки на місці, не промахнешся.'],
   ['restart','Тихіший рядок перекруток','«Перекрутити колесо · залишилось N» — тепер тонкий підпис над кнопками, а не окремий яскравий блок.']]};
 function openNews(){screenTag('news');const box=document.getElementById('viewBox');document.getElementById('viewTitle').textContent=`Що нового · версія ${WHATSNEW.v}`;
