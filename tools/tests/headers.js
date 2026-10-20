@@ -22,11 +22,11 @@ T.check(!(cfg.headers || []).some(h => h.headers.some(x => x.key.toLowerCase() =
 
 // ---- short marketing links: temporary redirects keep the UTM tags the game reads on the first visit
 const RD = Object.fromEntries((cfg.redirects || []).map(r => [r.source, r]));
-const SHORT = { '/t': 'utm_source=threads&utm_medium=social&utm_campaign=post', '/tb': 'utm_source=threads&utm_medium=social&utm_campaign=bio',
+const SHORT = { '/t': 'utm_source=threads&utm_medium=social&utm_campaign=comment', '/tp': 'utm_source=threads&utm_medium=social&utm_campaign=post', '/tb': 'utm_source=threads&utm_medium=social&utm_campaign=bio',
   '/to': 'utm_source=threads&utm_medium=outreach', '/tg': 'utm_source=telegram&utm_medium=social&utm_campaign=post',
   '/ig': 'utm_source=instagram&utm_medium=social&utm_campaign=bio', '/tt': 'utm_source=tiktok&utm_medium=social&utm_campaign=bio',
   '/tr/:name([a-z0-9-]{1,48})': 'utm_source=tribuna&utm_medium=blog&utm_campaign=:name' };
-T.check(Object.entries(SHORT).every(([k, q]) => RD[k] && RD[k].destination === '/?' + q && RD[k].statusCode === 302) && (cfg.redirects || []).length === 7, 'короткі посилання /t /tb /to /tg /ig /tt /tr/<назва> → 302 на головну з UTM');
+T.check(Object.entries(SHORT).every(([k, q]) => RD[k] && RD[k].destination === '/?' + q && RD[k].statusCode === 302) && (cfg.redirects || []).length === 8, 'короткі посилання /t /tp /tb /to /tg /ig /tt /tr/<назва> → 302 на головну з UTM');
 T.check(!(cfg.rewrites || []).some(r => /^\/(t|tb|to|tg|ig|tt|tr)(\/|$)/.test(r.source)) && !['t', 'tb', 'to', 'tg', 'ig', 'tt', 'tr'].some(f => ['', '.html'].some(x => require('fs').existsSync(path.join(__dirname, '..', '..', f + x)))), 'короткі посилання не перетинаються з адресами сайту');
 
 // ---- enforced CSP of the page itself
