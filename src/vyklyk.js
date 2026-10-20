@@ -43,7 +43,7 @@ function stkRender(){const el=document.getElementById('stkChip');if(!el)return;c
 
 // ---- home card: new / in progress (best medal) / done (timer to the next one); no challenge today: "coming soon"
 function renderVdCard(){const box=document.getElementById('vdBox');if(!box)return;stkRender();const ch=vdCh(VD_DAY);
-  if(!ch){box.innerHTML=`<div class="evc soon"><span class="e1"><span class="lb">Виклик дня</span></span><span class="e3">Новий виклик скоро.</span></div>`;return;}
+  if(!ch){box.innerHTML=`<div class="evc soon"><span class="e1"><span class="lb">Виклик дня</span></span><span class="e3">Новий виклик скоро.</span></div>`;box.style.minHeight='0';return;}
   const st=vdState(VD_DAY),done=st.used>=VD_ATTEMPTS||st.best===11,k=done?'done':st.used?'progress':'new';
   const af=k==='new'?'Зібрати склад':k==='progress'?(st.best!=null?'Покращити':'Ще спроба'):'Переглянути';
   const m=st.best!=null&&vdMedal(st.best),[em,tt]=vdSplit(ch.title);
@@ -52,7 +52,9 @@ function renderVdCard(){const box=document.getElementById('vdBox');if(!box)retur
   box.innerHTML=`<button class="evc ${k}" id="vdCard" type="button"><span class="e1"><span class="lb">Виклик дня</span><span class="af">${af}</span></span>`
     +`<span class="e2">${em?`<span class="em" aria-hidden="true">${em}</span>`:''}<span>${esc(tt)}</span></span><span class="e3">${esc(ch.task)}</span>${res}<span class="e4">${vdMedals(st.best)}</span>`
     +(done?`<span class="evt">${ic('timer-sand')}<span id="vdLeft">Новий виклик через ${vdLeft()}</span></span>`:'')+`</button>`;
-  document.getElementById('vdCard').onclick=()=>done?openVdArchive():vdOpen(VD_DAY,'#vdCard');}
+  document.getElementById('vdCard').onclick=()=>done?openVdArchive():vdOpen(VD_DAY,'#vdCard');
+  vdKeepH(box);}
+function vdKeepH(box){box.style.minHeight='0';const h=Math.round(box.getBoundingClientRect().height);if(h>100&&h<400)lsSet('upl30_vdh',{w:innerWidth<324?0:innerWidth<462?1:2,h});}   // reserved height for the next load
 setInterval(()=>{const el=document.getElementById('vdLeft');if(el&&CUR_SEC===1)el.textContent='Новий виклик через '+vdLeft();},30e3);
 
 // ---- attempt: draft with the event player already on the pitch; the server issues (or resumes) the attempt
@@ -65,7 +67,7 @@ function vdOpen(day,from){const ch=vdCh(day);if(!ch)return;const st=vdState(day)
   if(ev){const p=ev.p,b=bestSlot(p);if(b){const s=b.s;s.player={name:p[0],pos:GROUP_OF[s.slot],slot:s.slot,main:p[6],alts:p[7],r:effRating(p,s.slot),r0:p[2],apps:p[3],goals:p[4],ast:p[8],cs:p[9],nat:p[10],by:p[11],cc:ev.c.c,id:p[5],club:ev.c.n,y:ev.c.y,ev:vdSplit(ch.title)[0]||'★'};S.taken.add(canon(p[5]));}}
   document.getElementById('modeLabel').textContent=`Виклик дня · ${S.formation}`;
   v.wait=vdStart(v).then(()=>{v.wait=null;if(S.vd!==v)return;if(v.over){S.vd=null;openVdArchive('Спроби на цей день закінчились.');return;}renderDraft();if(S.slots.every(x=>x.player))setTimeout(vdComplete,0);});
-  renderDraft();go(2,false,from);}
+  renderDraft();draftEv();go(2,false,from);}
 async function vdStart(v){trafficSend('season_start');let seed=null;   // online: the wheel comes from the attempt (server checks the XI against it)
   if(ONLINE){try{const j=await vdApi({vd:'start',day:v.day});
       if(j.attempt){v.attempt=j.attempt;v.seedId=j.seed_id;seed=hashStr(String(j.seed_id)+'|wheel');vdMerge(v.day,j);}   // same attempt -> same wheel

@@ -55,7 +55,7 @@ function chalStart(){
   const c=CHAL;if(!c)return;S.league=null;S.vd=null;S.result=null;S.format='classic';S.pickMode=false;S.mode=c.mode==='hard'?'hard':'normal';S.formation=FORMATIONS[c.formation]?c.formation:'4-4-2';   // level: same rule as api/_draft.js start
   S.challenge=c;S.chal=draftNew({chal_id:c.id,ws:+c.seed});S.chal.year=+c.year;
   S.slots=newSlots(S.formation);S.taken=new Set();S.wheel=null;S.rerolls=MODES[S.mode].rerolls;
-  document.getElementById('modeLabel').textContent=`Виклик · ${S.formation} · ${MODES[S.mode].name}`;renderDraft();go(2);
+  document.getElementById('modeLabel').textContent=`Виклик · ${S.formation} · ${MODES[S.mode].name}`;renderDraft();draftEv();go(2);
 }
 // after the season: compare with the challenge and save the result
 function chalAfterSeason(r){
