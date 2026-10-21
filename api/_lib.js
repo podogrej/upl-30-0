@@ -43,12 +43,18 @@ async function devicesOf(pid, device) {
 const xiHash = xi => crypto.createHash('sha256').update(xi.map(x => `${x.id}|${x.slot}|${x.c}|${x.y}`).join(';')).digest('hex');
 // JSON body of a request (Vercel may pass a string); throws on invalid JSON
 const body = req => { let b = req.body || {}; if (typeof b === 'string') b = JSON.parse(b); return b; };
-// 500 without internals: the cause (DB text, stage) goes to the server log only
+// server problem: Vercel log (kept 1 hour) plus a client_errors row (kept long, in the daily digest); never throws
+async function report(where, e) {
+  const msg = `${where}: ${String(e && e.message || e).slice(0, 260)}`;
+  console.error(msg);
+  try { await sb('client_errors', { method: 'POST', body: [{ version: 'server', msg: msg.slice(0, 300), src: 'api', line: 0, col: 0, n: 1 }], prefer: 'return=minimal' }); } catch (x) {}
+}
+// 500 without internals: the cause (DB text, stage) goes to the log and client_errors only
 const SERVER_ERR = 'Щось пішло не так на сервері. Спробуй ще раз трохи згодом.';
-function fail(res, where, e) {
-  console.error(`${where}: ${String(e && e.message || e).slice(0, 300)}`);
+async function fail(res, where, e) {
+  await report(where, e);
   return res.status(500).json({ error: SERVER_ERR });
 }
 // Ukrainian plural form by count (one / few / many), same as plUk on the site
 const plUk = (n, a, b, c) => { const m = n % 10, h = n % 100; return m === 1 && h !== 11 ? a : m >= 2 && m <= 4 && (h < 12 || h > 14) ? b : c; };
-module.exports = { SB_URL, env, sb, sbAll, kyivDate, miniApp, plUk, uuidRe, devicesOf, xiHash, body, fail, SERVER_ERR };
+module.exports = { SB_URL, env, sb, sbAll, kyivDate, miniApp, plUk, uuidRe, devicesOf, xiHash, body, fail, report, SERVER_ERR };

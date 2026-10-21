@@ -10,7 +10,7 @@
 //   First choice is the service channel TG_CARDS_CHAT (see cachePhoto); no env var or channel failure -> bucket.
 const crypto = require('crypto');
 const { rateLimit, gate } = require('./_device.js');   // rate limiting, device check
-const { SB_URL, env, sb, miniApp, body, fail } = require('./_lib.js');
+const { SB_URL, env, sb, miniApp, body, fail, report } = require('./_lib.js');
 async function storeCard(buf, ext) {   // -> public card URL or null
   const key = env('SUPABASE_SERVICE_KEY'); if (!key) return null;
   const path = `${new Date().toISOString().slice(0, 10)}/${crypto.randomBytes(9).toString('hex')}.${ext}`;
@@ -27,6 +27,7 @@ async function cachePhoto(token, buf, ext) {   // -> file_id or null
   const r = await fetch(`https://api.telegram.org/bot${token}/sendPhoto`, { method: 'POST', body: fd });
   const j = await r.json().catch(() => ({}));
   const ph = (j.ok && j.result && j.result.photo) || [];
+  if (!ph.length) await report('card channel', String(j.description || r.status));
   return ph.length ? ph[ph.length - 1].file_id : null;
 }
 async function warm(url) {   // read the whole file (up to 4 s) so Telegram gets it intact from the storage cache
@@ -62,7 +63,7 @@ async function ogCard(req, res, b, token) {
   if (b.initData) {
     if (await rateLimit(req, res, 'og')) return;
     const u = checkMiniApp(String(b.initData), token);
-    if (!u || !u.id) return res.status(401).json({ error: 'bad telegram signature' });
+    if (!u || !u.id) { await report('card og', badInit(b.initData)); return res.status(401).json({ error: 'bad telegram signature' }); }
     const l = await sb(`player_links?kind=eq.tg&key=eq.${encodeURIComponent(String(u.id))}&select=player_id&limit=1`);
     pid = l && l[0] && l[0].player_id;
   } else {
@@ -82,6 +83,13 @@ async function ogCard(req, res, b, token) {
   res.status(200).json({ ok: true, og: ogUrl(id) });
 }
 const checkMiniApp = (initData, token) => { const m = miniApp(initData, token); return m && m.user; };
+// why initData was refused, without the data itself: missing, expired (age in hours) or bad hash
+function badInit(initData) {
+  const p = new URLSearchParams(String(initData || '')), age = Date.now() / 1000 - Number(p.get('auth_date') || 0);
+  return !initData ? 'telegram signature: no initData' : age > 86400 ? `telegram signature: initData ${Math.round(age / 3600)} h old` : 'telegram signature: bad hash';
+}
+// a refused prepared message is reported with Telegram's text
+async function prepared(r) { if (!r.ok) await report('card prepare', r.error); return r; }
 // HTML caption: only <b> and links to the site itself; anything else is sent as plain text with the tags removed
 const OWN_LINK = /^https:\/\/(upl30\.com\.ua|upl-30-0[a-z0-9-]*\.vercel\.app)\//;   // the site and this project's preview deployments
 const htmlOk = c => !/[<>]/.test(String(c).replace(/<\/?b>|<\/a>/g, '').replace(/<a href="([^"<>]*)">/g, (m, h) => OWN_LINK.test(h) ? '' : '<'));
@@ -99,7 +107,7 @@ module.exports = async (req, res) => {
     if (await rateLimit(req, res, 'card')) return;   // per IP
     stage = 'signature';
     const u = checkMiniApp(String(b.initData || ''), token);
-    if (!u || !u.id) return res.status(401).json({ error: 'bad telegram signature' });
+    if (!u || !u.id) { await report('card', badInit(b.initData)); return res.status(401).json({ error: 'bad telegram signature' }); }
     stage = 'image';
     const m = /^data:image\/(jpeg|png);base64,(.+)$/.exec(String(b.image || ''));
     if (!m) return res.status(400).json({ error: 'image?' });
@@ -109,8 +117,8 @@ module.exports = async (req, res) => {
     if (buf.length > 3.5e6) return res.status(413).json({ error: 'image too large' });
     if (b.share) {
       stage = 'channel';
-      const fid = await cachePhoto(token, buf, m[1]).catch(() => null);
-      if (fid) { stage = 'prepare'; return res.status(200).json(await prepare(token, u, { photo_file_id: fid }, b.caption, html)); }
+      const fid = await cachePhoto(token, buf, m[1]).catch(e => report('card channel', e).then(() => null));
+      if (fid) { stage = 'prepare'; return res.status(200).json(await prepared(await prepare(token, u, { photo_file_id: fid }, b.caption, html))); }
       stage = 'store';
       const url = await storeCard(buf, m[1] === 'png' ? 'png' : 'jpg').catch(() => null);
       if (url) {
@@ -122,8 +130,9 @@ module.exports = async (req, res) => {
         stage = 'warm';
         await warm(url);
         stage = 'prepare';
-        return res.status(200).json(await prepare(token, u, { photo_url: url, thumbnail_url: thumb || url, photo_width: 1080, photo_height: 1350 }, b.caption, html));
+        return res.status(200).json(await prepared(await prepare(token, u, { photo_url: url, thumbnail_url: thumb || url, photo_width: 1080, photo_height: 1350 }, b.caption, html)));
       }
+      await report('card store', 'no storage url');
       if (b.prefetch) return res.status(200).json({ ok: false, error: 'store' });   // prefetch: no private-chat fallback
     }
     stage = 'send';
@@ -137,6 +146,7 @@ module.exports = async (req, res) => {
     if (!j.ok) {
       // user hasn't started the bot in private chat; the bot can't write first
       const blocked = /chat not found|bot can't initiate|blocked/i.test(j.description || '');
+      if (!blocked) await report('card send', String(j.description || r.status));
       return res.status(200).json({ ok: false, need_start: blocked, error: String(j.description || r.status).slice(0, 160) });
     }
     if (!b.share) return res.status(200).json({ ok: true });
@@ -146,7 +156,7 @@ module.exports = async (req, res) => {
     const fileId = photos.length ? photos[photos.length - 1].file_id : null;
     if (!fileId) return res.status(200).json({ ok: false, error: 'no file_id' });
     fetch(`https://api.telegram.org/bot${token}/deleteMessage`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: u.id, message_id: j.result.message_id }) }).catch(() => {});
-    res.status(200).json(await prepare(token, u, { photo_file_id: fileId }, b.caption, html));
+    res.status(200).json(await prepared(await prepare(token, u, { photo_file_id: fileId }, b.caption, html)));
   } catch (e) {
     fail(res, `card ${stage}`, e);
   }

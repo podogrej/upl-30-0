@@ -2342,13 +2342,13 @@ function shareParts(r){
   return {head:`30-0 УПЛ · ${rec}`,cards:top?top+'…':'',cta:'Побий мій результат'};}
 const shareBody=q=>q.head+(q.cards?'\n'+q.cards:'');
 function shareTextOf(r,ch){const q=shareParts(r);return shareBody(q)+(ONLINE?`\n${q.cta}: ${shareLink(r,ch||'copy')}`:'');}
-// caption under the Telegram card, as before 0.92: plain text (no parse_mode), result, best scorer, streak, new trophies; no link (the bot adds a button); a daily challenge names no player
+// caption under the Telegram card, as before 0.92: plain text (no parse_mode), result, best scorer, streak, new trophies; no link (the bot adds a button); a daily challenge shows neither scorer nor trophies (both can name a player)
 function cardCaption(r){const wd=(n,a,b,c)=>n+' '+plUk(n,a,b,c),[tier,gold]=tierOf(r),vd=r.vd&&S.vd;
   const head=vd?'⚽ 30-0 УПЛ':`⚽ 30-0 УПЛ · ${fmtLabel()}${S.formation} · ${modeName()}`;
   const rec=`${wd(r.W,'перемога','перемоги','перемог')}, ${wd(r.D,'нічия','нічиї','нічиїх')}, ${wd(r.L,'поразка','поразки','поразок')}`;
   const top=!vd&&r.scorers[0]?`\nНайкращий бомбардир: ${r.scorers[0].name} — ${r.scorers[0].g}`:'';
   const stk=r.streak&&r.streak.count>1?`\n🔥 Серія: ${r.streak.count} дн. поспіль${r.streak.used?' (❄️ заморозка)':''}`:'';
-  const tro=r.tro&&r.tro.fresh.length?`\n🏆 ${r.tro.fresh.length>1?'Нові трофеї':'Новий трофей'}: ${r.tro.fresh.map(id=>`«${trDef(id).n}»`).join(', ')}`:'';
+  const tro=!vd&&r.tro&&r.tro.fresh.length?`\n🏆 ${r.tro.fresh.length>1?'Нові трофеї':'Новий трофей'}: ${r.tro.fresh.map(id=>`«${trDef(id).n}»`).join(', ')}`:'';
   const q=vd&&shareParts(r);
   return `${head}${vd?`\n${q.head}`:''}${gold?'\n'+tier:''}\n\n${rec}\n${r.pts} ${ptsWord(r.pts)} · ${r.place} місце · голи ${r.gf}:${r.ga}\n${top}${stk}${tro}`;}
 const inTgApp=()=>!!(ONLINE&&TG&&TG.initData);
@@ -2387,8 +2387,8 @@ async function shareTg(r,pre,b,msg){
   b.disabled=true;msg.textContent=pre?'':'Готуємо картку…';
   try{let j=pre?await pre.p:null;if(!j||!j.prepared||j.link!==shareLink(r,'telegram'))j=await cardPost(r);b.disabled=false;   // preparation failed or the link changed since: regular path
     if(j.ok&&j.prepared){msg.textContent='';TG.shareMessage(j.prepared,ok=>{msg.textContent=ok?'Надіслано':'';});return;}
+    if(j.need_start){shareNote('need start',j);needStart(msg);return;}
     shareNote('card not prepared',j);
-    if(j.need_start){needStart(msg);return;}
   }catch(e){b.disabled=false;shareNote('exception '+(e&&e.message||e));}
   msg.textContent='Картку не вийшло — надсилаю текстом.';shareTextLink();}
 function needStart(msg){msg.innerHTML='Спочатку відкрий чат з ботом і натисни «Start», потім спробуй ще раз. <button class="ghost" id="openBotBtn" type="button" style="padding:var(--sp-1) var(--sp-3);margin-left:var(--sp-2)">Відкрити @'+TG_BOT+'</button>';document.getElementById('openBotBtn').onclick=()=>TG.openTelegramLink('https://t.me/'+TG_BOT+'?start=card');}

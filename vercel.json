@@ -94,7 +94,7 @@
       "headers": [
         {
           "key": "Content-Security-Policy",
-          "value": "script-src 'self' 'sha256-EVB23NB+udGHSHnSKCwGZqg04OvL78bfXclc9b67zeM=' 'sha256-MaOtjPxnf1QNZErwmsb+Z6YztLHbFf2B9DkCu2jTlKc=' 'sha256-RpSYOEFeyVJ5Bd3nll6OGJzFKFGx1yO11J4W3Ik5+aI=' 'sha256-YkW9euIk6BLj7wQGfAdL1VUS6k9YWyXeIhwhLXRtBsk=' 'sha256-k4m/e5FIc7NIlvaOVRoGGiMaqXVyCfddiY4Rj6N21gc=' 'sha256-wsxmTGzDAHbI7nCP69YBZB5wuXs27pMd+ry4SnCg798=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/ https://telegram.org https://www.clarity.ms https://scripts.clarity.ms; object-src 'none'; base-uri 'none'; frame-ancestors 'self' https://web.telegram.org https://*.telegram.org; report-uri /api/err?csp=1"
+          "value": "script-src 'self' 'sha256-3Rs21HnK8gZMDtX35B+B8BN+RgM/lphAO1oG2DVfom0=' 'sha256-EVB23NB+udGHSHnSKCwGZqg04OvL78bfXclc9b67zeM=' 'sha256-RpSYOEFeyVJ5Bd3nll6OGJzFKFGx1yO11J4W3Ik5+aI=' 'sha256-YkW9euIk6BLj7wQGfAdL1VUS6k9YWyXeIhwhLXRtBsk=' 'sha256-k4m/e5FIc7NIlvaOVRoGGiMaqXVyCfddiY4Rj6N21gc=' 'sha256-wsxmTGzDAHbI7nCP69YBZB5wuXs27pMd+ry4SnCg798=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/ https://telegram.org https://www.clarity.ms https://scripts.clarity.ms; object-src 'none'; base-uri 'none'; frame-ancestors 'self' https://web.telegram.org https://*.telegram.org; report-uri /api/err?csp=1"
         }
       ]
     },
@@ -103,7 +103,7 @@
       "headers": [
         {
           "key": "Content-Security-Policy",
-          "value": "script-src 'self' 'sha256-EVB23NB+udGHSHnSKCwGZqg04OvL78bfXclc9b67zeM=' 'sha256-MaOtjPxnf1QNZErwmsb+Z6YztLHbFf2B9DkCu2jTlKc=' 'sha256-RpSYOEFeyVJ5Bd3nll6OGJzFKFGx1yO11J4W3Ik5+aI=' 'sha256-YkW9euIk6BLj7wQGfAdL1VUS6k9YWyXeIhwhLXRtBsk=' 'sha256-k4m/e5FIc7NIlvaOVRoGGiMaqXVyCfddiY4Rj6N21gc=' 'sha256-wsxmTGzDAHbI7nCP69YBZB5wuXs27pMd+ry4SnCg798=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/ https://telegram.org https://www.clarity.ms https://scripts.clarity.ms; object-src 'none'; base-uri 'none'; frame-ancestors 'self' https://web.telegram.org https://*.telegram.org; report-uri /api/err?csp=1"
+          "value": "script-src 'self' 'sha256-3Rs21HnK8gZMDtX35B+B8BN+RgM/lphAO1oG2DVfom0=' 'sha256-EVB23NB+udGHSHnSKCwGZqg04OvL78bfXclc9b67zeM=' 'sha256-RpSYOEFeyVJ5Bd3nll6OGJzFKFGx1yO11J4W3Ik5+aI=' 'sha256-YkW9euIk6BLj7wQGfAdL1VUS6k9YWyXeIhwhLXRtBsk=' 'sha256-k4m/e5FIc7NIlvaOVRoGGiMaqXVyCfddiY4Rj6N21gc=' 'sha256-wsxmTGzDAHbI7nCP69YBZB5wuXs27pMd+ry4SnCg798=' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/ https://telegram.org https://www.clarity.ms https://scripts.clarity.ms; object-src 'none'; base-uri 'none'; frame-ancestors 'self' https://web.telegram.org https://*.telegram.org; report-uri /api/err?csp=1"
         }
       ]
     },
