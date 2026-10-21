@@ -66,6 +66,7 @@ const prev = async (query) => new Promise(res => { const r = { setHeader(k, v) {
   OG_EXISTS = false;
   let [h, hd] = await prev({});
   check(/og\.jpg/.test(h) && /1200/.test(h), 'без файлу: загальна картинка og.jpg 1200x630');
+  check(!/http-equiv="refresh"/i.test(h) && /location\.replace\(/.test(h), 'перехід на сайт лише скриптом: бот месенджера лишається на сторінці сезону');
   OG_EXISTS = true;
   [h] = await prev({});
   check(/og\/7\.jpg/.test(h) && /og:image:width" content="1080"/.test(h) && /height" content="1350"/.test(h) && !/og\.jpg/.test(h), 'з файлом: og/7.jpg 1080x1350');
@@ -91,7 +92,7 @@ const prev = async (query) => new Promise(res => { const r = { setHeader(k, v) {
   [h] = await prev({ utm_source: 'telegram', utm_medium: 'share', utm_campaign: 'r', foo: 'bar' });
   check(/\?s=7&amp;utm_source=telegram&amp;utm_medium=share&amp;utm_campaign=r"/.test(h) && !/foo/.test(h) && /replace\("[^"]*\?s=7&utm_source=telegram/.test(h), 'utm переноситься, чужі параметри — ні');
   [h] = await prev({ utm_source: 'https://evil.com/<x>', url: 'https://evil.com', next: '//evil.com' });
-  check(!/evil\.com\/|url=https:\/\/evil|<x>/.test(h) && /url=https:\/\/upl30\.com\.ua\/\?s=7/.test(h), 'без відкритого редиректу, значення фільтруються');
+  check(!/evil\.com\/|url=https:\/\/evil|<x>/.test(h) && /replace\("https:\/\/upl30\.com\.ua\/\?s=7/.test(h), 'без відкритого редиректу, значення фільтруються');
 
   // traffic
   const err = require('../../api/err.js');

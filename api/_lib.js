@@ -21,17 +21,21 @@ async function sbAll(q, maxPages = 100) {
 const kyivDate = (d = new Date()) => new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Kyiv', year: 'numeric', month: '2-digit', day: '2-digit' }).format(d);
 
 // Telegram Mini App signature (initData) -> {user, start_param} or null; max age one day
-function miniApp(initData, token = env('TG_TOKEN')) {
-  if (!token || !initData || typeof initData !== 'string' || initData.length > 4096) return null;
-  const p = new URLSearchParams(initData); const hash = p.get('hash'); if (!hash) return null;
+function miniAppCheck(initData, token = env('TG_TOKEN')) {   // -> { user, start_param } or { why }: reason without the data itself
+  if (!token) return { why: 'no token' };
+  if (!initData || typeof initData !== 'string') return { why: 'no initData' };
+  if (initData.length > 4096) return { why: 'initData too long' };
+  const p = new URLSearchParams(initData); const hash = p.get('hash'); if (!hash) return { why: 'no hash' };
   p.delete('hash');
   const dcs = [...p.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([k, v]) => `${k}=${v}`).join('\n');
   const secret = crypto.createHmac('sha256', 'WebAppData').update(token).digest();
-  if (crypto.createHmac('sha256', secret).update(dcs).digest('hex') !== hash) return null;
-  if (Date.now() / 1000 - Number(p.get('auth_date') || 0) > 86400) return null;
+  if (crypto.createHmac('sha256', secret).update(dcs).digest('hex') !== hash) return { why: 'bad hash' };
+  const age = Date.now() / 1000 - Number(p.get('auth_date') || 0);
+  if (age > 86400) return { why: `initData ${Math.round(age / 3600)} h old` };
   let user = null; try { user = JSON.parse(p.get('user')); } catch (e) {}
-  return user ? { user, start_param: p.get('start_param') || '' } : null;
+  return user ? { user, start_param: p.get('start_param') || '' } : { why: 'no user' };
 }
+function miniApp(initData, token) { const m = miniAppCheck(initData, token); return m.user ? m : null; }
 const uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 // every device bound to a player (player_links kind 'device'), plus the given one; lowercase uuids. Errors propagate (callers count attempts per player)
 async function devicesOf(pid, device) {
@@ -43,12 +47,20 @@ async function devicesOf(pid, device) {
 const xiHash = xi => crypto.createHash('sha256').update(xi.map(x => `${x.id}|${x.slot}|${x.c}|${x.y}`).join(';')).digest('hex');
 // JSON body of a request (Vercel may pass a string); throws on invalid JSON
 const body = req => { let b = req.body || {}; if (typeof b === 'string') b = JSON.parse(b); return b; };
-// 500 without internals: the cause (DB text, stage) goes to the server log only
+// server problem: Vercel log (kept 1 hour) plus a client_errors row (kept long, in the daily digest); never throws
+async function report(where, e) {
+  const msg = `${where}: ${String(e && e.message || e).slice(0, 260)}`;
+  console.error(msg);
+  const key = env('SUPABASE_SERVICE_KEY'), ac = new AbortController(), t = setTimeout(() => ac.abort(), 1500);   // a slow DB must not hold the answer
+  try { await fetch(`${SB_URL}/rest/v1/client_errors`, { method: 'POST', signal: ac.signal, headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+    body: JSON.stringify([{ version: 'server', msg: msg.slice(0, 300), src: 'api', line: 0, col: 0, n: 1 }]) }); } catch (x) {} finally { clearTimeout(t); }
+}
+// 500 without internals: the cause (DB text, stage) goes to the log and client_errors only
 const SERVER_ERR = 'Щось пішло не так на сервері. Спробуй ще раз трохи згодом.';
-function fail(res, where, e) {
-  console.error(`${where}: ${String(e && e.message || e).slice(0, 300)}`);
+async function fail(res, where, e) {
+  await report(where, e);
   return res.status(500).json({ error: SERVER_ERR });
 }
 // Ukrainian plural form by count (one / few / many), same as plUk on the site
 const plUk = (n, a, b, c) => { const m = n % 10, h = n % 100; return m === 1 && h !== 11 ? a : m >= 2 && m <= 4 && (h < 12 || h > 14) ? b : c; };
-module.exports = { SB_URL, env, sb, sbAll, kyivDate, miniApp, plUk, uuidRe, devicesOf, xiHash, body, fail, SERVER_ERR };
+module.exports = { SB_URL, env, sb, sbAll, kyivDate, miniApp, miniAppCheck, plUk, uuidRe, devicesOf, xiHash, body, fail, report, SERVER_ERR };

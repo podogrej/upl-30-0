@@ -3,6 +3,7 @@
 // share texts (utm, challenge number, no mode names), preview image and the "share" event. In-memory DB, no real network.
 // Screenshots: tools/tests/out/v092_*.png. Run from repo root: node tools/tests/v092.js
 const path=require('path'),fs=require('fs');const {ROOT,launch,makeDB,openSite,draftSeason,checker}=require('./_site.js');
+let CARD_FAIL=null;   // set: the bot refuses to prepare the card
 const OUT=path.join(ROOT,'tools','tests','out');fs.mkdirSync(OUT,{recursive:true});
 const E=require(path.join(ROOT,'lib','engine.js')),V=require(path.join(ROOT,'lib','vd_core.js'));
 const T=checker('0.92 поділитися');
@@ -26,7 +27,7 @@ const TGJS=`window.Telegram={WebApp:{initData:'user=x&hash=abc',initDataUnsafe:{
 const tgRoute=(r,u)=>{if(u.host==='telegram.org'){r.fulfill({contentType:'application/javascript',body:TGJS});return true;}return false;};
 (async()=>{const b=await launch();const db=mkDb();global.fetch=db.fetch;
  const seen=[];const api={'/api/seed':async()=>({status:500,json:{error:'down'}}),'/api/save':async req=>req.body.kind==='season'?{json:{id:77,verified:true}}:{json:{}},
-   '/api/err':async req=>{seen.push(['err',req.body]);return {json:{ok:true}};},'/api/card':async req=>{seen.push(['card',req.body]);return {json:req.body.share?{ok:true,prepared:'PM1'}:{ok:true}};},'/api/auth':async()=>({json:{token_hash:'TH'}})};
+   '/api/err':async req=>{seen.push(['err',req.body]);return {json:{ok:true}};},'/api/card':async req=>{seen.push(['card',req.body]);return {json:req.body.share?(CARD_FAIL?{ok:false,error:CARD_FAIL}:{ok:true,prepared:'PM1'}):{ok:true}};},'/api/auth':async()=>({json:{token_hash:'TH'}})};
  // ---- 1. normal season by link
  {const A=await openSite({b,db,api,query:'?s=500'});const pg=A.pg;await pg.waitForSelector('#shr .hero',{timeout:5000});await pg.waitForTimeout(400);
   {const bk=await openSite({b,db,api,query:'?s=500'});await bk.pg.waitForSelector('#shr .hero',{timeout:5000});await bk.pg.waitForTimeout(400);await bk.pg.click('#backBtn');await bk.pg.waitForTimeout(700);T.check(await vis(bk.pg,'#s1')&&!await vis(bk.pg,'#s12'),'«Назад» у того, хто прийшов за посиланням без історії, веде на головну');await bk.ctx.close();}
@@ -148,10 +149,19 @@ const tgRoute=(r,u)=>{if(u.host==='telegram.org'){r.fulfill({contentType:'applic
   const sm=await pg.evaluate(()=>window.__sm),cards=seen.filter(x=>x[0]==='card'&&x[1].share);
   T.check(sm==='PM1','у Telegram «Поділитися» відкриває вибір чату (shareMessage з підготовленим повідомленням)');
   const cap=cards.length&&cards[cards.length-1][1].caption,pm=cards.length&&cards[cards.length-1][1].parse_mode;
-  T.check(pm==='HTML'&&/^<b>30-0 УПЛ · /.test(cap)&&/<a href="https:\/\/upl\.test\/r\/77\?utm_source=share&amp;utm_medium=telegram&amp;utm_campaign=result">Побий мій результат<\/a>$/.test(cap),'підпис у Telegram: HTML, посилання сховане під «Побий мій результат» (/r/<id>, utm_medium=telegram): '+String(cap).slice(0,160));
-  T.check(!/https?:\/\/[^"]*<\/a>|>https?:/.test(cap||'')&&!/Звичайний|Хардкор/.test(cap||''),'у підписі немає видимого URL і назв режимів');
+  T.check(!pm&&/^⚽ 30-0 УПЛ · /.test(cap||'')&&/перемог/.test(cap)&&/Найкращий бомбардир: /.test(cap)&&!/https?:|<[a-z\/]/.test(cap),'підпис у Telegram як до 0.92: звичайний текст, результат і бомбардир, без посилання й тегів: '+String(cap).slice(0,160));
+  const vdc=await pg.evaluate(()=>{const D=window.__dbg,S=D.S,r={...S.result,vd:{score:9},tro:{fresh:[D.TROPHIES[0].id,D.TROPHIES[1].id]}},sv=S.vd;S.vd={day:'2026-10-12'};const c=D.cardCaption(r);S.vd=sv;return c;});
+  T.check(/Виклик дня №/.test(vdc)&&!/бомбардир|трофе|«/i.test(vdc),'підпис виклику дня: без бомбардира й трофеїв (їхні назви можуть назвати гравця): '+vdc.replace(/\n/g,' / ').slice(0,160));
   const og=seen.filter(x=>x[0]==='card'&&x[1].og);T.check(og.length===1&&!!og[0][1].initData&&!og[0][1].device,'прев\'ю в Telegram: initData замість device/secret');
   const ev=seen.filter(x=>x[0]==='err'&&x[1].traffic&&x[1].traffic.event==='share');T.check(ev.length===1&&ev[0][1].traffic.utm_medium==='telegram','подія «share» з utm_medium=telegram');
   await pg.screenshot({path:path.join(OUT,'v092_result_tg.png')});
   T.check(!A.errs.length,'помилок на сторінці немає '+A.errs.join(' | '));await A.ctx.close();}
+ // ---- 7. Telegram refuses the card: text fallback, and the reason is reported to client_errors
+ {seen.length=0;CARD_FAIL='Bad Request: test refusal';const A=await openSite({b,db,api,route:tgRoute,hash:'#tgWebAppData=x',signed:true});const pg=A.pg;
+  await pg.click('#freeOpen');await pg.evaluate(()=>window.__dbg.setFmt('classic'));await pg.click('#startBtn');await draftSeason(pg);await pg.waitForTimeout(2500);
+  await pg.click('#tgShareBtn');await pg.waitForTimeout(4000);
+  const links=await pg.evaluate(()=>window.__tgLinks||[]),msgs=seen.filter(x=>x[0]==='err'&&x[1].errors).flatMap(x=>x[1].errors.map(e=>e.msg));
+  T.check(links.some(u=>/^https:\/\/t\.me\/share\/url\?/.test(u)),'бот не підготував картку: текст через t.me/share');
+  T.check(msgs.some(m=>/^share fallback: card not prepared · Bad Request: test refusal/.test(m)),'причина записана в client_errors: '+msgs.join(' | '));
+  CARD_FAIL=null;await A.ctx.close();}
  await b.close();process.exit(T.done());})();
