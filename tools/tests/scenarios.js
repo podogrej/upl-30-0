@@ -12,7 +12,7 @@ const fail=[];const check=(ok,msg)=>{if(!ok)fail.push(msg);};
  check(await pg.evaluate(()=>document.documentElement.dataset.theme)==='dark','за замовчуванням не темна тема');
  await pg.screenshot({path:path.join(OUT,'home.png'),fullPage:true});
  await pg.click('#themeBtn');check(await pg.waitForFunction(()=>document.documentElement.dataset.theme==='light',null,{timeout:2000}).then(()=>true,()=>false),'перемикач теми не працює');   // cross-fade: the theme flips in the view transition callback, one frame later
- await pg.reload();await pg.waitForTimeout(500);check(await pg.evaluate(()=>document.documentElement.dataset.theme)==='light','тема не запам\'яталась');
+ await pg.reload();check(await pg.waitForFunction(()=>document.documentElement.dataset.theme==='light',null,{timeout:3000}).then(()=>true,()=>false),'тема не запам\'яталась');   // reload under load: wait for the stored theme, not a fixed delay
  await pg.screenshot({path:path.join(OUT,'home_light.png')});await pg.click('#themeBtn');
  // show-ratings toggle: off by default, can be enabled mid-draft, doesn't change order, persists to the next spin
  await pg.evaluate(()=>document.getElementById('homeBtn').click());await pg.click('#freeOpen');await pg.evaluate(()=>window.__dbg.setFmt('classic'));await pg.click('#modes .opt:nth-child(1)');await pg.click('#startBtn');
