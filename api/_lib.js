@@ -46,7 +46,8 @@ async function devicesOf(pid, device) {
 // squad fingerprint stored in season_seeds.xi_hash (seed.js issues it, verify.js and _vd.js compare it)
 const xiHash = xi => crypto.createHash('sha256').update(xi.map(x => `${x.id}|${x.slot}|${x.c}|${x.y}`).join(';')).digest('hex');
 // JSON body of a request (Vercel may pass a string); throws on invalid JSON
-const body = req => { let b = req.body || {}; if (typeof b === 'string') { try { b = JSON.parse(b); } catch (e) { const x = new Error('bad json'); x.badJson = true; throw x; } } return b; };
+// the Vercel runtime parses application/json itself and throws on reading req.body, so the read is inside the try as well
+const body = req => { try { const b = req.body || {}; return typeof b === 'string' ? JSON.parse(b) : b; } catch (e) { const x = new Error('bad json'); x.badJson = true; throw x; } };
 // server problem: Vercel log (kept 1 hour) plus a client_errors row (kept long, in the daily digest); never throws
 async function report(where, e) {
   const msg = `${where}: ${String(e && e.message || e).slice(0, 260)}`;

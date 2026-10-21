@@ -10,7 +10,7 @@
 //   First choice is the service channel TG_CARDS_CHAT (see cachePhoto); no env var or channel failure -> bucket.
 const crypto = require('crypto');
 const { rateLimit, gate } = require('./_device.js');   // rate limiting, device check
-const { SB_URL, env, sb, miniAppCheck, body, fail, report } = require('./_lib.js');
+const { SB_URL, env, sb, miniAppCheck, body, fail, report, reportOnce } = require('./_lib.js');
 async function storeCard(buf, ext) {   // -> public card URL or null
   const key = env('SUPABASE_SERVICE_KEY'); if (!key) { await report('card store', 'no service key'); return null; }
   const path = `${new Date().toISOString().slice(0, 10)}/${crypto.randomBytes(9).toString('hex')}.${ext}`;
@@ -62,7 +62,7 @@ async function ogCard(req, res, b, token) {
   if (b.initData) {
     if (await rateLimit(req, res, 'og')) return;
     const mc = miniAppCheck(String(b.initData), token), u = mc.user;
-    if (!u || !u.id) { await report('card og', 'telegram signature: ' + (mc.why || 'no user id')); return res.status(401).json({ error: 'bad telegram signature' }); }
+    if (!u || !u.id) { await reportOnce('card og sig', 'card og', 'telegram signature: ' + (mc.why || 'no user id')); return res.status(401).json({ error: 'bad telegram signature' }); }
     const l = await sb(`player_links?kind=eq.tg&key=eq.${encodeURIComponent(String(u.id))}&select=player_id&limit=1`);
     pid = l && l[0] && l[0].player_id;
   } else {
@@ -103,7 +103,7 @@ module.exports = async (req, res) => {
     if (await rateLimit(req, res, 'card')) return;   // per IP
     stage = 'signature';
     const mc = miniAppCheck(String(b.initData || ''), token), u = mc.user;
-    if (!u || !u.id) { await report('card', 'telegram signature: ' + (mc.why || 'no user id')); return res.status(401).json({ error: 'bad telegram signature' }); }
+    if (!u || !u.id) { await reportOnce('card sig', 'card', 'telegram signature: ' + (mc.why || 'no user id')); return res.status(401).json({ error: 'bad telegram signature' }); }
     stage = 'image';
     const m = /^data:image\/(jpeg|png);base64,(.+)$/.exec(String(b.image || ''));
     if (!m) return refuse(res, 400, { error: 'image?' }, 'card');

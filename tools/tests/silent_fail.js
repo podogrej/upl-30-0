@@ -12,7 +12,7 @@ global.fetch = async (url, opt = {}) => {
   if (url.startsWith('https://api.telegram.org/')) return R(TG_ANSWER);
   return R([]);
 };
-const run = (h, req) => new Promise(done => { const r = { h: {}, setHeader(k, v) { this.h[k] = v; }, status(c) { this.c = c; return this; }, json(j) { done([this.c, j, this.h]); }, send(t) { done([this.c, t, this.h]); }, end() { done([this.c]); } }; h({ headers: {}, query: {}, ...req }, r); });
+const run = (h, req) => new Promise(done => { const r = { h: {}, setHeader(k, v) { this.h[k] = v; }, status(c) { this.c = c; return this; }, json(j) { done([this.c, j, this.h]); }, send(t) { done([this.c, t, this.h]); }, end() { done([this.c]); } }; h(req.raw ? req.raw : { headers: {}, query: {}, ...req }, r); });   // raw: request passed as is (a throwing body getter)
 let fail = 0; const check = (ok, m) => { console.log(ok ? '✓' : '✗', m); if (!ok) fail++; };
 const rows = re => errRows.filter(r => re.test(r.msg)).length;
 (async () => {
@@ -20,6 +20,13 @@ const rows = re => errRows.filter(r => re.test(r.msg)).length;
   for (const name of ['save', 'seed', 'verify', 'card', 'auth', 'league']) {
     const [c] = await run(require(`../../api/${name}.js`), { method: 'POST', body: '{bad' });
     check(c === 400, `${name}: зіпсований JSON — 400 (було 500)`);
+  }
+  // on Vercel, application/json is parsed by the runtime: reading req.body throws (ApiError 400)
+  for (const name of ['save', 'seed', 'verify', 'card', 'auth', 'league']) {
+    const req = { method: 'POST', query: {}, headers: { 'content-type': 'application/json' } };
+    Object.defineProperty(req, 'body', { get() { const e = new Error('Invalid JSON'); e.statusCode = 400; throw e; } });
+    const [c] = await run(require(`../../api/${name}.js`), { raw: req });
+    check(c === 400, `${name}: зіпсований JSON через Vercel (application/json) — 400`);
   }
   check(rows(/json/i) === 0, 'зіпсований JSON нічого не пише в client_errors');
   // wrong bot token: Telegram answers 401 to every call; one row per instance, not one per call
