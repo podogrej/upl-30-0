@@ -84,5 +84,6 @@ T.check([acc, html].every(f => /flowType:'pkce'/.test(f) && !/flowType:'implicit
   T.check(ogi.startsWith('https://upl30.com.ua/') && fs.existsSync(ogf) && fs.statSync(ogf).size <= 300 * 1024 && meta('twitter:image') === ogi, 'головна: og:image абсолютний, файл є, ≤ 300 КБ, twitter:image той самий');
   T.check(meta('og:image:width') === '1200' && meta('og:image:height') === '630' && !!meta('og:image:alt') && meta('twitter:card') === 'summary_large_image', 'головна: 1200×630, alt, summary_large_image');
   T.check(meta('og:url') === 'https://upl30.com.ua/' && meta('og:type') === 'website' && meta('og:locale') === 'uk_UA', 'головна: og:url, og:type, og:locale');
+  T.check(!!meta('og:title') && meta('twitter:title') === meta('og:title') && !!meta('description') && meta('og:description') === meta('description') && meta('twitter:description') === meta('description'), 'головна: заголовок і опис однакові для og, twitter і пошуку');
   process.exit(T.done());
 })();
