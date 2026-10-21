@@ -991,6 +991,21 @@ chk "v092 профіль: сьогоднішні сезони виклику д�
   update seasons set vd_day = vd_day - 1 where device_id = '$PDEV';
   j := player_profile(t_link('device', '$PDEV')); assert j->'fav_player'->>'id' = 'pv1', 'завтра ' || j::text;
   update seasons set vd_day = null where device_id = '$PDEV';"
+# explicit grants (sql/v0932_grants.sql): on a built DB nothing changes; a DB built from scratch without Supabase default grants
+# (as Supabase does for new tables from 30.10.2026) still lets the server role reach every table and anon read only public views
+G="select md5(string_agg(table_name || grantee || privilege_type, ',' order by table_name, grantee, privilege_type)) from information_schema.role_table_grants where table_schema = 'public' and grantee in ('anon', 'authenticated', 'service_role')"
+G0=$($P -d t1 -tAc "$G")
+for pass in 1 2; do
+  if $P -d t1 -f "$ROOT/sql/v0932_grants.sql" >/dev/null 2>"$D/err"; then ok "запуск $pass: v0932_grants.sql"; else bad "запуск $pass: v0932_grants.sql — $(grep -v NOTICE "$D/err" | head -3)"; fi
+done
+[ "$($P -d t1 -tAc "$G")" = "$G0" ] && ok "v0932: на зібраній базі права не змінились" || bad "v0932: права на зібраній базі змінились"
+$P -c "create database t9" >/dev/null
+if { grep -v "alter default privileges" "$ROOT/tools/tests/stub.sql" | $P -d t9 && $P -d t9 -f "$ROOT/sql/new_db_part_A.sql" && $P -d t9 -f "$ROOT/sql/v039_part_B.sql" \
+     && $P -d t9 -f "$ROOT/sql/v0932_grants.sql"; } >/dev/null 2>"$D/err"; then ok "v0932: база з нуля без автоматичних прав збирається"; else bad "v0932: збірка з нуля — $(grep -v NOTICE "$D/err" | head -3)"; fi
+R=$($P -d t9 -tAc "select count(*) filter (where not has_table_privilege('service_role', c.oid, 'select, insert, update, delete')), count(*) filter (where has_table_privilege('anon', c.oid, 'insert') and c.relname <> 'user_state'), count(*) from pg_class c join pg_namespace n on n.oid = c.relnamespace where n.nspname = 'public' and c.relkind in ('r', 'v')")
+case "$R" in 0\|0\|[1-9]*) ok "v0932: з нуля сервер бачить усі таблиці, anon нікуди не пише ($R)";; *) bad "v0932: з нуля права неправильні (без сервера|anon пише|усього): $R";; esac
+$P -d t9 -c "create table t_after (id int)" >/dev/null 2>&1
+[ "$($P -d t9 -tAc "select has_table_privilege('service_role', 'public.t_after', 'select') and not has_table_privilege('anon', 'public.t_after', 'select')")" = t ] && ok "v0932: нова таблиця — сервер бачить, anon ні" || bad "v0932: права нової таблиці"
 echo "база: $D (порт $PORT)"
 [ $FAIL = 0 ] && echo "SQL: УСЕ ГАРАЗД ($N перевірок)" || echo "SQL: ПРОБЛЕМИ $FAIL/$N"
 exit $((FAIL>0))
