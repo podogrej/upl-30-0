@@ -15,7 +15,7 @@ async function isMember(chat_id, user_id) {
     const to = r && !r.ok && r.parameters && r.parameters.migrate_to_chat_id;
     if (to) { await L.migrateLeague(chat_id, to); return { moved: String(to), ok: await isMember(to, user_id) }; }
     const st = r && r.ok && r.result ? r.result.status : null;
-    if (!r || (!r.ok && r.error_code !== 400 && r.error_code !== 403)) await reportOnce('member', 'league member check', `${r && r.error_code} ${String(r && r.description || 'no answer').slice(0, 120)}`);   // 400/403: not in chat or bot removed, normal
+    if (!r || (!r.ok && ![400, 401, 403, 404].includes(r.error_code))) await reportOnce('member', 'league member check', `${r && r.error_code} ${String(r && r.description || 'no answer').slice(0, 120)}`);   // 400/403: not in chat or bot removed, normal; 401/404 reported by L.tg
     return MEMBER.has(st) || (st === 'restricted' && r.result.is_member !== false);
   } catch (e) { await reportOnce('member', 'league member check', e); return false; }
 }

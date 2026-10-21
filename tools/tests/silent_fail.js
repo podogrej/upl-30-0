@@ -39,6 +39,17 @@ const rows = re => errRows.filter(r => re.test(r.msg)).length;
   check(!d1.sent && /Unauthorized/.test(d1.why) && calls.some(c => /^DELETE .*app_marks\?key=eq\.errdigest-2026-10-21/.test(c)), 'зведення помилок не дійшло — позначку знято, причина в відповіді');
   const d2 = await errDigest({ sb: dsb, tg: async () => ({ ok: true }), env: L.env, day: '2026-10-21' });
   check(d2.sent, 'після ремонту токена зведення надсилається');
+  const { digestText } = require('../../api/_errdigest.js');
+  const many = Array.from({ length: 12 }, (_, i) => ({ version: '0.94', msg: 'client ' + i, player: 'p' + i, n: 5 }));
+  check(/telegram: sendMessage: 401/.test(digestText([...many, { version: 'server', msg: 'telegram: sendMessage: 401 Unauthorized', n: 1 }], 'd').split('…')[0]), 'зведення: поломка токена бота — вгорі, не в «…і ще N»');
+  // evening league summaries: a group that removed the bot (403) is normal, not stored
+  process.env.CRON_SECRET = 'cs'; const n0 = errRows.length;
+  TG_ANSWER = { ok: false, error_code: 403, description: 'Forbidden: bot was kicked from the group chat' };
+  const lr = [-1, -2].map((chat_id, i) => ({ id: i + 1, chat_id, day: '2026-10-05', tg_user_id: 1, name: 'P', season_id: i + 1, w: 10, d: 0, l: 0, gf: 1, ga: 0, pts: 30, created_at: '2026-10-05T10:00:00Z' }));
+  const f0 = global.fetch; global.fetch = async (url, opt = {}) => url.includes('/rest/v1/league_results') ? R(lr) : /\/rest\/v1\/seasons\?/.test(url) ? R(lr.map(r => ({ id: r.season_id, day: r.day, tg_user_id: 1, w: 10, d: 0, l: 0, gf: 1, ga: 0, place: 1 }))) : f0(url, opt);
+  const [cc] = await run(require('../../api/cron.js'), { method: 'GET', query: { day: '2026-10-05' }, headers: { authorization: 'Bearer cs' } });
+  global.fetch = f0;
+  check(cc === 200 && errRows.slice(n0).filter(r => /cron summary/.test(r.msg)).length === 0, 'вечірній підсумок: група, що вигнала бота (403), не пише в журнал');
   // Mini App sign-in and group league join with a bad signature: refusal reason stored once
   const bad = 'auth_date=1&user=%7B%22id%22%3A1%7D&hash=00';
   let [c] = await run(require('../../api/auth.js'), { method: 'POST', body: { initData: bad } });

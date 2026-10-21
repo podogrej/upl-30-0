@@ -14,7 +14,8 @@ function digestText(rows, day) {
     const x = g[k] || (g[k] = { msg: r.msg, version: r.version || '?', n: 0, who: new Set(), screens: new Set(), where: new Set(), line: r.line });
     x.n += r.n || 1; x.who.add(r.player || r.ua || '?'); if (r.screen) x.screens.add(r.screen); x.where.add(where(r));
   }
-  const list = Object.values(g).sort((a, b) => b.who.size - a.who.size || b.n - a.n);
+  const top = x => x.version === 'server' && /^(telegram|auth|league|save): /.test(x.msg) ? 1 : 0;   // bot token and signature failures first: they break whole features
+  const list = Object.values(g).sort((a, b) => top(b) - top(a) || b.who.size - a.who.size || b.n - a.n);
   const total = list.reduce((s, x) => s + x.n, 0), people = new Set(rows.map(r => r.player || r.ua || '?')).size;
   let t = `<b>🐞 Помилки гравців за добу (${esc(day)})</b>\nУсього ${total}, різних ${list.length}, пристроїв ~${people}\n`;
   t += list.slice(0, TOP).map(x => `\n• <b>${x.n}×</b> у ${x.who.size} · v${esc(x.version)} · ${esc([...x.screens].join(', ') || '?')} · ${esc([...x.where].join(', '))}\n<code>${esc(x.msg.slice(0, 160))}</code>${x.line ? ` (рядок ${x.line})` : ''}`).join('\n');

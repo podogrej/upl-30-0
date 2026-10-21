@@ -11,7 +11,7 @@
 // 503 {fallback:true}: DB has no device_ok yet (SQL 0.53 not applied). Clients 0.73.1+ do not write directly any more (sql/v054_close_writes.sql).
 const { sb, gate, tgUser, body } = require('./_device.js');
 const { verifyById, seasonTrophy } = require('./verify.js');
-const { fail, report, miniAppCheck } = require('./_lib.js');
+const { fail, report, reportOnce, miniAppCheck } = require('./_lib.js');
 
 const int = (v, lo, hi) => { const n = Number(v); return Number.isInteger(n) && n >= lo && n <= hi ? n : null; };
 const num = (v, lo, hi) => { if (v == null || v === '') return null; const n = Number(v); return Number.isFinite(n) && n >= lo && n <= hi ? n : null; };
@@ -88,7 +88,7 @@ const handler = async (req, res) => {
     const dev = g.dev;
     if (dev.status) return res.status(dev.status).json({ error: dev.error, fallback: dev.fallback || undefined });
     const device_id = String(b.device_id), tg = tgUser(b.tg_init) || {};
-    if (b.tg_init && !tg.tg_user_id) await report('save', 'telegram signature: ' + (miniAppCheck(String(b.tg_init)).why || 'no user id'));   // Mini App season saved without its Telegram user
+    if (b.tg_init && !tg.tg_user_id) { const why = miniAppCheck(String(b.tg_init)).why || 'no user id'; await reportOnce('save-sig ' + why.replace(/\d+/g, 'N'), 'save', 'telegram signature: ' + why); }   // Mini App season saved without its Telegram user
     const r = b.row || {};
     stage = b.kind;
     if (b.kind === 'season') {

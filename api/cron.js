@@ -56,7 +56,7 @@ module.exports = async (req, res) => {
       try {
         const r = await L.tg('sendMessage', { chat_id, text, parse_mode: 'HTML', reply_markup: L.playKb(chat_id), disable_web_page_preview: true });
         if (r && r.ok) return true;
-        await report(`cron ${what} ${chat_id}`, 'telegram refused: ' + String(r && r.description || 'no answer').slice(0, 200));
+        if (!r || ![400, 401, 403, 404].includes(r.error_code)) await report(`cron ${what} ${chat_id}`, 'telegram refused: ' + String(r && r.description || 'no answer').slice(0, 200));   // 400/403: bot left the group (normal); 401/404: reported once by L.tg
       } catch (e) { await report(`cron ${what} ${chat_id}`, e); }
       return false;
     };
