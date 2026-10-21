@@ -1,5 +1,6 @@
 // 30-0 UPL: result link with messenger preview: /r/<season id> (vercel.json -> /api/r?id=<id>)
-// Serves a tiny page with og:title / og:description / og:image (Telegram, WhatsApp, Viber render a card) and redirects to the site,
+// Serves a tiny page with og:title / og:description / og:image (Telegram, WhatsApp, Viber render a card) and redirects to the site by script only
+// (no meta refresh: link-preview bots follow it and would take the home page preview instead of the season),
 // which opens that squad (?s=<id>). Reads only public season fields (seasons_pub) with the publishable key, like the site. Env: SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY (test).
 const { SB_URL, plUk } = require('./_lib.js');
 const { VD_MEDALS, vdNumber } = require('../lib/vd_core.js');
@@ -59,7 +60,7 @@ function page(site, id, s, extra, og) {
 <meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(desc)}">
 ${og ? `<meta property="og:image" content="${esc(og)}"><meta property="og:image:width" content="1080"><meta property="og:image:height" content="1350">` : `<meta property="og:image" content="${esc(site)}og.jpg"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">`}
 <meta property="og:url" content="${esc(site)}r/${id}"><meta name="twitter:card" content="summary_large_image">
-<meta http-equiv="refresh" content="0;url=${esc(go)}"></head>
+</head>
 <body style="background:#0b1430;color:#ffffff;font-family:system-ui,sans-serif;padding:24px"><p><a style="color:#ff5aa0" href="${esc(go)}">Відкрити результат у 30-0 УПЛ</a></p>
 <script>location.replace(${JSON.stringify(go)})</script></body></html>`;
 }
