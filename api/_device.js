@@ -1,7 +1,7 @@
 // 30-0 UPL: shared by /api/save and /api/seed ("_" prefix: not a route, Vercel does not expose it).
 // Device ownership: the browser sends device_id and the device secret (upl30_dsecret); the DB checks the secret with device_ok,
 // callable only by the server (service_role). The player comes from the device binding in the DB, never from the browser.
-const { env, sb, kyivDate, miniApp, body, uuidRe } = require('./_lib.js');
+const { env, sb, kyivDate, miniApp, body, uuidRe, reportOnce } = require('./_lib.js');
 
 // function not in DB yet (SQL 0.53 not applied): PostgREST 404 / PGRST202
 const missingFn = e => e && (e.status === 404 || /PGRST202|Could not find the function/.test(e.body || ''));
@@ -41,7 +41,7 @@ const IP_X = 4;
 const ipOf = req => String((req.headers && (req.headers['x-forwarded-for'] || req.headers['x-real-ip'])) || '').split(',')[0].trim().slice(0, 64) || 'unknown';
 async function rateHit(key, limit) {
   try { return (await sb('rpc/rate_hit', { method: 'POST', body: { p_key: key, p_limit: limit } })) !== false; }
-  catch (e) { if (!missingFn(e)) console.warn('rate', e.message); return true; }
+  catch (e) { if (!missingFn(e)) await reportOnce('rate', 'rate limit off', e); return true; }
 }
 // true = 429 already sent, handler must return
 async function rateLimit(req, res, name, device) {
@@ -69,7 +69,7 @@ async function gate(req, res, name, device, secret) {
   if (!uuidRe.test(String(device || '')) || !okSecret) return legacy();
   let r;
   try { r = await sb('rpc/api_gate', { method: 'POST', body: { p_name: name, p_ip: ipOf(req), p_device: String(device).toLowerCase(), p_secret: secret == null ? null : secret, p_limit: LIMITS[name], p_ip_limit: LIMITS[name] * IP_X } }); }
-  catch (e) { if (!missingFn(e)) console.warn('gate', e.message); return legacy(); }
+  catch (e) { if (!missingFn(e)) await reportOnce('gate', 'gate', e); return legacy(); }
   if (!r || typeof r !== 'object' || typeof r.rate !== 'boolean') return legacy();
   if (!r.rate) { res.status(429).json({ error: RATE_MSG, rate: true }); return { done: true }; }
   if (secret == null) return { dev: null };

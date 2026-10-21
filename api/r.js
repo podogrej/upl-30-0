@@ -2,7 +2,7 @@
 // Serves a tiny page with og:title / og:description / og:image (Telegram, WhatsApp, Viber render a card) and redirects to the site by script only
 // (no meta refresh: link-preview bots follow it and would take the home page preview instead of the season),
 // which opens that squad (?s=<id>). Reads only public season fields (seasons_pub) with the publishable key, like the site. Env: SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY (test).
-const { SB_URL, plUk } = require('./_lib.js');
+const { SB_URL, plUk, reportOnce } = require('./_lib.js');
 const { VD_MEDALS, vdNumber } = require('../lib/vd_core.js');
 const SB_KEY = (process.env.SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_pEszTOPsCHLgpiPpwB4JKg_SS-X07hY').trim();   // publishable key, same as on the site
 const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -21,10 +21,10 @@ async function season(id) {
     for (const cols of [base + ',vd_day,vd_score,vd_gate', base]) {   // the vd_* columns may be missing in an older database
       const r = await fetch(`${SB_URL}/rest/v1/seasons_pub?select=${cols}&id=eq.${id}&limit=1`, { headers: { apikey: SB_KEY } });
       if (r.ok) { const j = await r.json(); return j[0] || null; }
-      if (r.status !== 400) break;
+      if (r.status !== 400) { await reportOnce('r' + r.status, 'r', `seasons_pub ${r.status}`); break; }
     }
-  } catch (e) { console.error('r', e.message); }
-  return null;
+  } catch (e) { await reportOnce('r', 'r', e); }
+  return undefined;   // DB failure, unlike null (no such season): the generic page is not cached for long
 }
 // share image stored by /api/card (og:true); HEAD with a short timeout
 async function ogExists(id) {
@@ -72,7 +72,7 @@ module.exports = async (req, res) => {
   const s = id ? await season(id) : null;
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   const og = s && s.verified === true && await ogExists(id) ? `${SB_URL}/storage/v1/object/public/cards/og/${id}.jpg` : null;
-  res.setHeader('Cache-Control', s && !og ? 's-maxage=300, stale-while-revalidate=600' : 's-maxage=86400, stale-while-revalidate=604800');   // image may still be uploading
+  res.setHeader('Cache-Control', s === undefined || (s && !og) ? 's-maxage=300, stale-while-revalidate=600' : 's-maxage=86400, stale-while-revalidate=604800');   // image may still be uploading
   res.status(200).send(page(site, id, s, utmQuery(req.query), og));
 };
 module.exports.page = page;   // for tests

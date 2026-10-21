@@ -73,6 +73,7 @@
 - Джугелі: в пуле «Іван», на Transfermarkt Mamuka.
 
 ## Порядок и техдолг
+- **Тихие сбои на клиенте** (аудит tester 21.10, после двух дней без `tg_user_id`): игрок не узнаёт, что сезон не засчитан — `fetchSeed` при ошибке берёт локальный seed без пометки (`src/template.html` ~2156), сбой `/api/save` уходит в `console.warn` (~2425), `verified` false/null строку просто прячет (~2434), виклик дня при сбое `vd start` молча крутит локальное колесо (`src/vyklyk.js` ~72). Нужны видимая строка «не збережено, спробуй ще» и запись в `client_errors`. Меняет вид — через impeccable, отдельным выпуском. Плюс: в `save` различать «initData N h old» (Mini App открыт больше суток) и `bad hash` при чтении сводки.
 - 🧹 (проверка прав 21.10) У anon/authenticated есть `usage, select, update` на последовательностях `client_errors_id_seq`, `daily_results_id_seq`, `feedback_id_seq`, `merge_log_id_seq`, `seasons_id_seq`, `vd_results_id_seq` (наследие автоматических прав). Через Data API не вызываются, вреда нет; снять при уборке (`revoke all on sequence … from anon, authenticated`).
 - 🧹 **Предложение 19.10:** `docs/mockups` ~30 МБ PNG (2_clubs.png 1,9 МБ и др.) — перегнать в WebP или удалить завершённые; `data/club_colors_review/all_clubs_v2.png`, `data/names/out/*.csv`.
 

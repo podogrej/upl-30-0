@@ -1,6 +1,7 @@
 // 30-0 UPL: Telegram bot (Vercel serverless function, /api/bot)
 // Vercel env: TG_TOKEN, TG_SECRET (required, else 401), TG_BOT, SUPABASE_SERVICE_KEY
 const L = require('./_league.js');   // shared group league helpers
+const { report } = require('./_lib.js');
 const C = require('./_channel.js');   // Telegram channel: admin commands, approval buttons, /whoami
 const N = require('./_notify.js');   // opt-in evening notifications: /notify, nt:on|off buttons
 const SITE = 'https://upl30.com.ua/';   // must stay code (not commented out): /start, /play, /top in private chat depend on it
@@ -34,12 +35,12 @@ async function feedback(m) {
     try {
       if (!m.media_group_id || m.caption) await L.tg('sendMessage', { chat_id: to, text: `💬 Відгук: ${name || 'гравець'}${f.username ? ' (@' + f.username + ')' : ''} · id ${f.id}` });
       const r = await L.tg('forwardMessage', { chat_id: to, from_chat_id: m.chat.id, message_id: m.message_id }); fwd = !!(r && r.ok);
-    } catch (e) { console.error('feedback fwd', e.message); }
+    } catch (e) { await report('feedback fwd', e); }
   }
   try {   // "thanks" reply at most once a minute (an album or several messages in a row get one reply)
     recent = ((await L.sb(`feedback?tg_user_id=eq.${f.id}&at=gte.${new Date(Date.now() - 60e3).toISOString()}&select=id&limit=1`)) || []).length > 0;
     await L.sb('feedback', { method: 'POST', prefer: 'return=minimal', body: { tg_user_id: f.id, name: name || null, username: f.username || null, kind, text: String(m.text || m.caption || '').slice(0, 4000) || null, file_id: file, forwarded: fwd } });
-  } catch (e) { if (e.status !== 404) console.error('feedback db', e.message); }
+  } catch (e) { if (e.status !== 404) await report('feedback db', e); }
   if (!recent) await L.tg('sendMessage', { chat_id: m.chat.id, text: 'Дякую! Передав розробнику 🙌' });
 }
 
@@ -94,7 +95,7 @@ module.exports = async (req, res) => {
     }
     const m = u.message;
     // group became a supergroup: Telegram sends a service message with migrate_from_chat_id to the new chat; move the league
-    if (m && m.migrate_from_chat_id && m.chat) { try { await L.migrateLeague(m.migrate_from_chat_id, m.chat.id); } catch (e) { console.error('migrate', e.message); } }
+    if (m && m.migrate_from_chat_id && m.chat) { try { await L.migrateLeague(m.migrate_from_chat_id, m.chat.id); } catch (e) { await report('migrate', e); } }
     if (m && typeof m.text === 'string') {
       const chat = m.chat, isPrivate = chat.type === 'private';
       const cmd = m.text.trim().split(/[\s@]/)[0].toLowerCase();
@@ -122,6 +123,6 @@ module.exports = async (req, res) => {
     }
     // any private non-command message is feedback
     if (m && m.chat && m.chat.type === 'private' && !(typeof m.text === 'string' && m.text.trim().startsWith('/')) && !m.migrate_from_chat_id) await feedback(m);
-  } catch (e) { console.error(e); }
+  } catch (e) { await report('bot', e); }
   res.status(200).send('ok'); // always 200, otherwise Telegram retries
 };

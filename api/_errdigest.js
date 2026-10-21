@@ -31,7 +31,11 @@ async function errDigest({ sb, tg, env, day, now = Date.now() }) {
   if (!text) return { sent: false, n: 0 };
   const mark = await sb('app_marks?on_conflict=key', { method: 'POST', prefer: 'resolution=ignore-duplicates,return=representation', body: { key: 'errdigest-' + day } });
   if (Array.isArray(mark) && !mark.length) return { sent: false, n: rows.length, why: 'already sent' };
-  await tg('sendMessage', { chat_id: chat, text, parse_mode: 'HTML', disable_web_page_preview: true });
+  const r = await tg('sendMessage', { chat_id: chat, text, parse_mode: 'HTML', disable_web_page_preview: true }).catch(e => ({ description: e.message }));
+  if (!r || !r.ok) {   // not delivered: drop the mark so the next run (after the token or chat is fixed) sends it
+    await sb(`app_marks?key=eq.errdigest-${day}`, { method: 'DELETE', prefer: 'return=minimal' }).catch(() => {});
+    return { sent: false, n: rows.length, why: 'telegram refused: ' + String(r && r.description || 'no answer').slice(0, 120) };
+  }
   return { sent: true, n: rows.length };
 }
 module.exports = { digestText, errDigest };

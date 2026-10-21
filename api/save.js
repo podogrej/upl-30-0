@@ -95,13 +95,13 @@ const handler = async (req, res) => {
       const row = seasonRow(r); if (!row) return res.status(400).json({ error: 'season?' });
       // the inserted row (select=*) goes straight to verification: no second read
       const [ins] = await insert('seasons', { ...row, device_id, ...tg }, '?select=*') || [];
-      if (!ins || !ins.id) return res.status(500).json({ error: 'no id' });
+      if (!ins || !ins.id) return fail(res, 'save', new Error('season insert returned no id'));
       stage = 'verify';
       const off = b.off != null ? offersOf(b.off, row.xi) : null;
-      const putOff = off ? insert('season_offers', { season_id: ins.id, player_id: ins.player_id || null, off }, '', 'return=minimal').then(() => true, () => false) : undefined;
+      const putOff = off ? insert('season_offers', { season_id: ins.id, player_id: ins.player_id || null, off }, '', 'return=minimal').then(() => true, e => report('save offers', e).then(() => false)) : undefined;
       const [v, of] = await Promise.all([verifyById(ins.id, ins), putOff]);   // verification first: milestone claims count this season
       const ids = claimable(trophyIds(b.trophies));
-      const tr = ids.length ? await putTrophies(ids, device_id, tg).then(() => true, () => false) : true;   // true: nothing left for the browser to resend
+      const tr = ids.length ? await putTrophies(ids, device_id, tg).then(() => true, e => report('save trophies', e).then(() => false)) : true;   // true: nothing left for the browser to resend
       return res.status(200).json({ id: ins.id, verified: v.verified, note: v.note, fl: v.fl, tr, off: of });
     }
     if (b.kind === 'trophies') {   // 5x5, retro awards, older tabs

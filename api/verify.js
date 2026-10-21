@@ -2,7 +2,7 @@
 // POST {season_id}: the server takes the season record from the log, checks seed, squad, ratings and format rules
 // and recomputes the season with the same engine as the game (lib/engine.js). Result: seasons.verified = true/false.
 const { sb, rateLimit, body } = require('./_device.js');   // DB requests with the service key
-const { xiHash, fail } = require('./_lib.js');
+const { xiHash, fail, report } = require('./_lib.js');
 const L = require('./_league.js');   // chat leagues: credit verified free-play seasons
 let E = null;
 const CHAL_OLD_BEFORE = '2026-10-01T14:56:00Z';   // since this merge (0.64) challenges are created only against "League of Legends"
@@ -147,7 +147,7 @@ async function vdLink(row, seedRow, id) {
 // SQL 0.61 not applied or attempt not credited: season is still verified, return fl = null
 async function flRecord(row, id) {
   if (!row.fl_id) return undefined;
-  try { const n = await sb('rpc/fl_record', { method: 'POST', body: { p_season: id } }); return n == null ? null : +n; } catch (e) { return null; }
+  try { const n = await sb('rpc/fl_record', { method: 'POST', body: { p_season: id } }); return n == null ? null : +n; } catch (e) { await report('fl_record ' + id, e); return null; }
 }
 // verify season by id (shared by /api/verify and /api/save): {verified, note, cached?, fl?}
 // row: the full row just inserted by /api/save (insert returned select=*), saves re-reading it
@@ -166,7 +166,7 @@ async function verifyById(id, row) {
     chalYearOk = ch.length > 0;
   }
   let v, note, fix, sim;
-  try { [v, note, fix, sim] = check(row, seedRow, { chalYearOk }); } catch (e) { v = null; note = 'рушій недоступний: ' + String(e.message || e).slice(0, 80); }
+  try { [v, note, fix, sim] = check(row, seedRow, { chalYearOk }); } catch (e) { v = null; note = 'рушій недоступний: ' + String(e.message || e).slice(0, 80); await report('verify engine ' + id, e); }
   // claim the seed atomically (only while used_by is still null): of two parallel verifications of seasons that share one seed, only one wins
   if (v === true && seedRow) {
     const got = await sb(`season_seeds?id=eq.${seedRow.id}&used_by=is.null`, { method: 'PATCH', prefer: 'return=representation', body: { used_by: id } }) || [];
@@ -178,10 +178,10 @@ async function verifyById(id, row) {
   // verdict and the server-computed fields in one PATCH (retry-safe: the same values every time)
   await sb(`seasons?id=eq.${id}`, { method: 'PATCH', prefer: 'return=minimal', body: { verified: v, verify_note: String(note).slice(0, 200), ...(v === true && fix ? fix : {}) } });
   if (v === true && fix) row = { ...row, ...fix };
-  if (v === true && sim && !row.practice) await putTrophies(row, sim).catch(e => console.error('trophies', e.message));
-  if (v === true && seedRow && seedRow.vd_day) await vdLink(row, seedRow, id).catch(e => console.error('vd', e.message));
+  if (v === true && sim && !row.practice) await putTrophies(row, sim).catch(e => report('verify trophies ' + id, e));
+  if (v === true && seedRow && seedRow.vd_day) await vdLink(row, seedRow, id).catch(e => report('verify vd ' + id, e));
   // friends league attempt and chat leagues are independent; a chat league failure never fails the verification
-  const [fl] = v === true ? await Promise.all([flRecord(row, id), L.creditSeason({ ...row, verified: true }, seedRow).catch(e => console.error('chat leagues', e.message))]) : [];
+  const [fl] = v === true ? await Promise.all([flRecord(row, id), L.creditSeason({ ...row, verified: true }, seedRow).catch(e => report('verify chat leagues ' + id, e))]) : [];
   return { verified: v, note, fl };
 }
 

@@ -2,7 +2,7 @@
 // Verifies the Telegram signature (Mini App initData or bot login via login_token) and issues a one-time Supabase login token.
 // Vercel env: TG_TOKEN (bot token), SUPABASE_SERVICE_KEY (Supabase -> Settings -> API Keys -> secret key).
 const { rateLimit } = require('./_device.js');   // rate limiting
-const { SB_URL, env, sb: sbRest, miniApp, body, fail } = require('./_lib.js');
+const { SB_URL, env, sb: sbRest, miniApp, miniAppCheck, body, fail, reportOnce } = require('./_lib.js');
 const checkMiniApp = (initData, token) => { const m = miniApp(initData, token); return m && m.user; };
 
 async function admin(path, body) {
@@ -38,7 +38,10 @@ module.exports = async (req, res) => {
     const r0 = rows[0];
     u = { id: r0.tg_id, first_name: r0.first_name, last_name: r0.last_name, username: r0.username };
   } else u = b.initData ? checkMiniApp(b.initData, token) : null;   // Telegram login widget is no longer supported
-  if (!u || !u.id) return res.status(401).json({ error: 'bad telegram signature' });
+  if (!u || !u.id) {
+    if (b.initData && !b.login_token) await reportOnce('auth-sig', 'auth', 'telegram signature: ' + (miniAppCheck(String(b.initData), token).why || 'no user id'));   // Mini App sign-in refused
+    return res.status(401).json({ error: 'bad telegram signature' });
+  }
   const tgId = Number(u.id);
   if (!Number.isSafeInteger(tgId) || tgId <= 0) return res.status(401).json({ error: 'bad telegram signature' });
   const email = `tg-${tgId}@users.upl-30-0.vercel.app`;   // service address, no mail is sent; do NOT switch to the new domain: Telegram accounts are looked up by it

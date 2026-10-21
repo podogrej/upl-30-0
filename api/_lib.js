@@ -46,21 +46,29 @@ async function devicesOf(pid, device) {
 // squad fingerprint stored in season_seeds.xi_hash (seed.js issues it, verify.js and _vd.js compare it)
 const xiHash = xi => crypto.createHash('sha256').update(xi.map(x => `${x.id}|${x.slot}|${x.c}|${x.y}`).join(';')).digest('hex');
 // JSON body of a request (Vercel may pass a string); throws on invalid JSON
-const body = req => { let b = req.body || {}; if (typeof b === 'string') b = JSON.parse(b); return b; };
+const body = req => { let b = req.body || {}; if (typeof b === 'string') { try { b = JSON.parse(b); } catch (e) { const x = new Error('bad json'); x.badJson = true; throw x; } } return b; };
 // server problem: Vercel log (kept 1 hour) plus a client_errors row (kept long, in the daily digest); never throws
 async function report(where, e) {
   const msg = `${where}: ${String(e && e.message || e).slice(0, 260)}`;
   console.error(msg);
   const key = env('SUPABASE_SERVICE_KEY'), ac = new AbortController(), t = setTimeout(() => ac.abort(), 1500);   // a slow DB must not hold the answer
-  try { await fetch(`${SB_URL}/rest/v1/client_errors`, { method: 'POST', signal: ac.signal, headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
-    body: JSON.stringify([{ version: 'server', msg: msg.slice(0, 300), src: 'api', line: 0, col: 0, n: 1 }]) }); } catch (x) {} finally { clearTimeout(t); }
+  try { const r = await fetch(`${SB_URL}/rest/v1/client_errors`, { method: 'POST', signal: ac.signal, headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+    body: JSON.stringify([{ version: 'server', msg: msg.slice(0, 300), src: 'api', line: 0, col: 0, n: 1 }]) });
+    if (!r.ok) console.error(`report not stored: client_errors ${r.status}`); } catch (x) { console.error('report not stored:', String(x && x.message || x).slice(0, 100)); } finally { clearTimeout(t); }
+}
+// same as report, at most once per key per instance in ms: for failures that repeat on every request (bad token, broken rate limit)
+const reported = new Map();
+async function reportOnce(key, where, e, ms = 10 * 60e3) {
+  const now = Date.now(); if (now - (reported.get(key) || 0) < ms) return;
+  reported.set(key, now); await report(where, e);
 }
 // 500 without internals: the cause (DB text, stage) goes to the log and client_errors only
 const SERVER_ERR = 'Щось пішло не так на сервері. Спробуй ще раз трохи згодом.';
 async function fail(res, where, e) {
+  if (e && e.badJson) return res.status(400).json({ error: 'json?' });   // client junk, not a server failure: nothing stored
   await report(where, e);
   return res.status(500).json({ error: SERVER_ERR });
 }
 // Ukrainian plural form by count (one / few / many), same as plUk on the site
 const plUk = (n, a, b, c) => { const m = n % 10, h = n % 100; return m === 1 && h !== 11 ? a : m >= 2 && m <= 4 && (h < 12 || h > 14) ? b : c; };
-module.exports = { SB_URL, env, sb, sbAll, kyivDate, miniApp, miniAppCheck, plUk, uuidRe, devicesOf, xiHash, body, fail, report, SERVER_ERR };
+module.exports = { SB_URL, env, sb, sbAll, kyivDate, miniApp, miniAppCheck, plUk, uuidRe, devicesOf, xiHash, body, fail, report, reportOnce, SERVER_ERR };
