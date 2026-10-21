@@ -106,7 +106,7 @@ const findPl=(pg,multi)=>pg.evaluate(multi=>{const D=window.__dbg,S=D.S;const bs
  // daily challenge also has the buttons
  await home(pg);await pg.evaluate(()=>{localStorage.clear();});await pg.reload();await pg.waitForTimeout(500);await pg.evaluate(()=>window.__dbg.vdOpen('2026-10-12'));await pg.waitForTimeout(300);
  {let seen=false;for(let k=0;k<10&&!seen;k++){await spin(pg);const mi=await findPl(pg,true);if(mi>=0){await (await pg.$$('#squad .pl'))[mi].click();await pg.waitForTimeout(100);seen=await pg.evaluate(()=>document.querySelectorAll('#squad .plpos button').length>=2);break;}
-   await (await pg.$('#squad .pl:not([disabled])')).click();await pg.waitForTimeout(60);}
+   await (await pg.$('#squad .pl:not([disabled])')).click();await pg.waitForTimeout(60);const pb=await pg.$('#squad .plpos button');if(pb)await pb.click();}   // one free position: the player is placed only by its button
   check(seen,'позиції: у виклику дня кнопки теж є');}
  // ---- Georgian trophy: 6+ Georgian players
  check(await pg.evaluate(()=>{const D=window.__dbg,g=D.DATA.nats.indexOf('Грузія');const X=n=>Array.from({length:11},(_,i)=>({id:'x'+i,name:'Гравець Тест'+i,nat:i<n?g:0}));

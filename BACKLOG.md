@@ -73,6 +73,7 @@
 - Джугелі: в пуле «Іван», на Transfermarkt Mamuka.
 
 ## Порядок и техдолг
+- 🧹 (проверка прав 21.10) У anon/authenticated есть `usage, select, update` на последовательностях `client_errors_id_seq`, `daily_results_id_seq`, `feedback_id_seq`, `merge_log_id_seq`, `seasons_id_seq`, `vd_results_id_seq` (наследие автоматических прав). Через Data API не вызываются, вреда нет; снять при уборке (`revoke all on sequence … from anon, authenticated`).
 - 🧹 **Предложение 19.10:** `docs/mockups` ~30 МБ PNG (2_clubs.png 1,9 МБ и др.) — перегнать в WebP или удалить завершённые; `data/club_colors_review/all_clubs_v2.png`, `data/names/out/*.csv`.
 
 - 🧹 Таблицы `f5_*`: убрать из `api/backup.js:28`, снять права anon, затем удалить (п. 13, два шага).
