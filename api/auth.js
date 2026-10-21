@@ -39,7 +39,7 @@ module.exports = async (req, res) => {
     u = { id: r0.tg_id, first_name: r0.first_name, last_name: r0.last_name, username: r0.username };
   } else u = b.initData ? checkMiniApp(b.initData, token) : null;   // Telegram login widget is no longer supported
   if (!u || !u.id) {
-    if (b.initData && !b.login_token) await reportOnce('auth-sig', 'auth', 'telegram signature: ' + (miniAppCheck(String(b.initData), token).why || 'no user id'));   // Mini App sign-in refused
+    if (b.initData && !b.login_token) { const why = miniAppCheck(String(b.initData), token).why || 'no user id'; await reportOnce('auth-sig ' + why.replace(/\d+/g, 'N'), 'auth', 'telegram signature: ' + why); }   // Mini App sign-in refused
     return res.status(401).json({ error: 'bad telegram signature' });
   }
   const tgId = Number(u.id);

@@ -61,8 +61,9 @@ let fail = 0; const check = (ok, m) => { if (!ok) { fail++; console.log('✗', m
   [c, j] = await run({ initData: initData({ id: 42, first_name: 'A' }, 3 * 86400), image: img, caption: 'hi', share: true });
   check(c === 401 && errRows.some(r => r.msg === 'card: telegram signature: initData 72 h old'), 'застарілий initData: 401 і причина (вік у годинах) в client_errors');
   errRows.length = 0;
-  [c, j] = await run({ initData: 'user=%7B%22id%22%3A1%7D&auth_date=1&hash=bad', image: img, caption: 'hi', share: true });
-  check(c === 401 && errRows.some(r => r.msg === 'card: telegram signature: bad hash'), 'підроблений initData (навіть зі старою датою) — «bad hash», а не «застарілий»');
+  const forged = 'user=%7B%22id%22%3A1%7D&auth_date=1&hash=bad';
+  [c, j] = await run({ initData: forged, image: img, caption: 'hi', share: true });   // 'bad hash' row was already stored by the foreign-signature check: same reason within 10 min is not repeated
+  check(c === 401 && require('../../api/_lib.js').miniAppCheck(forged, TOKEN).why === 'bad hash' && !errRows.length, 'підроблений initData (навіть зі старою датою) — «bad hash», а не «застарілий»; та сама причина вдруге не пишеться');
   errRows.length = 0;
   [c, j] = await run({ initData: initData({ id: 42, first_name: 'A' }), image: 'nope', caption: 'hi', share: true });
   check(c === 400 && errRows.some(r => r.msg === 'card: image?'), 'зламана картинка від сайту: 400 і запис у client_errors');

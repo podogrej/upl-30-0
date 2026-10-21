@@ -62,7 +62,7 @@ async function ogCard(req, res, b, token) {
   if (b.initData) {
     if (await rateLimit(req, res, 'og')) return;
     const mc = miniAppCheck(String(b.initData), token), u = mc.user;
-    if (!u || !u.id) { await reportOnce('card og sig', 'card og', 'telegram signature: ' + (mc.why || 'no user id')); return res.status(401).json({ error: 'bad telegram signature' }); }
+    if (!u || !u.id) { await reportOnce('card og sig ' + String(mc.why).replace(/\d+/g, 'N'), 'card og', 'telegram signature: ' + (mc.why || 'no user id')); return res.status(401).json({ error: 'bad telegram signature' }); }
     const l = await sb(`player_links?kind=eq.tg&key=eq.${encodeURIComponent(String(u.id))}&select=player_id&limit=1`);
     pid = l && l[0] && l[0].player_id;
   } else {
@@ -103,7 +103,7 @@ module.exports = async (req, res) => {
     if (await rateLimit(req, res, 'card')) return;   // per IP
     stage = 'signature';
     const mc = miniAppCheck(String(b.initData || ''), token), u = mc.user;
-    if (!u || !u.id) { await reportOnce('card sig', 'card', 'telegram signature: ' + (mc.why || 'no user id')); return res.status(401).json({ error: 'bad telegram signature' }); }
+    if (!u || !u.id) { await reportOnce('card sig ' + String(mc.why).replace(/\d+/g, 'N'), 'card', 'telegram signature: ' + (mc.why || 'no user id')); return res.status(401).json({ error: 'bad telegram signature' }); }
     stage = 'image';
     const m = /^data:image\/(jpeg|png);base64,(.+)$/.exec(String(b.image || ''));
     if (!m) return refuse(res, 400, { error: 'image?' }, 'card');

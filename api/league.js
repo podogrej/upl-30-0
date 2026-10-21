@@ -63,7 +63,7 @@ module.exports = async (req, res) => {
     const b = body(req);
     stage = 'signature';
     const v = L.checkMiniApp(b.initData);
-    if (!v) { await reportOnce('league-sig', 'league', 'telegram signature: ' + (miniAppCheck(String(b.initData || '')).why || 'no user')); return res.status(401).json({ error: 'bad telegram signature' }); }
+    if (!v) { const why = miniAppCheck(String(b.initData || '')).why || 'no user'; await reportOnce('league-sig ' + why.replace(/\d+/g, 'N'), 'league', 'telegram signature: ' + why); return res.status(401).json({ error: 'bad telegram signature' }); }
     const u = v.user, name = L.nameOf(u);
     const joined = [];
     // game opened from a group button -> join that group's league
