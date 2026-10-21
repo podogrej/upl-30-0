@@ -2,15 +2,16 @@
 // Run from repo root: node tools/tests/card_api.js
 const crypto = require('crypto');
 const TOKEN = '123:TEST'; process.env.TG_TOKEN = TOKEN; process.env.TG_BOT = 'upl30_bot'; process.env.SUPABASE_SERVICE_KEY = 'svc'; process.env.SUPABASE_URL = 'https://sb.test';
-let STORAGE_OK = true, RATE_OK = true, PREP_FAIL = null; const errRows = [];   // PREP_FAIL: Telegram refuses the prepared message; errRows: client_errors inserts   // RATE_OK: rate_hit response
+let STORAGE_OK = true, RATE_OK = true, PREP_FAIL = null, ERR_HANG = false; const errRows = [];   // PREP_FAIL: Telegram refuses the prepared message; errRows: client_errors inserts   // RATE_OK: rate_hit response
 const hmac = (k, d) => crypto.createHmac('sha256', k).update(d).digest();
-function initData(user) {
-  const p = new URLSearchParams({ auth_date: String(Math.floor(Date.now() / 1000)), user: JSON.stringify(user), query_id: 'q1' });
+function initData(user, ageS = 0) {
+  const p = new URLSearchParams({ auth_date: String(Math.floor(Date.now() / 1000) - ageS), user: JSON.stringify(user), query_id: 'q1' });
   const dcs = [...p.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([k, v]) => `${k}=${v}`).join('\n');
   p.set('hash', hmac(hmac('WebAppData', TOKEN), dcs).toString('hex')); return p.toString();
 }
 const calls = [];
-global.fetch = async (url, opt) => { if (url.startsWith('https://sb.test/rest/v1/client_errors')) { errRows.push(...JSON.parse(opt.body)); return { ok: true, status: 201, text: async () => '' }; }
+global.fetch = async (url, opt) => { if (url.startsWith('https://sb.test/rest/v1/client_errors') && ERR_HANG) return new Promise((_, no) => opt.signal && opt.signal.addEventListener('abort', () => no(new Error('aborted'))));
+  if (url.startsWith('https://sb.test/rest/v1/client_errors')) { errRows.push(...JSON.parse(opt.body)); return { ok: true, status: 201, text: async () => '' }; }
   if (url.startsWith('https://sb.test/rest/v1/rpc/rate_hit')) return { ok: true, status: 200, text: async () => JSON.stringify(RATE_OK) };
   if (url.startsWith('https://sb.test/storage/')) { calls.push('storage'); return { ok: STORAGE_OK, status: STORAGE_OK ? 200 : 404, json: async () => ({}) }; }
   const m = url.split('/').pop(); calls.push(m);
@@ -57,8 +58,17 @@ let fail = 0; const check = (ok, m) => { if (!ok) { fail++; console.log('✗', m
   [c, j] = await run({ initData: initData({ id: 42, first_name: 'A' }), image: img, caption: 'hi', share: true });
   check(!j.ok && /test refusal/.test(j.error) && errRows.some(r => r.version === 'server' && /^card prepare: Bad Request: test refusal/.test(r.msg)), 'Telegram відмовив у картці: причина в client_errors');
   PREP_FAIL = null; errRows.length = 0;
-  const old = new URLSearchParams(initData({ id: 42, first_name: 'A' })); old.set('auth_date', String(Math.floor(Date.now() / 1000) - 3 * 86400));
-  [c, j] = await run({ initData: old.toString(), image: img, caption: 'hi', share: true });
-  check(c === 401 && errRows.some(r => /^card: telegram signature: initData 7\d h old/.test(r.msg)), 'застарілий initData: 401 і причина (вік у годинах) в client_errors');
+  [c, j] = await run({ initData: initData({ id: 42, first_name: 'A' }, 3 * 86400), image: img, caption: 'hi', share: true });
+  check(c === 401 && errRows.some(r => r.msg === 'card: telegram signature: initData 72 h old'), 'застарілий initData: 401 і причина (вік у годинах) в client_errors');
+  errRows.length = 0;
+  [c, j] = await run({ initData: 'user=%7B%22id%22%3A1%7D&auth_date=1&hash=bad', image: img, caption: 'hi', share: true });
+  check(c === 401 && errRows.some(r => r.msg === 'card: telegram signature: bad hash'), 'підроблений initData (навіть зі старою датою) — «bad hash», а не «застарілий»');
+  errRows.length = 0;
+  [c, j] = await run({ initData: initData({ id: 42, first_name: 'A' }), image: 'nope', caption: 'hi', share: true });
+  check(c === 400 && errRows.some(r => r.msg === 'card: image?'), 'зламана картинка від сайту: 400 і запис у client_errors');
+  ERR_HANG = true; const t0 = Date.now();
+  [c, j] = await run({ initData: initData({ id: 42, first_name: 'A' }), image: 'nope', caption: 'hi', share: true });
+  check(c === 400 && Date.now() - t0 < 3000, `запис помилки завис — відповідь усе одно приходить (${Date.now() - t0} мс)`);
+  ERR_HANG = false;
   process.exit(fail ? 1 : 0);
 })();

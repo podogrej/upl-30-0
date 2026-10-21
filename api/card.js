@@ -10,11 +10,12 @@
 //   First choice is the service channel TG_CARDS_CHAT (see cachePhoto); no env var or channel failure -> bucket.
 const crypto = require('crypto');
 const { rateLimit, gate } = require('./_device.js');   // rate limiting, device check
-const { SB_URL, env, sb, miniApp, body, fail, report } = require('./_lib.js');
+const { SB_URL, env, sb, miniAppCheck, body, fail, report } = require('./_lib.js');
 async function storeCard(buf, ext) {   // -> public card URL or null
-  const key = env('SUPABASE_SERVICE_KEY'); if (!key) return null;
+  const key = env('SUPABASE_SERVICE_KEY'); if (!key) { await report('card store', 'no service key'); return null; }
   const path = `${new Date().toISOString().slice(0, 10)}/${crypto.randomBytes(9).toString('hex')}.${ext}`;
   const r = await fetch(`${SB_URL}/storage/v1/object/cards/${path}`, { method: 'POST', headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': `image/${ext === 'png' ? 'png' : 'jpeg'}`, 'x-upsert': 'false' }, body: buf });
+  if (!r.ok) await report('card store', `storage ${r.status}`);
   return r.ok ? `${SB_URL}/storage/v1/object/public/cards/${path}` : null;
 }
 // Most reliable path: the bot uploads the card once to a service channel (TG_CARDS_CHAT, bot is channel admin), then it is sent
@@ -53,17 +54,17 @@ async function ogExists(id) {
 }
 async function ogCard(req, res, b, token) {
   const id = /^\d{1,12}$/.test(String(b.season_id)) ? String(b.season_id) : null;
-  if (!id) return res.status(400).json({ error: 'season_id?' });
+  if (!id) return refuse(res, 400, { error: 'season_id?' }, 'card og');
   const m = /^data:image\/jpeg;base64,([A-Za-z0-9+/=]+)$/.exec(String(b.image || ''));
-  if (!m) return res.status(400).json({ error: 'image?' });
+  if (!m) return refuse(res, 400, { error: 'image?' }, 'card og');
   const buf = Buffer.from(m[1], 'base64');
-  if (buf.length < 4 || buf[0] !== 0xff || buf[1] !== 0xd8) return res.status(400).json({ error: 'jpeg?' });
-  if (buf.length > OG_MAX) return res.status(413).json({ error: 'image too large' });
+  if (buf.length < 4 || buf[0] !== 0xff || buf[1] !== 0xd8) return refuse(res, 400, { error: 'jpeg?' }, 'card og');
+  if (buf.length > OG_MAX) return refuse(res, 413, { error: 'image too large' }, 'card og');
   let pid = null;
   if (b.initData) {
     if (await rateLimit(req, res, 'og')) return;
-    const u = checkMiniApp(String(b.initData), token);
-    if (!u || !u.id) { await report('card og', badInit(b.initData)); return res.status(401).json({ error: 'bad telegram signature' }); }
+    const mc = miniAppCheck(String(b.initData), token), u = mc.user;
+    if (!u || !u.id) { await report('card og', 'telegram signature: ' + (mc.why || 'no user id')); return res.status(401).json({ error: 'bad telegram signature' }); }
     const l = await sb(`player_links?kind=eq.tg&key=eq.${encodeURIComponent(String(u.id))}&select=player_id&limit=1`);
     pid = l && l[0] && l[0].player_id;
   } else {
@@ -72,22 +73,18 @@ async function ogCard(req, res, b, token) {
     if (!g.dev || g.dev.status) { const d = g.dev || {}; return res.status(d.status || 401).json({ error: d.error || 'device secret' }); }
     pid = g.dev.player;
   }
-  if (!pid) return res.status(403).json({ error: 'owner?' });
+  if (!pid) return refuse(res, 403, { error: 'owner? no player for this account' }, 'card og');
   const rows = await sb(`seasons?id=eq.${id}&select=player_id,verified,practice&limit=1`);
   const s = rows && rows[0];
-  if (!s || s.player_id !== pid || s.verified !== true || s.practice) return res.status(403).json({ error: 'owner?' });
+  if (!s || s.player_id !== pid || s.verified !== true || s.practice) return refuse(res, 403, { error: `owner? season ${id}: ${!s ? 'missing' : s.player_id !== pid ? 'other player' : s.verified !== true ? 'not verified' : 'practice'}` }, 'card og');
   if (await ogExists(id)) return res.status(200).json({ ok: true, og: ogUrl(id) });
   const key = env('SUPABASE_SERVICE_KEY'); if (!key) return fail(res, 'card og', new Error('no service key'));
   const r = await fetch(`${SB_URL}/storage/v1/object/cards/og/${id}.jpg`, { method: 'POST', headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'image/jpeg', 'x-upsert': 'false' }, body: buf });
   if (!r.ok && !(await ogExists(id))) return fail(res, 'card og store', new Error(`storage ${r.status}`));   // a parallel upload may have won
   res.status(200).json({ ok: true, og: ogUrl(id) });
 }
-const checkMiniApp = (initData, token) => { const m = miniApp(initData, token); return m && m.user; };
-// why initData was refused, without the data itself: missing, expired (age in hours) or bad hash
-function badInit(initData) {
-  const p = new URLSearchParams(String(initData || '')), age = Date.now() / 1000 - Number(p.get('auth_date') || 0);
-  return !initData ? 'telegram signature: no initData' : age > 86400 ? `telegram signature: initData ${Math.round(age / 3600)} h old` : 'telegram signature: bad hash';
-}
+// refusal: reported to client_errors with its reason, then answered
+async function refuse(res, code, j, where) { await report(where, j.error); return res.status(code).json(j); }
 // a refused prepared message is reported with Telegram's text
 async function prepared(r) { if (!r.ok) await report('card prepare', r.error); return r; }
 // HTML caption: only <b> and links to the site itself; anything else is sent as plain text with the tags removed
@@ -106,15 +103,15 @@ module.exports = async (req, res) => {
     stage = 'rate';
     if (await rateLimit(req, res, 'card')) return;   // per IP
     stage = 'signature';
-    const u = checkMiniApp(String(b.initData || ''), token);
-    if (!u || !u.id) { await report('card', badInit(b.initData)); return res.status(401).json({ error: 'bad telegram signature' }); }
+    const mc = miniAppCheck(String(b.initData || ''), token), u = mc.user;
+    if (!u || !u.id) { await report('card', 'telegram signature: ' + (mc.why || 'no user id')); return res.status(401).json({ error: 'bad telegram signature' }); }
     stage = 'image';
     const m = /^data:image\/(jpeg|png);base64,(.+)$/.exec(String(b.image || ''));
-    if (!m) return res.status(400).json({ error: 'image?' });
+    if (!m) return refuse(res, 400, { error: 'image?' }, 'card');
     const buf = Buffer.from(m[2], 'base64');
     const html = b.parse_mode === 'HTML' && htmlOk(b.caption || '');
     if (b.parse_mode === 'HTML' && !html) b.caption = plainOf(b.caption || '');
-    if (buf.length > 3.5e6) return res.status(413).json({ error: 'image too large' });
+    if (buf.length > 3.5e6) return refuse(res, 413, { error: 'image too large' }, 'card');
     if (b.share) {
       stage = 'channel';
       const fid = await cachePhoto(token, buf, m[1]).catch(e => report('card channel', e).then(() => null));
@@ -132,7 +129,6 @@ module.exports = async (req, res) => {
         stage = 'prepare';
         return res.status(200).json(await prepared(await prepare(token, u, { photo_url: url, thumbnail_url: thumb || url, photo_width: 1080, photo_height: 1350 }, b.caption, html)));
       }
-      await report('card store', 'no storage url');
       if (b.prefetch) return res.status(200).json({ ok: false, error: 'store' });   // prefetch: no private-chat fallback
     }
     stage = 'send';
@@ -154,7 +150,7 @@ module.exports = async (req, res) => {
     stage = 'prepare';
     const photos = (j.result && j.result.photo) || [];
     const fileId = photos.length ? photos[photos.length - 1].file_id : null;
-    if (!fileId) return res.status(200).json({ ok: false, error: 'no file_id' });
+    if (!fileId) return refuse(res, 200, { ok: false, error: 'no file_id' }, 'card send');
     fetch(`https://api.telegram.org/bot${token}/deleteMessage`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: u.id, message_id: j.result.message_id }) }).catch(() => {});
     res.status(200).json(await prepared(await prepare(token, u, { photo_file_id: fileId }, b.caption, html)));
   } catch (e) {

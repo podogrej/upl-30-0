@@ -150,6 +150,8 @@ const tgRoute=(r,u)=>{if(u.host==='telegram.org'){r.fulfill({contentType:'applic
   T.check(sm==='PM1','у Telegram «Поділитися» відкриває вибір чату (shareMessage з підготовленим повідомленням)');
   const cap=cards.length&&cards[cards.length-1][1].caption,pm=cards.length&&cards[cards.length-1][1].parse_mode;
   T.check(!pm&&/^⚽ 30-0 УПЛ · /.test(cap||'')&&/перемог/.test(cap)&&/Найкращий бомбардир: /.test(cap)&&!/https?:|<[a-z\/]/.test(cap),'підпис у Telegram як до 0.92: звичайний текст, результат і бомбардир, без посилання й тегів: '+String(cap).slice(0,160));
+  const vdc=await pg.evaluate(()=>{const D=window.__dbg,S=D.S,r={...S.result,vd:{score:9},tro:{fresh:[D.TROPHIES[0].id,D.TROPHIES[1].id]}},sv=S.vd;S.vd={day:'2026-10-12'};const c=D.cardCaption(r);S.vd=sv;return c;});
+  T.check(/Виклик дня №/.test(vdc)&&!/бомбардир|трофе|«/i.test(vdc),'підпис виклику дня: без бомбардира й трофеїв (їхні назви можуть назвати гравця): '+vdc.replace(/\n/g,' / ').slice(0,160));
   const og=seen.filter(x=>x[0]==='card'&&x[1].og);T.check(og.length===1&&!!og[0][1].initData&&!og[0][1].device,'прев\'ю в Telegram: initData замість device/secret');
   const ev=seen.filter(x=>x[0]==='err'&&x[1].traffic&&x[1].traffic.event==='share');T.check(ev.length===1&&ev[0][1].traffic.utm_medium==='telegram','подія «share» з utm_medium=telegram');
   await pg.screenshot({path:path.join(OUT,'v092_result_tg.png')});
