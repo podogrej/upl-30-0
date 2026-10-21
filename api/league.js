@@ -5,7 +5,7 @@
 // GET ?chat=ID: league data (today and standings).
 const L = require('./_league.js');   // shared group league helpers
 const { rateLimit, body } = require('./_device.js');
-const { fail } = require('./_lib.js');
+const { fail, report, reportOnce, miniAppCheck } = require('./_lib.js');
 // whether the user is a group member (bot must be in the group). Telegram error -> "no" (fail closed)
 const MEMBER = new Set(['member', 'administrator', 'creator']);
 async function isMember(chat_id, user_id) {
@@ -15,8 +15,9 @@ async function isMember(chat_id, user_id) {
     const to = r && !r.ok && r.parameters && r.parameters.migrate_to_chat_id;
     if (to) { await L.migrateLeague(chat_id, to); return { moved: String(to), ok: await isMember(to, user_id) }; }
     const st = r && r.ok && r.result ? r.result.status : null;
+    if (!r || (!r.ok && ![400, 401, 403, 404].includes(r.error_code))) await reportOnce('member', 'league member check', `${r && r.error_code} ${String(r && r.description || 'no answer').slice(0, 120)}`);   // 400/403: not in chat or bot removed, normal; 401/404 reported by L.tg
     return MEMBER.has(st) || (st === 'restricted' && r.result.is_member !== false);
-  } catch (e) { return false; }
+  } catch (e) { await reportOnce('member', 'league member check', e); return false; }
 }
 
 // player joined a league: today's best counted free-play season goes in (devices of the player linked to this Telegram id)
@@ -27,7 +28,7 @@ async function backfill(chat_id, u, name) {
   const best = await L.dayBest(await L.devicesOf(lk.player_id), day);
   const changed = await L.putBest(best, day, [{ chat_id, tg_user_id: u.id, name }]);
   if (!changed.length) return false;
-  try { await L.upsertBoard(chat_id, day); } catch (e) { console.error('board', chat_id, e.message); }
+  try { await L.upsertBoard(chat_id, day); } catch (e) { await report('board ' + chat_id, e); }
   return true;
 }
 
@@ -62,7 +63,7 @@ module.exports = async (req, res) => {
     const b = body(req);
     stage = 'signature';
     const v = L.checkMiniApp(b.initData);
-    if (!v) return res.status(401).json({ error: 'bad telegram signature' });
+    if (!v) { const why = miniAppCheck(String(b.initData || '')).why || 'no user'; await reportOnce('league-sig ' + why.replace(/\d+/g, 'N'), 'league', 'telegram signature: ' + why); return res.status(401).json({ error: 'bad telegram signature' }); }
     const u = v.user, name = L.nameOf(u);
     const joined = [];
     // game opened from a group button -> join that group's league
@@ -82,7 +83,7 @@ module.exports = async (req, res) => {
         const j = { chat_id: chat_to, title: lg.title };
         joined.push(j);
         stage = 'backfill';
-        try { if (await backfill(chat_to, u, name)) j.backfilled = true; } catch (e) { console.error('backfill', chat_to, e.message); }
+        try { if (await backfill(chat_to, u, name)) j.backfilled = true; } catch (e) { await report('backfill ' + chat_to, e); }
       }
     }
     // clients before 0.79 also sent the daily draft result here: chat leagues no longer take it (posted stays empty)

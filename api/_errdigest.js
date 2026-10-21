@@ -14,7 +14,8 @@ function digestText(rows, day) {
     const x = g[k] || (g[k] = { msg: r.msg, version: r.version || '?', n: 0, who: new Set(), screens: new Set(), where: new Set(), line: r.line });
     x.n += r.n || 1; x.who.add(r.player || r.ua || '?'); if (r.screen) x.screens.add(r.screen); x.where.add(where(r));
   }
-  const list = Object.values(g).sort((a, b) => b.who.size - a.who.size || b.n - a.n);
+  const top = x => x.version === 'server' && /^(telegram|auth|league|save): /.test(x.msg) ? 1 : 0;   // bot token and signature failures first: they break whole features
+  const list = Object.values(g).sort((a, b) => top(b) - top(a) || b.who.size - a.who.size || b.n - a.n);
   const total = list.reduce((s, x) => s + x.n, 0), people = new Set(rows.map(r => r.player || r.ua || '?')).size;
   let t = `<b>🐞 Помилки гравців за добу (${esc(day)})</b>\nУсього ${total}, різних ${list.length}, пристроїв ~${people}\n`;
   t += list.slice(0, TOP).map(x => `\n• <b>${x.n}×</b> у ${x.who.size} · v${esc(x.version)} · ${esc([...x.screens].join(', ') || '?')} · ${esc([...x.where].join(', '))}\n<code>${esc(x.msg.slice(0, 160))}</code>${x.line ? ` (рядок ${x.line})` : ''}`).join('\n');
@@ -31,7 +32,11 @@ async function errDigest({ sb, tg, env, day, now = Date.now() }) {
   if (!text) return { sent: false, n: 0 };
   const mark = await sb('app_marks?on_conflict=key', { method: 'POST', prefer: 'resolution=ignore-duplicates,return=representation', body: { key: 'errdigest-' + day } });
   if (Array.isArray(mark) && !mark.length) return { sent: false, n: rows.length, why: 'already sent' };
-  await tg('sendMessage', { chat_id: chat, text, parse_mode: 'HTML', disable_web_page_preview: true });
+  const r = await tg('sendMessage', { chat_id: chat, text, parse_mode: 'HTML', disable_web_page_preview: true }).catch(e => ({ description: e.message }));
+  if (!r || !r.ok) {   // not delivered: drop the mark so the next run (after the token or chat is fixed) sends it
+    await sb(`app_marks?key=eq.errdigest-${day}`, { method: 'DELETE', prefer: 'return=minimal' }).catch(() => {});
+    return { sent: false, n: rows.length, why: 'telegram refused: ' + String(r && r.description || 'no answer').slice(0, 120) };
+  }
   return { sent: true, n: rows.length };
 }
 module.exports = { digestText, errDigest };

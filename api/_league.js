@@ -1,13 +1,16 @@
 // 30-0 UPL: shared Telegram group league helpers for api/bot.js, api/cron.js, api/league.js ("_" prefix: not a route).
 const L = (() => {
-const { SB_URL, env, sb, sbAll, kyivDate, miniApp, devicesOf } = require('./_lib.js');
+const { SB_URL, env, sb, sbAll, kyivDate, miniApp, devicesOf, report, reportOnce } = require('./_lib.js');
 const esc = s => String(s == null ? '' : s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
 
 async function tg(method, body) {
   const r = await fetch(`https://api.telegram.org/bot${env('TG_TOKEN')}/${method}`, {
     method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
   });
-  return r.json();
+  const j = await r.json();
+  // 401/404: the bot token itself is wrong, every bot call fails; other refusals (blocked bot, gone chat) are normal
+  if (j && !j.ok && (j.error_code === 401 || j.error_code === 404)) await reportOnce('tg' + j.error_code, 'telegram', `${method}: ${j.error_code} ${String(j.description || '').slice(0, 120)}`);
+  return j;
 }
 
 const LAUNCH = Date.UTC(2026, 8, 28);
@@ -180,7 +183,7 @@ async function creditSeason(row, seedRow) {
   const day = String(seedRow.day).slice(0, 10);
   const best = await dayBest(await devicesOf(row.player_id, row.device_id), day);
   const changed = await putBest(best, day, members);
-  await Promise.all(changed.map(c => upsertBoard(c, day).catch(e => console.error('board', c, e.message))));
+  await Promise.all(changed.map(c => upsertBoard(c, day).catch(e => report('board ' + c, e))));
   return changed;
 }
 

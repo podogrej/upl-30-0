@@ -4,7 +4,7 @@
 const L = require('./_league.js');
 const C = require('./_channel.js');   // channel post queue
 const N = require('./_notify.js');   // opt-in evening notifications to players
-const { plUk } = require('./_lib.js');
+const { plUk, report } = require('./_lib.js');
 const D = require('./_device.js');   // per-IP rate limit for the database token
 const { errDigest } = require('./_errdigest.js');   // errors digest
 const MAX_LINES = 30;   // table lines per message (Telegram limit 4096 characters)
@@ -21,9 +21,9 @@ module.exports = async (req, res) => {
   // or the database token (cron_token_ok, 64 hex chars), checked with the service key and rate limited per IP
   if (req.query && req.query.task === 'channel') {
     const tok = /^Bearer ([0-9a-f]{64})$/.exec(auth);
-    const dbOk = async () => !!tok && !(await D.rateLimit(req, res, 'cron')) && (await L.sb('rpc/cron_token_ok', { method: 'POST', body: { p_token: tok[1] } }).catch(e => { console.error('cron token:', String(e && e.message || e).slice(0, 200)); return false; })) === true;
+    const dbOk = async () => !!tok && !(await D.rateLimit(req, res, 'cron')) && (await L.sb('rpc/cron_token_ok', { method: 'POST', body: { p_token: tok[1] } }).catch(async e => { await report('cron token', e); return false; })) === true;
     if (!okBy(cronSecret) && !okBy(L.env('CHANNEL_SECRET')) && !(await dbOk())) return res.headersSent ? undefined : res.status(401).json({ error: 'unauthorized' });
-    try { return res.status(200).json({ ok: true, channel: await C.runChannel() }); } catch (e) { return res.status(500).json({ error: String(e && e.message || e).slice(0, 200) }); }
+    try { return res.status(200).json({ ok: true, channel: await C.runChannel() }); } catch (e) { await report('channel', e); return res.status(500).json({ error: String(e && e.message || e).slice(0, 200) }); }
   }
   if (!okBy(cronSecret)) return res.status(401).json({ error: 'unauthorized' });
   try {
@@ -56,8 +56,8 @@ module.exports = async (req, res) => {
       try {
         const r = await L.tg('sendMessage', { chat_id, text, parse_mode: 'HTML', reply_markup: L.playKb(chat_id), disable_web_page_preview: true });
         if (r && r.ok) return true;
-        console.error(`cron ${what} ${chat_id}: telegram refused:`, String(r && r.description || 'no answer').slice(0, 200));
-      } catch (e) { console.error(`cron ${what} ${chat_id}:`, String(e && e.message || e).slice(0, 200)); }
+        if (!r || ![400, 401, 403, 404].includes(r.error_code)) await report(`cron ${what} ${chat_id}`, 'telegram refused: ' + String(r && r.description || 'no answer').slice(0, 200));   // 400/403: bot left the group (normal); 401/404: reported once by L.tg
+      } catch (e) { await report(`cron ${what} ${chat_id}`, e); }
       return false;
     };
     for (const chat_id of chats) {
@@ -96,19 +96,20 @@ module.exports = async (req, res) => {
     }
     // old unused seeds and login tokens (sql/v090_seed_cleanup.sql); function missing or failing never breaks the summaries
     let cleaned = null;
-    try { cleaned = await L.sb('rpc/cleanup_old_rows', { method: 'POST', body: {} }); } catch (e) { if (e.status !== 404) console.error('cleanup', e.message); }
+    try { cleaned = await L.sb('rpc/cleanup_old_rows', { method: 'POST', body: {} }); } catch (e) { if (e.status !== 404) await report('cleanup', e); }
     if (weekErr) throw weekErr;
     // opt-in evening notifications (one message per player): after the group summaries; failure doesn't break them
     let notify = null;
-    try { notify = await N.sendEvening(day); } catch (e) { notify = { error: String(e && e.message || e).slice(0, 120) }; }
+    try { notify = await N.sendEvening(day); } catch (e) { notify = { error: String(e && e.message || e).slice(0, 120) }; await report('notify', e); }
     // channel queue: daily fallback run (primary is GitHub Actions); failure doesn't break league summaries
     let channel = null;
-    try { channel = await C.runChannel(); } catch (e) { channel = { error: String(e && e.message || e).slice(0, 120) }; }
+    try { channel = await C.runChannel(); } catch (e) { channel = { error: String(e && e.message || e).slice(0, 120) }; await report('channel', e); }
     // player errors digest to admin (api/_errdigest.js); failure doesn't break league summaries
     let errs = null;
-    try { errs = await errDigest({ sb: L.sb, tg: L.tg, env: L.env, day }); } catch (e) { errs = { error: String(e && e.message || e).slice(0, 120) }; }
+    try { errs = await errDigest({ sb: L.sb, tg: L.tg, env: L.env, day }); } catch (e) { errs = { error: String(e && e.message || e).slice(0, 120) }; await report('digest', e); }
     res.status(200).json({ ok: true, day, summaries: done.length, weekly: weekly.length, errs, channel, notify, cleaned });
   } catch (e) {
+    await report('cron', e);
     res.status(500).json({ error: String(e && e.message || e).slice(0, 200) });
   }
 };

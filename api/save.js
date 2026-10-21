@@ -11,7 +11,7 @@
 // 503 {fallback:true}: DB has no device_ok yet (SQL 0.53 not applied). Clients 0.73.1+ do not write directly any more (sql/v054_close_writes.sql).
 const { sb, gate, tgUser, body } = require('./_device.js');
 const { verifyById, seasonTrophy } = require('./verify.js');
-const { fail, report, miniAppCheck } = require('./_lib.js');
+const { fail, report, reportOnce, miniAppCheck } = require('./_lib.js');
 
 const int = (v, lo, hi) => { const n = Number(v); return Number.isInteger(n) && n >= lo && n <= hi ? n : null; };
 const num = (v, lo, hi) => { if (v == null || v === '') return null; const n = Number(v); return Number.isFinite(n) && n >= lo && n <= hi ? n : null; };
@@ -88,20 +88,20 @@ const handler = async (req, res) => {
     const dev = g.dev;
     if (dev.status) return res.status(dev.status).json({ error: dev.error, fallback: dev.fallback || undefined });
     const device_id = String(b.device_id), tg = tgUser(b.tg_init) || {};
-    if (b.tg_init && !tg.tg_user_id) await report('save', 'telegram signature: ' + (miniAppCheck(String(b.tg_init)).why || 'no user id'));   // Mini App season saved without its Telegram user
+    if (b.tg_init && !tg.tg_user_id) { const why = miniAppCheck(String(b.tg_init)).why || 'no user id'; await reportOnce('save-sig ' + why.replace(/\d+/g, 'N'), 'save', 'telegram signature: ' + why); }   // Mini App season saved without its Telegram user
     const r = b.row || {};
     stage = b.kind;
     if (b.kind === 'season') {
       const row = seasonRow(r); if (!row) return res.status(400).json({ error: 'season?' });
       // the inserted row (select=*) goes straight to verification: no second read
       const [ins] = await insert('seasons', { ...row, device_id, ...tg }, '?select=*') || [];
-      if (!ins || !ins.id) return res.status(500).json({ error: 'no id' });
+      if (!ins || !ins.id) return fail(res, 'save', new Error('season insert returned no id'));
       stage = 'verify';
       const off = b.off != null ? offersOf(b.off, row.xi) : null;
-      const putOff = off ? insert('season_offers', { season_id: ins.id, player_id: ins.player_id || null, off }, '', 'return=minimal').then(() => true, () => false) : undefined;
+      const putOff = off ? insert('season_offers', { season_id: ins.id, player_id: ins.player_id || null, off }, '', 'return=minimal').then(() => true, e => report('save offers', e).then(() => false)) : undefined;
       const [v, of] = await Promise.all([verifyById(ins.id, ins), putOff]);   // verification first: milestone claims count this season
       const ids = claimable(trophyIds(b.trophies));
-      const tr = ids.length ? await putTrophies(ids, device_id, tg).then(() => true, () => false) : true;   // true: nothing left for the browser to resend
+      const tr = ids.length ? await putTrophies(ids, device_id, tg).then(() => true, e => report('save trophies', e).then(() => false)) : true;   // true: nothing left for the browser to resend
       return res.status(200).json({ id: ins.id, verified: v.verified, note: v.note, fl: v.fl, tr, off: of });
     }
     if (b.kind === 'trophies') {   // 5x5, retro awards, older tabs
