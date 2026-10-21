@@ -676,8 +676,8 @@ input.sw:checked{background:var(--win)}:root[data-theme="light"] input.sw:not(:c
 button.danger{background:var(--loss);border-color:var(--loss);color:#fff}
 .pp-warn{display:flex;align-items:center;gap:var(--sp-3);margin-top:var(--sp-4);padding:var(--sp-3) var(--sp-3) var(--sp-3) var(--sp-4);border-radius:var(--r-lg);background:var(--card)}
 .pp-warn .h{flex:1 1 auto;min-width:0;display:grid;gap:var(--sp-0h)}.pp-warn .h b{font-size:var(--fs-body);font-weight:var(--wt-bold)}.pp-warn .h span{font-size:var(--fs-footnote);color:var(--ink2)}
-.pp-warn button{flex:none;min-height:44px;padding-inline:var(--sp-4)}
-.pp-cabact{display:flex;flex-wrap:wrap;gap:var(--sp-2);margin-top:var(--sp-3)}
+.pp-warn button{flex:none;min-height:44px;padding-inline:var(--sp-4)}.pp-warn .h b,.pp-warn .h span{text-wrap:balance}
+.pp-cabact{display:flex;flex-wrap:wrap;gap:var(--sp-2);margin-top:var(--sp-4)}
 #ppCab .pp-cabact button{flex:1 1 9em;display:inline-flex;align-items:center;justify-content:center;gap:var(--sp-2);min-height:44px;margin:0;padding:var(--sp-2) var(--sp-3);border:1px solid var(--line);border-radius:var(--r-md);background:var(--surface);color:var(--ink);font:var(--wt-medium) var(--fs-body) var(--font-body);text-decoration:none}
 #ppCab .pp-cabact .ic{color:var(--ink2)}
 #verLine{display:flex;align-items:center}#verLine .ic{flex:none}
@@ -2809,7 +2809,7 @@ function drawCard(r){   // card in site style: UPL navy background, UPL.TV gradi
     g.fillStyle=MUTED;g.font=`600 26px ${MONO}`;g.fillText('СКЛАД ВІДКРИЄТЬСЯ ЗАВТРА',80,y+24);y+=48;
     const ph=150,step=(W-160)/11;rr(80,y,W-160,ph,32);g.fillStyle='rgba(255,255,255,.05)';g.fill();   // one row of 11 circles: hits first
     for(let k=0;k<11;k++){const cx=80+step*(k+.5),cy=y+ph/2;g.beginPath();g.arc(cx,cy,22,0,7);
-      if(k<sc){g.fillStyle='#2fd07a';g.fill();g.setLineDash([]);}else{g.setLineDash([8,7]);g.strokeStyle='rgba(255,255,255,.45)';g.lineWidth=3;g.stroke();}}
+      if(k<sc){g.fillStyle='#30D158';g.fill();g.setLineDash([]);}else{g.setLineDash([8,7]);g.strokeStyle='rgba(255,255,255,.45)';g.lineWidth=3;g.stroke();}}
     g.setLineDash([]);
   }else{
   // instead of match bars: two tiles, top scorer and player of the season
