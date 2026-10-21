@@ -53,13 +53,11 @@ async function ogExists(id) {
   try { return (await fetch(ogUrl(id), { method: 'HEAD' })).ok; } catch (e) { return false; }
 }
 async function ogCard(req, res, b, token) {
+  // input is checked first but refused only after the rate limit and the sign-in check, so junk requests can't flood client_errors
   const id = /^\d{1,12}$/.test(String(b.season_id)) ? String(b.season_id) : null;
-  if (!id) return refuse(res, 400, { error: 'season_id?' }, 'card og');
   const m = /^data:image\/jpeg;base64,([A-Za-z0-9+/=]+)$/.exec(String(b.image || ''));
-  if (!m) return refuse(res, 400, { error: 'image?' }, 'card og');
-  const buf = Buffer.from(m[1], 'base64');
-  if (buf.length < 4 || buf[0] !== 0xff || buf[1] !== 0xd8) return refuse(res, 400, { error: 'jpeg?' }, 'card og');
-  if (buf.length > OG_MAX) return refuse(res, 413, { error: 'image too large' }, 'card og');
+  const buf = m ? Buffer.from(m[1], 'base64') : null;
+  const bad = !id ? [400, 'season_id?'] : !buf ? [400, 'image?'] : buf.length < 4 || buf[0] !== 0xff || buf[1] !== 0xd8 ? [400, 'jpeg?'] : buf.length > OG_MAX ? [413, 'image too large'] : null;
   let pid = null;
   if (b.initData) {
     if (await rateLimit(req, res, 'og')) return;
@@ -70,9 +68,10 @@ async function ogCard(req, res, b, token) {
   } else {
     const g = await gate(req, res, 'og', b.device, b.secret == null ? '' : b.secret);
     if (g.done) return;
-    if (!g.dev || g.dev.status) { const d = g.dev || {}; return res.status(d.status || 401).json({ error: d.error || 'device secret' }); }
+    if (!g.dev || g.dev.status) { const d = g.dev || {}; return refuse(res, d.status || 401, { error: d.error || 'device secret' }, 'card og'); }
     pid = g.dev.player;
   }
+  if (bad) return refuse(res, bad[0], { error: bad[1] }, 'card og');
   if (!pid) return refuse(res, 403, { error: 'owner? no player for this account' }, 'card og');
   const rows = await sb(`seasons?id=eq.${id}&select=player_id,verified,practice&limit=1`);
   const s = rows && rows[0];

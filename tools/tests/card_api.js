@@ -66,6 +66,12 @@ let fail = 0; const check = (ok, m) => { if (!ok) { fail++; console.log('✗', m
   errRows.length = 0;
   [c, j] = await run({ initData: initData({ id: 42, first_name: 'A' }), image: 'nope', caption: 'hi', share: true });
   check(c === 400 && errRows.some(r => r.msg === 'card: image?'), 'зламана картинка від сайту: 400 і запис у client_errors');
+  errRows.length = 0; RATE_OK = false;
+  for (let i = 0; i < 5; i++) [c, j] = await run({ og: true, season_id: 'x', image: 'junk', initData: 'hash=bad' });
+  check(c === 429 && !errRows.length, 'og: сміття понад ліміт частоти — 429 і жодного запису в client_errors');
+  RATE_OK = true;
+  [c, j] = await run({ og: true, season_id: 'x', image: 'junk', initData: 'hash=bad' });
+  check(c === 401 && errRows.length === 1 && /^card og: telegram signature: /.test(errRows[0].msg), 'og: сміття без входу — 401, один запис про підпис, вміст не розбирається');
   ERR_HANG = true; const t0 = Date.now();
   [c, j] = await run({ initData: initData({ id: 42, first_name: 'A' }), image: 'nope', caption: 'hi', share: true });
   check(c === 400 && Date.now() - t0 < 3000, `запис помилки завис — відповідь усе одно приходить (${Date.now() - t0} мс)`);
