@@ -718,7 +718,7 @@ button.danger{background:var(--loss);border-color:var(--loss);color:#fff}
 .pp-warn .h{flex:1 1 auto;min-width:0;display:grid;gap:var(--sp-0h)}.pp-warn .h b{font-size:var(--fs-body);font-weight:var(--wt-bold)}.pp-warn .h span{font-size:var(--fs-footnote);color:var(--ink2)}
 .pp-warn button{flex:none;min-height:44px;padding-inline:var(--sp-4)}.pp-warn .h b,.pp-warn .h span{text-wrap:balance}
 .pp-cabact{display:flex;flex-wrap:wrap;gap:var(--sp-2);margin-top:var(--sp-4)}
-#ppCab .pp-cabact button{flex:1 1 9em;display:inline-flex;align-items:center;justify-content:center;gap:var(--sp-2);min-height:44px;margin:0;padding:var(--sp-2) var(--sp-3);border:1px solid var(--line);border-radius:var(--r-md);background:var(--surface);color:var(--ink);font:var(--wt-medium) var(--fs-body) var(--font-body);text-decoration:none}
+#ppCab .pp-cabact button{flex:1 1 auto;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;gap:var(--sp-2);min-height:44px;margin:0;padding:var(--sp-2) var(--sp-3);border:1px solid var(--line);border-radius:var(--r-md);background:var(--surface);color:var(--ink);font:var(--wt-medium) var(--fs-body) var(--font-body);text-decoration:none}
 #ppCab .pp-cabact .ic{color:var(--ink2)}
 #verLine{display:flex;align-items:center}#verLine .ic{flex:none}
 .pp-lock{display:flex;align-items:center;gap:var(--sp-2);font-size:var(--fs-footnote);color:var(--muted);padding:var(--sp-3);border:1px dashed var(--line);border-radius:var(--r-md)}
@@ -1050,7 +1050,7 @@ section>h3:first-child,.box h3:first-of-type,#viewBody>h3:first-child,#viewBody>
 .trg,.fl5ms,.fl5teams{gap:var(--sp-3)}
 .tro0{display:flex;flex-wrap:wrap;gap:var(--sp-2)}.tro0>span{display:inline-flex;align-items:center;gap:var(--sp-2);padding:var(--sp-2) var(--sp-4) var(--sp-2) var(--sp-2);border-radius:var(--r-pill);background:var(--surface);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--amber) 32%,transparent);font-size:var(--fs-body);font-weight:var(--wt-bold)}
 #viewBody .trsec,.trsec{display:flex;justify-content:center;align-items:center;gap:var(--sp-2);margin:var(--sp-4) 0 0;font-size:var(--fs-body);color:var(--muted);text-align:center}.trsec .ico{vertical-align:0}   /* icon on the same line as the text */
-.pp-ms{gap:var(--sp-2);margin-top:var(--sp-3);justify-content:center}#ppCabAll{display:block;margin:var(--sp-4) auto 0}
+.pp-ms{gap:var(--sp-2);margin-top:var(--sp-3);justify-content:center}
 .row:has(.chip.ms){gap:var(--sp-2)!important;margin-bottom:var(--sp-2)}
 /* trophies as tiles: one per row, small icon next to the title, title in gradient, description below; locked ones dimmed */
 .tro{grid-template-columns:40px 1fr auto;column-gap:var(--sp-2);row-gap:var(--sp-1);align-items:start;padding:var(--sp-4) var(--sp-4)}
@@ -3315,7 +3315,7 @@ function ppRenderCab(){
   let list=LIVE.filter(t=>inCat(t,st.f));
   const on=list.filter(got),off=own?list.filter(t=>!got(t)&&!t.sec):[];const secOff=list.filter(t=>!got(t)&&t.sec).length;
   const rk=t=>{if(t.sec)return -1;const p=trPct(t.id);return p==null?1e3:p;};
-  if(st.s==='recent')on.sort((a,b)=>String(have[b.id].at||'').localeCompare(String(have[a.id].at||''))||rk(a)-rk(b));
+  if(st.s==='recent'&&st.all)on.sort((a,b)=>String(have[b.id].at||'').localeCompare(String(have[a.id].at||''))||rk(a)-rk(b));   // collapsed view always shows the rarest
   else on.sort((a,b)=>rk(a)-rk(b)||String(have[b.id].at||'').localeCompare(String(have[a.id].at||'')));
   off.sort((a,b)=>rk(a)-rk(b));
   const cards=[...on,...off];const shown=st.all?cards:on.slice(0,PP_CAB_PEEK);   // collapsed: the rarest unlocked only
@@ -3336,7 +3336,7 @@ function ppRenderCab(){
     ${shown.length?`<div class="trg">${st.all&&on.length&&off.length?`<h3 class="nm-gh">Відкриті <i>${on.length}</i></h3>${on.map(card).join('')}<h3 class="nm-gh">Ще не відкриті <i>${off.length}</i></h3>${off.map(card).join('')}`:shown.map(card).join('')}</div>`:`<p class="pp-empty">${own?'Тут поки порожньо — зіграй сезон.':'Поки жодного трофея.'}</p>`}
     ${secOff&&own&&st.all?`<p class="trsec"><span>+${secOff} ${plUk(secOff,'секретний трофей чекає','секретні трофеї чекають','секретних трофеїв чекають')}</span>${icon('eye')}</p>`:''}
     ${own&&st.all?`<div class="row pp-ms">${MILESTONES.map(([k,,nm])=>{const e=have['ms'+k];return `<span class="chip ms${e?' onc':''}">${trBadge({id:'ms'+k,cat:'milestone'},!!e)}${nm}${!e&&trStore().seasons<k?` · ${trStore().seasons}/${k}`:''}</span>`;}).join('')}</div>`:''}
-    ${cards.length>shown.length||st.all||(own&&n)?`<div class="pp-cabact">${cards.length>shown.length||st.all?`<button id="ppCabAll">${st.all?'Згорнути':`Усі трофеї · ${total}`}</button>`:''}${own&&n?`<button id="ppCabShare">Поділитися</button>`:''}</div>`:''}${own&&n?`<div id="ppCabOut" hidden class="pp-cabout"><img id="ppCabImg" alt="Шафа трофеїв"><div class="row"><button class="primary" id="ppCabSend" hidden>${ic('share-variant','sm')}Поділитися</button><span class="muted" id="ppCabMsg" style="font-size:var(--fs-footnote)"></span></div></div>`:''}`;
+    ${cards.length>shown.length||st.all||(own&&n)?`<div class="pp-cabact">${cards.length>shown.length||st.all?`<button id="ppCabAll">${st.all?'Згорнути':`Усі трофеї · ${total}`}</button>`:''}${own&&n?`<button id="ppCabShare" aria-label="Поділитися шафою">Поділитися</button>`:''}</div>`:''}${own&&n?`<div id="ppCabOut" hidden class="pp-cabout"><img id="ppCabImg" alt="Шафа трофеїв"><div class="row"><button class="primary" id="ppCabSend" hidden>${ic('share-variant','sm')}Поділитися</button><span class="muted" id="ppCabMsg" style="font-size:var(--fs-footnote)"></span></div></div>`:''}`;
   el.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{st.f=b.dataset.f;ppRenderCab();});
   el.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>{st.s=b.dataset.s;ppRenderCab();});
   const all=document.getElementById('ppCabAll');if(all)all.onclick=()=>{st.all=!st.all;ppRenderCab();};

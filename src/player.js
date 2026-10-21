@@ -109,7 +109,7 @@ function ppRenderCab(){
   let list=LIVE.filter(t=>inCat(t,st.f));
   const on=list.filter(got),off=own?list.filter(t=>!got(t)&&!t.sec):[];const secOff=list.filter(t=>!got(t)&&t.sec).length;
   const rk=t=>{if(t.sec)return -1;const p=trPct(t.id);return p==null?1e3:p;};
-  if(st.s==='recent')on.sort((a,b)=>String(have[b.id].at||'').localeCompare(String(have[a.id].at||''))||rk(a)-rk(b));
+  if(st.s==='recent'&&st.all)on.sort((a,b)=>String(have[b.id].at||'').localeCompare(String(have[a.id].at||''))||rk(a)-rk(b));   // collapsed view always shows the rarest
   else on.sort((a,b)=>rk(a)-rk(b)||String(have[b.id].at||'').localeCompare(String(have[a.id].at||'')));
   off.sort((a,b)=>rk(a)-rk(b));
   const cards=[...on,...off];const shown=st.all?cards:on.slice(0,PP_CAB_PEEK);   // collapsed: the rarest unlocked only
@@ -130,7 +130,7 @@ function ppRenderCab(){
     ${shown.length?`<div class="trg">${st.all&&on.length&&off.length?`<h3 class="nm-gh">Відкриті <i>${on.length}</i></h3>${on.map(card).join('')}<h3 class="nm-gh">Ще не відкриті <i>${off.length}</i></h3>${off.map(card).join('')}`:shown.map(card).join('')}</div>`:`<p class="pp-empty">${own?'Тут поки порожньо — зіграй сезон.':'Поки жодного трофея.'}</p>`}
     ${secOff&&own&&st.all?`<p class="trsec"><span>+${secOff} ${plUk(secOff,'секретний трофей чекає','секретні трофеї чекають','секретних трофеїв чекають')}</span>${icon('eye')}</p>`:''}
     ${own&&st.all?`<div class="row pp-ms">${MILESTONES.map(([k,,nm])=>{const e=have['ms'+k];return `<span class="chip ms${e?' onc':''}">${trBadge({id:'ms'+k,cat:'milestone'},!!e)}${nm}${!e&&trStore().seasons<k?` · ${trStore().seasons}/${k}`:''}</span>`;}).join('')}</div>`:''}
-    ${cards.length>shown.length||st.all||(own&&n)?`<div class="pp-cabact">${cards.length>shown.length||st.all?`<button id="ppCabAll">${st.all?'Згорнути':`Усі трофеї · ${total}`}</button>`:''}${own&&n?`<button id="ppCabShare">Поділитися</button>`:''}</div>`:''}${own&&n?`<div id="ppCabOut" hidden class="pp-cabout"><img id="ppCabImg" alt="Шафа трофеїв"><div class="row"><button class="primary" id="ppCabSend" hidden>${ic('share-variant','sm')}Поділитися</button><span class="muted" id="ppCabMsg" style="font-size:var(--fs-footnote)"></span></div></div>`:''}`;
+    ${cards.length>shown.length||st.all||(own&&n)?`<div class="pp-cabact">${cards.length>shown.length||st.all?`<button id="ppCabAll">${st.all?'Згорнути':`Усі трофеї · ${total}`}</button>`:''}${own&&n?`<button id="ppCabShare" aria-label="Поділитися шафою">Поділитися</button>`:''}</div>`:''}${own&&n?`<div id="ppCabOut" hidden class="pp-cabout"><img id="ppCabImg" alt="Шафа трофеїв"><div class="row"><button class="primary" id="ppCabSend" hidden>${ic('share-variant','sm')}Поділитися</button><span class="muted" id="ppCabMsg" style="font-size:var(--fs-footnote)"></span></div></div>`:''}`;
   el.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{st.f=b.dataset.f;ppRenderCab();});
   el.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>{st.s=b.dataset.s;ppRenderCab();});
   const all=document.getElementById('ppCabAll');if(all)all.onclick=()=>{st.all=!st.all;ppRenderCab();};
