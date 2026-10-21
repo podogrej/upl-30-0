@@ -714,10 +714,13 @@ input.sw:checked{background:var(--win)}:root[data-theme="light"] input.sw:not(:c
 .pp-del{border:0;background:none;color:var(--loss);font-weight:var(--wt-medium);font-size:var(--fs-caption);padding:var(--sp-2) 0;justify-self:start}
 .pp-delbox{display:grid;gap:var(--sp-2);border:1px solid color-mix(in srgb,var(--loss) 50%,var(--line));border-radius:var(--r-md);padding:var(--sp-3) var(--sp-3)}.pp-delbox p{margin:0;font-size:var(--fs-footnote)}
 button.danger{background:var(--loss);border-color:var(--loss);color:#fff}
-.pp-warn{display:grid;gap:var(--sp-2);margin-top:var(--sp-4);padding:var(--sp-3);border:1px solid color-mix(in srgb,var(--amber) 55%,var(--line));border-radius:var(--r-md);background:color-mix(in srgb,var(--amber) 9%,var(--surface))}
-.pp-warn .h{display:flex;align-items:flex-start;gap:var(--sp-2);line-height:var(--lh-normal);font-weight:var(--wt-bold);font-size:var(--fs-body)}.pp-warn .h .ico{width:20px;height:20px;fill:var(--amber);flex:none;margin-top:0}   /* icon aligned with the first line of the title */
+.pp-warn{display:flex;align-items:center;gap:var(--sp-3);margin-top:var(--sp-4);padding:var(--sp-3) var(--sp-3) var(--sp-3) var(--sp-4);border-radius:var(--r-lg);background:var(--card)}
+.pp-warn .h{flex:1 1 auto;min-width:0;display:grid;gap:var(--sp-0h)}.pp-warn .h b{font-size:var(--fs-body);font-weight:var(--wt-bold)}.pp-warn .h span{font-size:var(--fs-footnote);color:var(--ink2)}
+.pp-warn button{flex:none;min-height:44px;padding-inline:var(--sp-4)}.pp-warn .h b,.pp-warn .h span{text-wrap:balance}
+.pp-cabact{display:flex;flex-wrap:wrap;gap:var(--sp-2);margin-top:var(--sp-4)}
+#ppCab .pp-cabact button{flex:1 1 auto;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;gap:var(--sp-2);min-height:44px;margin:0;padding:var(--sp-2) var(--sp-3);border:1px solid var(--line);border-radius:var(--r-md);background:var(--surface);color:var(--ink);font:var(--wt-medium) var(--fs-body) var(--font-body);text-decoration:none}
+#ppCab .pp-cabact .ic{color:var(--ink2)}
 #verLine{display:flex;align-items:center}#verLine .ic{flex:none}
-.pp-warn p{margin:0;font-size:var(--fs-footnote);color:var(--ink2)}
 .pp-lock{display:flex;align-items:center;gap:var(--sp-2);font-size:var(--fs-footnote);color:var(--muted);padding:var(--sp-3);border:1px dashed var(--line);border-radius:var(--r-md)}
 .pp-lock .ico{width:16px;height:16px;fill:currentColor}
 a.plink{color:inherit;text-decoration:underline;text-decoration-color:color-mix(in srgb,var(--ink) 30%,transparent);text-underline-offset:3px}
@@ -1047,7 +1050,7 @@ section>h3:first-child,.box h3:first-of-type,#viewBody>h3:first-child,#viewBody>
 .trg,.fl5ms,.fl5teams{gap:var(--sp-3)}
 .tro0{display:flex;flex-wrap:wrap;gap:var(--sp-2)}.tro0>span{display:inline-flex;align-items:center;gap:var(--sp-2);padding:var(--sp-2) var(--sp-4) var(--sp-2) var(--sp-2);border-radius:var(--r-pill);background:var(--surface);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--amber) 32%,transparent);font-size:var(--fs-body);font-weight:var(--wt-bold)}
 #viewBody .trsec,.trsec{display:flex;justify-content:center;align-items:center;gap:var(--sp-2);margin:var(--sp-4) 0 0;font-size:var(--fs-body);color:var(--muted);text-align:center}.trsec .ico{vertical-align:0}   /* icon on the same line as the text */
-.pp-ms{gap:var(--sp-2);margin-top:var(--sp-3);justify-content:center}#ppCabAll{display:block;margin:var(--sp-4) auto 0}
+.pp-ms{gap:var(--sp-2);margin-top:var(--sp-3);justify-content:center}
 .row:has(.chip.ms){gap:var(--sp-2)!important;margin-bottom:var(--sp-2)}
 /* trophies as tiles: one per row, small icon next to the title, title in gradient, description below; locked ones dimmed */
 .tro{grid-template-columns:40px 1fr auto;column-gap:var(--sp-2);row-gap:var(--sp-1);align-items:start;padding:var(--sp-4) var(--sp-4)}
@@ -1420,7 +1423,7 @@ h3,.sec0,#s1 .sec0,.pgh,.trleg .h{font-size:var(--fs-footnote);font-weight:var(-
 <div class="ft-done" id="fbDone" hidden><b>✓</b><span>Дякуємо! Прочитаємо найближчим часом</span></div>
 <div class="ft-pills"><button class="ft-pill" id="fbBtn" type="button"><!--i:mail-->Відгук і баги</button><a class="ft-pill" id="ftBot" href="https://t.me/upl30_bot" target="_blank" rel="noopener"><!--i:telegram-->Telegram-бот</a></div>
 <div class="ft-soc-icons"><a id="ftTg" href="https://t.me/upl_nostalgia" target="_blank" rel="noopener" aria-label="Telegram-канал" title="Telegram-канал"><!--i:telegram-plane--></a><a href="https://www.threads.com/@upl30_game" target="_blank" rel="noopener" aria-label="Threads" title="Threads"><!--i:threads--></a><a href="https://ua.tribuna.com/uk/blogs/dim-nostalhiyi-istoriya-upl/" target="_blank" rel="noopener" aria-label="Блог на Трибуні" title="Блог на Трибуні"><!--i:newspaper--></a></div>
-<div class="foot ft-small"><a href="#" id="newsBtn">Що нового у версії 0.93.2<b id="newsDot" hidden></b></a><a href="privacy.html">Конфіденційність</a><a href="terms.html">Умови використання</a></div>
+<div class="foot ft-small"><a href="#" id="newsBtn">Що нового у версії 0.94<b id="newsDot" hidden></b></a><a href="privacy.html">Конфіденційність</a><a href="terms.html">Умови використання</a></div>
 <div class="foot ft-copy">© 2026 30-0 УПЛ · неофіційний фан-проєкт <a href="#" id="themeBtn" class="thm" role="switch" aria-checked="false" aria-label="Світла тема"></a></div>
 <p class="ft-legal">30-0 УПЛ — незалежний фан-проєкт: футбольний драфт і симулятор сезону. Він не пов'язаний з Українською Прем'єр-лігою, Українською асоціацією футболу, клубами, футболістами, їхніми об'єднаннями чи іншими організаціями й не схвалений ними. Назви клубів, імена футболістів, рейтинги, статистику й дані сезонів використано лише з інформаційною та довідковою метою. Офіційні логотипи, емблеми та фото футболістів не використовуються. Усі торговельні марки належать їхнім власникам.</p>
 <div class="ft-cred">Шрифт KyivType Sans © Дмитро Растворцев (айдентика Києва)<br>Іконки: Material Design Icons (Apache 2.0), логотипи Telegram і Threads — Font Awesome Free (CC BY 4.0)</div>
@@ -3271,7 +3274,7 @@ function ppRender(){
   const best=p.best_classic!=null?p.best_classic:(own&&BEST.classic?BEST.classic.pts:null);
   const streak=own?Math.max(si.best||0,p.streak_best||0):p.streak_best;
   let h='';
-  if(guest)h+=`<div class="pp-warn"><div class="h">${icon('alert-outline')}Усе зберігається лише на цьому пристрої</div><p>Очистиш кеш браузера чи Telegram, зміниш телефон, браузер або пристрій — і трофеї, рекорди та серія зникнуть. Результати в таблицях залишаться, але не будуть пов’язані з тобою.</p><div class="row"><button class="primary" id="ppLogin">Увійти</button></div></div>`;
+  if(guest)h+=`<div class="pp-warn"><div class="h"><b>Прогрес лише на цьому пристрої</b><span>Увійди, щоб не втратити трофеї й рекорди.</span></div><button class="primary" id="ppLogin">Увійти</button></div>`;
   h+=`<div class="pp-head">${avatarSvg(seed,64)}<div style="min-width:0"><div class="pp-name"><h1 id="ppName">${wait&&!name?'<i class="sk w60"></i>':esc(name)}</h1>${own&&ONLINE&&PLAYER?`<button id="ppEdit" title="Змінити ім'я" aria-label="Змінити ім'я">${icon('pencil')}</button>`:''}</div><div class="pp-since">${p.since?'грає з '+fmtLong(p.since):st.loading?'<i class="sk w40"></i>':''}</div></div></div>`;
   if(p.deleted)h+=`<p class="muted" style="margin-top:var(--sp-4)">Гравець видалив акаунт. Його результати лишились у таблицях під анонімним іменем.</p>`;
   else{
@@ -3302,6 +3305,7 @@ function ppXiRow(x,kind,label,icn){if(!x)return '';const grp=a=>a.filter(Boolean
 function ppXiHtml(p){const b=p.best||{},w=p.worst||{};const rows=PP_BUCKETS.map(([k,l,i])=>ppXiRow(b[k],'best',l,i)+ppXiRow(w[k],'worst',l,i)).join('');
   return rows?`<div class="pp-sec"><h3>Найкращий і найгірший XI</h3></div><div class="pp-list">${rows}</div>`:'';}
 // trophy cabinet: filter by section (N/M), sort by rarity / recent
+const PP_CAB_PEEK=10;   // collapsed cabinet: N rarest unlocked
 function ppRenderCab(){
   const el=document.getElementById('ppCab');if(!el||!PP)return;const st=PP,own=st.own,have=ppHave();
   const mine=trStore().t;const got=t=>!!have[t.id];
@@ -3311,10 +3315,10 @@ function ppRenderCab(){
   let list=LIVE.filter(t=>inCat(t,st.f));
   const on=list.filter(got),off=own?list.filter(t=>!got(t)&&!t.sec):[];const secOff=list.filter(t=>!got(t)&&t.sec).length;
   const rk=t=>{if(t.sec)return -1;const p=trPct(t.id);return p==null?1e3:p;};
-  if(st.s==='recent')on.sort((a,b)=>String(have[b.id].at||'').localeCompare(String(have[a.id].at||''))||rk(a)-rk(b));
+  if(st.s==='recent'&&st.all)on.sort((a,b)=>String(have[b.id].at||'').localeCompare(String(have[a.id].at||''))||rk(a)-rk(b));   // collapsed view always shows the rarest
   else on.sort((a,b)=>rk(a)-rk(b)||String(have[b.id].at||'').localeCompare(String(have[a.id].at||'')));
   off.sort((a,b)=>rk(a)-rk(b));
-  const cards=[...on,...off];const shown=st.all?cards:on;   // collapsed: unlocked only
+  const cards=[...on,...off];const shown=st.all?cards:on.slice(0,PP_CAB_PEEK);   // collapsed: the rarest unlocked only
   const card=t=>{const e=have[t.id];
     if(!own&&t.sec&&e&&!(mine[t.id]&&mine[t.id].n))return `<div class="tro k-secret on sec rt-secret"><span class="tri">${trBadge({id:'secret',cat:'secret'},true)}</span><div class="trt"><b>Секретний трофей</b><span>Відкрий його сам, щоб дізнатися, за що він</span><span class="trp"><span class="nm-sg nm-sg-r"><span class="nm-rw nm-rw-secret">Секретний</span></span>${e.at?`<span class="nm-sg">${fmtShort(e.at)}</span>`:''}</span></div></div>`;
     const tier=trTier(t),p=trPct(t.id);
@@ -3326,14 +3330,13 @@ function ppRenderCab(){
   const cnt=c=>{const l=LIVE.filter(t=>inCat(t,c));return `${l.filter(got).length}/${l.length}`;};
   // order: cards -> "+N secret" -> milestones -> collapse; secret row centered, badge aligned with text
   el.innerHTML=`<div class="pp-sec"><h3>Трофеї</h3><span class="best">Відкрито ${n} з ${total}</span></div><div class="pp-bar"><i style="width:${total?Math.round(100*n/total):0}%"></i></div>
-    ${own&&n?`<button class="ghost wbtn" id="ppCabShare">${ic('bookshelf','sm')}Поділитися шафою</button><div id="ppCabOut" hidden class="pp-cabout"><img id="ppCabImg" alt="Шафа трофеїв"><div class="row"><button class="primary" id="ppCabSend" hidden>${ic('share-variant','sm')}Поділитися</button><span class="muted" id="ppCabMsg" style="font-size:var(--fs-footnote)"></span></div></div>`:''}
     ${st.all?`<div class="pp-filt" role="tablist">${cats.filter(([c])=>c==='all'||LIVE.some(t=>inCat(t,c))).map(([c,l])=>`<button class="chip${st.f===c?' onc':''}" data-f="${c}" role="tab" aria-selected="${st.f===c}">${l} <i>${cnt(c)}</i></button>`).join('')}</div>
     <div class="seg pp-sort"><button data-s="rare" class="${st.s==='rare'?'on':''}">За рідкістю</button><button data-s="recent" class="${st.s==='recent'?'on':''}">Нещодавні</button></div>`:''}
     ${st.all&&shown.length?`<div class="trleg"><div class="h">Колір картки — клас трофея</div><div class="row nm-lgr">${[['base','Основний'],['friends','З друзями'],['secret','Секретний']].map(([k,l])=>`<span class="it k-${k}"><i class="sw"></i>${l}</span>`).join('')}</div><div class="h">Рідкість</div><div class="row nm-lgr">${RARITY.slice(1).map(([,k,l])=>`<span class="it"><i class="nm-rl nm-rl-${k}" aria-hidden="true"></i><span class="nm-rw nm-rw-${k}">${l}</span></span>`).join('')}</div></div>`:''}
     ${shown.length?`<div class="trg">${st.all&&on.length&&off.length?`<h3 class="nm-gh">Відкриті <i>${on.length}</i></h3>${on.map(card).join('')}<h3 class="nm-gh">Ще не відкриті <i>${off.length}</i></h3>${off.map(card).join('')}`:shown.map(card).join('')}</div>`:`<p class="pp-empty">${own?'Тут поки порожньо — зіграй сезон.':'Поки жодного трофея.'}</p>`}
     ${secOff&&own&&st.all?`<p class="trsec"><span>+${secOff} ${plUk(secOff,'секретний трофей чекає','секретні трофеї чекають','секретних трофеїв чекають')}</span>${icon('eye')}</p>`:''}
     ${own&&st.all?`<div class="row pp-ms">${MILESTONES.map(([k,,nm])=>{const e=have['ms'+k];return `<span class="chip ms${e?' onc':''}">${trBadge({id:'ms'+k,cat:'milestone'},!!e)}${nm}${!e&&trStore().seasons<k?` · ${trStore().seasons}/${k}`:''}</span>`;}).join('')}</div>`:''}
-    ${cards.length>shown.length||st.all?`<button class="link0 pp-all" id="ppCabAll">${st.all?'Згорнути ▴':`Усі трофеї · ${total} ▾`}</button>`:''}`;
+    ${cards.length>shown.length||st.all||(own&&n)?`<div class="pp-cabact">${cards.length>shown.length||st.all?`<button id="ppCabAll">${st.all?'Згорнути':`Усі трофеї · ${total}`}</button>`:''}${own&&n?`<button id="ppCabShare" aria-label="Поділитися шафою">Поділитися</button>`:''}</div>`:''}${own&&n?`<div id="ppCabOut" hidden class="pp-cabout"><img id="ppCabImg" alt="Шафа трофеїв"><div class="row"><button class="primary" id="ppCabSend" hidden>${ic('share-variant','sm')}Поділитися</button><span class="muted" id="ppCabMsg" style="font-size:var(--fs-footnote)"></span></div></div>`:''}`;
   el.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{st.f=b.dataset.f;ppRenderCab();});
   el.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>{st.s=b.dataset.s;ppRenderCab();});
   const all=document.getElementById('ppCabAll');if(all)all.onclick=()=>{st.all=!st.all;ppRenderCab();};
@@ -4552,7 +4555,7 @@ function drawCard(r){   // card in site style: UPL navy background, UPL.TV gradi
   if(vdc){   // daily challenge: medal, score and condition right under the header, then the season numbers, then one circle per position
     const sc=Math.min(r.vd.score,11),m=vdMedal(sc),ch=S.vd.ch||{};
     g.font=`600 28px ${BODY}`;vdLines=[];let ln='';for(const w of `${ch.title||''}. ${ch.task||''}`.split(' ')){const tr=ln?ln+' '+w:w;if(g.measureText(tr).width>W-224&&ln){vdLines.push(ln);ln=w;}else ln=tr;}if(ln)vdLines.push(ln);
-    vdTh=Math.max(210,148+(vdLines.length-1)*38+40);
+    vdTh=Math.max(190,148+(vdLines.length-1)*38+40);
     GAP=Math.max(40,Math.min(84,Math.floor((1180-y-(gold?104:0)-(vdTh+300+150+58))/2)));   // spread the free height evenly
     rr(80,y,W-160,vdTh,24);g.fillStyle='rgba(255,255,255,.05)';g.fill();
     g.fillStyle=INK;g.font=`800 76px ${DISP}`;g.fillText(`${m?m.e+' ':''}${sc} з 11`,112,y+92);
@@ -4561,49 +4564,47 @@ function drawCard(r){   // card in site style: UPL navy background, UPL.TV gradi
   if(gold){const fs=fit(tier,f=>`800 ${f}px ${DISP}`,W-160,64,34);const tw=g.measureText(tier).width;g.fillStyle=grad(80,80+tw);g.fillText(tier,80,y+fs);y+=fs+40;}
   // main tile: W-D-L / points / place (as on the site), goals and xG below
   const hh=300;rr(80,y,W-160,hh,32);g.fillStyle='rgba(255,255,255,.06)';g.fill();g.strokeStyle='rgba(224,40,122,.35)';g.lineWidth=2;g.stroke();
-  const cw=(W-160)/3;
+  const PX=112,cw=(W-2*PX)/3;   // columns inside the tile padding, not from its border
   {const parts=[[String(r.W),INK],['-',INK],[String(r.D),INK],['-',INK],[String(r.L),INK]];   /* single color, as on the site */g.font=`800 84px ${DISP}`;let tw=parts.reduce((a,[t])=>a+g.measureText(t).width,0),fs=84;
-    while(tw>cw-30&&fs>48){fs-=4;g.font=`800 ${fs}px ${DISP}`;tw=parts.reduce((a,[t])=>a+g.measureText(t).width,0);}let x=80+cw/2-tw/2;for(const [t,cl] of parts){g.fillStyle=cl;g.fillText(t,x,y+150);x+=g.measureText(t).width;}}
-  const big=(t,k,fill)=>{g.font=`800 96px ${DISP}`;const tw=g.measureText(t).width,x=80+cw*k+cw/2-tw/2;g.fillStyle=fill?fill(x,x+tw):INK;g.fillText(t,x,y+152);};
+    while(tw>cw-24&&fs>48){fs-=4;g.font=`800 ${fs}px ${DISP}`;tw=parts.reduce((a,[t])=>a+g.measureText(t).width,0);}let x=PX+cw/2-tw/2;for(const [t,cl] of parts){g.fillStyle=cl;g.fillText(t,x,y+150);x+=g.measureText(t).width;}}
+  const big=(t,k,fill)=>{g.font=`800 96px ${DISP}`;const tw=g.measureText(t).width,x=PX+cw*k+cw/2-tw/2;g.fillStyle=fill?fill(x,x+tw):INK;g.fillText(t,x,y+152);};
   big(String(r.pts),1,grad);big(String(r.place),2);
-  g.font=`600 28px ${BODY}`;g.fillStyle=MUTED;[['в · н · п',0],[ptsWord(r.pts),1],['місце',2]].forEach(([t,k])=>{const tw=g.measureText(t).width;g.fillText(t,80+cw*k+cw/2-tw/2,y+200);});
+  g.font=`600 28px ${BODY}`;g.fillStyle=MUTED;[['в · н · п',0],[ptsWord(r.pts),1],['місце',2]].forEach(([t,k])=>{const tw=g.measureText(t).width;g.fillText(t,PX+cw*k+cw/2-tw/2,y+200);});
   g.fillStyle='rgba(255,255,255,.08)';g.fillRect(120,y+228,W-240,2);
   {const t=`Голи ${r.gf}:${r.ga}`+(r.xgf!=null?` · xG ${r.xgf.toFixed(1)} : ${r.xga.toFixed(1)}`:'');g.font=`600 30px ${BODY}`;g.fillStyle=INK2;const tw=g.measureText(t).width;g.fillText(t,W/2-tw/2,y+276);}
   y+=hh+GAP;
   if(vdc){   // no names, the squad opens the next day
     const sc=Math.min(r.vd.score,11);
-    g.fillStyle=MUTED;g.font=`600 24px ${MONO}`;g.fillText('СКЛАД ВІДКРИЄТЬСЯ ЗАВТРА',80,y+24);y+=48;
+    g.fillStyle=MUTED;g.font=`600 26px ${MONO}`;g.fillText('СКЛАД ВІДКРИЄТЬСЯ ЗАВТРА',80,y+24);y+=48;
     const ph=150,step=(W-160)/11;rr(80,y,W-160,ph,32);g.fillStyle='rgba(255,255,255,.05)';g.fill();   // one row of 11 circles: hits first
     for(let k=0;k<11;k++){const cx=80+step*(k+.5),cy=y+ph/2;g.beginPath();g.arc(cx,cy,22,0,7);
-      if(k<sc){g.fillStyle='rgba(47,208,122,.6)';g.fill();g.setLineDash([]);}else{g.setLineDash([8,7]);g.strokeStyle='rgba(255,255,255,.45)';g.lineWidth=3;g.stroke();}}
+      if(k<sc){g.fillStyle='#30D158';g.fill();g.setLineDash([]);}else{g.setLineDash([8,7]);g.strokeStyle='rgba(255,255,255,.45)';g.lineWidth=3;g.stroke();}}
     g.setLineDash([]);
   }else{
   // instead of match bars: two tiles, top scorer and player of the season
     {const top=r.scorers&&r.scorers[0],mvp=(r.players||[]).slice().sort((a,b)=>b.rt-a.rt)[0];const tw=(W-160-24)/2,th=150;
       [[`⚽  БОМБАРДИР`,top?top.name:'—',top?`${top.g} ${plUk(top.g,'гол','голи','голів')}`:''],[`⭐  ГРАВЕЦЬ СЕЗОНУ`,mvp?mvp.name:'—',mvp?`оцінка ${mvp.rt.toFixed(2)}`:'']].forEach(([k,n,v],i)=>{const x=80+i*(tw+24);
         rr(x,y,tw,th,24);g.fillStyle='rgba(255,255,255,.05)';g.fill();
-        g.fillStyle=MUTED;g.font=`600 22px ${MONO}`;g.fillText(k,x+28,y+44);
+        g.fillStyle=MUTED;g.font=`600 24px ${MONO}`;g.fillText(k,x+28,y+44);
         g.fillStyle=INK;let fs=fit(n,f=>`700 ${f}px ${BODY}`,tw-56,34,24);g.fillText(n,x+28,y+92);
         g.fillStyle='#ff5aa0';g.font=`700 26px ${BODY}`;g.fillText(v,x+28,y+128);});
       y+=th+56;}
-    g.fillStyle=MUTED;g.font=`600 24px ${MONO}`;g.fillText((S.teamName||'Твоя 11-ка').toUpperCase(),80,y);
-    const LN={FW:0,MF:1,DF:2,GK:3},PC={GK:'#f5b83d',DF:'#4d8dff',MF:'#2fd07a',FW:'#ff4d5e'};
+    g.fillStyle=MUTED;g.font=`600 26px ${MONO}`;g.fillText((S.teamName||'Твоя 11-ка').toUpperCase(),80,y);
+    const LN={FW:0,MF:1,DF:2,GK:3},PC={GK:'#FFD60A',DF:'#0A84FF',MF:'#30D158',FW:'#FF453A'};
     const xi=S.slots.map(s=>s.player).map((p,i)=>[p,i]).sort((a,b)=>(LN[a[0].pos]-LN[b[0].pos])||(a[1]-b[1])).map(x=>x[0]);const colsX=[80,560];
-    xi.forEach((p,i)=>{const cx=colsX[i<6?0:1],cy=y+48+(i<6?i:i-6)*46;g.fillStyle=PC[p.pos];g.beginPath();g.arc(cx+8,cy-10,8,0,7);g.fill();
+    xi.forEach((p,i)=>{const cx=colsX[i<6?0:1],cy=y+52+(i<6?i:i-6)*52;g.fillStyle=PC[p.pos];g.beginPath();g.arc(cx+8,cy-10,8,0,7);g.fill();
       g.fillStyle=INK;g.font=`700 28px ${BODY}`;let nm=p.name;while(g.measureText(nm).width>330&&nm.length>4)nm=nm.slice(0,-2)+'…';g.fillText(nm,cx+28,cy);
-      if(ratingsOpen()){g.fillStyle='#ff5aa0';g.font=`700 28px ${DISP}`;g.fillText(String(baseR(p)),cx+380,cy);}});
+      if(ratingsOpen()){g.fillStyle=INK2;g.font=`700 28px ${DISP}`;g.textAlign='right';g.fillText(String(baseR(p)),i<6?500:W-108,cy);g.textAlign='left';}});
   }
   g.fillStyle=INK;g.font=`700 34px ${DISP}`;g.fillText('Зможеш краще?',80,H-104);   // like 'Think you can beat this?' in 38-0
   g.fillStyle=MUTED;g.font=`500 26px ${BODY}`;g.fillText(SITE_HOST,80,H-56);
   return c.toDataURL('image/png');
 }
 // ---------- What's new: short player-friendly notes on the latest version (technical log: CHANGELOG.md)
-const WHATSNEW={v:'0.93.2',news:'0.93.2',date:'21.10.2026',items:[
-  ['soccer-field','Тап по порожній позиції','Натисни на порожній кружечок на полі — колесо закрутиться. Якщо колесо вже крутилося, гра підкаже, що робити далі.'],
-  ['lightning-bolt','Сторінка не стрибає','Поки гра завантажується, головний екран і «Рахуємо прогноз» більше не зсуваються: кнопки на місці, не промахнешся.'],
-  ['restart','Тихіший рядок перекруток','«Перекрутити колесо · залишилось N» — тепер тонкий підпис над кнопками, а не окремий яскравий блок.'],
-  ['share-variant','Картинка в посиланні','Коли ділишся посиланням на гру в Telegram, Threads чи Instagram, тепер видно картинку з полем і назвою гри. Посилання на твій результат показує саме твій сезон.'],
-  ['telegram','Картка в Telegram — як раніше','Під карткою знову повний підпис: результат, найкращий бомбардир, серія і нові трофеї.']]};
+const WHATSNEW={v:'0.94',news:'0.94',date:'21.10.2026',items:[
+  ['account-circle','Коротший профіль','У шафі видно 10 найрідкісніших трофеїв, решта — за кнопкою «Усі трофеї». «Твої цифри» тепер одразу під шафою.'],
+  ['bookshelf','Поділитися шафою','Кнопка тепер під трофеями, поряд з «Усі трофеї», і виглядає як кнопка.'],
+  ['share-variant','Охайніша картка результату','Рівніший блок з рахунком, спокійніші цифри складу, кольори позицій як на полі.']]};
 function openNews(){screenTag('news');const box=document.getElementById('viewBox');document.getElementById('viewTitle').textContent=`Що нового · версія ${WHATSNEW.v}`;
   document.getElementById('viewBody').innerHTML=`<div class="news">${WHATSNEW.items.map(([e,h,d])=>`<div class="ni">${ic(e,'lg')}<div><b>${esc(h)}</b><p>${esc(d)}</p></div></div>`).join('')}</div>`;
   box.hidden=false;lsSet('upl30_news_seen',WHATSNEW.news||WHATSNEW.v);document.getElementById('newsDot').hidden=true;}

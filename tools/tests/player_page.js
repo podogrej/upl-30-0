@@ -80,6 +80,13 @@ const order=pg=>pg.$$eval('#ppCab .tro.on[data-tr]',es=>es.map(e=>e.dataset.tr))
  // card colour: only three classes
  T.check(await pg.$$eval('#ppCab .tro',l=>l.length>0&&l.every(e=>['k-base','k-friends','k-secret'].filter(k=>e.classList.contains(k)).length===1)),'трофеї: кожна картка — рівно один із трьох класів (основний, з друзями, секретний)');
  T.check(await pg.$$eval('#ppCab .tro.sec.rt-legend, #ppCab .tro.sec.rt-epic, #ppCab .tro.sec.rt-rare',e=>e.length)===0,'секретні трофеї без рівня рідкості');
+ {const r=await pg.evaluate(()=>{const on=document.querySelectorAll('#ppCab .tro.on').length,bs=[...document.querySelectorAll('#ppCab .pp-cabact button')];
+   return {on,bs:bs.map(x=>({id:x.id,h:Math.round(x.getBoundingClientRect().height)})),afterList:!!document.querySelector('#ppCab .trg + .pp-cabact, #ppCab .trg ~ .pp-cabact')};});
+  T.check(r.on<=10&&r.afterList&&r.bs.some(x=>x.id==='ppCabAll')&&r.bs.every(x=>x.h>=44&&x.h<50),'0.94: згорнута шафа — не більше 10, кнопки під списком в один рядок, 44 px: '+JSON.stringify(r));
+  await pg.setViewportSize({width:320,height:844});await pg.waitForTimeout(100);
+  const h320=await pg.$$eval('#ppCab .pp-cabact button',bs=>bs.map(x=>Math.round(x.getBoundingClientRect().height)));
+  T.check(h320.length&&h320.every(h=>h<50),'0.94: на 320 px «Усі трофеї · N» не переноситься: '+h320.join(','));
+  await pg.setViewportSize({width:390,height:844});await pg.waitForTimeout(100);}
  await pg.click('#ppCabAll');await pg.waitForTimeout(100);   // filters and sorting are behind All trophies
  await pg.click('#ppCab [data-s="recent"]');await pg.waitForTimeout(100);
  T.check(JSON.stringify(await order(pg))===JSON.stringify(['top3','unbeaten','champ']),'«Нещодавні»: '+(await order(pg)).join(','));
