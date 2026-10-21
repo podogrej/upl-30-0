@@ -80,7 +80,7 @@ T.check([acc, html].every(f => /flowType:'pkce'/.test(f) && !/flowType:'implicit
   T.check(fs.readdirSync(path.join(ROOT, 'api')).filter(f => f.endsWith('.js') && !f.startsWith('_')).length <= 12, 'функцій Vercel не більше 12');
   // link preview of the home page (0.93.1): absolute og:image that exists, its size, twitter card
   const home = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8'), meta = k => (home.match(new RegExp(`(?:property|name)="${k}" content="([^"]*)"`)) || [])[1];
-  const ogi = meta('og:image') || '', ogf = path.join(ROOT, ogi.replace('https://upl30.com.ua/', ''));
+  const ogi = meta('og:image') || '', ogf = path.join(ROOT, ogi.replace('https://upl30.com.ua/', '').replace(/\?.*$/, ''));   // ?v=N busts messenger caches
   T.check(ogi.startsWith('https://upl30.com.ua/') && fs.existsSync(ogf) && fs.statSync(ogf).size <= 300 * 1024 && meta('twitter:image') === ogi, 'головна: og:image абсолютний, файл є, ≤ 300 КБ, twitter:image той самий');
   T.check(meta('og:image:width') === '1200' && meta('og:image:height') === '630' && !!meta('og:image:alt') && meta('twitter:card') === 'summary_large_image', 'головна: 1200×630, alt, summary_large_image');
   T.check(meta('og:url') === 'https://upl30.com.ua/' && meta('og:type') === 'website' && meta('og:locale') === 'uk_UA', 'головна: og:url, og:type, og:locale');
