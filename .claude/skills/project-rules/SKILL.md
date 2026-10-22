@@ -46,6 +46,8 @@ A person owns every result. "The agent wrote it" is never a reason. Anything its
 **Release and checks**
 - Work branch (`dev` or `test`); `main` is production, reached only by pull request. Never release on red CI. I decide when to release unless the repo's `CLAUDE.md` says Claude may merge itself.
 - After any code change, before push: call the `tester` subagent (independent, did not see the code being written). Fix and repeat until clean. Show me which commands ran and how many checks passed.
+- Developer and tester are always different agents. For test-first work use the `tdd-tester` skill: the tester writes the failing test, a different agent makes it pass.
+- Nobody reports "done", "fixed" or "passes" without a fresh run of the check in the same message (skill `verification-before-completion`). A PM or reviewer accepting an agent's report looks at the diff and runs the checks itself.
 - CI runs the same checks on every push and pull request.
 - Database: additive and repeatable changes only; no rename or delete in one step. Apply to the test database first, check with a query, production only with my OK (unless the repo says Claude applies it). Show the SQL inline.
 
