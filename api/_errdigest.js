@@ -22,14 +22,23 @@ function digestText(rows, day) {
   if (list.length > TOP) t += `\n\n…і ще ${list.length - TOP}. Усі — у Supabase → Table Editor → client_errors.`;
   return t;
 }
+// fewer than 10 days of daily challenges left (counting `day`) -> warning line for the top of the digest, else null
+const dayAdd = (d, n) => new Date(Date.parse(d + 'T12:00:00Z') + n * 864e5).toISOString().slice(0, 10);
+function runwayLine(challenges, day) {
+  const last = (challenges || []).map(c => c && c.day).filter(d => /^\d{4}-\d{2}-\d{2}$/.test(d)).sort().pop();
+  if (last && last >= dayAdd(day, 9)) return null;
+  const dm = last ? `${last.slice(8, 10)}.${last.slice(5, 7)}` : '—';
+  return `<b>⚠️ Виклики дня ${last && last >= day ? 'закінчуються' : 'закінчились'}: останній — ${dm}.</b> Додай нові в lib/challenges.json, інакше на головній буде «Новий виклик скоро», а серії гравців обнуляться.`;
+}
 // sb, tg, env from api/_league.js; returns {sent, n}
-async function errDigest({ sb, tg, env, day, now = Date.now() }) {
+async function errDigest({ sb, tg, env, day, now = Date.now(), challenges = require('../lib/challenges.json') }) {
   const chat = env('TG_ERRORS_CHAT') || env('TG_CARDS_CHAT');
   if (!chat) return { sent: false, n: 0, why: 'no chat' };
   const since = new Date(now - 864e5).toISOString();
   const rows = await sb(`client_errors?at=gte.${since}&select=version,msg,line,screen,ua,tg,player,n&order=at.desc&limit=2000`) || [];
-  const text = digestText(rows, day);
-  if (!text) return { sent: false, n: 0 };
+  const warn = runwayLine(challenges, day), errs = digestText(rows, day);
+  if (!errs && !warn) return { sent: false, n: 0 };
+  const text = [warn, errs].filter(Boolean).join('\n\n');
   const mark = await sb('app_marks?on_conflict=key', { method: 'POST', prefer: 'resolution=ignore-duplicates,return=representation', body: { key: 'errdigest-' + day } });
   if (Array.isArray(mark) && !mark.length) return { sent: false, n: rows.length, why: 'already sent' };
   const r = await tg('sendMessage', { chat_id: chat, text, parse_mode: 'HTML', disable_web_page_preview: true }).catch(e => ({ description: e.message }));
@@ -39,4 +48,4 @@ async function errDigest({ sb, tg, env, day, now = Date.now() }) {
   }
   return { sent: true, n: rows.length };
 }
-module.exports = { digestText, errDigest };
+module.exports = { digestText, errDigest, runwayLine };
