@@ -1,5 +1,5 @@
 // Daily (api/cron.js, 18:00 UTC) digest of player errors sent to Telegram
-// from client_errors (sql/v068_client_errors.sql) for the last 24 h. No errors -> nothing is sent.
+// from client_errors (sql/v068_client_errors.sql) for the last 24 h. No errors and 10+ days of challenges left -> nothing is sent.
 // Target: Vercel env TG_ERRORS_CHAT (admin's chat with the bot), else the cards service channel TG_CARDS_CHAT.
 // Same-day reruns don't duplicate: app_marks key "errdigest-DATE" (server-only table).
 const TOP = 8;
